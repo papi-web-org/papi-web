@@ -49,13 +49,13 @@ logger.info('Creating batch file {}...'.format(target_file))
 with open(target_file, 'wt') as f:
     f.write('@echo off\n'
             '@rem Papi-web {} - {} - {}\n'
-            '{} --server\n'.format(exe_file, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION))
+            '{} --server\n'.format(PAPI_WEB_VERSION, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, exe_file))
 target_file = os.path.join(PROJECT_DIR, 'ffe.bat')
 logger.info('Creating batch file {}...'.format(target_file))
 with open(target_file, 'wt') as f:
     f.write('@echo off\n'
             '@rem Papi-web {} - {} - {}\n'
-            '{} --ffe\n'.format(exe_file, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION))
+            '{} --ffe\n'.format(PAPI_WEB_VERSION, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, exe_file))
 
 logger.info('Creating archive {}...'.format(ZIP_FILE))
 with ZipFile(ZIP_FILE, 'w') as zip_file:
