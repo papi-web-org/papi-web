@@ -2,9 +2,9 @@ import logging
 import os
 import re
 from typing import Optional, Dict
-from common.config_reader import ConfigReader
 from logging import Logger
-from logger import get_logger, configure_logger
+from common.config_reader import ConfigReader
+from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
 

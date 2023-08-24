@@ -5,7 +5,7 @@ from configparser import ConfigParser, DuplicateSectionError, DuplicateOptionErr
     ParsingError, Error
 from typing import List, Optional
 from logging import Logger
-from logger import get_logger
+from common.logger import get_logger
 
 logger: Logger = get_logger()
 

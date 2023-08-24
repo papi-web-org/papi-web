@@ -1,10 +1,10 @@
 import os
 import shutil
-from PyInstaller.__main__ import run
-from papi_web_config import PAPI_WEB_VERSION, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL
 from zipfile import ZipFile
 from logging import Logger
-from logger import get_logger
+from PyInstaller.__main__ import run
+from common.papi_web_config import PAPI_WEB_VERSION, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL
+from common.logger import get_logger
 
 logger: Logger = get_logger()
 
