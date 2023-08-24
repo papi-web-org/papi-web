@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+import sys
 from pathlib import Path
 from django.contrib.messages import constants as messages
 
@@ -124,8 +125,9 @@ STATIC_URL = 'static/'
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'web', 'static'),
-    os.path.join(BASE_DIR, 'custom'),
+    os.path.join(os.getcwd(), 'custom'),
 )
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
