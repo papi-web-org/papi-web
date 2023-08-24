@@ -47,15 +47,15 @@ shutil.copytree(CUSTOM_DIR, target_dir)
 target_file = os.path.join(PROJECT_DIR, 'server.bat')
 logger.info('Creating batch file {}...'.format(target_file))
 with open(target_file, 'wt') as f:
-    f.write('@echo off'
-            '@rem Papi-web {} - {} - {}'
-            '{} --server'.format(exe_file, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION))
+    f.write('@echo off\n'
+            '@rem Papi-web {} - {} - {}\n'
+            '{} --server\n'.format(exe_file, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION))
 target_file = os.path.join(PROJECT_DIR, 'ffe.bat')
 logger.info('Creating batch file {}...'.format(target_file))
 with open(target_file, 'wt') as f:
-    f.write('@echo off'
-            '@rem Papi-web {} - {} - {}'
-            '{} --ffe'.format(exe_file, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION))
+    f.write('@echo off\n'
+            '@rem Papi-web {} - {} - {}\n'
+            '{} --ffe\n'.format(exe_file, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION))
 
 logger.info('Creating archive {}...'.format(ZIP_FILE))
 with ZipFile(ZIP_FILE, 'w') as zip_file:
