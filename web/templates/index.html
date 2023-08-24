@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Papi-web
+{% endblock title %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/index.css' %}" type="text/css" />
+{% endblock head %}
+
+{% block content %}
+    <div id="content-wrapper" class="content-wrapper p-3">
+        <h1>Papi-web</h1>
+        <table class="table border-black">
+            <thead class="table-dark">
+                <th scope="col">Nom</th>
+                <th scope="col">Evènement</th>
+                <th scope="col">Messages</th>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                    <tr>
+                        <th scope="row"><a href="{% url 'show-event' event.id %}" target="_blank"><strong>{{ event.name }}</strong></a></th>
+                        <td>
+                            <i class="bi-people-fill" ></i>&nbsp;{{ event.tournaments | length }} tournoi{% if event.tournaments|length > 1 %}s{% endif %}
+                            <i class="bi-arrows-fullscreen" ></i>&nbsp;{{ event.screens | length }} écran{% if event.screens|length > 1 %}s{% endif %}
+                            <i class="bi-repeat" ></i>&nbsp;{{ event.rotators | length }} écran{% if event.rotators|length > 1 %}s{% endif %} rotatif{% if event.rotators|length > 1 %}s{% endif %}
+                            <i class="bi-calendar2-event-fill" ></i>&nbsp;{{ event.timer.events | length }} évènement{% if event.timer.events|length > 1 %}s{% endif %}
+                        </td>
+                        {% with id='messages' errors_len=event.errors|length warnings_len=event.warnings|length infos_len=event.infos|length %}
+                        {% with messages_len=errors_len|add:warnings_len|add:infos_len %}
+                            <td>
+                                <i class="bi-chat-fill" ></i>&nbsp;{{ messages_len }} message{% if messages_len > 1 %}s{% endif %}&nbsp;:&nbsp;&nbsp;<i class="bi-bug" ></i>&nbsp;{{ errors_len }}&nbsp;&nbsp;<i class="bi-exclamation-triangle" ></i>&nbsp;{{ warnings_len }}&nbsp;&nbsp;<i class="bi-info-circle" ></i>&nbsp;{{ infos_len }}
+                            </td>
+                        {% endwith %}
+                        {% endwith %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock content %}

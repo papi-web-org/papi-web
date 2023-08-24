@@ -1,0 +1,29 @@
+* {
+	font-family: Arial;
+}
+body {
+	background-image: url('/static/images/papi-web-background.png');
+	background-repeat: no-repeat;
+	background-position: center center;
+}
+.copyright {
+    text-align: center;
+    font-style: italic;
+}
+.please-wait-modal {
+	background-image: radial-gradient(white 30%, transparent);
+}
+.please-wait-modal .modal-header {
+    justify-content: center;
+}
+.please-wait-modal .modal-title {
+    font-size: x-large;
+    font-weight: bold;
+}
+.please-wait-modal .modal-content {
+    background-color: transparent;
+	background-image: url("/static/images/papi-web.gif");
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-size: 300px auto;
+}

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+{{ screen.id }}
+{% endblock title %}
+
+{% block page_title %}{% endblock page_title %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/timer.css' %}" type="text/css" />
+<link rel="stylesheet" href="{% static 'css/screen.css' %}" type="text/css" />
+<script>
+{% include 'refresh.js' %}
+{% if event.timer %}
+    {% if screen.show_timer %}
+        {% include 'timer.js' %}
+    {% endif %}
+{% endif %}
+</script>
+{% endblock head %}
+
+{% block content %}
+    {% if screen.menu_screens %}
+        <div id="#menu" class="menu">
+            {% for entry in screen.menu_screens %}
+                <a href="{% url 'show-screen' event.id entry.id %}" class="menu-item {% if screen.id == entry.id %}selected{% endif %}">{% spaceless %}
+                    {% if entry.type == 'boards' %}
+                        {% if entry.sets.0.tournament.current_round %}
+                            {{ entry.menu_text_boards }}
+                        {% else %}
+                            {{ entry.menu_text_players_by_rating }}
+                        {% endif %}
+                    {% endif %}
+                    {% if entry.type == 'players' %}
+                        {{ entry.menu_text_players_by_name }}
+                    {% endif %}
+                    {% if entry.type == 'results' %}
+                        {{ entry.menu_text }}
+                    {% endif %}
+                    {% endspaceless %}</a>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% if event.timer %}
+        {% if screen.show_timer %}
+            {% include 'timer.html' %}
+        {% endif %}
+    {% endif %}
+    {% if screen.type == 'boards' %}
+        <div class="screen screen-boards {% if screen.enter_results %}screen-boards-enter-results{% else %}view-only{% endif %}">
+            {% include 'screen_boards.html' %}
+        </div>
+    {% endif %}
+    {% if screen.type == 'players' %}
+        <div class="screen screen-players">
+            {% include 'screen_players.html' %}
+        </div>
+    {% endif %}
+    {% if screen.type == 'results' %}
+        <div class="screen screen-results">
+            {% include 'screen_results.html' %}
+        </div>
+    {% endif %}
+{% endblock content %}
+
+{% block footer %}
+    <script>
+    {% if screen.enter_results %}
+        function add_result(tournament_id, board_id, result) {
+            stop_refresh_interval();
+            please_wait();
+            window.location = '/result/{{ event.id }}/{{ screen.id }}/' + tournament_id + '/' + board_id + '/' + result;
+        }
+    {% endif %}
+    $(document).ready(function(){
+        $('.menu').click(function () {
+            refresh();
+        });
+        $('.screen .set-title').click(function () {
+            refresh();
+        });
+        $('.screen-boards thead').click(function () {
+            refresh();
+        });
+        $('.screen-boards .board-row-result').click(function () {
+            refresh();
+        });
+        $('.screen-boards-view-only .board-row-no-result').click(function () {
+            refresh();
+        });
+    });
+    {% if rotator_next_url %}
+        $(document).ready(function(){
+            setTimeout(function(){
+                window.location = '{{ rotator_next_url }}';
+            }, {{ rotator_delay }} * 1000)
+        });
+    {% endif %}
+    </script>
+{% endblock footer %}

@@ -1,0 +1,12 @@
+.timer {
+    font-size: x-large;
+    font-weight: bold;
+    width: 100%;
+    margin: 0;
+}
+.timer-text {
+    text-align: left;
+}
+.timer-clock {
+    text-align: right;
+}

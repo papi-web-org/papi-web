@@ -1,0 +1,8 @@
+/.idea/
+/venv/
+/papi/
+/events/
+/fees/
+/docs/images/src/
+papi-web.ini
+/tmp/

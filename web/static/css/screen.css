@@ -1,0 +1,106 @@
+.screen .screen-set-row,
+.screen .screen-set-tuple-row {
+    margin-right: 0;
+    margin-left: 0;
+    width: 100%;
+}
+.screen .screen-set-col:last-child,
+.screen .screen-set-tuple-col:last-child {
+    padding-right: 0;
+}
+.screen .screen-set-col:first-child,
+.screen .screen-set-tuple-col:first-child {
+    padding-left: 0;
+}
+.screen-players .paired .player,
+.screen-players .paired .pairing {
+    font-weight: bold
+}
+.screen-players .not-paired {
+    font-style: italic
+}
+.screen-boards .board-row-no-result {
+    font-weight: bold
+}
+.screen-boards .board-number {
+    text-align: right
+}
+.screen .set-title,
+.screen-boards .score,
+.screen-boards .points,
+.screen-boards-enter-results .result-button {
+    text-align: center;
+}
+.screen-players .player,
+.screen-players .pairing,
+.screen-players .opponent {
+    white-space: nowrap
+}
+.screen-boards-enter-results .login-modal .modal-content,
+.screen-boards-enter-results .board-modal .modal-content {
+    background-color: lightgrey;
+}
+.screen-boards-enter-results .board-modal .result-text,
+.screen-boards-enter-results .board-modal .modal-title,
+.screen-boards-enter-results .board-modal .btn {
+    font-weight: bold;
+    font-size: x-large;
+}
+.screen-boards-enter-results .result-button {
+    border: 3px #000080 solid;
+}
+.screen-boards-enter-results .result-button:hover {
+    background-color: yellow;
+    color: #000080;
+}
+.screen-boards-enter-results .result-button-white {
+    background-color: white;
+    color: black;
+}
+.screen-boards-enter-results .result-button-draw {
+    color: #000080;
+}
+.screen-boards-enter-results .result-button-black {
+    background-color: black;
+    color: white;
+}
+.screen-boards .board-row th,
+.screen-boards .board-row td,
+.screen-players .player-row th,
+.screen-players .player-row td {
+    background-color: transparent;
+}
+.screen-boards-enter-results .board-row-no-result:hover {
+    background-color: yellow;
+    cursor: pointer;
+}
+.screen-boards-enter-results .board-row-result:hover {
+    background-color: #ffffcc;
+}
+.menu {
+    text-align: left;
+    font-size: x-large;
+    font-weight: bold;
+    width: 100%;
+    margin: 0;
+    padding: 0.5% 0px 0.5% 0px;
+}
+.menu-item {
+    white-space: nowrap;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-left: 5px;
+    color: red;
+}
+.menu-item.selected {
+    background-color: red;
+    color: white;
+}
+.menu-item:hover {
+    background-color: #ffff00;
+    color: #000080;
+}
+.modified-time .minutes,
+ .modified-time .seconds {
+    color: red;
+}

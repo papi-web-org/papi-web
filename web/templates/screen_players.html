@@ -1,0 +1,47 @@
+{% for set in screen.sets %}
+    {% with tournament=set.tournament %}
+        {% if set.players_by_name_lists %}{% endif %}
+        <h2 class="set-title">{{ set.name }}{% if tournament.current_round %} (ronde {{ tournament.current_round }}){% endif %}</h2>
+        <div class="row screen-set-row">
+            {% for players in set.players_by_name_lists %}
+                <div class="col screen-set-col">
+                    <table class="table table-striped table-sm">
+                        <thead class="table-dark">
+                            <th scope="col" class="player">Joueur.euse Elo [Pts]</th>
+                            <th scope="col" class="pairing">Table & Couleur</th>
+                            <th scope="col" class="opponent">Adversaire Elo [Pts]</th>
+                        </thead>
+                        <tbody>
+                        {% for player in players %}
+                            {% if tournament.current_round %}
+                                {% with pairing=player.pairings|get_item:tournament.current_round %}
+                                {% with opponent_id=pairing.opponent_id %}
+                                    <tr class=" player-row {% if not opponent_id or opponent_id == 1 %}not-paired{% else %}paired{% endif %}">
+                                        <td  class="player">{% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }} {{ player.vpoints_str }}</td>
+                                        {% if not opponent_id %}
+                                            <td colspan="2"><em>{{ player.not_paired_str }}</em></td>
+                                        {% elif opponent_id == 1 %}
+                                            <td colspan="2"><em>{{ player.exempt_str }}</em></td>
+                                        {% else %}
+                                            {% with opponent=tournament.players_by_id|get_item:opponent_id %}
+                                                <td class="pairing">Table n°{{ player.board_number }} {{ player.color_str }}</td>
+                                                <td class="opponent">{% if opponent.title_str %}{{ opponent.title_str }}&nbsp;{% endif %}{{ opponent.last_name }} {{ opponent.first_name }} {{ opponent.rating }}{{ opponent.rating_type }} {{ opponent.vpoints_str }}</td>
+                                            {% endwith %}
+                                        {% endif %}
+                                    </tr>
+                                {% endwith %}
+                                {% endwith %}
+                            {% else %}
+                                <tr class="not-paired">
+                                    <td  class="player">{% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}</td>
+                                    <td colspan="2"><em>{{ player.not_paired_str }}</em></td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
+    {% endwith %}
+{% endfor %}
