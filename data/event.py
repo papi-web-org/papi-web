@@ -5,17 +5,16 @@ import re
 import time
 
 from typing import List, Optional, Dict, Tuple
+from logging import Logger
 
 from common.config_reader import ConfigReader
+from common.logger import get_logger
 from data.rotator import Rotator, ROTATOR_DEFAULT_DELAY
 from data.screen import SCREEN_TYPE_NAMES, SCREEN_TYPE_BOARDS, SCREEN_TYPE_PLAYERS, SCREEN_TYPE_RESULTS
 from data.screen import ScreenSet, ScreenBoards, ScreenPlayers, ScreenResults, AScreen
-
 from data.template import Template
 from data.timer import Timer, TimerEvent
 from data.tournament import Tournament
-from logging import Logger
-from logger import get_logger
 
 logger: Logger = get_logger()
 

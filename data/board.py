@@ -1,10 +1,10 @@
 from functools import total_ordering
 from typing import Optional
+from logging import Logger
 
+from common.logger import get_logger
 from database.papi import RESULT_STRINGS
 from data.player import Player
-from logging import Logger
-from logger import get_logger
 
 logger: Logger = get_logger()
 

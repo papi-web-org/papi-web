@@ -1,10 +1,10 @@
 from typing import Dict, List, Tuple
+from logging import Logger
 
 from database.access import AccessDatabase
 from data.pairing import Pairing
 from data.player import Player, PLAYER_TITLE_VALUES, COLOR_DB_VALUES
-from logging import Logger
-from logger import get_logger
+from common.logger import get_logger
 
 logger: Logger = get_logger()
 

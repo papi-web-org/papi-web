@@ -1,9 +1,10 @@
 import os
 from typing import Any, Dict, List, Tuple, Optional
 import pyodbc
-from common.exception import PapiException
 from logging import Logger
-from logger import get_logger
+
+from common.exception import PapiException
+from common.logger import get_logger
 
 logger: Logger = get_logger()
 

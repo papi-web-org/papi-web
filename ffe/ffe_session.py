@@ -1,14 +1,12 @@
 import os
 import webbrowser
 from typing import Optional, Dict, Any
-
 from AdvancedHTMLParser import AdvancedHTMLParser, AdvancedTag
-
 from requests import Session, Response
+from logging import Logger
 
 from data.tournament import Tournament
-from logging import Logger
-from logger import get_logger
+from common.logger import get_logger
 
 logger: Logger = get_logger()
 

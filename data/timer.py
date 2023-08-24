@@ -1,7 +1,8 @@
 import datetime
-from typing import Optional, Tuple, List, Dict, Union
 from logging import Logger
-from logger import get_logger
+from typing import Optional, Tuple, List, Dict, Union
+
+from common.logger import get_logger
 
 logger: Logger = get_logger()
 

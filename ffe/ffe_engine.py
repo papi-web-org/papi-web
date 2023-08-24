@@ -1,8 +1,9 @@
+from logging import Logger
+
+from common.logger import get_logger
 from common.engine import Engine
 from data.event import get_events
 from ffe.event_selector import EventSelector
-from logging import Logger
-from logger import get_logger
 
 logger: Logger = get_logger()
 

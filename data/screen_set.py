@@ -1,11 +1,11 @@
 import math
 from typing import Optional, List, Any, Tuple
+from logging import Logger
 
+from common.logger import get_logger
 from data.board import Board
 from data.player import Player
 from data.tournament import Tournament
-from logging import Logger
-from logger import get_logger
 
 logger: Logger = get_logger()
 

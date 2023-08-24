@@ -1,8 +1,5 @@
-from logging import Logger, getLogger, root, StreamHandler
+from logging import Logger, getLogger, StreamHandler
 from colorlog import ColoredFormatter
-
-LOGFORMAT = "  %(log_color)s%(levelname)-8s%(reset)s | %(log_color)s%(message)s%(reset)s"
-
 
 logger: Logger = getLogger()
 

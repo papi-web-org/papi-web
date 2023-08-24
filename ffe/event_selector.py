@@ -1,8 +1,9 @@
 from typing import List, Optional
+from logging import Logger
+
+from common.logger import get_logger
 from data.event import Event
 from ffe.action_selector import ActionSelector
-from logging import Logger
-from logger import get_logger
 
 logger: Logger = get_logger()
 

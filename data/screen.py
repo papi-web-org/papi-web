@@ -1,8 +1,8 @@
 from typing import List, Dict, Optional
-
-from data.screen_set import ScreenSet
 from logging import Logger
-from logger import get_logger
+
+from common.logger import get_logger
+from data.screen_set import ScreenSet
 
 logger: Logger = get_logger()
 

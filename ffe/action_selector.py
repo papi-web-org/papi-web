@@ -1,11 +1,12 @@
 import os.path
 import time
 from typing import List, Optional
+from logging import Logger
+
+from common.logger import get_logger
 from data.event import Event
 from data.tournament import Tournament
 from ffe.ffe_session import FFESession
-from logging import Logger
-from logger import get_logger
 
 logger: Logger = get_logger()
 

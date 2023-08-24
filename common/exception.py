@@ -1,5 +1,5 @@
 from logging import Logger
-from logger import get_logger
+from common.logger import get_logger
 
 logger: Logger = get_logger()
 

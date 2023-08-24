@@ -3,10 +3,10 @@ import django
 from django.core.management import call_command
 from webbrowser import open
 import socket
-
-from common.engine import Engine
 from logging import Logger
-from logger import get_logger
+
+from common.logger import get_logger
+from common.engine import Engine
 
 logger: Logger = get_logger()
 

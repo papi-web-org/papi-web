@@ -4,22 +4,20 @@ import sys
 import time
 import traceback
 from typing import List, Dict, Optional, Tuple
-
 from django.contrib import messages
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.template.defaulttags import register
+from logging import Logger
 
+from common.logger import get_logger
+from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION
+from data.event import Event, get_events
 from data.rotator import Rotator
 from data.screen import AScreen, SCREEN_TYPE_RESULTS
 from data.tournament import Tournament
 
-from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION
-from logging import Logger
-
-from data.event import Event, get_events
-from common.logger import get_logger
 
 logger: Logger = get_logger()
 
