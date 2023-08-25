@@ -117,5 +117,4 @@ class Board:
 
     def __repr__(self):
         return '{}({}. {} {} {})'.format(
-            type(self).__name__, self.number, self.white_player,
-            RESULT_STRINGS[self.result] if self.result else '', self.black_player)
+            type(self).__name__, self.number, self.white_player,self.result_str, self.black_player)

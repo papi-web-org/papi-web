@@ -2,12 +2,12 @@
 {% for set in screen.sets %}
     {% with tournament=set.tournament %}
         {% if tournament.current_round %}
-            {% if set.boards_lists %}{% endif %}
+            {% if screen.boards_lists %}{% endif %}
             <h2 class="set-title">{{ set.name }} (ronde {{ tournament.current_round }})</h2>
             <div class="row screen-set-row">
                 {% for boards in set.boards_lists %}
                     <div class="col screen-set-col">
-                        <table class="table table-striped table-sm {% if screen.enter_results %}table-hover{% endif %}">
+                        <table class="table table-striped table-sm {% if screen.update %}table-hover{% endif %}">
                             <thead class="table-dark">
                                 <th scope="col" class="board-number">Ech</th>
                                 <th scope="col" class="points">Pts</th>
@@ -24,7 +24,7 @@
                                 <tr
                                     id="board-{{ board.id }}-row"
                                     class="board-row {% if board.result_str %}board-row-result{% else %}board-row-no-result{% endif %}"
-                                    data-bs-toggle="modal" data-bs-target="#board-{{ board.id }}-modal"
+                                    {% if not board.result_str %}data-bs-toggle="modal" data-bs-target="#board-{{ board.id }}-modal"{% endif %}
                                 >
                                     <th scope="row" class="board-number">{{ board.number }}.</th>
                                     <td class="points">{{ wp.vpoints_str }}</td>
@@ -43,7 +43,7 @@
                                     {% if tournament.print_real_points %}<td class="points">{% if bp.id != 1 %}[{{ bp.points_str }}]{% endif %}</td>{% endif %}
                                     <td class="points">{% if bp.id != 1 %}{{ bp.vpoints_str }}{% endif %}</td>
                                 </tr>
-                                {% if screen.enter_results and not board.result_str %}
+                                {% if screen.update and not board.result_str %}
                                     <script>
 $(document).ready(function(){
     $('#board-{{ board.id }}-modal').on('shown.bs.modal', function () {

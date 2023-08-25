@@ -1,8 +1,6 @@
 import math
 import os
-import sys
 import time
-import traceback
 from typing import List, Dict, Optional, Tuple
 from django.contrib import messages
 from django.http import HttpResponse, HttpRequest
@@ -13,11 +11,12 @@ from logging import Logger
 
 from common.logger import get_logger
 from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION
+from data.board import Board
 from data.event import Event, get_events
 from data.rotator import Rotator
 from data.screen import AScreen, SCREEN_TYPE_RESULTS
 from data.tournament import Tournament
-
+from database.papi import RESULT_LOSS, RESULT_GAIN, RESULT_DRAW_OR_BYE_05
 
 logger: Logger = get_logger()
 
@@ -129,7 +128,7 @@ def show_screen(request: HttpRequest, event_id: str, screen_id: str) -> HttpResp
         return redirect(event_url(event_id))
     screen: AScreen = event.screens[screen_id]
     login_needed: bool = False
-    if event.input_password and screen.enter_results:
+    if event.input_password and screen.update:
         login_needed, do_redirect = check_auth(request, event)
         if do_redirect:
             return redirect(screen_url(event.id, screen.id, ))
@@ -149,7 +148,7 @@ def show_rotator(request: HttpRequest, event_id: str, rotator_id: str, screen_in
     screen_index: int = screen_index % len(rotator.screens)
     screen: AScreen = rotator.screens[screen_index]
     login_needed: bool = False
-    if event.input_password and screen.enter_results:
+    if event.input_password and screen.update:
         login_needed, do_redirect = check_auth(request, event)
         if do_redirect:
             return redirect(rotator_screen_url(event.id, rotator.id, screen_index))
@@ -174,11 +173,18 @@ def update_result(
     except KeyError:
         messages.error(request, 'Tournament [{}] not found'.format(tournament_id))
         return redirect(event_url(event_id))
+    board: Board
     try:
-        tournament.add_result(board_id, result)
-    except Exception as e:
-        traceback.print_exception(*sys.exc_info())
-        messages.error(request, 'Writing result failed: {}'.format(e))
+        board = tournament.boards[board_id - 1]
+    except KeyError:
+        messages.error(request, 'Writing result failed (board [{}] not found for tournament [{}])'.format(
+            board_id, tournament.id))
+        return redirect(screen_url(event.id, screen_id, ))
+    if result not in [RESULT_LOSS, RESULT_DRAW_OR_BYE_05, RESULT_GAIN]:
+        messages.error(request, 'Writing result failed (invalid result [{}])'.format(result))
+        return redirect(screen_url(event.id, screen_id, ))
+    tournament.add_result(board, result)
+    event.store_result(tournament, board, result)
     return redirect(screen_url(event_id, screen_id, ))
 
 

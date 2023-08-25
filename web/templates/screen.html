@@ -48,7 +48,7 @@
         {% endif %}
     {% endif %}
     {% if screen.type == 'boards' %}
-        <div class="screen screen-boards {% if screen.enter_results %}screen-boards-enter-results{% else %}view-only{% endif %}">
+        <div class="screen screen-boards {% if screen.update %}screen-boards-update{% else %}view-only{% endif %}">
             {% include 'screen_boards.html' %}
         </div>
     {% endif %}
@@ -66,7 +66,7 @@
 
 {% block footer %}
     <script>
-    {% if screen.enter_results %}
+    {% if screen.update %}
         function add_result(tournament_id, board_id, result) {
             stop_refresh_interval();
             please_wait();
@@ -87,6 +87,9 @@
             refresh();
         });
         $('.screen-boards-view-only .board-row-no-result').click(function () {
+            refresh();
+        });
+        $('.screen-results table').click(function () {
             refresh();
         });
     });

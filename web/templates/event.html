@@ -140,7 +140,7 @@
                                     <th scope="row">{{ screen.id }}</th>
                                     <td><a href="{% url 'show-screen' event.id screen.id %}" target="_blank">{{ screen.name }}</a></td>
                                     <td><i class="{{ screen.icon_str }}"></i>&nbsp;{{ screen.type_str }}</td>
-                                    <td>{{ screen.sets_str }}</td>
+                                    <td>{% if screen.type == 'results' %}{% if screen.limit %}{{ screen.limit }} max.{% else %}Tous{% endif %}{% else %}{{ screen.sets_str }}{% endif %}</td>
                                     <td>{{ screen.columns }}</td>
                                     <td>{% if screen.menu %}{% if screen.menu == 'view' %}Visualisation{% else %}{% if screen.menu == 'update' %}Saisie{% else %}{% if screen.menu == 'family' %}{{ screen.family_id }}-*{% else %}screen.menu{% endif %}{% endif %}{% endif %}{% endif %}</td>
                                     <td>{% if screen.menu_text %}{{ screen.menu_text }}{% else %}<em>-</em>{% endif %}</td>

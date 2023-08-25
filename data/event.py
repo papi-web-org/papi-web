@@ -2,6 +2,8 @@ import datetime
 import glob
 import os
 import re
+from pathlib import Path
+
 import time
 
 from typing import List, Optional, Dict, Tuple
@@ -9,6 +11,8 @@ from logging import Logger
 
 from common.config_reader import ConfigReader
 from common.logger import get_logger
+from data.board import Board
+from data.result import Result
 from data.rotator import Rotator, ROTATOR_DEFAULT_DELAY
 from data.screen import SCREEN_TYPE_NAMES, SCREEN_TYPE_BOARDS, SCREEN_TYPE_PLAYERS, SCREEN_TYPE_RESULTS
 from data.screen import ScreenSet, ScreenBoards, ScreenPlayers, ScreenResults, AScreen
@@ -369,7 +373,7 @@ class Event(ConfigReader):
         update_menu: List[AScreen] = []
         for screen in self.__screens.values():
             if screen.menu_text:
-                if screen.type == SCREEN_TYPE_BOARDS and screen.enter_results:
+                if screen.update:
                     update_menu.append(screen)
                 else:
                     view_menu.append(screen)
@@ -404,7 +408,7 @@ class Event(ConfigReader):
             screen.set_menu_screens(menu_screens)
 
     event_screen_keys: List[str] = [
-        'type', 'name', 'columns', 'menu_text', 'show_timer', 'menu', 'enter_results',
+        'type', 'name', 'columns', 'menu_text', 'show_timer', 'menu', 'update', 'limit',
     ]
 
     def __build_screen(self, screen_id: str):
@@ -428,16 +432,16 @@ class Event(ConfigReader):
                     if not self.has_option(new_section, key):
                         self.set(new_section, key, value)
         key = 'type'
-        default: str = SCREEN_TYPE_BOARDS
+        default_type: str = SCREEN_TYPE_BOARDS
         if not self.has_option(section, key):
-            self._add_warning('key not found, screen ignored'.format(default), section=section, key=key)
+            self._add_warning('key not found, screen ignored'.format(default_type), section=section, key=key)
             return
         screen_type: str = self.get(section, key)
         if screen_type not in SCREEN_TYPE_NAMES:
             self._add_warning(
-                'invalid screen type [{}], screen ignored'.format(screen_type, default), section=section, key=key)
+                'invalid screen type [{}], screen ignored'.format(screen_type, default_type), section=section, key=key)
             return
-        screen_set_sections: List[str]
+        screen_set_sections: List[str] = []
         section2 = section + '.' + screen_type
         if screen_type == SCREEN_TYPE_BOARDS:
             if self.has_section(section2):
@@ -464,35 +468,39 @@ class Event(ConfigReader):
                 self._add_warning('section not found, screen ignored'.format(section2), section=section2)
                 return
         elif screen_type == SCREEN_TYPE_RESULTS:
-            self._add_warning(
-                'screen type [{}] not supported yet, screen is ignored'.format(screen_type), section=section)
-            return
+            pass
         else:
             self._add_warning(
                 'unknown screen type [{}], screen is ignored'.format(screen_type), section=section)
             return
         key = 'columns'
-        default: int = 1
-        columns: int = default
+        default_columns: int = 1
+        columns: int = default_columns
         if not self.has_option(section, key):
             pass  # self._add_info('key not found, defaults to [{}]'.format(default), section=section, key=key)
         else:
             columns = self._getint_safe(section, key)
             if columns is None:
-                self._add_warning('not null positive integer expected, defaults to [{}]'.format(default),
+                self._add_warning('not null positive integer expected, defaults to [{}]'.format(default_columns),
                                   section=section, key=key)
-        screen_sets: List[ScreenSet] = self.__build_screen_sets(screen_set_sections, columns)
-        if not screen_sets:
-            self._add_warning('no set defined, screen ignored'.format(), section=section)
-            return
+                columns = default_columns
+        screen_sets: Optional[List[ScreenSet]] = None
+        if screen_type in [SCREEN_TYPE_BOARDS, SCREEN_TYPE_PLAYERS, ]:
+            screen_sets = self.__build_screen_sets(screen_set_sections, columns)
+            if not screen_sets:
+                self._add_warning('no set defined, screen ignored'.format(), section=section)
+                return
         key = 'name'
-        screen_name: Optional[str]
+        screen_name: Optional[str] = None
         if self.has_option(section, key):
             screen_name = self.get(section, key)
+        elif screen_type == SCREEN_TYPE_RESULTS:
+            screen_name = 'Derniers résultats'
+            self._add_debug(
+                'not set, defaults to [{}]'.format(screen_name), section=section, key=key)
         else:
             self._add_debug(
                 'not set, the name of the first set will be used'.format(), section=section, key=key)
-            screen_name = None
         key = 'menu_text'
         menu_text: Optional[str] = None
         if self.has_option(section, key):
@@ -508,7 +516,11 @@ class Event(ConfigReader):
             if menu == 'none':
                 menu = None
             elif menu == 'family':
-                pass
+                if screen_type == SCREEN_TYPE_RESULTS:
+                    self._add_warning(
+                        'key [family] is not allowed for screens of type [{}], '
+                        'no menu will be printed'.format(screen_type), section=section, key=key)
+                    menu = None
             elif menu == 'view':
                 pass
             elif menu == 'update':
@@ -517,8 +529,8 @@ class Event(ConfigReader):
                 pass
             else:
                 self._add_warning(
-                    'expected [familly], [view], [update] or a comma-separated list of screen ids, '
-                    'no menu will be printed'.format(screen_type), section=section, key=key)
+                    'expected [none], [family], [view], [update] or a comma-separated list of screen ids, '
+                    'no menu will be printed'.format(), section=section, key=key)
                 menu = None
         key = 'show_timer'
         default: bool = True
@@ -527,27 +539,52 @@ class Event(ConfigReader):
             show_timer = self.getboolean(section, key)
             if show_timer is None:
                 self._add_warning('boolean expected, defaults to [{}]'.format(default), section=section, key=key)
-        key = 'enter_results'
-        default_enter_results: bool = False
-        enter_results: bool = default_enter_results
-        if key in self.event_screen_keys and self.has_option(section, key):
-            enter_results = self.getboolean(section, key)
-            if enter_results is None:
-                self._add_warning('boolean expected, screen is ignored'.format(screen_type), section=section, key=key)
-                return
+        key = 'update'
+        default_update: bool = False
+        update: bool = default_update
+        if screen_type == SCREEN_TYPE_BOARDS:
+            if self.has_option(section, key):
+                update = self._getboolean_safe(section, key)
+                if update is None:
+                    self._add_warning('boolean expected, screen is ignored'.format(), section=section, key=key)
+                    return
+        else:
+            if self.has_option(section, key):
+                self._add_warning(
+                    'key is not allowed for screens of type [{}], key ignored'.format(screen_type),
+                    section=section, key=key)
+        key = 'limit'
+        default_limit: int = 0
+        limit: int = default_limit
+        if screen_type == SCREEN_TYPE_RESULTS:
+            if self.has_option(section, key):
+                limit = self._getint_safe(section, key)
+                if limit is None:
+                    self._add_warning(
+                        'null or positive integer expected, defaults to [{}]'.format(default_limit),
+                        section=section, key=key)
+                    limit = default_limit
+                if limit > 0 and limit % columns > 0:
+                    limit = columns * (limit // columns + 1)
+                    self._add_info('set to [{}] to fit to {} columns'.format(limit, columns), section=section, key=key)
+        else:
+            if self.has_option(section, key):
+                self._add_warning(
+                    'key is not allowed for screens of type [{}], key ignored'.format(screen_type),
+                    section=section, key=key)
         key = '__family__'
         family_id: Optional[str] = None
         if self.has_option(section, key):
             family_id: str = self.get(section, key)
         if screen_type == SCREEN_TYPE_BOARDS:
             self.__screens[screen_id] = ScreenBoards(
-                screen_id, family_id, screen_name, columns, menu_text, menu, show_timer, screen_sets, enter_results)
+                screen_id, family_id, screen_name, columns, menu_text, menu, show_timer, screen_sets, update)
         elif screen_type == SCREEN_TYPE_PLAYERS:
             self.__screens[screen_id] = ScreenPlayers(
                 screen_id, family_id, screen_name, columns, menu_text, menu, show_timer, screen_sets)
         elif screen_type == SCREEN_TYPE_RESULTS:
             self.__screens[screen_id] = ScreenResults(
-                screen_id, family_id, screen_name, columns, menu_text, menu, show_timer)
+                self.id, screen_id, family_id, screen_name, columns, menu_text, menu, show_timer, limit)
         for key, value in self.items(section):
             if key not in self.event_screen_keys + ['template', '__family__', ]:
                 self._add_warning('unknown key'.format(key), section=section, key=key)
@@ -811,6 +848,30 @@ class Event(ConfigReader):
                     'positive integer expected, ignored'.format(self.get(section, key)), section=section, key=key)
             else:
                 timer.delays[delay_id] = delay
+
+    def store_result(self, tournament: Tournament, board: Board, result: int):
+        results_dir: str = Result.results_dir(self.id)
+        if not os.path.isdir(results_dir):
+            os.makedirs(results_dir)
+        now: float = time.time()
+        # delete old files
+        for file in glob.glob(os.path.join(results_dir, '*')):
+            if os.path.getctime(file) - now > 3600:
+                os.unlink(file)
+                logger.debug('Deleted file {}'.format(file))
+        # add a new file
+        white_str = '{} {} {}'.format(
+            board.white_player.last_name, board.white_player.first_name, board.white_player.rating
+        ). replace(' ', '_')
+        black_str = '{} {} {}'.format(
+            board.black_player.last_name, board.black_player.first_name, board.black_player.rating
+        ). replace(' ', '_')
+        filename: str = '{} {} {} {} {} {} {} '.format(
+            now, tournament.id, tournament.current_round, board.id,
+            white_str, black_str, result,
+        )
+        Path(os.path.join(results_dir, filename)).touch()
+        logger.info('Added file {}'.format(os.path.join(results_dir, filename)))
 
 
 def get_events() -> List[Event]:

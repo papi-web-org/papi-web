@@ -28,7 +28,7 @@
 .screen .set-title,
 .screen-boards .score,
 .screen-boards .points,
-.screen-boards-enter-results .result-button {
+.screen-boards-update .result-button {
     text-align: center;
 }
 .screen-players .player,
@@ -36,45 +36,47 @@
 .screen-players .opponent {
     white-space: nowrap
 }
-.screen-boards-enter-results .login-modal .modal-content,
-.screen-boards-enter-results .board-modal .modal-content {
+.screen-boards-update .login-modal .modal-content,
+.screen-boards-update .board-modal .modal-content {
     background-color: lightgrey;
 }
-.screen-boards-enter-results .board-modal .result-text,
-.screen-boards-enter-results .board-modal .modal-title,
-.screen-boards-enter-results .board-modal .btn {
+.screen-boards-update .board-modal .result-text,
+.screen-boards-update .board-modal .modal-title,
+.screen-boards-update .board-modal .btn {
     font-weight: bold;
     font-size: x-large;
 }
-.screen-boards-enter-results .result-button {
+.screen-boards-update .result-button {
     border: 3px #000080 solid;
 }
-.screen-boards-enter-results .result-button:hover {
+.screen-boards-update .result-button:hover {
     background-color: yellow;
     color: #000080;
 }
-.screen-boards-enter-results .result-button-white {
+.screen-boards-update .result-button-white {
     background-color: white;
     color: black;
 }
-.screen-boards-enter-results .result-button-draw {
+.screen-boards-update .result-button-draw {
     color: #000080;
 }
-.screen-boards-enter-results .result-button-black {
+.screen-boards-update .result-button-black {
     background-color: black;
     color: white;
 }
 .screen-boards .board-row th,
 .screen-boards .board-row td,
 .screen-players .player-row th,
-.screen-players .player-row td {
+.screen-players .player-row td,
+.screen-results .result-row th,
+.screen-results .result-row td {
     background-color: transparent;
 }
-.screen-boards-enter-results .board-row-no-result:hover {
+.screen-boards-update .board-row-no-result:hover {
     background-color: yellow;
     cursor: pointer;
 }
-.screen-boards-enter-results .board-row-result:hover {
+.screen-boards-update .board-row-result:hover {
     background-color: #ffffcc;
 }
 .menu {

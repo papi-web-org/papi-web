@@ -330,21 +330,17 @@ class Tournament:
                 weak_player.set_handicap(weak_time, self.handicap_increment, False)
             id += 1
 
-    def add_result(self, board_id: int, white_result: int):
-        try:
-            board: Board = self.boards[board_id - 1]
-            black_result: int
-            if white_result == RESULT_LOSS:
-                black_result = RESULT_GAIN
-            elif white_result == RESULT_DRAW_OR_BYE_05:
-                black_result = RESULT_DRAW_OR_BYE_05
-            elif white_result == RESULT_GAIN:
-                black_result = RESULT_LOSS
-            else:
-                raise PapiException('Invalid result [{}]'.format(white_result))
-            self.__papi_database.add_result(board.white_player.id, self.current_round, white_result)
-            self.__papi_database.add_result(board.black_player.id, self.current_round, black_result)
-            self.__papi_database.close()
-            print('{} {} {}'.format(board.white_player, RESULT_STRINGS[white_result], board.black_player))
-        except KeyError:
-            raise PapiException('Board #{} not found'.format(board_id))
+    def add_result(self, board: Board, white_result: int):
+        black_result: int = {
+            RESULT_LOSS: RESULT_GAIN,
+            RESULT_DRAW_OR_BYE_05: RESULT_DRAW_OR_BYE_05,
+            RESULT_GAIN: RESULT_LOSS,
+        }[white_result]
+        self.__papi_database.add_result(board.white_player.id, self.current_round, white_result)
+        self.__papi_database.add_result(board.black_player.id, self.current_round, black_result)
+        self.__papi_database.close()
+        logger.info('Added result: {} {}.{} {} {} {} {} {} {} {}'.format(
+            self.id, self.current_round, board.id,
+            board.white_player.last_name, board.white_player.first_name, board.white_player.rating,
+            RESULT_STRINGS[white_result],
+            board.black_player.last_name, board.black_player.first_name, board.black_player.rating))
