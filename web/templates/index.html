@@ -12,7 +12,37 @@ Papi-web
 {% block content %}
     <div id="content-wrapper" class="content-wrapper p-3">
         <h1>Papi-web</h1>
-        <table class="table border-black">
+        <h2>Configuration</h2>
+        <table class="table table-striped table-sm table-hover border-black">
+            <thead class="table-dark">
+                <th scope="col">Configuration</th>
+                <th scope="col">Valeur</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">Configuration réseau</th>
+                    <td>{{ papi_web_config.web_host }}:{{ papi_web_config.web_port }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Accès depuis le serveur Papi-web</th>
+                    <td><a href="{{ papi_web_config.local_url }}">{{ papi_web_config.local_url }}</a></td>
+                </tr>
+                <tr>
+                    <th scope="row">Accès depuis le réseau local (LAN/WAN)</th>
+                    <td><a href="{{ papi_web_config.lan_url }}">{{ papi_web_config.lan_url }}</a></td>
+                </tr>
+                <tr>
+                    <th scope="row">Lancement du navigateur au démarrage du serveur</th>
+                    <td>{% if papi_web_config.web_launch_browser %}Oui{% else %}<em>Non</em>{% endif %}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Version de Papi-web</th>
+                    <td>{{ papi_web_info|get_item:'version' }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <h2>Evènements</h2>
+        <table class="table table-striped table-sm table-hover border-black">
             <thead class="table-dark">
                 <th scope="col">Nom</th>
                 <th scope="col">Evènement</th>
@@ -21,7 +51,7 @@ Papi-web
             <tbody>
                 {% for event in events %}
                     <tr>
-                        <th scope="row"><a href="{% url 'show-event' event.id %}" target="_blank"><strong>{{ event.name }}</strong></a></th>
+                        <th scope="row"><a href="{% url 'show-event' event.id %}" target="_blank">{{ event.name }}</a></th>
                         <td>
                             <i class="bi-people-fill" ></i>&nbsp;{{ event.tournaments | length }} tournoi{% if event.tournaments|length > 1 %}s{% endif %}
                             <i class="bi-arrows-fullscreen" ></i>&nbsp;{{ event.screens | length }} écran{% if event.screens|length > 1 %}s{% endif %}

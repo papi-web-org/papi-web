@@ -1,8 +1,13 @@
 import logging
 import os
 import re
+import socket
 from typing import Optional, Dict
 from logging import Logger
+
+from django import get_version
+
+from common.singleton import singleton
 from common.config_reader import ConfigReader
 from common.logger import get_logger, configure_logger
 
@@ -24,6 +29,7 @@ DEFAULT_WEB_PORT: int = 8080
 DEFAULT_WEB_LAUNCH_BROWSER: bool = True
 
 
+@singleton
 class PapiWebConfig(ConfigReader):
     def __init__(self):
         super().__init__(CONFIG_FILE)
@@ -116,3 +122,36 @@ class PapiWebConfig(ConfigReader):
     @property
     def web_launch_browser(self) -> bool:
         return self.__web_launch_browser
+
+    @property
+    def django_version(self) -> str:
+        return get_version()
+
+    def __url(self, ip: str) -> str:
+        return 'http://' + ip + (':' + str(self.web_port) if self.web_port != 80 else '')
+
+    @property
+    def __lan_ip(self) -> Optional[str]:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(0)
+        ip: Optional[str] = None
+        try:
+            s.connect(('10.254.254.254', 1))  # doesn't even have to be reachable
+            ip = s.getsockname()[0]
+        except Exception:
+            pass
+        finally:
+            s.close()
+        return ip
+
+    @property
+    def __local_ip(self) -> str:
+        return '127.0.0.1'
+
+    @property
+    def lan_url(self) -> str:
+        return self.__url(self.__lan_ip)
+
+    @property
+    def local_url(self) -> str:
+        return self.__url(self.__local_ip)

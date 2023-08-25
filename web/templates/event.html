@@ -92,6 +92,10 @@
                                 <th scope="row">Mot de passe de saisie des scores</th>
                                 <td>{% if event.input_password %}********{% else %}<em>Aucun</em>{% endif %}</td>
                             </tr>
+                            <tr>
+                                <th scope="row">Lancement automatique du navigateur</th>
+                                <td>{{ event.css }}</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

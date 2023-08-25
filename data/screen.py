@@ -84,6 +84,10 @@ class AScreen:
     def update(self) -> bool:
         return False
 
+    @property
+    def sets(self) -> List[ScreenSet]:
+        return []
+
 
 class AScreenWithSets(AScreen):
     def __init__(self, screen_id: str, family_id: Optional[str], name: str, type: str, columns: int, menu_text: str,

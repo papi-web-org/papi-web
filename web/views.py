@@ -10,7 +10,7 @@ from django.template.defaulttags import register
 from logging import Logger
 
 from common.logger import get_logger
-from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION
+from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION, PapiWebConfig
 from data.board import Board
 from data.event import Event, get_events
 from data.rotator import Rotator
@@ -69,7 +69,11 @@ def index(request: HttpRequest) -> HttpResponse:
     events: List[Event] = get_events()
     if len(events) == 0:
         messages.error(request, 'No event found')
-    return render(request, 'index.html', {'papi_web_info': papi_web_info, 'events': events})
+    return render(request, 'index.html', {
+        'papi_web_info': papi_web_info,
+        'papi_web_config': PapiWebConfig(),
+        'events': events,
+    })
 
 
 def load_event(request: HttpRequest, event_id: str) -> Optional[Event]:
