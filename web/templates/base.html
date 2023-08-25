@@ -2,7 +2,7 @@
 {% load mathfilters %}
 <html>
     <head>
-        <title>Papi-web {% block title %}Base title{% endblock %}</title>
+        <title>{% block title %}Base title{% endblock %}</title>
         {# This Bootsrap css is added to all pages #}
         <link rel="shortcut icon" type="image/png" href="{% static 'images/papi-web.ico' %}"/>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
