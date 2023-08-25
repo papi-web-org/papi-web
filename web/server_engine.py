@@ -22,8 +22,9 @@ class ServerEngine(Engine):
                 logger.error('Port [{}] already in use, can not start Papi-web server'.format(self._config.web_port))
                 return
         url: str = 'http://{}:{}'.format('localhost', self._config.web_port)
-        logger.info('Opening the welcome page [{}] in a browser...'.format(url))
-        open(url, new=2)
+        if self._config.web_launch_browser:
+            logger.info('Opening the welcome page [{}] in a browser...'.format(url))
+            open(url, new=2)
         logger.info('Starting Papi-web server, please wait...')
         call_command(
             'runserver',

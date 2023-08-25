@@ -21,6 +21,7 @@ TMP_DIR: str = os.path.join('.', 'tmp')
 DEFAULT_LOG_LEVEL: int = logging.INFO
 DEFAULT_WEB_HOST: str = '0.0.0.0'
 DEFAULT_WEB_PORT: int = 8080
+DEFAULT_WEB_LAUNCH_BROWSER: bool = True
 
 
 class PapiWebConfig(ConfigReader):
@@ -29,6 +30,7 @@ class PapiWebConfig(ConfigReader):
         self.__log_level: Optional[int] = None
         self.__web_host: Optional[str] = None
         self.__web_port: Optional[int] = None
+        self.__web_launch_browser: Optional[bool] = None
         log_levels: Dict[int, str] = {
             logging.DEBUG: 'DEBUG',
             logging.INFO: 'INFO',
@@ -76,6 +78,13 @@ class PapiWebConfig(ConfigReader):
                     if self.web_port is None:
                         self._add_error(
                             'invalid port configuration [{}]'.format(self.get(section, key)), section=section, key=key)
+                key = 'launch_browser'
+                if not self.has_option(section, key):
+                    self._add_warning('key not found'.format(), section=section, key=key)
+                else:
+                    self.__web_launch_browser = self._getboolean_safe(section, key)
+                    if self.__web_launch_browser is None:
+                        self._add_error('invalid value [{}]'.format(self.get(section, key)), section=section, key=key)
         else:
             self._add_info('setting default configuration')
         if self.log_level is None:
@@ -88,6 +97,9 @@ class PapiWebConfig(ConfigReader):
         if self.web_port is None:
             self.__web_port = DEFAULT_WEB_PORT
         self._add_info('port: {}'.format(self.web_port))
+        if self.web_launch_browser is None:
+            self.__web_launch_browser = DEFAULT_WEB_LAUNCH_BROWSER
+        self._add_info('launch_browser: {}'.format(self.__web_launch_browser))
 
     @property
     def log_level(self) -> int:
@@ -100,3 +112,7 @@ class PapiWebConfig(ConfigReader):
     @property
     def web_port(self) -> int:
         return self.__web_port
+
+    @property
+    def web_launch_browser(self) -> bool:
+        return self.__web_launch_browser
