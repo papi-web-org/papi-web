@@ -2,7 +2,7 @@
 
 Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des résultats sur le site fédéral, a été développé à titre gracieux pour les arbitres et organisateurs de la Fédération Française des Échecs par Pascal AUBRY. Il est livré sans aucune garantie et peut être redistribué, sans aucune contrepartie financière.
 
-## Papi-web, ça vient d'où ?
+## Papi-web, c'est arrivé comment ?
 
 Papi-web est né de quelques observations simples : 
 
@@ -44,20 +44,23 @@ En parallèle, un programme en ligne de commande se charge de mettre en ligne su
 
 ## Papi-web, qui l'utilise ?
 
-Le logiciel Papi-web peut être utilisé gratuitement et sans autorisation par tou·tes celles·ceux qui le considérent comme un Beerware lorsqu'ils croisent son auteur :-)
+Le logiciel Papi-web peut être utilisé gratuitement et sans autorisation par tou·tes celles·ceux qui le considérent comme un Beerware lorsqu'il·elles croisent son auteur :-)
 
-Vous n'en faites pas encore partie ? Lancez-vous !
+Vous n'en faites pas encore partie ? Lancez-vous en découvrant les nouveautés de la version 2 !
 
-# En savoir plus...
+Pour être prévenu des nouvelles versions de Papi-web, il suffit de s'abonner à la liste de diffusion papi-web-news@echecs35.fr (demande par mail à pascal.aubry@echecs35.fr).
 
-- Comment installer et mettre à jour Papi-web
-- Comment utiliser Papi-web
+# Installer Papi-web
 
-# Comment être prévenu des nouvelles versions ?
+A compléter.
 
-Il suffit de s'abonner à la liste de diffusion papi-web-news@echecs35.fr (demande par mail à pascal.aubry@echecs35.fr).
+# Mettre à jour Papi-web
 
-# Nouveautés de la version 2
+A compléter.
+
+# Utiliser Papi-web
+
+A compléter.
 
 # ChangeLog
 
