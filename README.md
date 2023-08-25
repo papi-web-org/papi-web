@@ -4,7 +4,7 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 
 ## Papi-web, ça vient d'où ?
 
-Papi-web est né de quelques observations simples :
+Papi-web est né de quelques observations simples : 
 
 - Pendant les tournois, les arbitres « à l'ancienne » (qui se reconnaitront :-) ) passent un temps non négligeable sur le clavier de leur ordinateur à entrer les résultats des joueur·euses, puis à les vérifier ; l'arbitrage des parties en souffre, c'est pourtant le coeur de métier des arbitres !
 - La saisie des résultats par l'arbitre est souvent source d'erreurs, en simple saisie en cadence lente à cause des erreurs sur les feuilles de partie, et surtout en double saisie en cadence rapide quand les joueur·euses notent leur scores sur un papier et que l'arbitre les reporte ensuite dans la « boule Papi » ;
