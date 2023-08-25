@@ -25,11 +25,11 @@ Papi-web
                 </tr>
                 <tr>
                     <th scope="row">Accès depuis le serveur Papi-web</th>
-                    <td><a href="{{ papi_web_config.local_url }}">{{ papi_web_config.local_url }}</a></td>
+                    <td><a href="{{ papi_web_config.local_url }}" target="_blank">{{ papi_web_config.local_url }}</a></td>
                 </tr>
                 <tr>
                     <th scope="row">Accès depuis le réseau local (LAN/WAN)</th>
-                    <td><a href="{{ papi_web_config.lan_url }}">{{ papi_web_config.lan_url }}</a></td>
+                    <td>{% if papi_web_config.lan_url %}<a href="{{ papi_web_config.lan_url }}" target="_blank">{{ papi_web_config.lan_url }}</a>{% else %}<em>-</em>{% endif %}</td>
                 </tr>
                 <tr>
                     <th scope="row">Lancement du navigateur au démarrage du serveur</th>

@@ -204,7 +204,7 @@ class Tournament:
                     self.__current_round = round
                     break
             if self.current_round == 0:
-                self.__current_round = self.rounds
+                self.__current_round = paired_rounds[-1]
 
     def __calculate_points(self):
         previous_rounds: List[int] = list(range(1, self.__current_round))

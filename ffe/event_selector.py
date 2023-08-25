@@ -28,7 +28,7 @@ class EventSelector:
                 event: Event = self.__events[num - 1]
                 logger.info('[{}] {} ({}.ini)'.format(num, event.name, event.id))
             while event_num is None:
-                logger.info('Veuillez entrer le numéro de votre évènement (ou [Q] pour quitter) : ')
+                logger.info('Veuillez entrer le numéro de votre évènement (ou [Q] pour quitter) :')
                 choice: str = input().strip().upper()
                 if choice == 'Q':
                     return False

@@ -86,15 +86,11 @@
                             </tr>
                             <tr>
                                 <th scope="row">Personnalisation CSS</th>
-                                <td>{{ event.css }}</td>
+                                <td>{% if event.css %}{{ event.css }}{% else %}<em>Aucune</em>{% endif %}</td>
                             </tr>
                             <tr>
                                 <th scope="row">Mot de passe de saisie des scores</th>
                                 <td>{% if event.input_password %}********{% else %}<em>Aucun</em>{% endif %}</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Lancement automatique du navigateur</th>
-                                <td>{{ event.css }}</td>
                             </tr>
                         </tbody>
                     </table>

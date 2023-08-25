@@ -31,7 +31,7 @@ class ActionSelector:
         logger.info('Tournois : {}'.format(
             ', '.join([(str(tournament.ffe_id) + ' (' + tournament.file + ')') for tournament in tournaments])))
         logger.info('Actions :')
-        logger.info('  - [T] Test les codes d\'accès des tournois')
+        logger.info('  - [T] Tester les codes d\'accès des tournois')
         logger.info('  - [V] Rendre les tournois visibles sur le site fédéral')
         logger.info('  - [H] Télécharger les factures d\'homologation')
         logger.info('  - [U] Mettre en ligne les tournois')

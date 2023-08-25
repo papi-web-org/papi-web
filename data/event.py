@@ -719,7 +719,7 @@ class Event(ConfigReader):
         section = 'timer.events'
         event_ids: List[str] = self._get_subsections_with_prefix(section)
         if not event_ids:
-            self._add_error('no event found, timer will not be available'.format(), section='timer.events.*')
+            self._add_warning('no event found, timer will not be available'.format(), section='timer.events.*')
             return
         for event_id in event_ids:
             self.__build_timer_event(event_id, timer)

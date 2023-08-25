@@ -37,7 +37,9 @@ class PapiWebConfig(ConfigReader):
         self.__web_host: Optional[str] = None
         self.__web_port: Optional[int] = None
         self.__web_launch_browser: Optional[bool] = None
-        log_levels: Dict[int, str] = {
+        self.__local_ip: Optional[str] = None
+        self.__lan_ip: Optional[str] = None
+        self.__log_levels: Dict[int, str] = {
             logging.DEBUG: 'DEBUG',
             logging.INFO: 'INFO',
             logging.WARNING: 'WARNING',
@@ -54,7 +56,7 @@ class PapiWebConfig(ConfigReader):
                 else:
                     level: str = self.get(section, key)
                     try:
-                        self.__log_level = [k for k, v in log_levels.items() if v == level][0]
+                        self.__log_level = [k for k, v in self.__log_levels.items() if v == level][0]
                     except IndexError:
                         self._add_warning('invalid log level [{}]'.format(level), section=section, key=key)
             section = 'web'
@@ -92,24 +94,24 @@ class PapiWebConfig(ConfigReader):
                     if self.__web_launch_browser is None:
                         self._add_error('invalid value [{}]'.format(self.get(section, key)), section=section, key=key)
         else:
-            self._add_info('setting default configuration')
+            self._add_debug('setting default configuration')
         if self.log_level is None:
             self.__log_level = DEFAULT_LOG_LEVEL
         configure_logger(self.log_level)
-        self._add_info('log: {}'.format(log_levels[self.log_level]))
         if self.web_host is None:
             self.__web_host = DEFAULT_WEB_HOST
-        self._add_info('host: {}'.format(self.web_host))
         if self.web_port is None:
             self.__web_port = DEFAULT_WEB_PORT
-        self._add_info('port: {}'.format(self.web_port))
         if self.web_launch_browser is None:
             self.__web_launch_browser = DEFAULT_WEB_LAUNCH_BROWSER
-        self._add_info('launch_browser: {}'.format(self.__web_launch_browser))
 
     @property
     def log_level(self) -> int:
         return self.__log_level
+
+    @property
+    def log_level_str(self) -> str:
+        return self.__log_levels[self.__log_level]
 
     @property
     def web_host(self) -> str:
@@ -127,31 +129,35 @@ class PapiWebConfig(ConfigReader):
     def django_version(self) -> str:
         return get_version()
 
-    def __url(self, ip: str) -> str:
+    def __url(self, ip: Optional[str]) -> Optional[str]:
+        if ip is None:
+            return None
         return 'http://' + ip + (':' + str(self.web_port) if self.web_port != 80 else '')
 
     @property
-    def __lan_ip(self) -> Optional[str]:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.settimeout(0)
-        ip: Optional[str] = None
-        try:
-            s.connect(('10.254.254.254', 1))  # doesn't even have to be reachable
-            ip = s.getsockname()[0]
-        except Exception:
-            pass
-        finally:
-            s.close()
-        return ip
+    def lan_ip(self) -> Optional[str]:
+        if self.__lan_ip is None:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.settimeout(0)
+            try:
+                s.connect(('10.254.254.254', 1))  # doesn't even have to be reachable
+                self.__lan_ip = s.getsockname()[0]
+            except Exception:
+                pass
+            finally:
+                s.close()
+        return self.__lan_ip
 
     @property
-    def __local_ip(self) -> str:
-        return '127.0.0.1'
+    def local_ip(self) -> str:
+        if self.__local_ip is None:
+            self.__local_ip = '127.0.0.1'
+        return self.__local_ip
 
     @property
     def lan_url(self) -> str:
-        return self.__url(self.__lan_ip)
+        return self.__url(self.lan_ip)
 
     @property
     def local_url(self) -> str:
-        return self.__url(self.__local_ip)
+        return self.__url(self.local_ip)

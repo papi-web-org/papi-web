@@ -20,7 +20,7 @@ class ScreenSet:
         self.__part: Optional[int] = part
         self.__parts: Optional[int] = parts
         self.__name: Optional[str] = name
-        self.__first_tem: Optional[Any] = None
+        self.__first_item: Optional[Any] = None
         self.__last_item: Optional[Any] = None
         self.__items_lists: Optional[List[List[Any]]] = None
         if self.__name is None:
@@ -54,18 +54,21 @@ class ScreenSet:
     def __extract_data(self, items: List[Any], force_even: bool = False):
         if self.__items_lists is not None:
             return
+        if not items:
+            self.__items_lists = [[], ] * self.__columns
+            return
         # at first select the desired items
         selected_first_index: int = 0
         selected_last_index: int = 0
         if self.first is None and self.last is None and self.part is None:
             selected_first_index = 0
-            selected_last_index = len(items) - 1
+            selected_last_index = len(items)
         elif self.first is not None and self.last is not None:
             selected_first_index = self.first - 1
             selected_last_index = self.last
         elif self.first is not None:
             selected_first_index = self.first - 1
-            selected_last_index = len(items) - 1
+            selected_last_index = len(items)
         elif self.last is not None:
             selected_first_index = 0
             selected_last_index = self.last
@@ -105,8 +108,10 @@ class ScreenSet:
     def __extract_boards(self):
         if self.__items_lists is None:
             self.__extract_data(self.tournament.boards, force_even=False)
-            self.__name = self.__name.replace('%f', str(self.first_board.id))
-            self.__name = self.__name.replace('%l', str(self.last_board.id))
+            if self.first_board:
+                self.__name = self.__name.replace('%f', str(self.first_board.id))
+            if self.last_board:
+                self.__name = self.__name.replace('%l', str(self.last_board.id))
 
     @property
     def boards_lists(self) -> List[List[Board]]:
@@ -126,8 +131,10 @@ class ScreenSet:
     def __extract_players_by_name(self):
         if self.__items_lists is None:
             self.__extract_data(self.tournament.players_by_name, force_even=False)
-            self.__name = self.__name.replace('%f', self.first_player_by_name.last_name)
-            self.__name = self.__name.replace('%l', self.last_player_by_name.last_name)
+            if self.first_player_by_name:
+                self.__name = self.__name.replace('%f', self.first_player_by_name.last_name)
+            if self.last_player_by_name:
+                self.__name = self.__name.replace('%l', self.last_player_by_name.last_name)
 
     @property
     def players_by_name_lists(self) -> List[List[Player]]:
@@ -147,8 +154,10 @@ class ScreenSet:
     def __extract_players_by_rating(self):
         if self.__items_lists is None:
             self.__extract_data(self.tournament.players_by_rating, force_even=True)
-            self.__name = self.__name.replace('%f', str(self.first_player_by_rating.rating))
-            self.__name = self.__name.replace('%l', str(self.last_player_by_rating.rating))
+            if self.first_player_by_rating:
+                self.__name = self.__name.replace('%f', str(self.first_player_by_rating.rating))
+            if self.last_player_by_rating:
+                self.__name = self.__name.replace('%l', str(self.last_player_by_rating.rating))
 
     @property
     def players_by_rating_tuple_lists(self) -> List[Tuple[List[Player], List[Player]]]:
