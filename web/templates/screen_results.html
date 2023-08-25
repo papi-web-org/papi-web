@@ -1,3 +1,4 @@
+{% with tournaments_len=screen.tournaments|length %}
 <h2 class="set-title">{{ screen.name }}</h2>
 <div class="row screen-set-row">
     {% for results in screen.results_lists %}
@@ -5,8 +6,8 @@
             <table class="table table-striped table-sm">
                 <thead class="table-dark">
                     <th scope="col" class="time">Heure</th>
-                    <th scope="col" class="tournament">Tournoi</th>
-                    <th scope="col" class="board-number">Ech</th>
+                    {% if tournaments_len > 1 %}<th scope="col" class="tournament">Tournoi</th>{% endif %}
+                    <th scope="col" class="board-number">{% if tournaments_len > 1 %}Rde.{% endif %}Ech</th>
                     <th scope="col" class="player">Blancs</th>
                     <th scope="col" class="score">Score</th>
                     <th scope="col" class="player">Noirs</th>
@@ -15,8 +16,8 @@
                 {% for result in results %}
                     <tr class="result-row">
                         <th scope="row" class="timestamp">{{ result.timestamp_str }}</th>
-                        <th scope="row" class="tournament">{{ result.tournament_id }}</th>
-                        <th scope="row" class="board-number">{{ result.round }}.{{ result.board_id }}</th>
+                        {% if tournaments_len > 1 %}<th scope="row" class="tournament">{{ result.tournament_id }}</th>{% endif %}
+                        <th scope="row" class="board-number">{% if tournaments_len > 1 %}{{ result.round }}.{% endif %}{{ result.board_id }}</th>
                         <th scope="row" class="player">{{ result.white_player }}</th>
                         <th scope="row" class="score">{{ result.result_str }}</th>
                         <th scope="row" class="player">{{ result.black_player }}</th>
@@ -27,3 +28,4 @@
         </div>
     {% endfor %}
 </div>
+{% endwith %}

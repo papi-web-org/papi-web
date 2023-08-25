@@ -28,7 +28,10 @@
 .screen .set-title,
 .screen-boards .score,
 .screen-boards .points,
-.screen-boards-update .result-button {
+.screen-boards-update .result-button,
+.screen-results .timee,
+.screen-results .score,
+.screen-results .board-number {
     text-align: center;
 }
 .screen-players .player,

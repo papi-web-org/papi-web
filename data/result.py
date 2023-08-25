@@ -104,16 +104,16 @@ class Result:
             group += 1
             tournament_id: str = matches.group(group)
             group += 1
-            board_id: int
-            try:
-                board_id = int(matches.group(group))
-            except ValueError:
-                logger.warning('invalid board id [{}] for result file [{}]'.format(matches.group(group), file))
-                continue
-            group += 1
             round: int
             try:
                 round = int(matches.group(group))
+            except ValueError:
+                logger.warning('invalid round number [{}] for result file [{}]'.format(matches.group(group), file))
+                continue
+            group += 1
+            board_id: int
+            try:
+                board_id = int(matches.group(group))
             except ValueError:
                 logger.warning('invalid board id [{}] for result file [{}]'.format(matches.group(group), file))
                 continue
