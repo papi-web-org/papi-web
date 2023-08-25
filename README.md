@@ -90,8 +90,58 @@ Pour installer une nouvelle version de Papi-web :
   - éventuellement les fichiers Papi si vous les avez stockés dans le répertoire `papi/`.
 
 # Utiliser Papi-web
-
 L'utilisation de Papi-web nécessite un peu d'apprentissage : il vous sera très vite indispensable, en particulier pour gérer de grois évènements, mais il est fortement conseillé de s'entrainer sur des évènements modestes dans un premier temps.
+
+## Configuration de Papi-web (`papi-web.ini`)
+La configuration fournie par défaut dans le fichier `papi-web.ini` est suffisante pour la très grande majorité des cas.
+
+### Messages (`[loggin]`)
+#### level
+```
+[logging]
+level = INFO
+```
+Pour obtenir plus (resp. moins) de messages utiliser `level = DEBUG` (resp. `level = WARNING`).
+### Réseau (`[web]`)
+#### host
+```
+[web]
+host = 0.0.0.0
+```
+La valeur `0.0.0.0` rend Papi-web accessible depuis tous les clients de votrer réseau local (consulter votre administrateur·trice réseau pour restreindre les plages IP autorisées).
+#### port
+```
+[web]
+**port** = 80
+```
+La valeur par défaut `80` est celle classiquement utilisée par les serveurs web, qui rendra le serveur accessible depuis votre serveur à l'URL `http://127.0.0.1` ou bien `http://localhost`, et depuis un client du réseau local à l'URL `http://<ip_serveur>`. Si le port `80` est déjà utilisé sur votre serveur (cela est indiqué lorsqu'on lance `server.bat`), vous pouvez changer le port, par exemple pour `8080` (les URLs à utiliser seront alors `http://127.0.0.1::8080`, `http://localhost:8080` et `http://<ip_serveur>:8080`).
+#### launch_browser
+```
+[web]
+**launch_brower** = on
+```
+Par défaut, le navigateur web ouvre la page d'accueil au démarrage du serveur (pour ne pas ouvrir automatiquement la page d'accueil, utilisez `launch_browser = off`).
+
+## Gestion du serveur Papi-web (`server.bat`)
+
+Le serveur Papi-web se lance en exécutant le script `server.bat` :
+```
+C:\...\papi-web-<version>$ server.bat
+INFO     log level: INFO
+INFO     host: 0.0.0.0
+INFO     port: 80
+INFO     local URL: http://127.0.0.1
+INFO     LAN/WAN URL: http://192.168.1.79
+INFO     Setting up Django...
+INFO     Opening the welcome page [http://127.0.0.1] in a browser...
+INFO     Starting Papi-web server, please wait...
+August 25, 2023 - 22:48:04
+Django version 4.2.3, using settings 'web.settings'
+Starting development server at http://0.0.0.0:80/
+Quit the server with CTRL-BREAK.
+```
+On arrête le serveur en tapant `Ctrl-C`.
+
 
 # ChangeLog
 
