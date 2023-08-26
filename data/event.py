@@ -120,9 +120,39 @@ class Event(ConfigReader):
             if key not in section_keys:
                 self._add_warning('unknown key, ignored'.format(), section=section, key=key)
 
+    def __rename_section(self, old_name: str, new_name: str):
+        self.add_section(new_name)
+        for option in self.options(old_name):
+            self.set(new_name, option, self.get(old_name, option))
+            self.remove_option(old_name, option)
+        self.remove_section(old_name)
+
     def __build_tournaments(self):
         tournament_ids: List[str] = self._get_subsections_with_prefix('tournament')
-        if not tournament_ids:
+        if self.has_section('tournament'):
+            if tournament_ids:
+                self._add_error(
+                    'section [tournament] should be used only when is single tournament is used, '
+                    'found other tournament sections ({})'.format(
+                        ', '.join(['[' + id + ']' for id in tournament_ids])
+                    ), section='tournament.*')
+                return
+            default_tournament_id: str = 'default'
+            old_tournament_section: str = 'tournament'
+            new_tournament_section: str = 'tournament.' + default_tournament_id
+            self.__rename_section(old_tournament_section, new_tournament_section)
+            self._add_info(
+                'single tournament found, section [{}] moved to [{}]'.format(
+                    old_tournament_section, new_tournament_section), section=old_tournament_section)
+            old_handicap_section: str = 'tournament.handicap'
+            if self.has_section(old_handicap_section):
+                new_handicap_section: str = 'tournament.' + default_tournament_id + '.handicap'
+                self.__rename_section(old_handicap_section, new_handicap_section)
+                self._add_info(
+                    'section [{}] moved to [{}]'.format(
+                        old_handicap_section, new_handicap_section), section=old_handicap_section)
+            tournament_ids.append(default_tournament_id)
+        elif not tournament_ids:
             self._add_error('no tournament found'.format(), section='tournament.*')
             return
         for tournament_id in tournament_ids:
@@ -363,8 +393,60 @@ class Event(ConfigReader):
     def __build_screens(self):
         screen_ids: List[str] = self._get_subsections_with_prefix('screen')
         if not screen_ids:
-            self._add_error('no screen found'.format(), section='screen.*')
-            return
+            self._add_info('no screen found, adding default screens'.format(), section='screen.*')
+            for tournament_id in self.tournaments:
+                name_prefix: str = ''
+                if len(self.tournaments) > 1:
+                    name_prefix = self.tournaments[tournament_id].name + ' - '
+                data: Dict[str, Dict[str, str]] = {
+                    tournament_id + '-' + SCREEN_TYPE_BOARDS + '-input': {
+                        'type': SCREEN_TYPE_BOARDS,
+                        'update': 'on',
+                        'name': name_prefix + 'Saisie des résultats',
+                        'menu': 'none',
+                    },
+                    tournament_id + '-' + SCREEN_TYPE_BOARDS + '-print': {
+                        'type': SCREEN_TYPE_BOARDS,
+                        'update': 'off',
+                        'name': name_prefix + 'Appariements par échiquier',
+                        'menu': 'view',
+                        'menu_text': name_prefix + 'Appariements par échiquier',
+                    },
+                    tournament_id + '-' + SCREEN_TYPE_PLAYERS: {
+                        'type': SCREEN_TYPE_PLAYERS,
+                        'name': name_prefix + 'Appariements par ordre alphabétique',
+                        'menu': 'view',
+                        'menu_text': name_prefix + 'Appariements par ordre alphabétique',
+                    },
+                    tournament_id + '-' + SCREEN_TYPE_RESULTS: {
+                        'type': SCREEN_TYPE_RESULTS,
+                        'name': name_prefix + 'Derniers résultats',
+                        'menu': 'view',
+                        'menu_text': name_prefix + 'Derniers résultats',
+                    },
+                }
+                for screen_id, options in data.items():
+                    section: str = 'screen.' + screen_id
+                    self.add_section(section)
+                    for key, value in options.items():
+                        self.set(section, key, value)
+                    screen_ids.append(screen_id)
+                data: Dict[str, Dict[str, str]] = {
+                    tournament_id + '-' + SCREEN_TYPE_BOARDS + '-input.' + SCREEN_TYPE_BOARDS: {
+                        'tournament': tournament_id,
+                    },
+                    tournament_id + '-' + SCREEN_TYPE_BOARDS + '-print.' + SCREEN_TYPE_BOARDS: {
+                        'tournament': tournament_id,
+                    },
+                    tournament_id + '-' + SCREEN_TYPE_PLAYERS + '.players': {
+                        'tournament': tournament_id,
+                    },
+                }
+                for screen_id, options in data.items():
+                    section: str = 'screen.' + screen_id
+                    self.add_section(section)
+                    for key, value in options.items():
+                        self.set(section, key, value)
         for screen_id in screen_ids:
             self.__build_screen(screen_id)
         if not len(self.__screens):
@@ -432,14 +514,13 @@ class Event(ConfigReader):
                     if not self.has_option(new_section, key):
                         self.set(new_section, key, value)
         key = 'type'
-        default_type: str = SCREEN_TYPE_BOARDS
         if not self.has_option(section, key):
-            self._add_warning('key not found, screen ignored'.format(default_type), section=section, key=key)
+            self._add_warning('key not found, screen ignored'.format(), section=section, key=key)
             return
         screen_type: str = self.get(section, key)
         if screen_type not in SCREEN_TYPE_NAMES:
             self._add_warning(
-                'invalid screen type [{}], screen ignored'.format(screen_type, default_type), section=section, key=key)
+                'invalid screen type [{}], screen ignored'.format(screen_type), section=section, key=key)
             return
         screen_set_sections: List[str] = []
         section2 = section + '.' + screen_type
@@ -453,8 +534,13 @@ class Event(ConfigReader):
             else:
                 screen_set_sections = self._get_subsections_with_prefix(section2)
             if not screen_set_sections:
-                self._add_warning('section not found, screen ignored'.format(section2), section=section2, key=key)
-                return
+                if len(self.tournaments) == 1:
+                    self.add_section(section2)
+                    screen_set_sections.append(section2)
+                    self._add_info('single tournament, added section [{}]'.format(section2), section=section)
+                else:
+                    self._add_warning('section not found, screen ignored'.format(section2), section=section2)
+                    return
         elif screen_type == SCREEN_TYPE_PLAYERS:
             if self.has_section(section2):
                 screen_set_sections = [section2, ]
@@ -465,8 +551,13 @@ class Event(ConfigReader):
             else:
                 screen_set_sections = self._get_subsections_with_prefix(section2)
             if not screen_set_sections:
-                self._add_warning('section not found, screen ignored'.format(section2), section=section2)
-                return
+                if len(self.tournaments) == 1:
+                    self.add_section(section2)
+                    screen_set_sections.append(section2)
+                    self._add_info('single tournament, added section [{}]'.format(section2), section=section)
+                else:
+                    self._add_warning('section not found, screen ignored'.format(section2), section=section2)
+                    return
         elif screen_type == SCREEN_TYPE_RESULTS:
             pass
         else:

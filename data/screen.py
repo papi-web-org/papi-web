@@ -18,14 +18,14 @@ SCREEN_TYPE_NAMES: Dict[str, str] = {
 
 
 class AScreen:
-    def __init__(self, screen_id: str, family_id: Optional[str], name: str, type: str, columns: int, menu_text: str,
-                 menu: Optional[str], show_timer: bool):
+    def __init__(self, screen_id: str, family_id: Optional[str], name: str, type: str, columns: int,
+                 menu_text: Optional[str], menu: Optional[str], show_timer: bool):
         self.__id: str = screen_id
         self.__family_id: Optional[str] = family_id
         self._name: str = name
         self.__type: str = type
         self.__columns: int = columns
-        self._menu_text: str = menu_text
+        self._menu_text: Optional[str] = menu_text
         self.__menu: str = menu
         self.__show_timer: bool = show_timer
         self.__menu_screens: Optional[List[AScreen]] = None
@@ -90,8 +90,8 @@ class AScreen:
 
 
 class AScreenWithSets(AScreen):
-    def __init__(self, screen_id: str, family_id: Optional[str], name: str, type: str, columns: int, menu_text: str,
-                 menu: Optional[str], show_timer: bool, sets: List[ScreenSet]):
+    def __init__(self, screen_id: str, family_id: Optional[str], name: str, type: str, columns: int,
+                 menu_text: Optional[str], menu: Optional[str], show_timer: bool, sets: List[ScreenSet]):
         super().__init__(screen_id, family_id, name, type, columns, menu_text, menu, show_timer)
         self.__sets: List[ScreenSet] = sets
 
@@ -151,7 +151,7 @@ class AScreenWithSets(AScreen):
 
 class ScreenBoards(AScreenWithSets):
     def __init__(
-            self, screen_id: str, family_id: Optional[str], name: str, columns: int, menu_text: str,
+            self, screen_id: str, family_id: Optional[str], name: str, columns: int, menu_text: Optional[str],
             menu: Optional[str], show_timer: bool, sets: List[ScreenSet], update: bool):
         super().__init__(screen_id, family_id, name, SCREEN_TYPE_BOARDS, columns, menu_text, menu, show_timer, sets)
         self.__update: bool = update
@@ -171,7 +171,7 @@ class ScreenBoards(AScreenWithSets):
 
 class ScreenPlayers(AScreenWithSets):
     def __init__(
-            self, screen_id: str, family_id: Optional[str], name: str, columns: int, menu_text: str,
+            self, screen_id: str, family_id: Optional[str], name: str, columns: int, menu_text: Optional[str],
             menu: Optional[str], show_timer: bool, sets: List[ScreenSet]):
         super().__init__(
             screen_id, family_id, name, SCREEN_TYPE_PLAYERS, columns, menu_text, menu, show_timer, sets)
@@ -187,8 +187,8 @@ class ScreenPlayers(AScreenWithSets):
 
 class ScreenResults(AScreen):
     def __init__(
-            self, event_id: str, screen_id: str, family_id: Optional[str], name: str, columns: int, menu_text: str,
-            menu: Optional[str], show_timer: bool, limit: int):
+            self, event_id: str, screen_id: str, family_id: Optional[str], name: str, columns: int,
+            menu_text: Optional[str], menu: Optional[str], show_timer: bool, limit: int):
         super().__init__(
             screen_id, family_id, name, SCREEN_TYPE_RESULTS, columns, menu_text, menu, show_timer)
         self.__event_id = event_id

@@ -63,7 +63,7 @@ Un ordinateur sous Windows avec :
 [!NOTE]
 L'installation de XAMPP ou d'autres outils tiers n'est plus nécessaire à partir de la version 2.0.
 
-## téléchargement et installation
+## Téléchargement et installation
 
 La dernière version de Papi-web doit être téléchargée depuis ce répertoire, décompressée et installée sur l'ordinateur qui jouera le rôle de serveur, sur lequel seront également les fichiers Papi.
 
@@ -101,7 +101,7 @@ La configuration fournie par défaut dans le fichier `papi-web.ini` est suffisan
 [logging]
 level = INFO
 ```
-Pour obtenir plus (resp. moins) de messages utiliser `level = DEBUG` (resp. `level = WARNING`).
+Pour obtenir plus de messages utiliser `level = DEBUG`.
 ### Réseau (`[web]`)
 #### host
 ```
@@ -112,13 +112,13 @@ La valeur `0.0.0.0` rend Papi-web accessible depuis tous les clients de votrer r
 #### port
 ```
 [web]
-**port** = 80
+port = 80
 ```
 La valeur par défaut `80` est celle classiquement utilisée par les serveurs web, qui rendra le serveur accessible depuis votre serveur à l'URL `http://127.0.0.1` ou bien `http://localhost`, et depuis un client du réseau local à l'URL `http://<ip_serveur>`. Si le port `80` est déjà utilisé sur votre serveur (cela est indiqué lorsqu'on lance `server.bat`), vous pouvez changer le port, par exemple pour `8080` (les URLs à utiliser seront alors `http://127.0.0.1::8080`, `http://localhost:8080` et `http://<ip_serveur>:8080`).
 #### launch_browser
 ```
 [web]
-**launch_brower** = on
+launch_brower = on
 ```
 Par défaut, le navigateur web ouvre la page d'accueil au démarrage du serveur (pour ne pas ouvrir automatiquement la page d'accueil, utilisez `launch_browser = off`).
 
@@ -142,6 +142,137 @@ Quit the server with CTRL-BREAK.
 ```
 On arrête le serveur en tapant `Ctrl-C`.
 
+## Utilisation de l'interface avec le site fédéral
+
+Les outils d'interface avec le site fédéral se lancent en exécutant le script `ffe.bat` :
+```
+C:\...\papi-web-<version>$ ffe.bat
+INFO     [1] Open Fide de domloup (domloup-fide.ini)
+INFO     [2] Championnat de France de parties rapides (france-rapide.ini)
+INFO     Veuillez entrer le numéro de votre évènement (ou [Q] pour quitter) :
+2
+INFO     Evènement : Championnat de France de parties rapides
+INFO     Tournois : 58878 (C:\...\58878.papi)
+INFO     Actions :
+INFO       - [T] Tester les codes d'accès des tournois
+INFO       - [V] Rendre les tournois visibles sur le site fédéral
+INFO       - [H] Télécharger les factures d'homologation
+INFO       - [U] Mettre en ligne les tournois
+INFO       - [Q] Revenir à la liste des évènements
+INFO     Entrez votre choix :
+```
+[!NOTE]
+Pour utiliser les outils d'interface avec le site fédéral sur les tournois de vos évènements, il est nécessaire de déclarer le numéro d'homologation et le code d'accès des tournois.
+
+# Configurer vos évènements
+
+## Configuration d'un petit tournoi amical
+
+Même pour un petit tournoi amical au club, l'utilisation de Papi-web pour l'entrée des résultats permet de fluidifier le déroulement de la compétition.
+On crée un fichier `amical.ini` dans le répertoire `events` pour déclarer l'évènement.
+```
+[event]
+name = Tournoi amical 17 juin 2023
+
+[tournament] 
+name = Tournoi amical
+filename = amical-20230617
+```
+La rubrique `[event]` est obligatoire et permet de déclarer le nom de l'évènement.
+
+Le tournoi est nommé `Tournoi amical` et le fichier Papi du tournoi est `amical-20230617.papi`, stocké dans le répertoire par défaut `papi/` (pour le localiser à un autre endroit, on utilisera par exemple `path = c:\...\echecs\domloup\2023\tournois\amical`)
+
+Lorsqu'aucun écran n'est déclaré, Papi-web ajoute automatiquement, pour chaque tournoi, les quatre écrans suivants :
+- saisie des résultats
+- affichage des appariements par échiquier
+- affichage des appariements par ordre alphabétique
+- affichage des derniers résultats
+
+La configuration d'un écran de saisie des résultats se fait en déclarant un écran de type (`type = boards`, affichage par échiquier) en positionnant `update = true` :
+```
+[screen.saisie]
+type = boards
+update = true
+[screen.saisie.boards]
+tournament = amical
+```
+
+TODO Positionner par défaut lorsqu'il n'y a qu'un tournoi
+
+
+
+
+
+
+
+Démarrer le serveur Papi-Web présente la page d'accueil avec un lien vers la page de l'évènement, et la page de l'évènement présente un lien vers l'écran de saisie des résultats.
+
+Il ne reste plus qu'à apparier la première ronde, demander aux joueur·euses de saisir leurs résultats, apparier les rondes suivantes, ...
+
+[!NOTE]
+Il est également possible 
+## Configuration d'un petit tournoi homologué
+
+Pour pouvoir utiliser les outils d'interface avec le site fédéral, il faut préciser le numéro d'homologation du tournoi et le code d'accès du tournoi sur le site fédéral de gestion des tournois.
+```
+[tournament.homologué]
+path = C:\OneDrive\echecs\domloup\2023\tournois\officiel
+filename = homologué-20230617
+name = Tournoi homologué 17 juin 2023
+ffe_id = 57777
+ffe_password = KJGYREIOBZ
+```
+[!NOTE]
+Lorsque l'on précise le numéro d'homologation (`ffe_id`), si `filename` n'est pas précisé alors Papi-web cherchera un fichier dont le nom est le numéro d'homologation (ici `57777.papi`), dans le répertoire précisé par `path` ou dans le répertoire `papi/` par défaut.
+
+En précisant simplement `ffe_id` et `ffe_password`, les opérations sur le site fédéral seront accessibles.
+
+## Utilisation de plusieurs écrans de saisie
+
+A partir de quelques dizaines de joueurs, un écran de saisie unique devient illisible et il est nécessaire de partager les échiquiers entre plusieurs écrans :
+```
+[screen.saisie-1]
+type = boards
+update = true
+[screen.saisie-1.boards]
+tournament = amical
+first = 1
+last = 20
+
+[screen.saisie-2]
+type = boards
+update = true
+[screen.saisie-2.boards]
+tournament = amical
+first = 21
+```
+On définit ainsi deux écrans de saisie, le premier pour les échiquiers 1 à 20 et le second pour les autres.
+
+Il est également possible (et souvent beaucoup plus pratique) de demander à Papi-web de séparer les échiquiers en partie égales, par exemple :
+```
+[screen.saisie-1]
+type = boards
+update = true
+[screen.saisie-1.boards]
+tournament = amical
+part = 1
+parts = 2
+
+[screen.saisie-2]
+type = boards
+update = true
+[screen.saisie-2.boards]
+tournament = amical
+part = 2
+parts = 2
+```
+Le premier écran de saisie affichera la première moitié des échiquiers, le second les autres.
+
+Lorsque l'on utilise plusieurs écrans de saisie il est pratique de pouvoir rapidement passer de l'un à l'autre, c'est le rôle des menus des écrans.
+
+La directive `menu` permet de préciser quel menu sera affiché sur un écran
+
+## Tournoi à handicap
 
 # ChangeLog
 
