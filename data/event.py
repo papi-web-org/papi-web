@@ -691,8 +691,11 @@ class Event(ConfigReader):
         for section in sections:
             key = 'tournament'
             if not self.has_option(section, key):
-                self._add_warning('key not found, screen set ignored'.format(), section=section, key=key)
-                continue
+                if len(self.tournaments) == 1:
+                    self.set(section, key, list(self.tournaments.keys())[0])
+                else:
+                    self._add_warning('key not found, screen set ignored'.format(), section=section, key=key)
+                    continue
             tournament_id: str = self.get(section, key)
             if tournament_id not in self.tournaments:
                 self._add_warning('tournament [{}] not found'.format(tournament_id), section=section, key=key)
