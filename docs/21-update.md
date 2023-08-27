@@ -6,7 +6,7 @@ la principale fonctionnalité attendue de Papi-web est celle de proposer une int
 
 Comme dit dans la partie [Gestion d'un petit tournoi amical](11-friendly.md), la simple déclaration d'un tournoi crée automatiquement plusieurs écrans, dont un écran de saisie des résultats. Pour personnaliser son ou ses écran de saisie des résultats, il faut le ou les déclarer manuellement.
 
-## Déclaration d'un écran de saisie basique (`type = board`, `update = on`)
+## Déclaration d'un écran de saisie basique (`type = boards`, `update = on`)
 
 On déclare un écran de saisie en créant une rubrique `[screen.<screen_id>]`, où `screen_id` est l'identifiant que vous aurez choisi pour votre écran. Vous pouvez par exemple déclarer un écran nommé `saisie` de la manière suivante :
 ```
@@ -23,7 +23,7 @@ Les utilisateurs peuvent en cliquant sur les échiquier présentés entrer le r�
 
 ![Entrée d'un résultat sur un écran de saisie d'un tournoi](images/friendly-update-3.jpg)
 
-## Déclaration d'un écran de saisie classique  (`[screen.<screen_id>.boards.<set_id>]`)
+## Déclaration d'un écran de saisie classique  (`[screen.<screen_id>.boards]`)
 
 Si vous avez plusieurs tournois dans votre évènement, vous devez préciser celui qui sera affiché en ajoutant une rubrique `[screen.<screen_id>.boards]` de la manière suivante :
 ```
