@@ -16,22 +16,35 @@ La rubrique `[event]` est obligatoire et permet de déclarer le nom de l'évène
 
 Le tournoi est nommé `Tournoi amical` et le fichier Papi du tournoi est `amical-20230617.papi`, stocké dans le répertoire par défaut `papi/` (pour le localiser à un autre endroit, on utilisera par exemple `path = c:\...\echecs\domloup\2023\tournois\amical`)
 
+Démarrer le serveur Papi-Web présente la page d'accueil avec un lien vers la page de l'évènement :
+
+![Page d'accueil de l'évènement (informations)](images/friendly-infos.jpg)
+![Page d'accueil de l'évènement (tournoi)](images/friendly-tournament.jpg)
+
 Lorsqu'aucun écran n'est déclaré, Papi-web ajoute automatiquement, pour chaque tournoi, les quatre écrans suivants :
-- saisie des résultats
-- affichage des appariements par échiquier
-- affichage des appariements par ordre alphabétique
-- affichage des derniers résultats
+
+![Page d'accueil de l'évènement (écrans)](images/friendly-screens.jpg)
 
 > [!NOTE]
-> Les écrans créés automatiquement sont configurés avec des options basiques par défaut. Pour les personnaliser, il faut les déclarer manuellement :
- 
- 
-- [Saisie des résultats](docs/21-update.md)
-- [Appariements par échiquier](docs/22-pairings-by-board.md)
-- [Appariements par ordre alphabétique](docs/23-pairings-by-player.md)
-- [Derniers résultats saisis](docs/24-pairings-by-player.md)
+> Les écrans créés automatiquement sont configurés avec des options basiques par défaut. Pour les personnaliser, il faut les déclarer manuellement (suivre les liens ci-dessus pour plus de détails).
+> - [Saisie des résultats](21-update.md)
+> - [Appariements par échiquier](22-pairings-by-board.md)
+> - [Appariements par ordre alphabétique](23-pairings-by-player.md)
+> - [Derniers résultats saisis](24-pairings-by-player.md)
 
-Démarrer le serveur Papi-Web présente la page d'accueil avec un lien vers la page de l'évènement, et la page de l'évènement présente un lien vers l'écran de saisie des résultats.
+L'écran de saisie peut directement être utilisé ; avant l'appariement de la première ronde, les noms des joueur·euses sont affichés...
+![Affichage des joueur·euses avant la première ronde](images/friendly-update-0.jpg)
 
-Il ne reste plus qu'à apparier la première ronde, demander aux joueur·euses de saisir leurs résultats, apparier les rondes suivantes, ...
+...puis les appariements :
+![Affichage des appariements](images/friendly-update-1.jpg)
+
+Il ne reste plus qu'à demander aux joueur·euses de saisir leurs résultats...
+![Sélection d'un échiquier](images/friendly-update-2.jpg)
+![Entrée d'un score](images/friendly-update-3.jpg)
+![Enregistrement dans le fichier Papi](images/friendly-update-4.jpg)
+
+...puis apparier la ronde suivante, dans Papi !
+
+> [!NOTE]
+> Lorsque des modifications sont apportées à un tournoi dans Papi, les écrans liés à ce tournoi se rafraichissent automatiquement pour refléter les modifications.
 

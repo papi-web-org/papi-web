@@ -29,6 +29,7 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 
 - [Modèles et familles d'écran](docs/31-templates-families.md)
 - [Ecrans rotatifs](docs/32-rotators.md)
+- [Personnalisation du rendu des écrans (CSS)](docs/33-css.md)
 
 ## Guide de référence de la configuration des évènements
 
