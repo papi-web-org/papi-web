@@ -57,14 +57,10 @@ Entrez votre choix : t
 INFO     Configuration file [events\homologation.ini] has been modified, reloading...
 Action : test des codes d'accès
 INFO     Tournoi [47778] :
-INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=47778```
-![Test de la connexion au serveur fédéral (échec)](images/ffe-t-1.jpg)
-![Test de la connexion au serveur fédéral (succès)](images/ffe-t-2.jpg)
+INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=47778
 ```
 
 ## Affichage du tournoi sur le site fédéral
-
-![Affichage du tournoi sur le site fédéral](images/ffe-v.jpg)
 
 > [!IMPORTANT]
 > - Les tournois ne sont pas visibles au public tant qu'ils n'ont pas été rendus visbles par cette opération.
@@ -96,8 +92,6 @@ INFO     show OK
 ## Mise en ligne des résultats en temps-réel
 
 Le tournoi sont mis à jour sur le site fédéral dès qu'une modification a été apportée.
-
-![Test de la connexion au serveur fédéral](images/ffe-u.jpg)
 
 > [!WARNING]
 > Lorsque la mise en ligne des résultats est activée, toutes les modifications effectuées dans le tournoi sont répercutées sur le site fédéral. Si vous souhaitez faire des opérations qui ne soient pas répercutées en ligne, il faut les effectuer sur une copie du fichier Papi ou arrêter temporairement la mise en ligne.
@@ -136,8 +130,6 @@ INFO     Tous les tournois sont à jour
 
 
 ## Téléchargement de la facture d'homologation
-
-![Téléchargement de la facture d'homologation](images/ffe-h.jpg)
 
 > [!NOTE]
 > La facture d'homologation est générée dans le répertoire `fees/`, qui est automatiquement créé au premier téléchargement d'une facture d'homologation.
