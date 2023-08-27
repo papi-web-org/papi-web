@@ -77,7 +77,8 @@ class ConfigReader(ConfigParser):
 
     def _add_debug(self, text: str, section: Optional[str] = None, key: Optional[str] = None):
         message = self.__format_message(text, section, key)
-        logger.debug(message)
+        if not self.__silent:
+            logger.debug(message)
 
     @property
     def infos(self) -> List[str]:
