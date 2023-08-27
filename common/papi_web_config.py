@@ -21,8 +21,6 @@ PAPI_WEB_COPYRIGHT: str = '© Pascal AUBRY 2013-2023'
 
 CONFIG_FILE: str = os.path.join('.', 'papi-web.ini')
 
-TMP_DIR: str = os.path.join('.', 'tmp')
-
 DEFAULT_LOG_LEVEL: int = logging.INFO
 DEFAULT_WEB_HOST: str = '0.0.0.0'
 DEFAULT_WEB_PORT: int = 8080
@@ -32,7 +30,7 @@ DEFAULT_WEB_LAUNCH_BROWSER: bool = True
 @singleton
 class PapiWebConfig(ConfigReader):
     def __init__(self):
-        super().__init__(CONFIG_FILE)
+        super().__init__(CONFIG_FILE, silent=False)
         self.__log_level: Optional[int] = None
         self.__web_host: Optional[str] = None
         self.__web_port: Optional[int] = None

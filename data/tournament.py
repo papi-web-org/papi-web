@@ -3,7 +3,7 @@ import os
 from typing import Optional, Dict, List
 from logging import Logger
 
-from common.papi_web_config import TMP_DIR
+from common.config_reader import TMP_DIR
 from common.logger import get_logger
 from database.papi import PapiDatabase, RESULT_STRINGS
 from database.papi import TOURNAMENT_PAIRING_HALEY, TOURNAMENT_PAIRING_HALEY_SOFT, TOURNAMENT_PAIRING_SAD

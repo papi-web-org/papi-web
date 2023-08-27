@@ -26,9 +26,9 @@ EVENTS_PATH: str = 'events'
 
 
 class Event(ConfigReader):
-    def __init__(self, event_id: str):
+    def __init__(self, event_id: str, silent: bool = True):
         self.__id: str = event_id
-        super().__init__(os.path.join(EVENTS_PATH, self.id + '.ini'), print_infos=False)
+        super().__init__(os.path.join(EVENTS_PATH, self.id + '.ini'), silent=silent)
         self.__name: str = self.__id
         self.__css: Optional[str] = None
         self.__input_password: Optional[str] = None
@@ -968,12 +968,12 @@ class Event(ConfigReader):
         logger.info('Added file {}'.format(os.path.join(results_dir, filename)))
 
 
-def get_events() -> List[Event]:
+def get_events(silent: bool = True) -> List[Event]:
     event_files_pattern: str = os.path.join(EVENTS_PATH, '*.ini')
     event_files: List[str] = glob.glob(event_files_pattern)
     events: List[Event] = []
     for event_file in event_files:
         event_id: str = os.path.splitext(os.path.basename(event_file))[0]
-        event: Event = Event(event_id)
+        event: Event = Event(event_id, silent=silent)
         events.append(event)
     return events

@@ -1,5 +1,6 @@
 import os
 import re
+from pathlib import Path
 
 from configparser import ConfigParser, DuplicateSectionError, DuplicateOptionError, MissingSectionHeaderError, \
     ParsingError, Error
@@ -9,40 +10,57 @@ from common.logger import get_logger
 
 logger: Logger = get_logger()
 
+TMP_DIR: str = os.path.join('.', 'tmp')
+
 
 # https://docs.python.org/3/library/configparser.html
 class ConfigReader(ConfigParser):
-    def __init__(self, ini_file: str, print_errors: bool = True, print_warnings: bool = True, print_infos: bool = True):
+    def __init__(self, ini_file: str, silent: bool):
         super().__init__(interpolation=None)
         self.__ini_file: str = ini_file
+        ini_marker_dir: str = os.path.join(TMP_DIR, os.path.dirname(self.ini_file))
+        ini_marker_file: str = os.path.join(ini_marker_dir, os.path.basename(self.ini_file) + '.read')
         self.__infos: List[str] = []
         self.__warnings: List[str] = []
         self.__errors: List[str] = []
-        self.__print_infos: bool = print_infos
-        self.__print_warnings: bool = print_warnings
-        self.__print_errors: bool = print_errors
+        self.__silent: bool = False
         if not os.path.exists(self.__ini_file):
             self._add_warning('file not found')
             return
         if not os.path.isfile(self.__ini_file):
             self._add_error('not a file')
             return
+        if silent:
+            if not os.path.isfile(ini_marker_file):
+                logger.info('New configuration file [{}] found, loading...'.format(self.ini_file))
+            elif os.path.getmtime(ini_marker_file) > os.path.getmtime(self.ini_file):
+                self.__silent = True
+            else:
+                logger.info('Configuration file [{}] has been modified, reloading...'.format(self.ini_file))
         try:
             self.read(self.__ini_file, encoding='utf8')
+            if not os.path.isdir(ini_marker_dir):
+                os.makedirs(ini_marker_dir)
+            Path(ini_marker_file).touch()
         except DuplicateSectionError as dse:
+            self.__silent = False
             self._add_error('section is duplicated at line {}'.format(dse.lineno, dse.message), section=dse.section)
             return
         except DuplicateOptionError as doe:
+            self.__silent = False
             self._add_error(
                 'key {} is duplicated at line {}'.format(doe.lineno, doe.message), section=doe.section, key=doe.option)
             return
         except MissingSectionHeaderError as mshe:
+            self.__silent = False
             self._add_error('the first section is missing at line {}'.format(mshe.lineno, mshe.message))
             return
         except ParsingError as pe:
+            self.__silent = False
             self._add_error('parsing error: {}'.format(pe.message))
             return
         except Error as e:
+            self.__silent = False
             self._add_error('error: {}'.format(e.message))
             return
 
@@ -67,7 +85,8 @@ class ConfigReader(ConfigParser):
 
     def _add_info(self, text: str, section: Optional[str] = None, key: Optional[str] = None):
         message = self.__format_message(text, section, key)
-        logger.info(message)
+        if not self.__silent:
+            logger.info(message)
         self.__infos.append(message)
 
     @property
@@ -76,7 +95,8 @@ class ConfigReader(ConfigParser):
 
     def _add_warning(self, text: str, section: Optional[str] = None, key: Optional[str] = None):
         message = self.__format_message(text, section, key)
-        logger.warning(message)
+        if not self.__silent:
+            logger.warning(message)
         self.__warnings.append(message)
 
     @property
@@ -85,7 +105,8 @@ class ConfigReader(ConfigParser):
 
     def _add_error(self, text: str, section: Optional[str] = None, key: Optional[str] = None):
         message = self.__format_message(text, section, key)
-        logger.error(message)
+        if not self.__silent:
+            logger.error(message)
         self.__errors.append(message)
 
     def _getint_safe(self, section: str, key: str, minimum: int = None, maximum: int = None) -> Optional[int]:

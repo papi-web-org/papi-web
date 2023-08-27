@@ -6,8 +6,8 @@ from functools import total_ordering
 from logging import Logger
 from typing import List
 
+from common.config_reader import TMP_DIR
 from common.logger import get_logger
-from common.papi_web_config import TMP_DIR
 from database.papi import RESULT_STRINGS
 
 logger: Logger = get_logger()

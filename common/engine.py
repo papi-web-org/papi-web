@@ -1,7 +1,8 @@
 import os
 from logging import Logger
 
-from common.papi_web_config import PapiWebConfig, TMP_DIR
+from common.config_reader import TMP_DIR
+from common.papi_web_config import PapiWebConfig
 from common.logger import get_logger
 
 logger: Logger = get_logger()

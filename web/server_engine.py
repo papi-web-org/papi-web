@@ -1,5 +1,6 @@
 import os
 import django
+from data.event import get_events
 from django.core.management import call_command
 from webbrowser import open
 import socket
@@ -14,6 +15,9 @@ logger: Logger = get_logger()
 class ServerEngine(Engine):
     def __init__(self):
         super().__init__()
+        logger.info('Reading events(silent=False)...')
+        get_events(silent=False)
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'web.settings')
         logger.info('log: {}'.format(self._config.log_level_str))
         logger.info('host: {}'.format(self._config.web_host))
         logger.info('port: {}'.format(self._config.web_port))
