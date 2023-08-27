@@ -149,9 +149,9 @@ Veuillez entrer le numéro de votre évènement :
   - [3] Championnat de France de parties rapides (france-rapide.ini)
   - [4] Tournoi homologué (homologation.ini)
   - [Q] Quitter
-Votre choix : 2
-Evènement : 33e open Fide de Domloup
-Tournois : 58878, 58879, 58880, 58881, 58882, 58883
+Votre choix : 4
+Evènement : Tournoi homologué
+Tournois : 59999
 Actions :
   - [T] Tester les codes d'accès des tournois
   - [V] Rendre les tournois visibles sur le site fédéral
@@ -160,28 +160,12 @@ Actions :
   - [Q] Revenir à la liste des évènements
 Entrez votre choix : H
 Action : téléchargement des factures d'homologation
-INFO     Tournoi [58878] :
+INFO     Tournoi [59999] :
 INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=58878
 INFO     Facture d'homologation enregistrée dans [fees\58878-fees.html]
 INFO     fees OK
-INFO     Tournoi [58879] :
-INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=58879
-INFO     Facture d'homologation enregistrée dans [fees\58879-fees.html]
-INFO     fees OK
-INFO     Tournoi [58880] :
-INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=58880
-INFO     Facture d'homologation enregistrée dans [fees\58880-fees.html]
-INFO     fees OK
-INFO     Tournoi [58881] :
-INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=58881
-INFO     Facture d'homologation enregistrée dans [fees\58881-fees.html]
-INFO     fees OK
-INFO     Tournoi [58882] :
-INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=58882
-INFO     Facture d'homologation enregistrée dans [fees\58882-fees.html]
-INFO     fees OK
-INFO     Tournoi [58883] :
-INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=58883
-INFO     Facture d'homologation enregistrée dans [fees\58883-fees.html]
-INFO     fees OK
 ```
+
+La facture d'homologation récupérée est stockée dans le répertoire `fees/<ffe_id>.html` et directement ouverte dans le navigateur.
+
+![Exemple de facture d'homologation](images/fees.jpg)
