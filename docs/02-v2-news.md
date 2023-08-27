@@ -167,7 +167,7 @@ menu_text = Tournoi ?
 [template.saisie.boards]
 tournament = domloup-fide-?
 
-# 6 écrans d'affichage des appariements pour les tournois A à F
+# 6 écrans d'affichage des appariements pour les tournois A à F (tournois nommés tournoi-A à tournoi-F)
 [family.tournoi]
 template = tournoi
 range = A-F

@@ -13,7 +13,7 @@ L'installation de XAMPP ou d'autres outils tiers n'est plus nécessaire à parti
 
 ## Téléchargement et installation
 
-La dernière version de Papi-web doit être téléchargée depuis ce répertoire, décompressée et installée sur l'ordinateur qui jouera le rôle de serveur, sur lequel seront également les fichiers Papi.
+La dernière version de Papi-web doit être téléchargée depuis [ce répertoire](../tree/main/downloads), décompressée et installée sur l'ordinateur qui jouera le rôle de serveur, sur lequel seront également les fichiers Papi.
 
 | Fichiers et répertoires  | Signification  |
 | -----------------------  | -------------  |

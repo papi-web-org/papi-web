@@ -22,6 +22,13 @@ Lorsqu'aucun écran n'est déclaré, Papi-web ajoute automatiquement, pour chaqu
 - affichage des appariements par ordre alphabétique
 - affichage des derniers résultats
 
+![NOTE]
+Les écrans créés automatiquement sont configurés avec des options basiques par défaut. Pour les personnaliser, il faut les déclarer manuellement :
+- [Saisie des résultats](docs/21-update.md)
+- [Appariements par échiquier](docs/22-pairings-by-board.md)
+- [Appariements par ordre alphabétique](docs/23-pairings-by-player.md)
+- [Derniers résultats saisis](docs/24-pairings-by-player.md)
+
 Démarrer le serveur Papi-Web présente la page d'accueil avec un lien vers la page de l'évènement, et la page de l'évènement présente un lien vers l'écran de saisie des résultats.
 
 Il ne reste plus qu'à apparier la première ronde, demander aux joueur·euses de saisir leurs résultats, apparier les rondes suivantes, ...
