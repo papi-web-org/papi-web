@@ -1,4 +1,4 @@
-# Papi-web présentation
+# Papi-web - Présentation
 
 ## Papi-web, c'est arrivé comment ?
 
@@ -11,7 +11,7 @@ Papi-web est né de quelques observations simples :
 
 Papi-web est ainsi né en septembre 2013 pour la [7e édition de l'open rapide de Domloup](http://domloup.echecs35.fr/node/1561), et son utilisation avait été relayée dans le [BAF n°135](http://www.echecs.asso.fr/Arbitrage/Baf135.pdf) ([Bulletin des Arbitres fédéraux](http://www.echecs.asso.fr/Default.aspx?Cat=5)). Depuis cette date, le logiciel n'a cessé d'évoluer grâce aux contributions et sous l'impulsion des utilisateur·trices...
 
-![Première utilisation de Papi-web dans une compétition homologuée en 2013](docs/images/saisie-2013.jpg)
+![Première utilisation de Papi-web dans une compétition homologuée en 2013](images/saisie-2013.jpg)
 
 En mai 2018, un débriefing avec Pierre LAPEYRE après un stage d'arbitrage à Domloup se conclut à une heure très avancée sur une conclusion simple : il faut absolument diffuser Papi-web pour permettre aux arbitres de se concentrer sur leur coeur de métier, et il faut pour cela le mettre en place sur une manifestation de masse. Après un test grandeur nature quelques semaines avant au festival international de Metz par Eric DELMOTTE, la décision est prise d'utiliser Papi-web au championnat de France et ce sont Pierre LAPEYRE et Eric DELMOTTE qui en font la promotion à Nîmes en août 2018 ([voir la vidéo](https://www.youtube.com/watch?v=u2arqnRH9SA)) !
 
@@ -23,7 +23,7 @@ C'est un programme qui permet :
 - La mise en ligne des résultats sur le site fédéral en temps réel ;
 - Le téléchargement des factures d'homologation depuis le site fédéral.
 
-![Workflow](docs/images/workflow.jpg)
+![Workflow](images/workflow.jpg)
 
 ## Papi-web, ça sert à quoi ?
 

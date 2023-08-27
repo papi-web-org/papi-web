@@ -1,44 +1,8 @@
-# Papi-web, installation et mise à jour
+# Papi-web - Configuration et utilisation
 
-## Prérequis
-
-Un ordinateur sous Windows avec :
-  - [la dernière version de Papi](https://dna.ffechecs.fr/ressources/appariements/papi/) opérationnelle (septembre 2023 : version 3.3.6)
-  - [le pilote Access](https://www.microsoft.com/en-us/download/details.aspx?id=54920) permettant de modifier les fichiers Papi
-
-[!NOTE]
-L'installation de XAMPP ou d'autres outils tiers n'est plus nécessaire à partir de la version 2.0.
-
-## Téléchargement et installation
-
-La dernière version de Papi-web doit être téléchargée depuis ce répertoire, décompressée et installée sur l'ordinateur qui jouera le rôle de serveur, sur lequel seront également les fichiers Papi.
-
-| Fichiers et répertoires  | Signification  |
-| -----------------------  | -------------  |
-| `papi-web-<version>.exe`  | L'exécutable unique de Papi-web  |
-| `server.bat`  | Le script de lancement du serveur de Papi-web  |
-| `ffe.bat`  | Le script de lancement des outils d'interface avec le site fédéral  |
-| `papi-web.ini`  | Le fichier de configuration de Papi-web  |
-| `events/*.ini`  | Les fichiers de configuration des évènements (un fichier par évènement, les fichiers de configuration des évènements sont toujours localisés à cet endroit)  |
-| `papi/*.papi`  | Les fichiers Papi des tournois égérés (il est possible configurer Papi-web pour que les fichiers Papi soient localisés dans un autre répertoire)  |
-| `custom/club/XNNNNN/*`, `custom/ligue/BRE/*`, `custom/FFF/*`  | Les fichiers de personnalisation des écrans d'affichage, de saisie, ...  |
-| `fees/XXXXX.html`  | Les factures d'homologation téléchargées depuis le site fédéral  |
-| `tmp/*`  | Les fichiers temporaires  |
-
-## Mise à jour
-
-Pour installer une nouvelle version de Papi-web :
-1. procédez comme pour une première installation
-1. récupérez vos personnalisations :
-  - la configuration de papi-web (`papi-web.ini`)
-  - les fichiers de configuration de vos évènements (`events/*.ini`)
-  - les fichiers de personnalisation des écrans (`custom/*`)
-  - éventuellement les fichiers Papi si vous les avez stockés dans le répertoire `papi/`.
-
-# Utiliser Papi-web
 L'utilisation de Papi-web nécessite un peu d'apprentissage : il vous sera très vite indispensable, en particulier pour gérer de grois évènements, mais il est fortement conseillé de s'entrainer sur des évènements modestes dans un premier temps.
 
-## Configuration de Papi-web (`papi-web.ini`)
+## Configuration (`papi-web.ini`)
 La configuration fournie par défaut dans le fichier `papi-web.ini` est suffisante pour la très grande majorité des cas.
 
 ### Messages (`[loggin]`)
@@ -88,7 +52,7 @@ Quit the server with CTRL-BREAK.
 ```
 On arrête le serveur en tapant `Ctrl-C`.
 
-## Utilisation de l'interface avec le site fédéral
+## Interface avec le site fédéral
 
 Les outils d'interface avec le site fédéral se lancent en exécutant le script `ffe.bat` :
 ```
@@ -108,5 +72,5 @@ INFO       - [Q] Revenir à la liste des évènements
 INFO     Entrez votre choix :
 ```
 [!NOTE]
-Pour utiliser les outils d'interface avec le site fédéral sur les tournois de vos évènements, il est nécessaire de déclarer le numéro d'homologation et le code d'accès des tournois.
+Pour utiliser les outils d'interface avec le site fédéral sur les tournois de vos évènements, il est nécessaire de déclarer le numéro d'homologation et le code d'accès des tournois ([détails](12-qualified.md)).
 
