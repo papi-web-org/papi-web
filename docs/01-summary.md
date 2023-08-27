@@ -1,3 +1,5 @@
+[Sommaire de la documentation](../README.md)
+
 # Papi-web - Présentation
 
 ## Papi-web, c'est arrivé comment ?
@@ -12,6 +14,7 @@ Papi-web est né de quelques observations simples :
 Papi-web est ainsi né en septembre 2013 pour la [7e édition de l'open rapide de Domloup](http://domloup.echecs35.fr/node/1561), et son utilisation avait été relayée dans le [BAF n°135](http://www.echecs.asso.fr/Arbitrage/Baf135.pdf) ([Bulletin des Arbitres fédéraux](http://www.echecs.asso.fr/Default.aspx?Cat=5)). Depuis cette date, le logiciel n'a cessé d'évoluer grâce aux contributions et sous l'impulsion des utilisateur·trices...
 
 ![Première utilisation de Papi-web dans une compétition homologuée en 2013](images/saisie-2013.jpg)
+_Première utilisation de Papi-web dans une compétition homologuée en 2013_
 
 En mai 2018, un débriefing avec Pierre LAPEYRE après un stage d'arbitrage à Domloup se conclut à une heure très avancée sur une conclusion simple : il faut absolument diffuser Papi-web pour permettre aux arbitres de se concentrer sur leur coeur de métier, et il faut pour cela le mettre en place sur une manifestation de masse. Après un test grandeur nature quelques semaines avant au festival international de Metz par Eric DELMOTTE, la décision est prise d'utiliser Papi-web au championnat de France et ce sont Pierre LAPEYRE et Eric DELMOTTE qui en font la promotion à Nîmes en août 2018 ([voir la vidéo](https://www.youtube.com/watch?v=u2arqnRH9SA)) !
 
@@ -46,7 +49,7 @@ En parallèle, un programme en ligne de commande se charge de mettre en ligne su
 
 Le logiciel Papi-web peut être utilisé gratuitement et sans autorisation par tou·tes celles·ceux qui le considérent comme un Beerware lorsqu'il·elles croisent son auteur :-)
 
-Vous n'en faites pas encore partie ? Lancez-vous en découvrant les nouveautés de la version 2 !
+Vous n'en faites pas encore partie ? Lancez-vous en découvrant [les nouveautés de la version 2](02-v2-news.md) !
 
 Pour être prévenu des nouvelles versions de Papi-web, il suffit de s'abonner à la liste de diffusion papi-web-news@echecs35.fr (demande par mail à pascal.aubry@echecs35.fr).
 

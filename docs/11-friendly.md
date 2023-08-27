@@ -1,3 +1,5 @@
+[Sommaire de la documentation](../README.md)
+
 # Papi-web - configuration d'un tournoi amical
 
 Même pour un petit tournoi amical au club, l'utilisation de Papi-web pour l'entrée des résultats permet de fluidifier le déroulement de la compétition.

@@ -1,3 +1,5 @@
+[Sommaire de la documentation](../README.md)
+
 # Papi-web - Configuration et utilisation
 
 L'utilisation de Papi-web nécessite un peu d'apprentissage : il vous sera très vite indispensable, en particulier pour gérer de grois évènements, mais il est fortement conseillé de s'entrainer sur des évènements modestes dans un premier temps.

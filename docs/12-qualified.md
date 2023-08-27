@@ -1,3 +1,5 @@
+[Sommaire de la documentation](../README.md)
+
 # Papi-web - Configuration d'un tournoi homologué
 
 Pour pouvoir utiliser les outils d'interface avec le site fédéral, il faut préciser le numéro d'homologation du tournoi et le code d'accès du tournoi sur le site fédéral de gestion des tournois.

@@ -1,3 +1,5 @@
+[Sommaire de la documentation](../README.md)
+
 # Papi-web - Utilisation de plusieurs écrans de saisie
 
 ## Partage des échiquiers par numéros

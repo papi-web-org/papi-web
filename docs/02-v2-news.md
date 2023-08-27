@@ -1,3 +1,5 @@
+[Sommaire de la documentation](../README.md)
+
 # Papi-web - Nouveautés de la version 2
 
 ## Installation plus rapide
