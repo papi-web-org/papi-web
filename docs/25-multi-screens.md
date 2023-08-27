@@ -1,4 +1,4 @@
-[Sommaire de la documentation](../README.md)
+**[Retour au sommaire de la documentation](../README.md)**
 
 # Papi-web - Utilisation de plusieurs écrans de saisie
 
