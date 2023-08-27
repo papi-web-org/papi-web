@@ -106,18 +106,21 @@ def get_stored_password(request: HttpRequest, event: Event) -> str:
 
 def check_auth(request: HttpRequest, event: Event) -> Tuple[bool, bool]:
     # -> login_needed, do_redirect
+    logger.debug('check_auth({})...'.format(event.id))
     if 'password' in request.POST:
-        if request.POST['password'] == event.input_password:
+        logger.debug('POST.password={}'.format(request.POST['password']))
+        if request.POST['password'] == event.update_password:
             messages.success(request, 'Authentification réussie.')
             store_password(request, event, request.POST['password'])
             return False, True
         messages.error(request, 'Code d\'accès incorrect.')
         return True, True
     session_password: str = get_stored_password(request, event)
+    logger.debug('session_password={}'.format(session_password))
     if session_password is None:
         messages.error(request, 'Un code d\'accès est nécessaire pour accéder à l\'interface de saisie des résultats.')
         return True, False
-    if session_password != event.input_password:
+    if session_password != event.update_password:
         messages.error(request, 'Code d\'accès incorrect.')
         return True, False
     return False, False
@@ -132,7 +135,7 @@ def show_screen(request: HttpRequest, event_id: str, screen_id: str) -> HttpResp
         return redirect(event_url(event_id))
     screen: AScreen = event.screens[screen_id]
     login_needed: bool = False
-    if event.input_password and screen.update:
+    if event.update_password and screen.update:
         login_needed, do_redirect = check_auth(request, event)
         if do_redirect:
             return redirect(screen_url(event.id, screen.id, ))
@@ -152,7 +155,7 @@ def show_rotator(request: HttpRequest, event_id: str, rotator_id: str, screen_in
     screen_index: int = screen_index % len(rotator.screens)
     screen: AScreen = rotator.screens[screen_index]
     login_needed: bool = False
-    if event.input_password and screen.update:
+    if event.update_password and screen.update:
         login_needed, do_redirect = check_auth(request, event)
         if do_redirect:
             return redirect(rotator_screen_url(event.id, rotator.id, screen_index))
@@ -167,7 +170,7 @@ def update_result(
     event: Event = load_event(request, event_id)
     if event is None:
         return redirect('index')
-    if event.input_password:
+    if event.update_password:
         login_needed, do_redirect = check_auth(request, event)
         if login_needed or do_redirect:
             return redirect(screen_url(event.id, screen_id, ))

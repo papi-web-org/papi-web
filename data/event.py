@@ -31,7 +31,7 @@ class Event(ConfigReader):
         super().__init__(os.path.join(EVENTS_PATH, self.id + '.ini'), silent=silent)
         self.__name: str = self.__id
         self.__css: Optional[str] = None
-        self.__input_password: Optional[str] = None
+        self.__update_password: Optional[str] = None
         self.__tournaments: Dict[str, Tournament] = {}
         self.__templates: Dict[str, Template] = {}
         self.__screens_by_family_id: Dict[str, List[AScreen]] = {}
@@ -73,8 +73,8 @@ class Event(ConfigReader):
         return self.__css
 
     @property
-    def input_password(self) -> str:
-        return self.__input_password
+    def update_password(self) -> str:
+        return self.__update_password
 
     @property
     def tournaments(self) -> Dict[str, Tournament]:
@@ -110,12 +110,12 @@ class Event(ConfigReader):
         if not self.has_option(section, key):
             self._add_info('key not found'.format(), section=section, key=key)
         self.__css = self.get(section, key, fallback=None)
-        key = 'input_password'
+        key = 'update_password'
         if not self.has_option(section, key):
             self._add_warning(
                 'key not found, no password will be prompted for input screens'.format(), section=section, key=key)
-        self.__input_password = self.get(section, key, fallback=None)
-        section_keys: List[str] = ['name', 'input_password', 'css', ]
+        self.__update_password = self.get(section, key, fallback=None)
+        section_keys: List[str] = ['name', 'update_password', 'css', ]
         for key, value in self.items(section):
             if key not in section_keys:
                 self._add_warning('unknown key, ignored'.format(), section=section, key=key)
@@ -536,40 +536,49 @@ class Event(ConfigReader):
                 'invalid screen type [{}], screen ignored'.format(screen_type), section=section, key=key)
             return
         screen_set_sections: List[str] = []
-        section2 = section + '.' + screen_type
+        screen_set_single_section = section + '.' + screen_type
         if screen_type == SCREEN_TYPE_BOARDS:
-            if self.has_section(section2):
-                screen_set_sections = [section2, ]
-                for screen_set_sub_section in self._get_subsections_with_prefix(section2):
+            if self.has_section(screen_set_single_section):
+                screen_set_sections = [screen_set_single_section, ]
+                for screen_set_sub_section in self._get_subsections_with_prefix(screen_set_single_section):
                     self._add_warning(
-                        'section skipped, remove section [{}] to enable'.format(section2),
-                        section=section2 + '.' + screen_set_sub_section)
+                        'section skipped, remove section [{}] to enable'.format(screen_set_single_section),
+                        section=screen_set_single_section + '.' + screen_set_sub_section)
             else:
-                screen_set_sections = self._get_subsections_with_prefix(section2)
+                screen_set_sections = [
+                    screen_set_single_section + '.' + sub_section
+                    for sub_section in self._get_subsections_with_prefix(screen_set_single_section)
+                ]
             if not screen_set_sections:
                 if len(self.tournaments) == 1:
-                    self.add_section(section2)
-                    screen_set_sections.append(section2)
-                    self._add_info('single tournament, added section [{}]'.format(section2), section=section)
+                    self.add_section(screen_set_single_section)
+                    screen_set_sections.append(screen_set_single_section)
+                    self._add_info(
+                        'single tournament, added section [{}]'.format(screen_set_single_section), section=section)
                 else:
-                    self._add_warning('section not found, screen ignored'.format(section2), section=section2)
+                    self._add_warning(
+                        'section not found, screen ignored'.format(screen_set_single_section),
+                        section=screen_set_single_section)
                     return
         elif screen_type == SCREEN_TYPE_PLAYERS:
-            if self.has_section(section2):
-                screen_set_sections = [section2, ]
-                for screen_set_sub_section in self._get_subsections_with_prefix(section2):
+            if self.has_section(screen_set_single_section):
+                screen_set_sections = [screen_set_single_section, ]
+                for screen_set_sub_section in self._get_subsections_with_prefix(screen_set_single_section):
                     self._add_warning(
-                        'section skipped, remove section [{}] to enable'.format(section2),
-                        section=section2 + '.' + screen_set_sub_section)
+                        'section skipped, remove section [{}] to enable'.format(screen_set_single_section),
+                        section=screen_set_single_section + '.' + screen_set_sub_section)
             else:
-                screen_set_sections = self._get_subsections_with_prefix(section2)
+                screen_set_sections = [
+                    screen_set_single_section + '.' + sub_section
+                    for sub_section in self._get_subsections_with_prefix(screen_set_single_section)
+                ]
             if not screen_set_sections:
                 if len(self.tournaments) == 1:
-                    self.add_section(section2)
-                    screen_set_sections.append(section2)
-                    self._add_info('single tournament, added section [{}]'.format(section2), section=section)
+                    self.add_section(screen_set_single_section)
+                    screen_set_sections.append(screen_set_single_section)
+                    self._add_info('single tournament, added section [{}]'.format(screen_set_single_section), section=section)
                 else:
-                    self._add_warning('section not found, screen ignored'.format(section2), section=section2)
+                    self._add_warning('section not found, screen ignored'.format(screen_set_single_section), section=screen_set_single_section)
                     return
         elif screen_type == SCREEN_TYPE_RESULTS:
             pass
