@@ -15,8 +15,6 @@ logger: Logger = get_logger()
 class ServerEngine(Engine):
     def __init__(self):
         super().__init__()
-        logger.info('Reading events(silent=False)...')
-        get_events(silent=False)
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'web.settings')
         logger.info('log: {}'.format(self._config.log_level_str))
         logger.info('host: {}'.format(self._config.web_host))
@@ -24,6 +22,7 @@ class ServerEngine(Engine):
         logger.info('local URL: {}'.format(self._config.local_url))
         if self._config.lan_url:
             logger.info('LAN/WAN URL: {}'.format(self._config.lan_url))
+        get_events(silent=False)
         logger.info('Setting up Django...')
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'web.settings')
         django.setup()

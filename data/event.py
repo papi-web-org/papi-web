@@ -166,17 +166,19 @@ class Event(ConfigReader):
         default = 'papi'
         if not self.has_option(section, key):
             self._add_debug('key not found, defaults to [{}]'.format(default), section=section, key=key)
-        path: str = self.get(section, key, fallback=default)
-        # path = os.path.join('.', path)
+        path: Optional[str] = self.get(section, key, fallback=default)
         if not os.path.exists(path):
             self._add_warning(
-                'directory [{}] not found, tournament ignored'.format(path), section=section, key=key)
-            return
-        if not os.path.isdir(path):
+                'directory [{}] not found, only a few operations on the FFE website will be available'.format(path),
+                section=section, key=key)
+            path = None
+        elif not os.path.isdir(path):
             self._add_warning(
-                '[{}] is not a directory, tournament ignored'.format(path), section=section, key=key)
-            return
-        path = os.path.realpath(path)
+                '[{}] is not a directory, only a few operations on the FFE website will be available'.format(path),
+                section=section, key=key)
+            path = None
+        else:
+            path = os.path.realpath(path)
         key = 'filename'
         filename: Optional[str] = None
         if self.has_option(section, key):
@@ -188,17 +190,22 @@ class Event(ConfigReader):
             if ffe_id is None:
                 self._add_warning('not null positive integer expected'.format(), section=section, key=key)
         if filename is None and ffe_id is None:
-            self._add_warning('neither [filename] nor [ffe_id] set, tournament ignored'.format(), section=section)
-            return
+            self._add_warning(
+                'neither [filename] nor [ffe_id] set, '
+                'only a few operations on the FFE website will be available'.format(), section=section)
         if filename is None:
             filename = str(ffe_id)
-        file = os.path.join(path, filename + '.papi')
+        file: Optional[str] = os.path.join(path, filename + '.papi')
         if not os.path.exists(file):
-            self._add_warning('file [{}] not found, tournament ignored'.format(file), section=section)
-            return
-        if not os.path.isfile(file):
-            self._add_warning('[{}] is not a file, tournament ignored'.format(file), section=section)
-            return
+            self._add_warning(
+                'file [{}] not found, only a few operations on the FFE website will be available'.format(file),
+                section=section)
+            file = None
+        elif not os.path.isfile(file):
+            self._add_warning(
+                '[{}] is not a file, only a few operations on the FFE website will be available'.format(file),
+                section=section)
+            file = None
         key = 'name'
         default = tournament_id
         if not self.has_option(section, key):
@@ -210,14 +217,17 @@ class Event(ConfigReader):
         if ffe_id is not None:
             if not self.has_option(section, key):
                 self._add_info(
-                    'key not found, FFE upload will not be available'.format(), section=section, key=key)
+                    'key not found, operations on the FFE website will not be available'.format(),
+                    section=section, key=key)
             else:
                 ffe_password: str = self.get(section, key)
                 if not re.match('^[A-Z]{10}$', ffe_password):
                     self._add_warning(
                         '10 uppercase letters string expected, password ignored '
-                        '(FFE upload will not be available)'.format(), section=section, key=key)
+                        '(operations on the FFE website will not be available)'.format(), section=section, key=key)
                     ffe_password = None
+        elif self.has_option(section, key):
+            self._add_info('key is ignored when [ffe_id] is not set'.format(), section=section, key=key)
         section_keys: List[str] = ['path', 'filename', 'name', 'ffe_id', 'ffe_password', ]
         for key, value in self.items(section):
             if key not in section_keys:
@@ -395,6 +405,8 @@ class Event(ConfigReader):
         if not screen_ids:
             self._add_info('no screen found, adding default screens'.format(), section='screen.*')
             for tournament_id in self.tournaments:
+                if not self.tournaments[tournament_id].file:
+                    continue
                 name_prefix: str = ''
                 if len(self.tournaments) > 1:
                     name_prefix = self.tournaments[tournament_id].name + ' - '
@@ -431,6 +443,7 @@ class Event(ConfigReader):
                     for key, value in options.items():
                         self.set(section, key, value)
                     screen_ids.append(screen_id)
+                    self._add_info('added screen [{}]'.format(screen_id), section='screen.*')
                 data: Dict[str, Dict[str, str]] = {
                     tournament_id + '-' + SCREEN_TYPE_BOARDS + '-input.' + SCREEN_TYPE_BOARDS: {
                         'tournament': tournament_id,
@@ -699,6 +712,11 @@ class Event(ConfigReader):
             tournament_id: str = self.get(section, key)
             if tournament_id not in self.tournaments:
                 self._add_warning('tournament [{}] not found'.format(tournament_id), section=section, key=key)
+                continue
+            if not self.tournaments[tournament_id].file:
+                self._add_warning(
+                    'no file found for tournament [{}], screen set ignored'.format(tournament_id),
+                    section=section, key=key)
                 continue
             if (self.has_option(section, 'first') or self.has_option(section, 'last')) \
                     and (self.has_option(section, 'part') or self.has_option(section, 'parts')):

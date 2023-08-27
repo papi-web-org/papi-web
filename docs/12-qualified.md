@@ -16,129 +16,172 @@ Lorsque l'on précise le numéro d'homologation (`ffe_id`), si `filename` n'est 
 
 En précisant simplement `ffe_id` et `ffe_password`, les opérations sur le site fédéral seront accessibles en lançant le script `ffe.bat`.
 
-## Utilisation de plusieurs écrans de saisie
+> [!NOTE]
+> Le numéro d'homologation et le code d'accès sont accessibles par les arbitres et les organisateurs sur le site fédéral dans la rubrique « Mon compte ».
 
-A partir de quelques dizaines de joueurs, un écran de saisie unique devient illisible et il est nécessaire de partager les échiquiers entre plusieurs écrans :
+Il est alors possible, en suivant les options proposées, d'effectuer les opérations suivantes.
+
+## Test de la connexion au serveur fédéral
+
+Cette étape permet de tester les identifiants fournis (`ffe_id` et `ffe_password`) en amont de la compétition.
+
 ```
-[screen.saisie-1]
-type = boards
-update = true
-[screen.saisie-1.boards]
-tournament = amical
-first = 1
-last = 20
-
-[screen.saisie-2]
-type = boards
-update = true
-[screen.saisie-2.boards]
-tournament = amical
-first = 21
+Veuillez entrer le numéro de votre évènement :
+  - [1] Tournoi amical 17 juin 2023 (amical.ini)
+  - [2] 33e open Fide de Domloup (domloup-fide.ini)
+  - [3] Championnat de France de parties rapides (france-rapide.ini)
+  - [4] Tournoi homologué (homologation.ini)
+  - [Q] Quitter
+Votre choix : 4
+Evènement : Tournoi homologué
+Tournois : 47778
+Actions :
+  - [T] Tester les codes d'accès des tournois
+  - [V] Rendre les tournois visibles sur le site fédéral
+  - [H] Télécharger les factures d'homologation
+  - [U] Mettre en ligne les tournois
+  - [Q] Revenir à la liste des évènements
+Entrez votre choix : T
+Action : test des codes d'accès
+INFO     Tournoi [47778] :
+ERROR    L'authentification a échoué (vérifier les codes)
+Evènement : Tournoi homologué
+Tournois : 47778
+Actions :
+  - [T] Tester les codes d'accès des tournois
+  - [V] Rendre les tournois visibles sur le site fédéral
+  - [H] Télécharger les factures d'homologation
+  - [U] Mettre en ligne les tournois
+  - [Q] Revenir à la liste des évènements
+Entrez votre choix : t
+INFO     Configuration file [events\homologation.ini] has been modified, reloading...
+Action : test des codes d'accès
+INFO     Tournoi [47778] :
+INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=47778```
+![Test de la connexion au serveur fédéral (échec)](images/ffe-t-1.jpg)
+![Test de la connexion au serveur fédéral (succès)](images/ffe-t-2.jpg)
 ```
-On définit ainsi deux écrans de saisie, le premier pour les échiquiers 1 à 20 et le second pour les autres.
 
-Il est également possible (et souvent beaucoup plus pratique) de demander à Papi-web de séparer les échiquiers en partie égales, par exemple :
+## Affichage du tournoi sur le site fédéral
+
+![Affichage du tournoi sur le site fédéral](images/ffe-v.jpg)
+
+> [!IMPORTANT]
+> - Les tournois ne sont pas visibles au public tant qu'ils n'ont pas été rendus visbles par cette opération.
+> - Pour rendre un tournoi visible, Papi-web commence par mettre en ligne le fichier du tournoi.
+
 ```
-[screen.saisie-1]
-type = boards
-update = true
-[screen.saisie-1.boards]
-tournament = amical
-part = 1
-parts = 2
-
-[screen.saisie-2]
-type = boards
-update = true
-[screen.saisie-2.boards]
-tournament = amical
-part = 2
-parts = 2
+Veuillez entrer le numéro de votre évènement :
+  - [1] Tournoi amical 17 juin 2023 (amical.ini)
+  - [2] 33e open Fide de Domloup (domloup-fide.ini)
+  - [3] Championnat de France de parties rapides (france-rapide.ini)
+  - [4] Tournoi homologué (homologation.ini)
+  - [Q] Quitter
+Votre choix : 4
+Evènement : Tournoi homologué
+Tournois : 47778
+Actions :
+  - [T] Tester les codes d'accès des tournois
+  - [V] Rendre les tournois visibles sur le site fédéral
+  - [H] Télécharger les factures d'homologation
+  - [U] Mettre en ligne les tournois
+  - [Q] Revenir à la liste des évènements
+Entrez votre choix : v
+Action : affichage des tournois en ligne
+INFO     Tournoi [47778] :
+INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=47778
+INFO     show OK
 ```
-Le premier écran de saisie affichera la première moitié des échiquiers, le second les autres.
 
-Lorsque l'on utilise plusieurs écrans de saisie il est pratique de pouvoir rapidement passer de l'un à l'autre, c'est le rôle des menus des écrans.
+## Mise en ligne des résultats en temps-réel
 
-La directive `menu` permet de préciser quel menu sera affiché sur un écran
+Le tournoi sont mis à jour sur le site fédéral dès qu'une modification a été apportée.
 
-## Tournoi à handicap
+![Test de la connexion au serveur fédéral](images/ffe-u.jpg)
 
-# ChangeLog
+> [!WARNING]
+> Lorsque la mise en ligne des résultats est activée, toutes les modifications effectuées dans le tournoi sont répercutées sur le site fédéral. Si vous souhaitez faire des opérations qui ne soient pas répercutées en ligne, il faut les effectuer sur une copie du fichier Papi ou arrêter temporairement la mise en ligne.
 
-**Version 2.0 - Septembre 2023**
-- Livraison sous forme d'un exécutable autonome (ne nécessite plus l'installation de XAMPP)
-- Configuration des évènements au format INI (plus simple que PHP)
-- Amélioration de la page d'acceuil
-- Ajout d'une page par évènement
-- Ajout d'écrans d'affichage des appariements par ordre alphabétique
-- Simplification de la configuration des écrans grâce aux modèles et aux familles d'écran
+```
+Veuillez entrer le numéro de votre évènement :
+  - [1] Tournoi amical 17 juin 2023 (amical.ini)
+  - [2] 33e open Fide de Domloup (domloup-fide.ini)
+  - [3] Championnat de France de parties rapides (france-rapide.ini)
+  - [4] Tournoi homologué (homologation.ini)
+  - [Q] Quitter
+Votre choix : 4
+Evènement : Tournoi homologué
+Tournois : 47778
+Actions :
+  - [T] Tester les codes d'accès des tournois
+  - [V] Rendre les tournois visibles sur le site fédéral
+  - [H] Télécharger les factures d'homologation
+  - [U] Mettre en ligne les tournois
+  - [Q] Revenir à la liste des évènements
+Entrez votre choix : u
+Action : mise en ligne des résultats
+INFO     Mise à jour du tournoi [47778] (C:\OneDrive\echecs\papi-web\test\papi\47778.papi):
+INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=47778
+INFO     upload OK
+INFO     Tous les tournois sont à jour
+INFO     Tous les tournois sont à jour
+INFO     Tous les tournois sont à jour
+INFO     Tous les tournois sont à jour
+INFO     Mise à jour du tournoi [47778] (C:\OneDrive\echecs\papi-web\test\papi\47778.papi):
+INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=47778
+INFO     upload OK
+INFO     Tous les tournois sont à jour
+INFO     Tous les tournois sont à jour
+```
 
-**Version 1.19 - 22 janvier 2023**
-- Correction d'un bug de protection des pages de saisie des résultats
 
-**Version 1.18 - 4 février 2020**
-- Correction d'un bug d'affichage des derniers résultats
-- Correction d'un bug de transmission sur le site fédéral
+## Téléchargement de la facture d'homologation
 
-**Version 1.17 - 4 octobre 2019**
-- Correction d'un bug d'accès concurrent (saisie des résultats sur plusieurs écrans)
-- Correction d'un bug d'affichage des joueurs avant appariement
+![Téléchargement de la facture d'homologation](images/ffe-h.jpg)
 
-**Version 1.16 - 31 août 2019**
-- Correction d'un bug d'affichage du chronomètre
+> [!NOTE]
+> La facture d'homologation est générée dans le répertoire `fees/`, qui est automatiquement créé au premier téléchargement d'une facture d'homologation.
 
-**Version 1.15 - 31 août 2019**
-- Compatibilité avec Papi 3.3.6
-- Support du système de Haley dégressif
-- Support du « bye »
-- Ajout du chronomètre
-- Amélioration du rafraichissement des pages
-- Rennomage de la propriété no-banner en no_banner
-
-**Version 1.14 - 9 avril 2019**
-- Ajout des écrans d'affichage des résultats
-- Ajout des écrans d'affichage des derniers résultats
-- Ajout du rafraichissement automatique des écrans de saisie
-- Amélioration des temps de réponse
-- Simplification des URL des écrans
-- Téléchargement systématique des fichiers avant affichage sur le site FFE
-
-**Version 1.13 - 10 novembre 2018**
-- Affichage des numéros des échiquiers
-
-**Version 1.12 - 30 octobre 2018**
-- Support des tournois à handicap
-
-**Version 1.11 - 27 octobre 2018**
-- Support du Suisse Accéléré Degressif (SAD)
-- Support de l'acélération de Haley
-
-**Version 1.10 - 26 octobre 2018**
-- Possibilité de tester les codes d'accès au site FFE
-- Possibilité de rendre les données visibles sur le site FFE
-- Possibilité de télécharger les factures d'homologation depuis le site FFE
-- Renommage du script upload.bat en ffe.bat
-
-**Version 1.9 - 23 octobre 2018**
-- Correction de la mise en ligne sur le site fédéral
-
-**Version 1.8 - 1er septembre 2018**
-- Amélioration des transitions entre les requêtes
-
-**Version 1.7 - 31 août 2018**
-- Recherche automatique des mises à jour
-
-**Version 1.6 - 30 août 2018**
-- Ecriture de la documentation
-- Diffusion sous forme d'une archive
-- Amélioration de l'affichage des participants avant les appariements
-- Amélioration des styles CSS (normalisation)
-- Obfuscation des sources PHP
-
-**Version 1.5 - 3 août 2018**
-- Ajout des personnalisations CSS
-- Amélioration de l'affichage (bandeau supérieur toujours visible)
-
-**Version 1.4 - 28 juillet 2018**
-- Gestion de plusieurs écrans de saisie
-
+```
+Veuillez entrer le numéro de votre évènement :
+  - [1] Tournoi amical 17 juin 2023 (amical.ini)
+  - [2] 33e open Fide de Domloup (domloup-fide.ini)
+  - [3] Championnat de France de parties rapides (france-rapide.ini)
+  - [4] Tournoi homologué (homologation.ini)
+  - [Q] Quitter
+Votre choix : 2
+Evènement : 33e open Fide de Domloup
+Tournois : 58878, 58879, 58880, 58881, 58882, 58883
+Actions :
+  - [T] Tester les codes d'accès des tournois
+  - [V] Rendre les tournois visibles sur le site fédéral
+  - [H] Télécharger les factures d'homologation
+  - [U] Mettre en ligne les tournois
+  - [Q] Revenir à la liste des évènements
+Entrez votre choix : H
+Action : téléchargement des factures d'homologation
+INFO     Tournoi [58878] :
+INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=58878
+INFO     Facture d'homologation enregistrée dans [fees\58878-fees.html]
+INFO     fees OK
+INFO     Tournoi [58879] :
+INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=58879
+INFO     Facture d'homologation enregistrée dans [fees\58879-fees.html]
+INFO     fees OK
+INFO     Tournoi [58880] :
+INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=58880
+INFO     Facture d'homologation enregistrée dans [fees\58880-fees.html]
+INFO     fees OK
+INFO     Tournoi [58881] :
+INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=58881
+INFO     Facture d'homologation enregistrée dans [fees\58881-fees.html]
+INFO     fees OK
+INFO     Tournoi [58882] :
+INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=58882
+INFO     Facture d'homologation enregistrée dans [fees\58882-fees.html]
+INFO     fees OK
+INFO     Tournoi [58883] :
+INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=58883
+INFO     Facture d'homologation enregistrée dans [fees\58883-fees.html]
+INFO     fees OK
+```

@@ -13,6 +13,7 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 
 - [Gestion d'un petit tournoi amical](docs/11-friendly.md)
 - [Gestion d'un tournoi homologué (interface avec le site fédéral)](docs/12-qualified.md)
+- [Gestion d'un évènement avec plusieurs tournois](docs/13-multi-tournaments.md)
 
 ## Fonctionnalités standards
 
