@@ -24,6 +24,8 @@ Lorsqu'aucun écran n'est déclaré, Papi-web ajoute automatiquement, pour chaqu
 
 > [!NOTE]
 > Les écrans créés automatiquement sont configurés avec des options basiques par défaut. Pour les personnaliser, il faut les déclarer manuellement :
+ 
+ 
 - [Saisie des résultats](docs/21-update.md)
 - [Appariements par échiquier](docs/22-pairings-by-board.md)
 - [Appariements par ordre alphabétique](docs/23-pairings-by-player.md)
