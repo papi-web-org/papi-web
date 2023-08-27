@@ -4,7 +4,7 @@
 
 Pour pouvoir utiliser les outils d'interface avec le site fédéral, il faut préciser le numéro d'homologation du tournoi et le code d'accès du tournoi sur le site fédéral de gestion des tournois.
 ```
-[tournament.homologué]
+[tournament]
 path = C:\OneDrive\echecs\domloup\2023\tournois\officiel
 filename = homologué-20230617
 name = Tournoi homologué 17 juin 2023
