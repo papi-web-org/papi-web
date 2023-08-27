@@ -2,9 +2,9 @@
 
 # Papi-web - Saisie des résultats
 
-la principale fonctionnalité attendue de Papi-web est celle de proposer une interface de saisie des résultats, délégable aux joueur·euses.
+La principale fonctionnalité attendue de Papi-web est celle de proposer une interface de saisie des résultats, délégable aux joueur·euses.
 
-Comme dit dans la partie [Gestion d'un petit tournoi amical](11-friendly.md), la simple déclaration d'un tournoi crée automatiquement plusieurs écrans, dont un écran de saisie des résultats. Pour personnaliser son ou ses écran de saisie des résultats, il faut le ou les déclarer manuellement.
+Comme dit dans la partie [Gestion d'un petit tournoi amical](11-friendly.md), la simple déclaration d'un tournoi crée automatiquement plusieurs écrans, dont un écran de saisie des résultats. Pour personnaliser son ou ses écrans de saisie des résultats, il faut le ou les déclarer manuellement.
 
 ## Déclaration d'un écran de saisie basique (`type = boards`, `update = on`)
 
@@ -19,7 +19,7 @@ Si vous n'avez qu'un seul tournoi dans votre évènement (`default`), alors vous
 
 ![Écran de saisie d'un tournoi](images/friendly-update-2.jpg)
 
-Les utilisateurs peuvent en cliquant sur les échiquier présentés entrer le résultat des parties :
+Les utilisateurs peuvent entrer le résultat des parties en cliquant sur les échiquier présentés :
 
 ![Entrée d'un résultat sur un écran de saisie d'un tournoi](images/friendly-update-3.jpg)
 
@@ -60,8 +60,8 @@ last = 20
 
 
 > [!NOTE]
-> - les options `part`/`parts` doivent toujours être utilisées ensemble, et sont incompatibles avec les options `first`/`last`.
-> - les options `first`/`last` sont incompatibles avec les options `part`/`parts`, par défaut `first` vaut 1 et `last` vaut le numéro du dernier échiquier 
+> - les options `part`/`parts` doivent toujours être utilisées ensemble, et sont incompatibles avec les options `first`/`last` ;
+> - les options `first`/`last` sont incompatibles avec les options `part`/`parts`, par défaut `first` vaut 1 et `last` vaut le numéro du dernier échiquier.
 
 ## Protection de l'accès aux écrans de saisie (`[event] update_password`)
 
