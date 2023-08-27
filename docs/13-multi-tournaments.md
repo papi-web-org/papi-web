@@ -11,7 +11,9 @@ name = Le plus beau tournoi du monde
 
 Lorsqu'un évènement regroupe plusieurs tournois, les tournois doivent être distingués les uns des autres par un identifiant unique. Par exemple pour un tournoi rapide de club, on gèrera souvent en parallèle un tournoi principal et un tournoi jeunes.
 
-On déclare alors les tournois non plus dans une rubrique `[tournament]` mais dans une rubrique `[tournament.<id>]`, par exemple :
+On déclare alors les tournois non plus dans une unique rubrique `[tournament]` mais dans plusieurs rubriques `[tournament.<id>]`, où `<id>` est l'identifiant que vous choisissez pour vos tournois.
+
+## Exemple
 
 ```
 [event]
