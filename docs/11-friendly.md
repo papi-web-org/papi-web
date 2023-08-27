@@ -1,6 +1,6 @@
 **[Retour au sommaire de la documentation](../README.md)**
 
-# Papi-web - configuration d'un tournoi amical
+# Papi-web - Configuration d'un tournoi amical
 
 Même pour un petit tournoi amical au club, l'utilisation de Papi-web pour l'entrée des résultats permet de fluidifier le déroulement de la compétition.
 On crée un fichier `amical.ini` dans le répertoire `events` pour déclarer l'évènement.
@@ -38,13 +38,13 @@ L'écran de saisie peut directement être utilisé ; avant l'appariement de la p
 ...puis les appariements :
 ![Affichage des appariements](images/friendly-update-1.jpg)
 
+> [!NOTE]
+> Lorsque des modifications sont apportées à un tournoi dans Papi, les écrans liés à ce tournoi se rafraichissent automatiquement pour refléter les modifications.
+
 Il ne reste plus qu'à demander aux joueur·euses de saisir leurs résultats...
 ![Sélection d'un échiquier](images/friendly-update-2.jpg)
 ![Entrée d'un score](images/friendly-update-3.jpg)
 ![Enregistrement dans le fichier Papi](images/friendly-update-4.jpg)
 
 ...puis apparier la ronde suivante, dans Papi !
-
-> [!NOTE]
-> Lorsque des modifications sont apportées à un tournoi dans Papi, les écrans liés à ce tournoi se rafraichissent automatiquement pour refléter les modifications.
 
