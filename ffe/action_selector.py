@@ -88,26 +88,31 @@ class ActionSelector:
             return True
         if choice == 'U':
             print_interactive('Action : mise en ligne des résultats')
-            while True:
-                tournaments = cls.__get_qualified_tournaments_with_file(Event(event_id))
-                if not tournaments:
-                    logger.error('Aucun tournoi éligible pour cette action')
-                    return True
-                updated_tournaments: List[Tournament] = []
-                for tournament in tournaments:
-                    upload: bool
-                    if not os.path.isfile(tournament.ffe_upload_marker):
-                        upload = True
-                    elif os.path.getmtime(tournament.file) <= os.path.getmtime(tournament.ffe_upload_marker):
-                        upload = False
-                    elif time.time() <= os.path.getmtime(tournament.file) + 5:
-                        upload = False
-                    else:
-                        upload = True
-                    if upload:
-                        updated_tournaments.append(tournament)
-                if not updated_tournaments:
-                    logger.info('Tous les tournois sont à jour')
-                for tournament in updated_tournaments:
-                    FFESession(tournament).upload(set_visible=False)
-                time.sleep(10)
+            try:
+                while True:
+                    tournaments = cls.__get_qualified_tournaments_with_file(Event(event_id))
+                    if not tournaments:
+                        logger.error('Aucun tournoi éligible pour cette action')
+                        return True
+                    updated_tournaments: List[Tournament] = []
+                    for tournament in tournaments:
+                        upload: bool
+                        if not os.path.isfile(tournament.ffe_upload_marker):
+                            upload = True
+                        elif os.path.getmtime(tournament.file) <= os.path.getmtime(tournament.ffe_upload_marker):
+                            upload = False
+                        elif time.time() <= os.path.getmtime(tournament.file) + 5:
+                            upload = False
+                        else:
+                            upload = True
+                        if upload:
+                            updated_tournaments.append(tournament)
+                    if not updated_tournaments:
+                        logger.info('Tous les tournois sont à jour')
+                    for tournament in updated_tournaments:
+                        FFESession(tournament).upload(set_visible=False)
+                    time.sleep(10)
+            except KeyboardInterrupt:
+                logger.info('Fin de la mise en ligne')
+                return True
+        return True
