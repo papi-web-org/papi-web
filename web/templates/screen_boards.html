@@ -114,7 +114,7 @@ $(document).ready(function(){
                                         </thead>
                                         <tbody>
                                         {% for player in players_by_rating %}
-                                            <tr>
+                                            <tr class="player-row">
                                                 <td class="player">{% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}</td>
                                             </tr>
                                         {% endfor %}
