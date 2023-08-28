@@ -21,16 +21,15 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 - [Affichage des appariements par échiquier](docs/22-pairings-by-board.md)
 - [Affichage des appariements par ordre alphabétique](docs/23-pairings-by-player.md)
 - [Affichage des derniers résultats saisis](docs/24-last-results.md)
-- [Configuration des menus des écrans](docs/25-menus.md)
-- [Configurations multi-écrans](docs/26-multi-screens.md)
-- [Utilisation d'un chronomètre](docs/27-timer.md)
-- [Configuration d'un tournoi à handicap](docs/28-handicap.md)
 
 ## Fonctionnalités avancées
 
-- [Modèles et familles d'écran](docs/31-templates-families.md)
-- [Ecrans rotatifs](docs/32-rotators.md)
-- [Personnalisation du rendu des écrans (CSS)](docs/33-css.md)
+- [Utilisation d'un chronomètre](docs/31-timer.md)
+- [Configuration d'un tournoi à handicap](docs/32-handicap.md)
+- [Modèles et familles d'écran](docs/33-templates-families.md)
+- [Ecrans rotatifs](docs/34-rotators.md)
+- [Configuration des menus des écrans](docs/35-menus.md)
+- [Personnalisation du rendu des écrans (CSS)](docs/36-css.md)
 
 ## Guide de référence de la configuration des évènements
 

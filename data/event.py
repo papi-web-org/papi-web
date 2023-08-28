@@ -941,7 +941,7 @@ class Event(ConfigReader):
                         if color_rbg[0] > 255 or color_rbg[1] > 255 or color_rbg[2] > 255:
                             color_rbg = None
             if color_rbg is None:
-                self._add_warning('couleur [{}] non valide (#HHH, #HHHHHH ou RGB(RRR, GGG, BBB) attentu), '
+                self._add_warning('couleur [{}] non valide (#HHH, #HHHHHH ou RGB(RRR, GGG, BBB) attendu), '
                                   'la couleur par défaut sera utilisée'.format(color_value), section=section, key=key)
             else:
                 self._add_info('couleur personnalisée [{}] définie'.format(color_rbg), section=section, key=key)
