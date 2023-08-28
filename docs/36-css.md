@@ -12,7 +12,7 @@ On utilise une personnalisation en utilisation l'option `css` dans la rubrique `
 
 ```
 [event] 
-css = FFE/FFE.css
+css = ffe/ffe.css
 ```
 
 ## Exemple (Ligue de Bretagne)
