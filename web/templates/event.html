@@ -103,6 +103,7 @@
                             <th scope="col">Id</th>
                             <th scope="col">Nom</th>
                             <th scope="col">Fichier</th>
+                            <th scope="col">Joueur·euses</th>
                             <th scope="col">Rondes</th>
                             <th scope="col">N° FFE</th>
                             <th scope="col">Mot de passe FFE</th>
@@ -113,8 +114,9 @@
                                 <tr>
                                     <th scope="row">{{ tournament.id }}</th>
                                     <td>{{ tournament.name }}</td>
-                                    <td>{{ tournament.file }}</td>
-                                    <td>{{ tournament.current_round }} / {{ tournament.rounds }}</td>
+                                    <td>{% if tournament.file %}{{ tournament.file }}{% else %}<em>-</em>{% endif %}</td>
+                                    <td>{% if tournament.file %}{{ tournament.players_by_name | length }}{% else %}<em>-</em>{% endif %}</td>
+                                    <td>{% if tournament.file %}{{ tournament.current_round }} / {{ tournament.rounds }}{% else %}<em>-</em>{% endif %}</td>
                                     <td>{% if tournament.ffe_id %}{{ tournament.ffe_id }}{% else %}<em>Aucun</em>{% endif %}</td>
                                     <td>{% if tournament.ffe_password %}**********{% else %}<em>Aucun</em>{% endif %}</td>
                                     <td>{% if tournament.handicap %}<i class="bi-plus-slash-minus"></i><i class="bi-hourglass-split">Oui{% else %}<em>-</em>{% endif %}</td>

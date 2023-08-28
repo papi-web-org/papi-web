@@ -162,15 +162,16 @@ class Tournament:
     def read_papi(self):
         if self.__papi_read:
             return
-        (
-            self.__rounds,
-            self.__pairing,
-            self.__rating,
-            self.__rating_limit1,
-            self.__rating_limit2
-        ) = self.__papi_database.read_info()
-        self.__players_by_id = self.__papi_database.read_players(self.__rating, self.__rounds)
-        self.__papi_database.close()
+        if self.file:
+            (
+                self.__rounds,
+                self.__pairing,
+                self.__rating,
+                self.__rating_limit1,
+                self.__rating_limit2
+            ) = self.__papi_database.read_info()
+            self.__players_by_id = self.__papi_database.read_players(self.__rating, self.__rounds)
+            self.__papi_database.close()
         self.__papi_read = True
         self.__calculate_current_round()
         self.__calculate_points()
