@@ -799,7 +799,7 @@ class Event(ConfigReader):
         default: int = ROTATOR_DEFAULT_DELAY
         delay: int = default
         if not self.has_option(section, key):
-            self._add_info('option absente, par défaut [{}]'.format(default), section=section, key=key)
+            self._add_debug('option absente, par défaut [{}]'.format(default), section=section, key=key)
         else:
             delay = self._getint_safe(section, key)
             if delay is None:
@@ -838,7 +838,7 @@ class Event(ConfigReader):
         section = 'timer.events'
         event_ids: List[str] = self._get_subsections_with_prefix(section)
         if not event_ids:
-            self._add_warning('aucun horaire déclaré, le chronomètre ne sera pas disponible', section='timer.events.*')
+            self._add_debug('aucun horaire déclaré, le chronomètre ne sera pas disponible', section='timer.events.*')
             return
         for event_id in event_ids:
             self.__build_timer_event(event_id, timer)

@@ -31,11 +31,11 @@ body {
 
 Vous trouverez ci-dessous quelques personnalisations déjà existantes :
 
-- [`custom/fide`](../../tree/main/custom/fide) (Fédération Internationale des Échecs)
-- [`custom/ffe`](../../tree/main/custom/ffe) (Fédération Française des Échecs)
-- [`custom/ligue/BRE`](../../tree/main/custom/ligue/BRE) (Ligue de Bretagne)
-- [`custom/cdje/35`](../../tree/main/custom/cdje/35) (Comité Départemental d'Ille-et-Vilaine)
-- [`custom/club/F35043`](../../tree/main/custom/club/F35043) (Échiquier Domloupéen)
+- [`custom/fide`](../custom/fide) (Fédération Internationale des Échecs)
+- [`custom/ffe`](../custom/ffe) (Fédération Française des Échecs)
+- [`custom/ligue/BRE`](../custom/ligue/BRE) (Ligue de Bretagne)
+- [`custom/cdje/35`](../custom/cdje/35) (Comité Départemental d'Ille-et-Vilaine)
+- [`custom/club/F35043`](../custom/club/F35043) (Échiquier Domloupéen)
 
 Si vous souhaitez partager votre personnalisation dans de futures versions de Papi-Web, faites nous signe !
 

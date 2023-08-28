@@ -31,13 +31,13 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 - [Écrans rotatifs](docs/35-rotators.md)
 - [Personnalisation du rendu des écrans (CSS)](docs/36-css.md)
 
-## Guide de référence de la configuration des évènements
+## Guide de référence de la configuration des évènements (à venir)
 
-- [Généralités ([event])](docs/41-event.md)
-- [Tournois ([tournament])](docs/42-tournament.md)
-- [Modèles d'écran ([template])](docs/43-template.md)
-- [Écrans ([screen])](docs/44-screen.md)
-- [Familles d'écrans ([family])](docs/45-family.md)
-- [Écrans rotatifs ([rotator])](docs/46-rotator.md)
-- [Chronomètre ([timer])](docs/47-timer.md)
+- [Généralités ([event])](docs/41-event.md) (à venir)
+- [Tournois ([tournament])](docs/42-tournament.md) (à venir)
+- [Modèles d'écran ([template])](docs/43-template.md) (à venir)
+- [Écrans ([screen])](docs/44-screen.md) (à venir)
+- [Familles d'écrans ([family])](docs/45-family.md) (à venir)
+- [Écrans rotatifs ([rotator])](docs/46-rotator.md) (à venir)
+- [Chronomètre ([timer])](docs/47-timer.md) (à venir)
 
