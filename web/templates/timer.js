@@ -88,6 +88,7 @@ function update_timer() {
 		dur = duration(time - {{ event.timestamp }});
 		text_html = '{{ event.text_after }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
+		return;
 	{% if not event.last %}
 	}
 	{% endif %}

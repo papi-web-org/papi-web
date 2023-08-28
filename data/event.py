@@ -130,6 +130,8 @@ class Event(ConfigReader):
 
     def __build_tournaments(self):
         tournament_ids: List[str] = self._get_subsections_with_prefix('tournament')
+        if 'handicap' in tournament_ids:
+            tournament_ids.remove('handicap')
         if self.has_section('tournament'):
             if tournament_ids:
                 self._add_error(
