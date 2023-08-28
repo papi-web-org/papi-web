@@ -27,8 +27,8 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 - [Utilisation d'un chronomètre](docs/31-timer.md)
 - [Configuration d'un tournoi à handicap](docs/32-handicap.md)
 - [Modèles et familles d'écran](docs/33-templates-families.md)
-- [Écrans rotatifs](docs/34-rotators.md)
-- [Configuration des menus des écrans](docs/35-menus.md)
+- [Configuration des menus des écrans](docs/34-menus.md)
+- [Écrans rotatifs](docs/35-rotators.md)
 - [Personnalisation du rendu des écrans (CSS)](docs/36-css.md)
 
 ## Guide de référence de la configuration des évènements

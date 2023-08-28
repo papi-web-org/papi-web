@@ -11,6 +11,9 @@ La déclaration des écrans par ordre alphabétique est détaillée ci-dessous, 
 
 Comme dit dans la partie [Gestion d'un petit tournoi amical](11-friendly.md), la simple déclaration d'un tournoi crée automatiquement plusieurs écrans, dont un écran d'affichage par ordre alphabétique. Pour personnaliser son ou ses écrans par ordre alphabétique, il faut le ou les déclarer manuellement.
 
+> [!NOTE]
+> Les options de personnalisation des menus sont décrites sur la page [Configuration des menus des écrans](34-menus.md).
+
 ## Déclaration d'un écran par ordre alphabétique basique (`type = players`)
 
 On déclare un écran par ordre alphabétique en créant une rubrique `[screen.<screen_id>]`, où `screen_id` est l'identifiant que vous aurez choisi pour votre écran. Vous pouvez par exemple déclarer un écran nommé `alpha` de la manière suivante :

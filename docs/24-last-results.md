@@ -22,3 +22,8 @@ Le paramètre `limit` permet de limiter le nombre de résultats affichés (ici 3
 > [!NOTE]
 > - les résultats de tous les tournois sont affichés sur les écrans de résultats ;
 > - les résultats sont conservés au maximum une heure sur le serveur.
+
+> [!NOTE]
+> Les options de personnalisation des menus sont décrites sur la page [Configuration des menus des écrans](34-menus.md).
+
+

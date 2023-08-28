@@ -4,6 +4,9 @@
 
 Les modèles et les familles ont été introduits dans Papi-web en version 2 pour simplifier la configuration des écrans multiples.
 
+> [!NOTE]
+> Les options `menu` et `menu_text` sont décrites sur la page [Configuration des menus des écrans](34-menus.md).
+
 ## Les modèles d'écran
 
 Les modèles servent à définir des « patrons » qui peuvent être réutilisés pour créer les écrans. Le bénéfice de l'utilisation des modèles réside en la facilité à modifier d'un coup tous les écrans basés sur un modèle.
@@ -24,6 +27,8 @@ Dans les trois exemples ci-dessous :
 type = boards
 update = on
 menu = saisie-A,saisie-B,saisie-C,saisie-D,saisie-E
+[template.saisie.boards]
+name = %t
 ```
 
 #### Déclaration des écrans
@@ -31,35 +36,30 @@ menu = saisie-A,saisie-B,saisie-C,saisie-D,saisie-E
 ```
 [screen.saisie-A]
 template = saisie
-name = Tournoi A
 menu_text = Tournoi A
 [screen.saisie-A.boards]
 Tournament = A
 
 [screen.saisie-B]
 template = saisie
-name = Tournoi B
 menu_text = Tournoi B
 [screen.saisie-B.boards]
 Tournament = B
 
 [screen.saisie-C]
 template = saisie
-name = Tournoi C
 menu_text = Tournoi C
 [screen.saisie-C.boards]
 Tournament = C
 
 [screen.saisie-D]
 template = saisie
-name = Tournoi D
 menu_text = Tournoi D
 [screen.saisie-D.boards]
 Tournament = D
 
 [screen.saisie-E]
 template = saisie
-name = Tournoi E
 menu_text = Tournoi E
 [screen.saisie-E.boards]
 Tournament = E
@@ -73,12 +73,12 @@ Tournament = E
 [template.appariements]
 type = boards
 update = off
-name = Échiquiers %f à %l
 menu = appariements-1,appariements-2,appariements-3,appariements-4,appariements-5
 menu_text = Éch. [%f à %l]
 [template.appariements.boards]
 tournament = principal
 parts = 5
+name = Échiquiers %f à %l
 ```
 
 #### Déclaration des écrans
@@ -118,13 +118,13 @@ part = 5
 [template.alpha]
 type = players
 update = on
-name = Joueur·euses %f à %l
 columns = 2
 menu = alpha-1,alpha-2,alpha-3,alpha-4,alpha-5
 menu_text = [%f - %l]
 [template.alpha.boards]
 tournament = principal
 parts = 5
+name = Joueur·euses %f à %l
 ```
 
 #### Déclaration des écrans
@@ -177,11 +177,11 @@ Les valeurs de la plage de l'option `range` sont utilisées à la création des 
 [template.saisie]
 type = boards
 update = on
-name = Tournoi ?
 menu = family
 menu_text = Tournoi ?
 [screen.saisie.boards]
 Tournament = ?
+name = %t
 ```
 
 #### Déclaration de la famille d'écrans
@@ -202,13 +202,13 @@ Cette déclaration crée automatiquement les écrans saisie-A à saisie-E, chaqu
 [template.appariements]
 type = boards
 update = off
-name = Échiquiers %f à %l
 menu = family
 menu_text = Éch. [%f à %l]
 [template.appariements.boards]
 tournament = principal
 parts = 5
 part = ?
+name = Échiquiers %f à %l
 ```
 
 #### Déclaration de la famille d'écrans
@@ -229,7 +229,6 @@ Cette déclaration crée automatiquement les écrans appariement-1 à appariemen
 [template.alpha]
 type = players
 update = on
-name = Joueur·euses %f à %l
 columns = 2
 menu = family
 menu_text = [%f - %l]
@@ -237,6 +236,7 @@ menu_text = [%f - %l]
 tournament = principal
 parts = 5
 part = ?
+name = Joueur·euses %f à %l
 ```
 
 #### Déclaration de la famille d'écrans
