@@ -22,7 +22,7 @@ def timestamp_to_str(ts: int) -> str:
     return datetime_to_str(timestamp_to_datetime(ts))
 
 
-class TimerEvent:
+class TimerHour:
     def __init__(self, id: Union[int, str], timestamp: int, round: Optional[int] = None,
                  text_before: Optional[str] = None, text_after: Optional[str] = None):
         self.__id: Union[int, str] = id
@@ -139,7 +139,7 @@ class Timer:
     def __init__(self):
         self.__colors: Dict[int, Tuple[int, int, int, ]] = DEFAULT_COLORS
         self.__delays: Dict[int, int] = DEFAULT_DELAYS
-        self.__events: List[TimerEvent] = []
+        self.__hours: List[TimerHour] = []
 
     @property
     def colors(self) -> Dict[int, Tuple[int, int, int, ]]:
@@ -150,18 +150,18 @@ class Timer:
         return self.__delays
 
     @property
-    def events(self) -> List[TimerEvent]:
-        return self.__events
+    def hours(self) -> List[TimerHour]:
+        return self.__hours
 
-    def set_events_timestamps(self):
-        for event in self.events:
-            event.set_timestamps(
-                event.timestamp - self.delays[1] * 60 - self.delays[2] * 60,
-                event.timestamp - self.delays[2] * 60,
-                event.timestamp,
-                event.timestamp + self.delays[3] * 60)
-        self.events[-1].set_last(True)
+    def set_hours_timestamps(self):
+        for hour in self.hours:
+            hour.set_timestamps(
+                hour.timestamp - self.delays[1] * 60 - self.delays[2] * 60,
+                hour.timestamp - self.delays[2] * 60,
+                hour.timestamp,
+                hour.timestamp + self.delays[3] * 60)
+        self.hours[-1].set_last(True)
 
     def __repr__(self):
         return '{}({} {} {})'.format(
-            type(self).__name__, self.colors, self.delays, self.events)
+            type(self).__name__, self.colors, self.delays, self.hours)

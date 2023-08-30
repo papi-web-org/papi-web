@@ -52,8 +52,6 @@ class ScreenSet:
         return self.__name
 
     def __extract_data(self, items: List[Any], force_even: bool = False):
-        if self.__items_lists is not None:
-            return
         if not items:
             self.__items_lists = [[], ] * self.__columns
             return
@@ -108,6 +106,12 @@ class ScreenSet:
     def __extract_boards(self):
         if self.__items_lists is None:
             self.__extract_data(self.tournament.boards, force_even=False)
+            if self.__name is None:
+                if self.first or self.last or self.part:
+                    self.__name = '%t échiquiers %f à %l'
+                else:
+                    self.__name = '%t'
+            self.__name = self.__name.replace('%t', str(self.tournament.name))
             if self.first_board:
                 self.__name = self.__name.replace('%f', str(self.first_board.id))
             if self.last_board:
@@ -131,6 +135,12 @@ class ScreenSet:
     def __extract_players_by_name(self):
         if self.__items_lists is None:
             self.__extract_data(self.tournament.players_by_name, force_even=False)
+            if self.__name is None:
+                if self.first or self.last or self.part:
+                    self.__name = '%t %f à %l'
+                else:
+                    self.__name = '%t'
+            self.__name = self.__name.replace('%t', str(self.tournament.name))
             if self.first_player_by_name:
                 self.__name = self.__name.replace('%f', self.first_player_by_name.last_name)
             if self.last_player_by_name:
@@ -154,6 +164,12 @@ class ScreenSet:
     def __extract_players_by_rating(self):
         if self.__items_lists is None:
             self.__extract_data(self.tournament.players_by_rating, force_even=True)
+            if self.__name is None:
+                if self.first or self.last or self.part:
+                    self.__name = '%t %f à %l'
+                else:
+                    self.__name = '%t'
+            self.__name = self.__name.replace('%t', str(self.tournament.name))
             if self.first_player_by_rating:
                 self.__name = self.__name.replace('%f', str(self.first_player_by_rating.rating))
             if self.last_player_by_rating:

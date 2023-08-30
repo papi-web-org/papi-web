@@ -53,7 +53,7 @@
             {% with id='timer' %}
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="{{ id }}-tab" data-bs-toggle="tab" data-bs-target="#{{ id }}-tab-pane" type="button" role="tab" aria-controls="{{ id }}-tab-pane" aria-selected="true">
-                        <i class="bi-calendar2-event-fill" ></i>&nbsp;{{ event.timer.events | length }} évènement{% if event.timer.events|length > 1 %}s{% endif %}
+                        <i class="bi-calendar2-event-fill" ></i>&nbsp;{{ event.timer.hours | length }} horaire{% if event.timer.hours|length > 1 %}s{% endif %}
                     </button>
                 </li>
             {% endwith %}
@@ -189,12 +189,12 @@
                                                 <th scope="col">Message après</th>
                                             </thead>
                                             <tbody>
-                                                {% for event in event.timer.events %}
+                                                {% for hour in event.timer.hours %}
                                                     <tr>
-                                                        <th scope="row">{{ event.id }}</th>
-                                                        <td>{{ event.datetime_str }}</td>
-                                                        <td>{{ event.text_before }}</td>
-                                                        <td>{{ event.text_after }}</td>
+                                                        <th scope="row">{{ hour.id }}</th>
+                                                        <td>{{ hour.datetime_str }}</td>
+                                                        <td>{{ hour.text_before }}</td>
+                                                        <td>{{ hour.text_after }}</td>
                                                     </tr>
                                                 {% endfor %}
                                             </tbody>

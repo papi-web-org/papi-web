@@ -33,7 +33,7 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 
 ## Guide de référence de la configuration des évènements (à venir)
 
-- [Généralités ([event])](docs/41-event.md) (à venir)
+- [Généralités ([event])](docs/40-ref.md) (à venir)
 - [Tournois ([tournament])](docs/42-tournament.md) (à venir)
 - [Modèles d'écran ([template])](docs/43-template.md) (à venir)
 - [Écrans ([screen])](docs/44-screen.md) (à venir)

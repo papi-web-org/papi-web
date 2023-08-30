@@ -17,7 +17,7 @@ from data.rotator import Rotator, ROTATOR_DEFAULT_DELAY
 from data.screen import SCREEN_TYPE_NAMES, SCREEN_TYPE_BOARDS, SCREEN_TYPE_PLAYERS, SCREEN_TYPE_RESULTS
 from data.screen import ScreenSet, ScreenBoards, ScreenPlayers, ScreenResults, AScreen
 from data.template import Template
-from data.timer import Timer, TimerEvent
+from data.timer import Timer, TimerHour
 from data.tournament import Tournament
 
 logger: Logger = get_logger()
@@ -281,7 +281,7 @@ class Event(ConfigReader):
         key = 'penalty_value'
         penalty_value: Optional[int] = None
         if not self.has_option(section, key):
-            self._add_info('key not found, handicap ignored'.format(), section=section, key=key)
+            self._add_info('option absente, configuration de handicap ignorée'.format(), section=section, key=key)
         else:
             penalty_value = self._getint_safe(section, key, minimum=1)
             if penalty_value is None:
@@ -290,7 +290,7 @@ class Event(ConfigReader):
         key = 'min_time'
         min_time: Optional[int] = None
         if not self.has_option(section, key):
-            self._add_info('key not found, handicap ignored'.format(), section=section, key=key)
+            self._add_info('option absente, configuration de handicap ignorée'.format(), section=section, key=key)
         else:
             min_time = self._getint_safe(section, key, minimum=1)
             if min_time is None:
@@ -314,7 +314,7 @@ class Event(ConfigReader):
         template: Template = Template(template_id)
         section = 'template.' + template_id
         for key, value in self.items(section):
-            if key not in self.event_screen_keys:
+            if key not in self.screen_keys:
                 self._add_warning('option de modèle inconnue, ignorée', section=section, key=key)
             else:
                 template.add_data(None, key, value)
@@ -323,7 +323,7 @@ class Event(ConfigReader):
                 self._add_warning('rubrique de modèle non valide, ignorée', section=section + '.' + sub_section)
                 continue
             for key, value in self.items(section + '.' + sub_section):
-                if key not in self.event_screen_set_keys:
+                if key not in self.screen_set_keys:
                     self._add_warning('option de modèle inconnue, ignorée', section=section + '.' + sub_section,
                                       key=key)
                 else:
@@ -506,7 +506,7 @@ class Event(ConfigReader):
             screen.set_menu(', '.join([screen.id for screen in menu_screens]))
             screen.set_menu_screens(menu_screens)
 
-    event_screen_keys: List[str] = [
+    screen_keys: List[str] = [
         'type', 'name', 'columns', 'menu_text', 'show_timer', 'menu', 'update', 'limit',
     ]
 
@@ -700,14 +700,14 @@ class Event(ConfigReader):
             self.__screens[screen_id] = ScreenResults(
                 self.id, screen_id, family_id, screen_name, columns, menu_text, menu, show_timer, limit)
         for key, value in self.items(section):
-            if key not in self.event_screen_keys + ['template', '__family__', ]:
-                self._add_warning('unknown key'.format(key), section=section, key=key)
+            if key not in self.screen_keys + ['template', '__family__', ]:
+                self._add_warning('option absente'.format(key), section=section, key=key)
         if family_id is not None:
             if family_id not in self.__screens_by_family_id:
                 self.__screens_by_family_id[family_id] = []
             self.__screens_by_family_id[family_id].append(self.__screens[screen_id])
 
-    event_screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', ]
+    screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', ]
 
     def __build_screen_sets(self, sections: List[str], columns: int) -> List[ScreenSet]:
         screen_sets: List[ScreenSet] = []
@@ -773,7 +773,7 @@ class Event(ConfigReader):
             if self.has_option(section, key):
                 name = self.get(section, key)
             for key, value in self.items(section):
-                if key not in self.event_screen_set_keys:
+                if key not in self.screen_set_keys:
                     self._add_warning('option connue', section=section, key=key)
             screen_sets.append(ScreenSet(
                 self.tournaments[tournament_id], columns, first=first, last=last, part=part, parts=parts, name=name))
@@ -828,6 +828,10 @@ class Event(ConfigReader):
                                           key=key)
                     elif self.screens[screen_id] not in screens:
                         screens.append(self.screens[screen_id])
+        if not self.has_option(section, 'screens') and not self.has_option(section, 'families'):
+            self._add_warning('au moins des deux options [screens] ou [families] doit être utilisée'
+                              ', écran rotatif ignoré', section=section)
+            return
         if not screens:
             self._add_warning('aucun écran, écran rotatif ignoré'.format(), section=section, key=key)
             return
@@ -835,31 +839,31 @@ class Event(ConfigReader):
 
     def __build_timer(self):
         timer: Timer = Timer()
-        section = 'timer.events'
-        event_ids: List[str] = self._get_subsections_with_prefix(section)
-        if not event_ids:
-            self._add_debug('aucun horaire déclaré, le chronomètre ne sera pas disponible', section='timer.events.*')
+        section = 'timer.hour'
+        hour_ids: List[str] = self._get_subsections_with_prefix(section)
+        if not hour_ids:
+            self._add_debug('aucun horaire déclaré, le chronomètre ne sera pas disponible', section='timer.hour.*')
             return
-        for event_id in event_ids:
-            self.__build_timer_event(event_id, timer)
-        if not timer.events:
+        for hour_id in hour_ids:
+            self.__build_timer_hour(hour_id, timer)
+        if not timer.hours:
             self._add_warning('aucun horaire défini, le chronomètre ne sera pas disponible'.format(), section=section)
             return
         self.__build_timer_colors(timer)
         self.__build_timer_delays(timer)
         self.__timer = timer
-        self.timer.set_events_timestamps()
+        self.timer.set_hours_timestamps()
 
-    def __build_timer_event(self, event_id: str, timer: Timer):
-        section = 'timer.events.' + event_id
+    def __build_timer_hour(self, hour_id: str, timer: Timer):
+        section = 'timer.hour.' + hour_id
         section_keys: List[str] = ['date', 'text_before', 'text_after', ]
         key = 'date'
         if not self.has_option(section, key):
             self._add_warning('option absente, horaire ignoré'.format(), section=section, key=key)
             return
-        previous_event: Optional[TimerEvent] = None
-        if timer.events:
-            previous_event = timer.events[-1]
+        previous_hour: Optional[TimerHour] = None
+        if timer.hours:
+            previous_hour = timer.hours[-1]
         datetime_str = re.sub('\\s+', ' ', str(self.get(section, key)).strip().upper())
         timestamp: Optional[int] = None
         matches = re.match('^#?([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2})$', datetime_str)
@@ -868,46 +872,48 @@ class Event(ConfigReader):
         else:
             matches = re.match('^([0-9]{1,2}):([0-9]{1,2})$', datetime_str)
             if matches:
-                if previous_event is None:
+                if previous_hour is None:
                     self._add_warning('le jour du premier horaire doit être spécifié, horaire ignoré'.format(),
                                       section=section, key=key)
                     return
                 self._add_debug('jour non spécifié, [{} {}] pris en compte'.format(
-                    datetime_str, previous_event.date_str, datetime_str), section=section, key=key)
+                    datetime_str, previous_hour.date_str, datetime_str), section=section, key=key)
                 timestamp = int(time.mktime(datetime.datetime.strptime(
-                    previous_event.date_str + ' ' + datetime_str, '%Y-%m-%d %H:%M').timetuple()))
+                    previous_hour.date_str + ' ' + datetime_str, '%Y-%m-%d %H:%M').timetuple()))
         if timestamp is None:
             self._add_warning(
                 'date [{}] non valide ([YYYY-MM-DD hh:mm] ou [hh:mm] attendu), horaire ignoré'.format(datetime_str),
                 section=section, key=key)
             return
-        event: TimerEvent = TimerEvent(event_id, timestamp)
-        if timer.events:
-            previous_event: TimerEvent = timer.events[-1]
-            if timestamp <= previous_event.timestamp:
-                self._add_warning('l\'horaire [{}] arrive avant l\'horaire précédent [{}], event ignored'.format(
-                    event.datetime_str, previous_event.datetime_str), section=section, key=key)
+        hour: TimerHour = TimerHour(hour_id, timestamp)
+        if timer.hours:
+            previous_hour: TimerHour = timer.hours[-1]
+            if timestamp <= previous_hour.timestamp:
+                self._add_warning('l\'horaire [{}] arrive avant l\'horaire précédent [{}], horaire ignoré'.format(
+                    hour.datetime_str, previous_hour.datetime_str), section=section, key=key)
                 return
 
-        if event_id.isdigit():
-            event.set_round(int(event_id))
+        if hour_id.isdigit():
+            hour.set_round(int(hour_id))
         key = 'text_before'
         if self.has_option(section, key):
-            event.set_text_before(self.get(section, key))
+            hour.set_text_before(self.get(section, key))
         key = 'text_after'
         if self.has_option(section, key):
-            event.set_text_after(self.get(section, key))
-        if event.text_before is None or event.text_after is None:
+            hour.set_text_after(self.get(section, key))
+        if hour.text_before is None or hour.text_after is None:
             self._add_warning('les options [text_before] et [text_after] sont attendues, horaire ignoré'.format(),
                               section=section)
             return
         for key, value in self.items(section):
             if key not in section_keys:
                 self._add_warning('option inconnue', section=section, key=key)
-        timer.events.append(event)
+        timer.hours.append(hour)
 
     def __build_timer_colors(self, timer: Timer):
         section = 'timer.colors'
+        if not self.has_section(section):
+            return
         section_keys = [str(id) for id in range(1, 4)]
         for key in self.options(section):
             if key not in section_keys:
@@ -951,6 +957,8 @@ class Event(ConfigReader):
 
     def __build_timer_delays(self, timer: Timer):
         section = 'timer.delays'
+        if not self.has_section(section):
+            return
         section_keys = [str(id) for id in range(1, 4)]
         for key in self.options(section):
             if key not in section_keys:
