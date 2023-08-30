@@ -237,6 +237,9 @@ class Event(ConfigReader):
         handicap_min_time: Optional[int]
         handicap_initial_time, handicap_increment, handicap_penalty_step, handicap_penalty_value, handicap_min_time = \
             self.__build_tournament_handicap(tournament_id)
+        if handicap_initial_time is not None and ffe_id is not None:
+            self._add_warning('les tournois à handicap ne devraient pas être homologués',
+                              section='tournament.' + tournament_id + 'handicap')
         self.__tournaments[tournament_id] = Tournament(
             tournament_id, name, file, ffe_id, ffe_password, handicap_initial_time, handicap_increment,
             handicap_penalty_step, handicap_penalty_value, handicap_min_time)
