@@ -156,7 +156,7 @@ range = A-F
 families = appariements
 ```
 
-> ![NOTE]
+> [!NOTE]
 > Il est également possible de configurer des écrans rotatifs sur une liste d'écran, par exemple :
 
 ```

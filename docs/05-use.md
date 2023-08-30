@@ -73,6 +73,6 @@ INFO       - [U] Mettre en ligne les tournois
 INFO       - [Q] Revenir à la liste des évènements
 INFO     Entrez votre choix :
 ```
-[!NOTE]
-Pour utiliser les outils d'interface avec le site fédéral sur les tournois de vos évènements, il est nécessaire de déclarer le numéro d'homologation et le code d'accès des tournois ([détails](12-qualified.md)).
+> [!NOTE]
+> Pour utiliser les outils d'interface avec le site fédéral sur les tournois de vos évènements, il est nécessaire de déclarer le numéro d'homologation et le code d'accès des tournois ([détails](12-qualified.md)).
 
