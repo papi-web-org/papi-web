@@ -52,9 +52,9 @@ En parallèle, un programme en ligne de commande se charge de mettre en ligne su
 
 ## Papi-web, qui l'utilise ?
 
-Le logiciel Papi-web peut être utilisé gratuitement et sans autorisation par tou·tes celles·ceux qui le considérent comme un Beerware lorsqu'il·elles croisent son auteur :-)
+Le logiciel Papi-web peut être utilisé gratuitement et sans autorisation par tou·tes celles·ceux qui le considèrent comme un Beerware lorsqu'il·elles croisent son auteur :-)
 
 Vous n'en faites pas encore partie ? Lancez-vous en découvrant [les nouveautés de la version 2](02-v2-news.md) !
 
-Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonner à la liste de diffusion papi-web-news@echecs35.fr (demande par mail à pascal.aubry@echecs35.fr).
+Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonner à la liste de diffusion papi-web-news@echecs-bretagne.fr (demande par mail à pascal.aubry@echecs35.fr).
  
