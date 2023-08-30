@@ -88,7 +88,7 @@ template = commun
 tournament = j
 ```
 
-![img.png](images/menus-0.jpg)
+![Exemple de menu](images/menus-0.jpg)
 
 ```
 [template.saisie]
@@ -105,7 +105,7 @@ template = saisie
 range = A-F
 ```
 
-![img.png](images/menus-1.jpg)
+![Exemple de menu](images/menus-1.jpg)
 
 ```
 [template.alpha]
@@ -123,4 +123,7 @@ template = alpha
 range = 1-12
 ```
 
-![img.png](images/menus-2.jpg)
+![Exemple de menu](images/menus-2.jpg)
+
+Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
+

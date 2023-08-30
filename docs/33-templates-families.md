@@ -249,3 +249,5 @@ range = 1-5
 
 Cette déclaration crée automatiquement les écrans alpha-1 à alpha-5, chaque écran affichant les joueur·euses de sa partie.
 
+Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
+

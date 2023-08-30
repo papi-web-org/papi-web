@@ -30,3 +30,6 @@ ffe_id = 60000
 
 > [!NOTE]
 > Pour information, lorsque vous ne déclarez qu'un seul tournoi à l'aide de la rubrique `[tournament]`, Papi-web considère que l'identifiant de ce tournoi est `default`, comme si vous aviez déclaré votre tournoi dans la rubrique `[tournament.default]`.
+
+Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
+

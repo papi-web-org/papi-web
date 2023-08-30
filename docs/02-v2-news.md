@@ -54,7 +54,7 @@ Pour présenter un tournoi sur plusieurs écrans, indiquez simplement la partie 
 ```
 [screen.pairings-7.boards]
 type = boards
-part = 1
+part = 7
 parts = 12
 ```
 
@@ -63,7 +63,7 @@ parts = 12
 
 ## Présentation des écrans en plusieurs colonnes
 
-Pour un meilleurs affichage, tous les écrans peuvent être présentés en multi-colonnes.
+Pour un meilleurs affichages, tous les écrans peuvent être présentés en multi-colonnes.
 
 ```
 [screen.pairings]
@@ -74,7 +74,7 @@ columns = 2
 
 ## Affichage des appariements par ordre alphabétique
 
-Pour les tournois à fortes participation (à partir d'une centaine de joueur·euses), il est désormais possible d'afficher les appariements par ordre alphabétique.
+Pour les tournois à forte participation (à partir d'une centaine de joueur·euses), il est désormais possible d'afficher les appariements par ordre alphabétique.
 
 ```
 [screen.players]
@@ -156,8 +156,8 @@ range = A-F
 families = appariements
 ```
 
-![NOTE]
-Il est également possible de configurer des écran rotatifs sur une liste d'écran, par exemple :
+> ![NOTE]
+> Il est également possible de configurer des écrans rotatifs sur une liste d'écran, par exemple :
 
 ```
 # modèle d'affichage des tournois
@@ -181,3 +181,9 @@ screens = tournoi-C,tournoi-D
 [rotator.tournoi-EF]
 screens = tournoi-E,tournoi-F
 ```
+
+## Sources accessibles
+
+Tous les sources de Papi-web sont accessibles sur GitHub : [https://github.com/pascalaubry/papi-web](https://github.com/pascalaubry/papi-web).
+
+

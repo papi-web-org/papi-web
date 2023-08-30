@@ -161,3 +161,6 @@ INFO     fees OK
 La facture d'homologation récupérée est stockée dans le répertoire `fees/<ffe_id>.html` et directement ouverte dans le navigateur.
 
 ![Exemple de facture d'homologation](images/fees.jpg)
+
+Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
+

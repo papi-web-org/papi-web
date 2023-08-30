@@ -26,4 +26,5 @@ Le paramètre `limit` permet de limiter le nombre de résultats affichés (ici 3
 > [!NOTE]
 > Les options de personnalisation des menus sont décrites sur la page [Configuration des menus des écrans](34-menus.md).
 
+Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
 

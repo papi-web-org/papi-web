@@ -108,11 +108,11 @@ class Event(ConfigReader):
         self.__name = self.get(section, key, fallback=default)
         key = 'css'
         if not self.has_option(section, key):
-            self._add_info('option absente'.format(), section=section, key=key)
+            self._add_debug('option absente'.format(), section=section, key=key)
         self.__css = self.get(section, key, fallback=None)
         key = 'update_password'
         if not self.has_option(section, key):
-            self._add_warning(
+            self._add_info(
                 'option absente, aucun mot de passe ne sera demandé pour les saisies'.format(),
                 section=section, key=key)
         self.__update_password = self.get(section, key, fallback=None)
@@ -144,14 +144,14 @@ class Event(ConfigReader):
             old_tournament_section: str = 'tournament'
             new_tournament_section: str = 'tournament.' + default_tournament_id
             self.__rename_section(old_tournament_section, new_tournament_section)
-            self._add_info(
+            self._add_debug(
                 'un seul tournoi, la rubrique [{}] a été renommée [{}]'.format(
                     old_tournament_section, new_tournament_section), section=old_tournament_section)
             old_handicap_section: str = 'tournament.handicap'
             if self.has_section(old_handicap_section):
                 new_handicap_section: str = 'tournament.' + default_tournament_id + '.handicap'
                 self.__rename_section(old_handicap_section, new_handicap_section)
-                self._add_info(
+                self._add_debug(
                     'un seul tournoi, la rubrique [{}] a été renommée [{}]'.format(
                         old_handicap_section, new_handicap_section), section=old_handicap_section)
             tournament_ids.append(default_tournament_id)
@@ -448,7 +448,7 @@ class Event(ConfigReader):
                     for key, value in options.items():
                         self.set(section, key, value)
                     screen_ids.append(screen_id)
-                    self._add_info('l\'écran [{}] a été ajouté'.format(screen_id), section='screen.*')
+                    self._add_debug('l\'écran [{}] a été ajouté'.format(screen_id), section='screen.*')
                 data: Dict[str, Dict[str, str]] = {
                     tournament_id + '-' + SCREEN_TYPE_BOARDS + '-input.' + SCREEN_TYPE_BOARDS: {
                         'tournament': tournament_id,

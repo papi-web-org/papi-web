@@ -98,3 +98,5 @@ tournament = D
 > [!NOTE]
 > Il est tout à fait possible dans chaque ensemble de limiter les joueur·euses présenté·es, comme vu précédemment avec les options `first`/`last` ou `part`/`parts`.
 
+Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
+

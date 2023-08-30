@@ -131,3 +131,6 @@ parts = 6
 ```
 
 ![Écran de saisie multi-colonnes](images/update-multi-columns.jpg)
+
+Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
+

@@ -39,3 +39,5 @@ Vous trouverez ci-dessous quelques personnalisations déjà existantes :
 
 Si vous souhaitez partager votre personnalisation dans de futures versions de Papi-Web, faites nous signe !
 
+Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
+

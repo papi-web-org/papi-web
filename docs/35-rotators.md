@@ -58,3 +58,6 @@ screens = tournoi-E,tournoi-F
 
 > [!NOTE]
 > Il est possible d'utiliser à la fois `families` et `screens`.
+
+Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
+

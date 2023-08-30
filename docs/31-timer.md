@@ -83,3 +83,5 @@ Les délais de fonctionnement du chronomètre sont exprimés en minutes :
 3 = 10
 ```
 
+Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
+
