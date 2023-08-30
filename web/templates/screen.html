@@ -25,19 +25,7 @@
         <div id="#menu" class="menu">
             {% for entry in screen.menu_screens %}
                 <a href="{% url 'show-screen' event.id entry.id %}" class="menu-item {% if screen.id == entry.id %}selected{% endif %}">{% spaceless %}
-                    {% if entry.type == 'boards' %}
-                        {% if entry.sets.0.tournament.current_round %}
-                            {{ entry.menu_text_boards }}
-                        {% else %}
-                            {{ entry.menu_text_players_by_rating }}
-                        {% endif %}
-                    {% endif %}
-                    {% if entry.type == 'players' %}
-                        {{ entry.menu_text_players_by_name }}
-                    {% endif %}
-                    {% if entry.type == 'results' %}
-                        {{ entry.menu_text }}
-                    {% endif %}
+                    {{ entry.menu_text }}
                     {% endspaceless %}</a>
             {% endfor %}
         </div>
@@ -90,6 +78,9 @@
             refresh();
         });
         $('.screen-results table').click(function () {
+            refresh();
+        });
+        $('.screen-players table').click(function () {
             refresh();
         });
     });

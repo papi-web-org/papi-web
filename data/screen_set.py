@@ -23,9 +23,6 @@ class ScreenSet:
         self.__first_item: Optional[Any] = None
         self.__last_item: Optional[Any] = None
         self.__items_lists: Optional[List[List[Any]]] = None
-        if self.__name is None:
-            self.__name = '%t'
-        self.__name = self.__name.replace('%t', tournament.name)
 
     @property
     def tournament(self) -> Tournament:
@@ -49,6 +46,19 @@ class ScreenSet:
 
     @property
     def name(self) -> str:
+        return self.__name
+
+    @property
+    def name_for_boards(self) -> str:
+        if self.tournament.current_round:
+            self.__extract_boards()
+        else:
+            self.__extract_players_by_rating()
+        return self.__name
+
+    @property
+    def name_for_players(self) -> str:
+        self.__extract_players_by_name()
         return self.__name
 
     def __extract_data(self, items: List[Any], force_even: bool = False):
@@ -108,7 +118,7 @@ class ScreenSet:
             self.__extract_data(self.tournament.boards, force_even=False)
             if self.__name is None:
                 if self.first or self.last or self.part:
-                    self.__name = '%t échiquiers %f à %l'
+                    self.__name = '%t [%f à %l]'
                 else:
                     self.__name = '%t'
             self.__name = self.__name.replace('%t', str(self.tournament.name))

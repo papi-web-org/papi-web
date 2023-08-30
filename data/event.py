@@ -422,37 +422,37 @@ class Event(ConfigReader):
                 if len(self.tournaments) > 1:
                     name_prefix = self.tournaments[tournament_id].name + ' - '
                 data: Dict[str, Dict[str, str]] = {
-                    tournament_id + '-' + SCREEN_TYPE_BOARDS + '-input': {
+                    tournament_id + '-' + SCREEN_TYPE_BOARDS + '-update': {
                         'type': SCREEN_TYPE_BOARDS,
                         'update': 'on',
                         'name': name_prefix + 'Saisie des résultats',
-                        'menu': 'none',
+                        'menu_text': name_prefix + 'Saisie des résultats',
                     },
-                    tournament_id + '-' + SCREEN_TYPE_BOARDS + '-print': {
+                    tournament_id + '-' + SCREEN_TYPE_BOARDS + '-view': {
                         'type': SCREEN_TYPE_BOARDS,
                         'update': 'off',
                         'name': name_prefix + 'Appariements par échiquier',
-                        'menu': 'view',
-                        'menu_text': name_prefix + 'Appariements par échiquier',
+                        'menu_text': name_prefix + 'Appariements',
                     },
                     tournament_id + '-' + SCREEN_TYPE_PLAYERS: {
                         'type': SCREEN_TYPE_PLAYERS,
                         'name': name_prefix + 'Appariements par ordre alphabétique',
-                        'menu': 'view',
-                        'menu_text': name_prefix + 'Appariements par ordre alphabétique',
+                        'columns': '2',
+                        'menu_text': name_prefix + 'Ordre alphabétique',
                     },
                     tournament_id + '-' + SCREEN_TYPE_RESULTS: {
                         'type': SCREEN_TYPE_RESULTS,
                         'name': name_prefix + 'Derniers résultats',
-                        'menu': 'view',
                         'menu_text': name_prefix + 'Derniers résultats',
                     },
                 }
+                menu: str = ','.join([screen_id for screen_id in data])
                 for screen_id, options in data.items():
                     section: str = 'screen.' + screen_id
                     self.add_section(section)
                     for key, value in options.items():
                         self.set(section, key, value)
+                    self.set(section, 'menu', menu)
                     screen_ids.append(screen_id)
                     self._add_debug('l\'écran [{}] a été ajouté'.format(screen_id), section='screen.*')
                 data: Dict[str, Dict[str, str]] = {
@@ -1024,6 +1024,4 @@ def get_events(silent: bool = True) -> List[Event]:
 
 
 def get_events_by_name() -> List[Event]:
-    events: List[Event] = get_events()
     return sorted(get_events(), key=lambda event: event.name)
-

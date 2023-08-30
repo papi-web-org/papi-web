@@ -93,58 +93,16 @@ class AScreenWithSets(AScreen):
     def __init__(self, screen_id: str, family_id: Optional[str], name: str, type: str, columns: int,
                  menu_text: Optional[str], menu: Optional[str], show_timer: bool, sets: List[ScreenSet]):
         super().__init__(screen_id, family_id, name, type, columns, menu_text, menu, show_timer)
-        self.__sets: List[ScreenSet] = sets
-
-    @property
-    def name(self) -> str:
-        if self._name is None:
-            return self.__sets[0].name
-        return self._name
-
-    @property
-    def menu_text_boards(self) -> Optional[str]:
-        if self._menu_text is None:
-            return None
-        text: str = self._menu_text
-        if self.sets:
-            set: ScreenSet = self.sets[0]
-            text = text.replace('%t', set.tournament.name)
-            text = text.replace('%f', str(set.first_board.id))
-            text = text.replace('%l', str(set.last_board.id))
-        return text
-
-    @property
-    def menu_text_players_by_name(self) -> Optional[str]:
-        if self._menu_text is None:
-            return None
-        text: str = self._menu_text
-        if self.sets:
-            set: ScreenSet = self.sets[0]
-            text = text.replace('%t', set.tournament.name)
-            text = text.replace('%f', str(set.first_player_by_name.last_name)[:3])
-            text = text.replace('%l', str(set.last_player_by_name.last_name)[:3])
-        return text
-
-    @property
-    def menu_text_players_by_rating(self) -> Optional[str]:
-        if self._menu_text is None:
-            return None
-        text: str = self._menu_text
-        if self.sets:
-            set: ScreenSet = self.sets[0]
-            text = text.replace('%t', set.tournament.name)
-            text = text.replace('%f', str(set.first_player_by_rating.rating))
-            text = text.replace('%l', str(set.last_player_by_rating.rating))
-        return text
+        self._sets: List[ScreenSet] = sets
 
     @property
     def sets(self) -> List[ScreenSet]:
-        return self.__sets
+        return self._sets
 
     @property
     def sets_str(self) -> str:
         strings: List[str] = []
-        for set in self.__sets:
+        for set in self._sets:
             strings.append(str(set))
         return ' + '.join(strings)
 
@@ -155,6 +113,28 @@ class ScreenBoards(AScreenWithSets):
             menu: Optional[str], show_timer: bool, sets: List[ScreenSet], update: bool):
         super().__init__(screen_id, family_id, name, SCREEN_TYPE_BOARDS, columns, menu_text, menu, show_timer, sets)
         self.__update: bool = update
+
+    @property
+    def name(self) -> str:
+        if self._name is None:
+            return self.sets[0].name_for_boards
+        return self._name
+
+    @property
+    def menu_text(self) -> Optional[str]:
+        if self._menu_text is None:
+            return None
+        text: str = self._menu_text
+        if self.sets:
+            set: ScreenSet = self.sets[0]
+            text = text.replace('%t', set.tournament.name)
+            if set.tournament.current_round:
+                text = text.replace('%f', str(set.first_board.id))
+                text = text.replace('%l', str(set.last_board.id))
+            else:
+                text = text.replace('%f', str(set.first_player_by_rating.rating))
+                text = text.replace('%l', str(set.last_player_by_rating.rating))
+        return text
 
     @property
     def type_str(self) -> str:
@@ -177,6 +157,24 @@ class ScreenPlayers(AScreenWithSets):
             screen_id, family_id, name, SCREEN_TYPE_PLAYERS, columns, menu_text, menu, show_timer, sets)
 
     @property
+    def name(self) -> str:
+        if self._name is None:
+            return self._sets[0].name_for_players
+        return self._name
+
+    @property
+    def menu_text(self) -> Optional[str]:
+        if self._menu_text is None:
+            return None
+        text: str = self._menu_text
+        if self.sets:
+            set: ScreenSet = self.sets[0]
+            text = text.replace('%t', set.tournament.name)
+            text = text.replace('%f', str(set.first_player_by_name.last_name)[:3])
+            text = text.replace('%l', str(set.last_player_by_name.last_name)[:3])
+        return text
+
+    @property
     def type_str(self) -> str:
         return 'Alphabétique'
 
@@ -193,10 +191,6 @@ class ScreenResults(AScreen):
             screen_id, family_id, name, SCREEN_TYPE_RESULTS, columns, menu_text, menu, show_timer)
         self.__event_id = event_id
         self.__limit: int = limit
-
-    @property
-    def name(self) -> str:
-        return self._name
 
     @property
     def event_id(self) -> str:
