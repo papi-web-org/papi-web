@@ -53,43 +53,43 @@ function update_timer() {
 	now = new Date();
 	time = Math.floor(now.getTime() / 1000);
 	clock_html = two_digits(now.getHours())+':'+two_digits(now.getMinutes())+':'+two_digits(now.getSeconds());
-{% for event in timer.events %}
-	if (time < {{ event.timestamp_1 }}) { // {{ event.datetime_str_1 }} color_1 {{ event.text_before }}
+{% for hour in timer.hours %}
+	if (time < {{ hour.timestamp_1 }}) { // {{ hour.datetime_str_1 }} color_1 {{ hour.text_before }}
 		color = 'rgb({{ color_1_r }},{{ color_1_g }},{{ color_1_b }})';
-		dur = duration({{ event.timestamp }} - time);
-		text_html = '{{ event.text_before }}'.replace('%s', dur);
+		dur = duration({{ hour.timestamp }} - time);
+		text_html = '{{ hour.text_before }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
 		return;
 	}
-	if (time < {{ event.timestamp_2 }}) { // {{ event.datetime_str_2 }} color_1 -> color_2 {{ event.text_before }}
-		color_r = Math.floor({{ color_1_r }} + (time - {{ event.timestamp_1 }})/({{ delay_1|mul:60 }})*({{ color_2_r|sub:color_1_r }}));
-		color_g = Math.floor({{ color_1_g }} + (time - {{ event.timestamp_1 }})/({{ delay_1|mul:60 }})*({{ color_2_g|sub:color_1_g }}));
-		color_b = Math.floor({{ color_1_b }} + (time - {{ event.timestamp_1 }})/({{ delay_1|mul:60 }})*({{ color_2_b|sub:color_1_b }}));
+	if (time < {{ hour.timestamp_2 }}) { // {{ hour.datetime_str_2 }} color_1 -> color_2 {{ hour.text_before }}
+		color_r = Math.floor({{ color_1_r }} + (time - {{ hour.timestamp_1 }})/({{ delay_1|mul:60 }})*({{ color_2_r|sub:color_1_r }}));
+		color_g = Math.floor({{ color_1_g }} + (time - {{ hour.timestamp_1 }})/({{ delay_1|mul:60 }})*({{ color_2_g|sub:color_1_g }}));
+		color_b = Math.floor({{ color_1_b }} + (time - {{ hour.timestamp_1 }})/({{ delay_1|mul:60 }})*({{ color_2_b|sub:color_1_b }}));
 		color = 'rgb(' + color_r + ',' + color_g + ',' + color_b + ')';
-		dur = duration({{ event.timestamp }} - time);
-		text_html = '{{ event.text_before }}'.replace('%s', dur);
+		dur = duration({{ hour.timestamp }} - time);
+		text_html = '{{ hour.text_before }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
 		return;
 	}
-	if (time < {{ event.timestamp_3 }}) { // {{ event.datetime_str_3 }} color_2 -> color_3 {{ event.text_before }}
-		color_r = Math.floor({{ color_2_r }} + (time - {{ event.timestamp_2 }})/({{ delay_2|mul:60 }})*({{ color_3_r|sub:color_2_r }}));
-		color_g = Math.floor({{ color_2_g }} + (time - {{ event.timestamp_2 }})/({{ delay_2|mul:60 }})*({{ color_3_g|sub:color_2_g }}));
-		color_b = Math.floor({{ color_2_b }} + (time - {{ event.timestamp_2 }})/({{ delay_2|mul:60 }})*({{ color_3_b|sub:color_2_b }}));
+	if (time < {{ hour.timestamp_3 }}) { // {{ hour.datetime_str_3 }} color_2 -> color_3 {{ hour.text_before }}
+		color_r = Math.floor({{ color_2_r }} + (time - {{ hour.timestamp_2 }})/({{ delay_2|mul:60 }})*({{ color_3_r|sub:color_2_r }}));
+		color_g = Math.floor({{ color_2_g }} + (time - {{ hour.timestamp_2 }})/({{ delay_2|mul:60 }})*({{ color_3_g|sub:color_2_g }}));
+		color_b = Math.floor({{ color_2_b }} + (time - {{ hour.timestamp_2 }})/({{ delay_2|mul:60 }})*({{ color_3_b|sub:color_2_b }}));
 		color = 'rgb(' + color_r + ',' + color_g + ',' + color_b + ')';
-		dur = duration({{ event.timestamp }} - time);
-		text_html = '{{ event.text_before }}'.replace('%s', dur);
+		dur = duration({{ hour.timestamp }} - time);
+		text_html = '{{ hour.text_before }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
 		return;
 	}
-	{% if not event.last %}
-	if (time < {{ event.timestamp_next }}) { // {{ event.datetime_str_next }} color_3 {{ event.text_after }}
+	{% if not hour.last %}
+	if (time < {{ hour.timestamp_next }}) { // {{ hour.datetime_str_next }} color_3 {{ hour.text_after }}
 	{% endif %}
 		color = 'rgb({{ color_3_r }},{{ color_3_g }},{{ color_3_b }})';
-		dur = duration(time - {{ event.timestamp }});
-		text_html = '{{ event.text_after }}'.replace('%s', dur);
+		dur = duration(time - {{ hour.timestamp }});
+		text_html = '{{ hour.text_after }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
 		return;
-	{% if not event.last %}
+	{% if not hour.last %}
 	}
 	{% endif %}
 {% endfor %}
