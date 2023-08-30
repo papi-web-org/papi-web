@@ -9,6 +9,8 @@ Papi-web est désormais livré sous la forme d'un exécutable Windows autonome.
 > [!IMPORTANT]
 > L'installation de XAMPP (ou d'un autre serveur Apache/PHP) n'est plus nécessaire.
 
+A voir : [Installation et mise à jour](04-install.md)
+
 ## Configuration plus simple
 
 Papi-web et les évènements sont désormais configuré au format INI :
@@ -27,6 +29,11 @@ name = Tournoi amical 17 juin 2023
 [tournament]
 filename = amical-20230617
 ```
+
+A voir :
+- [Configuration et utilisation](05-use.md)
+- [Guide de référence de la configuration des évènements](40-ref.md)
+
 
 ## Utilisation plus simple
 
@@ -49,6 +56,11 @@ Django version 4.2.3, using settings 'web.settings'
 Starting development server at http://0.0.0.0:80/
 Quit the server with CTRL-BREAK.
 ```
+
+A voir :
+- [Gestion d'un petit tournoi amical](11-friendly.md)
+- [Gestion d'un tournoi homologué (interface avec le site fédéral)](12-qualified.md)
+
 
 ## Page d'accueil mieux renseignée
 
@@ -86,7 +98,7 @@ parts = 12
 
 ## Présentation des écrans en plusieurs colonnes
 
-Pour un meilleurs affichages, tous les écrans peuvent être présentés en multi-colonnes.
+Pour un meilleur affichage, tous les écrans peuvent être présentés en multi-colonnes.
 
 ```
 [screen.pairings]
@@ -105,6 +117,8 @@ type = players
 ```
 
 ![Appariements par ordre alphabétique](images/screen-players.jpg)
+
+A voir : [Affichage des appariements par ordre alphabétique](23-pairings-by-player.md)
 
 ## Créations des écrans multiples à l'aide de modèles
 
@@ -133,6 +147,8 @@ template = alpha
 part = 2
 ```
 
+A voir : [Modèles et familles d'écran](33-templates-families.md)
+
 ## Création de familles d'écrans multiples
 
 Pour encore plus de souplesse, il est possible de définir toute une famille d'écrans en une fois :
@@ -155,6 +171,8 @@ range = 1-10
 ```
 
 Dans l'exemple ci-dessus, 10 écrans de saisie des résultats sont automatiquement créés !
+
+A voir : [Modèles et familles d'écran](33-templates-families.md)
 
 ## écrans rotatifs
 
@@ -204,6 +222,8 @@ screens = tournoi-C,tournoi-D
 [rotator.tournoi-EF]
 screens = tournoi-E,tournoi-F
 ```
+
+A voir : [Écrans rotatifs](35-rotators.md)
 
 ## Sources accessibles
 
