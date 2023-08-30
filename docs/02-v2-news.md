@@ -6,7 +6,8 @@
 
 Papi-web est désormais livré sous la forme d'un exécutable Windows autonome.
 
-L'installation de XAMPP (ou d'un autre serveur Apache/PHP) n'est plus nécessaire.
+> [!IMPORTANT]
+> L'installation de XAMPP (ou d'un autre serveur Apache/PHP) n'est plus nécessaire.
 
 ## Configuration plus simple
 
@@ -25,6 +26,28 @@ name = Tournoi amical 17 juin 2023
 
 [tournament]
 filename = amical-20230617
+```
+
+## Utilisation plus simple
+
+Le lancement du serveur indique les URL à accéder (depuis le serveur et depuis un client du réseau local) :
+
+```
+C:\OneDrive\echecs\papi-web\dev\venv\Scripts\python.exe C:\OneDrive\echecs\papi-web\dev\papi_web.py --server 
+INFO     Papi-web 2.0-rc2 Copyright © Pascal AUBRY 2013-2023
+INFO     Reading configuration file...
+INFO     log: INFO
+INFO     host: 0.0.0.0
+INFO     port: 80
+INFO     local URL: http://127.0.0.1
+INFO     LAN/WAN URL: http://192.168.1.79
+INFO     Setting up Django...
+INFO     Opening the welcome page [http://127.0.0.1] in a browser...
+INFO     Starting Papi-web server, please wait...
+August 30, 2023 - 23:44:43
+Django version 4.2.3, using settings 'web.settings'
+Starting development server at http://0.0.0.0:80/
+Quit the server with CTRL-BREAK.
 ```
 
 ## Page d'accueil mieux renseignée
