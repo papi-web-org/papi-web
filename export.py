@@ -23,16 +23,19 @@ SPEC_FILE: str = basename + '.spec'
 TEST_DIR = os.path.join('..', 'test')
 
 
-def clean():
+def clean(clean_zip: bool):
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
     for d in [BUILD_DIR, DIST_DIR, PROJECT_DIR, ]:
         if os.path.isdir(d):
             logger.info('Deleting folder {}...'.format(d))
             shutil.rmtree(d)
-    for f in [ZIP_FILE, SPEC_FILE, ]:
-        if os.path.isfile(f):
-            logger.info('Deleting file {}...'.format(f))
-            os.unlink(f)
+    if os.path.isfile(SPEC_FILE):
+        logger.info('Deleting file {}...'.format(SPEC_FILE))
+        os.unlink(SPEC_FILE)
+    if clean_zip:
+        if os.path.isfile(ZIP_FILE):
+            logger.info('Deleting file {}...'.format(ZIP_FILE))
+            os.unlink(ZIP_FILE)
 
 
 def build_exe():
@@ -101,12 +104,12 @@ def build_test():
 
 
 def main():
-    clean()
+    clean(clean_zip=True)
     build_exe()
     create_project()
     create_zip()
     build_test()
-    clean()
+    clean(clean_zip=False)
 
 
 main()
