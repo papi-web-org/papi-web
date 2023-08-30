@@ -91,10 +91,10 @@ Pour la présentation multi-écrans, il est possible d'utiliser des modèles (le
 # modèle d'affichage des appariements par ordre alphabétique
 [template.alpha]
 type = players
-tournament = principal
 columns = 2
 menu_text = [%f-%l]
 [template.apha.players]
+tournament = principal
 parts = 2
 
 # écran n°1

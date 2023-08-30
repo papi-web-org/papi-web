@@ -2,6 +2,7 @@ import datetime
 import glob
 import os
 import re
+from functools import total_ordering
 from pathlib import Path
 
 import time
@@ -25,6 +26,7 @@ logger: Logger = get_logger()
 EVENTS_PATH: str = 'events'
 
 
+@total_ordering
 class Event(ConfigReader):
     def __init__(self, event_id: str, silent: bool = True):
         self.__id: str = event_id
@@ -390,7 +392,7 @@ class Event(ConfigReader):
             screen_id = section.split('.')[1] + '-' + screen_index
             screen_section = 'screen.' + screen_id
             if not self.has_section(screen_section):
-                # self._add_info('added section'.format(), section=screen_section)
+                self._add_debug('rubrique ajoutée', section=screen_section)
                 self.add_section(screen_section)
             self.set(screen_section, '__family__', family_id)
             for sub_section, properties in template.data.items():
@@ -399,14 +401,15 @@ class Event(ConfigReader):
                 else:
                     new_section = screen_section + '.' + sub_section
                 if not self.has_section(new_section):
-                    # self._add_info('added section'.format(), section=new_section)
+                    self._add_debug('rubrique ajoutée', section=new_section)
                     self.add_section(new_section)
                 for key, value in properties.items():
                     if not self.has_option(new_section, key):
                         new_value = value.replace('?', screen_index)
                         self.set(new_section, key, new_value)
-                        # self._add_info('added key with value [{}]'.format(new_value), section=new_section, key=key)
-            self._add_debug('l\'écran [{}] a été ajouté'.format(screen_id), section=section)
+                        self._add_debug(
+                            'option ajoutée avec la valeur [{}]'.format(new_value), section=new_section, key=key)
+            self._add_debug('écran [{}] ajouté'.format(screen_id), section=section)
 
     def __build_screens(self):
         screen_ids: List[str] = self._get_subsections_with_prefix('screen')
@@ -1000,6 +1003,14 @@ class Event(ConfigReader):
         Path(os.path.join(results_dir, filename)).touch()
         logger.info('le fichier [{}] a été ajouté'.format(os.path.join(results_dir, filename)))
 
+    def __lt__(self, other: 'Event'):
+        # p1 < p2 calls p1.__lt__(p2)
+        return self.name > other.name
+
+    def __eq__(self, other: 'Event'):
+        # p1 == p2 calls p1.__eq__(p2)
+        return self.name == other.name
+
 
 def get_events(silent: bool = True) -> List[Event]:
     event_files_pattern: str = os.path.join(EVENTS_PATH, '*.ini')
@@ -1010,3 +1021,9 @@ def get_events(silent: bool = True) -> List[Event]:
         event: Event = Event(event_id, silent=silent)
         events.append(event)
     return events
+
+
+def get_events_by_name() -> List[Event]:
+    events: List[Event] = get_events()
+    return sorted(get_events(), key=lambda event: event.name)
+

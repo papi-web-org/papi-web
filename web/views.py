@@ -12,7 +12,7 @@ from logging import Logger
 from common.logger import get_logger
 from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION, PapiWebConfig
 from data.board import Board
-from data.event import Event, get_events
+from data.event import Event, get_events_by_name
 from data.rotator import Rotator
 from data.screen import AScreen, SCREEN_TYPE_RESULTS
 from data.tournament import Tournament
@@ -66,7 +66,7 @@ def render_screen(
 
 
 def index(request: HttpRequest) -> HttpResponse:
-    events: List[Event] = get_events()
+    events: List[Event] = get_events_by_name()
     if len(events) == 0:
         messages.error(request, 'No event found')
     return render(request, 'index.html', {
