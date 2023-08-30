@@ -8,6 +8,7 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 - [Nouveautés de la version 2](docs/02-v2-news.md) _([ChangeLog](docs/03-change-log.md))_
 - [Installation et mise à jour](docs/04-install.md)
 - [Configuration et utilisation](docs/05-use.md)
+- [Guide de référence de la configuration des évènements](docs/40-ref.md)
 
 ## Guide de démarrage rapide
 
@@ -30,14 +31,3 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 - [Configuration des menus des écrans](docs/34-menus.md)
 - [Écrans rotatifs](docs/35-rotators.md)
 - [Personnalisation du rendu des écrans (CSS)](docs/36-css.md)
-
-## Guide de référence de la configuration des évènements (à venir)
-
-- [Généralités ([event])](docs/40-ref.md) (à venir)
-- [Tournois ([tournament])](docs/42-tournament.md) (à venir)
-- [Modèles d'écran ([template])](docs/43-template.md) (à venir)
-- [Écrans ([screen])](docs/44-screen.md) (à venir)
-- [Familles d'écrans ([family])](docs/45-family.md) (à venir)
-- [Écrans rotatifs ([rotator])](docs/46-rotator.md) (à venir)
-- [Chronomètre ([timer])](docs/47-timer.md) (à venir)
-

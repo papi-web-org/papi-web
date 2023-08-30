@@ -1,6 +1,6 @@
 **[Retour au sommaire de la documentation](../README.md)**
 
-# Papi-web - Guide de référence
+# Papi-web - Guide de référence de la configuration des évènements
 
 ## Généralités (`[event]`)
 
@@ -10,6 +10,10 @@
 | `update_password` | Le code d'accès aux pages de saisie des scores (facultatif).                                                                                        |
 | `css`             | La personnalisation CSS de l'évènement (facultative).<br/>Pour utiliser `custom/ffe/ffe.css`, on utilisera `css = ffe/ffe.css`.                     |
 
+Voir également :
+- [Gestion d'un petit tournoi amical](11-friendly.md)
+- [Gestion d'un tournoi homologué (interface avec le site fédéral)](12-qualified.md)
+ 
 ## Tournois (`[tournament.<tournament_id>]` ou `[tournament]`)
 
 L'identifiant du tournoi (`<tournament_id>`) est facultatif si l'évènement ne comporte qu'un tournoi, obligatoire s'il y en a plusieurs (s'il n'est pas précisé, l'identifiant du tournoi sera `default`).
@@ -25,6 +29,8 @@ L'identifiant du tournoi (`<tournament_id>`) est facultatif si l'évènement ne 
 > [!NOTE]
 > Si ni `filename` ni `ffe_id` ne sont utilisées ou si le fichier est introuvable, seules les opérations de test des accès et de récupération de la facture d'homologation sur le site fédérale seront disponiibles.
 > Si `ffe_id` ou `ffe_password` ne sont utilisées, les opérations sur le site fédéral ne seront pas disponibles.
+
+Voir également : [Gestion d'un évènement avec plusieurs tournois](13-multi-tournaments.md)
 
 ### Tournois à handicap (`[tournament.<tournament_id>.handicap]` ou `[tournament.handicap]`)
 
@@ -65,7 +71,6 @@ L'identifiant de l'écran (`<screen_id>`) est obligatoire.
 | `show_timer` | `show_timer = on` pour afficher le chronomètre, `show_timer = off` sinon (facultatif, par défaut `show_timer = off`).                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `limit`      | Le nombre maximal de résultats affichés (cette option n'est autorisée que pour les écrans de résultats).                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `columns`    | Le nombre de colonnes utilisé pour le rendu de l'écran (facultatif, par défaut `1`).                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-
 
 Voir également :
 - [Saisie des résultats](21-update.md)
@@ -135,6 +140,8 @@ L'identifiant de l'écran (`<rotator_id>`) est obligatoire.
 > Au moins une des deux options `screens` ou `families` doit être utilisée pour préciser les écrans à afficher.
 
 ## Chronomètre
+
+Voir également : [Utilisation d'un chronomètre](31-timer.md).
 
 ### Horaires des rondes (`[timer.hour.<round_id>]`)
 
