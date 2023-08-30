@@ -18,6 +18,11 @@ _Première utilisation de Papi-web dans une compétition homologuée en 2013_
 
 En mai 2018, un débriefing avec Pierre LAPEYRE après un stage d'arbitrage à Domloup se conclut à une heure très avancée sur une conclusion simple : il faut absolument diffuser Papi-web pour permettre aux arbitres de se concentrer sur leur coeur de métier, et il faut pour cela le mettre en place sur une manifestation de masse. Après un test grandeur nature quelques semaines avant au festival international de Metz par Eric DELMOTTE, la décision est prise d'utiliser Papi-web au championnat de France et ce sont Pierre LAPEYRE et Eric DELMOTTE qui en font la promotion à Nîmes en août 2018 ([voir la vidéo](https://www.youtube.com/watch?v=u2arqnRH9SA)) !
 
+En 2023, Papi-web est complètement ré-écrit : la version 2 apporte de nouvelles fonctionnalités et améliorations, notamment pour permettre la gestion de très gros tournois ([voir les nouveautés de la version 2](02-v2-news.md)).
+
+![Affichage des résultats dans la salle de jeu](images/affichage-2023.jpg)
+_Affichage des résultats dans la salle de jeu en 2023_
+
 ## Papi-web, c'est quoi ?
 
 C'est un programme qui permet :
