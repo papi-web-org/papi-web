@@ -174,7 +174,7 @@ Dans l'exemple ci-dessus, 10 écrans de saisie des résultats sont automatiqueme
 
 A voir : [Modèles et familles d'écran](33-templates-families.md)
 
-## écrans rotatifs
+## Écrans rotatifs
 
 Avec la version 1 de Papi-web, les organisateurs s'appuyaient parfois sur des modules externes de navigateurs (Tab Rotate sur Chrome, Tab Rotator sur Firefox, ...) pour permettre une rotation de l'affichage entre plusieurs écrans.
 
