@@ -169,19 +169,18 @@ class Event(ConfigReader):
         section: str = 'tournament.' + tournament_id
         key = 'path'
         default = 'papi'
+        path: str = default
         if not self.has_option(section, key):
             self._add_debug('option absente, par défaut [{}]'.format(default), section=section, key=key)
-        path: Optional[str] = self.get(section, key, fallback=default)
-        if not os.path.exists(path):
-            self._add_warning('le répertoire [{}] n\'existe pas, seules quelques opérations sur le site web de la FFE '
-                              'seront disponibles'.format(path), section=section, key=key)
-            path = None
-        elif not os.path.isdir(path):
-            self._add_warning('[{}] n\'est pas un répertoire, seules quelques opérations sur le site web de la FFE '
-                              'seront disponibles'.format(path), section=section, key=key)
-            path = None
         else:
-            path = os.path.realpath(path)
+            path = self.get(section, key)
+        if not os.path.exists(path):
+            self._add_error('le répertoire [{}] n\'existe pas, tournoi ignoré'.format(path), section=section, key=key)
+            return
+        if not os.path.isdir(path):
+            self._add_error('[{}] n\'est pas un répertoire, tournoi ignoré'.format(path), section=section, key=key)
+            return
+        path = os.path.realpath(path)
         key = 'filename'
         filename: Optional[str] = None
         if self.has_option(section, key):
@@ -191,21 +190,19 @@ class Event(ConfigReader):
         if self.has_option(section, key):
             ffe_id = self._getint_safe(section, key, minimum=1)
             if ffe_id is None:
-                self._add_warning('un entier positif non nul est attendu'.format(), section=section, key=key)
+                self._add_warning('un entier positif non nul est attendu', section=section, key=key)
         if filename is None and ffe_id is None:
-            self._add_warning('ni [filename] ni [ffe_id] ne sont indiqués, seules quelques opérations sur le site '
-                              'web de la FFE seront disponibles'.format(), section=section)
+            self._add_error('ni [filename] ni [ffe_id] ne sont indiqués, tournoi ignoré', section=section)
+            return
         if filename is None:
             filename = str(ffe_id)
-        file: Optional[str] = os.path.join(path, filename + '.papi')
+        file = os.path.join(path, filename + '.papi')
         if not os.path.exists(file):
-            self._add_warning('le fichier [{}] n\'existe pas, seules quelques opérations sur le site web de la FFE '
-                              'seront disponibles'.format(file), section=section)
-            file = None
-        elif not os.path.isfile(file):
-            self._add_warning('[{}] n\'est pas un fichier, seules quelques opérations sur le site web de la FFE '
-                              'seront disponibles'.format(file), section=section)
-            file = None
+            self._add_error('le fichier [{}] n\'existe pas, tournoi ignoré'.format(file), section=section)
+            return
+        if not os.path.isfile(file):
+            self._add_error('[{}] n\'est pas un fichier, tournoi ignoré'.format(file), section=section)
+            return
         key = 'name'
         default = tournament_id
         if not self.has_option(section, key):
@@ -226,8 +223,7 @@ class Event(ConfigReader):
                                       section=section, key=key)
                     ffe_password = None
         elif self.has_option(section, key):
-            self._add_info('cette option est ignorée quand l\'option [ffe_id] n\'est pas indiquée',
-                           section=section, key=key)
+            self._add_info('option ignorée quand l\'option [ffe_id] n\'est pas indiquée', section=section, key=key)
         section_keys: List[str] = ['path', 'filename', 'name', 'ffe_id', 'ffe_password', ]
         for key, value in self.items(section):
             if key not in section_keys:
