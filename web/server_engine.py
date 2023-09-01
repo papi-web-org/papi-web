@@ -1,4 +1,6 @@
 import os
+from typing import List
+
 import django
 from data.event import get_events
 from django.core.management import call_command
@@ -26,10 +28,9 @@ class ServerEngine(Engine):
         logger.info('Setting up Django...')
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'web.settings')
         django.setup()
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            if s.connect_ex(('localhost', self._config.web_port)) == 0:
-                logger.error('Port [{}] already in use, can not start Papi-web server'.format(self._config.web_port))
-                return
+        if self.__port_in_use(self._config.web_port):
+            logger.error('Port [{}] already in use, can not start Papi-web server'.format(self._config.web_port))
+            return
         if self._config.web_launch_browser:
             logger.info('Opening the welcome page [{}] in a browser...'.format(self._config.local_url))
             open(self._config.local_url, new=2)
@@ -41,3 +42,8 @@ class ServerEngine(Engine):
                 '--noreload',
             ]
         )
+
+    @staticmethod
+    def __port_in_use(port: int):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(('localhost', port)) != 0
