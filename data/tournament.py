@@ -1,5 +1,5 @@
+from pathlib import Path
 import math
-import os
 from typing import Optional, Dict, List
 from logging import Logger
 
@@ -19,13 +19,13 @@ logger: Logger = get_logger()
 
 
 class Tournament:
-    def __init__(self, tournament_id: str, name: str, file: str, ffe_id: Optional[int], ffe_password: Optional[str],
+    def __init__(self, tournament_id: str, name: str, file: Path, ffe_id: Optional[int], ffe_password: Optional[str],
                  handicap_initial_time: Optional[int], handicap_increment: Optional[int],
                  handicap_penalty_step: Optional[int], handicap_penalty_value: Optional[int],
                  handicap_min_time: Optional[int]):
         self.__id: str = tournament_id
         self.__name: str = name
-        self.__file: str = file
+        self.__file: Path = file
         self.__ffe_id: Optional[int] = ffe_id
         self.__ffe_password: Optional[str] = ffe_password
         self.__handicap_initial_time: Optional[int] = handicap_initial_time
@@ -55,7 +55,7 @@ class Tournament:
         return self.__name
 
     @property
-    def file(self) -> str:
+    def file(self) -> Path:
         return self.__file
 
     @property
@@ -67,8 +67,8 @@ class Tournament:
         return self.__ffe_password
 
     @property
-    def ffe_upload_marker(self) -> Optional[str]:
-        return os.path.realpath(os.path.join(TMP_DIR, str(self.__ffe_id) + '.ffe_upload'))
+    def ffe_upload_marker(self) -> Path:
+        return Path(TMP_DIR, str(self.__ffe_id) + '.ffe_upload')
 
     @property
     def handicap(self) -> bool:

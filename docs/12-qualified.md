@@ -91,7 +91,7 @@ INFO     show OK
 
 ## Mise en ligne des résultats en temps-réel
 
-Le tournoi sont mis à jour sur le site fédéral dès qu'une modification a été apportée.
+Le tournoi est mis à jour sur le site fédéral dès qu'une modification a été apportée, via Papi-web ou directement depuis le logiciel Papi.
 
 > [!WARNING]
 > Lorsque la mise en ligne des résultats est activée, toutes les modifications effectuées dans le tournoi sont répercutées sur le site fédéral. Si vous souhaitez faire des opérations qui ne soient pas répercutées en ligne, il faut les effectuer sur une copie du fichier Papi ou arrêter temporairement la mise en ligne.

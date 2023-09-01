@@ -1,9 +1,9 @@
 import glob
-import os
 import re
 from datetime import datetime
 from functools import total_ordering
 from logging import Logger
+from pathlib import Path
 from typing import List
 
 from common.config_reader import TMP_DIR
@@ -76,21 +76,20 @@ class Result:
             self.result_str, self.black_player)
 
     @classmethod
-    def results_dir(cls, event_id: str) -> str:
-        return os.path.join(TMP_DIR, event_id, 'results')
+    def results_dir(cls, event_id: str) -> Path:
+        return Path(TMP_DIR, event_id, 'results')
 
     @classmethod
     def get_results(cls, event_id: str, limit: int) -> List['Result']:
         results: List[Result] = []
-        results_dir: str = cls.results_dir(event_id)
-        if not os.path.isdir(results_dir):
+        results_dir: Path = cls.results_dir(event_id)
+        if not results_dir.is_dir():
             return results
-        files: List[str] = glob.glob(os.path.join(results_dir, '*'))
+        files: List[str] = glob.glob(str(Path(results_dir, '*')))
         if not files:
             return results
         for file in reversed(files):
-            basename = os.path.basename(file)
-            matches = re.match('^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)$', basename)
+            matches = re.match('^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)$', Path(file).name)
             if not matches:
                 logger.warning('invalid result filename [{}]'.format(file))
                 continue

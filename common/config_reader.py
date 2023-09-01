@@ -1,4 +1,3 @@
-import os
 import re
 from pathlib import Path
 
@@ -10,38 +9,38 @@ from common.logger import get_logger
 
 logger: Logger = get_logger()
 
-TMP_DIR: str = os.path.join('.', 'tmp')
+TMP_DIR: Path = Path('tmp')
 
 
 # https://docs.python.org/3/library/configparser.html
 class ConfigReader(ConfigParser):
-    def __init__(self, ini_file: str, silent: bool):
+    def __init__(self, ini_file: Path, silent: bool):
         super().__init__(interpolation=None)
-        self.__ini_file: str = ini_file
-        ini_marker_dir: str = os.path.join(TMP_DIR, os.path.dirname(self.ini_file))
-        ini_marker_file: str = os.path.join(ini_marker_dir, os.path.basename(self.ini_file) + '.read')
+        self.__ini_file: Path = ini_file
+        ini_marker_dir: Path = Path(TMP_DIR, self.ini_file.parents[0])
+        ini_marker_file: Path = Path(ini_marker_dir, self.ini_file.name + '.read')
         self.__infos: List[str] = []
         self.__warnings: List[str] = []
         self.__errors: List[str] = []
         self.__silent: bool = False
-        if not os.path.exists(self.__ini_file):
+        if not self.ini_file.exists():
             self._add_warning('file not found')
             return
-        if not os.path.isfile(self.__ini_file):
+        if not self.ini_file.is_file():
             self._add_error('not a file')
             return
         if silent:
-            if not os.path.isfile(ini_marker_file):
+            if not ini_marker_file.is_file():
                 logger.info('New configuration file [{}] found, loading...'.format(self.ini_file))
-            elif os.path.getmtime(ini_marker_file) > os.path.getmtime(self.ini_file):
+            elif ini_marker_file.lstat().st_mtime > self.ini_file.lstat().st_mtime:
                 self.__silent = True
             else:
                 logger.info('Configuration file [{}] has been modified, reloading...'.format(self.ini_file))
         try:
             self.read(self.__ini_file, encoding='utf8')
-            if not os.path.isdir(ini_marker_dir):
-                os.makedirs(ini_marker_dir)
-            Path(ini_marker_file).touch()
+            if not ini_marker_dir.is_dir():
+                ini_marker_dir.mkdir(parents=True)
+            ini_marker_file.touch()
         except DuplicateSectionError as dse:
             self.__silent = False
             self._add_error('section is duplicated at line {}'.format(dse.lineno, dse.message), section=dse.section)
@@ -65,15 +64,15 @@ class ConfigReader(ConfigParser):
             return
 
     @property
-    def ini_file(self) -> str:
+    def ini_file(self) -> Path:
         return self.__ini_file
 
     def __format_message(self, text: str, section: Optional[str], key: Optional[str]):
         if section is None:
-            return '{}: {}'.format(os.path.basename(self.__ini_file), text)
+            return '{}: {}'.format(self.ini_file.name, text)
         if key is None:
-            return '{}[{}]: {}'.format(os.path.basename(self.__ini_file), section, text)
-        return '{}[{}].{}: {}'.format(os.path.basename(self.__ini_file), section, key, text)
+            return '{}[{}]: {}'.format(self.ini_file.name, section, text)
+        return '{}[{}].{}: {}'.format(self.ini_file.name, section, key, text)
 
     def _add_debug(self, text: str, section: Optional[str] = None, key: Optional[str] = None):
         message = self.__format_message(text, section, key)

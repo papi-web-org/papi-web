@@ -1,6 +1,5 @@
 import datetime
 import glob
-import os
 import re
 from functools import total_ordering
 from pathlib import Path
@@ -23,14 +22,14 @@ from data.tournament import Tournament
 
 logger: Logger = get_logger()
 
-EVENTS_PATH: str = 'events'
+EVENTS_PATH: Path = Path('events')
 
 
 @total_ordering
 class Event(ConfigReader):
     def __init__(self, event_id: str, silent: bool = True):
         self.__id: str = event_id
-        super().__init__(os.path.join(EVENTS_PATH, self.id + '.ini'), silent=silent)
+        super().__init__(Path(EVENTS_PATH, self.id + '.ini'), silent=silent)
         self.__name: str = self.__id
         self.__css: Optional[str] = None
         self.__update_password: Optional[str] = None
@@ -168,19 +167,18 @@ class Event(ConfigReader):
     def __build_tournament(self, tournament_id: str):
         section: str = 'tournament.' + tournament_id
         key = 'path'
-        default = 'papi'
-        path: str = default
+        default_path: Path = Path('papi')
+        path: Path = default_path
         if not self.has_option(section, key):
-            self._add_debug('option absente, par défaut [{}]'.format(default), section=section, key=key)
+            self._add_debug('option absente, par défaut [{}]'.format(default_path), section=section, key=key)
         else:
-            path = self.get(section, key)
-        if not os.path.exists(path):
+            path = Path(self.get(section, key))
+        if not path.exists():
             self._add_error('le répertoire [{}] n\'existe pas, tournoi ignoré'.format(path), section=section, key=key)
             return
-        if not os.path.isdir(path):
+        if not path.is_dir():
             self._add_error('[{}] n\'est pas un répertoire, tournoi ignoré'.format(path), section=section, key=key)
             return
-        path = os.path.realpath(path)
         key = 'filename'
         filename: Optional[str] = None
         if self.has_option(section, key):
@@ -196,21 +194,20 @@ class Event(ConfigReader):
             return
         if filename is None:
             filename = str(ffe_id)
-        file = os.path.join(path, filename + '.papi')
-        if not os.path.exists(file):
+        file: Path = Path(path, filename + '.papi')
+        if not file.exists():
             self._add_error('le fichier [{}] n\'existe pas, tournoi ignoré'.format(file), section=section)
             return
-        if not os.path.isfile(file):
+        if not file.is_file():
             self._add_error('[{}] n\'est pas un fichier, tournoi ignoré'.format(file), section=section)
             return
         key = 'name'
-        default = tournament_id
+        default_name: str = tournament_id
         if not self.has_option(section, key):
-            self._add_info('option absente, par défaut [{}]'.format(default), section=section, key=key)
-        name: str = self.get(section, key, fallback=default)
+            self._add_info('option absente, par défaut [{}]'.format(default_name), section=section, key=key)
+        name: str = self.get(section, key, fallback=default_name)
         key = 'ffe_password'
-        default = None
-        ffe_password: Optional[str] = default
+        ffe_password: Optional[str] = None
         if ffe_id is not None:
             if not self.has_option(section, key):
                 self._add_info('option absente, les opérations sur le site web de la FFE ne seront pas disponibles',
@@ -977,13 +974,13 @@ class Event(ConfigReader):
 
     def store_result(self, tournament: Tournament, board: Board, result: int):
         results_dir: str = Result.results_dir(self.id)
-        if not os.path.isdir(results_dir):
-            os.makedirs(results_dir)
+        if not Path(results_dir).is_dir():
+            Path(results_dir).mkdir(parents=True)
         now: float = time.time()
         # delete old files
-        for file in glob.glob(os.path.join(results_dir, '*')):
-            if os.path.getctime(file) - now > 3600:
-                os.unlink(file)
+        for file in glob.glob(str(Path(results_dir, '*'))):
+            if Path(file).lstat().st_ctime - now > 3600:
+                Path(file).unlink()
                 logger.debug('le fichier [{}] a été supprimé'.format(file))
         # add a new file
         white_str = '{} {} {}'.format(
@@ -996,8 +993,9 @@ class Event(ConfigReader):
             now, tournament.id, tournament.current_round, board.id,
             white_str, black_str, result,
         )
-        Path(os.path.join(results_dir, filename)).touch()
-        logger.info('le fichier [{}] a été ajouté'.format(os.path.join(results_dir, filename)))
+        result_file: Path = Path(results_dir, filename)
+        result_file.touch()
+        logger.info('le fichier [{}] a été ajouté'.format(result_file))
 
     def __lt__(self, other: 'Event'):
         # p1 < p2 calls p1.__lt__(p2)
@@ -1009,11 +1007,11 @@ class Event(ConfigReader):
 
 
 def get_events(silent: bool = True) -> List[Event]:
-    event_files_pattern: str = os.path.join(EVENTS_PATH, '*.ini')
+    event_files_pattern: str = str(Path(EVENTS_PATH, '*.ini'))
     event_files: List[str] = glob.glob(event_files_pattern)
     events: List[Event] = []
     for event_file in event_files:
-        event_id: str = os.path.splitext(os.path.basename(event_file))[0]
+        event_id: str = Path(event_file).stem
         event: Event = Event(event_id, silent=silent)
         events.append(event)
     return events

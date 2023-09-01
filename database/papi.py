@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Dict, List, Tuple
 from logging import Logger
 
@@ -67,7 +68,7 @@ TOURNAMENT_RATING_TYPE_DB_FIELDS: Dict[int, str] = {
 
 class PapiDatabase(AccessDatabase):
 
-    def __init__(self, file: str):
+    def __init__(self, file: Path):
         super().__init__(file)
         '''self.__player_fields: List[str] = [
             'Ref',

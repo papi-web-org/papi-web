@@ -1,5 +1,5 @@
-import os
 import webbrowser
+from pathlib import Path
 from typing import Optional, Dict, Any
 from AdvancedHTMLParser import AdvancedHTMLParser, AdvancedTag
 from requests import Session, Response
@@ -24,7 +24,7 @@ FEES_EVENT: str = 'ctl00$ContentPlaceHolderMain$CmdFactureHomologation'
 UPLOAD_LINK_ID: str = 'ctl00_ContentPlaceHolderMain_CmdUploadPapi'
 UPLOAD_EVENT: str = UPLOAD_LINK_ID.replace('_', '$')
 
-FEES_DIR: str = 'fees'
+FEES_DIR: Path = Path('fees')
 
 
 class FFESession(Session):
@@ -130,37 +130,6 @@ class FFESession(Session):
             return
         logger.info('auth OK: {}'.format(self.__tournament_ffe_url))
 
-    '''def set_visible(self):
-        logger.info('Tournoi [{}] :'.format(self.__tournament.ffe_id))
-        if not self.ffe_init():
-            return
-        # logger.info('init OK')
-        if not self.ffe_auth():
-            return
-        logger.info('auth OK: {}'.format(self.__tournament_ffe_url))
-        if self.__auth_vars[SET_VISIBLE_LINK_ID] is None:
-            logger.warning('Lien d\'affichage non trouvé (vérifier qu\'un fichier Papi a déjà été téléchargé)')
-            return False
-        if self.__auth_vars[SET_VISIBLE_LINK_ID].lower().startswith('desactiver'):
-            logger.info('Les données sont déjà affichées')
-            return True
-        if not self.__auth_vars[SET_VISIBLE_LINK_ID].lower().startswith('activer'):
-            logger.error('Lien d\'affichage non reconnu [{}]'.format(self.__auth_vars[SET_VISIBLE_LINK_ID]))
-            return False
-        url = FFE_URL + '/MonTournoi.aspx'
-        post_data: Dict[str, str] = {
-            '__EVENTTARGET': SET_VISIBLE_EVENT,
-            '__EVENTARGUMENT': '',
-            VIEW_STATE_INPUT_ID: self.__auth_vars[VIEW_STATE_INPUT_ID],
-            VIEW_STATE_GENERATOR_INPUT_ID: self.__auth_vars[VIEW_STATE_GENERATOR_INPUT_ID],
-            EVENT_VALIDATION_INPUT_ID: self.__auth_vars[EVENT_VALIDATION_INPUT_ID],
-        }
-        html: str = self.__read_url(url, post_data)
-        if not html:
-            return False
-        logger.info('show OK')
-        return True'''
-
     def get_fees(self):
         logger.info('Tournoi [{}] :'.format(self.__tournament.ffe_id))
         if not self.ffe_init():
@@ -191,10 +160,10 @@ class FFESession(Session):
         html: str = self.__read_url(url, post_data)
         if not html:
             return
-        if not os.path.exists(FEES_DIR):
-            os.makedirs(FEES_DIR)
-        if not os.path.isdir(FEES_DIR):
-            logger.error('[{}] n\'est pas un répertoire'.format(os.path.realpath(FEES_DIR)))
+        if not FEES_DIR.exists():
+            FEES_DIR.mkdir(parents=True)
+        if not FEES_DIR.is_dir():
+            logger.error('[{}] n\'est pas un répertoire'.format(FEES_DIR.resolve()))
             return
         base: AdvancedTag = AdvancedTag('base')
         base.setAttribute('href', FFE_URL)
@@ -203,11 +172,11 @@ class FFESession(Session):
             return
         head: AdvancedTag = parser.getElementsByTagName('head')[0]
         head.insertBefore(base, head.getChildren()[0])
-        file: str = os.path.join(FEES_DIR, str(self.__tournament.ffe_id) + '-fees.html')
+        file: Path = Path(FEES_DIR, str(self.__tournament.ffe_id) + '-fees.html')
         with open(file, 'w') as f:
             f.write(parser.getHTML())
         logger.info('Facture d\'homologation enregistrée dans [{}]'.format(file))
-        webbrowser.open('file://' + os.path.realpath(file), new=2)
+        webbrowser.open('file://{}'.format(file.resolve()), new=2)
         logger.info('fees OK')
         return
 
@@ -233,8 +202,7 @@ class FFESession(Session):
         html: str = self.__read_url(url, data=post, files={UPLOAD_EVENT: self.__tournament.file, })
         if not html:
             return
-        from pathlib import Path
-        Path(self.__tournament.ffe_upload_marker).touch()
+        self.__tournament.ffe_upload_marker.touch()
         logger.info('upload OK')
         if not set_visible:
             return

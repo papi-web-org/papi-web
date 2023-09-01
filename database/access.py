@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
 import pyodbc
 from logging import Logger
@@ -11,8 +11,8 @@ logger: Logger = get_logger()
 
 class AccessDatabase:
 
-    def __init__(self, file: str):
-        self.__file = file
+    def __init__(self, file: Path):
+        self.__file: Path = file
         self.__database: Optional[pyodbc.Connection] = None
         self.__cursor: Optional[pyodbc.Cursor] = None
 
@@ -28,7 +28,7 @@ class AccessDatabase:
                     access_driver, install_url)
                 msg = msg + '\nNote: for 32bits/64bits compatibility, use accessdatabaseengine_X64.exe /passive'
                 raise PapiException(msg)
-            db_url: str = 'DRIVER={{{}}};DBQ={};'.format(access_driver, os.path.relpath(self.__file))
+            db_url: str = 'DRIVER={{{}}};DBQ={};'.format(access_driver, self.__file.resolve())
             # log_info(db_url)
             try:
                 self.__database = pyodbc.connect(db_url)

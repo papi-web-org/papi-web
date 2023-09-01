@@ -1,4 +1,3 @@
-import os.path
 import time
 from typing import List, Optional
 from logging import Logger
@@ -97,11 +96,11 @@ class ActionSelector:
                     updated_tournaments: List[Tournament] = []
                     for tournament in tournaments:
                         upload: bool
-                        if not os.path.isfile(tournament.ffe_upload_marker):
+                        if not tournament.ffe_upload_marker.is_file():
                             upload = True
-                        elif os.path.getmtime(tournament.file) <= os.path.getmtime(tournament.ffe_upload_marker):
+                        elif tournament.file.lstat().st_mtime <= tournament.ffe_upload_marker.lstat().st_mtime:
                             upload = False
-                        elif time.time() <= os.path.getmtime(tournament.file) + 5:
+                        elif time.time() <= tournament.file.lstat().st_mtime + 5:
                             upload = False
                         else:
                             upload = True

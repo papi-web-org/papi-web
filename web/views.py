@@ -1,5 +1,6 @@
+from pathlib import Path
+
 import math
-import os
 import time
 from typing import List, Dict, Optional, Tuple
 from django.contrib import messages
@@ -201,7 +202,7 @@ def get_screen_last_update(request: HttpRequest, event_id: str, screen_id: str) 
         return redirect('index')
     try:
         screen: AScreen = event.screens[screen_id]
-        screen_files: List[str] = []
+        screen_files: List[Path] = []
         if screen.type == SCREEN_TYPE_RESULTS:
             for tournament in event.tournaments.values():
                 if tournament.file not in screen_files:
@@ -212,7 +213,7 @@ def get_screen_last_update(request: HttpRequest, event_id: str, screen_id: str) 
                     screen_files.append(set.tournament.file)
         mtime: float = 0.0
         for screen_file in screen_files:
-            mtime = max(mtime, os.path.getmtime(screen_file))
+            mtime = max(mtime, screen_file.lstat().st_mtime)
         return HttpResponse(str(math.ceil(mtime)), content_type='text/plain')
     except KeyError:
         messages.error(request, 'Screen [{}] not found'.format(screen_id))
