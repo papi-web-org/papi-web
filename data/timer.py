@@ -127,8 +127,7 @@ class TimerHour:
         self.__last = last
 
     def __repr__(self):
-        return '{}({} {} [{}/{}])'.format(
-            type(self).__name__, self.timestamp, self.datetime_str, self.text_before, self.text_after)
+        return f'{type(self).__name__}({self.timestamp} {self.datetime_str} [{self.text_before}/{self.text_after}])'
 
 
 DEFAULT_COLORS: Dict[int, Tuple[int, int, int, ]] = {1: (0, 255, 0), 2: (255, 127, 0), 3: (255, 0, 0), }
@@ -163,5 +162,4 @@ class Timer:
         self.hours[-1].set_last(True)
 
     def __repr__(self):
-        return '{}({} {} {})'.format(
-            type(self).__name__, self.colors, self.delays, self.hours)
+        return f'{type(self).__name__}({self.colors} {self.delays} {self.hours})'

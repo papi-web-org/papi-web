@@ -52,13 +52,13 @@ class FFESession(Session):
                     handler.close()
                 return response.content.decode()
         except ConnectionError as e:
-            logger.error('[{}] [{}]'.format(e.__class__.__name__, url, e))
-            logger.error('Veuillez vérifier votre connection à internet')
+            logger.error(f'[{url}] [{e.__class__.__name__}] [{e}]')
+            logger.error(f'Veuillez vérifier votre connection à internet')
         except TimeoutError as e:
-            logger.error('[{}] [{}]'.format(e.__class__.__name__, url, e))
+            logger.error(f'[{url}] [{e.__class__.__name__}] [{e}]')
             logger.error('Le site fédéral est indisponible')
         except Exception as e:
-            logger.error('[{}] [{}]'.format(e.__class__.__name__, url, e))
+            logger.error(f'[{url}] [{e.__class__.__name__}] [{e}]')
         for handler in handlers.values():
             handler.close()
         return None
@@ -75,7 +75,7 @@ class FFESession(Session):
         for id in [VIEW_STATE_INPUT_ID, VIEW_STATE_GENERATOR_INPUT_ID, EVENT_VALIDATION_INPUT_ID, ]:
             tag: AdvancedTag = parser.getElementById(id)
             if not tag:
-                logger.error('[{}] input[id=[{}] not found'.format(url, id))
+                logger.error(f'[{url}] input[id=[{id}] not found')
                 return None
             result[id] = tag.attributesDict['value']
         return result
@@ -114,40 +114,40 @@ class FFESession(Session):
             auth_vars[id] = tag.innerText if tag else None
         tag: AdvancedTag = parser.getElementById(VIEW_LINK_ID)
         if not tag:
-            # logger.error('[{}] a[id=[{}] not found'.format(url, VIEW_LINK_ID))
-            logger.error('L\'authentification a échoué (vérifier les codes)')
+            # logger.error(f'[{url}] a[id=[{VIEW_LINK_ID}] not found')
+            logger.error(f'L\'authentification a échoué (vérifier les codes)')
             return False
         self.__auth_vars = auth_vars
         self.__tournament_ffe_url = tag.attributesDict['href']
         return True
 
     def test(self):
-        logger.info('Tournoi [{}] :'.format(self.__tournament.ffe_id))
+        logger.info(f'Tournoi [{self.__tournament.ffe_id}] :')
         if not self.ffe_init():
             return
         # logger.info('init OK')
         if not self.ffe_auth():
             return
-        logger.info('auth OK: {}'.format(self.__tournament_ffe_url))
+        logger.info(f'auth OK: {self.__tournament_ffe_url}')
 
     def get_fees(self):
-        logger.info('Tournoi [{}] :'.format(self.__tournament.ffe_id))
+        logger.info(f'Tournoi [{self.__tournament_ffe_url}] :')
         if not self.ffe_init():
             return
         # logger.info('init OK')
         if not self.ffe_auth():
             return
-        logger.info('auth OK: {}'.format(self.__tournament_ffe_url))
+        logger.info(f'auth OK: {self.__tournament_ffe_url}')
         if self.__auth_vars[FEES_LINK_ID] is None:
             logger.warning(
-                'Lien de facturation non trouvé (vérifier qu\'un fichier Papi a déjà été téléchargé '
-                'ou que le tournoi n\'a pas déjà été archivé)')
+                f'Lien de facturation non trouvé (vérifier qu\'un fichier Papi a déjà été téléchargé '
+                f'ou que le tournoi n\'a pas déjà été archivé)')
             return
         if self.__auth_vars[FEES_LINK_ID].lower() == 'tournoi exempté de droits':
-            logger.info('Tournoi exempt de droits d\'homologation')
+            logger.info(f'Tournoi exempt de droits d\'homologation')
             return
         if self.__auth_vars[FEES_LINK_ID].lower() != 'afficher la facture':
-            logger.error('Lien de facturation non reconnu [{}]'.format(self.__auth_vars[FEES_LINK_ID]))
+            logger.error(f'Lien de facturation non reconnu [{self.__auth_vars[FEES_LINK_ID]}]')
             return
         url = FFE_URL + '/MonTournoi.aspx'
         post_data: Dict[str, str] = {
@@ -163,7 +163,7 @@ class FFESession(Session):
         if not FEES_DIR.exists():
             FEES_DIR.mkdir(parents=True)
         if not FEES_DIR.is_dir():
-            logger.error('[{}] n\'est pas un répertoire'.format(FEES_DIR.resolve()))
+            logger.error(f'[{FEES_DIR.resolve()}] n\'est pas un répertoire')
             return
         base: AdvancedTag = AdvancedTag('base')
         base.setAttribute('href', FFE_URL)
@@ -175,21 +175,21 @@ class FFESession(Session):
         file: Path = Path(FEES_DIR, str(self.__tournament.ffe_id) + '-fees.html')
         with open(file, 'w') as f:
             f.write(parser.getHTML())
-        logger.info('Facture d\'homologation enregistrée dans [{}]'.format(file))
-        webbrowser.open('file://{}'.format(file.resolve()), new=2)
-        logger.info('fees OK')
+        logger.info(f'Facture d\'homologation enregistrée dans [{file}]')
+        webbrowser.open(f'file://{file.resolve()}', new=2)
+        logger.info(f'fees OK')
         return
 
     def upload(self, set_visible: bool):
-        logger.info('Mise à jour du tournoi [{}] ({}):'.format(self.__tournament.ffe_id, self.__tournament.file))
+        logger.info(f'Mise à jour du tournoi [{self.__tournament.ffe_id}] ({self.__tournament.file}):')
         if not self.ffe_init():
             return
         # logger.info('init OK')
         if not self.ffe_auth():
             return
-        logger.info('auth OK: {}'.format(self.__tournament_ffe_url))
+        logger.info(f'auth OK: {self.__tournament_ffe_url}')
         if self.__auth_vars[UPLOAD_LINK_ID] is None:
-            logger.warning('Lien de mise en ligne non trouvé (vérifier que le tournoi n\'est pas terminé)')
+            logger.warning(f'Lien de mise en ligne non trouvé (vérifier que le tournoi n\'est pas terminé)')
             return
         url = FFE_URL + '/MonTournoi.aspx'
         post: Dict[str, str] = {
@@ -203,17 +203,17 @@ class FFESession(Session):
         if not html:
             return
         self.__tournament.ffe_upload_marker.touch()
-        logger.info('upload OK')
+        logger.info(f'upload OK')
         if not set_visible:
             return
         if self.__auth_vars[SET_VISIBLE_LINK_ID] is None:
-            logger.warning('Lien d\'affichage non trouvé (vérifier qu\'un fichier Papi a déjà été téléchargé)')
+            logger.warning(f'Lien d\'affichage non trouvé (vérifier qu\'un fichier Papi a déjà été téléchargé)')
             return
         if self.__auth_vars[SET_VISIBLE_LINK_ID].lower().startswith('desactiver'):
-            logger.info('Les données sont déjà affichées')
+            logger.info(f'Les données sont déjà affichées')
             return
         if not self.__auth_vars[SET_VISIBLE_LINK_ID].lower().startswith('activer'):
-            logger.error('Lien d\'affichage non reconnu [{}]'.format(self.__auth_vars[SET_VISIBLE_LINK_ID]))
+            logger.error(f'Lien d\'affichage non reconnu [{self.__auth_vars[SET_VISIBLE_LINK_ID]}]')
             return
         url = FFE_URL + '/MonTournoi.aspx'
         post_data: Dict[str, str] = {
@@ -226,4 +226,4 @@ class FFESession(Session):
         html: str = self.__read_url(url, post_data)
         if not html:
             return
-        logger.info('show OK')
+        logger.info(f'show OK')

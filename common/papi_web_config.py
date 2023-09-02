@@ -46,25 +46,25 @@ class PapiWebConfig(ConfigReader):
         if not self.errors and not self.warnings:
             section = 'logging'
             if not self.has_section(section):
-                self._add_warning('rubrique introuvable', section=section)
+                self._add_warning(f'rubrique introuvable', section=section)
             else:
                 key = 'level'
                 if not self.has_option(section, key):
-                    self._add_warning('option absente, par défaut [{}]'.format(self.__log_levels[DEFAULT_LOG_LEVEL]),
-                                      section=section, key=key)
+                    self._add_warning(
+                        f'option absente, par défaut [{self.__log_levels[DEFAULT_LOG_LEVEL]}]', section, key)
                 else:
                     level: str = self.get(section, key)
                     try:
                         self.__log_level = [k for k, v in self.__log_levels.items() if v == level][0]
                     except IndexError:
-                        self._add_warning('niveau de log invalide [{}]'.format(level), section=section, key=key)
+                        self._add_warning(f'niveau de log invalide [{level}]', section, key)
             section = 'web'
             if not self.has_section(section):
-                self._add_warning('rubrique introuvable', section=section)
+                self._add_warning(f'rubrique introuvable', section)
             else:
                 key = 'host'
                 if not self.has_option(section, key):
-                    self._add_warning('option absente'.format(), section=section, key=key)
+                    self._add_warning(f'option absente', section, key)
                 else:
                     self.__web_host = self.get(section, key)
                     matches = re.match('^(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)$', self.__web_host)
@@ -75,27 +75,26 @@ class PapiWebConfig(ConfigReader):
                     else:
                         self.__web_host = None
                     if self.web_host is None:
-                        self._add_warning('configuration d\'hôte invalide [{}], par défaut [{}]'.format(
-                            self.get(section, key), DEFAULT_WEB_HOST), section=section, key=key)
+                        self._add_warning(f'configuration d\'hôte invalide [{self.get(section, key)}], par défaut '
+                                          f'[{DEFAULT_WEB_HOST}]', section, key)
                 key = 'port'
                 if not self.has_option(section, key):
-                    self._add_warning('option absente, par défaut [{}]'.format(DEFAULT_WEB_PORT), section=section,
-                                      key=key)
+                    self._add_warning(f'option absente, par défaut [{DEFAULT_WEB_PORT}]', section, key)
                 else:
                     self.__web_port = self._getint_safe(section, key)
                     if self.web_port is None:
-                        self._add_warning('port non valide [{}], par défaut [{}]'.format(
-                            self.get(section, key), DEFAULT_WEB_PORT), section=section, key=key)
+                        self._add_warning(f'port non valide [{self.get(section, key)}], par défaut '
+                                          f'[{DEFAULT_WEB_PORT}]', section, key)
                 key = 'launch_browser'
                 if not self.has_option(section, key):
-                    self._add_warning('option absente, par défaut [{}]'.format(
-                        'on' if DEFAULT_WEB_LAUNCH_BROWSER else 'off'), section=section, key=key)
+                    self._add_warning(f'option absente, par défaut [{"on" if DEFAULT_WEB_LAUNCH_BROWSER else "off"}]',
+                                      section, key)
                 else:
                     self.__web_launch_browser = self._getboolean_safe(section, key)
                     if self.__web_launch_browser is None:
-                        self._add_error('valeur invalide [{}]'.format(self.get(section, key)), section=section, key=key)
+                        self._add_error(f'valeur invalide [{self.get(section, key)}]', section, key)
         else:
-            self._add_debug('configuration par défaut')
+            self._add_debug(f'configuration par défaut')
         if self.log_level is None:
             self.__log_level = DEFAULT_LOG_LEVEL
         configure_logger(self.log_level)

@@ -107,22 +107,22 @@ def get_stored_password(request: HttpRequest, event: Event) -> str:
 
 def check_auth(request: HttpRequest, event: Event) -> Tuple[bool, bool]:
     # -> login_needed, do_redirect
-    logger.debug('check_auth({})...'.format(event.id))
+    logger.debug(f'check_auth({event.id})...')
     if 'password' in request.POST:
-        logger.debug('POST.password={}'.format(request.POST['password']))
+        logger.debug(f'POST.password={request.POST["password"]}')
         if request.POST['password'] == event.update_password:
-            messages.success(request, 'Authentification réussie.')
+            messages.success(request, f'Authentification réussie.')
             store_password(request, event, request.POST['password'])
             return False, True
-        messages.error(request, 'Code d\'accès incorrect.')
+        messages.error(request, f'Code d\'accès incorrect.')
         return True, True
     session_password: str = get_stored_password(request, event)
-    logger.debug('session_password={}'.format(session_password))
+    logger.debug(f'session_password={session_password}')
     if session_password is None:
-        messages.error(request, 'Un code d\'accès est nécessaire pour accéder à l\'interface de saisie des résultats.')
+        messages.error(request, f'Un code d\'accès est nécessaire pour accéder à l\'interface de saisie des résultats.')
         return True, False
     if session_password != event.update_password:
-        messages.error(request, 'Code d\'accès incorrect.')
+        messages.error(request, f'Code d\'accès incorrect.')
         return True, False
     return False, False
 
@@ -132,7 +132,7 @@ def show_screen(request: HttpRequest, event_id: str, screen_id: str) -> HttpResp
     if event is None:
         return redirect('index')
     if screen_id not in event.screens:
-        messages.error(request, 'Screen [{}] not found'.format(screen_id))
+        messages.error(request, f'Screen [{screen_id}] not found')
         return redirect(event_url(event_id))
     screen: AScreen = event.screens[screen_id]
     login_needed: bool = False
@@ -150,7 +150,7 @@ def show_rotator(request: HttpRequest, event_id: str, rotator_id: str, screen_in
     if event is None:
         return redirect('index')
     if rotator_id not in event.rotators:
-        messages.error(request, 'Rotator [{}] not found'.format(rotator_id))
+        messages.error(request, f'Rotator [{rotator_id}] not found')
         return redirect(event_url(event_id))
     rotator: Rotator = event.rotators[rotator_id]
     screen_index: int = screen_index % len(rotator.screens)
@@ -179,17 +179,17 @@ def update_result(
     try:
         tournament = event.tournaments[tournament_id]
     except KeyError:
-        messages.error(request, 'Tournament [{}] not found'.format(tournament_id))
+        messages.error(request, f'Tournament [{tournament_id}] not found')
         return redirect(event_url(event_id))
     board: Board
     try:
         board = tournament.boards[board_id - 1]
     except KeyError:
-        messages.error(request, 'Writing result failed (board [{}] not found for tournament [{}])'.format(
-            board_id, tournament.id))
+        messages.error(
+            request, f'Writing result failed (board [{board_id}] not found for tournament [{tournament.id}])')
         return redirect(screen_url(event.id, screen_id, ))
     if result not in [RESULT_LOSS, RESULT_DRAW_OR_BYE_05, RESULT_GAIN]:
-        messages.error(request, 'Writing result failed (invalid result [{}])'.format(result))
+        messages.error(request, f'Writing result failed (invalid result [{result}])')
         return redirect(screen_url(event.id, screen_id, ))
     tournament.add_result(board, result)
     event.store_result(tournament, board, result)
@@ -216,5 +216,5 @@ def get_screen_last_update(request: HttpRequest, event_id: str, screen_id: str) 
             mtime = max(mtime, screen_file.lstat().st_mtime)
         return HttpResponse(str(math.ceil(mtime)), content_type='text/plain')
     except KeyError:
-        messages.error(request, 'Screen [{}] not found'.format(screen_id))
+        messages.error(request, f'Screen [{screen_id}] not found')
         return redirect(event_url(event_id))

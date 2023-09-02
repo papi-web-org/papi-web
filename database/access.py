@@ -22,18 +22,17 @@ class AccessDatabase:
             if access_driver not in pyodbc.drivers():
                 msg: str = 'ODBC driver installed are:'
                 for driver in pyodbc.drivers():
-                    msg = msg + '\n - {}'.format(driver)
+                    msg = msg + f'\n - {driver}'
                 install_url: str = 'https://www.microsoft.com/en-us/download/details.aspx?id=54920'
-                msg = msg + '\nInstall driver [{}] (cf {}) and retry.'.format(
-                    access_driver, install_url)
-                msg = msg + '\nNote: for 32bits/64bits compatibility, use accessdatabaseengine_X64.exe /passive'
+                msg = msg + f'\nInstall driver [{access_driver}] (cf {install_url}) and retry.'
+                msg = msg + f'\nNote: for 32bits/64bits compatibility, use accessdatabaseengine_X64.exe /passive'
                 raise PapiException(msg)
-            db_url: str = 'DRIVER={{{}}};DBQ={};'.format(access_driver, self.__file.resolve())
+            db_url: str = f'DRIVER={{{access_driver}}};DBQ={self.__file.resolve()};'
             # log_info(db_url)
             try:
                 self.__database = pyodbc.connect(db_url)
             except pyodbc.Error as e:
-                raise PapiException('Connection to file {} failed: {}'.format(self.__file, e.args))
+                raise PapiException(f'Connection to file {self.__file} failed: {e.args}')
             self.__cursor = self.__database.cursor()
 
     def _close(self):
@@ -43,8 +42,8 @@ class AccessDatabase:
             self.__cursor = None
 
     def _execute(self, query: str, params: Tuple = ()):
-        # log_info('query={}'.format(query))
-        # log_info('params={}'.format(params))
+        # log_info(f'query={query}')
+        # log_info(f'params={params}')
         self._open()
         self.__cursor.execute(query, params)
 

@@ -186,12 +186,10 @@ class Player:
             return None
         minutes = math.floor(self.__handicap_initial_time / 60)
         seconds = self.__handicap_initial_time - 60 * minutes
-        return '<span class="{}">{}{}</span> + {}"/cp'.format(
-            'modified-time' if self.__handicap_time_modified else 'base-time',
-            '{}\''.format(minutes) if minutes > 0 else '',
-            '{}"'.format(seconds) if seconds > 0 else '',
-            self.__handicap_increment
-        )
+        minutes_str: str = f'{minutes}\'' if minutes > 0 else ''
+        seconds_str: str = f'{seconds}"' if seconds > 0 else ''
+        class_str: str = 'modified-time' if self.__handicap_time_modified else 'base-time'
+        return f'<span class="{class_str}">{minutes_str}{seconds_str}</span> + {self.handicap_increment}"/cp'
 
     def set_handicap(self, initial_time: int, increment: int, time_modified: bool):
         self.__handicap_initial_time = initial_time
@@ -232,6 +230,6 @@ class Player:
 
     def __repr__(self):
         if self.id == 1:
-            return '{}(EXEMPT)'.format(type(self).__name__)
-        return '{}({}{} {} {} [{}])'.format(
-            type(self).__name__, self.title_str, self.last_name, self.first_name, self.rating, self.vpoints)
+            return f'{type(self).__name__}(EXEMPT)'
+        return (f'{type(self).__name__}'
+                f'({self.title_str}{self.last_name} {self.first_name} {self.rating} [{self.vpoints}])')

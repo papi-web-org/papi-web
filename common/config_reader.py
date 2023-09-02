@@ -31,11 +31,11 @@ class ConfigReader(ConfigParser):
             return
         if silent:
             if not ini_marker_file.is_file():
-                logger.info('New configuration file [{}] found, loading...'.format(self.ini_file))
+                logger.info(f'New configuration file [{self.ini_file}] found, loading...')
             elif ini_marker_file.lstat().st_mtime > self.ini_file.lstat().st_mtime:
                 self.__silent = True
             else:
-                logger.info('Configuration file [{}] has been modified, reloading...'.format(self.ini_file))
+                logger.info(f'Configuration file [{self.ini_file}] has been modified, reloading...')
         try:
             self.read(self.__ini_file, encoding='utf8')
             if not ini_marker_dir.is_dir():
@@ -43,24 +43,23 @@ class ConfigReader(ConfigParser):
             ini_marker_file.touch()
         except DuplicateSectionError as dse:
             self.__silent = False
-            self._add_error('section is duplicated at line {}'.format(dse.lineno, dse.message), section=dse.section)
+            self._add_error(f'section is duplicated at line {dse.lineno}', dse.section)
             return
         except DuplicateOptionError as doe:
             self.__silent = False
-            self._add_error(
-                'key {} is duplicated at line {}'.format(doe.lineno, doe.message), section=doe.section, key=doe.option)
+            self._add_error(f'key is duplicated at line {doe.lineno}', doe.section, doe.option)
             return
         except MissingSectionHeaderError as mshe:
             self.__silent = False
-            self._add_error('the first section is missing at line {}'.format(mshe.lineno, mshe.message))
+            self._add_error(f'the first section is missing at line {mshe.lineno}')
             return
         except ParsingError as pe:
             self.__silent = False
-            self._add_error('parsing error: {}'.format(pe.message))
+            self._add_error(f'parsing error: {pe.message}')
             return
         except Error as e:
             self.__silent = False
-            self._add_error('error: {}'.format(e.message))
+            self._add_error(f'error: {e.message}')
             return
 
     @property
@@ -69,10 +68,10 @@ class ConfigReader(ConfigParser):
 
     def __format_message(self, text: str, section: Optional[str], key: Optional[str]):
         if section is None:
-            return '{}: {}'.format(self.ini_file.name, text)
+            return f'{self.ini_file.name}: {text}'
         if key is None:
-            return '{}[{}]: {}'.format(self.ini_file.name, section, text)
-        return '{}[{}].{}: {}'.format(self.ini_file.name, section, key, text)
+            return f'{self.ini_file.name}[{section}]: {text}'
+        return f'{self.ini_file.name}[{section}].{key}: {text}'
 
     def _add_debug(self, text: str, section: Optional[str] = None, key: Optional[str] = None):
         message = self.__format_message(text, section, key)

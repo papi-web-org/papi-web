@@ -18,22 +18,22 @@ class EventSelector:
         events: List[Event] = get_events(self.__silent)
         self.__silent = True  # verbose on the first call only
         if not events:
-            logger.error('Aucun fichier de configuration d\'évènement trouvé')
+            logger.error(f'Aucun fichier de configuration d\'évènement trouvé')
             return False
         event_num: Optional[int] = None
         if len(events) == 1:
             event_num = 1
-            if input_interactive('Un seul évènement trouvé, tapez Entrée pour continuer (Q pour quitter) ') == 'Q':
+            if input_interactive(f'Un seul évènement trouvé, tapez Entrée pour continuer (Q pour quitter) ') == 'Q':
                 return False
         else:
-            print_interactive('Veuillez entrer le numéro de votre évènement :')
+            print_interactive(f'Veuillez entrer le numéro de votre évènement :')
             event_range = range(1, len(events) + 1)
             for num in event_range:
                 event: Event = events[num - 1]
-                print_interactive('  - [{}] {} ({}.ini)'.format(num, event.name, event.id))
+                print_interactive(f'  - [{num}] {event.name} ({event.id}.ini)')
             print_interactive('  - [Q] Quitter')
             while event_num is None:
-                choice: str = input_interactive('Votre choix : ')
+                choice: str = input_interactive(f'Votre choix : ')
                 if choice == 'Q':
                     return False
                 try:

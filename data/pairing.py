@@ -24,4 +24,4 @@ class Pairing:
         return self.__result
 
     def __repr__(self):
-        return '{}({} {} {})'.format(type(self).__name__, self.color, self.opponent_id, self.result)
+        return f'{type(self).__name__}({self.color} {self.opponent_id} {self.result})'

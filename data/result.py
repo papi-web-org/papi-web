@@ -71,9 +71,9 @@ class Result:
         return self.timestamp == other.timestamp
 
     def __repr__(self):
-        return '{}({}.{} {} {} {})'.format(
-            type(self).__name__, self.timestamp_str, self.tournament_id, self.board_id, self.white_player,
-            self.result_str, self.black_player)
+        return (f'{type(self).__name__}('
+                f'{self.timestamp_str} {self.tournament_id}.{self.board_id} '
+                f'{self.white_player} {self.result_str} {self.black_player})')
 
     @classmethod
     def results_dir(cls, event_id: str) -> Path:
@@ -91,14 +91,14 @@ class Result:
         for file in reversed(files):
             matches = re.match('^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)$', Path(file).name)
             if not matches:
-                logger.warning('invalid result filename [{}]'.format(file))
+                logger.warning(f'invalid result filename [{file}]')
                 continue
             group: int = 1
             timestamp: float
             try:
                 timestamp = float(matches.group(group))
             except ValueError:
-                logger.warning('invalid timestamp [{}] for result file [{}]'.format(matches.group(group), file))
+                logger.warning(f'invalid timestamp [{matches.group(group)}] for result file [{file}]')
                 continue
             group += 1
             tournament_id: str = matches.group(group)
@@ -107,14 +107,14 @@ class Result:
             try:
                 round = int(matches.group(group))
             except ValueError:
-                logger.warning('invalid round number [{}] for result file [{}]'.format(matches.group(group), file))
+                logger.warning(f'invalid round number [{matches.group(group)}] for result file [{file}]')
                 continue
             group += 1
             board_id: int
             try:
                 board_id = int(matches.group(group))
             except ValueError:
-                logger.warning('invalid board id [{}] for result file [{}]'.format(matches.group(group), file))
+                logger.warning(f'invalid board id [{matches.group(group)}] for result file [{file}]')
                 continue
             group += 1
             white_player: str = matches.group(group).replace('_', ' ')
@@ -125,10 +125,10 @@ class Result:
             try:
                 result = int(matches.group(group))
                 if result not in RESULT_STRINGS:
-                    logger.warning('invalid result [{}] for result file [{}]'.format(matches.group(group), file))
+                    logger.warning(f'invalid result [{matches.group(group)}] for result file [{file}]')
                     continue
             except ValueError:
-                logger.warning('invalid result [{}] for result file [{}]'.format(matches.group(group), file))
+                logger.warning(f'invalid result [{matches.group(group)}] for result file [{file}]')
                 continue
             results.append(Result(timestamp, tournament_id, round, board_id, white_player, black_player, result))
             if len(results) > limit:

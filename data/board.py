@@ -116,5 +116,4 @@ class Board:
         return self_player_1 == other_player_1 and self_player_2 == other_player_2
 
     def __repr__(self):
-        return '{}({}. {} {} {})'.format(
-            type(self).__name__, self.number, self.white_player,self.result_str, self.black_player)
+        return f'{type(self).__name__}({self.number}. {self.white_player} {self.result_str} {self.black_player})'

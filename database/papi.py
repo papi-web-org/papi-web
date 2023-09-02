@@ -92,7 +92,7 @@ class PapiDatabase(AccessDatabase):
 
     '''def update(self, event: str, city: str, start_date: str, end_date: str, rounds_number: int, arbiter: str):
         query: str = 'UPDATE info SET `Value` = ? WHERE Variable = ?'
-        # log_info('query={}'.format(query))
+        # log_info(f'query={query}')
         self._execute(query, (event, 'Nom', ))
         self._execute(query, (city, 'Lieu'))
         self._execute(query, (start_date, 'DateDebut', ))
@@ -130,7 +130,7 @@ class PapiDatabase(AccessDatabase):
         for round in range(1, rounds + 1):
             for suffix in ['Cl', 'Adv', 'Res']:
                 player_fields.append('Rd' + str(round).zfill(2) + suffix)
-        query: str = 'SELECT {} FROM joueur ORDER BY Ref'.format(', '.join(player_fields))
+        query: str = f'SELECT {", ".join(player_fields)} FROM joueur ORDER BY Ref'
         self._execute(query)
         for row in self._fetchall():
             pairings: Dict[int, Pairing] = {}
@@ -150,6 +150,5 @@ class PapiDatabase(AccessDatabase):
         return players
 
     def add_result(self, player_id: int, round: int, result: int):
-        res_field: str = 'Rd' + str(round).zfill(2) + 'Res'
-        query: str = 'UPDATE joueur SET {} = ? WHERE Ref = ?'.format(res_field)
+        query: str = f'UPDATE joueur SET Rd{str(round).zfill(2)}Res = ? WHERE Ref = ?'
         self._query(query, (result, player_id, ))

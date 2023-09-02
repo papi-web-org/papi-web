@@ -210,12 +210,12 @@ class ScreenSet:
 
     def __str__(self):
         if self.first is None and self.last is None and self.part is None:
-            return '{} (tout)'.format(self.tournament.id)
+            return f'{self.tournament.id} (tout)'
         if self.first is not None and self.last is not None:
-            return '{} (de n°{} à n°{})'.format(self.tournament.id, self.first, self.last)
+            return f'{self.tournament.id} (de n°{self.first} à n°{self.last})'
         if self.first is not None:
-            return '{} (à partir de n°{})'.format(self.tournament.id, self.first)
+            return f'{self.tournament.id} (à partir de n°{self.first})'
         if self.last is not None:
-            return '{} (jusqu\'à n°{})'.format(self.tournament.id, self.last)
+            return f'{self.tournament.id} (jusqu\'à n°{self.last})'
         if self.part is not None:
-            return '{} ({}/{})'.format(self.tournament.id, self.part, self.parts)
+            return f'{self.tournament.id} ({self.part}/{self.parts})'

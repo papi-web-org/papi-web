@@ -14,7 +14,7 @@ class Engine:
     def __init__(self):
         if not TMP_DIR.is_dir():
             TMP_DIR.mkdir(parents=True)
-        logger.info('Reading configuration file...')
+        logger.info(f'Reading configuration file...')
         self.__config = PapiWebConfig()
 
     @property
