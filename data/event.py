@@ -31,6 +31,7 @@ class Event(ConfigReader):
         self.__id: str = event_id
         super().__init__(Path(EVENTS_PATH, self.id + '.ini'), silent=silent)
         self.__name: str = self.__id
+        self.__path: Path = Path('papi')
         self.__css: Optional[str] = None
         self.__update_password: Optional[str] = None
         self.__tournaments: Dict[str, Tournament] = {}
@@ -70,11 +71,15 @@ class Event(ConfigReader):
         return self.__name
 
     @property
-    def css(self) -> str:
+    def path(self) -> Path:
+        return self.__path
+
+    @property
+    def css(self) -> Optional[str]:
         return self.__css
 
     @property
-    def update_password(self) -> str:
+    def update_password(self) -> Optional[str]:
         return self.__update_password
 
     @property
@@ -109,17 +114,31 @@ class Event(ConfigReader):
             self._add_info(f'option absente, par défaut [{default_name}]', section, key)
         else:
             self.__name = self.get(section, key)
+        key = 'path'
+        default_path: Path = Path('papi')
+        self.__path: Path = default_path
+        if not self.has_option(section, key):
+            self._add_debug(f'option absente, par défaut [{default_path}]', section, key)
+        else:
+            path = Path(self.get(section, key))
+        if not self.path.exists():
+            self._add_error(f'le répertoire [{self.path}] n\'existe pas', section, key)
+            return
+        if not self.path.is_dir():
+            self._add_error(f'[{self.path}] n\'est pas un répertoire', section, key)
+            return
         key = 'css'
         if not self.has_option(section, key):
-            pass
-        self._add_debug(f'option absente', section, key)
-        self.__css = self.get(section, key, fallback=None)
+            self._add_debug(f'option absente', section, key)
+        else:
+            self.__css = self.get(section, key)
         key = 'update_password'
         if not self.has_option(section, key):
             self._add_info(
                 f'option absente, aucun mot de passe ne sera demandé pour les saisies'.format(), section, key)
-        self.__update_password = self.get(section, key, fallback=None)
-        section_keys: List[str] = ['name', 'update_password', 'css', ]
+        else:
+            self.__update_password = self.get(section, key)
+        section_keys: List[str] = ['name', 'path', 'update_password', 'css', ]
         for key, value in self.items(section):
             if key not in section_keys:
                 self._add_warning(f'option inconnue', section, key)
@@ -166,7 +185,7 @@ class Event(ConfigReader):
     def __build_tournament(self, tournament_id: str):
         section: str = 'tournament.' + tournament_id
         key = 'path'
-        default_path: Path = Path('papi')
+        default_path: Path = self.path
         path: Path = default_path
         if not self.has_option(section, key):
             self._add_debug(f'option absente, par défaut [{default_path}]', section, key)

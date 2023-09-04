@@ -4,11 +4,12 @@
 
 ## Généralités (`[event]`)
 
-| Option            | Description                                                                                                                                         |
-|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| `name`            | Le nom de l'évènement (obligatoire), utilisé sur la page d'accueil de Papi-web (liste des évènements) et sur la page de description de l'évènement. |
-| `update_password` | Le code d'accès aux pages de saisie des scores (facultatif).                                                                                        |
-| `css`             | La personnalisation CSS de l'évènement (facultative).<br/>Pour utiliser `custom/ffe/ffe.css`, on utilisera `css = ffe/ffe.css`.                     |
+| Option            | Description                                                                                                                                                              |
+|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `name`            | Le nom de l'évènement (obligatoire), utilisé sur la page d'accueil de Papi-web (liste des évènements) et sur la page de description de l'évènement.                      |
+| `path`            | Le répertoire par défaut dans lequel sont stockés les fichiers Papi des tournois (facultatif, par défaut `papi/`). Cette valeur peut être modifiée pour chaque tournoi.  |
+| `update_password` | Le code d'accès aux pages de saisie des scores (facultatif).                                                                                                             |
+| `css`             | La personnalisation CSS de l'évènement (facultative).<br/>Pour utiliser `custom/ffe/ffe.css`, on utilisera `css = ffe/ffe.css`.                                          |
 
 Voir également :
 - [Gestion d'un petit tournoi amical](11-friendly.md)
@@ -21,7 +22,7 @@ L'identifiant du tournoi (`<tournament_id>`) est facultatif si l'évènement ne 
 | Option         | Description                                                                                                                                                                 |
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `name`         | Le nom du tournoi (facultatif) est utilisé sur la page de description de l'évènement et sur les écrans.<br/>S'il n'est pas précisé, le nom du tournoi est son identifiant.  |
-| `path`         | Le répertoire dans le quel est stocké le fichier Papi du tournoi (facultatif, par défaut `papi/`).                                                                          |
+| `path`         | Le répertoire dans lequel est stocké le fichier Papi du tournoi (facultatif, par défaut la valeur donnée pour l'évènement dans `[event].path`).                             |
 | `filename`     | Le nom du fichier du tournoi (facultatif).<br/>Si l'option `filename` n'est pas utilisée, le nom du fichier sera par défaut le numéro d'homologation du tournoi (`ffe_id`). |
 | `ffe_id`       | Le numéro d'homologation du tournoi (facultatif).                                                                                                                           |
 | `ffe_password` | Le code d'accès à l'interface de gestion du tournoi sur le site fédéral (facultatif).                                                                                       |
