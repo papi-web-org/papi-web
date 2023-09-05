@@ -120,7 +120,7 @@ class Event(ConfigReader):
         if not self.has_option(section, key):
             self._add_debug(f'option absente, par défaut [{default_path}]', section, key)
         else:
-            path = Path(self.get(section, key))
+            self.__path = Path(self.get(section, key))
         if not self.path.exists():
             self._add_error(f'le répertoire [{self.path}] n\'existe pas', section, key)
             return

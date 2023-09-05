@@ -1,5 +1,4 @@
 import os
-from typing import List
 
 import django
 from data.event import get_events
