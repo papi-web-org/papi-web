@@ -15,7 +15,7 @@ TMP_DIR: Path = Path('tmp')
 # https://docs.python.org/3/library/configparser.html
 class ConfigReader(ConfigParser):
     def __init__(self, ini_file: Path, silent: bool):
-        super().__init__(interpolation=None)
+        super().__init__(interpolation=None, empty_lines_in_values=False)
         self.__ini_file: Path = ini_file
         ini_marker_dir: Path = Path(TMP_DIR, self.ini_file.parents[0])
         ini_marker_file: Path = Path(ini_marker_dir, self.ini_file.name + '.read')
