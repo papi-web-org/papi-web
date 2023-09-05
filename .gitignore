@@ -6,3 +6,4 @@
 /docs/images/src/
 papi-web.ini
 /tmp/
+__pycache__/
