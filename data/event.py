@@ -5,7 +5,7 @@ from pathlib import Path
 
 import time
 
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Dict, Tuple, Iterator
 from logging import Logger
 
 from common.config_reader import ConfigReader
@@ -995,7 +995,7 @@ class Event(ConfigReader):
 
 
 def get_events(silent: bool = True) -> List[Event]:
-    event_files: List[Path] = EVENTS_PATH.glob('*.ini')
+    event_files: Iterator[Path] = EVENTS_PATH.glob('*.ini')
     events: List[Event] = []
     for event_file in event_files:
         event_id: str = event_file.stem
