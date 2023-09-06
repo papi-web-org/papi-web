@@ -184,8 +184,7 @@ class Player:
     def handicap_str(self) -> Optional[str]:
         if self.__handicap_initial_time is None:
             return None
-        minutes = math.floor(self.__handicap_initial_time / 60)
-        seconds = self.__handicap_initial_time - 60 * minutes
+        (minutes, seconds) = divmod(self.__handicap_initial_time, 60)
         minutes_str: str = f'{minutes}\'' if minutes > 0 else ''
         seconds_str: str = f'{seconds}"' if seconds > 0 else ''
         class_str: str = 'modified-time' if self.__handicap_time_modified else 'base-time'
