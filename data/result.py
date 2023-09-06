@@ -88,8 +88,9 @@ class Result:
         files: List[str] = glob.glob(str(Path(results_dir, '*')))
         if not files:
             return results
+        prog = re.compile('^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)$')
         for file in reversed(files):
-            matches = re.match('^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)$', Path(file).name)
+            matches = prog.match(Path(file).name)
             if not matches:
                 logger.warning(f'invalid result filename [{file}]')
                 continue
