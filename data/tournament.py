@@ -340,7 +340,7 @@ class Tournament:
         self.__papi_database.add_result(board.white_player.id, self.current_round, white_result)
         self.__papi_database.add_result(board.black_player.id, self.current_round, black_result)
         self.__papi_database.close()
-        logger.info('Added result: {self.id} {self.current_round}.{board.id} '
-                    '{board.white_player.last_name} {board.white_player.first_name} {board.white_player.rating} '
-                    '{RESULT_STRINGS[white_result]} '
-                    '{board.black_player.last_name} {board.black_player.first_name} {board.black_player.rating}')
+        logger.info(f'Added result: {self.id} {self.current_round}.{board.id} '
+                    f'{board.white_player.last_name} {board.white_player.first_name} {board.white_player.rating} '
+                    f'{RESULT_STRINGS[white_result]} '
+                    f'{board.black_player.last_name} {board.black_player.first_name} {board.black_player.rating}')
