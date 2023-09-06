@@ -1,10 +1,9 @@
-import glob
 import re
 from datetime import datetime
 from functools import total_ordering
 from logging import Logger
 from pathlib import Path
-from typing import List
+from typing import List, Iterator
 
 from common.config_reader import TMP_DIR
 from common.logger import get_logger
@@ -85,7 +84,7 @@ class Result:
         results_dir: Path = cls.results_dir(event_id)
         if not results_dir.is_dir():
             return results
-        files: List[str] = glob.glob(str(Path(results_dir, '*')))
+        files: Iterator[str] = results_dir.glob("*")
         if not files:
             return results
         prog = re.compile('^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)$')
