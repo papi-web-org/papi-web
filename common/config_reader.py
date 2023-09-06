@@ -130,9 +130,9 @@ class ConfigReader(ConfigParser):
         subsections: List[str] = []
         for section in self.sections():
             if first_level_only:
-                pattern = '^{}\\.([^.]+)$'
+                pattern = r'^{}\.([^.]+)$'
             else:
-                pattern = '^{}\\.([^.]+(\\.[^.]+)*)$'
+                pattern = r'^{}\.([^.]+(\.[^.]+)*)$'
             matches = re.match(pattern.format(prefix.replace('.', '\\.')), section)
             if matches:
                 subsections.append(matches.group(1))

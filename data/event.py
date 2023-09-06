@@ -909,6 +909,9 @@ class Event(ConfigReader):
         if not self.has_section(section):
             return
         section_keys = [str(id) for id in range(1, 4)]
+        simplfied_hex_pattern = re.compile('^#?([0-9A-F])([0-9A-F])([0-9A-F])$')
+        hex_pattern = re.compile('^#?([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$')
+        rgb_pattern = re.compile(r'^(RBG)*\(([0-9]+),([0-9]+)([0-9]+)\)*$')
         for key in self.options(section):
             if key not in section_keys:
                 self._add_warning(f'option de couleur invalide (acceptées : [{", ".join(section_keys)}]), '
@@ -917,7 +920,7 @@ class Event(ConfigReader):
             color_id = int(key)
             color_rbg: Optional[Tuple[int, int, int]] = None
             color_value: str = self.get(section, key).replace(' ', '').upper()
-            matches = re.match('^#?([0-9A-F])([0-9A-F])([0-9A-F])$', color_value)
+            matches = simplified_hex_pattern.match(color_value)
             if matches:
                 color_rbg = (
                     int(matches.group(1) * 2, 16),
@@ -925,7 +928,7 @@ class Event(ConfigReader):
                     int(matches.group(3) * 2, 16),
                 )
             else:
-                matches = re.match('^#?([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$', color_value)
+                matches = hex_pattern.match(color_value)
                 if matches:
                     color_rbg = (
                         int(matches.group(1), 16),
@@ -933,7 +936,7 @@ class Event(ConfigReader):
                         int(matches.group(3), 16),
                     )
                 else:
-                    matches = re.match('^(RBG)*\\(([0-9]+),([0-9]+)([0-9]+)\\)*$', color_value)
+                    matches = rgb_pattern.match(color_value)
                     if matches:
                         color_rbg = (
                             int(matches.group(1)),

@@ -67,7 +67,7 @@ class PapiWebConfig(ConfigReader):
                     self._add_warning(f'option absente', section, key)
                 else:
                     self.__web_host = self.get(section, key)
-                    matches = re.match('^(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)$', self.__web_host)
+                    matches = re.match(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)$', self.__web_host)
                     if matches:
                         for i in range(4):
                             if int(matches.group(i + 1)) > 255:
