@@ -909,7 +909,7 @@ class Event(ConfigReader):
         if not self.has_section(section):
             return
         section_keys = [str(id) for id in range(1, 4)]
-        simplfied_hex_pattern = re.compile('^#?([0-9A-F])([0-9A-F])([0-9A-F])$')
+        simplified_hex_pattern = re.compile('^#?([0-9A-F])([0-9A-F])([0-9A-F])$')
         hex_pattern = re.compile('^#?([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$')
         rgb_pattern = re.compile(r'^(RBG)*\(([0-9]+),([0-9]+)([0-9]+)\)*$')
         for key in self.options(section):
