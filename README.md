@@ -5,9 +5,9 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 ## Généralités
 
 - [Présentation](docs/01-summary.md)
-- [Nouveautés de la version 2](docs/02-v2-news.md) _([ChangeLog](docs/03-change-log.md))_
-- [Installation et mise à jour](docs/04-install.md)
-- [Configuration et utilisation](docs/05-use.md)
+- [Nouveautés de la version 2](docs/02-v2-news.md) _([ChangeLog](docs/03-change-log.md), [ChangeLog](docs/04-contributors.md))_
+- [Installation et mise à jour](docs/05-install.md)
+- [Configuration et utilisation](docs/06-use.md)
 - [Guide de référence de la configuration des évènements](docs/40-ref.md)
 
 ## Guide de démarrage rapide

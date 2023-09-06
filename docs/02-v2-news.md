@@ -9,7 +9,7 @@ Papi-web est désormais livré sous la forme d'un exécutable Windows autonome.
 > [!IMPORTANT]
 > L'installation de XAMPP (ou d'un autre serveur Apache/PHP) n'est plus nécessaire.
 
-A voir : [Installation et mise à jour](04-install.md)
+A voir : [Installation et mise à jour](05-install.md)
 
 ## Configuration plus simple
 
@@ -31,7 +31,7 @@ filename = amical-20230617
 ```
 
 A voir :
-- [Configuration et utilisation](05-use.md)
+- [Configuration et utilisation](06-use.md)
 - [Guide de référence de la configuration des évènements](40-ref.md)
 
 
