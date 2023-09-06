@@ -3,7 +3,7 @@ from datetime import datetime
 from functools import total_ordering
 from logging import Logger
 from pathlib import Path
-from typing import List, Iterator, Generator
+from typing import List
 
 from common.config_reader import TMP_DIR
 from common.logger import get_logger
@@ -131,6 +131,6 @@ class Result:
                 logger.warning(f'invalid result [{matches.group(group)}] for result file [{file}]')
                 continue
             results.append(Result(timestamp, tournament_id, round, board_id, white_player, black_player, result))
-            if len(results) > limit:
+            if limit and len(results) > limit:
                 break
         return results
