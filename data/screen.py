@@ -212,7 +212,7 @@ class ScreenResults(AScreen):
     def results_lists(self) -> List[List[Result]]:
         results: List[Result] = Result.get_results(self.event_id, self.limit)
         results_by_column: List[List[Result]] = []
-        column_size: int = self.limit // self.columns
+        column_size: int = (self.limit if self.limit else len(results)) // self.columns
         for i in range(self.columns):
             results_by_column.append(results[i * column_size:(i + 1) * column_size])
         return results_by_column
