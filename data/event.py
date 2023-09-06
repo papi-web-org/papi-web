@@ -971,9 +971,9 @@ class Event(ConfigReader):
             results_dir.mkdir(parents=True)
         now: float = time.time()
         # delete old files
-        for file in glob.glob(str(Path(results_dir, '*'))):
-            if Path(file).lstat().st_ctime - now > 3600:
-                Path(file).unlink()
+        for file in results_dir.glob('*'):
+            if now - file.lstat().st_ctime > 3600:
+                file.unlink()
                 logger.debug(f'le fichier [{file}] a été supprimé')
         # add a new file
         white_str: str = (f'{board.white_player.last_name} {board.white_player.first_name} {board.white_player.rating}'
