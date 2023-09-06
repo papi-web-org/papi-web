@@ -1,5 +1,4 @@
 import datetime
-import glob
 import re
 from functools import total_ordering
 from pathlib import Path
@@ -996,11 +995,10 @@ class Event(ConfigReader):
 
 
 def get_events(silent: bool = True) -> List[Event]:
-    event_files_pattern: str = str(Path(EVENTS_PATH, '*.ini'))
-    event_files: List[str] = glob.glob(event_files_pattern)
+    event_files: List[Path] = EVENTS_PATH.glob('*.ini')
     events: List[Event] = []
     for event_file in event_files:
-        event_id: str = Path(event_file).stem
+        event_id: str = event_file.stem
         event: Event = Event(event_id, silent=silent)
         events.append(event)
     return events
