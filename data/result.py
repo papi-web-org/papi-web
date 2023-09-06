@@ -3,7 +3,7 @@ from datetime import datetime
 from functools import total_ordering
 from logging import Logger
 from pathlib import Path
-from typing import List, Iterator
+from typing import List, Iterator, Generator
 
 from common.config_reader import TMP_DIR
 from common.logger import get_logger
@@ -84,11 +84,11 @@ class Result:
         results_dir: Path = cls.results_dir(event_id)
         if not results_dir.is_dir():
             return results
-        files: Iterator[str] = results_dir.glob("*")
-        if not files:
+        files: List[Path] = list(results_dir.glob("*"))
+        if not reversed(files):
             return results
         prog = re.compile('^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)$')
-        for file in reversed(files):
+        for file in files:
             matches = prog.match(Path(file).name)
             if not matches:
                 logger.warning(f'invalid result filename [{file}]')
