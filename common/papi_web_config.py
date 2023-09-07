@@ -13,7 +13,7 @@ from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
 
-PAPI_WEB_VERSION: str = '2.0-rc8'
+PAPI_WEB_VERSION: str = '2.0-rc9'
 
 PAPI_WEB_URL = 'https://github.com/pascalaubry/papi-web'
 
@@ -58,6 +58,20 @@ class PapiWebConfig(ConfigReader):
                         self.__log_level = [k for k, v in self.__log_levels.items() if v == level][0]
                     except IndexError:
                         self._add_warning(f'niveau de log invalide [{level}]', section, key)
+            try:
+                options = self[section]
+                key = 'level'
+                try:
+                    level = options[key]
+                    try:
+                        self.__log_level = [k for k, v in self.__log_levels.items() if v == level][0]
+                    except IndexError:
+                        self._add_warning(f'niveau de log invalide [{level}]', section, key)
+                except KeyError:
+                    self._add_warning(
+                        f'option absente, par défaut [{self.__log_levels[DEFAULT_LOG_LEVEL]}]', section, key)
+            except KeyError:
+                self._add_warning(f'rubrique introuvable', section=section)
             section = 'web'
             if not self.has_section(section):
                 self._add_warning(f'rubrique introuvable', section)

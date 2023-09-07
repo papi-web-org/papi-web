@@ -132,8 +132,10 @@ class ScreenBoards(AScreenWithSets):
                 text = text.replace('%f', str(set.first_board.id))
                 text = text.replace('%l', str(set.last_board.id))
             else:
-                text = text.replace('%f', str(set.first_player_by_rating.rating))
-                text = text.replace('%l', str(set.last_player_by_rating.rating))
+                if set.first_player_by_rating:
+                    text = text.replace('%f', str(set.first_player_by_rating.rating))
+                if set.last_player_by_rating:
+                    text = text.replace('%l', str(set.last_player_by_rating.rating))
         return text
 
     @property
@@ -170,8 +172,10 @@ class ScreenPlayers(AScreenWithSets):
         if self.sets:
             set: ScreenSet = self.sets[0]
             text = text.replace('%t', set.tournament.name)
-            text = text.replace('%f', str(set.first_player_by_name.last_name)[:3])
-            text = text.replace('%l', str(set.last_player_by_name.last_name)[:3])
+            if set.first_player_by_name:
+                text = text.replace('%f', str(set.first_player_by_name.last_name)[:3])
+            if set.last_player_by_name:
+                text = text.replace('%l', str(set.last_player_by_name.last_name)[:3])
         return text
 
     @property
