@@ -54,7 +54,7 @@ class PapiWebConfig(ConfigReader):
                         self.__log_level = [k for k, v in self.__log_levels.items() if v == level][0]
                     except IndexError:
                         self._add_warning(f'niveau de log invalide [{level}]', section, key)
-                except KeyError:
+                except (TypeError, KeyError):
                     self._add_warning(
                         f'option absente, par défaut [{self.__log_levels[DEFAULT_LOG_LEVEL]}]', section, key)
             except KeyError:
