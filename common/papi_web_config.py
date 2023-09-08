@@ -45,19 +45,6 @@ class PapiWebConfig(ConfigReader):
         }
         if not self.errors and not self.warnings:
             section = 'logging'
-            if not self.has_section(section):
-                self._add_warning(f'rubrique introuvable', section=section)
-            else:
-                key = 'level'
-                if not self.has_option(section, key):
-                    self._add_warning(
-                        f'option absente, par défaut [{self.__log_levels[DEFAULT_LOG_LEVEL]}]', section, key)
-                else:
-                    level: str = self.get(section, key)
-                    try:
-                        self.__log_level = [k for k, v in self.__log_levels.items() if v == level][0]
-                    except IndexError:
-                        self._add_warning(f'niveau de log invalide [{level}]', section, key)
             try:
                 options = self[section]
                 key = 'level'
@@ -146,7 +133,7 @@ class PapiWebConfig(ConfigReader):
     def __url(self, ip: Optional[str]) -> Optional[str]:
         if ip is None:
             return None
-        return 'http://' + ip + (':' + str(self.web_port) if self.web_port != 80 else '')
+        return f'http://' + ip + (':' + str(self.web_port) if self.web_port != 80 else '')
 
     @property
     def lan_ip(self) -> Optional[str]:
