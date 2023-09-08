@@ -133,7 +133,7 @@ class PapiWebConfig(ConfigReader):
     def __url(self, ip: Optional[str]) -> Optional[str]:
         if ip is None:
             return None
-        return f'http://' + ip + (':' + str(self.web_port) if self.web_port != 80 else '')
+        return f'http://{ip}{f":{self.web_port}" if self.web_port != 80 else ""}'
 
     @property
     def lan_ip(self) -> Optional[str]:
