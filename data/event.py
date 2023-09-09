@@ -5,7 +5,7 @@ from pathlib import Path
 
 import time
 
-from typing import List, Optional, Dict, Tuple, Iterator
+from typing import List, Optional, Dict, Tuple, Iterator, NamedTuple
 from logging import Logger
 
 from common.config_reader import ConfigReader
@@ -22,6 +22,13 @@ from data.tournament import Tournament
 logger: Logger = get_logger()
 
 EVENTS_PATH: Path = Path('events')
+
+class HandicapTournament(NamedTuple):
+    initial_time: Optional[int] = None
+    increment: Optional[int] = None
+    penalty_step: Optional[int] = None
+    penalty_value: Optional[int] = None
+    min_time: Optional[int] = None
 
 
 @total_ordering
@@ -102,52 +109,97 @@ class Event(ConfigReader):
         return self.__timer
 
     def __build_root(self):
-        section: str = 'event'
-        if not self.has_section(section):
-            self._add_error(f'rubrique absente', section)
+        section_key: str = 'event'
+        if not self.has_section(section_key):
+            self._add_error(f'rubrique absente', section_key)
             return
+        section = self[section_key]
+        
         key = 'name'
         default_name = self.__id
-        self.__name = default_name
-        if not self.has_option(section, key):
-            self._add_info(f'option absente, par défaut [{default_name}]', section, key)
-        else:
-            self.__name = self.get(section, key)
+        try:
+            self.__name = section[key]
+        except KeyError:
+            self.__name = default_name
+            self._add_info(
+                   f'option absente, par défaut [{default_name}]',
+                   section_key,
+                   key
+            )
+        except TypeError:
+            # NOTE(Amaras) This could happen because of a TOC/TOU bug
+            # https://en.wikipedia.org/wiki/Time-of-check_to_time-of-use
+            # After this, the secion has already been retrieved, so no future
+            # access will throw a TypeError.
+            self._add_error(
+                    f'la rubrique est devenue une clé, erreur fatale',
+                    section_key
+            )
+            return
+
         key = 'path'
         default_path: Path = Path('papi')
-        self.__path: Path = default_path
-        if not self.has_option(section, key):
-            self._add_debug(f'option absente, par défaut [{default_path}]', section, key)
-        else:
-            self.__path = Path(self.get(section, key))
+        try:
+            self.__path = Path(section[key])
+        except KeyError:
+            self.__path = default_path
+            self._add_debug(
+                    f'option absente, par défaut [{default_path}]',
+                    section_key,
+                    key
+            )
+        # NOTE(Amaras) This could be a TOC/TOU bug
+        # What would our threat model be for this?
         if not self.path.exists():
-            self._add_error(f'le répertoire [{self.path}] n\'existe pas', section, key)
+            self._add_error(
+                    f"le répertoire [{self.path}] n'existe pas",
+                    section_key,
+                    key
+            )
             return
-        if not self.path.is_dir():
-            self._add_error(f'[{self.path}] n\'est pas un répertoire', section, key)
-            return
+        elif not self.path.is_dir():
+            self._add_error(
+                    f"[{self.path}] n'est pas un répertoire",
+                    section_key,
+                    key
+            )
+
         key = 'css'
-        if not self.has_option(section, key):
-            self._add_debug(f'option absente', section, key)
-        else:
-            self.__css = self.get(section, key)
+        try:
+            self.__css = section[key]
+        except KeyError:
+            self._add_debug(f'option absente', section_key, key)
+
         key = 'update_password'
-        if not self.has_option(section, key):
-            self._add_info(
-                f'option absente, aucun mot de passe ne sera demandé pour les saisies'.format(), section, key)
-        else:
-            self.__update_password = self.get(section, key)
+        try:
+            self.__update_password = section[key]
+        except KeyError:
+            self.__add_info(
+                f'option absente, aucun mot de passe ne sera demandé pour les saisies',
+                section_key,
+                key
+            )
+
         section_keys: List[str] = ['name', 'path', 'update_password', 'css', ]
-        for key, value in self.items(section):
+        for key, value in section:
             if key not in section_keys:
                 self._add_warning(f'option inconnue', section, key)
 
     def __rename_section(self, old_name: str, new_name: str):
-        self.add_section(new_name)
-        for option in self.options(old_name):
-            self.set(new_name, option, self.get(old_name, option))
-            self.remove_option(old_name, option)
-        self.remove_section(old_name)
+        # TODO(Amaras) see if the current function body is equivalent to:
+        # self[new_name] = self[old_name]
+        # del self[old_name]
+        # NOTE(Amaras) if it is equivalent, it could be safely replaced by
+        # the two lines above in each call site
+        
+        # NOTE(Amaras) this can add values that are in DEFAULTSEC if any.
+        # This can also cause a crash if we're trying to delete DEFAULTSEC,
+        # as deleting DEFAUTLSEC causes a ValueError.
+        self.add_secion(new_name)
+        for key, value in self[old_name].items():
+            self[new_name][key] = value
+        self[old_name].clear()
+        del self[old_name]
 
     def __build_tournaments(self):
         tournament_ids: List[str] = self._get_subsections_with_prefix('tournament')
@@ -182,7 +234,7 @@ class Event(ConfigReader):
             self._add_error(f'aucun tournoi initialisé')
 
     def __build_tournament(self, tournament_id: str):
-        section: str = 'tournament.' + tournament_id
+        section: str = f'tournament.{tournament_id}'
         key = 'path'
         default_path: Path = self.path
         path: Path = default_path
@@ -190,6 +242,7 @@ class Event(ConfigReader):
             self._add_debug(f'option absente, par défaut [{default_path}]', section, key)
         else:
             path = Path(self.get(section, key))
+        # NOTE(Amaras) TOC/TOU bug
         if not path.exists():
             self._add_error(f'le répertoire [{path}] n\'existe pas, tournoi ignoré', section, key)
             return
@@ -212,6 +265,7 @@ class Event(ConfigReader):
         if filename is None:
             filename = str(ffe_id)
         file: Path = Path(path, filename + '.papi')
+        # NOTE(Amaras) TOC/TOU bug
         if not file.exists():
             self._add_error(f'le fichier [{file}] n\'existe pas, tournoi ignoré', section)
             return
@@ -258,9 +312,9 @@ class Event(ConfigReader):
 
     def __build_tournament_handicap(
             self, section: str
-    ) -> Tuple[Optional[int], Optional[int], Optional[int], Optional[int], Optional[int]]:
+    ) -> HandicapTournament:
         if not self.has_section(section):
-            return None, None, None, None, None
+            return HandicapTournament()
         section_keys: List[str] = ['initial_time', 'increment', 'penalty_step', 'penalty_value', 'min_time', ]
         for key, value in self.items(section):
             if key not in section_keys:
@@ -311,8 +365,8 @@ class Event(ConfigReader):
                 self._add_warning(
                     f'un entier positif non nul est attendu, configuration de handicap ignorée', section, key)
         if None in [initial_time, increment, penalty_step, penalty_value, min_time]:
-            return None, None, None, None, None
-        return initial_time, increment, penalty_step, penalty_value, min_time
+            return HandicapTournament()
+        return HandicapTournament(initial_time, increment, penalty_step, penalty_value, min_time)
 
     def __build_templates(self):
         template_ids: List[str] = self._get_subsections_with_prefix('template')
