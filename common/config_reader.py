@@ -69,9 +69,10 @@ class ConfigReader(ConfigParser):
     def __format_message(self, text: str, section: Optional[str], key: Optional[str]):
         if section is None:
             return f'{self.ini_file.name}: {text}'
-        if key is None:
+        elif key is None:
             return f'{self.ini_file.name}[{section}]: {text}'
-        return f'{self.ini_file.name}[{section}].{key}: {text}'
+        else: 
+            return f'{self.ini_file.name}[{section}].{key}: {text}'
 
     def _add_debug(self, text: str, section: Optional[str] = None, key: Optional[str] = None):
         message = self.__format_message(text, section, key)
