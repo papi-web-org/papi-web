@@ -174,31 +174,23 @@ class Event(ConfigReader):
         try:
             self.__update_password = section[key]
         except KeyError:
-            self.__add_info(
+            self._add_info(
                 f'option absente, aucun mot de passe ne sera demandé pour les saisies',
                 section_key,
                 key
             )
 
         section_keys: List[str] = ['name', 'path', 'update_password', 'css', ]
-        for key, value in section:
+        for key, value in section.items():
             if key not in section_keys:
                 self._add_warning(f'option inconnue', section, key)
 
     def __rename_section(self, old_name: str, new_name: str):
-        # TODO(Amaras) see if the current function body is equivalent to:
-        # self[new_name] = self[old_name]
-        # del self[old_name]
-        # NOTE(Amaras) if it is equivalent, it could be safely replaced by
-        # the two lines above in each call site
-        
         # NOTE(Amaras) this can add values that are in DEFAULTSEC if any.
         # This can also cause a crash if we're trying to delete DEFAULTSEC,
         # as deleting DEFAUTLSEC causes a ValueError.
-        self.add_secion(new_name)
-        for key, value in self[old_name].items():
-            self[new_name][key] = value
-        self[old_name].clear()
+        # self.add_section(new_name)
+        self[new_name] = self[old_name]
         del self[old_name]
 
     def __build_tournaments(self):
@@ -301,9 +293,9 @@ class Event(ConfigReader):
         handicap_penalty_step: Optional[int]
         handicap_penalty_value: Optional[int]
         handicap_min_time: Optional[int]
-        handicap_section = 'tournament.' + tournament_id + 'handicap'
-        handicap_initial_time, handicap_increment, handicap_penalty_step, handicap_penalty_value, handicap_min_time = \
-            self.__build_tournament_handicap(handicap_section)
+        handicap_section = 'tournament.' + tournament_id + '.handicap'
+        handicap_values = self.__build_tournament_handicap(handicap_section)
+        handicap_initial_time, handicap_increment, handicap_penalty_step, handicap_penalty_value, handicap_min_time = handicap_values
         if handicap_initial_time is not None and ffe_id is not None:
             self._add_warning(f'les tournois à handicap ne devraient pas être homologués', handicap_section)
         self.__tournaments[tournament_id] = Tournament(
@@ -332,7 +324,7 @@ class Event(ConfigReader):
         key = 'increment'
         increment: Optional[int] = None
         if not self.has_option(section, key):
-            self._add_info(f'option absente, configuration de handicap ignorée', section, key)
+            self._add_warning(f'option absente, configuration de handicap ignorée', section, key)
             return HandicapTournament()
         else:
             increment = self._getint_safe(section, key, minimum=0)
@@ -343,7 +335,7 @@ class Event(ConfigReader):
         key = 'penalty_step'
         penalty_step: Optional[int] = None
         if not self.has_option(section, key):
-            self._add_info(f'option absente, configuration de handicap ignorée', section, key)
+            self._add_warning(f'option absente, configuration de handicap ignorée', section, key)
             return HandicapTournament()
         else:
             penalty_step = self._getint_safe(section, key, minimum=1)
@@ -354,7 +346,7 @@ class Event(ConfigReader):
         key = 'penalty_value'
         penalty_value: Optional[int] = None
         if not self.has_option(section, key):
-            self._add_info(f'option absente, configuration de handicap ignorée', section, key)
+            self._add_warning(f'option absente, configuration de handicap ignorée', section, key)
             return HandicapTournament()
         else:
             penalty_value = self._getint_safe(section, key, minimum=1)
@@ -365,7 +357,7 @@ class Event(ConfigReader):
         key = 'min_time'
         min_time: Optional[int] = None
         if not self.has_option(section, key):
-            self._add_info(f'option absente, configuration de handicap ignorée', section, key)
+            self._add_warning(f'option absente, configuration de handicap ignorée', section, key)
             return HandicapTournament()
         else:
             min_time = self._getint_safe(section, key, minimum=1)
