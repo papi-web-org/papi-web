@@ -323,6 +323,7 @@ class Event(ConfigReader):
         initial_time: Optional[int] = None
         if not self.has_option(section, key):
             self._add_warning(f'option absente, configuration de handicap ignorée', section, key)
+            return HandicapTournament()
         else:
             initial_time = self._getint_safe(section, key, minimum=1)
             if initial_time is None:
@@ -332,40 +333,46 @@ class Event(ConfigReader):
         increment: Optional[int] = None
         if not self.has_option(section, key):
             self._add_info(f'option absente, configuration de handicap ignorée', section, key)
+            return HandicapTournament()
         else:
             increment = self._getint_safe(section, key, minimum=0)
             if increment is None:
                 self._add_warning(
                     f'un entier positif est attendu, configuration de handicap ignorée', section, key)
+                return HandicapTournament()
         key = 'penalty_step'
         penalty_step: Optional[int] = None
         if not self.has_option(section, key):
             self._add_info(f'option absente, configuration de handicap ignorée', section, key)
+            return HandicapTournament()
         else:
             penalty_step = self._getint_safe(section, key, minimum=1)
             if penalty_step is None:
                 self._add_warning(
                     f'un entier positif non nul est attendu, configuration de handicap ignorée', section, key)
+                return HandicapTournament()
         key = 'penalty_value'
         penalty_value: Optional[int] = None
         if not self.has_option(section, key):
             self._add_info(f'option absente, configuration de handicap ignorée', section, key)
+            return HandicapTournament()
         else:
             penalty_value = self._getint_safe(section, key, minimum=1)
             if penalty_value is None:
                 self._add_warning(
                     f'un entier positif non nul est attendu, configuration de handicap ignorée', section, key)
+                return HandicapTournament()
         key = 'min_time'
         min_time: Optional[int] = None
         if not self.has_option(section, key):
             self._add_info(f'option absente, configuration de handicap ignorée', section, key)
+            return HandicapTournament()
         else:
             min_time = self._getint_safe(section, key, minimum=1)
             if min_time is None:
                 self._add_warning(
                     f'un entier positif non nul est attendu, configuration de handicap ignorée', section, key)
-        if None in [initial_time, increment, penalty_step, penalty_value, min_time]:
-            return HandicapTournament()
+                return HandicapTournament()
         return HandicapTournament(initial_time, increment, penalty_step, penalty_value, min_time)
 
     def __build_templates(self):
