@@ -69,12 +69,14 @@ def create_project():
     logger.info(f'Creating batch file {target_file}...')
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
+                f'echo Starting Papi-web, please wait...\n'
                 f'@rem Papi-web {PAPI_WEB_VERSION} - {PAPI_WEB_COPYRIGHT} - {PAPI_WEB_URL}\n'
                 f'{EXE_FILENAME} --server\n')
     target_file = Path(PROJECT_DIR, 'ffe.bat')
     logger.info(f'Creating batch file {target_file}...')
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
+                f'echo Starting Papi-web, please wait...\n'
                 f'@rem Papi-web {PAPI_WEB_VERSION} - {PAPI_WEB_COPYRIGHT} - {PAPI_WEB_URL}\n'
                 f'{EXE_FILENAME} --ffe\n')
 
