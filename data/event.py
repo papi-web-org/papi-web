@@ -1000,15 +1000,16 @@ class Event(ConfigReader):
         return self.name == other.name
 
 
-def get_events(silent: bool = True) -> List[Event]:
+def get_events(silent: bool = True, with_tournaments_only: bool = False) -> List[Event]:
     event_files: Iterator[Path] = EVENTS_PATH.glob('*.ini')
     events: List[Event] = []
     for event_file in event_files:
         event_id: str = event_file.stem
         event: Event = Event(event_id, silent=silent)
-        events.append(event)
+        if not with_tournaments_only or event.tournaments:
+            events.append(event)
     return events
 
 
-def get_events_by_name() -> List[Event]:
-    return sorted(get_events(), key=lambda event: event.name)
+def get_events_by_name(silent: bool = True, with_tournaments_only: bool = False) -> List[Event]:
+    return sorted(get_events(silent=silent, with_tournaments_only=with_tournaments_only), key=lambda event: event.name)
