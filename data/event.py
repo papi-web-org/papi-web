@@ -113,6 +113,9 @@ class Event(ConfigReader):
             self._add_info(f'option absente, par défaut [{default_name}]', section, key)
         else:
             self.__name = self.get(section, key)
+        if not self.__name:
+            self._add_error(f'option vide', section, key)
+            return
         key = 'path'
         default_path: Path = Path('papi')
         self.__path: Path = default_path
