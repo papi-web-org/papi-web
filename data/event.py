@@ -132,7 +132,7 @@ class Event(ConfigReader):
             # After this, the secion has already been retrieved, so no future
             # access will throw a TypeError.
             self._add_error(
-                    f'la rubrique est devenue une clé, erreur fatale',
+                    f'la rubrique est devenue une option, erreur fatale',
                     section_key
             )
             return
@@ -199,7 +199,7 @@ class Event(ConfigReader):
             tournament_ids.remove('handicap')
         if self.has_section('tournament'):
             if tournament_ids:
-                sections: str = ', '.join(['[tournament.' + id + ']' for id in tournament_ids])
+                sections: str = ', '.join(('[tournament.' + id + ']' for id in tournament_ids))
                 self._add_error(f'la rubrique [tournament] ne doit être utilisée que lorsque l\'évènement '
                                 f'ne compte qu\'un tournoi, d\'autres rubriques sont présentes ({sections})',
                                 'tournament.*')
