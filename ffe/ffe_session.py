@@ -1,6 +1,7 @@
+import re
 import webbrowser
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 from AdvancedHTMLParser import AdvancedHTMLParser, AdvancedTag
 from requests import Session, Response
 from logging import Logger
@@ -23,6 +24,7 @@ FEES_LINK_ID: str = 'ctl00_ContentPlaceHolderMain_CmdFactureHomologation'
 FEES_EVENT: str = 'ctl00$ContentPlaceHolderMain$CmdFactureHomologation'
 UPLOAD_LINK_ID: str = 'ctl00_ContentPlaceHolderMain_CmdUploadPapi'
 UPLOAD_EVENT: str = UPLOAD_LINK_ID.replace('_', '$')
+UPLOAD_FILE_ID: str = 'ctl00$ContentPlaceHolderMain$UploadPapi'
 
 FEES_DIR: Path = Path('fees')
 
@@ -35,8 +37,9 @@ class FFESession(Session):
         self.__auth_vars: Optional[Dict[str, str]] = None
         self.__tournament_ffe_url: Optional[str] = None
 
-    def __read_url(self, url: str, data: Dict[str, str] = None, files: Dict[str, str] = None) -> Optional[str]:
+    def __read_url(self, url: str, data: Dict[str, str] = None, files: Dict[str, Path] = None) -> Optional[str]:
         handlers: Dict[str, Any] = {}
+        content: Optional[str] = None
         try:
             if not data and not files:
                 response: Response = self.get(url)
@@ -47,10 +50,11 @@ class FFESession(Session):
             for file_id, file_name in files.items():
                 handler = open(file_name, 'rb')
                 handlers[file_id] = handler
-                response: Response = self.post(url, data=data)
-                for handler in handlers.values():
-                    handler.close()
-                return response.content.decode()
+            response: Response = self.post(url, data=data, files=handlers)
+            content: str = response.content.decode()
+            for handler in handlers.values():
+                handler.close()
+            return content
         except ConnectionError as e:
             logger.error(f'[{url}] [{e.__class__.__name__}] [{e}]')
             logger.error(f'Veuillez vérifier votre connection à internet')
@@ -64,10 +68,18 @@ class FFESession(Session):
         return None
 
     @staticmethod
-    def __parse_html(html: str) -> Optional[AdvancedHTMLParser]:
+    def __parse_html(html: str) -> Tuple[Optional[AdvancedHTMLParser], Optional[str]]:
         parser: AdvancedHTMLParser = AdvancedHTMLParser()
+        error: Optional[str] = None
         parser.parseStr(html)
-        return parser
+        tag: AdvancedTag = parser.getElementById('ctl00_ContentPlaceHolderMain_LabelError')
+        if tag:
+            if tag.innerText:
+                matches = re.match(r'^Transfert du fichier : .*\.papi \(\d+ octets\) achevé$', tag.innerText)
+                if not matches:
+                    error = tag.innerText
+                    logger.error(error)
+        return parser, error
 
     @staticmethod
     def __get_state_vars(parser: AdvancedHTMLParser, url: str) -> Optional[Dict[str, str]]:
@@ -85,8 +97,8 @@ class FFESession(Session):
         html: str = self.__read_url(url)
         if not html:
             return False
-        parser: AdvancedHTMLParser = self.__parse_html(html)
-        if not parser:
+        parser, error = self.__parse_html(html)
+        if error:
             return False
         self.__init_vars = self.__get_state_vars(parser, url)
         return True
@@ -105,8 +117,8 @@ class FFESession(Session):
         html: str = self.__read_url(url, post_data)
         if not html:
             return False
-        parser: AdvancedHTMLParser = self.__parse_html(html)
-        if not parser:
+        parser, error = self.__parse_html(html)
+        if error:
             return False
         auth_vars: Dict[str, Optional[str]] = self.__get_state_vars(parser, url)
         for id in [SET_VISIBLE_LINK_ID, FEES_LINK_ID, UPLOAD_LINK_ID, ]:
@@ -167,9 +179,9 @@ class FFESession(Session):
             return
         base: AdvancedTag = AdvancedTag('base')
         base.setAttribute('href', FFE_URL)
-        parser: AdvancedHTMLParser = self.__parse_html(html)
-        if not parser:
-            return
+        parser, error = self.__parse_html(html)
+        if error:
+            return False
         head: AdvancedTag = parser.getElementsByTagName('head')[0]
         head.insertBefore(base, head.getChildren()[0])
         file: Path = Path(FEES_DIR, str(self.__tournament.ffe_id) + '-fees.html')
@@ -199,8 +211,11 @@ class FFESession(Session):
             VIEW_STATE_GENERATOR_INPUT_ID: self.__auth_vars[VIEW_STATE_GENERATOR_INPUT_ID],
             EVENT_VALIDATION_INPUT_ID: self.__auth_vars[EVENT_VALIDATION_INPUT_ID],
         }
-        html: str = self.__read_url(url, data=post, files={UPLOAD_EVENT: self.__tournament.file, })
+        html: str = self.__read_url(url, data=post, files={UPLOAD_FILE_ID: self.__tournament.file, })
         if not html:
+            return
+        parser, error = self.__parse_html(html)
+        if error:
             return
         self.__tournament.ffe_upload_marker.touch()
         logger.info(f'upload OK')
