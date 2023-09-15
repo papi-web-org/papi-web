@@ -3,7 +3,7 @@ from logging import Logger
 
 from common.singleton import singleton
 from common.logger import get_logger, print_interactive, input_interactive
-from data.event import Event, get_events
+from data.event import Event, get_events_by_name
 from ffe.action_selector import ActionSelector
 
 logger: Logger = get_logger()
@@ -15,10 +15,10 @@ class EventSelector:
         self.__silent: bool = False
 
     def run(self) -> bool:
-        events: List[Event] = get_events(self.__silent)
+        events: List[Event] = get_events_by_name(silent=self.__silent, with_tournaments_only=True)
         self.__silent = True  # verbose on the first call only
         if not events:
-            logger.error(f'Aucun fichier de configuration d\'évènement trouvé')
+            logger.error(f'Aucun évènement trouvé')
             return False
         event_num: Optional[int] = None
         if len(events) == 1:

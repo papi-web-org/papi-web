@@ -1,7 +1,7 @@
 import os
 import shutil
 from pathlib import Path
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 from logging import Logger
 from PyInstaller.__main__ import run
 from common.papi_web_config import PAPI_WEB_VERSION, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL
@@ -69,19 +69,21 @@ def create_project():
     logger.info(f'Creating batch file {target_file}...')
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
+                f'echo Starting Papi-web, please wait...\n'
                 f'@rem Papi-web {PAPI_WEB_VERSION} - {PAPI_WEB_COPYRIGHT} - {PAPI_WEB_URL}\n'
                 f'{EXE_FILENAME} --server\n')
     target_file = Path(PROJECT_DIR, 'ffe.bat')
     logger.info(f'Creating batch file {target_file}...')
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
+                f'echo Starting Papi-web, please wait...\n'
                 f'@rem Papi-web {PAPI_WEB_VERSION} - {PAPI_WEB_COPYRIGHT} - {PAPI_WEB_URL}\n'
                 f'{EXE_FILENAME} --ffe\n')
 
 
 def create_zip():
     logger.info(f'Creating archive {ZIP_FILE}...')
-    with ZipFile(ZIP_FILE, 'w') as zip_file:
+    with ZipFile(ZIP_FILE, 'w', ZIP_DEFLATED) as zip_file:
         os.chdir(PROJECT_DIR.resolve())
         for folder_name, sub_folders, file_names in os.walk('.'):
             zip_file.write(folder_name, folder_name)
