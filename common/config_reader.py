@@ -1,8 +1,10 @@
 import re
 from pathlib import Path
 
-from configparser import ConfigParser, DuplicateSectionError, DuplicateOptionError, MissingSectionHeaderError, \
-    ParsingError, Error
+from configparser import (
+        ConfigParser, DuplicateSectionError, DuplicateOptionError,
+        MissingSectionHeaderError, ParsingError, Error
+    )
 from typing import List, Optional
 from logging import Logger
 from common.logger import get_logger
@@ -17,8 +19,8 @@ class ConfigReader(ConfigParser):
     def __init__(self, ini_file: Path, silent: bool):
         super().__init__(interpolation=None, empty_lines_in_values=False)
         self.__ini_file: Path = ini_file
-        ini_marker_dir: Path = Path(TMP_DIR, self.ini_file.parent)
-        ini_marker_file: Path = Path(ini_marker_dir, f'{self.ini_file.name}.read')
+        ini_marker_dir: Path = TMP_DIR / self.ini_file.parent
+        ini_marker_file: Path = ini_marker_dir / f'{self.ini_file.name}.read'
         self.__infos: List[str] = []
         self.__warnings: List[str] = []
         self.__errors: List[str] = []
