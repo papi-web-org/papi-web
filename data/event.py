@@ -111,10 +111,10 @@ class Event(ConfigReader):
     def __build_root(self):
         section_key: str = 'event'
         if not self.has_section(section_key):
-            self._add_error(f'rubrique absente', section_key)
+            self._add_error('rubrique absente', section_key)
             return
         section = self[section_key]
-        
+
         key = 'name'
         default_name = self.__id
         try:
@@ -135,7 +135,7 @@ class Event(ConfigReader):
             # After this, the secion has already been retrieved, so no future
             # access will throw a TypeError.
             self._add_error(
-                    f'la rubrique est devenue une option, erreur fatale',
+                    'la rubrique est devenue une option, erreur fatale',
                     section_key
             )
             return
@@ -171,14 +171,14 @@ class Event(ConfigReader):
         try:
             self.__css = section[key]
         except KeyError:
-            self._add_debug(f'option absente', section_key, key)
+            self._add_debug('option absente', section_key, key)
 
         key = 'update_password'
         try:
             self.__update_password = section[key]
         except KeyError:
             self._add_info(
-                f'option absente, aucun mot de passe ne sera demandé pour les saisies',
+                'option absente, aucun mot de passe ne sera demandé pour les saisies',
                 section_key,
                 key
             )
@@ -192,41 +192,52 @@ class Event(ConfigReader):
         # NOTE(Amaras) this can add values that are in DEFAULTSEC if any.
         # This can also cause a crash if we're trying to delete DEFAULTSEC,
         # as deleting DEFAUTLSEC causes a ValueError.
-        # self.add_section(new_name)
         self[new_name] = self[old_name]
         del self[old_name]
 
     def __build_tournaments(self):
         tournament_ids: List[str] = self._get_subsections_with_prefix('tournament')
+        # NOTE(Amaras) Special case of tournament: handicap depends on
+        # the [tournament] section being there.
         if 'handicap' in tournament_ids:
             tournament_ids.remove('handicap')
         if self.has_section('tournament'):
             if tournament_ids:
-                sections: str = ', '.join(('[tournament.' + id + ']' for id in tournament_ids))
-                self._add_error(f'la rubrique [tournament] ne doit être utilisée que lorsque l\'évènement '
-                                f'ne compte qu\'un tournoi, d\'autres rubriques sont présentes ({sections})',
-                                'tournament.*')
+                sections: str = ', '.join(
+                    ('[tournament.' + id + ']' for id in tournament_ids)
+                )
+                self._add_error(
+                    "la rubrique [tournament] ne doit être utilisée que lorsque"
+                    " l'évènement ne compte qu'un tournoi, d'autres rubriques "
+                    f"sont présentes ({sections})",
+                    'tournament.*'
+                )
                 return
             default_tournament_id: str = 'default'
             old_tournament_section: str = 'tournament'
             new_tournament_section: str = 'tournament.' + default_tournament_id
             self.__rename_section(old_tournament_section, new_tournament_section)
-            self._add_debug(f'un seul tournoi, la rubrique [{old_tournament_section}] a été renommée '
-                            f'[{new_tournament_section}]', old_tournament_section)
+            self._add_debug(
+                f'un seul tournoi, la rubrique [{old_tournament_section}] a '
+                f'été renommée [{new_tournament_section}]',
+                old_tournament_section
+            )
             old_handicap_section: str = 'tournament.handicap'
             if self.has_section(old_handicap_section):
-                new_handicap_section: str = 'tournament.' + default_tournament_id + '.handicap'
+                new_handicap_section = f'tournament.{default_tournament_id}.handicap'
                 self.__rename_section(old_handicap_section, new_handicap_section)
-                self._add_debug(f'un seul tournoi, la rubrique [{old_handicap_section}] a été renommée '
-                                f'[{new_tournament_section}]')
+                self._add_debug(
+                    f'un seul tournoi, la rubrique [{old_handicap_section}] a '
+                    f'été renommée [{new_tournament_section}]'
+                )
             tournament_ids.append(default_tournament_id)
         elif not tournament_ids:
-            self._add_error(f'aucun tournoi trouvé', 'tournament.*')
+            self._add_error('aucun tournoi trouvé', 'tournament.*')
             return
         for tournament_id in tournament_ids:
             self.__build_tournament(tournament_id)
         if not len(self.__tournaments):
-            self._add_error(f'aucun tournoi initialisé')
+            self._add_error('aucun tournoi initialisé')
 
     def __build_tournament(self, tournament_id: str):
         section_key: str = f'tournament.{tournament_id}'
@@ -253,14 +264,14 @@ class Event(ConfigReader):
         # NOTE(Amaras) TOC/TOU bug
         if not path.exists():
             self._add_error(
-                    f'le répertoire [{path}] n\'existe pas, tournoi ignoré',
+                    f"le répertoire [{path}] n'existe pas, tournoi ignoré",
                     section_key,
                     key
             )
             return
         if not path.is_dir():
             self._add_error(
-                    f'[{path}] n\'est pas un répertoire, tournoi ignoré',
+                    f"[{path}] n'est pas un répertoire, tournoi ignoré",
                     section_key,
                     key
             )
@@ -310,6 +321,7 @@ class Event(ConfigReader):
                     section_key,
                     key
             )
+            name = default_name
         key = 'ffe_password'
         ffe_password: Optional[str] = None
         if ffe_id is not None:
@@ -317,8 +329,8 @@ class Event(ConfigReader):
                 ffe_password = section[key]
                 if not re.match('^[A-Z]{10}$', ffe_password):
                     self._add_warning(
-                        'un mot de 10 lettres majuscules est attendu, le mot'
-                        'de passe est ignoré (les opérations sur le site web'
+                        'un mot de 10 lettres majuscules est attendu, le mot '
+                        'de passe est ignoré (les opérations sur le site web '
                         'de la FFE ne seront pas disponibles',
                         section_key,
                         key
@@ -326,7 +338,7 @@ class Event(ConfigReader):
                     ffe_password = None
             except KeyError:
                 self._add_info(
-                    'option absente, les opération sur le site web de la FFE'
+                    'option absente, les opération sur le site web de la FFE '
                     'ne seront pas disponibles',
                     section_key,
                     key
@@ -347,93 +359,151 @@ class Event(ConfigReader):
         for key, value in self.items(section):
             if key not in section_keys:
                 self._add_warning('option inconnue', section, key)
-        handicap_initial_time: Optional[int]
-        handicap_increment: Optional[int]
-        handicap_penalty_step: Optional[int]
-        handicap_penalty_value: Optional[int]
-        handicap_min_time: Optional[int]
         handicap_section = 'tournament.' + tournament_id + '.handicap'
         handicap_values = self.__build_tournament_handicap(handicap_section)
-        handicap_initial_time, handicap_increment, handicap_penalty_step, handicap_penalty_value, handicap_min_time = handicap_values
-        if handicap_initial_time is not None and ffe_id is not None:
-            self._add_warning(f'les tournois à handicap ne devraient pas être homologués', handicap_section)
+        if handicap_values[0] is not None and ffe_id is not None:
+            self._add_warning(
+                'les tournois à handicap ne devraient pas être homologués',
+                handicap_section
+            )
         self.__tournaments[tournament_id] = Tournament(
             tournament_id,
             name,
             file,
             ffe_id,
             ffe_password,
-            handicap_initial_time,
-            handicap_increment,
-            handicap_penalty_step,
-            handicap_penalty_value,
-            handicap_min_time
+            *handicap_values
         )
+    def _get_value_with_warning(
+        self,
+        section: dict,
+        section_key: str,
+        key: str,
+        target_type: type,
+        predicate,
+        default_value,
+        *messages,
+    ):
+        try:
+            value = target_type(section[key])
+            assert predicate(value)
+            return value
+        except TypeError:
+            self._add_error(messages[0], section_key)
+            return default_value
+        except KeyError:
+            self._add_warning(messages[1], section_key, key)
+            return default_value
+        except ValueError:
+            self._add_warning(messages[2], section_key, key)
+            return default_value
+        except AssertionError:
+            self._add_warning(messages[3], section_key, key)
+            return default_value
 
-    def __build_tournament_handicap(
-            self, section: str
-    ) -> HandicapTournament:
-        if not self.has_section(section):
+    def __build_tournament_handicap(self, section: str) -> HandicapTournament:
+        try:
+            handicap_section = self[section]
+        except KeyError:
             return HandicapTournament()
-        section_keys: List[str] = ['initial_time', 'increment', 'penalty_step', 'penalty_value', 'min_time', ]
-        for key, value in self.items(section):
+        section_keys: List[str] = [
+            'initial_time',
+            'increment',
+            'penalty_step',
+            'penalty_value',
+            'min_time',
+        ]
+        for key in self[section]:
             if key not in section_keys:
                 self._add_warning('option inconnue', section, key)
+        positive_messages = (
+            'La rubrique est en fait une option, configuration de handicap '
+            'ignorée',
+            'option absente, configuration de handicap ignorée',
+            'un entier est attendu, configuration de handicap ignorée',
+            'un entier strictement positif est attendu, configuration de '
+            'handicap ignorée'
+        )
+        non_negative_messages = (
+            'La rubrique est en fait une option, configuration de handicap '
+            'ignorée',
+            'option absente, configuration de handicap ignorée',
+            'un entier est attendu, configuration de handicap ignorée',
+            'un entier positif est attendu, configuration de '
+            'handicap ignorée'
+        )
+
         key = 'initial_time'
-        initial_time: Optional[int] = None
-        if not self.has_option(section, key):
-            self._add_warning('option absente, configuration de handicap ignorée', section, key)
+        initial_time: Optional[int] = self._get_value_with_warning(
+            handicap_section,
+            section,
+            key,
+            int,
+            lambda x: x >= 1,
+            None,
+            *positive_messages
+        )
+        if initial_time is None:
             return HandicapTournament()
-        else:
-            initial_time = self._getint_safe(section, key, minimum=1)
-            if initial_time is None:
-                self._add_warning(
-                    'un entier positif non nul est attendu, configuration de handicap ignorée', section, key)
+
         key = 'increment'
-        increment: Optional[int] = None
-        if not self.has_option(section, key):
-            self._add_warning('option absente, configuration de handicap ignorée', section, key)
+        increment: Optional[int] = self._get_value_with_warning(
+            handicap_section,
+            section,
+            key,
+            int,
+            lambda x: x >= 0,
+            None,
+            *non_negative_messages
+        )
+        if increment is None:
             return HandicapTournament()
-        else:
-            increment = self._getint_safe(section, key, minimum=0)
-            if increment is None:
-                self._add_warning(
-                    'un entier positif est attendu, configuration de handicap ignorée', section, key)
-                return HandicapTournament()
+
         key = 'penalty_step'
-        penalty_step: Optional[int] = None
-        if not self.has_option(section, key):
-            self._add_warning('option absente, configuration de handicap ignorée', section, key)
+        penalty_step: Optional[int] = self._get_value_with_warning(
+            handicap_section,
+            section,
+            key,
+            int,
+            lambda x: x >= 1,
+            None,
+            *positive_messages
+        )
+        if penalty_step is None:
             return HandicapTournament()
-        else:
-            penalty_step = self._getint_safe(section, key, minimum=1)
-            if penalty_step is None:
-                self._add_warning(
-                    'un entier positif non nul est attendu, configuration de handicap ignorée', section, key)
-                return HandicapTournament()
+
         key = 'penalty_value'
-        penalty_value: Optional[int] = None
-        if not self.has_option(section, key):
-            self._add_warning('option absente, configuration de handicap ignorée', section, key)
+        penalty_value: Optional[int] = self._get_value_with_warning(
+            handicap_section,
+            section,
+            key,
+            int,
+            lambda x: x >= 1,
+            None,
+            *positive_messages
+        )
+        if penalty_value is None:
             return HandicapTournament()
-        else:
-            penalty_value = self._getint_safe(section, key, minimum=1)
-            if penalty_value is None:
-                self._add_warning(
-                    'un entier positif non nul est attendu, configuration de handicap ignorée', section, key)
-                return HandicapTournament()
+
         key = 'min_time'
-        min_time: Optional[int] = None
-        if not self.has_option(section, key):
-            self._add_warning('option absente, configuration de handicap ignorée', section, key)
+        min_time: Optional[int] = self._get_value_with_warning(
+            handicap_section,
+            section,
+            key,
+            int,
+            lambda x: x >= 1,
+            *positive_messages
+        )
+        if min_time is None:
             return HandicapTournament()
-        else:
-            min_time = self._getint_safe(section, key, minimum=1)
-            if min_time is None:
-                self._add_warning(
-                    'un entier positif non nul est attendu, configuration de handicap ignorée', section, key)
-                return HandicapTournament()
-        return HandicapTournament(initial_time, increment, penalty_step, penalty_value, min_time)
+
+        return HandicapTournament(
+            initial_time,
+            increment,
+            penalty_step,
+            penalty_value,
+            min_time,
+        )
 
     def __build_templates(self):
         template_ids: List[str] = self._get_subsections_with_prefix('template')
@@ -447,15 +517,26 @@ class Event(ConfigReader):
 
     def __build_template(self, template_id: str):
         template: Template = Template(template_id)
-        section = 'template.' + template_id
+        section = f'template.{template_id}'
         for key, value in self.items(section):
             if key not in self.screen_keys:
-                self._add_warning('option de modèle inconnue, ignorée', section, key)
+                self._add_warning(
+                    'option de modèle inconnue, ignorée',
+                    section,
+                    key
+                )
             else:
                 template.add_data(None, key, value)
-        for sub_section in self._get_subsections_with_prefix(section, first_level_only=False):
+        subsections = self._get_subsections_with_prefix(
+            section,
+            first_level_only=False
+        )
+        for sub_section in subsections:
             if sub_section.split('.')[0] not in SCREEN_TYPE_NAMES or len(sub_section.split('.')) > 2:
-                self._add_warning('rubrique de modèle non valide, ignorée', section + '.' + sub_section)
+                self._add_warning(
+                    'rubrique de modèle non valide, ignorée',
+                    f'{section}.{sub_section}'
+                )
                 continue
             for key, value in self.items(section + '.' + sub_section):
                 if key not in self.screen_set_keys:
