@@ -120,7 +120,7 @@ class Event(ConfigReader):
         try:
             self.__name = section[key]
             if not self.__name:
-                self._add_error(f'option vide', section, key)
+                self._add_error('option vide', section, key)
                 return
         except KeyError:
             self.__name = default_name
@@ -186,7 +186,7 @@ class Event(ConfigReader):
         section_keys: List[str] = ['name', 'path', 'update_password', 'css', ]
         for key, value in section.items():
             if key not in section_keys:
-                self._add_warning(f'option inconnue', section, key)
+                self._add_warning('option inconnue', section, key)
 
     def __rename_section(self, old_name: str, new_name: str):
         # NOTE(Amaras) this can add values that are in DEFAULTSEC if any.
@@ -416,21 +416,18 @@ class Event(ConfigReader):
         for key in self[section]:
             if key not in section_keys:
                 self._add_warning('option inconnue', section, key)
+        ignore_message = 'configuration de handicap ignorée'
         positive_messages = (
-            'La rubrique est en fait une option, configuration de handicap '
-            'ignorée',
-            'option absente, configuration de handicap ignorée',
-            'un entier est attendu, configuration de handicap ignorée',
-            'un entier strictement positif est attendu, configuration de '
-            'handicap ignorée'
+            f'La rubrique est en fait une option, {ignore_message}',
+            f'option absente, {ignore_message}',
+            f'un entier est attendu, {ignore_message}',
+            f'un entier strictement positif est attendu, {ignore_message}'
         )
         non_negative_messages = (
-            'La rubrique est en fait une option, configuration de handicap '
-            'ignorée',
-            'option absente, configuration de handicap ignorée',
-            'un entier est attendu, configuration de handicap ignorée',
-            'un entier positif est attendu, configuration de '
-            'handicap ignorée'
+            f'La rubrique est en fait une option, {ignore_message}'
+            f'option absente, {ignore_message}',
+            f'un entier est attendu, {ignore_message}',
+            f'un entier positif est attendu, {ignore_message}'
         )
 
         key = 'initial_time'
@@ -518,7 +515,8 @@ class Event(ConfigReader):
     def __build_template(self, template_id: str):
         template: Template = Template(template_id)
         section = f'template.{template_id}'
-        for key, value in self.items(section):
+        template_section = self[section]
+        for key, value in template_section.items():
             if key not in self.screen_keys:
                 self._add_warning(
                     'option de modèle inconnue, ignorée',
@@ -532,15 +530,24 @@ class Event(ConfigReader):
             first_level_only=False
         )
         for sub_section in subsections:
-            if sub_section.split('.')[0] not in SCREEN_TYPE_NAMES or len(sub_section.split('.')) > 2:
+            splitted = sub_section.split('.')
+            if splitted[0] not in SCREEN_TYPE_NAMES or len(splitted) > 2:
                 self._add_warning(
                     'rubrique de modèle non valide, ignorée',
                     f'{section}.{sub_section}'
                 )
                 continue
-            for key, value in self.items(section + '.' + sub_section):
+            # NOTE(Amaras) Nesting subsections in the Python INI parser
+            # (ConfigParser) only works because nested subsections have
+            # unique names. Is this behaviour expected?
+            subsection_key = f'{section}.{sub_section}'
+            for key, value in self.items(subsection_key):
                 if key not in self.screen_set_keys:
-                    self._add_warning('option de modèle inconnue, ignorée', section + '.' + sub_section, key)
+                    self._add_warning(
+                        'option de modèle inconnue, ignorée',
+                        subsection_key,
+                        key
+                    )
                 else:
                     template.add_data(sub_section, key, value)
         self.__templates[template_id] = template
@@ -554,25 +561,37 @@ class Event(ConfigReader):
             self.__build_family(family_id)
 
     def __build_family(self, family_id: str):
-        section = 'family.' + family_id
+        section = f'family.{family_id}'
+        family_section = self[section]
         section_keys = ['template', 'range', ]
-        for key, value in self.items(section):
+        for key in family_section:
             if key not in section_keys:
-                self._add_warning('option de famille inconnue, ignorée', section, key)
+                self._add_warning(
+                    'option de famille inconnue, ignorée',
+                    section,
+                    key
+                )
         key = 'template'
-        if not self.has_option(section, key):
+        try:
+            template_id = family_section[key]
+        except KeyError:
             self._add_warning('option absente, famille ignorée', section, key)
             return
-        template_id: str = self.get(section, key)
         if template_id not in self.templates:
-            self._add_warning(f"le modèle [{template_id}] n'existe pas, famille ignorée", section, key)
+            self._add_warning(
+                f"le modèle [{template_id}] n'existe pas, famille ignorée",
+                section,
+                key
+            )
             return
         template: Template = self.templates[template_id]
         key = 'range'
-        if not self.has_option(section, key):
+        try:
+            range_str = family_section[key]
+        except KeyError:
             self._add_warning('option absente, famille ignorée', section, key)
             return
-        range_str = self.get(section, key).replace(' ', '')
+
         family_indices: Optional[List[str]] = None
         matches = re.match(r'^(\d+)-(\d+)$', range_str)
         if matches:
