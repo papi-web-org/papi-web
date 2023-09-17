@@ -600,106 +600,126 @@ class Event(ConfigReader):
             first_number = int(matches.group(1))
             last_number = int(matches.group(2))
             if first_number <= last_number:
-                family_indices = [str(number) for number in range(first_number, last_number + 1)]
+                family_indices = list(
+                    map(str, range(first_number, last_number + 1))
+                )
         elif (matches := re.match('^([A-Z])-([A-Z])$', range_str)):
             first_letter = matches.group(1)
             last_letter = matches.group(2)
             if ord(first_letter) <= ord(last_letter):
-                family_indices = [chr(i) for i in range(ord(first_letter), ord(last_letter) + 1)]
+                family_indices = list(
+                    map(chr, range(ord(first_letter), ord(last_letter) + 1))
+                )
         elif (matches := re.match('^([a-z])-([a-z])$', range_str)):
             first_letter = matches.group(1)
             last_letter = matches.group(2)
             if ord(first_letter) <= ord(last_letter):
-                family_indices = [chr(i) for i in range(ord(first_letter), ord(last_letter) + 1)]
+                family_indices = list(
+                    map(chr, range(ord(first_letter), ord(last_letter) + 1))
+                )
         if family_indices is None:
-            self._add_warning(f'valeurs [{range_str}] non valides, famille ignorée', section, key)
+            self._add_warning(
+                f'valeurs [{range_str}] non valides, famille ignorée',
+                section,
+                key
+            )
             return
         for screen_index in family_indices:
-            screen_id = section.split('.')[1] + '-' + screen_index
-            screen_section = 'screen.' + screen_id
+            screen_id = f'{section.split(".")[1]}-{screen_index}'
+            screen_section = f'screen.{screen_id}'
+            # TODO(Amaras) Could this check be replaced with a .setdefault()?
+            # https://docs.python.org/3/library/stdtypes.html?highlight=dict#dict.setdefault
             if not self.has_section(screen_section):
                 self._add_debug('rubrique ajoutée', screen_section)
-                self.add_section(screen_section)
-            self.set(screen_section, '__family__', family_id)
+                self[screen_section] = {}
+            self[screen_section]['__family__'] = family_id
             for sub_section, properties in template.data.items():
                 if sub_section is None:
                     new_section = screen_section
                 else:
-                    new_section = screen_section + '.' + sub_section
+                    new_section = f'{screen_section}.{sub_section}'
+                # TODO(Amaras) setdefault()?
                 if not self.has_section(new_section):
                     self._add_debug('rubrique ajoutée', new_section)
                     self.add_section(new_section)
                 for key, value in properties.items():
+                    # TODO(Amaras) This is definitely a .setdefault() in waiting
                     if not self.has_option(new_section, key):
                         new_value = value.replace('?', screen_index)
-                        self.set(new_section, key, new_value)
-                        self._add_debug(f'option ajoutée avec la valeur [{new_value}]', new_section, key)
+                        self[new_section][key] = new_value
+                        self._add_debug(
+                            f'option ajoutée avec la valeur [{new_value}]',
+                            new_section,
+                            key
+                        )
             self._add_debug(f'écran [{screen_id}] ajouté', section)
 
     def __build_screens(self):
         screen_ids: List[str] = self._get_subsections_with_prefix('screen')
         if not screen_ids:
-            self._add_info('aucun écran défini, ajout des écrans par défaut', 'screen.*')
+            self._add_info(
+                'aucun écran défini, ajout des écrans par défaut',
+                'screen.*'
+            )
             for tournament_id in self.tournaments:
                 if not self.tournaments[tournament_id].file:
                     continue
                 name_prefix: str = ''
                 if len(self.tournaments) > 1:
-                    name_prefix = self.tournaments[tournament_id].name + ' - '
+                    name_prefix = f'{self.tournaments[tournament_id].name} - '
                 data: Dict[str, Dict[str, str]] = {
-                    tournament_id + '-' + SCREEN_TYPE_BOARDS + '-update': {
+                    f'{tournament_id}-{SCREEN_TYPE_BOARDS}-update': {
                         'type': SCREEN_TYPE_BOARDS,
                         'update': 'on',
-                        'name': name_prefix + 'Saisie des résultats',
-                        'menu_text': name_prefix + 'Saisie des résultats',
+                        'name': f'{name_prefix}Saisie des résultats',
+                        'menu_text': f'{name_prefix}Saisie des résultats',
                     },
-                    tournament_id + '-' + SCREEN_TYPE_BOARDS + '-view': {
+                    f'{tournament_id}-{SCREEN_TYPE_BOARDS}-view': {
                         'type': SCREEN_TYPE_BOARDS,
                         'update': 'off',
-                        'name': name_prefix + 'Appariements par échiquier',
-                        'menu_text': name_prefix + 'Appariements',
+                        'name': f'{name_prefix}Appariements par échiquier',
+                        'menu_text': f'{name_prefix}Appariements',
                     },
-                    tournament_id + '-' + SCREEN_TYPE_PLAYERS: {
+                    f'{tournament_id}-{SCREEN_TYPE_PLAYERS}': {
                         'type': SCREEN_TYPE_PLAYERS,
-                        'name': name_prefix + 'Appariements par ordre alphabétique',
+                        'name': f'{name_prefix}Appariements par ordre alphabétique',
                         'columns': '2',
-                        'menu_text': name_prefix + 'Ordre alphabétique',
+                        'menu_text': f'{name_prefix}Ordre alphabétique',
                     },
-                    tournament_id + '-' + SCREEN_TYPE_RESULTS: {
+                    f'{tournament_id}-{SCREEN_TYPE_RESULTS}': {
                         'type': SCREEN_TYPE_RESULTS,
-                        'name': name_prefix + 'Derniers résultats',
-                        'menu_text': name_prefix + 'Derniers résultats',
+                        'name': f'{name_prefix}Derniers résultats',
+                        'menu_text': f'{name_prefix}Derniers résultats',
                     },
                 }
-                menu: str = ','.join([screen_id for screen_id in data])
+                menu: str = ','.join((screen_id for screen_id in data))
                 for screen_id, options in data.items():
-                    section: str = 'screen.' + screen_id
-                    self.add_section(section)
-                    for key, value in options.items():
-                        self.set(section, key, value)
-                    self.set(section, 'menu', menu)
+                    section: str = f'screen.{screen_id}'
+                    self[section] = options
+                    self[section]['menu'] = menu
                     screen_ids.append(screen_id)
-                    self._add_debug(f'l\'écran [{screen_id}] a été ajouté', 'screen.*')
+                    self._add_debug(
+                        f"l'écran [{screen_id}] a été ajouté",
+                        'screen.*'
+                    )
                 data: Dict[str, Dict[str, str]] = {
-                    tournament_id + '-' + SCREEN_TYPE_BOARDS + '-input.' + SCREEN_TYPE_BOARDS: {
+                    f'{tournament_id}-{SCREEN_TYPE_BOARDS}-input.{SCREEN_TYPE_BOARDS}': {
                         'tournament': tournament_id,
                     },
-                    tournament_id + '-' + SCREEN_TYPE_BOARDS + '-print.' + SCREEN_TYPE_BOARDS: {
+                    f'{tournament_id}-{SCREEN_TYPE_BOARDS}-print.{SCREEN_TYPE_BOARDS}': {
                         'tournament': tournament_id,
                     },
-                    tournament_id + '-' + SCREEN_TYPE_PLAYERS + '.players': {
+                    f'{tournament_id}-{SCREEN_TYPE_PLAYERS}.players': {
                         'tournament': tournament_id,
                     },
                 }
                 for screen_id, options in data.items():
-                    section: str = 'screen.' + screen_id
-                    self.add_section(section)
-                    for key, value in options.items():
-                        self.set(section, key, value)
+                    section: str = f'screen.{screen_id}'
+                    self[section] = options
         for screen_id in screen_ids:
             self.__build_screen(screen_id)
         if not len(self.__screens):
-            self._add_warning('aucun écran n\'a été initialisé')
+            self._add_warning("aucun écran n'a été initialisé")
         view_menu: List[AScreen] = []
         update_menu: List[AScreen] = []
         for screen in self.__screens.values():
@@ -720,11 +740,17 @@ class Event(ConfigReader):
                 continue
             if screen.menu == 'family':
                 if screen.family_id is None:
-                    self._add_warning("l'écran n'appartient pas à une famille, aucun menu ne sera affiché",
-                                      'screen.' + screen.id, 'menu')
+                    self._add_warning(
+                        "l'écran n'appartient pas à une famille, aucun menu "
+                        "ne sera affiché",
+                        f'screen.{screen.id}',
+                        'menu'
+                    )
                     screen.set_menu_screens([])
                     continue
-                screen.set_menu_screens(self.__screens_by_family_id[screen.family_id])
+                screen.set_menu_screens(
+                    self.__screens_by_family_id[screen.family_id]
+                )
                 continue
             menu_screens: List[AScreen] = []
             for screen_id in screen.menu.replace(' ', '').split(','):
@@ -732,22 +758,36 @@ class Event(ConfigReader):
                     if screen_id in self.screens:
                         menu_screens.append(self.screens[screen_id])
                     else:
-                        self._add_warning(f'l\'écran [{screen_id}] n\'existe pas, ignoré',
-                                          'screen.' + screen.id, 'menu')
+                        self._add_warning(
+                            f"l'écran [{screen_id}] n'existe pas, ignoré",
+                            f'screen.{screen.id}',
+                            'menu'
+                        )
             screen.set_menu(', '.join([screen.id for screen in menu_screens]))
             screen.set_menu_screens(menu_screens)
 
     screen_keys: List[str] = [
-        'type', 'name', 'columns', 'menu_text', 'show_timer', 'menu', 'update', 'limit',
+        'type',
+        'name',
+        'columns',
+        'menu_text',
+        'show_timer',
+        'menu',
+        'update',
+        'limit',
     ]
 
     def __build_screen(self, screen_id: str):
-        section = 'screen.' + screen_id
+        section = f'screen.{screen_id}'
         key = 'template'
         if self.has_option(section, key):
             template_id = self.get(section, key)
             if template_id not in self.templates:
-                self._add_warning(f"le modèle [{template_id}] n'existe pas, écran ignoré", section, key)
+                self._add_warning(
+                    f"le modèle [{template_id}] n'existe pas, écran ignoré",
+                    section,
+                    key
+                )
                 return
             template: Template = self.templates[template_id]
             for sub_section, properties in template.data.items():
