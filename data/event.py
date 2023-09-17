@@ -593,26 +593,24 @@ class Event(ConfigReader):
             return
 
         family_indices: Optional[List[str]] = None
-        matches = re.match(r'^(\d+)-(\d+)$', range_str)
-        if matches:
+        # NOTE(Amaras) The walrus operator (:= aka assignment expression)
+        # is available since Python 3.8 and this use case is one of the
+        # motivational examples for its introduction, so let's use it.
+        if (matches := re.match(r'^(\d+)-(\d+)$', range_str)):
             first_number = int(matches.group(1))
             last_number = int(matches.group(2))
             if first_number <= last_number:
                 family_indices = [str(number) for number in range(first_number, last_number + 1)]
-        else:
-            matches = re.match('^([A-Z])-([A-Z])$', range_str)
-            if matches:
-                first_letter = matches.group(1)
-                last_letter = matches.group(2)
-                if ord(first_letter) <= ord(last_letter):
-                    family_indices = [chr(i) for i in range(ord(first_letter), ord(last_letter) + 1)]
-            else:
-                matches = re.match('^([a-z])-([a-z])$', range_str)
-                if matches:
-                    first_letter = matches.group(1)
-                    last_letter = matches.group(2)
-                    if ord(first_letter) <= ord(last_letter):
-                        family_indices = [chr(i) for i in range(ord(first_letter), ord(last_letter) + 1)]
+        elif (matches := re.match('^([A-Z])-([A-Z])$', range_str)):
+            first_letter = matches.group(1)
+            last_letter = matches.group(2)
+            if ord(first_letter) <= ord(last_letter):
+                family_indices = [chr(i) for i in range(ord(first_letter), ord(last_letter) + 1)]
+        elif (matches := re.match('^([a-z])-([a-z])$', range_str)):
+            first_letter = matches.group(1)
+            last_letter = matches.group(2)
+            if ord(first_letter) <= ord(last_letter):
+                family_indices = [chr(i) for i in range(ord(first_letter), ord(last_letter) + 1)]
         if family_indices is None:
             self._add_warning(f'valeurs [{range_str}] non valides, famille ignorée', section, key)
             return
