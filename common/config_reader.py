@@ -1,8 +1,10 @@
 import re
 from pathlib import Path
 
-from configparser import ConfigParser, DuplicateSectionError, DuplicateOptionError, MissingSectionHeaderError, \
-    ParsingError, Error
+from configparser import (
+        ConfigParser, DuplicateSectionError, DuplicateOptionError,
+        MissingSectionHeaderError, ParsingError, Error
+    )
 from typing import List, Optional
 from logging import Logger
 from common.logger import get_logger
@@ -17,8 +19,8 @@ class ConfigReader(ConfigParser):
     def __init__(self, ini_file: Path, silent: bool):
         super().__init__(interpolation=None, empty_lines_in_values=False)
         self.__ini_file: Path = ini_file
-        ini_marker_dir: Path = Path(TMP_DIR, self.ini_file.parents[0])
-        ini_marker_file: Path = Path(ini_marker_dir, self.ini_file.name + '.read')
+        ini_marker_dir: Path = TMP_DIR / self.ini_file.parent
+        ini_marker_file: Path = ini_marker_dir / f'{self.ini_file.name}.read'
         self.__infos: List[str] = []
         self.__warnings: List[str] = []
         self.__errors: List[str] = []
@@ -37,7 +39,16 @@ class ConfigReader(ConfigParser):
             else:
                 logger.info(f'Configuration file [{self.ini_file}] has been modified, reloading...')
         try:
-            self.read(self.__ini_file, encoding='utf8')
+            files_read = self.read(self.__ini_file, encoding='utf8')
+            # NOTE(Amaras) There could still be a problem leading to not
+            # getting a configuration.
+            # Since a file raising an OSError is ignored, a file not existing
+            # (due to a TOC/TOU bug), a file being changed to a directory
+            # (e.g. by symlink switching), or a permission error (not accounted
+            # for by previous checks)
+            if str(self.__ini_file) not in files_read:
+                self._add_error(f'Could not read: {self.__ini_file}')
+                return
             if not ini_marker_dir.is_dir():
                 ini_marker_dir.mkdir(parents=True)
             ini_marker_file.touch()
@@ -69,9 +80,10 @@ class ConfigReader(ConfigParser):
     def __format_message(self, text: str, section: Optional[str], key: Optional[str]):
         if section is None:
             return f'{self.ini_file.name}: {text}'
-        if key is None:
+        elif key is None:
             return f'{self.ini_file.name}[{section}]: {text}'
-        return f'{self.ini_file.name}[{section}].{key}: {text}'
+        else: 
+            return f'{self.ini_file.name}[{section}].{key}: {text}'
 
     def _add_debug(self, text: str, section: Optional[str] = None, key: Optional[str] = None):
         message = self.__format_message(text, section, key)
