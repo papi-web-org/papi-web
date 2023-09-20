@@ -869,7 +869,10 @@ class Event(ConfigReader):
         timestamp: Optional[int] = None
         matches = re.match('^#?([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2})$', datetime_str)
         if matches:
-            timestamp = int(time.mktime(datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M').timetuple()))
+            try:
+                timestamp = int(time.mktime(datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M').timetuple()))
+            except ValueError:
+                pass
         else:
             matches = re.match('^([0-9]{1,2}):([0-9]{1,2})$', datetime_str)
             if matches:
@@ -877,8 +880,11 @@ class Event(ConfigReader):
                     self._add_warning(f'le jour du premier horaire doit être spécifié, horaire ignoré', section, key)
                     return
                 self._add_debug(f'jour non spécifié, [{datetime_str} {previous_hour}] pris en compte', section, key)
-                timestamp = int(time.mktime(datetime.datetime.strptime(
-                    previous_hour.date_str + ' ' + datetime_str, '%Y-%m-%d %H:%M').timetuple()))
+                try:
+                    timestamp = int(time.mktime(datetime.datetime.strptime(
+                        previous_hour.date_str + ' ' + datetime_str, '%Y-%m-%d %H:%M').timetuple()))
+                except ValueError:
+                    pass
         if timestamp is None:
             self._add_warning(f'date [{datetime_str}] non valide ([YYYY-MM-DD hh:mm] ou [hh:mm] attendu), '
                               f'horaire ignoré', section, key)
