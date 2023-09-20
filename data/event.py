@@ -357,7 +357,7 @@ class Event(ConfigReader):
                 'ffe_id',
                 'ffe_password',
             ]
-        for key, value in self.items(section):
+        for key, value in section.items():
             if key not in section_keys:
                 self._add_warning('option inconnue', section, key)
         handicap_section = 'tournament.' + tournament_id + '.handicap'
@@ -1095,9 +1095,9 @@ class Event(ConfigReader):
                 self._add_error('rubrique non trouvée', section)
                 return screen_sets
             key = 'tournament'
-            if key not in current_section
+            if key not in current_section:
                 if len(self.tournaments) == 1:
-                    current_section[ley] = list(self.tournaments.keys())[0]
+                    current_section[key] = list(self.tournaments.keys())[0]
                 else:
                     self._add_warning(
                         'option absente, écran ignoré',
@@ -1224,7 +1224,7 @@ class Event(ConfigReader):
         section = f'rotator.{rotator_id}'
         rotator_section = self[section]
         section_keys: List[str] = ['screens', 'families', 'delay', ]
-        for for key, value in rotator_section:
+        for key in rotator_section:
             if key not in section_keys:
                 self._add_warning('option inconnue', section, key)
         key = 'delay'
@@ -1238,7 +1238,7 @@ class Event(ConfigReader):
                 key
             )
         else:
-            delay = self._getint_safe(section, key, minmum=1)
+            delay = self._getint_safe(section, key, minimum=1)
             if delay is None:
                 self._add_warning(
                     f'un entier positif non nul est attendu, par défaut '
