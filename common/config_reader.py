@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 
+import chardet
 from configparser import (
         ConfigParser, DuplicateSectionError, DuplicateOptionError,
         MissingSectionHeaderError, ParsingError, Error
@@ -39,7 +40,10 @@ class ConfigReader(ConfigParser):
             else:
                 logger.info(f'Configuration file [{self.ini_file}] has been modified, reloading...')
         try:
-            files_read = self.read(self.__ini_file, encoding='utf8')
+            encoding: str
+            with open(self.__ini_file, "rb") as f:
+                encoding = chardet.detect(f.read())['encoding']
+            files_read = self.read(self.__ini_file, encoding=encoding)
             # NOTE(Amaras) There could still be a problem leading to not
             # getting a configuration.
             # Since a file raising an OSError is ignored, a file not existing
@@ -77,16 +81,16 @@ class ConfigReader(ConfigParser):
     def ini_file(self) -> Path:
         return self.__ini_file
 
-    def __format_message(self, text: str, section: Optional[str], key: Optional[str]):
-        if section is None:
+    def __format_message(self, text: str, section_key: Optional[str], key: Optional[str]):
+        if section_key is None:
             return f'{self.ini_file.name}: {text}'
         elif key is None:
-            return f'{self.ini_file.name}[{section}]: {text}'
+            return f'{self.ini_file.name}[{section_key}]: {text}'
         else: 
-            return f'{self.ini_file.name}[{section}].{key}: {text}'
+            return f'{self.ini_file.name}[{section_key}].{key}: {text}'
 
-    def _add_debug(self, text: str, section: Optional[str] = None, key: Optional[str] = None):
-        message = self.__format_message(text, section, key)
+    def _add_debug(self, text: str, section_key: Optional[str] = None, key: Optional[str] = None):
+        message = self.__format_message(text, section_key, key)
         if not self.__silent:
             logger.debug(message)
 
@@ -94,8 +98,8 @@ class ConfigReader(ConfigParser):
     def infos(self) -> List[str]:
         return self.__infos
 
-    def _add_info(self, text: str, section: Optional[str] = None, key: Optional[str] = None):
-        message = self.__format_message(text, section, key)
+    def _add_info(self, text: str, section_key: Optional[str] = None, key: Optional[str] = None):
+        message = self.__format_message(text, section_key, key)
         if not self.__silent:
             logger.info(message)
         self.__infos.append(message)
@@ -104,8 +108,8 @@ class ConfigReader(ConfigParser):
     def warnings(self) -> List[str]:
         return self.__warnings
 
-    def _add_warning(self, text: str, section: Optional[str] = None, key: Optional[str] = None):
-        message = self.__format_message(text, section, key)
+    def _add_warning(self, text: str, section_key: Optional[str] = None, key: Optional[str] = None):
+        message = self.__format_message(text, section_key, key)
         if not self.__silent:
             logger.warning(message)
         self.__warnings.append(message)
@@ -114,15 +118,15 @@ class ConfigReader(ConfigParser):
     def errors(self) -> List[str]:
         return self.__errors
 
-    def _add_error(self, text: str, section: Optional[str] = None, key: Optional[str] = None):
-        message = self.__format_message(text, section, key)
+    def _add_error(self, text: str, section_key: Optional[str] = None, key: Optional[str] = None):
+        message = self.__format_message(text, section_key, key)
         if not self.__silent:
             logger.error(message)
         self.__errors.append(message)
 
-    def _getint_safe(self, section: str, key: str, minimum: int = None, maximum: int = None) -> Optional[int]:
+    def _getint_safe(self, section_key: str, key: str, minimum: int = None, maximum: int = None) -> Optional[int]:
         try:
-            val: int = self.getint(section, key)
+            val: int = self.getint(section_key, key)
             if minimum is not None and val < minimum:
                 return None
             if maximum is not None and val > maximum:
@@ -131,21 +135,21 @@ class ConfigReader(ConfigParser):
         except ValueError:
             return None
 
-    def _getboolean_safe(self, section: str, key: str) -> Optional[bool]:
+    def _getboolean_safe(self, section_key: str, key: str) -> Optional[bool]:
         try:
-            val: bool = self.getboolean(section, key)
+            val: bool = self.getboolean(section_key, key)
             return val
         except ValueError:
             return None
 
-    def _get_subsections_with_prefix(self, prefix: str, first_level_only: int = True) -> List[str]:
-        subsections: List[str] = []
-        for section in self.sections():
+    def _get_subsection_keys_with_prefix(self, prefix: str, first_level_only: int = True) -> List[str]:
+        subsection_keys: List[str] = []
+        for section_key in self.sections():
             if first_level_only:
                 pattern = r'^{}\.([^.]+)$'
             else:
                 pattern = r'^{}\.([^.]+(\.[^.]+)*)$'
-            matches = re.match(pattern.format(prefix.replace('.', '\\.')), section)
+            matches = re.match(pattern.format(prefix.replace('.', '\\.')), section_key)
             if matches:
-                subsections.append(matches.group(1))
-        return subsections
+                subsection_keys.append(matches.group(1))
+        return subsection_keys

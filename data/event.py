@@ -24,6 +24,7 @@ logger: Logger = get_logger()
 
 EVENTS_PATH: Path = Path('events')
 
+
 class HandicapTournament(NamedTuple):
     initial_time: Optional[int] = None
     increment: Optional[int] = None
@@ -36,7 +37,7 @@ class HandicapTournament(NamedTuple):
 class Event(ConfigReader):
     def __init__(self, event_id: str, silent: bool = True):
         self.__id: str = event_id
-        super().__init__(Path(EVENTS_PATH, self.id + '.ini'), silent=silent)
+        super().__init__(Path(EVENTS_PATH, f'{self.id}.ini'), silent=silent)
         self.__name: str = self.__id
         self.__path: Path = Path('papi')
         self.__css: Optional[str] = None
@@ -121,7 +122,7 @@ class Event(ConfigReader):
         try:
             self.__name = section[key]
             if not self.__name:
-                self._add_error('option vide', section, key)
+                self._add_error('option vide', section_key, key)
                 return
         except KeyError:
             self.__name = default_name
@@ -187,49 +188,49 @@ class Event(ConfigReader):
         section_keys: List[str] = ['name', 'path', 'update_password', 'css', ]
         for key, value in section.items():
             if key not in section_keys:
-                self._add_warning('option inconnue', section, key)
+                self._add_warning('option inconnue', section_key, key)
 
-    def __rename_section(self, old_name: str, new_name: str):
+    def __rename_section(self, old_section_key: str, new_section_key: str):
         # NOTE(Amaras) this can add values that are in DEFAULTSEC if any.
         # This can also cause a crash if we're trying to delete DEFAULTSEC,
         # as deleting DEFAUTLSEC causes a ValueError.
-        self[new_name] = self[old_name]
-        del self[old_name]
+        self[new_section_key] = self[old_section_key]
+        del self[old_section_key]
 
     def __build_tournaments(self):
-        tournament_ids: List[str] = self._get_subsections_with_prefix('tournament')
+        tournament_ids: List[str] = self._get_subsection_keys_with_prefix('tournament')
         # NOTE(Amaras) Special case of tournament: handicap depends on
         # the [tournament] section being there.
         if 'handicap' in tournament_ids:
             tournament_ids.remove('handicap')
         if self.has_section('tournament'):
             if tournament_ids:
-                sections: str = ', '.join(
+                section_keys: str = ', '.join(
                     ('[tournament.' + id + ']' for id in tournament_ids)
                 )
                 self._add_error(
                     "la rubrique [tournament] ne doit être utilisée que lorsque"
                     " l'évènement ne compte qu'un tournoi, d'autres rubriques "
-                    f"sont présentes ({sections})",
+                    f"sont présentes ({section_keys})",
                     'tournament.*'
                 )
                 return
             default_tournament_id: str = 'default'
-            old_tournament_section: str = 'tournament'
-            new_tournament_section: str = 'tournament.' + default_tournament_id
-            self.__rename_section(old_tournament_section, new_tournament_section)
+            old_tournament_section_key: str = 'tournament'
+            new_tournament_section_key: str = 'tournament.' + default_tournament_id
+            self.__rename_section(old_tournament_section_key, new_tournament_section_key)
             self._add_debug(
-                f'un seul tournoi, la rubrique [{old_tournament_section}] a '
-                f'été renommée [{new_tournament_section}]',
-                old_tournament_section
+                f'un seul tournoi, la rubrique [{old_tournament_section_key}] a '
+                f'été renommée [{new_tournament_section_key}]',
+                old_tournament_section_key
             )
-            old_handicap_section: str = 'tournament.handicap'
-            if self.has_section(old_handicap_section):
-                new_handicap_section = f'tournament.{default_tournament_id}.handicap'
-                self.__rename_section(old_handicap_section, new_handicap_section)
+            old_handicap_section_key: str = 'tournament.handicap'
+            if self.has_section(old_handicap_section_key):
+                new_handicap_section_key = f'tournament.{default_tournament_id}.handicap'
+                self.__rename_section(old_handicap_section_key, new_handicap_section_key)
                 self._add_debug(
-                    f'un seul tournoi, la rubrique [{old_handicap_section}] a '
-                    f'été renommée [{new_tournament_section}]'
+                    f'un seul tournoi, la rubrique [{old_handicap_section_key}] a '
+                    f'été renommée [{new_tournament_section_key}]'
                 )
             tournament_ids.append(default_tournament_id)
         elif not tournament_ids:
@@ -245,23 +246,25 @@ class Event(ConfigReader):
         try:
             section = self[section_key]
         except KeyError:
-            self._add_error('Pas de tournoi trouvé', section_key)
+            self._add_error('Tournoi non trouvé', section_key)
+            return
         key = 'path'
         default_path: Path = self.path
+        path: Path = default_path
         try:
             path = section[key]
         except KeyError:
             self._add_debug(
-                    f'option absente, par dfault [{default_path}]',
+                    f'option absente, par défault [{default_path}]',
                     section_key,
                     key
             )
-            path: Path = default_path
         except TypeError:
             self._add_error(
                     f'La rubrique [{section_key}] est en fait une option',
                     section_key
             )
+            return
         # NOTE(Amaras) TOC/TOU bug
         if not path.exists():
             self._add_error(
@@ -307,10 +310,10 @@ class Event(ConfigReader):
         file: Path = path / f'{filename}.papi'
         # NOTE(Amaras) TOC/TOU bug
         if not file.exists():
-            self._add_error(f'le fichier [{file}] n\'existe pas, tournoi ignoré', section)
+            self._add_error(f'le fichier [{file}] n\'existe pas, tournoi ignoré', section_key)
             return
         if not file.is_file():
-            self._add_error(f'[{file}] n\'est pas un fichier, tournoi ignoré', section)
+            self._add_error(f'[{file}] n\'est pas un fichier, tournoi ignoré', section_key)
             return
         key = 'name'
         default_name: str = tournament_id
@@ -359,13 +362,13 @@ class Event(ConfigReader):
             ]
         for key, value in section.items():
             if key not in section_keys:
-                self._add_warning('option inconnue', section, key)
-        handicap_section = 'tournament.' + tournament_id + '.handicap'
-        handicap_values = self.__build_tournament_handicap(handicap_section)
+                self._add_warning('option inconnue', section_key, key)
+        handicap_section_key = 'tournament.' + tournament_id + '.handicap'
+        handicap_values = self.__build_tournament_handicap(handicap_section_key)
         if handicap_values[0] is not None and ffe_id is not None:
             self._add_warning(
                 'les tournois à handicap ne devraient pas être homologués',
-                handicap_section
+                handicap_section_key
             )
         self.__tournaments[tournament_id] = Tournament(
             tournament_id,
@@ -375,6 +378,7 @@ class Event(ConfigReader):
             ffe_password,
             *handicap_values
         )
+
     def _get_value_with_warning(
         self,
         section: dict,
@@ -402,9 +406,9 @@ class Event(ConfigReader):
             self._add_warning(messages[3], section_key, key)
             return default_value
 
-    def __build_tournament_handicap(self, section: str) -> HandicapTournament:
+    def __build_tournament_handicap(self, section_key: str) -> HandicapTournament:
         try:
-            handicap_section = self[section]
+            handicap_section = self[section_key]
         except KeyError:
             return HandicapTournament()
         section_keys: List[str] = [
@@ -414,9 +418,9 @@ class Event(ConfigReader):
             'penalty_value',
             'min_time',
         ]
-        for key in self[section]:
+        for key in self[section_key]:
             if key not in section_keys:
-                self._add_warning('option inconnue', section, key)
+                self._add_warning('option inconnue', section_key, key)
         ignore_message = 'configuration de handicap ignorée'
         positive_messages = (
             f'La rubrique est en fait une option, {ignore_message}',
@@ -434,7 +438,7 @@ class Event(ConfigReader):
         key = 'initial_time'
         initial_time: Optional[int] = self._get_value_with_warning(
             handicap_section,
-            section,
+            section_key,
             key,
             int,
             lambda x: x >= 1,
@@ -447,7 +451,7 @@ class Event(ConfigReader):
         key = 'increment'
         increment: Optional[int] = self._get_value_with_warning(
             handicap_section,
-            section,
+            section_key,
             key,
             int,
             lambda x: x >= 0,
@@ -460,7 +464,7 @@ class Event(ConfigReader):
         key = 'penalty_step'
         penalty_step: Optional[int] = self._get_value_with_warning(
             handicap_section,
-            section,
+            section_key,
             key,
             int,
             lambda x: x >= 1,
@@ -473,7 +477,7 @@ class Event(ConfigReader):
         key = 'penalty_value'
         penalty_value: Optional[int] = self._get_value_with_warning(
             handicap_section,
-            section,
+            section_key,
             key,
             int,
             lambda x: x >= 1,
@@ -486,7 +490,7 @@ class Event(ConfigReader):
         key = 'min_time'
         min_time: Optional[int] = self._get_value_with_warning(
             handicap_section,
-            section,
+            section_key,
             key,
             int,
             lambda x: x >= 1,
@@ -504,7 +508,7 @@ class Event(ConfigReader):
         )
 
     def __build_templates(self):
-        template_ids: List[str] = self._get_subsections_with_prefix('template')
+        template_ids: List[str] = self._get_subsection_keys_with_prefix('template')
         if not template_ids:
             self._add_debug('aucun modèle déclaré', 'template.*')
             return
@@ -515,33 +519,33 @@ class Event(ConfigReader):
 
     def __build_template(self, template_id: str):
         template: Template = Template(template_id)
-        section = f'template.{template_id}'
-        template_section = self[section]
+        section_key = f'template.{template_id}'
+        template_section = self[section_key]
         for key, value in template_section.items():
             if key not in self.screen_keys:
                 self._add_warning(
                     'option de modèle inconnue, ignorée',
-                    section,
+                    section_key,
                     key
                 )
             else:
                 template.add_data(None, key, value)
-        subsections = self._get_subsections_with_prefix(
-            section,
+        subsection_keys = self._get_subsection_keys_with_prefix(
+            section_key,
             first_level_only=False
         )
-        for sub_section in subsections:
-            splitted = sub_section.split('.')
+        for sub_section_key in subsection_keys:
+            splitted = sub_section_key.split('.')
             if splitted[0] not in SCREEN_TYPE_NAMES or len(splitted) > 2:
                 self._add_warning(
                     'rubrique de modèle non valide, ignorée',
-                    f'{section}.{sub_section}'
+                    f'{section_key}.{sub_section_key}'
                 )
                 continue
             # NOTE(Amaras) Nesting subsections in the Python INI parser
             # (ConfigParser) only works because nested subsections have
             # unique names. Is this behaviour expected?
-            subsection_key = f'{section}.{sub_section}'
+            subsection_key = f'{section_key}.{sub_section_key}'
             for key, value in self.items(subsection_key):
                 if key not in self.screen_set_keys:
                     self._add_warning(
@@ -550,11 +554,11 @@ class Event(ConfigReader):
                         key
                     )
                 else:
-                    template.add_data(sub_section, key, value)
+                    template.add_data(sub_section_key, key, value)
         self.__templates[template_id] = template
 
     def __build_families(self):
-        family_ids: List[str] = self._get_subsections_with_prefix('family')
+        family_ids: List[str] = self._get_subsection_keys_with_prefix('family')
         if not family_ids:
             self._add_debug('aucune famille déclarée', 'family.*')
             return
@@ -562,26 +566,26 @@ class Event(ConfigReader):
             self.__build_family(family_id)
 
     def __build_family(self, family_id: str):
-        section = f'family.{family_id}'
-        family_section = self[section]
+        section_key = f'family.{family_id}'
+        family_section = self[section_key]
         section_keys = ['template', 'range', ]
         for key in family_section:
             if key not in section_keys:
                 self._add_warning(
                     'option de famille inconnue, ignorée',
-                    section,
+                    section_key,
                     key
                 )
         key = 'template'
         try:
             template_id = family_section[key]
         except KeyError:
-            self._add_warning('option absente, famille ignorée', section, key)
+            self._add_warning('option absente, famille ignorée', section_key, key)
             return
         if template_id not in self.templates:
             self._add_warning(
                 f"le modèle [{template_id}] n'existe pas, famille ignorée",
-                section,
+                section_key,
                 key
             )
             return
@@ -590,28 +594,28 @@ class Event(ConfigReader):
         try:
             range_str = family_section[key]
         except KeyError:
-            self._add_warning('option absente, famille ignorée', section, key)
+            self._add_warning('option absente, famille ignorée', section_key, key)
             return
 
         family_indices: Optional[List[str]] = None
         # NOTE(Amaras) The walrus operator (:= aka assignment expression)
         # is available since Python 3.8 and this use case is one of the
         # motivational examples for its introduction, so let's use it.
-        if (matches := re.match(r'^(\d+)-(\d+)$', range_str)):
+        if matches := re.match(r'^(\d+)-(\d+)$', range_str):
             first_number = int(matches.group(1))
             last_number = int(matches.group(2))
             if first_number <= last_number:
                 family_indices = list(
                     map(str, range(first_number, last_number + 1))
                 )
-        elif (matches := re.match('^([A-Z])-([A-Z])$', range_str)):
+        elif matches := re.match('^([A-Z])-([A-Z])$', range_str):
             first_letter = matches.group(1)
             last_letter = matches.group(2)
             if ord(first_letter) <= ord(last_letter):
                 family_indices = list(
                     map(chr, range(ord(first_letter), ord(last_letter) + 1))
                 )
-        elif (matches := re.match('^([a-z])-([a-z])$', range_str)):
+        elif matches := re.match('^([a-z])-([a-z])$', range_str):
             first_letter = matches.group(1)
             last_letter = matches.group(2)
             if ord(first_letter) <= ord(last_letter):
@@ -621,42 +625,42 @@ class Event(ConfigReader):
         if family_indices is None:
             self._add_warning(
                 f'valeurs [{range_str}] non valides, famille ignorée',
-                section,
+                section_key,
                 key
             )
             return
         for screen_index in family_indices:
-            screen_id = f'{section.split(".")[1]}-{screen_index}'
-            screen_section = f'screen.{screen_id}'
+            screen_id = f'{section_key.split(".")[1]}-{screen_index}'
+            screen_section_key = f'screen.{screen_id}'
             # TODO(Amaras) Could this check be replaced with a .setdefault()?
             # https://docs.python.org/3/library/stdtypes.html?highlight=dict#dict.setdefault
-            if not self.has_section(screen_section):
-                self._add_debug('rubrique ajoutée', screen_section)
-                self[screen_section] = {}
-            self[screen_section]['__family__'] = family_id
-            for sub_section, properties in template.data.items():
-                if sub_section is None:
-                    new_section = screen_section
+            if not self.has_section(screen_section_key):
+                self._add_debug('rubrique ajoutée', screen_section_key)
+                self[screen_section_key] = {}
+            self[screen_section_key]['__family__'] = family_id
+            for sub_section_key, properties in template.data.items():
+                if sub_section_key is None:
+                    new_section_key = screen_section_key
                 else:
-                    new_section = f'{screen_section}.{sub_section}'
+                    new_section_key = f'{screen_section_key}.{sub_section_key}'
                 # TODO(Amaras) setdefault()?
-                if not self.has_section(new_section):
-                    self._add_debug('rubrique ajoutée', new_section)
-                    self.add_section(new_section)
+                if not self.has_section(new_section_key):
+                    self._add_debug('rubrique ajoutée', new_section_key)
+                    self.add_section(new_section_key)
                 for key, value in properties.items():
                     # TODO(Amaras) This is definitely a .setdefault() in waiting
-                    if not self.has_option(new_section, key):
+                    if not self.has_option(new_section_key, key):
                         new_value = value.replace('?', screen_index)
-                        self[new_section][key] = new_value
+                        self[new_section_key][key] = new_value
                         self._add_debug(
                             f'option ajoutée avec la valeur [{new_value}]',
-                            new_section,
+                            new_section_key,
                             key
                         )
-            self._add_debug(f'écran [{screen_id}] ajouté', section)
+            self._add_debug(f'écran [{screen_id}] ajouté', section_key)
 
     def __build_screens(self):
-        screen_ids: List[str] = self._get_subsections_with_prefix('screen')
+        screen_ids: List[str] = self._get_subsection_keys_with_prefix('screen')
         if not screen_ids:
             self._add_info(
                 'aucun écran défini, ajout des écrans par défaut',
@@ -695,9 +699,9 @@ class Event(ConfigReader):
                 }
                 menu: str = ','.join((screen_id for screen_id in data))
                 for screen_id, options in data.items():
-                    section: str = f'screen.{screen_id}'
-                    self[section] = options
-                    self[section]['menu'] = menu
+                    section_key: str = f'screen.{screen_id}'
+                    self[section_key] = options
+                    self[section_key]['menu'] = menu
                     screen_ids.append(screen_id)
                     self._add_debug(
                         f"l'écran [{screen_id}] a été ajouté",
@@ -715,8 +719,8 @@ class Event(ConfigReader):
                     },
                 }
                 for screen_id, options in data.items():
-                    section: str = f'screen.{screen_id}'
-                    self[section] = options
+                    section_key: str = f'screen.{screen_id}'
+                    self[section_key] = options
         for screen_id in screen_ids:
             self.__build_screen(screen_id)
         if not len(self.__screens):
@@ -779,97 +783,97 @@ class Event(ConfigReader):
     ]
 
     def __build_screen(self, screen_id: str):
-        section = f'screen.{screen_id}'
-        screen_section = self[section]
+        section_key = f'screen.{screen_id}'
+        screen_section = self[section_key]
         key = 'template'
         with suppress(KeyError):
             template_id = screen_section[key]
             if template_id not in self.templates:
                 self._add_warning(
                     f"le modèle [{template_id}] n'existe pas, écran ignoré",
-                    section,
+                    section_key,
                     key
                 )
                 return
             template: Template = self.templates[template_id]
-            for sub_section, properties in template.data.items():
-                if sub_section is None:
-                    new_section = section
+            for sub_section_key, properties in template.data.items():
+                if sub_section_key is None:
+                    new_section_key = section_key
                 else:
-                    new_section = f'{section}.{sub_section}'
-                if not new_section not in self:
-                    self[new_section] = {}
+                    new_section_key = f'{section_key}.{sub_section_key}'
+                if not new_section_key not in self:
+                    self[new_section_key] = {}
                 for key, value in properties.items():
-                    self[new_section].setdefault(key, value)
+                    self[new_section_key].setdefault(key, value)
         key = 'type'
         try:
             screen_type = screen_section[key]
         except KeyError:
             self._add_warning(
-                f"type d'écran invalide [{screen_type}], écran ignoré",
-                section,
+                f"type d'écran non précisé, écran ignoré",
+                section_key,
                 key
             )
             return
-        screen_set_sections: List[str] = []
-        screen_set_single_section = f'{section}.{screen_type}'
+        screen_set_section_keys: List[str] = []
+        screen_set_single_section_key = f'{section_key}.{screen_type}'
         if screen_type == SCREEN_TYPE_BOARDS:
-            if screen_set_single_section in self:
-                screen_set_sections = [screen_set_single_section, ]
-                for screen_set_sub_section in self._get_subsections_with_prefix(screen_set_single_section):
+            if screen_set_single_section_key in self:
+                screen_set_section_keys = [screen_set_single_section_key, ]
+                for screen_set_sub_section_key in self._get_subsection_keys_with_prefix(screen_set_single_section_key):
                     self._add_warning(
                         'rubrique non prise en compte, supprimez la rubrique '
-                        f'[{screen_set_single_section}] pour cela',
-                        f'{screen_set_single_section}.{screen_set_sub_section}'
+                        f'[{screen_set_single_section_key}] pour cela',
+                        f'{screen_set_single_section_key}.{screen_set_sub_section_key}'
                     )
             else:
-                screen_set_sections = [
-                    f'{screen_set_single_section}.{sub_section}'
-                    for sub_section
-                    in self._get_subsections_with_prefix(screen_set_single_section)
+                screen_set_section_keys = [
+                    f'{screen_set_single_section_key}.{sub_section_key}'
+                    for sub_section_key
+                    in self._get_subsection_keys_with_prefix(screen_set_single_section_key)
                 ]
-            if not screen_set_sections:
+            if not screen_set_section_keys:
                 if len(self.tournaments) == 1:
-                    self[screen_set_single_section] = {}
-                    screen_set_sections.append(screen_set_single_section)
+                    self[screen_set_single_section_key] = {}
+                    screen_set_section_keys.append(screen_set_single_section_key)
                     self._add_info(
                         'un seul tournoi, la rubrique '
-                        f'[{screen_set_single_section}] a été ajoutée',
-                        section
+                        f'[{screen_set_single_section_key}] a été ajoutée',
+                        section_key
                     )
                 else:
                     self._add_warning(
                         'rubrique absente, écran ignoré',
-                        screen_set_single_section
+                        screen_set_single_section_key
                     )
                     return
         elif screen_type == SCREEN_TYPE_PLAYERS:
-            if screen_set_single_section in self:
-                screen_set_sections = [screen_set_single_section, ]
-                for screen_set_sub_section in self._get_subsections_with_prefix(screen_set_single_section):
+            if screen_set_single_section_key in self:
+                screen_set_section_keys = [screen_set_single_section_key, ]
+                for screen_set_sub_section_key in self._get_subsection_keys_with_prefix(screen_set_single_section_key):
                     self._add_warning(
                         'rubrique non prise en compte, supprimez la rubrique '
-                        f'[{screen_set_single_section}] pour cela',
-                        f'{screen_set_single_section}.{screen_set_sub_section}'
+                        f'[{screen_set_single_section_key}] pour cela',
+                        f'{screen_set_single_section_key}.{screen_set_sub_section_key}'
                     )
             else:
-                screen_set_sections = [
-                    screen_set_single_section + '.' + sub_section
-                    for sub_section in self._get_subsections_with_prefix(screen_set_single_section)
+                screen_set_section_keys = [
+                    screen_set_single_section_key + '.' + sub_section_key
+                    for sub_section_key in self._get_subsection_keys_with_prefix(screen_set_single_section_key)
                 ]
-            if not screen_set_sections:
+            if not screen_set_section_keys:
                 if len(self.tournaments) == 1:
-                    self[screen_set_single_section] = {}
-                    screen_set_sections.append(screen_set_single_section)
+                    self[screen_set_single_section_key] = {}
+                    screen_set_section_keys.append(screen_set_single_section_key)
                     self._add_info(
                         'un seul tournoi, la rubrique '
-                        f'[{screen_set_single_section}] a été ajoutée',
-                        section
+                        f'[{screen_set_single_section_key}] a été ajoutée',
+                        section_key
                     )
                 else:
                     self._add_warning(
                         'rubrique absente, écran ignoré',
-                        screen_set_single_section
+                        screen_set_single_section_key
                     )
                     return
         elif screen_type == SCREEN_TYPE_RESULTS:
@@ -877,7 +881,7 @@ class Event(ConfigReader):
         else:
             self._add_warning(
                 f"type d'écran [{screen_type}] inconnu, écran ignoré",
-                section
+                section_key
             )
             return
         key = 'columns'
@@ -890,7 +894,7 @@ class Event(ConfigReader):
         except ValueError:
             self._add_warning(
                 f'un entier est attendu, par défault [{default_columns}]',
-                section,
+                section_key,
                 key
             )
             columns = default_columns
@@ -898,24 +902,24 @@ class Event(ConfigReader):
             self._add_warning(
                 'un entier strictement positif est attendu, par défaut '
                 f'[{default_columns}]',
-                section,
+                section_key,
                 key
             )
             columns = default_columns
         screen_sets: Optional[List[ScreenSet]] = None
         if screen_type in [SCREEN_TYPE_BOARDS, SCREEN_TYPE_PLAYERS, ]:
-            screen_sets = self.__build_screen_sets(screen_set_sections, columns)
+            screen_sets = self.__build_screen_sets(screen_set_section_keys, columns)
             if not screen_sets:
                 if screen_type == SCREEN_TYPE_BOARDS:
                     self._add_warning(
                         "pas d'ensemble d'échiquiers déclaré, écran ignoré",
-                        section
+                        section_key
                     )
                     # NOTE(Amaras) should this return?
                 else:
                     self._add_warning(
                         "pas d'ensemble de joueur·euses déclaré, écran ignoré",
-                        section
+                        section_key
                     )
                 return
         key = 'name'
@@ -927,26 +931,24 @@ class Event(ConfigReader):
                 screen_name = 'Derniers résultats'
                 self._add_debug(
                     f'option absente, par défault [{screen_name}]',
-                    section,
+                    section_key,
                     key
                 )
             else:
                 self._add_debug(
                     'option absente, le nom du premier ensemble sera utilisé',
-                    section,
+                    section_key,
                     key
                 )
         key = 'menu_text'
         menu_text = screen_section.get(key)
         key = 'menu'
-        default_menu: Optional[str] = None
-        menu: Optional[str] = default_menu
         menu = screen_section.get(key)
         if menu is None:
             self._add_info(
                 'option absente, aucun menu ne sera affiché (indiquer [none] '
                 'pour supprimer ce message)',
-                section,
+                section_key,
                 key
             )
         elif menu == 'none':
@@ -956,7 +958,7 @@ class Event(ConfigReader):
                 self._add_warning(
                     "l'option [family] n'est pas autorisée pour les écrans de "
                     f'type [{screen_type}], aucun menu ne sera affiché',
-                    section,
+                    section_key,
                     key
                 )
                 menu = None
@@ -971,7 +973,7 @@ class Event(ConfigReader):
                 "[none], [family], [view], [update] ou une liste d'écrans "
                 'séparés par des virgules sont attendus, aucun menu ne sera '
                 'affiché',
-                section,
+                section_key,
                 key
             )
             menu = None
@@ -979,11 +981,11 @@ class Event(ConfigReader):
         default_show_timer: bool = True
         show_timer: bool = default_show_timer
         if key in screen_section:
-            show_timer = self.getboolean(section, key)
+            show_timer = self.getboolean(section_key, key)
             if show_timer is None:
                 self._add_warning(
                     f'un booléen est attendu, par défaut [{default_show_timer}]',
-                    section,
+                    section_key,
                     key
                 )
         key = 'update'
@@ -991,11 +993,11 @@ class Event(ConfigReader):
         update: bool = default_update
         if screen_type == SCREEN_TYPE_BOARDS:
             if key in screen_section:
-                update = self._getboolean_safe(section, key)
+                update = self._getboolean_safe(section_key, key)
                 if update is None:
                     self._add_warning(
                         'un booléen est attendu, écran ignoré',
-                        section,
+                        section_key,
                         key
                     )
                     return
@@ -1004,7 +1006,7 @@ class Event(ConfigReader):
                 self._add_warning(
                     "l'option n'est pas autorisée pour les écrans de type "
                     f"[{screen_type}], ignorée",
-                    section,
+                    section_key,
                     key
                 )
         key = 'limit'
@@ -1012,35 +1014,32 @@ class Event(ConfigReader):
         limit: int = default_limit
         if screen_type == SCREEN_TYPE_RESULTS:
             if key in screen_section:
-                limit = self._getint_safe(section, key)
+                limit = self._getint_safe(section_key, key)
                 if limit is None:
                     self._add_warning(
-                        'un entier positif ou nul ets attendu, par défaut '
-                        f'[{default_limit}]',
-                        section,
+                        f'un entier positif ou nul ets attendu, par défaut [{default_limit}]',
+                        section_key,
                         key
                     )
                     limit = default_limit
                 if limit > 0 and limit % columns > 0:
                     limit = columns * (limit // columns + 1)
                     self._add_info(
-                        f'positionné à [{limit}] pour tenir sur {columns} '
-                        'colonnes',
-                        section,
+                        f'positionné à [{limit}] pour tenir sur {columns} colonnes',
+                        section_key,
                         key
                     )
         else:
             if key in screen_section:
                 self._add_warning(
-                    "l'option n'est pas autorisée pour les écrans de type "
-                    f"[{screen_type}], ignorée",
-                    section,
+                    f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
+                    section_key,
                     key
                 )
         key = '__family__'
         family_id: Optional[str] = None
         if key in screen_section:
-            family_id: str = self.get(section, key)
+            family_id: str = self.get(section_key, key)
         if screen_type == SCREEN_TYPE_BOARDS:
             self.__screens[screen_id] = ScreenBoards(
                 screen_id,
@@ -1076,9 +1075,9 @@ class Event(ConfigReader):
                 show_timer,
                 limit
             )
-        for key, value in self.items(section):
+        for key, value in self.items(section_key):
             if key not in self.screen_keys + ['template', '__family__', ]:
-                self._add_warning('option absente', section, key)
+                self._add_warning('option absente', section_key, key)
         if family_id is not None:
             if family_id not in self.__screens_by_family_id:
                 self.__screens_by_family_id[family_id] = []
@@ -1086,13 +1085,13 @@ class Event(ConfigReader):
 
     screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', ]
 
-    def __build_screen_sets(self, sections: List[str], columns: int) -> List[ScreenSet]:
+    def __build_screen_sets(self, section_keys: List[str], columns: int) -> List[ScreenSet]:
         screen_sets: List[ScreenSet] = []
-        for section in sections:
+        for section_key in section_keys:
             try:
-                current_section = self[section]
+                current_section = self[section_key]
             except KeyError:
-                self._add_error('rubrique non trouvée', section)
+                self._add_error('rubrique non trouvée', section_key)
                 return screen_sets
             key = 'tournament'
             if key not in current_section:
@@ -1101,15 +1100,15 @@ class Event(ConfigReader):
                 else:
                     self._add_warning(
                         'option absente, écran ignoré',
-                        section,
+                        section_key,
                         key
                     )
                     continue
-            tournament_id: str = self.get(section, key)
+            tournament_id: str = self.get(section_key, key)
             if tournament_id not in self.tournaments:
                 self._add_warning(
                     f"le tournoi [{tournament_id}] n'existe pas, écran ignoré",
-                    section,
+                    section_key,
                     key
                 )
                 continue
@@ -1117,7 +1116,7 @@ class Event(ConfigReader):
                 self._add_warning(
                     f"le fichier du tournoi [{tournament_id}] n'existe pas, "
                     "l'ensemble est ignoré",
-                    section,
+                    section_key,
                     key
                 )
                 continue
@@ -1128,53 +1127,53 @@ class Event(ConfigReader):
                 self._add_warning(
                     'les options [part]/[parts] et [first]/[last] ne sont pas '
                     'compatibles, écran ignoré',
-                    section
+                    section_key
                 )
                 continue
             key = 'first'
             first: Optional[int] = None
             if key in current_section:
-                first = self._getint_safe(section, key, minimum=1)
+                first = self._getint_safe(section_key, key, minimum=1)
                 if first is None:
                     self._add_warning(
                         'un entier positif non nul est attendu, ignoré',
-                        section,
+                        section_key,
                         key
                     )
             key = 'last'
             last: Optional[int] = None
             if key in current_section:
-                last = self._getint_safe(section, key)
+                last = self._getint_safe(section_key, key)
                 if last is None:
                     self._add_warning(
                         'un entier positif non nul est attendu, ignoré',
-                        section,
+                        section_key,
                         key
                     )
             if first is not None and last is not None and first > last:
                 self._add_warning(
                     f'intervalle [{first}-{last}] non valide',
-                    section
+                    section_key
                 )
                 continue
             key = 'part'
             part: Optional[int] = None
             if key in current_section:
-                part = self._getint_safe(section, key)
+                part = self._getint_safe(section_key, key)
                 if part is None:
                     self._add_warning(
                         'un entier positif non nul est attendu, ignoré',
-                        section,
+                        section_key,
                         key
                     )
             key = 'parts'
             parts: Optional[int] = None
             if key in current_section:
-                parts = self._getint_safe(section, key)
+                parts = self._getint_safe(section_key, key)
                 if parts is None:
                     self._add_warning(
                         'un entier positif non nul est attendu, ignoré',
-                        section,
+                        section_key,
                         key
                     )
             if (
@@ -1185,21 +1184,21 @@ class Event(ConfigReader):
                 self._add_warning(
                     'les options [part]/[parts] et [first]/[last] ne sont pas '
                     'compatibles, écran ignoré',
-                    section
+                    section_key
                 )
             if part is not None and part > parts:
                 self._add_warning(
                     f"la partie [{part}] sur [{parts}] n'est pas valide, écran "
                     "ignoré",
-                    section
+                    section_key
                 )
             key = 'name'
             name: Optional[str] = None
             if key in current_section:
-                name = self.get(section, key)
-            for key, value in self.items(section):
+                name = self.get(section_key, key)
+            for key, value in self.items(section_key):
                 if key not in self.screen_set_keys:
-                    self._add_warning('option inconnue', section, key)
+                    self._add_warning('option inconnue', section_key, key)
             screen_sets.append(ScreenSet(
                 self.tournaments[tournament_id],
                 columns,
@@ -1211,7 +1210,7 @@ class Event(ConfigReader):
         return screen_sets
 
     def __build_rotators(self):
-        rotator_ids: List[str] = self._get_subsections_with_prefix('rotator')
+        rotator_ids: List[str] = self._get_subsection_keys_with_prefix('rotator')
         if not rotator_ids:
             self._add_debug('aucun écran rotatif déclaré', 'rotator.*')
             return
@@ -1221,36 +1220,36 @@ class Event(ConfigReader):
             self._add_debug('aucun écran rotatif défini')
 
     def __build_rotator(self, rotator_id: str):
-        section = f'rotator.{rotator_id}'
-        rotator_section = self[section]
+        section_key = f'rotator.{rotator_id}'
+        rotator_section = self[section_key]
         section_keys: List[str] = ['screens', 'families', 'delay', ]
         for key in rotator_section:
             if key not in section_keys:
-                self._add_warning('option inconnue', section, key)
+                self._add_warning('option inconnue', section_key, key)
         key = 'delay'
         default_delay: int = ROTATOR_DEFAULT_DELAY
         delay: int = default_delay
-        # if not self.has_option(section, key):
+        # if not self.has_option(section_key, key):
         if key not in rotator_section:
             self._add_debug(
                 f'option absente, par défaut [{default_delay}]',
-                section,
+                section_key,
                 key
             )
         else:
-            delay = self._getint_safe(section, key, minimum=1)
+            delay = self._getint_safe(section_key, key, minimum=1)
             if delay is None:
                 self._add_warning(
                     f'un entier positif non nul est attendu, par défaut '
                     f'[{default_delay}]',
-                    section,
+                    section_key,
                     key
                 )
         if 'screens' not in rotator_section and 'families' not in rotator_section:
             self._add_info(
                 'au moins une option parmi [screens] et [families] doit être '
                 'définie, écran rotatif ignoré',
-                section
+                section_key
             )
             return
         screens: List[AScreen] = []
@@ -1261,44 +1260,44 @@ class Event(ConfigReader):
                     if family_id not in self.__screens_by_family_id:
                         self._add_warning(
                             f"la famille [{family_id}] n'existe pas, ignorée",
-                            section,
+                            section_key,
                             key
                         )
                     else:
                         screens += self.__screens_by_family_id[family_id]
         key = 'screens'
-        # if self.has_option(section, key):
+        # if self.has_option(section_key, key):
         if key in rotator_section:
             for screen_id in str(rotator_section.get(key)).replace(' ', '').split(','):
                 if screen_id:
                     if screen_id not in self.screens:
                         self._add_warning(
                             f"l'écran [{screen_id}] n'existe pas, ignoré",
-                            section,
+                            section_key,
                             key
                         )
                     elif self.screens[screen_id] not in screens:
                         screens.append(self.screens[screen_id])
 
-        if 'screens' not in rotator_section and not 'families' in rotator_section:
+        if 'screens' not in rotator_section and 'families' not in rotator_section:
             self._add_warning(
                 'au moins une des deux options [screens] ou [families] doit '
                 'être utilisée, écran rotatif ignoré',
-                section
+                section_key
             )
             return
         if not screens:
-            self._add_warning('aucun écran, écran rotatif ignoré', section, key)
+            self._add_warning('aucun écran, écran rotatif ignoré', section_key, key)
             return
         self.__rotators[rotator_id] = Rotator(rotator_id, delay, screens)
 
     def __build_timer(self):
         timer: Timer = Timer()
-        section = 'timer.hour'
-        hour_ids: List[str] = self._get_subsections_with_prefix(section)
+        section_key = 'timer.hour'
+        hour_ids: List[str] = self._get_subsection_keys_with_prefix(section_key)
         if not hour_ids:
-            self._add_debug('aucun horaire déclaré, le chronomètre ne sera '
-                'pas disponible',
+            self._add_debug(
+                'aucun horaire déclaré, le chronomètre ne sera pas disponible',
                 'timer.hour.*'
             )
             return
@@ -1307,7 +1306,7 @@ class Event(ConfigReader):
         if not timer.hours:
             self._add_warning(
                 'aucun horaire défini, le chronomètre ne sera pas disponible',
-                section
+                section_key
             )
             return
         self.__build_timer_colors(timer)
@@ -1316,12 +1315,12 @@ class Event(ConfigReader):
         self.timer.set_hours_timestamps()
 
     def __build_timer_hour(self, hour_id: str, timer: Timer):
-        section = f'timer.hour.{hour_id}'
-        timer_section = self[section]
+        section_key = f'timer.hour.{hour_id}'
+        timer_section = self[section_key]
         section_keys: List[str] = ['date', 'text_before', 'text_after', ]
         key = 'date'
         if key not in timer_section:
-            self._add_warning('option absente, horaire ignoré', section, key)
+            self._add_warning('option absente, horaire ignoré', section_key, key)
             return
         previous_hour: Optional[TimerHour] = None
         if timer.hours:
@@ -1338,9 +1337,9 @@ class Event(ConfigReader):
             matches = re.match('^([0-9]{1,2}):([0-9]{1,2})$', datetime_str)
             if matches:
                 if previous_hour is None:
-                    self._add_warning('le jour du premier horaire doit être spécifié, horaire ignoré', section, key)
+                    self._add_warning('le jour du premier horaire doit être spécifié, horaire ignoré', section_key, key)
                     return
-                self._add_debug(f'jour non spécifié, [{datetime_str} {previous_hour}] pris en compte', section, key)
+                self._add_debug(f'jour non spécifié, [{datetime_str} {previous_hour}] pris en compte', section_key, key)
                 try:
                     timestamp = int(time.mktime(datetime.datetime.strptime(
                         previous_hour.date_str + ' ' + datetime_str, '%Y-%m-%d %H:%M').timetuple()))
@@ -1348,40 +1347,40 @@ class Event(ConfigReader):
                     pass
         if timestamp is None:
             self._add_warning(f'date [{datetime_str}] non valide ([YYYY-MM-DD hh:mm] ou [hh:mm] attendu), '
-                              f'horaire ignoré', section, key)
+                              f'horaire ignoré', section_key, key)
             return
         hour: TimerHour = TimerHour(hour_id, timestamp)
         if timer.hours:
             previous_hour: TimerHour = timer.hours[-1]
             if timestamp <= previous_hour.timestamp:
                 self._add_warning(f"l'horaire [{hour.datetime_str}] arrive avant l'horaire précédent "
-                                  f'[{previous_hour.datetime_str}], horaire ignoré', section, key)
+                                  f'[{previous_hour.datetime_str}], horaire ignoré', section_key, key)
                 return
 
         if hour_id.isdigit():
             hour.set_round(int(hour_id))
         key = 'text_before'
-        if self.has_option(section, key):
-            hour.set_text_before(self.get(section, key))
+        if self.has_option(section_key, key):
+            hour.set_text_before(self.get(section_key, key))
         key = 'text_after'
-        if self.has_option(section, key):
-            hour.set_text_after(self.get(section, key))
+        if self.has_option(section_key, key):
+            hour.set_text_after(self.get(section_key, key))
         if hour.text_before is None or hour.text_after is None:
             self._add_warning(
                 'les options [text_before] et [text_after] sont attendues, '
                 'horaire ignoré',
-                section
+                section_key
             )
             return
-        for key, value in self.items(section):
+        for key, value in self.items(section_key):
             if key not in section_keys:
-                self._add_warning('option inconnue', section, key)
+                self._add_warning('option inconnue', section_key, key)
         timer.hours.append(hour)
 
     def __build_timer_colors(self, timer: Timer):
-        section = 'timer.colors'
+        section_key = 'timer.colors'
         try:
-            color_section = self[section]
+            color_section = self[section_key]
         except KeyError:
             return
         section_keys = [str(id) for id in range(1, 4)]
@@ -1394,7 +1393,7 @@ class Event(ConfigReader):
                     'option de couleur invalide (acceptées : '
                     f'[{", ".join(section_keys)}]), '
                     'couleur ignorée',
-                    section,
+                    section_key,
                     key
                 )
                 continue
@@ -1431,21 +1430,21 @@ class Event(ConfigReader):
                     f'couleur [{color_value}] non valide (#HHH, #HHHHHH ou '
                     'RGB(RRR, GGG, BBB) attendu), la couleur par défaut sera '
                     'utilisée',
-                    section,
+                    section_key,
                     key
                 )
             else:
                 self._add_info(
                     f'couleur personnalisée [{color_rbg}] définie',
-                    section,
+                    section_key,
                     key
                 )
                 timer.colors[color_id] = color_rbg
 
     def __build_timer_delays(self, timer: Timer):
-        section = 'timer.delays'
+        section_key = 'timer.delays'
         try:
-            delay_section = self[section]
+            delay_section = self[section_key]
         except KeyError:
             return
         section_keys = [str(id) for id in range(1, 4)]
@@ -1454,16 +1453,16 @@ class Event(ConfigReader):
                 self._add_warning(
                     'option de délai non valide (acceptées: '
                     f'[{", ".join(section_keys)}])',
-                    section,
+                    section_key,
                     key
                 )
                 continue
             delay_id = int(key)
-            delay: Optional[int] = self._getint_safe(section, key, minimum=1)
+            delay: Optional[int] = self._getint_safe(section_key, key, minimum=1)
             if delay is None:
                 self._add_warning(
                     'un entier positif est attendu, ignoré',
-                    section,
+                    section_key,
                     key
                 )
             else:
