@@ -633,31 +633,17 @@ class Event:
         for screen_index in family_indices:
             screen_id = f'{section_key.split(".")[1]}-{screen_index}'
             screen_section_key = f'screen.{screen_id}'
-            # TODO(Amaras) Could this check be replaced with a .setdefault()?
-            # https://docs.python.org/3/library/stdtypes.html?highlight=dict#dict.setdefault
-            if screen_section_key not in self.reader:
-                self.reader._add_debug('rubrique ajoutée', screen_section_key)
-                self.reader[screen_section_key] = {}
+            self.reader.setdefault(screen_section_key, {})
             self.reader[screen_section_key]['__family__'] = family_id
             for sub_section_key, properties in template.data.items():
                 if sub_section_key is None:
                     new_section_key = screen_section_key
                 else:
                     new_section_key = f'{screen_section_key}.{sub_section_key}'
-                # TODO(Amaras) setdefault()?
-                if new_section_key not in self.reader:
-                    self.reader._add_debug('rubrique ajoutée', new_section_key)
-                    self.reader[new_section_key] = {}
+                screen_section = self.reader.setdefault(new_section_key, {})
                 for key, value in properties.items():
-                    # TODO(Amaras) This is definitely a .setdefault() in waiting
-                    if key not in self.reader[new_section_key]:
-                        new_value = value.replace('?', screen_index)
-                        self.reader[new_section_key][key] = new_value
-                        self.reader._add_debug(
-                            f'option ajoutée avec la valeur [{new_value}]',
-                            new_section_key,
-                            key
-                        )
+                    new_value = value.replace('?', screen_index)
+                    screen_section.setdefault(key, new_value)
             self.reader._add_debug(f'écran [{screen_id}] ajouté', section_key)
 
     def __build_screens(self):
@@ -1402,32 +1388,26 @@ class Event:
             color_id = int(key)
             color_rbg: Optional[Tuple[int, int, int]] = None
             color_value: str = color_section.get(key).replace(' ', '').upper()
-            # TODO(Amaras) Change this using the walrus operator
-            matches = simplified_hex_pattern.match(color_value)
-            if matches:
+            if (matches := simplified_hex_pattern.match(color_value)):
                 color_rbg = (
                     int(matches.group(1) * 2, 16),
                     int(matches.group(2) * 2, 16),
                     int(matches.group(3) * 2, 16),
                 )
-            else:
-                matches = hex_pattern.match(color_value)
-                if matches:
-                    color_rbg = (
-                        int(matches.group(1), 16),
-                        int(matches.group(2), 16),
-                        int(matches.group(3), 16),
-                    )
-                else:
-                    matches = rgb_pattern.match(color_value)
-                    if matches:
-                        color_rbg = (
-                            int(matches.group(1)),
-                            int(matches.group(2)),
-                            int(matches.group(3)),
-                        )
-                        if color_rbg[0] > 255 or color_rbg[1] > 255 or color_rbg[2] > 255:
-                            color_rbg = None
+            elif (matches := hex_pattern.match(color_value)):
+                color_rbg = (
+                    int(matches.group(1), 16),
+                    int(matches.group(2), 16),
+                    int(matches.group(3), 16),
+                )
+            elif (matches := rgb_pattern.match(color_value)):
+                color_rbg = (
+                    int(matches.group(1)),
+                    int(matches.group(2)),
+                    int(matches.group(3)),
+                )
+                if color_rbg[0] > 255 or color_rbg[1] > 255 or color_rbg[2] > 255:
+                    color_rbg = None
             if color_rbg is None:
                 self.reader._add_warning(
                     f'couleur [{color_value}] non valide (#HHH, #HHHHHH ou '
