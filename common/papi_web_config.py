@@ -60,11 +60,12 @@ class PapiWebConfig:
             except KeyError:
                 self.reader._add_warning(f'rubrique introuvable', section=section)
             section = 'web'
-            if not self.reader.has_section(section):
+            if section not in self.reader:
                 self.reader._add_warning(f'rubrique introuvable', section)
             else:
+                web_section = self.reader[section]
                 key = 'host'
-                if not self.reader.has_option(section, key):
+                if key not in web_section:
                     self.reader._add_warning(f'option absente', section, key)
                 else:
                     self.__web_host = self.reader.get(section, key)
@@ -79,7 +80,7 @@ class PapiWebConfig:
                         self.reader._add_warning(f'configuration d\'hôte invalide [{self.get(section, key)}], par défaut '
                                           f'[{DEFAULT_WEB_HOST}]', section, key)
                 key = 'port'
-                if not self.reader.has_option(section, key):
+                if key not in web_section:
                     self.reader._add_warning(f'option absente, par défaut [{DEFAULT_WEB_PORT}]', section, key)
                 else:
                     self.__web_port = self.reader._getint_safe(section, key)
@@ -87,7 +88,7 @@ class PapiWebConfig:
                         self._add_warning(f'port non valide [{self.get(section, key)}], par défaut '
                                           f'[{DEFAULT_WEB_PORT}]', section, key)
                 key = 'launch_browser'
-                if not self.reader.has_option(section, key):
+                if key not in web_section:
                     self.reader._add_warning(f'option absente, par défaut [{"on" if DEFAULT_WEB_LAUNCH_BROWSER else "off"}]',
                                       section, key)
                 else:

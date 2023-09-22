@@ -112,10 +112,11 @@ class Event:
 
     def __build_root(self):
         section_key: str = 'event'
-        if not self.reader.has_section(section_key):
+        try:
+            section = self.reader[section_key]
+        except KeyError:
             self.reader._add_error('rubrique absente', section_key)
             return
-        section = self.reader[section_key]
 
         key = 'name'
         default_name = self.__id
@@ -203,7 +204,7 @@ class Event:
         # the [tournament] section being there.
         if 'handicap' in tournament_ids:
             tournament_ids.remove('handicap')
-        if self.reader.has_section('tournament'):
+        if 'tournament' in self.reader:
             if tournament_ids:
                 section_keys: str = ', '.join(
                     ('[tournament.' + id + ']' for id in tournament_ids)
@@ -347,7 +348,7 @@ class Event:
                     section_key,
                     key
                 )
-        elif self.reader.has_option(section_key, key):
+        elif key in section:
             self.reader._add_info(
                 "option ignorée quand l'option [ffe_id] n'est pas indiquée",
                 section_key,
@@ -634,7 +635,7 @@ class Event:
             screen_section_key = f'screen.{screen_id}'
             # TODO(Amaras) Could this check be replaced with a .setdefault()?
             # https://docs.python.org/3/library/stdtypes.html?highlight=dict#dict.setdefault
-            if not self.reader.has_section(screen_section_key):
+            if screen_section_key not in self.reader:
                 self.reader._add_debug('rubrique ajoutée', screen_section_key)
                 self.reader[screen_section_key] = {}
             self.reader[screen_section_key]['__family__'] = family_id
@@ -644,15 +645,15 @@ class Event:
                 else:
                     new_section_key = f'{screen_section_key}.{sub_section_key}'
                 # TODO(Amaras) setdefault()?
-                if not self.reader.has_section(new_section_key):
-                    sel.reader._add_debug('rubrique ajoutée', new_section_key)
-                    sel.reader.add_section(new_section_key)
+                if new_section_key not in self.reader:
+                    self.reader._add_debug('rubrique ajoutée', new_section_key)
+                    self.reader[new_section_key] = {}
                 for key, value in properties.items():
                     # TODO(Amaras) This is definitely a .setdefault() in waiting
-                    if not sel.reader.has_option(new_section_key, key):
+                    if key not in self.reader[new_section_key]:
                         new_value = value.replace('?', screen_index)
-                        sel.reader[new_section_key][key] = new_value
-                        sel.reader._add_debug(
+                        self.reader[new_section_key][key] = new_value
+                        self.reader._add_debug(
                             f'option ajoutée avec la valeur [{new_value}]',
                             new_section_key,
                             key
@@ -1361,11 +1362,11 @@ class Event:
         if hour_id.isdigit():
             hour.set_round(int(hour_id))
         key = 'text_before'
-        if self.reader.has_option(section_key, key):
-            hour.set_text_before(self.reader.get(section_key, key))
+        with suppress(KeyError):
+            hour.set_text_before(timer_section[key])
         key = 'text_after'
-        if self.reader.has_option(section_key, key):
-            hour.set_text_after(self.reader.get(section_key, key))
+        with suppress(KeyError):
+            hour.set_text_after(timer_section[key])
         if hour.text_before is None or hour.text_after is None:
             self.reader._add_warning(
                 'les options [text_before] et [text_after] sont attendues, '
