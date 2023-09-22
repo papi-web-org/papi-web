@@ -111,7 +111,7 @@ class Event(ConfigReader):
 
     def __build_root(self):
         section_key: str = 'event'
-        if not self.reader.has_section(section_key)
+        if not self.reader.has_section(section_key):
             self.reader._add_error('rubrique absente', section_key)
             return
         section = self.reader[section_key]
@@ -119,7 +119,7 @@ class Event(ConfigReader):
         key = 'name'
         default_name = self.__id
         try:
-            self.__name = section.reader[key]
+            self.__name = section[key]
             if not self.__name:
                 self.reader._add_error('option vide', section, key)
                 return
