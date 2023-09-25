@@ -37,7 +37,7 @@ class HandicapTournament(NamedTuple):
 class Event(ConfigReader):
     def __init__(self, event_id: str, silent: bool = True):
         self.__id: str = event_id
-        super().__init__(Path(EVENTS_PATH, f'{self.id}.ini'), silent=silent)
+        super().__init__(EVENTS_PATH / f'{self.id}.ini', silent=silent)
         self.__name: str = self.__id
         self.__path: Path = Path('papi')
         self.__css: Optional[str] = None
