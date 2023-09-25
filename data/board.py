@@ -1,5 +1,7 @@
 from functools import total_ordering
 from logging import Logger
+from dataclasses import dataclass
+import warnings
 
 from common.logger import get_logger
 from database.papi import RESULT_STRINGS
@@ -7,60 +9,84 @@ from data.player import Player
 
 logger: Logger = get_logger()
 
-
+@dataclass
 @total_ordering
 class Board:
-    def __init__(self, white_player: Player | None = None, black_player: Player | None = None):
-        self.__id: int | None = None
-        self.__number: int | None = None
-        self.__white_player: Player | None = white_player
-        self.__black_player: Player | None = black_player
-        self.__result: int | None = None
+    __id: int | None = None
+    __number: int | None
+    __white_player: Player | None = None
+    __black_player: Player | None = None
+    __result: int | None
 
     @property
     def id(self) -> int:
         return self.__id
 
+    @id.setter
+    def id(self, new_id):
+        self.id = new_id
+
     def set_id(self, id: int):
-        self.__id = id
+        warnings.warn('Use direct assignment to id instead')
+        self.id = id
 
     @property
     def number(self) -> int:
         return self.__number
 
-    def set_number(self, number: int):
+    @number.setter
+    def number(self, number):
         self.__number = number
+
+    def set_number(self, number: int):
+        warnings.warn('Use direct assignment to number instead')
+        self.number = number
 
     @property
     def white_player(self) -> Player:
         return self.__white_player
 
+    @white_player.setter
+    def white_player(self, player: Player):
+        self.__white_player = player
+
     def set_white_player(self, player: Player):
+        warnings.warn('Use direct assignment to white_player instead')
         self.__white_player = player
 
     @property
     def black_player(self) -> Player:
         return self.__black_player
 
-    def set_black_player(self, player: Player):
+    @black_player.setter
+    def black_player(self, player: Player):
         self.__black_player = player
+
+    def set_black_player(self, player: Player):
+        warnings.warn('Use direct assignment to black_player instead')
+        self.black_player = player
 
     @property
     def result(self) -> int:
         return self.__result
+
+    @result.setter
+    def result(self, result: int):
+        self.__result = result
 
     @property
     def result_str(self) -> str:
         return RESULT_STRINGS[self.result] if self.result else ''
 
     def set_result(self, result: int):
-        self.__result = result
+        warnings.warn('Use direct assignment to result instead')
+        self.result = result
 
     def __lt__(self, other):
         # p1 < p2 calls p1.__lt__(p2)
         if self.black_player.id == 1:
             return True
-        if other.black_player.id == 1:
+        elif other.black_player.id == 1:
             return False
         self_player_1: Player
         self_player_2: Player
@@ -115,4 +141,4 @@ class Board:
         return self_player_1 == other_player_1 and self_player_2 == other_player_2
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.number}. {self.white_player} {self.result_str} {self.black_player})'
+        return f'{self.__class__.__name__}({self.number}. {self.white_player} {self.result_str} {self.black_player})'

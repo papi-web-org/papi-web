@@ -3,6 +3,7 @@ from datetime import datetime
 from functools import total_ordering
 from logging import Logger
 from pathlib import Path
+from dataclasses import dataclass
 
 from common.config_reader import TMP_DIR
 from common.logger import get_logger
@@ -11,18 +12,16 @@ from database.papi import RESULT_STRINGS
 logger: Logger = get_logger()
 
 
+@dataclass
 @total_ordering
 class Result:
-    def __init__(
-            self, timestamp: float, tournament_id: str, round: int, board_id: int,
-            white_player: str, black_player: str, result: int):
-        self.__timestamp: float = timestamp
-        self.__tournament_id: str = tournament_id
-        self.__round: int = round
-        self.__board_id: int = board_id
-        self.__white_player: str = white_player
-        self.__black_player: str = black_player
-        self.__result: int = result
+    __timestamp: float
+    __tournament_id: str
+    __round: int
+    __board_id: int
+    __white_player: str
+    __black_player: str
+    __result: int
 
     @property
     def timestamp(self) -> float:
@@ -69,7 +68,7 @@ class Result:
         return self.timestamp == other.timestamp
 
     def __repr__(self):
-        return (f'{type(self).__name__}('
+        return (f'{self.__class__.__name__}('
                 f'{self.timestamp_str} {self.tournament_id}.{self.board_id} '
                 f'{self.white_player} {self.result_str} {self.black_player})')
 

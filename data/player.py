@@ -1,5 +1,6 @@
 from functools import total_ordering
 from logging import Logger
+from dataclasses import dataclass, field
 
 from data.pairing import Pairing
 from common.logger import get_logger
@@ -25,27 +26,25 @@ COLOR_STRINGS: dict[str, str] = {
 }
 
 
+@dataclass
 @total_ordering
 class Player:
-    def __init__(self, papi_id: int, last_name: str, first_name: str, sex: str, title: int, rating: int,
-                 rating_type: str, fixed: int, pairings: dict[int, Pairing]):
-        self.__id: int = papi_id
-        self.__last_name: str = last_name
-        self.__first_name: str = first_name
-        self.__sex: str = sex
-        self.__title: int = title
-        self.__rating: int = rating
-        self.__rating_type: str = rating_type
-        self.__fixed = fixed
-        self.__pairings: dict[int, Pairing] = pairings
-        self.__points: float | None = None
-        self.__vpoints: float | None = None
-        self.__board_id: int | None = None
-        self.__board_number: int | None = None
-        self.__color: str | None = None
-        self.__handicap_initial_time: int | None = None
-        self.__handicap_increment: int | None = None
-        self.__handicap_time_modified: bool | None = None
+    __id: int
+    __last_name: str
+    __first_name: str
+    __sex: str
+    __title: int
+    __rating: int
+    __rating_type: str
+    __fixed: int
+    __pairings: dict[int, Pairing]
+    __points: float | None = field(default=None, init=False)
+    __vpoints: float | None = field(default=None, init=False)
+    __board_id: int | None = field(default=None, init=False)
+    __color: str | None = field(default=None, init=False)
+    __handicap_initial_time: int | None = field(default=None, init=False)
+    __handicap_increment: int | None = field(default=None, init=False)
+    __handicap_time_modified: bool | None = field(default=None, init=False)
 
     @property
     def id(self) -> int:
@@ -227,6 +226,6 @@ class Player:
 
     def __repr__(self):
         if self.id == 1:
-            return f'{type(self).__name__}(EXEMPT)'
-        return (f'{type(self).__name__}'
+            return f'{self.__class__.__name__}(EXEMPT)'
+        return (f'{self.__class__.__name__}'
                 f'({self.title_str}{self.last_name} {self.first_name} {self.rating} [{self.vpoints}])')

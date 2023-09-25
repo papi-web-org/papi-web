@@ -1,5 +1,6 @@
 import datetime
 from logging import Logger
+from dataclasses import dataclass, field
 
 from common.logger import get_logger
 
@@ -9,11 +10,11 @@ ROUND_DEFAULT_TEXT_BEFORE: str = 'Début de la ronde {} dans %s'
 ROUND_DEFAULT_TEXT_AFTER: str = 'Ronde {} commencée depuis %s'
 
 
-def timestamp_to_datetime(ts: int) -> datetime:
+def timestamp_to_datetime(ts: int) -> datetime.datetime:
     return datetime.datetime.fromtimestamp(ts)
 
 
-def datetime_to_str(dt: datetime) -> str:
+def datetime_to_str(dt: datetime.datetime) -> str:
     return dt.strftime('%Y-%m-%d %H:%M')
 
 
@@ -21,26 +22,26 @@ def timestamp_to_str(ts: int) -> str:
     return datetime_to_str(timestamp_to_datetime(ts))
 
 
+@dataclass
 class TimerHour:
-    def __init__(self, id: int | str, timestamp: int, round: int | None = None,
-                 text_before: str | None = None, text_after: str | None = None):
-        self.__id: int | str = id
-        self.__timestamp: int = timestamp
-        self.__datetime = timestamp_to_datetime(self.timestamp)
-        self.__text_before: str | None = None
-        self.__text_after: str | None = None
-        if round is not None:
-            self.__text_before = ROUND_DEFAULT_TEXT_BEFORE.format(round)
-            self.__text_after = ROUND_DEFAULT_TEXT_AFTER.format(round)
-        if text_before is not None:
-            self.__text_before = text_before
-        if text_after is not None:
-            self.__text_after = text_after
-        self.__timestamp_1: int | None = None
-        self.__timestamp_2: int | None = None
-        self.__timestamp_3: int | None = None
-        self.__timestamp_next: int | None = None
-        self.__last = False
+    __id: int | str
+    __timestamp: int
+    __round: int | None = None
+    __text_before: str | None = None
+    __text_after: str | None = None
+    __datetime: str = field(default='', init=False)
+    __timestamp_1: int | None = field(default=None, init=False)
+    __timestamp_2: int | None = field(default=None, init=False)
+    __timestamp_3: int | None = field(default=None, init=False)
+    __timestamp_next: int | None = field(default=None, init=False)
+    __last: bool = field(default=False, init=False)
+
+    def __post_init__(self):
+        if self.__text_before is None and self.__round is not None:
+            self.__text_before = ROUND_DEFAULT_TEXT_BEFORE.format(self.__round)
+        if self.__text_after is None and self.__roudn is not None:
+            self.__text_after = ROUND_DEFAULT_TEXT_AFTER.format(self.__round)
+        self.__datetime = timestamp_to_datetime(self.__timestamp)
 
     @property
     def id(self) -> int | str:
@@ -126,7 +127,7 @@ class TimerHour:
         self.__last = last
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.timestamp} {self.datetime_str} [{self.text_before}/{self.text_after}])'
+        return f'{self.__class__.__name__}({self.timestamp} {self.datetime_str} [{self.text_before}/{self.text_after}])'
 
 
 DEFAULT_COLORS: dict[int, tuple[int, int, int, ]] = {1: (0, 255, 0), 2: (255, 127, 0), 3: (255, 0, 0), }

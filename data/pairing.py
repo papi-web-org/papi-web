@@ -1,14 +1,15 @@
 from logging import Logger
 from common.logger import get_logger
+from dataclasses import dataclass
 
 logger: Logger = get_logger()
 
 
+@dataclass(frozen=True)
 class Pairing:
-    def __init__(self, color: str, opponent_id: int, result: int):
-        self.__color: str | None = color
-        self.__opponent_id: int | None = opponent_id
-        self.__result: int | None = result
+    __color: str | None = None
+    __opponent_id: int | None = None
+    __result: int | None = None
 
     @property
     def color(self) -> str | None:
@@ -23,4 +24,4 @@ class Pairing:
         return self.__result
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.color} {self.opponent_id} {self.result})'
+        return f'{self.__class__.__name__}({self.color} {self.opponent_id} {self.result})'
