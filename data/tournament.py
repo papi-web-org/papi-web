@@ -19,20 +19,20 @@ logger: Logger = get_logger()
 
 
 class Tournament:
-    def __init__(self, tournament_id: str, name: str, file: Path, ffe_id: Optional[int], ffe_password: Optional[str],
-                 handicap_initial_time: Optional[int], handicap_increment: Optional[int],
-                 handicap_penalty_step: Optional[int], handicap_penalty_value: Optional[int],
-                 handicap_min_time: Optional[int]):
+    def __init__(self, tournament_id: str, name: str, file: Path, ffe_id: int | None, ffe_password: str | None,
+                 handicap_initial_time: int | None, handicap_increment: int | None,
+                 handicap_penalty_step: int | None, handicap_penalty_value: int | None,
+                 handicap_min_time: int | None):
         self.__id: str = tournament_id
         self.__name: str = name
         self.__file: Path = file
-        self.__ffe_id: Optional[int] = ffe_id
-        self.__ffe_password: Optional[str] = ffe_password
-        self.__handicap_initial_time: Optional[int] = handicap_initial_time
-        self.__handicap_increment: Optional[int] = handicap_increment
-        self.__handicap_penalty_step: Optional[int] = handicap_penalty_step
-        self.__handicap_penalty_value: Optional[int] = handicap_penalty_value
-        self.__handicap_min_time: Optional[int] = handicap_min_time
+        self.__ffe_id: int | None = ffe_id
+        self.__ffe_password: str | None = ffe_password
+        self.__handicap_initial_time: int | None = handicap_initial_time
+        self.__handicap_increment: int | None = handicap_increment
+        self.__handicap_penalty_step: int | None = handicap_penalty_step
+        self.__handicap_penalty_value: int | None = handicap_penalty_value
+        self.__handicap_min_time: int | None = handicap_min_time
         self.__papi_database: PapiDatabase = PapiDatabase(self.file)
         self.__rounds: int = 0
         self.__pairing: int = 0
@@ -41,10 +41,10 @@ class Tournament:
         self.__current_round: int = 0
         self.__rating_limit1: int = 0
         self.__rating_limit2: int = 0
-        self.__boards: Optional[List[Board]] = None
+        self.__boards: List[Board] | None = None
         self.__papi_read = False
-        self.__players_by_name: Optional[List[Player]] = None
-        self.__players_by_rating: Optional[List[Player]] = None
+        self.__players_by_name: List[Player] | None = None
+        self.__players_by_rating: List[Player] | None = None
 
     @property
     def id(self) -> str:
@@ -59,11 +59,11 @@ class Tournament:
         return self.__file
 
     @property
-    def ffe_id(self) -> Optional[int]:
+    def ffe_id(self) -> int | None:
         return self.__ffe_id
 
     @property
-    def ffe_password(self) -> Optional[str]:
+    def ffe_password(self) -> str | None:
         return self.__ffe_password
 
     @property
@@ -75,23 +75,23 @@ class Tournament:
         return self.__handicap_initial_time is not None
 
     @property
-    def handicap_initial_time(self) -> Optional[int]:
+    def handicap_initial_time(self) -> int | None:
         return self.__handicap_initial_time
 
     @property
-    def handicap_increment(self) -> Optional[int]:
+    def handicap_increment(self) -> int | None:
         return self.__handicap_increment
 
     @property
-    def handicap_penalty_step(self) -> Optional[int]:
+    def handicap_penalty_step(self) -> int | None:
         return self.__handicap_penalty_step
 
     @property
-    def handicap_penalty_value(self) -> Optional[int]:
+    def handicap_penalty_value(self) -> int | None:
         return self.__handicap_penalty_value
 
     @property
-    def handicap_min_time(self) -> Optional[int]:
+    def handicap_min_time(self) -> int | None:
         return self.__handicap_min_time
 
     @property
@@ -141,7 +141,7 @@ class Tournament:
         return self.__players_by_rating
 
     @property
-    def current_round(self) -> Optional[int]:
+    def current_round(self) -> int | None:
         self.read_papi()
         return self.__current_round
 
@@ -279,7 +279,7 @@ class Tournament:
         for player in self.players_by_id.values():
             opponent_id = player.pairings[self.current_round].opponent_id
             if opponent_id in self.players_by_id:
-                player_board: Optional[Board] = None
+                player_board: Board | None = None
                 for board_number in range(len(self.boards)):
                     board = self.boards[board_number]
                     if board.white_player is not None and board.white_player.id == opponent_id:

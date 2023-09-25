@@ -26,11 +26,11 @@ EVENTS_PATH: Path = Path('events')
 
 
 class HandicapTournament(NamedTuple):
-    initial_time: Optional[int] = None
-    increment: Optional[int] = None
-    penalty_step: Optional[int] = None
-    penalty_value: Optional[int] = None
-    min_time: Optional[int] = None
+    initial_time: int | None = None
+    increment: int | None = None
+    penalty_step: int | None = None
+    penalty_value: int | None = None
+    min_time: int | None = None
 
 
 @total_ordering
@@ -40,14 +40,14 @@ class Event(ConfigReader):
         super().__init__(Path(EVENTS_PATH, f'{self.id}.ini'), silent=silent)
         self.__name: str = self.__id
         self.__path: Path = Path('papi')
-        self.__css: Optional[str] = None
-        self.__update_password: Optional[str] = None
+        self.__css: str | None = None
+        self.__update_password: str | None = None
         self.__tournaments: Dict[str, Tournament] = {}
         self.__templates: Dict[str, Template] = {}
         self.__screens_by_family_id: Dict[str, List[AScreen]] = {}
         self.__screens: Dict[str, AScreen] = {}
         self.__rotators: Dict[str, Rotator] = {}
-        self.__timer: Optional[Timer] = None
+        self.__timer: Timer | None = None
         if self.errors or self.warnings:  # warning when the configuration file is not found
             return
         self.__build_root()
@@ -83,11 +83,11 @@ class Event(ConfigReader):
         return self.__path
 
     @property
-    def css(self) -> Optional[str]:
+    def css(self) -> str | None:
         return self.__css
 
     @property
-    def update_password(self) -> Optional[str]:
+    def update_password(self) -> str | None:
         return self.__update_password
 
     @property
@@ -107,7 +107,7 @@ class Event(ConfigReader):
         return self.__rotators
 
     @property
-    def timer(self) -> Optional[Timer]:
+    def timer(self) -> Timer | None:
         return self.__timer
 
     def __build_root(self):
@@ -281,9 +281,9 @@ class Event(ConfigReader):
             )
             return
         key = 'filename'
-        filename: Optional[str] = section.get(key)
+        filename: str | None = section.get(key)
         key = 'ffe_id'
-        ffe_id: Optional[int] = None
+        ffe_id: int | None = None
         try:
             ffe_id = int(section[key])
             assert ffe_id >= 1
@@ -327,7 +327,7 @@ class Event(ConfigReader):
             )
             name = default_name
         key = 'ffe_password'
-        ffe_password: Optional[str] = None
+        ffe_password: str | None = None
         if ffe_id is not None:
             try:
                 ffe_password = section[key]
@@ -436,7 +436,7 @@ class Event(ConfigReader):
         )
 
         key = 'initial_time'
-        initial_time: Optional[int] = self._get_value_with_warning(
+        initial_time: int | None = self._get_value_with_warning(
             handicap_section,
             section_key,
             key,
@@ -449,7 +449,7 @@ class Event(ConfigReader):
             return HandicapTournament()
 
         key = 'increment'
-        increment: Optional[int] = self._get_value_with_warning(
+        increment: int | None = self._get_value_with_warning(
             handicap_section,
             section_key,
             key,
@@ -462,7 +462,7 @@ class Event(ConfigReader):
             return HandicapTournament()
 
         key = 'penalty_step'
-        penalty_step: Optional[int] = self._get_value_with_warning(
+        penalty_step: int | None = self._get_value_with_warning(
             handicap_section,
             section_key,
             key,
@@ -475,7 +475,7 @@ class Event(ConfigReader):
             return HandicapTournament()
 
         key = 'penalty_value'
-        penalty_value: Optional[int] = self._get_value_with_warning(
+        penalty_value: int | None = self._get_value_with_warning(
             handicap_section,
             section_key,
             key,
@@ -488,7 +488,7 @@ class Event(ConfigReader):
             return HandicapTournament()
 
         key = 'min_time'
-        min_time: Optional[int] = self._get_value_with_warning(
+        min_time: int | None = self._get_value_with_warning(
             handicap_section,
             section_key,
             key,
@@ -597,7 +597,7 @@ class Event(ConfigReader):
             self._add_warning('option absente, famille ignorée', section_key, key)
             return
 
-        family_indices: Optional[List[str]] = None
+        family_indices: List[str] | None = None
         # NOTE(Amaras) The walrus operator (:= aka assignment expression)
         # is available since Python 3.8 and this use case is one of the
         # motivational examples for its introduction, so let's use it.
@@ -906,7 +906,7 @@ class Event(ConfigReader):
                 key
             )
             columns = default_columns
-        screen_sets: Optional[List[ScreenSet]] = None
+        screen_sets: List[ScreenSet] | None = None
         if screen_type in [SCREEN_TYPE_BOARDS, SCREEN_TYPE_PLAYERS, ]:
             screen_sets = self.__build_screen_sets(screen_set_section_keys, columns)
             if not screen_sets:
@@ -923,7 +923,7 @@ class Event(ConfigReader):
                     )
                 return
         key = 'name'
-        screen_name: Optional[str] = None
+        screen_name: str | None = None
         try:
             screen_name = screen_section[key]
         except KeyError:
@@ -1037,7 +1037,7 @@ class Event(ConfigReader):
                     key
                 )
         key = '__family__'
-        family_id: Optional[str] = None
+        family_id: str | None = None
         if key in screen_section:
             family_id: str = self.get(section_key, key)
         if screen_type == SCREEN_TYPE_BOARDS:
@@ -1131,7 +1131,7 @@ class Event(ConfigReader):
                 )
                 continue
             key = 'first'
-            first: Optional[int] = None
+            first: int | None = None
             if key in current_section:
                 first = self._getint_safe(section_key, key, minimum=1)
                 if first is None:
@@ -1141,7 +1141,7 @@ class Event(ConfigReader):
                         key
                     )
             key = 'last'
-            last: Optional[int] = None
+            last: int | None = None
             if key in current_section:
                 last = self._getint_safe(section_key, key)
                 if last is None:
@@ -1157,7 +1157,7 @@ class Event(ConfigReader):
                 )
                 continue
             key = 'part'
-            part: Optional[int] = None
+            part: int | None = None
             if key in current_section:
                 part = self._getint_safe(section_key, key)
                 if part is None:
@@ -1167,7 +1167,7 @@ class Event(ConfigReader):
                         key
                     )
             key = 'parts'
-            parts: Optional[int] = None
+            parts: int | None = None
             if key in current_section:
                 parts = self._getint_safe(section_key, key)
                 if parts is None:
@@ -1193,7 +1193,7 @@ class Event(ConfigReader):
                     section_key
                 )
             key = 'name'
-            name: Optional[str] = None
+            name: str | None = None
             if key in current_section:
                 name = self.get(section_key, key)
             for key, value in self.items(section_key):
@@ -1322,11 +1322,11 @@ class Event(ConfigReader):
         if key not in timer_section:
             self._add_warning('option absente, horaire ignoré', section_key, key)
             return
-        previous_hour: Optional[TimerHour] = None
+        previous_hour: TimerHour | None = None
         if timer.hours:
             previous_hour = timer.hours[-1]
         datetime_str = re.sub(r'\s+', ' ', str(timer_section.get(key)).strip().upper())
-        timestamp: Optional[int] = None
+        timestamp: int | None = None
         matches = re.match('^#?([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2})$', datetime_str)
         if matches:
             try:
@@ -1398,7 +1398,7 @@ class Event(ConfigReader):
                 )
                 continue
             color_id = int(key)
-            color_rbg: Optional[Tuple[int, int, int]] = None
+            color_rbg: Tuple[int, int, int] | None = None
             color_value: str = color_section.get(key).replace(' ', '').upper()
             matches = simplified_hex_pattern.match(color_value)
             if matches:
@@ -1458,7 +1458,7 @@ class Event(ConfigReader):
                 )
                 continue
             delay_id = int(key)
-            delay: Optional[int] = self._getint_safe(section_key, key, minimum=1)
+            delay: int | None = self._getint_safe(section_key, key, minimum=1)
             if delay is None:
                 self._add_warning(
                     'un entier positif est attendu, ignoré',

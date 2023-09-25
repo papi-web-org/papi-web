@@ -18,24 +18,24 @@ SCREEN_TYPE_NAMES: Dict[str, str] = {
 
 
 class AScreen:
-    def __init__(self, screen_id: str, family_id: Optional[str], name: str, type: str, columns: int,
-                 menu_text: Optional[str], menu: Optional[str], show_timer: bool):
+    def __init__(self, screen_id: str, family_id: str | None, name: str, type: str, columns: int,
+                 menu_text: str | None, menu: str | None, show_timer: bool):
         self.__id: str = screen_id
-        self.__family_id: Optional[str] = family_id
+        self.__family_id: str | None = family_id
         self._name: str = name
         self.__type: str = type
         self.__columns: int = columns
-        self._menu_text: Optional[str] = menu_text
+        self._menu_text: str | None = menu_text
         self.__menu: str = menu
         self.__show_timer: bool = show_timer
-        self.__menu_screens: Optional[List[AScreen]] = None
+        self.__menu_screens: List[AScreen] | None = None
 
     @property
     def id(self) -> str:
         return self.__id
 
     @property
-    def family_id(self) -> Optional[str]:
+    def family_id(self) -> str | None:
         return self.__family_id
 
     @property
@@ -59,11 +59,11 @@ class AScreen:
         return self.__columns
 
     @property
-    def menu_text(self) -> Optional[str]:
+    def menu_text(self) -> str | None:
         return self._menu_text
 
     @property
-    def menu(self) -> Optional[str]:
+    def menu(self) -> str | None:
         return self.__menu
 
     def set_menu(self, menu: str):
@@ -90,8 +90,8 @@ class AScreen:
 
 
 class AScreenWithSets(AScreen):
-    def __init__(self, screen_id: str, family_id: Optional[str], name: str, type: str, columns: int,
-                 menu_text: Optional[str], menu: Optional[str], show_timer: bool, sets: List[ScreenSet]):
+    def __init__(self, screen_id: str, family_id: str | None, name: str, type: str, columns: int,
+                 menu_text: str | None, menu: str | None, show_timer: bool, sets: List[ScreenSet]):
         super().__init__(screen_id, family_id, name, type, columns, menu_text, menu, show_timer)
         self._sets: List[ScreenSet] = sets
 
@@ -109,8 +109,8 @@ class AScreenWithSets(AScreen):
 
 class ScreenBoards(AScreenWithSets):
     def __init__(
-            self, screen_id: str, family_id: Optional[str], name: str, columns: int, menu_text: Optional[str],
-            menu: Optional[str], show_timer: bool, sets: List[ScreenSet], update: bool):
+            self, screen_id: str, family_id: str | None, name: str, columns: int, menu_text: str | None,
+            menu: str | None, show_timer: bool, sets: List[ScreenSet], update: bool):
         super().__init__(screen_id, family_id, name, SCREEN_TYPE_BOARDS, columns, menu_text, menu, show_timer, sets)
         self.__update: bool = update
 
@@ -121,7 +121,7 @@ class ScreenBoards(AScreenWithSets):
         return self._name
 
     @property
-    def menu_text(self) -> Optional[str]:
+    def menu_text(self) -> str | None:
         if self._menu_text is None:
             return None
         text: str = self._menu_text
@@ -153,8 +153,8 @@ class ScreenBoards(AScreenWithSets):
 
 class ScreenPlayers(AScreenWithSets):
     def __init__(
-            self, screen_id: str, family_id: Optional[str], name: str, columns: int, menu_text: Optional[str],
-            menu: Optional[str], show_timer: bool, sets: List[ScreenSet]):
+            self, screen_id: str, family_id: str | None, name: str, columns: int, menu_text: str | None,
+            menu: str | None, show_timer: bool, sets: List[ScreenSet]):
         super().__init__(
             screen_id, family_id, name, SCREEN_TYPE_PLAYERS, columns, menu_text, menu, show_timer, sets)
 
@@ -165,7 +165,7 @@ class ScreenPlayers(AScreenWithSets):
         return self._name
 
     @property
-    def menu_text(self) -> Optional[str]:
+    def menu_text(self) -> str | None:
         if self._menu_text is None:
             return None
         text: str = self._menu_text
@@ -189,8 +189,8 @@ class ScreenPlayers(AScreenWithSets):
 
 class ScreenResults(AScreen):
     def __init__(
-            self, event_id: str, screen_id: str, family_id: Optional[str], name: str, columns: int,
-            menu_text: Optional[str], menu: Optional[str], show_timer: bool, limit: int):
+            self, event_id: str, screen_id: str, family_id: str | None, name: str, columns: int,
+            menu_text: str | None, menu: str | None, show_timer: bool, limit: int):
         super().__init__(
             screen_id, family_id, name, SCREEN_TYPE_RESULTS, columns, menu_text, menu, show_timer)
         self.__event_id = event_id

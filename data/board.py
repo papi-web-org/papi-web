@@ -11,12 +11,12 @@ logger: Logger = get_logger()
 
 @total_ordering
 class Board:
-    def __init__(self, white_player: Optional[Player] = None, black_player: Optional[Player] = None):
-        self.__id: Optional[int] = None
-        self.__number: Optional[int] = None
-        self.__white_player: Optional[Player] = white_player
-        self.__black_player: Optional[Player] = black_player
-        self.__result: Optional[int] = None
+    def __init__(self, white_player: Player | None = None, black_player: Player | None = None):
+        self.__id: int | None = None
+        self.__number: int | None = None
+        self.__white_player: Player | None = white_player
+        self.__black_player: Player | None = black_player
+        self.__result: int | None = None
 
     @property
     def id(self) -> int:

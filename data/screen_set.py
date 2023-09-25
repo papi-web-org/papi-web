@@ -11,18 +11,18 @@ logger: Logger = get_logger()
 
 
 class ScreenSet:
-    def __init__(self, tournament: Tournament, columns: int, first: Optional[int] = None, last: Optional[int] = None,
-                 part: Optional[int] = None, parts: Optional[int] = None, name: Optional[str] = None):
+    def __init__(self, tournament: Tournament, columns: int, first: int | None = None, last: int | None = None,
+                 part: int | None = None, parts: int | None = None, name: str | None = None):
         self.__tournament: Tournament = tournament
         self.__columns = columns
-        self.__first: Optional[int] = first
-        self.__last: Optional[int] = last
-        self.__part: Optional[int] = part
-        self.__parts: Optional[int] = parts
-        self.__name: Optional[str] = name
-        self.__first_item: Optional[Any] = None
-        self.__last_item: Optional[Any] = None
-        self.__items_lists: Optional[List[List[Any]]] = None
+        self.__first: int | None = first
+        self.__last: int | None = last
+        self.__part: int | None = part
+        self.__parts: int | None = parts
+        self.__name: str | None = name
+        self.__first_item: Any | None = None
+        self.__last_item: Any | None = None
+        self.__items_lists: List[List[Any]] | None = None
 
     @property
     def tournament(self) -> Tournament:

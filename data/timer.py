@@ -23,13 +23,13 @@ def timestamp_to_str(ts: int) -> str:
 
 
 class TimerHour:
-    def __init__(self, id: Union[int, str], timestamp: int, round: Optional[int] = None,
-                 text_before: Optional[str] = None, text_after: Optional[str] = None):
-        self.__id: Union[int, str] = id
+    def __init__(self, id: int | str, timestamp: int, round: int | None = None,
+                 text_before: str | None = None, text_after: str | None = None):
+        self.__id: int | str = id
         self.__timestamp: int = timestamp
         self.__datetime = timestamp_to_datetime(self.timestamp)
-        self.__text_before: Optional[str] = None
-        self.__text_after: Optional[str] = None
+        self.__text_before: str | None = None
+        self.__text_after: str | None = None
         if round is not None:
             self.__text_before = ROUND_DEFAULT_TEXT_BEFORE.format(round)
             self.__text_after = ROUND_DEFAULT_TEXT_AFTER.format(round)
@@ -37,14 +37,14 @@ class TimerHour:
             self.__text_before = text_before
         if text_after is not None:
             self.__text_after = text_after
-        self.__timestamp_1: Optional[int] = None
-        self.__timestamp_2: Optional[int] = None
-        self.__timestamp_3: Optional[int] = None
-        self.__timestamp_next: Optional[int] = None
+        self.__timestamp_1: int | None = None
+        self.__timestamp_2: int | None = None
+        self.__timestamp_3: int | None = None
+        self.__timestamp_next: int | None = None
         self.__last = False
 
     @property
-    def id(self) -> Union[int, str]:
+    def id(self) -> int | str:
         return self.__id
 
     @property

@@ -7,20 +7,20 @@ logger: Logger = get_logger()
 
 class Pairing:
     def __init__(self, color: str, opponent_id: int, result: int):
-        self.__color: Optional[str] = color
-        self.__opponent_id: Optional[int] = opponent_id
-        self.__result: Optional[int] = result
+        self.__color: str | None = color
+        self.__opponent_id: int | None = opponent_id
+        self.__result: int | None = result
 
     @property
-    def color(self) -> Optional[str]:
+    def color(self) -> str | None:
         return self.__color
 
     @property
-    def opponent_id(self) -> Optional[int]:
+    def opponent_id(self) -> int | None:
         return self.__opponent_id
 
     @property
-    def result(self) -> Optional[int]:
+    def result(self) -> int | None:
         return self.__result
 
     def __repr__(self):

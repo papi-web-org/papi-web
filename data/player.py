@@ -40,14 +40,14 @@ class Player:
         self.__rating_type: str = rating_type
         self.__fixed = fixed
         self.__pairings: Dict[int, Pairing] = pairings
-        self.__points: Optional[float] = None
-        self.__vpoints: Optional[float] = None
-        self.__board_id: Optional[int] = None
-        self.__board_number: Optional[int] = None
-        self.__color: Optional[str] = None
-        self.__handicap_initial_time: Optional[int] = None
-        self.__handicap_increment: Optional[int] = None
-        self.__handicap_time_modified: Optional[bool] = None
+        self.__points: float | None = None
+        self.__vpoints: float | None = None
+        self.__board_id: int | None = None
+        self.__board_number: int | None = None
+        self.__color: str | None = None
+        self.__handicap_initial_time: int | None = None
+        self.__handicap_increment: int | None = None
+        self.__handicap_time_modified: bool | None = None
 
     @property
     def id(self) -> int:
@@ -132,21 +132,21 @@ class Player:
         return 'Exempt' + ('e' if self.__sex == PLAYER_SEX_F else '')
 
     @property
-    def board_id(self) -> Optional[int]:
+    def board_id(self) -> int | None:
         return self.__board_id
 
     def set_board_id(self, board_id: int):
         self.__board_id = board_id
 
     @property
-    def board_number(self) -> Optional[int]:
+    def board_number(self) -> int | None:
         return self.__board_number
 
     def set_board_number(self, board_number: int):
         self.__board_number = board_number
 
     @property
-    def color(self) -> Optional[str]:
+    def color(self) -> str | None:
         return self.__color
 
     def set_color(self, color: str):
@@ -157,31 +157,31 @@ class Player:
         return COLOR_STRINGS[self.color]
 
     @property
-    def handicap_initial_time(self) -> Optional[int]:
+    def handicap_initial_time(self) -> int | None:
         return self.__handicap_initial_time
 
     @property
-    def handicap_initial_time_minutes(self) -> Optional[int]:
+    def handicap_initial_time_minutes(self) -> int | None:
         if self.__handicap_initial_time is None:
             return None
         return self.handicap_initial_time // 60
 
     @property
-    def handicap_initial_time_seconds(self) -> Optional[int]:
+    def handicap_initial_time_seconds(self) -> int | None:
         if self.__handicap_initial_time is None:
             return None
         return self.handicap_initial_time % 60
 
     @property
-    def handicap_increment(self) -> Optional[int]:
+    def handicap_increment(self) -> int | None:
         return self.__handicap_increment
 
     @property
-    def handicap_time_modified(self) -> Optional[int]:
+    def handicap_time_modified(self) -> int | None:
         return self.__handicap_time_modified
 
     @property
-    def handicap_str(self) -> Optional[str]:
+    def handicap_str(self) -> str | None:
         if self.__handicap_initial_time is None:
             return None
         (minutes, seconds) = divmod(self.__handicap_initial_time, 60)
