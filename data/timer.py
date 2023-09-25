@@ -1,6 +1,5 @@
 import datetime
 from logging import Logger
-from typing import Optional, Tuple, List, Dict, Union
 
 from common.logger import get_logger
 
@@ -130,26 +129,26 @@ class TimerHour:
         return f'{type(self).__name__}({self.timestamp} {self.datetime_str} [{self.text_before}/{self.text_after}])'
 
 
-DEFAULT_COLORS: Dict[int, Tuple[int, int, int, ]] = {1: (0, 255, 0), 2: (255, 127, 0), 3: (255, 0, 0), }
-DEFAULT_DELAYS: Dict[int, int] = {1: 15, 2: 5, 3: 10, }
+DEFAULT_COLORS: dict[int, tuple[int, int, int, ]] = {1: (0, 255, 0), 2: (255, 127, 0), 3: (255, 0, 0), }
+DEFAULT_DELAYS: dict[int, int] = {1: 15, 2: 5, 3: 10, }
 
 
 class Timer:
     def __init__(self):
-        self.__colors: Dict[int, Tuple[int, int, int, ]] = DEFAULT_COLORS
-        self.__delays: Dict[int, int] = DEFAULT_DELAYS
-        self.__hours: List[TimerHour] = []
+        self.__colors: dict[int, tuple[int, int, int, ]] = DEFAULT_COLORS
+        self.__delays: dict[int, int] = DEFAULT_DELAYS
+        self.__hours: list[TimerHour] = []
 
     @property
-    def colors(self) -> Dict[int, Tuple[int, int, int, ]]:
+    def colors(self) -> dict[int, tuple[int, int, int, ]]:
         return self.__colors
 
     @property
-    def delays(self) -> Dict[int, int]:
+    def delays(self) -> dict[int, int]:
         return self.__delays
 
     @property
-    def hours(self) -> List[TimerHour]:
+    def hours(self) -> list[TimerHour]:
         return self.__hours
 
     def set_hours_timestamps(self):

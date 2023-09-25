@@ -6,7 +6,7 @@ from contextlib import suppress
 
 import time
 
-from typing import List, Optional, Dict, Tuple, Iterator, NamedTuple
+from typing import Iterator, NamedTuple
 from logging import Logger
 
 from common.config_reader import ConfigReader
@@ -42,11 +42,11 @@ class Event(ConfigReader):
         self.__path: Path = Path('papi')
         self.__css: str | None = None
         self.__update_password: str | None = None
-        self.__tournaments: Dict[str, Tournament] = {}
-        self.__templates: Dict[str, Template] = {}
-        self.__screens_by_family_id: Dict[str, List[AScreen]] = {}
-        self.__screens: Dict[str, AScreen] = {}
-        self.__rotators: Dict[str, Rotator] = {}
+        self.__tournaments: dict[str, Tournament] = {}
+        self.__templates: dict[str, Template] = {}
+        self.__screens_by_family_id: dict[str, list[AScreen]] = {}
+        self.__screens: dict[str, AScreen] = {}
+        self.__rotators: dict[str, Rotator] = {}
         self.__timer: Timer | None = None
         if self.errors or self.warnings:  # warning when the configuration file is not found
             return
@@ -91,19 +91,19 @@ class Event(ConfigReader):
         return self.__update_password
 
     @property
-    def tournaments(self) -> Dict[str, Tournament]:
+    def tournaments(self) -> dict[str, Tournament]:
         return self.__tournaments
 
     @property
-    def templates(self) -> Dict[str, Template]:
+    def templates(self) -> dict[str, Template]:
         return self.__templates
 
     @property
-    def screens(self) -> Dict[str, AScreen]:
+    def screens(self) -> dict[str, AScreen]:
         return self.__screens
 
     @property
-    def rotators(self) -> Dict[str, Rotator]:
+    def rotators(self) -> dict[str, Rotator]:
         return self.__rotators
 
     @property
@@ -185,7 +185,7 @@ class Event(ConfigReader):
                 key
             )
 
-        section_keys: List[str] = ['name', 'path', 'update_password', 'css', ]
+        section_keys: list[str] = ['name', 'path', 'update_password', 'css', ]
         for key, value in section.items():
             if key not in section_keys:
                 self._add_warning('option inconnue', section_key, key)
@@ -198,7 +198,7 @@ class Event(ConfigReader):
         del self[old_section_key]
 
     def __build_tournaments(self):
-        tournament_ids: List[str] = self._get_subsection_keys_with_prefix('tournament')
+        tournament_ids: list[str] = self._get_subsection_keys_with_prefix('tournament')
         # NOTE(Amaras) Special case of tournament: handicap depends on
         # the [tournament] section being there.
         if 'handicap' in tournament_ids:
@@ -353,7 +353,7 @@ class Event(ConfigReader):
                 section_key,
                 key
             )
-        section_keys: List[str] = [
+        section_keys: list[str] = [
                 'path',
                 'filename',
                 'name',
@@ -411,7 +411,7 @@ class Event(ConfigReader):
             handicap_section = self[section_key]
         except KeyError:
             return HandicapTournament()
-        section_keys: List[str] = [
+        section_keys: list[str] = [
             'initial_time',
             'increment',
             'penalty_step',
@@ -508,7 +508,7 @@ class Event(ConfigReader):
         )
 
     def __build_templates(self):
-        template_ids: List[str] = self._get_subsection_keys_with_prefix('template')
+        template_ids: list[str] = self._get_subsection_keys_with_prefix('template')
         if not template_ids:
             self._add_debug('aucun modèle déclaré', 'template.*')
             return
@@ -558,7 +558,7 @@ class Event(ConfigReader):
         self.__templates[template_id] = template
 
     def __build_families(self):
-        family_ids: List[str] = self._get_subsection_keys_with_prefix('family')
+        family_ids: list[str] = self._get_subsection_keys_with_prefix('family')
         if not family_ids:
             self._add_debug('aucune famille déclarée', 'family.*')
             return
@@ -597,7 +597,7 @@ class Event(ConfigReader):
             self._add_warning('option absente, famille ignorée', section_key, key)
             return
 
-        family_indices: List[str] | None = None
+        family_indices: list[str] | None = None
         # NOTE(Amaras) The walrus operator (:= aka assignment expression)
         # is available since Python 3.8 and this use case is one of the
         # motivational examples for its introduction, so let's use it.
@@ -660,7 +660,7 @@ class Event(ConfigReader):
             self._add_debug(f'écran [{screen_id}] ajouté', section_key)
 
     def __build_screens(self):
-        screen_ids: List[str] = self._get_subsection_keys_with_prefix('screen')
+        screen_ids: list[str] = self._get_subsection_keys_with_prefix('screen')
         if not screen_ids:
             self._add_info(
                 'aucun écran défini, ajout des écrans par défaut',
@@ -672,7 +672,7 @@ class Event(ConfigReader):
                 name_prefix: str = ''
                 if len(self.tournaments) > 1:
                     name_prefix = f'{self.tournaments[tournament_id].name} - '
-                data: Dict[str, Dict[str, str]] = {
+                data: dict[str, dict[str, str]] = {
                     f'{tournament_id}-{SCREEN_TYPE_BOARDS}-update': {
                         'type': SCREEN_TYPE_BOARDS,
                         'update': 'on',
@@ -707,7 +707,7 @@ class Event(ConfigReader):
                         f"l'écran [{screen_id}] a été ajouté",
                         'screen.*'
                     )
-                data: Dict[str, Dict[str, str]] = {
+                data: dict[str, dict[str, str]] = {
                     f'{tournament_id}-{SCREEN_TYPE_BOARDS}-input.{SCREEN_TYPE_BOARDS}': {
                         'tournament': tournament_id,
                     },
@@ -725,8 +725,8 @@ class Event(ConfigReader):
             self.__build_screen(screen_id)
         if not len(self.__screens):
             self._add_warning("aucun écran n'a été initialisé")
-        view_menu: List[AScreen] = []
-        update_menu: List[AScreen] = []
+        view_menu: list[AScreen] = []
+        update_menu: list[AScreen] = []
         for screen in self.__screens.values():
             if screen.menu_text:
                 if screen.update:
@@ -757,7 +757,7 @@ class Event(ConfigReader):
                     self.__screens_by_family_id[screen.family_id]
                 )
                 continue
-            menu_screens: List[AScreen] = []
+            menu_screens: list[AScreen] = []
             for screen_id in screen.menu.replace(' ', '').split(','):
                 if screen_id:
                     if screen_id in self.screens:
@@ -771,7 +771,7 @@ class Event(ConfigReader):
             screen.set_menu(', '.join([screen.id for screen in menu_screens]))
             screen.set_menu_screens(menu_screens)
 
-    screen_keys: List[str] = [
+    screen_keys: list[str] = [
         'type',
         'name',
         'columns',
@@ -815,7 +815,7 @@ class Event(ConfigReader):
                 key
             )
             return
-        screen_set_section_keys: List[str] = []
+        screen_set_section_keys: list[str] = []
         screen_set_single_section_key = f'{section_key}.{screen_type}'
         if screen_type == SCREEN_TYPE_BOARDS:
             if screen_set_single_section_key in self:
@@ -906,7 +906,7 @@ class Event(ConfigReader):
                 key
             )
             columns = default_columns
-        screen_sets: List[ScreenSet] | None = None
+        screen_sets: list[ScreenSet] | None = None
         if screen_type in [SCREEN_TYPE_BOARDS, SCREEN_TYPE_PLAYERS, ]:
             screen_sets = self.__build_screen_sets(screen_set_section_keys, columns)
             if not screen_sets:
@@ -1085,8 +1085,8 @@ class Event(ConfigReader):
 
     screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', ]
 
-    def __build_screen_sets(self, section_keys: List[str], columns: int) -> List[ScreenSet]:
-        screen_sets: List[ScreenSet] = []
+    def __build_screen_sets(self, section_keys: list[str], columns: int) -> list[ScreenSet]:
+        screen_sets: list[ScreenSet] = []
         for section_key in section_keys:
             try:
                 current_section = self[section_key]
@@ -1210,7 +1210,7 @@ class Event(ConfigReader):
         return screen_sets
 
     def __build_rotators(self):
-        rotator_ids: List[str] = self._get_subsection_keys_with_prefix('rotator')
+        rotator_ids: list[str] = self._get_subsection_keys_with_prefix('rotator')
         if not rotator_ids:
             self._add_debug('aucun écran rotatif déclaré', 'rotator.*')
             return
@@ -1222,7 +1222,7 @@ class Event(ConfigReader):
     def __build_rotator(self, rotator_id: str):
         section_key = f'rotator.{rotator_id}'
         rotator_section = self[section_key]
-        section_keys: List[str] = ['screens', 'families', 'delay', ]
+        section_keys: list[str] = ['screens', 'families', 'delay', ]
         for key in rotator_section:
             if key not in section_keys:
                 self._add_warning('option inconnue', section_key, key)
@@ -1252,7 +1252,7 @@ class Event(ConfigReader):
                 section_key
             )
             return
-        screens: List[AScreen] = []
+        screens: list[AScreen] = []
         key = 'families'
         if key in rotator_section:
             for family_id in str(rotator_section.get(key)).replace(' ', '').split(','):
@@ -1294,7 +1294,7 @@ class Event(ConfigReader):
     def __build_timer(self):
         timer: Timer = Timer()
         section_key = 'timer.hour'
-        hour_ids: List[str] = self._get_subsection_keys_with_prefix(section_key)
+        hour_ids: list[str] = self._get_subsection_keys_with_prefix(section_key)
         if not hour_ids:
             self._add_debug(
                 'aucun horaire déclaré, le chronomètre ne sera pas disponible',
@@ -1317,7 +1317,7 @@ class Event(ConfigReader):
     def __build_timer_hour(self, hour_id: str, timer: Timer):
         section_key = f'timer.hour.{hour_id}'
         timer_section = self[section_key]
-        section_keys: List[str] = ['date', 'text_before', 'text_after', ]
+        section_keys: list[str] = ['date', 'text_before', 'text_after', ]
         key = 'date'
         if key not in timer_section:
             self._add_warning('option absente, horaire ignoré', section_key, key)
@@ -1398,7 +1398,7 @@ class Event(ConfigReader):
                 )
                 continue
             color_id = int(key)
-            color_rbg: Tuple[int, int, int] | None = None
+            color_rbg: tuple[int, int, int] | None = None
             color_value: str = color_section.get(key).replace(' ', '').upper()
             matches = simplified_hex_pattern.match(color_value)
             if matches:
@@ -1497,9 +1497,9 @@ class Event(ConfigReader):
         return self.name == other.name
 
 
-def get_events(silent: bool = True, with_tournaments_only: bool = False) -> List[Event]:
+def get_events(silent: bool = True, with_tournaments_only: bool = False) -> list[Event]:
     event_files: Iterator[Path] = EVENTS_PATH.glob('*.ini')
-    events: List[Event] = []
+    events: list[Event] = []
     for event_file in event_files:
         event_id: str = event_file.stem
         event: Event = Event(event_id, silent=silent)
@@ -1508,5 +1508,5 @@ def get_events(silent: bool = True, with_tournaments_only: bool = False) -> List
     return events
 
 
-def get_events_by_name(silent: bool = True, with_tournaments_only: bool = False) -> List[Event]:
+def get_events_by_name(silent: bool = True, with_tournaments_only: bool = False) -> list[Event]:
     return sorted(get_events(silent=silent, with_tournaments_only=with_tournaments_only), key=lambda event: event.name)

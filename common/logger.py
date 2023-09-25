@@ -1,7 +1,7 @@
 import sys
 from logging import Logger, getLogger, StreamHandler
 from colorlog import ColoredFormatter
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 
 logger: Logger = getLogger()
 

@@ -3,7 +3,6 @@ from datetime import datetime
 from functools import total_ordering
 from logging import Logger
 from pathlib import Path
-from typing import List
 
 from common.config_reader import TMP_DIR
 from common.logger import get_logger
@@ -79,12 +78,12 @@ class Result:
         return Path(TMP_DIR, event_id, 'results')
 
     @classmethod
-    def get_results(cls, event_id: str, limit: int) -> List['Result']:
-        results: List[Result] = []
+    def get_results(cls, event_id: str, limit: int) -> list['Result']:
+        results: list[Result] = []
         results_dir: Path = cls.results_dir(event_id)
         if not results_dir.is_dir():
             return results
-        files: List[Path] = list(results_dir.glob("*"))
+        files: list[Path] = list(results_dir.glob("*"))
         if not reversed(files):
             return results
         prog = re.compile('^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)$')

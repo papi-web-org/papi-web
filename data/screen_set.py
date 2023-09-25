@@ -1,5 +1,5 @@
 import math
-from typing import Optional, List, Any, Tuple
+from typing import Any
 from logging import Logger
 
 from common.logger import get_logger
@@ -22,26 +22,26 @@ class ScreenSet:
         self.__name: str | None = name
         self.__first_item: Any | None = None
         self.__last_item: Any | None = None
-        self.__items_lists: List[List[Any]] | None = None
+        self.__items_lists: list[list[Any]] | None = None
 
     @property
     def tournament(self) -> Tournament:
         return self.__tournament
 
     @property
-    def first(self) -> Optional[int]:
+    def first(self) -> int | None:
         return self.__first
 
     @property
-    def last(self) -> Optional[int]:
+    def last(self) -> int | None:
         return self.__last
 
     @property
-    def part(self) -> Optional[int]:
+    def part(self) -> int | None:
         return self.__part
 
     @property
-    def parts(self) -> Optional[int]:
+    def parts(self) -> int | None:
         return self.__parts
 
     @property
@@ -61,7 +61,7 @@ class ScreenSet:
         self.__extract_players_by_name()
         return self.__name
 
-    def __extract_data(self, items: List[Any], force_even: bool = False):
+    def __extract_data(self, items: list[Any], force_even: bool = False):
         if not items:
             self.__items_lists = [[], ] * self.__columns
             return
@@ -128,7 +128,7 @@ class ScreenSet:
                 self.__name = self.__name.replace('%l', str(self.last_board.id))
 
     @property
-    def boards_lists(self) -> List[List[Board]]:
+    def boards_lists(self) -> list[list[Board]]:
         self.__extract_boards()
         return self.__items_lists
 
@@ -157,7 +157,7 @@ class ScreenSet:
                 self.__name = self.__name.replace('%l', self.last_player_by_name.last_name)
 
     @property
-    def players_by_name_lists(self) -> List[List[Player]]:
+    def players_by_name_lists(self) -> list[list[Player]]:
         self.__extract_players_by_name()
         return self.__items_lists
 
@@ -186,10 +186,10 @@ class ScreenSet:
                 self.__name = self.__name.replace('%l', str(self.last_player_by_rating.rating))
 
     @property
-    def players_by_rating_tuple_lists(self) -> List[Tuple[List[Player], List[Player]]]:
+    def players_by_rating_tuple_lists(self) -> list[tuple[list[Player], list[Player]]]:
         self.__extract_players_by_rating()
-        players_by_rating_lists: List[List[Player]] = self.__items_lists
-        players_by_rating_tuple_lists: List[Tuple[List[Player], List[Player]]] = []
+        players_by_rating_lists: list[list[Player]] = self.__items_lists
+        players_by_rating_tuple_lists: list[tuple[list[Player], list[Player]]] = []
         for players_by_rating in players_by_rating_lists:
             players_by_rating_tuple_lists.append(
                 (

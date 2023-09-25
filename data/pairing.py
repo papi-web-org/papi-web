@@ -1,4 +1,3 @@
-from typing import Optional
 from logging import Logger
 from common.logger import get_logger
 

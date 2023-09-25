@@ -1,4 +1,3 @@
-from typing import List, Dict, Optional
 from logging import Logger
 
 from common.logger import get_logger
@@ -10,7 +9,7 @@ logger: Logger = get_logger()
 SCREEN_TYPE_BOARDS: str = 'boards'
 SCREEN_TYPE_PLAYERS: str = 'players'
 SCREEN_TYPE_RESULTS: str = 'results'
-SCREEN_TYPE_NAMES: Dict[str, str] = {
+SCREEN_TYPE_NAMES: dict[str, str] = {
     SCREEN_TYPE_BOARDS: 'Appariements par table',
     SCREEN_TYPE_PLAYERS: 'Appariements par joueur.euse',
     SCREEN_TYPE_RESULTS: 'Résultats',
@@ -28,7 +27,7 @@ class AScreen:
         self._menu_text: str | None = menu_text
         self.__menu: str = menu
         self.__show_timer: bool = show_timer
-        self.__menu_screens: List[AScreen] | None = None
+        self.__menu_screens: list[AScreen] | None = None
 
     @property
     def id(self) -> str:
@@ -74,10 +73,10 @@ class AScreen:
         return self.__show_timer
 
     @property
-    def menu_screens(self) -> List['AScreen']:
+    def menu_screens(self) -> list['AScreen']:
         return self.__menu_screens
 
-    def set_menu_screens(self, menu_screens: List['AScreen']):
+    def set_menu_screens(self, menu_screens: list['AScreen']):
         self.__menu_screens = menu_screens
 
     @property
@@ -85,23 +84,23 @@ class AScreen:
         return False
 
     @property
-    def sets(self) -> List[ScreenSet]:
+    def sets(self) -> list[ScreenSet]:
         return []
 
 
 class AScreenWithSets(AScreen):
     def __init__(self, screen_id: str, family_id: str | None, name: str, type: str, columns: int,
-                 menu_text: str | None, menu: str | None, show_timer: bool, sets: List[ScreenSet]):
+                 menu_text: str | None, menu: str | None, show_timer: bool, sets: list[ScreenSet]):
         super().__init__(screen_id, family_id, name, type, columns, menu_text, menu, show_timer)
-        self._sets: List[ScreenSet] = sets
+        self._sets: list[ScreenSet] = sets
 
     @property
-    def sets(self) -> List[ScreenSet]:
+    def sets(self) -> list[ScreenSet]:
         return self._sets
 
     @property
     def sets_str(self) -> str:
-        strings: List[str] = []
+        strings: list[str] = []
         for set in self._sets:
             strings.append(str(set))
         return ' + '.join(strings)
@@ -110,7 +109,7 @@ class AScreenWithSets(AScreen):
 class ScreenBoards(AScreenWithSets):
     def __init__(
             self, screen_id: str, family_id: str | None, name: str, columns: int, menu_text: str | None,
-            menu: str | None, show_timer: bool, sets: List[ScreenSet], update: bool):
+            menu: str | None, show_timer: bool, sets: list[ScreenSet], update: bool):
         super().__init__(screen_id, family_id, name, SCREEN_TYPE_BOARDS, columns, menu_text, menu, show_timer, sets)
         self.__update: bool = update
 
@@ -154,7 +153,7 @@ class ScreenBoards(AScreenWithSets):
 class ScreenPlayers(AScreenWithSets):
     def __init__(
             self, screen_id: str, family_id: str | None, name: str, columns: int, menu_text: str | None,
-            menu: str | None, show_timer: bool, sets: List[ScreenSet]):
+            menu: str | None, show_timer: bool, sets: list[ScreenSet]):
         super().__init__(
             screen_id, family_id, name, SCREEN_TYPE_PLAYERS, columns, menu_text, menu, show_timer, sets)
 
@@ -213,9 +212,9 @@ class ScreenResults(AScreen):
         return self.__limit
 
     @property
-    def results_lists(self) -> List[List[Result]]:
-        results: List[Result] = Result.get_results(self.event_id, self.limit)
-        results_by_column: List[List[Result]] = []
+    def results_lists(self) -> list[list[Result]]:
+        results: list[Result] = Result.get_results(self.event_id, self.limit)
+        results_by_column: list[list[Result]] = []
         column_size: int = (self.limit if self.limit else len(results)) // self.columns
         for i in range(self.columns):
             results_by_column.append(results[i * column_size:(i + 1) * column_size])

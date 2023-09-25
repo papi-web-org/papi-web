@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any
 import pyodbc
 from logging import Logger
 
@@ -13,8 +13,8 @@ class AccessDatabase:
 
     def __init__(self, file: Path):
         self.__file: Path = file
-        self.__database: Optional[pyodbc.Connection] = None
-        self.__cursor: Optional[pyodbc.Cursor] = None
+        self.__database: pyodbc.Connection | None = None
+        self.__cursor: pyodbc.Cursor | None = None
 
     def _open(self):
         if self.__database is None:
@@ -41,13 +41,13 @@ class AccessDatabase:
             self.__database = None
             self.__cursor = None
 
-    def _execute(self, query: str, params: Tuple = ()):
+    def _execute(self, query: str, params: tuple = ()):
         # log_info(f'query={query}')
         # log_info(f'params={params}')
         self._open()
         self.__cursor.execute(query, params)
 
-    def _fetchall(self) -> List[Dict[str, Any]]:
+    def _fetchall(self) -> list[dict[str, Any]]:
         self._open()
         columns = [column[0] for column in self.__cursor.description]
         results = []
@@ -55,7 +55,7 @@ class AccessDatabase:
             results.append(dict(zip(columns, row)))
         return results
 
-    def _fetchone(self) -> Dict[str, Any]:
+    def _fetchone(self) -> dict[str, Any]:
         self._open()
         columns = [column[0] for column in self.__cursor.description]
         return dict(zip(columns, self.__cursor.fetchone()))

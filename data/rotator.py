@@ -1,5 +1,3 @@
-from typing import List
-
 from logging import Logger
 from common.logger import get_logger
 from data.screen import AScreen
@@ -11,10 +9,10 @@ ROTATOR_DEFAULT_DELAY: int = 15
 
 
 class Rotator:
-    def __init__(self, id: str, delay: int, screens: List[AScreen]):
+    def __init__(self, id: str, delay: int, screens: list[AScreen]):
         self.__id: str = id
         self.__delay: int = delay
-        self.__screens: List[AScreen] = screens
+        self.__screens: list[AScreen] = screens
 
     @property
     def id(self) -> str:
@@ -25,5 +23,5 @@ class Rotator:
         return self.__delay
 
     @property
-    def screens(self) -> List[AScreen]:
+    def screens(self) -> list[AScreen]:
         return self.__screens

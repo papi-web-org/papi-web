@@ -1,6 +1,5 @@
 from pathlib import Path
 import math
-from typing import Optional, Dict, List
 from logging import Logger
 
 from common.config_reader import TMP_DIR
@@ -37,14 +36,14 @@ class Tournament:
         self.__rounds: int = 0
         self.__pairing: int = 0
         self.__rating: int = 0
-        self.__players_by_id: Dict[int, Player] = {}
+        self.__players_by_id: dict[int, Player] = {}
         self.__current_round: int = 0
         self.__rating_limit1: int = 0
         self.__rating_limit2: int = 0
-        self.__boards: List[Board] | None = None
+        self.__boards: list[Board] | None = None
         self.__papi_read = False
-        self.__players_by_name: List[Player] | None = None
-        self.__players_by_rating: List[Player] | None = None
+        self.__players_by_name: list[Player] | None = None
+        self.__players_by_rating: list[Player] | None = None
 
     @property
     def id(self) -> str:
@@ -120,22 +119,22 @@ class Tournament:
         return self.__rating_limit2
 
     @property
-    def players_by_id(self) -> Dict[int, Player]:
+    def players_by_id(self) -> dict[int, Player]:
         self.read_papi()
         return self.__players_by_id
 
     @property
-    def players_by_name(self) -> List[Player]:
+    def players_by_name(self) -> list[Player]:
         if self.__players_by_name is None:
-            players: List[Player] = list(self.players_by_id.values())[1:]
+            players: list[Player] = list(self.players_by_id.values())[1:]
             self.__players_by_name = sorted(
                 players, key=lambda player: player.last_name + ' ' + player.first_name)
         return self.__players_by_name
 
     @property
-    def players_by_rating(self) -> List[Player]:
+    def players_by_rating(self) -> list[Player]:
         if self.__players_by_rating is None:
-            players: List[Player] = list(self.players_by_id.values())[1:]
+            players: list[Player] = list(self.players_by_id.values())[1:]
             self.__players_by_rating = sorted(
                 players, key=lambda player: (str(9999 - player.rating) + player.last_name + ' ' + player.first_name))
         return self.__players_by_rating
@@ -146,7 +145,7 @@ class Tournament:
         return self.__current_round
 
     @property
-    def boards(self) -> List[Board]:
+    def boards(self) -> list[Board]:
         self.read_papi()
         return self.__boards
 
@@ -178,7 +177,7 @@ class Tournament:
         self.__build_boards()
 
     def __calculate_current_round(self):
-        round_infos: Dict[int, Dict[str, bool]] = {}
+        round_infos: dict[int, dict[str, bool]] = {}
         for round in range(1, self.rounds + 1):
             round_infos[round] = {
                 'pairings_found': False,
@@ -194,7 +193,7 @@ class Tournament:
                     if round_infos[round]['pairings_found'] and round_infos[round]['results_missing']:
                         break
         # looking for rounds with pairings
-        paired_rounds: List[int] = []
+        paired_rounds: list[int] = []
         for round in range(1, self.__rounds + 1):
             if round_infos[round]['pairings_found']:
                 paired_rounds.append(round)
@@ -208,7 +207,7 @@ class Tournament:
                 self.__current_round = paired_rounds[-1]
 
     def __calculate_points(self):
-        previous_rounds: List[int] = list(range(1, self.__current_round))
+        previous_rounds: list[int] = list(range(1, self.__current_round))
         for player in self.players_by_id.values():
             if player.id != 1:
                 # real points

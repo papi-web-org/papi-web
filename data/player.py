@@ -1,6 +1,4 @@
-import math
 from functools import total_ordering
-from typing import Dict, Optional
 from logging import Logger
 
 from data.pairing import Pairing
@@ -8,7 +6,7 @@ from common.logger import get_logger
 
 logger: Logger = get_logger()
 
-PLAYER_TITLE_VALUES: Dict[str, int] = {'g': 6, 'gf': 5, 'm': 4, 'mf': 3, 'f': 2, 'ff': 1, '': 0, }
+PLAYER_TITLE_VALUES: dict[str, int] = {'g': 6, 'gf': 5, 'm': 4, 'mf': 3, 'f': 2, 'ff': 1, '': 0, }
 PLAYER_TITLE_STRINGS = {v: k for k, v in PLAYER_TITLE_VALUES.items()}
 
 PLAYER_SEX_M: str = 'M'
@@ -16,12 +14,12 @@ PLAYER_SEX_F: str = 'F'
 
 COLOR_WHITE: str = 'W'
 COLOR_BLACK: str = 'B'
-COLOR_DB_VALUES: Dict[str, str] = {
+COLOR_DB_VALUES: dict[str, str] = {
     'B': COLOR_WHITE,
     'N': COLOR_BLACK,
 }
-COLOR_VALUES: Dict[int, str] = {v: k for k, v in COLOR_DB_VALUES.items()}
-COLOR_STRINGS: Dict[str, str] = {
+COLOR_VALUES: dict[int, str] = {v: k for k, v in COLOR_DB_VALUES.items()}
+COLOR_STRINGS: dict[str, str] = {
     COLOR_WHITE: 'Blancs',
     COLOR_BLACK: 'Noirs',
 }
@@ -30,7 +28,7 @@ COLOR_STRINGS: Dict[str, str] = {
 @total_ordering
 class Player:
     def __init__(self, papi_id: int, last_name: str, first_name: str, sex: str, title: int, rating: int,
-                 rating_type: str, fixed: int, pairings: Dict[int, Pairing]):
+                 rating_type: str, fixed: int, pairings: dict[int, Pairing]):
         self.__id: int = papi_id
         self.__last_name: str = last_name
         self.__first_name: str = first_name
@@ -39,7 +37,7 @@ class Player:
         self.__rating: int = rating
         self.__rating_type: str = rating_type
         self.__fixed = fixed
-        self.__pairings: Dict[int, Pairing] = pairings
+        self.__pairings: dict[int, Pairing] = pairings
         self.__points: float | None = None
         self.__vpoints: float | None = None
         self.__board_id: int | None = None
@@ -86,7 +84,7 @@ class Player:
         return self.__fixed
 
     @property
-    def pairings(self) -> Dict[int, Pairing]:
+    def pairings(self) -> dict[int, Pairing]:
         return self.__pairings
 
     @staticmethod

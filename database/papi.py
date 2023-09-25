@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Dict, List, Tuple
 from logging import Logger
 
 from database.access import AccessDatabase
@@ -17,7 +16,7 @@ RESULT_FORFEIT_LOSS: int = 4            # forfeit (opp > 1, paired)
 RESULT_DOUBLE_FORFEIT: int = 5          # double forfeit (opp > 1)
 RESULT_EXE_FORFEIT_GAIN_BYE_1: int = 6  # exempt (opp == 1), forfeit won (opp > 1), bye 1pt (opp is None)
 
-RESULT_STRINGS: Dict[int, str] = {
+RESULT_STRINGS: dict[int, str] = {
     RESULT_NOT_PAIRED: '',
     RESULT_LOSS: '0-1',
     RESULT_DRAW_OR_BYE_05: '1/2',
@@ -31,14 +30,14 @@ TOURNAMENT_PAIRING_STANDARD: int = 1
 TOURNAMENT_PAIRING_HALEY: int = 2
 TOURNAMENT_PAIRING_HALEY_SOFT: int = 3
 TOURNAMENT_PAIRING_SAD: int = 4
-TOURNAMENT_PAIRING_DB_VALUES: Dict[int, str] = {
+TOURNAMENT_PAIRING_DB_VALUES: dict[int, str] = {
     TOURNAMENT_PAIRING_STANDARD: 'Standard',
     TOURNAMENT_PAIRING_HALEY: 'Haley',
     TOURNAMENT_PAIRING_HALEY_SOFT: 'HaleySoft',
     TOURNAMENT_PAIRING_SAD: 'SAD',
 }
-TOURNAMENT_PAIRING_VALUES: Dict[str, int] = {v: k for k, v in TOURNAMENT_PAIRING_DB_VALUES.items()}
-TOURNAMENT_PAIRING_STRINGS: Dict[int, str] = {
+TOURNAMENT_PAIRING_VALUES: dict[str, int] = {v: k for k, v in TOURNAMENT_PAIRING_DB_VALUES.items()}
+TOURNAMENT_PAIRING_STRINGS: dict[int, str] = {
     TOURNAMENT_PAIRING_STANDARD: 'Standard',
     TOURNAMENT_PAIRING_HALEY: 'Haley',
     TOURNAMENT_PAIRING_HALEY_SOFT: 'Haley Dégressif',
@@ -48,18 +47,18 @@ TOURNAMENT_PAIRING_STRINGS: Dict[int, str] = {
 TOURNAMENT_RATING_STANDARD: int = 1
 TOURNAMENT_RATING_RAPID: int = 2
 TOURNAMENT_RATING_BLITZ: int = 3
-TOURNAMENT_RATING_DB_FIELDS: Dict[int, str] = {
+TOURNAMENT_RATING_DB_FIELDS: dict[int, str] = {
     TOURNAMENT_RATING_STANDARD: 'Elo',
     TOURNAMENT_RATING_RAPID: 'Rapide',
     TOURNAMENT_RATING_BLITZ: 'Blitz',
 }
-TOURNAMENT_RATING_VALUES: Dict[str, int] = {v: k for k, v in TOURNAMENT_RATING_DB_FIELDS.items()}
-TOURNAMENT_RATING_STRINGS: Dict[int, str] = {
+TOURNAMENT_RATING_VALUES: dict[str, int] = {v: k for k, v in TOURNAMENT_RATING_DB_FIELDS.items()}
+TOURNAMENT_RATING_STRINGS: dict[int, str] = {
     TOURNAMENT_RATING_STANDARD: 'Standard',
     TOURNAMENT_RATING_RAPID: 'Rapide',
     TOURNAMENT_RATING_BLITZ: 'Blitz',
 }
-TOURNAMENT_RATING_TYPE_DB_FIELDS: Dict[int, str] = {
+TOURNAMENT_RATING_TYPE_DB_FIELDS: dict[int, str] = {
     TOURNAMENT_RATING_STANDARD: 'Fide',
     TOURNAMENT_RATING_RAPID: 'RapideFide',
     TOURNAMENT_RATING_BLITZ: 'BlitzFide',
@@ -70,7 +69,7 @@ class PapiDatabase(AccessDatabase):
 
     def __init__(self, file: Path):
         super().__init__(file)
-        '''self.__player_fields: List[str] = [
+        '''self.__player_fields: list[str] = [
             'Ref',
             'RefFFE',
             'Nr',
@@ -101,7 +100,7 @@ class PapiDatabase(AccessDatabase):
         self._execute(query, (arbiter, 'Arbitre', ))
         self._commit()'''
 
-    def _query(self, query: str, params: Tuple = ()):
+    def _query(self, query: str, params: tuple = ()):
         self._execute(query, params)
         self._commit()
 
@@ -113,7 +112,7 @@ class PapiDatabase(AccessDatabase):
         self._execute(query, (name, ))
         return self._fetchval()
 
-    def read_info(self) -> Tuple[int, int, int, int, int, ]:
+    def read_info(self) -> tuple[int, int, int, int, int, ]:
         rounds: int = int(self.__read_var('NbrRondes'))
         pairing: int = TOURNAMENT_PAIRING_VALUES[self.__read_var('Pairing')]
         rating: int = TOURNAMENT_RATING_VALUES[self.__read_var('ClassElo')]
@@ -121,9 +120,9 @@ class PapiDatabase(AccessDatabase):
         rating_limit2: int = int(self.__read_var('EloBase2'))
         return rounds, pairing, rating, rating_limit1, rating_limit2
 
-    def read_players(self, rating: int, rounds: int) -> Dict[int, Player]:
-        players: Dict[int, Player] = {}
-        player_fields: List[str] = [
+    def read_players(self, rating: int, rounds: int) -> dict[int, Player]:
+        players: dict[int, Player] = {}
+        player_fields: list[str] = [
             'Ref', 'Nom', 'Prenom', 'Sexe', 'FideTitre', 'Fixe',
             'Elo', 'Rapide', 'Blitz', 'Fide', 'RapideFide', 'BlitzFide',
         ]
@@ -133,7 +132,7 @@ class PapiDatabase(AccessDatabase):
         query: str = f'SELECT {", ".join(player_fields)} FROM joueur ORDER BY Ref'
         self._execute(query)
         for row in self._fetchall():
-            pairings: Dict[int, Pairing] = {}
+            pairings: dict[int, Pairing] = {}
             for round in range(1, rounds + 1):
                 color: str = row['Rd' + str(round).zfill(2) + 'Cl']
                 if color in COLOR_DB_VALUES:
