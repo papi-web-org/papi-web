@@ -666,61 +666,104 @@ class Event(ConfigReader):
                 'aucun écran défini, ajout des écrans par défaut',
                 'screen.*'
             )
+            results_screen_id: str = f'auto-{SCREEN_TYPE_RESULTS}'
+            if len(self.tournaments) > 1:
+                update_menu: str = ','.join([
+                    f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-update' for tournament_id in self.tournaments
+                ])
+                view_menu: str = ','.join([
+                    f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-view' for tournament_id in self.tournaments
+                ])
+                players_menu: str = ','.join([
+                    f'{tournament_id}-auto-{SCREEN_TYPE_PLAYERS}' for tournament_id in self.tournaments
+                ])
+                results_menu: str = 'none'
+            else:
+                tournament: Tournament = list(self.tournaments.values())[0]
+                update_menu: str = 'none'
+                view_menu: str = ','.join([
+                    f'{tournament.id}-auto-{SCREEN_TYPE_BOARDS}-view',
+                    f'{tournament.id}-auto-{SCREEN_TYPE_PLAYERS}',
+                    f'auto-{SCREEN_TYPE_RESULTS}',
+                ])
+                players_menu: str = view_menu
+                results_menu: str = view_menu
             for tournament_id in self.tournaments:
-                if not self.tournaments[tournament_id].file:
-                    continue
-                name_prefix: str = ''
-                if len(self.tournaments) > 1:
-                    name_prefix = f'{self.tournaments[tournament_id].name} - '
-                data: Dict[str, Dict[str, str]] = {
-                    f'{tournament_id}-{SCREEN_TYPE_BOARDS}-update': {
+                tournament_name = self.tournaments[tournament_id].name
+                auto_screens: Dict[str, Dict[str, str]] = {
+                    f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-update': {
                         'type': SCREEN_TYPE_BOARDS,
                         'update': 'on',
-                        'name': f'{name_prefix}Saisie des résultats',
-                        'menu_text': f'{name_prefix}Saisie des résultats',
+                        'name': f'{f"{tournament_name} - " if len(self.tournaments) > 1 else ""}'
+                                f'Saisie des résultats',
+                        'menu_text': tournament_name if len(self.tournaments) > 1 else '',
+                        'menu': update_menu,
                     },
-                    f'{tournament_id}-{SCREEN_TYPE_BOARDS}-view': {
+                    f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-view': {
                         'type': SCREEN_TYPE_BOARDS,
                         'update': 'off',
-                        'name': f'{name_prefix}Appariements par échiquier',
-                        'menu_text': f'{name_prefix}Appariements',
+                        'name': f'{f"{tournament_name} - " if len(self.tournaments) > 1 else ""}'
+                                f'Appariements par échiquier',
+                        'menu_text': tournament_name
+                        if len(self.tournaments) > 1
+                        else 'Appariements par échiquier',
+                        'menu': view_menu,
                     },
-                    f'{tournament_id}-{SCREEN_TYPE_PLAYERS}': {
+                    f'{tournament_id}-auto-{SCREEN_TYPE_PLAYERS}': {
                         'type': SCREEN_TYPE_PLAYERS,
-                        'name': f'{name_prefix}Appariements par ordre alphabétique',
+                        'name': f'{f"{tournament_name} - " if len(self.tournaments) > 1 else ""}'
+                                f'Appariements par ordre alphabétique',
                         'columns': '2',
-                        'menu_text': f'{name_prefix}Ordre alphabétique',
-                    },
-                    f'{tournament_id}-{SCREEN_TYPE_RESULTS}': {
-                        'type': SCREEN_TYPE_RESULTS,
-                        'name': f'{name_prefix}Derniers résultats',
-                        'menu_text': f'{name_prefix}Derniers résultats',
+                        'menu_text': tournament_name
+                        if len(self.tournaments) > 1
+                        else 'Appariements par ordre alphabétique',
+                        'menu': players_menu,
                     },
                 }
-                menu: str = ','.join((screen_id for screen_id in data))
-                for screen_id, options in data.items():
+                for screen_id, options in auto_screens.items():
                     section_key: str = f'screen.{screen_id}'
                     self[section_key] = options
-                    self[section_key]['menu'] = menu
                     screen_ids.append(screen_id)
                     self._add_debug(
                         f"l'écran [{screen_id}] a été ajouté",
                         'screen.*'
                     )
-                data: Dict[str, Dict[str, str]] = {
-                    f'{tournament_id}-{SCREEN_TYPE_BOARDS}-input.{SCREEN_TYPE_BOARDS}': {
+                auto_screen_sets: Dict[str, Dict[str, str]] = {
+                    f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-update.{SCREEN_TYPE_BOARDS}': {
                         'tournament': tournament_id,
                     },
-                    f'{tournament_id}-{SCREEN_TYPE_BOARDS}-print.{SCREEN_TYPE_BOARDS}': {
+                    f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-view.{SCREEN_TYPE_BOARDS}': {
                         'tournament': tournament_id,
                     },
-                    f'{tournament_id}-{SCREEN_TYPE_PLAYERS}.players': {
+                    f'{tournament_id}-auto-{SCREEN_TYPE_PLAYERS}.players': {
                         'tournament': tournament_id,
                     },
                 }
-                for screen_id, options in data.items():
-                    section_key: str = f'screen.{screen_id}'
+                for screen_set_id, options in auto_screen_sets.items():
+                    section_key: str = f'screen.{screen_set_id}'
                     self[section_key] = options
+            self[f'screen.{results_screen_id}'] = {
+                'type': SCREEN_TYPE_RESULTS,
+                'name': f'Derniers résultats',
+                'menu_text': f'Derniers résultats',
+                'menu': results_menu,
+            }
+            self._add_debug(
+                f"l'écran [{results_screen_id}] a été ajouté",
+                'screen.*'
+            )
+            screen_ids.append(results_screen_id)
+            if len(self.tournaments) > 1:
+                self[f'rotator.auto-{SCREEN_TYPE_BOARDS}'] = {
+                    'screens': view_menu,
+                }
+                self[f'rotator.auto-{SCREEN_TYPE_PLAYERS}'] = {
+                    'screens': players_menu,
+                }
+            else:
+                self['rotator.auto'] = {
+                    'screens': view_menu,
+                }
         for screen_id in screen_ids:
             self.__build_screen(screen_id)
         if not len(self.__screens):
