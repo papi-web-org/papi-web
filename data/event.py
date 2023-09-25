@@ -252,7 +252,7 @@ class Event(ConfigReader):
         default_path: Path = self.path
         path: Path = default_path
         try:
-            path = section[key]
+            path = Path(section[key])
         except KeyError:
             self._add_debug(
                     f'option absente, par défault [{default_path}]',
