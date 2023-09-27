@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any
 import pyodbc
 from logging import Logger
+from dataclasses import dataclass, field
 
 from common.exception import PapiException
 from common.logger import get_logger
@@ -9,12 +10,15 @@ from common.logger import get_logger
 logger: Logger = get_logger()
 
 
+@dataclass
 class AccessDatabase:
+    __file: Path
+    __database: pyodbc.Connection = field(init=False)
+    __cursor: pyodbc.Cursor = field(init=False)
 
-    def __init__(self, file: Path):
-        self.__file: Path = file
-        self.__database: pyodbc.Connection | None = None
-        self.__cursor: pyodbc.Cursor | None = None
+    def __post_init__(self):
+        self.__database = None
+        self._open()
 
     def _open(self):
         if self.__database is None:
