@@ -252,7 +252,7 @@ class Event(ConfigReader):
         default_path: Path = self.path
         path: Path = default_path
         try:
-            path = section[key]
+            path = Path(section[key])
         except KeyError:
             self._add_debug(
                     f'option absente, par défault [{default_path}]',
@@ -990,7 +990,7 @@ class Event(ConfigReader):
                 )
         key = 'update'
         default_update: bool = False
-        update: bool = default_update
+        update: bool | None = default_update
         if screen_type == SCREEN_TYPE_BOARDS:
             if key in screen_section:
                 update = self._getboolean_safe(section_key, key)
@@ -1011,7 +1011,7 @@ class Event(ConfigReader):
                 )
         key = 'limit'
         default_limit: int = 0
-        limit: int = default_limit
+        limit: int | None = default_limit
         if screen_type == SCREEN_TYPE_RESULTS:
             if key in screen_section:
                 limit = self._getint_safe(section_key, key)
@@ -1039,7 +1039,7 @@ class Event(ConfigReader):
         key = '__family__'
         family_id: str | None = None
         if key in screen_section:
-            family_id: str = self.get(section_key, key)
+            family_id = self.get(section_key, key)
         if screen_type == SCREEN_TYPE_BOARDS:
             self.__screens[screen_id] = ScreenBoards(
                 screen_id,
@@ -1186,7 +1186,7 @@ class Event(ConfigReader):
                     'compatibles, écran ignoré',
                     section_key
                 )
-            if part is not None and part > parts:
+            if part is not None and parts is not None and part > parts:
                 self._add_warning(
                     f"la partie [{part}] sur [{parts}] n'est pas valide, écran "
                     "ignoré",
@@ -1227,7 +1227,7 @@ class Event(ConfigReader):
             if key not in section_keys:
                 self._add_warning('option inconnue', section_key, key)
         key = 'delay'
-        default_delay: int = ROTATOR_DEFAULT_DELAY
+        default_delay: int | None = ROTATOR_DEFAULT_DELAY
         delay: int = default_delay
         # if not self.has_option(section_key, key):
         if key not in rotator_section:
@@ -1351,7 +1351,7 @@ class Event(ConfigReader):
             return
         hour: TimerHour = TimerHour(hour_id, timestamp)
         if timer.hours:
-            previous_hour: TimerHour = timer.hours[-1]
+            previous_hour = timer.hours[-1]
             if timestamp <= previous_hour.timestamp:
                 self._add_warning(f"l'horaire [{hour.datetime_str}] arrive avant l'horaire précédent "
                                   f'[{previous_hour.datetime_str}], horaire ignoré', section_key, key)
@@ -1492,8 +1492,10 @@ class Event(ConfigReader):
         # p1 < p2 calls p1.__lt__(p2)
         return self.name > other.name
 
-    def __eq__(self, other: 'Event'):
+    def __eq__(self, other):
         # p1 == p2 calls p1.__eq__(p2)
+        if not isinstance(self, Event):
+            return NotImplemented
         return self.name == other.name
 
 

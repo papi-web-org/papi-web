@@ -13,13 +13,13 @@ logger: Logger = get_logger()
 @total_ordering
 class Board:
     __id: int | None = None
-    __number: int | None
+    __number: int | None = None
     __white_player: Player | None = None
     __black_player: Player | None = None
-    __result: int | None
+    __result: int | None = None
 
     @property
-    def id(self) -> int:
+    def id(self) -> int | None:
         return self.__id
 
     @id.setter
@@ -31,7 +31,7 @@ class Board:
         self.id = id
 
     @property
-    def number(self) -> int:
+    def number(self) -> int | None:
         return self.__number
 
     @number.setter
@@ -43,7 +43,7 @@ class Board:
         self.number = number
 
     @property
-    def white_player(self) -> Player:
+    def white_player(self) -> Player | None:
         return self.__white_player
 
     @white_player.setter
@@ -55,7 +55,7 @@ class Board:
         self.__white_player = player
 
     @property
-    def black_player(self) -> Player:
+    def black_player(self) -> Player | None:
         return self.__black_player
 
     @black_player.setter
@@ -67,7 +67,7 @@ class Board:
         self.black_player = player
 
     @property
-    def result(self) -> int:
+    def result(self) -> int | None:
         return self.__result
 
     @result.setter
@@ -84,6 +84,8 @@ class Board:
 
     def __lt__(self, other):
         # p1 < p2 calls p1.__lt__(p2)
+        if not isinstance(other, Board):
+            return NotImplemented
         if self.black_player.id == 1:
             return True
         elif other.black_player.id == 1:

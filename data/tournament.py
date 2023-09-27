@@ -145,18 +145,22 @@ class Tournament:
         return self.__current_round
 
     @property
-    def boards(self) -> list[Board]:
+    def boards(self) -> list[Board] | None:
         self.read_papi()
         return self.__boards
 
     @property
     def print_real_points(self) -> bool:
-        if self.pairing == TOURNAMENT_PAIRING_HALEY:
+        if self.current_round is None:
+            return False
+        elif self.pairing == TOURNAMENT_PAIRING_HALEY:
             return self.current_round <= 2
-        if self.pairing == TOURNAMENT_PAIRING_HALEY_SOFT:
+        elif self.pairing == TOURNAMENT_PAIRING_HALEY_SOFT:
             return self.current_round <= 2
-        if self.pairing == TOURNAMENT_PAIRING_SAD:
+        elif self.pairing == TOURNAMENT_PAIRING_SAD and self.rounds is not None:
             return self.current_round <= self.rounds - 2
+        else:
+            return False
 
     def read_papi(self):
         if self.__papi_read:

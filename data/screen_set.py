@@ -1,6 +1,7 @@
 import math
 from typing import Any
 from logging import Logger
+from dataclasses import dataclass, field
 
 from common.logger import get_logger
 from data.board import Board
@@ -10,19 +11,18 @@ from data.tournament import Tournament
 logger: Logger = get_logger()
 
 
+@dataclass
 class ScreenSet:
-    def __init__(self, tournament: Tournament, columns: int, first: int | None = None, last: int | None = None,
-                 part: int | None = None, parts: int | None = None, name: str | None = None):
-        self.__tournament: Tournament = tournament
-        self.__columns = columns
-        self.__first: int | None = first
-        self.__last: int | None = last
-        self.__part: int | None = part
-        self.__parts: int | None = parts
-        self.__name: str | None = name
-        self.__first_item: Any | None = None
-        self.__last_item: Any | None = None
-        self.__items_lists: list[list[Any]] | None = None
+    __tournament: Tournament
+    __columns: int
+    __first: int | None = None
+    __last: int | None = None
+    __part: int | None = None
+    __parts: int | None = None
+    __name: str | None = None
+    __first_item: Any | None = field(default=None, init=False)
+    __last_item: Any | None = field(default=None, init=False)
+    __items_list: list[list[Any]] | None = field(default=None, init=False)
 
     @property
     def tournament(self) -> Tournament:
@@ -45,11 +45,11 @@ class ScreenSet:
         return self.__parts
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         return self.__name
 
     @property
-    def name_for_boards(self) -> str:
+    def name_for_boards(self) -> str | None:
         if self.tournament.current_round:
             self.__extract_boards()
         else:
@@ -57,17 +57,19 @@ class ScreenSet:
         return self.__name
 
     @property
-    def name_for_players(self) -> str:
+    def name_for_players(self) -> str | None:
         self.__extract_players_by_name()
         return self.__name
 
     def __extract_data(self, items: list[Any], force_even: bool = False):
         if not items:
-            self.__items_lists = [[], ] * self.__columns
+            self.__items_lists: list[list[Any]] | None = [[], ] * self.__columns
             return
         # at first select the desired items
         selected_first_index: int = 0
         selected_last_index: int = 0
+        first_index: int
+        last_index: int
         if self.first is None and self.last is None and self.part is None:
             selected_first_index = 0
             selected_last_index = len(items)
@@ -87,8 +89,7 @@ class ScreenSet:
                 q += 1
             if force_even and q % 2 == 1:
                 q += 1
-            first_index: int = 0
-            last_index: int
+            first_index = 0
             for part in range(1, self.parts + 1):
                 last_index = min(first_index + q * self.__columns, items_number)
                 if part == self.part:
@@ -102,8 +103,7 @@ class ScreenSet:
         # now split in columns
         items_number = len(selected_items)
         q, r = divmod(items_number, self.__columns)
-        first_index: int = 0
-        last_index: int
+        first_index = 0
         self.__items_lists = []
         for column in range(1, self.__columns + 1):
             last_index = first_index + q

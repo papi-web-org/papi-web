@@ -29,7 +29,7 @@ class TimerHour:
     __round: int | None = None
     __text_before: str | None = None
     __text_after: str | None = None
-    __datetime: str = field(default='', init=False)
+    __datetime: datetime.datetime = field(init=False)
     __timestamp_1: int | None = field(default=None, init=False)
     __timestamp_2: int | None = field(default=None, init=False)
     __timestamp_3: int | None = field(default=None, init=False)
@@ -74,27 +74,27 @@ class TimerHour:
         self.set_text_after(ROUND_DEFAULT_TEXT_AFTER.format(round))
 
     @property
-    def text_before(self) -> str:
+    def text_before(self) -> str | None:
         return self.__text_before
 
     @property
-    def text_after(self) -> str:
+    def text_after(self) -> str | None:
         return self.__text_after
 
     @property
-    def timestamp_1(self) -> int:
+    def timestamp_1(self) -> int | None:
         return self.__timestamp_1
 
     @property
-    def timestamp_2(self) -> int:
+    def timestamp_2(self) -> int | None:
         return self.__timestamp_2
 
     @property
-    def timestamp_3(self) -> int:
+    def timestamp_3(self) -> int | None:
         return self.__timestamp_3
 
     @property
-    def timestamp_next(self) -> int:
+    def timestamp_next(self) -> int | None:
         return self.__timestamp_next
 
     @property

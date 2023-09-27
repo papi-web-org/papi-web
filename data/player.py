@@ -19,7 +19,7 @@ COLOR_DB_VALUES: dict[str, str] = {
     'B': COLOR_WHITE,
     'N': COLOR_BLACK,
 }
-COLOR_VALUES: dict[int, str] = {v: k for k, v in COLOR_DB_VALUES.items()}
+COLOR_VALUES: dict[str, str] = {v: k for k, v in COLOR_DB_VALUES.items()}
 COLOR_STRINGS: dict[str, str] = {
     COLOR_WHITE: 'Blancs',
     COLOR_BLACK: 'Noirs',
@@ -87,34 +87,38 @@ class Player:
         return self.__pairings
 
     @staticmethod
-    def __points_str(points: float) -> str:
+    def __points_str(points: float | None) -> str:
+        if points is None:
+            return ''
         if points == 0.5:
             return '½'
         return '{:.1f}'.format(points).replace('.0', '').replace('.5', '½')
 
     @property
-    def points(self) -> float:
+    def points(self) -> float | None:
         return self.__points
 
     def set_points(self, points: float):
         self.__points = points
 
     def add_points(self, points: float):
-        self.__points += points
+        if self.__points is not None:
+            self.__points += points
 
     @property
     def points_str(self) -> str:
         return self.__points_str(self.points)
 
     @property
-    def vpoints(self) -> float:
+    def vpoints(self) -> float | None:
         return self.__vpoints
 
     def set_vpoints(self, vpoints: float):
         self.__vpoints = vpoints
 
     def add_vpoints(self, vpoints: float):
-        self.__vpoints += vpoints
+        if self.__vpoints is not None:
+            self.__vpoints += vpoints
 
     @property
     def vpoints_str(self) -> str:
@@ -151,7 +155,7 @@ class Player:
 
     @property
     def color_str(self) -> str:
-        return COLOR_STRINGS[self.color]
+        return COLOR_STRINGS[self.color] if self.color is not None else ''
 
     @property
     def handicap_initial_time(self) -> int | None:
@@ -161,13 +165,13 @@ class Player:
     def handicap_initial_time_minutes(self) -> int | None:
         if self.__handicap_initial_time is None:
             return None
-        return self.handicap_initial_time // 60
+        return self.__handicap_initial_time // 60
 
     @property
     def handicap_initial_time_seconds(self) -> int | None:
         if self.__handicap_initial_time is None:
             return None
-        return self.handicap_initial_time % 60
+        return self.__handicap_initial_time % 60
 
     @property
     def handicap_increment(self) -> int | None:
@@ -212,8 +216,10 @@ class Player:
             return False
         return self.first_name > other.first_name
 
-    def __eq__(self, other: 'Player'):
+    def __eq__(self, other):
         # p1 == p2 calls p1.__eq__(p2)
+        if not isinstance(other, Player):
+            return NotImplemented
         if self.vpoints != other.vpoints:
             return False
         if self.rating != other.rating:
