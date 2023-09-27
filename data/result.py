@@ -74,7 +74,7 @@ class Result:
 
     @classmethod
     def results_dir(cls, event_id: str) -> Path:
-        return Path(TMP_DIR, event_id, 'results')
+        return TMP_DIR / event_id / 'results'
 
     @classmethod
     def get_results(cls, event_id: str, limit: int) -> list['Result']:

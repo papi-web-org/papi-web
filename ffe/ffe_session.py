@@ -39,7 +39,6 @@ class FFESession(Session):
 
     def __read_url(self, url: str, data: Dict[str, str] = None, files: Dict[str, Path] = None) -> Optional[str]:
         handlers: Dict[str, Any] = {}
-        content: Optional[str] = None
         try:
             if not data and not files:
                 response: Response = self.get(url)

@@ -24,7 +24,7 @@
                                 <tr
                                     id="board-{{ board.id }}-row"
                                     class="board-row {% if board.result_str %}board-row-result{% else %}board-row-no-result{% endif %}"
-                                    {% if not board.result_str %}data-bs-toggle="modal" data-bs-target="#board-{{ board.id }}-modal"{% endif %}
+                                    {% if not board.result_str %}data-bs-toggle="modal" data-bs-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-modal"{% endif %}
                                 >
                                     <th scope="row" class="board-number">{{ board.number }}.</th>
                                     <td class="points">{{ wp.vpoints_str }}</td>
@@ -34,7 +34,7 @@
                                                     {%if wp.handicap_initial_time_minutes %}<span class="minutes">{{ wp.handicap_initial_time_minutes }}'</span>{% endif %}{%if wp.handicap_initial_time_seconds %}<span class="seconds">{{ wp.handicap_initial_time_seconds }}"</span>{% endif %}
                                                     {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endspaceless %}{% endif %}
                                     </td>
-                                    <td class="score">{{ board.result_str }}</td>
+                                    <td class="score">{% if board.result_str %}{{ board.result_str }}{% else %}n°{{ board.number }}{% endif %}</td>
                                     <td class="player">{% if bp.id == 1 %}<em>EXEMPT</em>{% else %}{% if bp.title_str %}{{ bp.title_str }}&nbsp;{% endif %}{{ bp.last_name }} {{ bp.first_name }} {{ bp.rating }}{{ bp.rating_type }}
                                         {% if tournament.handicap %}{% spaceless %}(<span class="{%if bp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">
                                             {%if bp.handicap_initial_time_minutes %}<span class="minutes">{{ bp.handicap_initial_time_minutes }}'</span>{% endif %}{%if bp.handicap_initial_time_seconds %}<span class="seconds">{{ bp.handicap_initial_time_seconds }}"</span>{% endif %}
@@ -46,41 +46,41 @@
                                 {% if screen.update and not board.result_str %}
                                     <script>
 $(document).ready(function(){
-    $('#board-{{ board.id }}-modal').on('shown.bs.modal', function () {
+    $('#tournament-{{ tournament.id }}-board-{{ board.id }}-modal').on('shown.bs.modal', function () {
         stop_refresh_interval();
     });
-    $('#board-{{ board.id }}-white-result').click(function(e){
+    $('#tournament-{{ tournament.id }}-board-{{ board.id }}-white-result').click(function(e){
         add_result('{{ tournament.id }}', {{ board.id }}, 3);
     });
-    $('#board-{{ board.id }}-draw-result').click(function(){
+    $('#tournament-{{ tournament.id }}-board-{{ board.id }}-draw-result').click(function(){
         add_result('{{ tournament.id }}', {{ board.id }}, 2);
     });
-    $('#board-{{ board.id }}-black-result').click(function(){
+    $('#tournament-{{ tournament.id }}-board-{{ board.id }}-black-result').click(function(){
         add_result('{{ tournament.id }}', {{ board.id }}, 1);
     });
-    $('#board-{{ board.id }}-modal').on('hidden.bs.modal', function () {
+    $('#tournament-{{ tournament.id }}-board-{{ board.id }}-modal').on('hidden.bs.modal', function () {
         start_refresh_interval();
     });
 });                                    </script>
                                     <div
-                                            id="board-{{ board.id }}-modal" class="modal fade board-modal"
+                                            id="tournament-{{ tournament.id }}-board-{{ board.id }}-modal" class="modal fade board-modal"
                                             data-bs-backdrop="static" data-bs-keyboard="false"
-                                            tabindex="-1" aria-labelledby="board-{{ board.id }}-modal-label" aria-hidden="true">
+                                            tabindex="-1" aria-labelledby="tournament-{{ tournament.id }}-board-{{ board.id }}-modal-label" aria-hidden="true">
                                         <div class="modal-dialog modal-fullscreen">
                                             <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h5 class="modal-title" id="board-{{ board.id }}-modal-label">Entrez le résultat :</h5>
+                                                    <h5 class="modal-title" id="tournament-{{ tournament.id }}-board-{{ board.id }}-modal-label">Entrez le résultat :</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                                                 </div>
                                                 <div class="modal-body">
                                                     <div class="row d-flex align-items-center justify-content-center">
-                                                        <button id="board-{{ board.id }}-white-result" class="result-button result-button-white col-3 ms-auto me-auto btn">
+                                                        <button id="tournament-{{ tournament.id }}-board-{{ board.id }}-white-result" class="result-button result-button-white col-3 ms-auto me-auto btn">
                                                             <div class="result-text"><br/>GAIN BLANCS<br/>1 - 0<br/><br/>{{ wp.last_name }}<br/>{{ wp.first_name }}<br/>{{ wp.rating }}{{ wp.rating_type }}<br/>&nbsp;</div>
                                                         </button>
-                                                        <button id="board-{{ board.id }}-draw-result" class="result-button result-button-draw col-3 ms-auto me-auto btn">
+                                                        <button id="tournament-{{ tournament.id }}-board-{{ board.id }}-draw-result" class="result-button result-button-draw col-3 ms-auto me-auto btn">
                                                             <div class="result-text"><br/>NULLE<br/>½ - ½<br/><br/><br/><br/><br/>&nbsp;</div>
                                                         </button>
-                                                        <button id="board-{{ board.id }}-black-result" class="result-button result-button-black col-3 ms-auto me-auto btn">
+                                                        <button id="tournament-{{ tournament.id }}-board-{{ board.id }}-black-result" class="result-button result-button-black col-3 ms-auto me-auto btn">
                                                             <div class="result-text"><br/>GAIN NOIRS<br/>0 - 1<br/><br/>{{ bp.last_name }}<br/>{{ bp.first_name }}<br/>{{ bp.rating }}{{ bp.rating_type }}<br/>&nbsp;</div>
                                                         </button>
                                                     </div>

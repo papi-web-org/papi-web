@@ -201,7 +201,7 @@ def get_screen_last_update(request: HttpRequest, event_id: str, screen_id: str) 
         return redirect('index')
     try:
         screen: AScreen = event.screens[screen_id]
-        screen_files: list[Path] = []
+        screen_files: list[Path] = [event.ini_file]
         if screen.type == SCREEN_TYPE_RESULTS:
             for tournament in event.tournaments.values():
                 if tournament.file not in screen_files:
