@@ -41,6 +41,7 @@ class Player:
     __points: float | None = field(default=None, init=False)
     __vpoints: float | None = field(default=None, init=False)
     __board_id: int | None = field(default=None, init=False)
+    __board_number: int | None = field(default=None, init=False)
     __color: str | None = field(default=None, init=False)
     __handicap_initial_time: int | None = field(default=None, init=False)
     __handicap_increment: int | None = field(default=None, init=False)
