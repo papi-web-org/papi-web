@@ -1,20 +1,47 @@
 from functools import total_ordering
 from logging import Logger
 from dataclasses import dataclass, field
+from enum import StrEnum, Enum, IntEnum, auto
+from optional import Optional
 
 from data.pairing import Pairing
 from common.logger import get_logger
 
 logger: Logger = get_logger()
 
-PLAYER_TITLE_VALUES: dict[str, int] = {'g': 6, 'gf': 5, 'm': 4, 'mf': 3, 'f': 2, 'ff': 1, '': 0, }
+
+class PlayerTitle(IntEnum):
+    g = 6
+    gf = 5
+    m = 4
+    mf = 3
+    f = 2
+    ff = 1
+    no = 0
+
+
+PLAYER_TITLE_VALUES = {title.name: title.value for title in PlayerTitle}
+del PLAYER_TITLE_VALUES[PlayerTitle.no]
+PLAYER_TITLE_VALUES[''] = 0
 PLAYER_TITLE_STRINGS = {v: k for k, v in PLAYER_TITLE_VALUES.items()}
 
-PLAYER_SEX_M: str = 'M'
-PLAYER_SEX_F: str = 'F'
 
-COLOR_WHITE: str = 'W'
-COLOR_BLACK: str = 'B'
+class PlayerSex(StrEnum):
+    M = 'M'
+    F = 'F'
+
+
+PLAYER_SEX_M: str = PlayerSex.M.value
+PLAYER_SEX_F: str = PlayerSex.F.value
+
+
+class Color(StrEnum):
+    White = 'W'
+    Black = 'B'
+
+
+COLOR_WHITE: str = Color.White.value
+COLOR_BLACK: str = Color.White.value
 COLOR_DB_VALUES: dict[str, str] = {
     'B': COLOR_WHITE,
     'N': COLOR_BLACK,
@@ -32,20 +59,20 @@ class Player:
     __id: int
     __last_name: str
     __first_name: str
-    __sex: str
-    __title: int
+    __sex: PlayerSex
+    __title: Optional[PlayerTitle]
     __rating: int
     __rating_type: str
     __fixed: int
     __pairings: dict[int, Pairing]
-    __points: float | None = field(default=None, init=False)
-    __vpoints: float | None = field(default=None, init=False)
-    __board_id: int | None = field(default=None, init=False)
-    __board_number: int | None = field(default=None, init=False)
-    __color: str | None = field(default=None, init=False)
-    __handicap_initial_time: int | None = field(default=None, init=False)
-    __handicap_increment: int | None = field(default=None, init=False)
-    __handicap_time_modified: bool | None = field(default=None, init=False)
+    __points: Optional[float] = field(default=Optional.empty(), init=False)
+    __vpoints: Optional[float] = field(default=Optional.empty(), init=False)
+    __board_id: Optional[int] = field(default=Optional.empty(), init=False)
+    __board_number: Optional[int] = field(default=Optional.empty(), init=False)
+    __color: Optional[Color] = field(default=Optional.empty(), init=False)
+    __handicap_initial_time: Optional[int] = field(default=Optional.empty(), init=False)
+    __handicap_increment: Optional[int] = field(default=Optional.empty(), init=False)
+    __handicap_time_modified: Optional[bool] = field(default=Optional.empty(), init=False)
 
     @property
     def id(self) -> int:
@@ -60,11 +87,11 @@ class Player:
         return self.__last_name
 
     @property
-    def sex(self) -> str:
+    def sex(self) -> PlayerSex:
         return self.__sex
 
     @property
-    def title(self) -> int:
+    def title(self) -> Optional[PlayerTitle]:
         return self.__title
 
     @property
@@ -88,38 +115,36 @@ class Player:
         return self.__pairings
 
     @staticmethod
-    def __points_str(points: float | None) -> str:
-        if points is None:
+    def __points_str(points: Optional[float]) -> str:
+        if points.is_empty():
             return ''
-        if points == 0.5:
+        if points.get() == 0.5:
             return '½'
-        return '{:.1f}'.format(points).replace('.0', '').replace('.5', '½')
+        return '{:.1f}'.format(points.get()).replace('.0', '').replace('.5', '½')
 
     @property
-    def points(self) -> float | None:
+    def points(self) -> Optional[float]:
         return self.__points
 
     def set_points(self, points: float):
-        self.__points = points
+        self.__points = Optional.of(points)
 
     def add_points(self, points: float):
-        if self.__points is not None:
-            self.__points += points
+        self.__points = self.__points.map(lambda x: x + points)
 
     @property
     def points_str(self) -> str:
         return self.__points_str(self.points)
 
     @property
-    def vpoints(self) -> float | None:
+    def vpoints(self) -> Optional[float]:
         return self.__vpoints
 
     def set_vpoints(self, vpoints: float):
-        self.__vpoints = vpoints
+        self.__vpoints = Optional.of(vpoints)
 
     def add_vpoints(self, vpoints: float):
-        if self.__vpoints is not None:
-            self.__vpoints += vpoints
+        self.__vpoints = self.__vpoints.map(lambda x: x + vpoints)
 
     @property
     def vpoints_str(self) -> str:
@@ -127,59 +152,55 @@ class Player:
 
     @property
     def not_paired_str(self) -> str:
-        return 'Non apparié' + ('e' if self.__sex == PLAYER_SEX_F else '')
+        return 'Non apparié' + ('e' if self.__sex == PlayerSex.F else '')
 
     @property
     def exempt_str(self) -> str:
-        return 'Exempt' + ('e' if self.__sex == PLAYER_SEX_F else '')
+        return 'Exempt' + ('e' if self.__sex == PlayerSex.F else '')
 
     @property
-    def board_id(self) -> int | None:
+    def board_id(self) -> Optional[int]:
         return self.__board_id
 
     def set_board_id(self, board_id: int):
-        self.__board_id = board_id
+        self.__board_id = Optional.of(board_id)
 
     @property
-    def board_number(self) -> int | None:
+    def board_number(self) -> Optional[int]:
         return self.__board_number
 
     def set_board_number(self, board_number: int):
-        self.__board_number = board_number
+        self.__board_number = Optional.of(board_number)
 
     @property
-    def color(self) -> str | None:
+    def color(self) -> Optional[Color]:
         return self.__color
 
-    def set_color(self, color: str):
-        self.__color = color
+    def set_color(self, color: Color):
+        self.__color = Optional.of(color)
 
     @property
     def color_str(self) -> str:
-        return COLOR_STRINGS[self.color] if self.color is not None else ''
+        return self.color.map(lambda k: COLOR_STRINGS[k]).get_or_default('')
 
     @property
-    def handicap_initial_time(self) -> int | None:
+    def handicap_initial_time(self) -> Optional[int]:
         return self.__handicap_initial_time
 
     @property
-    def handicap_initial_time_minutes(self) -> int | None:
-        if self.__handicap_initial_time is None:
-            return None
-        return self.__handicap_initial_time // 60
+    def handicap_initial_time_minutes(self) -> Optional[int]:
+        return self.__handicap_initial_time.map(lambda t: t // 60)
 
     @property
-    def handicap_initial_time_seconds(self) -> int | None:
-        if self.__handicap_initial_time is None:
-            return None
-        return self.__handicap_initial_time % 60
+    def handicap_initial_time_seconds(self) -> Optional[int]:
+        return self.__handicap_initial_time.map(lambda t: t % 60)
 
     @property
-    def handicap_increment(self) -> int | None:
+    def handicap_increment(self) -> Optional[int]:
         return self.__handicap_increment
 
     @property
-    def handicap_time_modified(self) -> int | None:
+    def handicap_time_modified(self) -> Optional[int]:
         return self.__handicap_time_modified
 
     @property

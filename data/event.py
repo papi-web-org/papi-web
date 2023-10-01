@@ -689,13 +689,6 @@ class Event(ConfigReader):
                 players_menu: str = view_menu
                 results_menu: str = view_menu
             for tournament_id in self.tournaments:
-                if not self.tournaments[tournament_id].file:
-                    continue
-                name_prefix: str = ''
-                if len(self.tournaments) > 1:
-                    name_prefix = f'{self.tournaments[tournament_id].name} - '
-                data: dict[str, dict[str, str]] = {
-                    f'{tournament_id}-{SCREEN_TYPE_BOARDS}-update': {
                 tournament_name = self.tournaments[tournament_id].name
                 auto_screens: dict[str, dict[str, str]] = {
                     f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-update': {

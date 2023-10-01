@@ -9,6 +9,7 @@ from data.player import Player
 
 logger: Logger = get_logger()
 
+
 @dataclass
 @total_ordering
 class Board:
