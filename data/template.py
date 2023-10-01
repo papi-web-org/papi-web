@@ -24,4 +24,3 @@ class Template:
             self.__data[section] = {key: value, }
         else:
             self.__data[section][key] = value
-

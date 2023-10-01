@@ -1,4 +1,3 @@
-import math
 from functools import total_ordering
 from typing import Dict, Optional
 from logging import Logger
