@@ -12,7 +12,7 @@ from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
 
-PAPI_WEB_VERSION: str = '2.0-rc14'
+PAPI_WEB_VERSION: str = '2.0-rc15'
 
 PAPI_WEB_URL = 'https://github.com/pascalaubry/papi-web'
 
@@ -27,9 +27,9 @@ DEFAULT_WEB_LAUNCH_BROWSER: bool = True
 
 
 @singleton
-class PapiWebConfig(ConfigReader):
+class PapiWebConfig:
     def __init__(self):
-        super().__init__(CONFIG_FILE, silent=False)
+        self.reader = ConfigReader(CONFIG_FILE, silent=False)
         self.__log_level: int | None = None
         self.__web_host: str | None = None
         self.__web_port: int | None = None
@@ -42,31 +42,32 @@ class PapiWebConfig(ConfigReader):
             logging.WARNING: 'WARNING',
             logging.ERROR: 'ERROR',
         }
-        if not self.errors and not self.warnings:
-            section = 'logging'
+        if not self.reader.errors and not self.reader.warnings:
+            section_key = 'logging'
             try:
-                options = self[section]
+                options = self.reader[section_key]
                 key = 'level'
                 try:
                     level = options[key]
                     try:
                         self.__log_level = [k for k, v in self.__log_levels.items() if v == level][0]
                     except IndexError:
-                        self._add_warning(f'niveau de log invalide [{level}]', section, key)
+                        self.reader.add_warning(f'niveau de log invalide [{level}]', section_key, key)
                 except (TypeError, KeyError):
-                    self._add_warning(
-                        f'option absente, par défaut [{self.__log_levels[DEFAULT_LOG_LEVEL]}]', section, key)
+                    self.reader.add_warning(
+                        f'option absente, par défaut [{self.__log_levels[DEFAULT_LOG_LEVEL]}]', section_key, key)
             except KeyError:
-                self._add_warning(f'rubrique introuvable', section=section)
-            section = 'web'
-            if not self.has_section(section):
-                self._add_warning(f'rubrique introuvable', section)
+                self.reader.add_warning(f'rubrique introuvable', section_key)
+            section_key = 'web'
+            if section_key not in self.reader:
+                self.reader.add_warning(f'rubrique introuvable', section_key)
             else:
+                web_section = self.reader[section_key]
                 key = 'host'
-                if not self.has_option(section, key):
-                    self._add_warning(f'option absente', section, key)
+                if key not in web_section:
+                    self.reader.add_warning(f'option absente', section_key, key)
                 else:
-                    self.__web_host = self.get(section, key)
+                    self.__web_host = self.reader.get(section_key, key)
                     matches = re.match(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)$', self.__web_host)
                     if matches:
                         for i in range(4):
@@ -75,26 +76,29 @@ class PapiWebConfig(ConfigReader):
                     else:
                         self.__web_host = None
                     if self.web_host is None:
-                        self._add_warning(f'configuration d\'hôte invalide [{self.get(section, key)}], par défaut '
-                                          f'[{DEFAULT_WEB_HOST}]', section, key)
+                        self.reader.add_warning(
+                            f'configuration d\'hôte invalide [{self.reader.get(section_key, key)}], par défaut '
+                            f'[{DEFAULT_WEB_HOST}]', section_key, key)
                 key = 'port'
-                if not self.has_option(section, key):
-                    self._add_warning(f'option absente, par défaut [{DEFAULT_WEB_PORT}]', section, key)
+                if key not in web_section:
+                    self.reader.add_warning(f'option absente, par défaut [{DEFAULT_WEB_PORT}]', section_key, key)
                 else:
-                    self.__web_port = self._getint_safe(section, key)
+                    self.__web_port = self.reader.getint_safe(section_key, key)
                     if self.web_port is None:
-                        self._add_warning(f'port non valide [{self.get(section, key)}], par défaut '
-                                          f'[{DEFAULT_WEB_PORT}]', section, key)
+                        self.reader.add_warning(f'port non valide [{self.reader.get(section_key, key)}], par défaut '
+                                                f'[{DEFAULT_WEB_PORT}]', section_key, key)
                 key = 'launch_browser'
-                if not self.has_option(section, key):
-                    self._add_warning(f'option absente, par défaut [{"on" if DEFAULT_WEB_LAUNCH_BROWSER else "off"}]',
-                                      section, key)
+                if key not in web_section:
+                    self.reader.add_warning(
+                        f'option absente, par défaut [{"on" if DEFAULT_WEB_LAUNCH_BROWSER else "off"}]',
+                        section_key, key)
                 else:
-                    self.__web_launch_browser = self._getboolean_safe(section, key)
+                    self.__web_launch_browser = self.reader.getboolean_safe(section_key, key)
                     if self.__web_launch_browser is None:
-                        self._add_error(f'valeur invalide [{self.get(section, key)}]', section, key)
+                        self.reader.add_error(
+                            f'valeur invalide [{self.reader.get(section_key, key)}]', section_key, key)
         else:
-            self._add_debug(f'configuration par défaut')
+            self.reader.add_debug(f'configuration par défaut')
         if self.log_level is None:
             self.__log_level = DEFAULT_LOG_LEVEL
         configure_logger(self.log_level)
