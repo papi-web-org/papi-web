@@ -11,17 +11,31 @@ logger: Logger = get_logger()
 
 
 @dataclass
-class AccessDatabase:
-    __file: Path
-    __database: pyodbc.Connection = field(init=False)
-    __cursor: pyodbc.Cursor = field(init=False)
+class AccessDatabae:
+    file: Path
+    database: pyodbc.Connection = field(init=False)
+    cursor: pyodbc.Cursor = field(init=False)
 
     def __post_init__(self):
-        self.__database = None
+        self.database = None
         self._open()
 
+    # NOTE(Amaras) This is the start of the infrastructure to build a DB as a
+    # context manager (making it possible to use it using the with statement).
+    # This function is responsible for opening the ressource and giving a way
+    # to access it.
+    def __enter__(self):
+        self._open()
+        return self
+
+    # NOTE(Amaras) Context manager infrastructure: this dunder method is
+    # supposed to close the ressource and handle exceptions (by catching or
+    # passing them through, DO NOT re-raise exceptions here).
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._close()
+
     def _open(self):
-        if self.__database is None:
+        if self.database is None:
             access_driver: str = 'Microsoft Access Driver (*.mdb, *.accdb)'
             if access_driver not in pyodbc.drivers():
                 msg: str = 'ODBC driver installed are:'
@@ -31,43 +45,43 @@ class AccessDatabase:
                 msg = msg + f'\nInstall driver [{access_driver}] (cf {install_url}) and retry.'
                 msg = msg + f'\nNote: for 32bits/64bits compatibility, use accessdatabaseengine_X64.exe /passive'
                 raise PapiException(msg)
-            db_url: str = f'DRIVER={{{access_driver}}};DBQ={self.__file.resolve()};'
+            db_url: str = f'DRIVER={{{access_driver}}};DBQ={self.file.resolve()};'
             # log_info(db_url)
             try:
-                self.__database = pyodbc.connect(db_url)
+                self.database = pyodbc.connect(db_url)
             except pyodbc.Error as e:
-                raise PapiException(f'Connection to file {self.__file} failed: {e.args}')
-            self.__cursor = self.__database.cursor()
+                raise PapiException(f'Connection to file {self.file} failed: {e.args}')
+            self.cursor = self.database.cursor()
 
     def _close(self):
-        if self.__database is not None:
-            self.__cursor.close()
-            self.__database = None
-            self.__cursor = None
+        if self.database is not None:
+            self.cursor.close()
+            self.database = None
+            self.cursor = None
 
     def _execute(self, query: str, params: tuple = ()):
         # log_info(f'query={query}')
         # log_info(f'params={params}')
         self._open()
-        self.__cursor.execute(query, params)
+        self.cursor.execute(query, params)
 
     def _fetchall(self) -> list[dict[str, Any]]:
         self._open()
-        columns = [column[0] for column in self.__cursor.description]
+        columns = [column[0] for column in self.cursor.description]
         results = []
-        for row in self.__cursor.fetchall():
+        for row in self.cursor.fetchall():
             results.append(dict(zip(columns, row)))
         return results
 
     def _fetchone(self) -> dict[str, Any]:
         self._open()
-        columns = [column[0] for column in self.__cursor.description]
-        return dict(zip(columns, self.__cursor.fetchone()))
+        columns = [column[0] for column in self.cursor.description]
+        return dict(zip(columns, self.cursor.fetchone()))
 
     def _fetchval(self) -> Any:
         self._open()
-        return self.__cursor.fetchval()
+        return self.cursor.fetchval()
 
     def _commit(self):
         self._open()
-        self.__cursor.commit()
+        self.cursor.commit()

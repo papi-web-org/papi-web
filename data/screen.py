@@ -1,5 +1,6 @@
 from logging import Logger
 from dataclasses import dataclass, field
+import warnings
 
 from common.logger import get_logger
 from data.result import Result
@@ -19,23 +20,19 @@ SCREEN_TYPE_NAMES: dict[str, str] = {
 
 @dataclass
 class AScreen:
-    __id: str
-    __family_id: str | None
+    screen_id: str
+    family_id: str | None
     _name: str
-    __type: str
-    __columns: int
+    _type: str = field(init=False)
+    columns: int
     _menu_text: str | None
-    __menu: str
-    __show_timer: bool
-    __menu_screens: list['AScreen'] | None = field(default=None, init=False)
+    menu: str
+    show_timer: bool
+    menu_screens: list['AScreen'] | None = field(default=None, init=False)
 
     @property
     def id(self) -> str:
-        return self.__id
-
-    @property
-    def family_id(self) -> str | None:
-        return self.__family_id
+        return self.screen_id
 
     @property
     def name(self) -> str:
@@ -43,7 +40,7 @@ class AScreen:
 
     @property
     def type(self) -> str:
-        return self.__type
+        return self._type
 
     @property
     def type_str(self) -> str:
@@ -54,30 +51,16 @@ class AScreen:
         return 'bi-question-circle'
 
     @property
-    def columns(self) -> int:
-        return self.__columns
-
-    @property
     def menu_text(self) -> str | None:
         return self._menu_text
 
-    @property
-    def menu(self) -> str | None:
-        return self.__menu
-
     def set_menu(self, menu: str):
-        self.__menu = menu
-
-    @property
-    def show_timer(self) -> bool:
-        return self.__show_timer
-
-    @property
-    def menu_screens(self) -> list['AScreen'] | None:
-        return self.__menu_screens
+        warnings.warn("Use direct assigment to menu instead")
+        self.menu = menu
 
     def set_menu_screens(self, menu_screens: list['AScreen']):
-        self.__menu_screens = menu_screens
+        warnings.warn("Use direct assigment to menu_screens instead")
+        self.menu_screens = menu_screens
 
     @property
     def update(self) -> bool:
@@ -106,7 +89,10 @@ class AScreenWithSets(AScreen):
 
 @dataclass
 class ScreenBoards(AScreenWithSets):
-    __update: bool
+    _update: bool
+
+    def __post__init__(self):
+        self._type = SCREEN_TYPE_BOARDS
 
     @property
     def name(self) -> str:
@@ -142,11 +128,14 @@ class ScreenBoards(AScreenWithSets):
 
     @property
     def update(self) -> bool:
-        return self.__update
+        return self._update
 
 
 @dataclass
 class ScreenPlayers(AScreenWithSets):
+
+    def __post_init__(self):
+        self._type = SCREEN_TYPE_PLAYERS
 
     @property
     def name(self) -> str:
@@ -182,13 +171,10 @@ class ScreenResults(AScreen):
             self, event_id: str, screen_id: str, family_id: str | None, name: str, columns: int,
             menu_text: str | None, menu: str, show_timer: bool, limit: int):
         super().__init__(
-            screen_id, family_id, name, SCREEN_TYPE_RESULTS, columns, menu_text, menu, show_timer)
-        self.__event_id = event_id
-        self.__limit: int = limit
-
-    @property
-    def event_id(self) -> str:
-        return self.__event_id
+            screen_id, family_id, name, columns, menu_text, menu, show_timer)
+        self._type = SCREEN_TYPE_PLAYERS
+        self.event_id = event_id
+        self.limit: int = limit
 
     @property
     def type_str(self) -> str:
@@ -197,10 +183,6 @@ class ScreenResults(AScreen):
     @property
     def icon_str(self) -> str:
         return 'bi-trophy-fill'
-
-    @property
-    def limit(self) -> int:
-        return self.__limit
 
     @property
     def results_lists(self) -> list[list[Result]]:

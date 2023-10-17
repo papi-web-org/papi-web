@@ -2,7 +2,7 @@
 /venv/
 /papi/
 /events/
-/fees/
+fees/
 /docs/images/src/
 papi-web.ini
 tmp/

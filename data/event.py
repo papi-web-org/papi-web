@@ -38,97 +38,61 @@ class HandicapTournament(NamedTuple):
 @total_ordering
 class Event:
     def __init__(self, event_id: str, silent: bool = True):
-        self.__id: str = event_id
+        self.event_id: str = event_id
         self.reader = ConfigReader(EVENTS_PATH / f'{self.id}.ini', silent=silent)
-        self.__name: str = self.__id
-        self.__path: Path = Path('papi')
-        self.__css: str | None = None
-        self.__update_password: str | None = None
-        self.__tournaments: dict[str, Tournament] = {}
-        self.__templates: dict[str, Template] = {}
-        self.__screens_by_family_id: dict[str, list[AScreen]] = {}
-        self.__screens: dict[str, AScreen] = {}
-        self.__rotators: dict[str, Rotator] = {}
-        self.__timer: Timer | None = None
+        self.name: str = self.event_id
+        self.path: Path = Path('papi')
+        self.css: str | None = None
+        self.update_password: str | None = None
+        self.tournaments: dict[str, Tournament] = {}
+        self.templates: dict[str, Template] = {}
+        self.screens_by_family_id: dict[str, list[AScreen]] = {}
+        self.screens: dict[str, AScreen] = {}
+        self.rotators: dict[str, Rotator] = {}
+        self.timer: Timer | None = None
         if self.reader.errors or self.reader.warnings:  # warning when the configuration file is not found
             return
-        self.__build_root()
+        self._build_root()
         if self.reader.errors:
             return
-        self.__build_tournaments()
+        self._build_tournaments()
         if self.reader.errors:
             return
-        self.__build_templates()
+        self._build_templates()
         if self.reader.errors:
             return
-        self.__build_families()
+        self._build_families()
         if self.reader.errors:
             return
-        self.__build_screens()
+        self._build_screens()
         if self.reader.errors:
             return
-        self.__build_rotators()
+        self._build_rotators()
         if self.reader.errors:
             return
-        self.__build_timer()
+        self._build_timer()
 
     @property
     def id(self) -> str:
-        return self.__id
-
-    @property
-    def name(self) -> str:
-        return self.__name
-
-    @property
-    def path(self) -> Path:
-        return self.__path
-
-    @property
-    def css(self) -> str | None:
-        return self.__css
-
-    @property
-    def update_password(self) -> str | None:
-        return self.__update_password
-
-    @property
-    def tournaments(self) -> dict[str, Tournament]:
-        return self.__tournaments
-
-    @property
-    def templates(self) -> dict[str, Template]:
-        return self.__templates
-
-    @property
-    def screens(self) -> dict[str, AScreen]:
-        return self.__screens
-
-    @property
-    def rotators(self) -> dict[str, Rotator]:
-        return self.__rotators
-
-    @property
-    def timer(self) -> Timer | None:
-        return self.__timer
+        return self.event_id
 
     @property
     def ini_file(self) -> Path:
         return self.reader.ini_file
 
     @property
-    def errors(self) -> List[str]:
+    def errors(self) -> list[str]:
         return self.reader.errors
 
     @property
-    def warnings(self) -> List[str]:
+    def warnings(self) -> list[str]:
         return self.reader.warnings
 
     @property
-    def infos(self) -> List[str]:
+    def infos(self) -> list[str]:
         return self.reader.infos
 
-    def __build_root(self):
+    def _build_root(self):
         section_key: str = 'event'
         try:
             section = self.reader[section_key]
@@ -137,14 +101,14 @@ class Event:
             return
 
         key = 'name'
-        default_name = self.__id
+        default_name = self.event_id
         try:
-            self.__name = section[key]
-            if not self.__name:
+            self.name = section[key]
+            if not self.name:
                 self.reader.add_error('option vide', section_key, key)
                 return
         except KeyError:
-            self.__name = default_name
+            self.name = default_name
             self.reader.add_info(
                    f'option absente, par défaut [{default_name}]',
                    section_key,
@@ -164,9 +128,9 @@ class Event:
         key = 'path'
         default_path: Path = Path('papi')
         try:
-            self.__path = Path(section[key])
+            self.path = Path(section[key])
         except KeyError:
-            self.__path = default_path
+            self.path = default_path
             self.reader.add_debug(
                     f'option absente, par défaut [{default_path}]',
                     section_key,
@@ -190,13 +154,13 @@ class Event:
 
         key = 'css'
         try:
-            self.__css = section[key]
+            self.css = section[key]
         except KeyError:
             self.reader.add_debug('option absente', section_key, key)
 
         key = 'update_password'
         try:
-            self.__update_password = section[key]
+            self.update_password = section[key]
         except KeyError:
             self.reader.add_info(
                 'option absente, aucun mot de passe ne sera demandé pour les saisies',
@@ -216,7 +180,7 @@ class Event:
         self.reader[new_section_key] = self.reader[old_section_key]
         del self.reader[old_section_key]
 
-    def __build_tournaments(self):
+    def _build_tournaments(self):
         tournament_ids: list[str] = self.reader.get_subsection_keys_with_prefix('tournament')
         # NOTE(Amaras) Special case of tournament: handicap depends on
         # the [tournament] section being there.
@@ -256,11 +220,11 @@ class Event:
             self.reader.add_error('aucun tournoi trouvé', 'tournament.*')
             return
         for tournament_id in tournament_ids:
-            self.__build_tournament(tournament_id)
-        if not len(self.__tournaments):
+            self._build_tournament(tournament_id)
+        if not len(self.tournaments):
             self.reader.add_error('aucun tournoi initialisé')
 
-    def __build_tournament(self, tournament_id: str):
+    def _build_tournament(self, tournament_id: str):
         section_key: str = f'tournament.{tournament_id}'
         try:
             section = self.reader[section_key]
@@ -383,13 +347,13 @@ class Event:
             if key not in section_keys:
                 self.reader.add_warning('option inconnue', section_key, key)
         handicap_section_key = 'tournament.' + tournament_id + '.handicap'
-        handicap_values = self.__build_tournament_handicap(handicap_section_key)
+        handicap_values = self._build_tournament_handicap(handicap_section_key)
         if handicap_values[0] is not None and ffe_id is not None:
             self.reader.add_warning(
                 'les tournois à handicap ne devraient pas être homologués',
                 handicap_section_key
             )
-        self.__tournaments[tournament_id] = Tournament(
+        self.tournaments[tournament_id] = Tournament(
             tournament_id,
             name,
             file,
@@ -425,7 +389,7 @@ class Event:
             self.reader.add_warning(messages[3], section_key, key)
             return default_value
 
-    def __build_tournament_handicap(self, section_key: str) -> HandicapTournament:
+    def _build_tournament_handicap(self, section_key: str) -> HandicapTournament:
         try:
             handicap_section = self.reader[section_key]
         except KeyError:
@@ -526,17 +490,17 @@ class Event:
             min_time,
         )
 
-    def __build_templates(self):
+    def _build_templates(self):
         template_ids: list[str] = self.reader.get_subsection_keys_with_prefix('template')
         if not template_ids:
             self.reader.add_debug('aucun modèle déclaré', 'template.*')
             return
         for template_id in template_ids:
-            self.__build_template(template_id)
-        if not len(self.__templates):
+            self._build_template(template_id)
+        if not len(self.templates):
             self.reader.add_debug('aucun modèle initialisé')
 
-    def __build_template(self, template_id: str):
+    def _build_template(self, template_id: str):
         template: Template = Template(template_id)
         section_key = f'template.{template_id}'
         template_section = self.reader[section_key]
@@ -576,17 +540,17 @@ class Event:
                 else:
                     template.add_data(sub_section_key, key, value)
                     self.reader.add_debug(f'option [{sub_section_key}].{key} = {value}', section_key)
-        self.__templates[template_id] = template
+        self.templates[template_id] = template
 
-    def __build_families(self):
+    def _build_families(self):
         family_ids: list[str] = self.reader.get_subsection_keys_with_prefix('family')
         if not family_ids:
             self.reader.add_debug('aucune famille déclarée', 'family.*')
             return
         for family_id in family_ids:
-            self.__build_family(family_id)
+            self._build_family(family_id)
 
-    def __build_family(self, family_id: str):
+    def _build_family(self, family_id: str):
         section_key = f'family.{family_id}'
         family_section = self.reader[section_key]
         section_keys = ['template', 'range', ]
@@ -672,7 +636,7 @@ class Event:
                     self.reader.add_debug(f"ajout de l'option {key} = {new_value}", new_section_key)
             self.reader.add_debug(f'écran [{screen_id}] ajouté', section_key)
 
-    def __build_screens(self):
+    def _build_screens(self):
         screen_ids: list[str] = self.reader.get_subsection_keys_with_prefix('screen')
         if not screen_ids:
             self.reader.add_info(
@@ -778,18 +742,18 @@ class Event:
                     'screens': view_menu,
                 }
         for screen_id in screen_ids:
-            self.__build_screen(screen_id)
-        if not len(self.__screens):
+            self._build_screen(screen_id)
+        if not len(self.screens):
             self.reader.add_warning("aucun écran n'a été initialisé")
         view_menu: list[AScreen] = []
         update_menu: list[AScreen] = []
-        for screen in self.__screens.values():
+        for screen in self.screens.values():
             if screen.menu_text:
                 if screen.update:
                     update_menu.append(screen)
                 else:
                     view_menu.append(screen)
-        for screen in self.__screens.values():
+        for screen in self.screens.values():
             if screen.menu is None:
                 screen.set_menu_screens([])
                 continue
@@ -810,7 +774,7 @@ class Event:
                     screen.set_menu_screens([])
                     continue
                 screen.set_menu_screens(
-                    self.__screens_by_family_id[screen.family_id]
+                    self.screens_by_family_id[screen.family_id]
                 )
                 continue
             menu_screens: list[AScreen] = []
@@ -838,7 +802,7 @@ class Event:
         'limit',
     ]
 
-    def __build_screen(self, screen_id: str):
+    def _build_screen(self, screen_id: str):
         section_key = f'screen.{screen_id}'
         screen_section = self.reader[section_key]
         key = 'template'
@@ -968,7 +932,7 @@ class Event:
             columns = default_columns
         screen_sets: list[ScreenSet] | None = None
         if screen_type in [SCREEN_TYPE_BOARDS, SCREEN_TYPE_PLAYERS, ]:
-            screen_sets = self.__build_screen_sets(screen_set_section_keys, columns)
+            screen_sets = self._build_screen_sets(screen_set_section_keys, columns)
             if not screen_sets:
                 if screen_type == SCREEN_TYPE_BOARDS:
                     self.reader.add_warning(
@@ -1104,7 +1068,7 @@ class Event:
         if key in screen_section:
             family_id: str = self.reader.get(section_key, key)
         if screen_type == SCREEN_TYPE_BOARDS:
-            self.__screens[screen_id] = ScreenBoards(
+            self.screens[screen_id] = ScreenBoards(
                 screen_id,
                 family_id,
                 screen_name,
@@ -1116,7 +1080,7 @@ class Event:
                 update
             )
         elif screen_type == SCREEN_TYPE_PLAYERS:
-            self.__screens[screen_id] = ScreenPlayers(
+            self.screens[screen_id] = ScreenPlayers(
                 screen_id,
                 family_id,
                 screen_name,
@@ -1127,7 +1091,7 @@ class Event:
                 screen_sets
             )
         elif screen_type == SCREEN_TYPE_RESULTS:
-            self.__screens[screen_id] = ScreenResults(
+            self.screens[screen_id] = ScreenResults(
                 self.id,
                 screen_id,
                 family_id,
@@ -1142,13 +1106,13 @@ class Event:
             if key not in self.screen_keys + ['template', '__family__', ]:
                 self.reader.add_warning('option absente', section_key, key)
         if family_id is not None:
-            if family_id not in self.__screens_by_family_id:
-                self.__screens_by_family_id[family_id] = []
-            self.__screens_by_family_id[family_id].append(self.__screens[screen_id])
+            if family_id not in self.screens_by_family_id:
+                self.screens_by_family_id[family_id] = []
+            self.screens_by_family_id[family_id].append(self.screens[screen_id])
 
     screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', ]
 
-    def __build_screen_sets(self, section_keys: list[str], columns: int) -> list[ScreenSet]:
+    def _build_screen_sets(self, section_keys: list[str], columns: int) -> list[ScreenSet]:
         screen_sets: list[ScreenSet] = []
         for section_key in section_keys:
             try:
@@ -1272,17 +1236,17 @@ class Event:
                 name=name))
         return screen_sets
 
-    def __build_rotators(self):
+    def _build_rotators(self):
         rotator_ids: list[str] = self.reader.get_subsection_keys_with_prefix('rotator')
         if not rotator_ids:
             self.reader.add_debug('aucun écran rotatif déclaré', 'rotator.*')
             return
         for rotator_id in rotator_ids:
-            self.__build_rotator(rotator_id)
-        if not len(self.__rotators):
+            self._build_rotator(rotator_id)
+        if not len(self.rotators):
             self.reader.add_debug('aucun écran rotatif défini')
 
-    def __build_rotator(self, rotator_id: str):
+    def _build_rotator(self, rotator_id: str):
         section_key = f'rotator.{rotator_id}'
         rotator_section = self.reader[section_key]
         section_keys: list[str] = ['screens', 'families', 'delay', ]
@@ -1319,14 +1283,14 @@ class Event:
         if key in rotator_section:
             for family_id in str(rotator_section.get(key)).replace(' ', '').split(','):
                 if family_id:
-                    if family_id not in self.__screens_by_family_id:
+                    if family_id not in self.screens_by_family_id:
                         self.reader.add_warning(
                             f"la famille [{family_id}] n'existe pas, ignorée",
                             section_key,
                             key
                         )
                     else:
-                        screens += self.__screens_by_family_id[family_id]
+                        screens += self.screens_by_family_id[family_id]
         key = 'screens'
         if key in rotator_section:
             for screen_id in str(rotator_section.get(key)).replace(' ', '').split(','):
@@ -1350,9 +1314,9 @@ class Event:
         if not screens:
             self.reader.add_warning('aucun écran, écran rotatif ignoré', section_key, key)
             return
-        self.__rotators[rotator_id] = Rotator(rotator_id, delay, screens)
+        self.rotators[rotator_id] = Rotator(rotator_id, delay, screens)
 
-    def __build_timer(self):
+    def _build_timer(self):
         timer: Timer = Timer()
         section_key = 'timer.hour'
         hour_ids: list[str] = self.reader.get_subsection_keys_with_prefix(section_key)
@@ -1363,19 +1327,19 @@ class Event:
             )
             return
         for hour_id in hour_ids:
-            self.__build_timer_hour(hour_id, timer)
+            self._build_timer_hour(hour_id, timer)
         if not timer.hours:
             self.reader.add_warning(
                 'aucun horaire défini, le chronomètre ne sera pas disponible',
                 section_key
             )
             return
-        self.__build_timer_colors(timer)
-        self.__build_timer_delays(timer)
-        self.__timer = timer
+        self._build_timer_colors(timer)
+        self._build_timer_delays(timer)
+        self.timer = timer
         self.timer.set_hours_timestamps()
 
-    def __build_timer_hour(self, hour_id: str, timer: Timer):
+    def _build_timer_hour(self, hour_id: str, timer: Timer):
         section_key = f'timer.hour.{hour_id}'
         timer_section = self.reader[section_key]
         section_keys: list[str] = ['date', 'text_before', 'text_after', ]
@@ -1440,7 +1404,7 @@ class Event:
                 self.reader.add_warning('option inconnue', section_key, key)
         timer.hours.append(hour)
 
-    def __build_timer_colors(self, timer: Timer):
+    def _build_timer_colors(self, timer: Timer):
         section_key = 'timer.colors'
         try:
             color_section = self.reader[section_key]
@@ -1499,13 +1463,13 @@ class Event:
                 )
                 timer.colors[color_id] = color_rbg
 
-    def __build_timer_delays(self, timer: Timer):
+    def _build_timer_delays(self, timer: Timer):
         section_key = 'timer.delays'
         try:
             delay_section = self.reader[section_key]
         except KeyError:
             return
-        section_keys = [str(id) for id in range(1, 4)]
+        section_keys = ('1', '2', '3')
         for key in delay_section:
             if key not in section_keys:
                 self.reader.add_warning(

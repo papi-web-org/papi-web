@@ -15,45 +15,17 @@ logger: Logger = get_logger()
 @dataclass
 @total_ordering
 class Result:
-    __timestamp: float
-    __tournament_id: str
-    __round: int
-    __board_id: int
-    __white_player: str
-    __black_player: str
-    __result: int
-
-    @property
-    def timestamp(self) -> float:
-        return self.__timestamp
+    timestamp: float
+    tournament_id: str
+    round: int
+    board_id: int
+    white_player: str
+    black_player: str
+    result: int
 
     @property
     def timestamp_str(self) -> str:
-        return datetime.fromtimestamp(self.__timestamp).strftime('%H:%M')
-
-    @property
-    def tournament_id(self) -> str:
-        return self.__tournament_id
-
-    @property
-    def round(self) -> int:
-        return self.__round
-
-    @property
-    def board_id(self) -> int:
-        return self.__board_id
-
-    @property
-    def white_player(self) -> str:
-        return self.__white_player
-
-    @property
-    def black_player(self) -> str:
-        return self.__black_player
-
-    @property
-    def result(self) -> int:
-        return self.__result
+        return datetime.fromtimestamp(self.timestamp).strftime('%H:%M')
 
     @property
     def result_str(self) -> str:
