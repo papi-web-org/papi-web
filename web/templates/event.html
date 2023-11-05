@@ -7,7 +7,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{% static 'css/timer.css' %}" type="text/css" />
-<link rel="stylesheet" href="{% static 'css/event.css' %}" type="text/css" />
+{% if event.css %}<link rel="stylesheet" href="{% static event.css %}" type="text/css" />{% endif %}
 <script>
 {% if event.timer %}
     {% include 'timer.js' %}
