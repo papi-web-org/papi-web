@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
 import pyodbc
@@ -28,11 +29,13 @@ class AccessDatabase:
                 msg = msg + f'\nNote: for 32bits/64bits compatibility, use accessdatabaseengine_X64.exe /passive'
                 raise PapiException(msg)
             db_url: str = f'DRIVER={{{access_driver}}};DBQ={self.__file.resolve()};'
-            # log_info(db_url)
-            try:
-                self.__database = pyodbc.connect(db_url)
-            except pyodbc.Error as e:
-                raise PapiException(f'Connection to file {self.__file} failed: {e.args}')
+            # Get rid of unresolved pyodbc.Error: ('HY000', 'The driver did not supply an error!')
+            while self.__database is None:
+                try:
+                    self.__database = pyodbc.connect(db_url)
+                except pyodbc.Error as e:
+                    logger.error(f'Connection to file {self.__file} failed: {e.args}')
+                    time.sleep(1)
             self.__cursor = self.__database.cursor()
 
     def _close(self):
