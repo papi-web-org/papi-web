@@ -14,9 +14,21 @@ import sys
 from pathlib import Path
 from django.contrib.messages import constants as messages
 
-# from logging import Logger
-# from common.logger import get_logger
-# logger: Logger = get_logger()
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
