@@ -193,7 +193,7 @@ class Tournament:
                     if color in ['W', 'B', ]:
                         round_infos[round]['pairings_found'] = True
                         paired_rounds.append(round)
-                    # Note(Aaras) Why is it called RESULT_NOT_PAIRED if it also
+                    # NOTE(Amaras) Why is it called RESULT_NOT_PAIRED if it also
                     # represents a missing result?
                     if result == Result.NotPaired and opponent_id is not None:
                         round_infos[round]['results_missing'] = True
@@ -209,24 +209,12 @@ class Tournament:
                 self._current_round = paired_rounds[-1]
 
     def __calculate_points(self):
-        # Note(Amaras) WTF IS THIS A LIST WHEN A RANGE OBJECT IS GOOD ENOUGH?
-        previous_rounds: list[int] = list(range(1, self._current_round))
+        # NOTE(Amaras) WTF IS THIS A LIST WHEN A RANGE OBJECT IS GOOD ENOUGH?
         for player in self._players_by_id.values():
             if player.id == 1:
                 continue
             # real points
-            player.set_points(0.0)
-            for round in previous_rounds:
-                result = player.pairings[round].result
-                match result:
-                    case Result.NotPaired | Result.Loss | Result.ForfeitLoss | Result.DoubleForfeit:
-                        pass
-                    case Result.DrawOrHPB:
-                        player.add_points(0.5)
-                    case Result.Gain | Result.ExeForfeitGainFPB:
-                        player.add_points(1.0)
-                    case _:
-                        raise PapiException('invalid result :-(')
+            player.compute_points(self._current_round)
             # virtual points
             player.set_vpoints(0.0)
             if self._pairing == TournamentPairing.Haley:

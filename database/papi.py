@@ -6,13 +6,14 @@ from typing import NamedTuple
 
 from database.access import AccessDatabase
 from data.pairing import Pairing
-from data.player import Player, PLAYER_TITLE_VALUES, COLOR_DB_VALUES
+from data.player import Player, PLAYER_TITLE_VALUES, COLOR_DB_VALUES, PlayerTitle, PlayerSex
 from common.logger import get_logger
 
 logger: Logger = get_logger()
 
 
 class Result(Enum):
+    """An enum representing the results in the database"""
     NotPaired = 0
     Loss = 1
     DrawOrHPB = 2
@@ -31,6 +32,7 @@ class Result(Enum):
                 return '1/2'
             case Result.NotPaired:
                 return ''
+            # NOTE(Amaras) This might be a mistake
             case Result.ForfeitLoss:
                 return '1-F'
             case Result.ExeForfeitGainFPB:
@@ -40,8 +42,32 @@ class Result(Enum):
             case _:
                 raise ValueError(f'Unknown value: {self}')
 
+    @property
+    def point_value(self) -> float:
+        match self:
+            case Result.NotPaired | Result.Loss | Result.ForfeitLoss | Result.DoubleForfeit:
+                return 0
+            case Result.DrawOrHPB:
+                return 0.5
+            case Result.Gain | Result.ExeForfeitGainFPB:
+                return 1
+
     @staticmethod
-    def opposite_result(self, white_result: Result) -> Result:
+    def opposite_result(white_result: Result) -> Result:
+        """Given a `Result` instance (white result), returns the result of the
+        opponent.
+
+        >>> Result.opposite_result(Result.Gain) == Result.Loss
+        True
+
+        >>> Result.opposite_result(Result.Loss) == Result.Gain
+        True
+
+        >>> Result.opposite_result(Result.DrawOrHPB) == Result.DrawOrHPB
+        True
+
+        >>> Result.opposite_result(Result.NotPaired) == Result.NotPaired
+        """
         match white_result:
             case Result.Loss:
                 return Result.Gain
@@ -210,9 +236,17 @@ class TournamentInfo(NamedTuple):
 
 
 class PapiDatabase(AccessDatabase):
+    """The database class, using the Papi format of the French Chess Federation
+    Tournament manager."""
 
     def __init__(self, file: Path):
         super().__init__(file)
+
+    def __enter__(self):
+        super().enter()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._close()
 
     def _query(self, query: str, params: tuple = ()):
         self._execute(query, params)
@@ -227,14 +261,18 @@ class PapiDatabase(AccessDatabase):
         return self._fetchval()
 
     def read_info(self) -> TournamentInfo:
+        """Reads the dabase and returns basic information about the
+        tournament."""
         rounds: int = int(self.__read_var('NbrRondes'))
-        pairing: int = TournamentRating.from_db(self.__read_var('Pairing'))
-        rating: int = TournamentRating.from_db(self.__read_var('ClassElo'))
+        pairing = TournamentRating.from_db(self.__read_var('Pairing'))
+        rating = TournamentRating.from_db(self.__read_var('ClassElo'))
         rating_limit1: int = int(self.__read_var('EloBase1'))
         rating_limit2: int = int(self.__read_var('EloBase2'))
         return TournamentInfo(rounds, pairing, rating, rating_limit1, rating_limit2)
 
     def read_players(self, rating: int, rounds: int) -> dict[int, Player]:
+        """Reads the database and fetches the Player identification, pairings
+        and results."""
         players: dict[int, Player] = {}
         player_fields: list[str] = [
             'Ref', 'Nom', 'Prenom', 'Sexe', 'FideTitre', 'Fixe',
@@ -255,13 +293,15 @@ class PapiDatabase(AccessDatabase):
                     color, row[f'{round_str}Adv'],
                     row[f'{round_str}Res'])
             players[row['Ref']] = Player(
-                row['Ref'], row['Nom'] or '', row['Prenom'] or '', row['Sexe'],
-                PLAYER_TITLE_VALUES[row['FideTitre'].strip()],
+                row['Ref'], row['Nom'] or '', row['Prenom'] or '',
+                PlayerSex.from_db(row['Sexe']),
+                PlayerTitle.from_db(row['FideTitre'].strip()),
                 row[TOURNAMENT_RATING_DB_FIELDS[rating]],
                 row[TOURNAMENT_RATING_TYPE_DB_FIELDS[rating]],
                 row['Fixe'], pairings)
         return players
 
     def add_result(self, player_id: int, round: int, result: Result):
+        """Writes the given result to the database."""
         query: str = f'UPDATE joueur SET Rd{round:0>2}Res = ? WHERE Ref = ?'
         self._query(query, (result.value, player_id, ))

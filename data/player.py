@@ -12,6 +12,8 @@ logger: Logger = get_logger()
 
 
 class PlayerTitle(IntEnum):
+    """The possible FIDE titles: GM, WGM, IM, WIM, FM, WFM.
+    Also includes the "no title" case, but does not include CM nor WCM."""
     g = 6
     gf = 5
     m = 4
@@ -19,6 +21,31 @@ class PlayerTitle(IntEnum):
     f = 2
     ff = 1
     no = 0
+
+    @classmethod
+    def from_db(cls, value) -> 'PlayerTitle':
+        match value:
+            case 0:
+                return PlayerTitle.no
+            case 1:
+                return PlayerTitle.ff
+            case 2:
+                return PlayerTitle.f
+            case 3:
+                return PlayerTitle.mf
+            case 4:
+                return PlayerTitle.m
+            case 5:
+                return PlayerTitle.gf
+            case 6:
+                return PlayerTitle.g
+            case _:
+                raise ValueError(f"Unknown title value: {value}")
+
+    def __str__(self):
+        if self == PlayerTitle.no:
+            return ''
+        return f'{self.name}'
 
 
 PLAYER_TITLE_VALUES = {title.name: title.value for title in PlayerTitle}
@@ -31,9 +58,17 @@ class PlayerSex(StrEnum):
     M = 'M'
     F = 'F'
 
-
-PLAYER_SEX_M: str = PlayerSex.M.value
-PLAYER_SEX_F: str = PlayerSex.F.value
+    @classmethod
+    def from_bd(cls, value) -> PlayerSex | None:
+        match value:
+            case 'M':
+                return PlayerSex.M
+            case 'F':
+                return PlayerSex.F
+            case '':
+                return None
+            case _:
+                raise ValueError(f'Unknown value: {value}')
 
 
 class Color(StrEnum):
@@ -81,7 +116,18 @@ class Player:
 
     @property
     def title_str(self) -> str:
-        return PLAYER_TITLE_STRINGS[self.title]
+        return str(self.title)
+
+    def compute_points(self, max_round):
+        """Computes and stores the points of the player,
+        from round 1 to round `max_round` (returns None)"""
+        # NOTE(Amaras) this does not rely on the fact that insertion order
+        # is preserved in 3.6+ dict, bacause I can't be sure insertion order
+        # is the correct (increasing) round order
+        self.points = sum(
+                pairing.result.point_value
+                for round_index, pairing in self.pairings.items()
+                if round_index <= max_round)
 
     @staticmethod
     def __points_str(points: float | None) -> str:
@@ -172,31 +218,13 @@ class Player:
         self.handicap_increment = increment
         self.handicap_time_modified = time_modified
 
-    def __le__(self, other: 'Player'):
+    def __le__(self, other):
         # p1 <= p2 calls p1.__le__(p2)
         if not isinstance(other, Player):
             return NotImplemented
         return (self.vpoints, self.rating, self.title, other.last_name,
                 other.first_name) <= (other.vpoints, other.rating, other.title,
                                       self.last_name, self.first_name)
-        # if self.vpoints < other.vpoints:
-        #     return True
-        # elif self.vpoints > other.vpoints:
-        #     return False
-        # elif self.rating < other.rating:
-        #     return True
-        # elif self.rating > other.rating:
-        #     return False
-        # elif self.title < other.title:
-        #     return True
-        # elif self.title > other.title:
-        #     return False
-        # elif self.last_name > other.last_name:
-        #     return True
-        # elif self.last_name < other.last_name:
-        #     return False
-        # else:
-        #     return self.first_name > other.first_name
 
     def __eq__(self, other):
         # p1 == p2 calls p1.__eq__(p2)

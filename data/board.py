@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import warnings
 
 from common.logger import get_logger
-from database.papi import RESULT_STRINGS, Result
+from database.papi import Result
 from data.player import Player
 
 logger: Logger = get_logger()
@@ -13,6 +13,9 @@ logger: Logger = get_logger()
 @dataclass
 @total_ordering
 class Board:
+    """The Board class, represented by its index in the board order and its
+    display number (fixed tables).
+    Stores both players and the result of the match between the two."""
     board_id: int | None = None
     number: int | None = None
     white_player: Player | None = None

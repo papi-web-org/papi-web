@@ -28,6 +28,8 @@ EVENTS_PATH: Path = Path('events')
 
 
 class HandicapTournament(NamedTuple):
+    """A helper data structure to store the informations needed to
+    compute handicap times if needed."""
     initial_time: int | None = None
     increment: int | None = None
     penalty_step: int | None = None

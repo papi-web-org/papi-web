@@ -57,44 +57,47 @@ class Result:
         files: list[Path] = list(results_dir.glob("*"))
         if not reversed(files):
             return results
-        prog = re.compile('^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)$')
+        prog = re.compile(
+                r'^(?P<timestamp>[\d.]+) (?P<tournament_id>[^ ]+) '
+                r'(?P<round>\d+) (?P<board_id>\d+) (?P<white_player>[^ ]+) '
+                r'(?P<black_player>[^ ]+) (?P<result>[0-6])$')
         for file in files:
             matches = prog.match(Path(file).name)
             if not matches:
                 logger.warning(f'invalid result filename [{file}]')
                 continue
-            group: int = 1
+            group: str = 'timestamp'
             timestamp: float
             try:
                 timestamp = float(matches.group(group))
             except ValueError:
                 logger.warning(f'invalid timestamp [{matches.group(group)}] for result file [{file}]')
                 continue
-            group += 1
+            group = 'tournament_id'
             tournament_id: str = matches.group(group)
-            group += 1
+            group = 'round'
             round: int
             try:
                 round = int(matches.group(group))
             except ValueError:
                 logger.warning(f'invalid round number [{matches.group(group)}] for result file [{file}]')
                 continue
-            group += 1
+            group = 'board_id'
             board_id: int
             try:
                 board_id = int(matches.group(group))
             except ValueError:
                 logger.warning(f'invalid board id [{matches.group(group)}] for result file [{file}]')
                 continue
-            group += 1
+            group = 'white_player'
             white_player: str = matches.group(group).replace('_', ' ')
-            group += 1
+            group = 'black_player'
             black_player: str = matches.group(group).replace('_', ' ')
-            group += 1
+            group = 'result'
             result: int
             try:
                 result = int(matches.group(group))
-                if result not in RESULT_STRINGS:
+                if result not in RESULT_STRINGS.keys():
                     logger.warning(f'invalid result [{matches.group(group)}] for result file [{file}]')
                     continue
             except ValueError:

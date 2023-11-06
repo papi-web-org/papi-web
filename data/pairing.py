@@ -8,6 +8,7 @@ logger: Logger = get_logger()
 
 @dataclass(frozen=True)
 class Pairing:
+    """A pairing (from the point of view of the `Player` class)"""
     color: str | None = None
     opponent_id: int | None = None
     result: Result | None = None

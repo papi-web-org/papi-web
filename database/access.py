@@ -11,7 +11,7 @@ logger: Logger = get_logger()
 
 
 @dataclass
-class AccessDatabae:
+class AccessDatabase:
     file: Path
     database: pyodbc.Connection = field(init=False)
     cursor: pyodbc.Cursor = field(init=False)
@@ -20,7 +20,7 @@ class AccessDatabae:
         self.database = None
         self._open()
 
-    # NOTE(Amaras) This is the start of the infrastructure to build a DB as a
+    # TODO(Amaras) This is the start of the infrastructure to build a DB as a
     # context manager (making it possible to use it using the with statement).
     # This function is responsible for opening the ressource and giving a way
     # to access it.
@@ -28,7 +28,7 @@ class AccessDatabae:
         self._open()
         return self
 
-    # NOTE(Amaras) Context manager infrastructure: this dunder method is
+    # TODO(Amaras) Context manager infrastructure: this dunder method is
     # supposed to close the ressource and handle exceptions (by catching or
     # passing them through, DO NOT re-raise exceptions here).
     def __exit__(self, exc_type, exc_value, traceback):
