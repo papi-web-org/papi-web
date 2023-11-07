@@ -3,6 +3,8 @@ from typing import List, Optional
 from logging import Logger
 
 from common.logger import get_logger, print_interactive, input_interactive
+from common.papi_web_config import PapiWebConfig
+from common.singleton import singleton
 from data.event import Event
 from data.tournament import Tournament
 from ffe.ffe_session import FFESession
@@ -10,7 +12,11 @@ from ffe.ffe_session import FFESession
 logger: Logger = get_logger()
 
 
+@singleton
 class ActionSelector:
+
+    def __init__(self, config: PapiWebConfig):
+        self.__config = config
 
     @classmethod
     def __get_qualified_tournaments(cls, event: Event) -> List[Tournament]:
@@ -38,11 +44,10 @@ class ActionSelector:
                 tournaments.append(tournament)
         return tournaments
 
-    @classmethod
-    def run(cls, event_id: str) -> bool:
+    def run(self, event_id: str) -> bool:
         event: Event = Event(event_id)
         print_interactive(f'Evènement : {event.name}')
-        tournaments = cls.__get_qualified_tournaments(event)
+        tournaments = self.__get_qualified_tournaments(event)
         if not tournaments:
             logger.error(f'Aucun tournoi éligible aux opérations FFE pour cet évènement')
             return False
@@ -60,7 +65,7 @@ class ActionSelector:
             return False
         if choice == 'T':
             print_interactive(f'Action : test des codes d\'accès')
-            tournaments = cls.__get_qualified_tournaments(Event(event_id))
+            tournaments = self.__get_qualified_tournaments(Event(event_id))
             if not tournaments:
                 logger.error(f'Aucun tournoi éligible pour cette action')
                 return True
@@ -69,7 +74,7 @@ class ActionSelector:
             return True
         if choice == 'V':
             print_interactive(f'Action : affichage des tournois en ligne')
-            tournaments = cls.__get_qualified_tournaments_with_file(Event(event_id))
+            tournaments = self.__get_qualified_tournaments_with_file(Event(event_id))
             if not tournaments:
                 logger.error(f'Aucun tournoi éligible pour cette action')
                 return True
@@ -78,7 +83,7 @@ class ActionSelector:
             return True
         if choice == 'H':
             print_interactive(f'Action : téléchargement des factures d\'homologation')
-            tournaments = cls.__get_qualified_tournaments(Event(event_id))
+            tournaments = self.__get_qualified_tournaments(Event(event_id))
             if not tournaments:
                 logger.error(f'Aucun tournoi éligible pour cette action')
                 return True
@@ -89,7 +94,7 @@ class ActionSelector:
             print_interactive(f'Action : mise en ligne des résultats')
             try:
                 while True:
-                    tournaments = cls.__get_qualified_tournaments_with_file(Event(event_id))
+                    tournaments = self.__get_qualified_tournaments_with_file(Event(event_id))
                     if not tournaments:
                         logger.error(f'Aucun tournoi éligible pour cette action')
                         return True
@@ -98,9 +103,8 @@ class ActionSelector:
                         upload: bool
                         if not tournament.ffe_upload_marker.is_file():
                             upload = True
-                        elif tournament.file.lstat().st_mtime <= tournament.ffe_upload_marker.lstat().st_mtime:
-                            upload = False
-                        elif time.time() <= tournament.file.lstat().st_mtime + 60:
+                        elif (time.time() <= tournament.ffe_upload_marker.lstat().st_mtime
+                              + self.__config.ffe_upload_delay):
                             upload = False
                         else:
                             upload = True

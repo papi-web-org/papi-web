@@ -10,5 +10,5 @@ logger: Logger = get_logger()
 class FFEEngine(Engine):
     def __init__(self):
         super().__init__()
-        while EventSelector().run():
+        while EventSelector(self._config).run():
             pass

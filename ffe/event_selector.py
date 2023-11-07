@@ -1,6 +1,7 @@
 from typing import List, Optional
 from logging import Logger
 
+from common.papi_web_config import PapiWebConfig
 from common.singleton import singleton
 from common.logger import get_logger, print_interactive, input_interactive
 from data.event import Event, get_events_by_name
@@ -11,8 +12,9 @@ logger: Logger = get_logger()
 
 @singleton
 class EventSelector:
-    def __init__(self):
+    def __init__(self, config: PapiWebConfig):
         self.__silent: bool = False
+        self.__config: PapiWebConfig = config
 
     def run(self) -> bool:
         events: List[Event] = get_events_by_name(silent=self.__silent, with_tournaments_only=True)
@@ -43,6 +45,6 @@ class EventSelector:
                 except ValueError:
                     pass
         event: Event = events[event_num - 1]
-        while ActionSelector.run(event.id):
+        while ActionSelector(self.__config).run(event.id):
             pass
         return True
