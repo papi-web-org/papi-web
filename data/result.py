@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from common.config_reader import TMP_DIR
 from common.logger import get_logger
-from database.papi import RESULT_STRINGS
+from data.util import Result as DataResult
 
 logger: Logger = get_logger()
 
@@ -21,7 +21,7 @@ class Result:
     board_id: int
     white_player: str
     black_player: str
-    result: int
+    result: DataResult
 
     @property
     def timestamp_str(self) -> str:
@@ -29,7 +29,7 @@ class Result:
 
     @property
     def result_str(self) -> str:
-        return RESULT_STRINGS[self.result] if self.result else ''
+        return str(self.result) if self.result else ''
 
     def __lt__(self, other):
         # p1 < p2 calls p1.__lt__(p2)
@@ -94,12 +94,10 @@ class Result:
             group = 'black_player'
             black_player: str = matches.group(group).replace('_', ' ')
             group = 'result'
-            result: int
+            result: int | DataResult
             try:
                 result = int(matches.group(group))
-                if result not in RESULT_STRINGS.keys():
-                    logger.warning(f'invalid result [{matches.group(group)}] for result file [{file}]')
-                    continue
+                result = DataResult.from_db_int(result)
             except ValueError:
                 logger.warning(f'invalid result [{matches.group(group)}] for result file [{file}]')
                 continue

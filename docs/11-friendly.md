@@ -30,7 +30,7 @@ Lorsqu'aucun écran n'est déclaré, Papi-web ajoute automatiquement, pour chaqu
 > - [Saisie des résultats](21-update.md)
 > - [Appariements par échiquier](22-pairings-by-board.md)
 > - [Appariements par ordre alphabétique](23-pairings-by-player.md)
-> - [Derniers résultats saisis](24-pairings-by-player.md)
+> - [Derniers résultats saisis](24-last-results.md)
 
 L'écran de saisie peut directement être utilisé ; avant l'appariement de la première ronde, les noms des joueur·euses sont affichés :
 ![Affichage des joueur·euses avant la première ronde](images/friendly-update-0.jpg)

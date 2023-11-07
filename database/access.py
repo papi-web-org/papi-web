@@ -12,6 +12,7 @@ logger: Logger = get_logger()
 
 @dataclass
 class AccessDatabase:
+    """Base class for Access-based databases."""
     file: Path
     database: pyodbc.Connection = field(init=False)
     cursor: pyodbc.Cursor = field(init=False)
@@ -40,10 +41,10 @@ class AccessDatabase:
             if access_driver not in pyodbc.drivers():
                 msg: str = 'ODBC driver installed are:'
                 for driver in pyodbc.drivers():
-                    msg = msg + f'\n - {driver}'
+                    msg += f'\n - {driver}'
                 install_url: str = 'https://www.microsoft.com/en-us/download/details.aspx?id=54920'
-                msg = msg + f'\nInstall driver [{access_driver}] (cf {install_url}) and retry.'
-                msg = msg + f'\nNote: for 32bits/64bits compatibility, use accessdatabaseengine_X64.exe /passive'
+                msg += f'\nInstall driver [{access_driver}] (cf {install_url}) and retry.'
+                msg += f'\nNote: for 32bits/64bits compatibility, use accessdatabaseengine_X64.exe /passive'
                 raise PapiException(msg)
             db_url: str = f'DRIVER={{{access_driver}}};DBQ={self.file.resolve()};'
             # log_info(db_url)

@@ -2,167 +2,21 @@ from pathlib import Path
 from logging import Logger
 from enum import Enum, StrEnum
 from itertools import product
-from typing import NamedTuple
+from typing import NamedTuple, Self
+from contextlib import suppress
 
 from database.access import AccessDatabase
 from data.pairing import Pairing
-from data.player import Player, PLAYER_TITLE_VALUES, COLOR_DB_VALUES, PlayerTitle, PlayerSex
+from data.player import Player
 from common.logger import get_logger
+
+from data.util import Result, TournamentPairing, PlayerSex, PlayerTitle, Color
 
 logger: Logger = get_logger()
 
-
-class Result(Enum):
-    """An enum representing the results in the database"""
-    NotPaired = 0
-    Loss = 1
-    DrawOrHPB = 2
-    Gain = 3
-    ForfeitLoss = 4
-    DoubleForfeit = 5
-    ExeForfeitGainFPB = 6
-
-    def __str__(self):
-        match self:
-            case Result.Gain:
-                return '1-0'
-            case Result.Loss:
-                return '0-1'
-            case Result.DrawOrHPB:
-                return '1/2'
-            case Result.NotPaired:
-                return ''
-            # NOTE(Amaras) This might be a mistake
-            case Result.ForfeitLoss:
-                return '1-F'
-            case Result.ExeForfeitGainFPB:
-                return '1-F'
-            case Result.DoubleForfeit:
-                return 'F-F'
-            case _:
-                raise ValueError(f'Unknown value: {self}')
-
-    @property
-    def point_value(self) -> float:
-        match self:
-            case Result.NotPaired | Result.Loss | Result.ForfeitLoss | Result.DoubleForfeit:
-                return 0
-            case Result.DrawOrHPB:
-                return 0.5
-            case Result.Gain | Result.ExeForfeitGainFPB:
-                return 1
-
-    @staticmethod
-    def opposite_result(white_result: Result) -> Result:
-        """Given a `Result` instance (white result), returns the result of the
-        opponent.
-
-        >>> Result.opposite_result(Result.Gain) == Result.Loss
-        True
-
-        >>> Result.opposite_result(Result.Loss) == Result.Gain
-        True
-
-        >>> Result.opposite_result(Result.DrawOrHPB) == Result.DrawOrHPB
-        True
-
-        >>> Result.opposite_result(Result.NotPaired) == Result.NotPaired
-        """
-        match white_result:
-            case Result.Loss:
-                return Result.Gain
-            case Result.Gain:
-                return Result.Loss
-            case Result.DrawOrHPB:
-                return Result.DrawOrHPB
-            case Result.ExeForfeitGainFPB:
-                return Result.ForfeitLoss
-            case Result.ForfeitLoss:
-                return Result.ExeForfeitGainFPB
-            case Result.DoubleForfeit:
-                return Result.DoubleForfeit
-            case Result.NotPaired:
-                return Result.NotPaired
-            case _:
-                raise ValueError(f"Unknown value: {white_result}")
-
-
-RESULT_NOT_PAIRED: int = 0              # forfeit (opp is None, not paired)
-RESULT_LOSS: int = 1                    # loss (opp > 1)
-RESULT_DRAW_OR_BYE_05: int = 2          # draw (opp > 1) or bye 0.5pt (opp is None)
-RESULT_GAIN: int = 3                    # won (opp > 1)
-RESULT_FORFEIT_LOSS: int = 4            # forfeit (opp > 1, paired)
-RESULT_DOUBLE_FORFEIT: int = 5          # double forfeit (opp > 1)
-RESULT_EXE_FORFEIT_GAIN_BYE_1: int = 6  # exempt (opp == 1), forfeit won (opp > 1), bye 1pt (opp is None)
-
-RESULT_STRINGS: dict[int, str] = {
-    RESULT_NOT_PAIRED: '',
-    RESULT_LOSS: '0-1',
-    RESULT_DRAW_OR_BYE_05: '1/2',
-    RESULT_GAIN: '1-0',
-    RESULT_FORFEIT_LOSS: '1-F',
-    RESULT_DOUBLE_FORFEIT: 'F-F',
-    RESULT_EXE_FORFEIT_GAIN_BYE_1: '1-F',
-}
-
-
-class TournamentPairing(StrEnum):
-    Standard = 'Standard'
-    Haley = 'Haley'
-    HaleySoft = 'HaleySoft'
-    SAD = 'SAD'
-    Berger = NotImplemented
-
-    @classmethod
-    def from_db(cls, value):
-        match value:
-            case 'Standard':
-                return cls.Standard
-            case 'SAD':
-                return cls.SAD
-            case 'Haley':
-                return cls.Haley
-            case 'HaleySoft':
-                return cls.HaleySoft
-            case 'Berger':
-                return cls.Berger
-            case _:
-                raise ValueError('Unknown value: {value}')
-
-    def __str__(self):
-        match self:
-            case TournamentPairing.Standard:
-                return 'Standard'
-            case TournamentPairing.Haley:
-                return 'Haley'
-            case TournamentPairing.HaleySoft:
-                return 'Haley Dégressif'
-            case TournamentPairing.SAD:
-                return 'Système Accéléré Dégressif'
-            case TournamentPairing.Berger:
-                raise NotImplementedError
-            case _:
-                raise ValueError('Unknown Pairing Type: {self}')
-
-
-TOURNAMENT_PAIRING_STANDARD: int = 1
-TOURNAMENT_PAIRING_HALEY: int = 2
-TOURNAMENT_PAIRING_HALEY_SOFT: int = 3
-TOURNAMENT_PAIRING_SAD: int = 4
-TOURNAMENT_PAIRING_DB_VALUES: dict[int, str] = {
-    TOURNAMENT_PAIRING_STANDARD: 'Standard',
-    TOURNAMENT_PAIRING_HALEY: 'Haley',
-    TOURNAMENT_PAIRING_HALEY_SOFT: 'HaleySoft',
-    TOURNAMENT_PAIRING_SAD: 'SAD',
-}
-TOURNAMENT_PAIRING_VALUES: dict[str, int] = {v: k for k, v in TOURNAMENT_PAIRING_DB_VALUES.items()}
-TOURNAMENT_PAIRING_STRINGS: dict[int, str] = {
-    TOURNAMENT_PAIRING_STANDARD: 'Standard',
-    TOURNAMENT_PAIRING_HALEY: 'Haley',
-    TOURNAMENT_PAIRING_HALEY_SOFT: 'Haley Dégressif',
-    TOURNAMENT_PAIRING_SAD: 'Système Accéléré Dégressif',
-}
-
+RESULT_LOSS = Result.Loss
+RESULT_GAIN = Result.Gain
+RESULT_DRAW_OR_BYE_05 = Result.DrawOrHPB
 
 class TournamentRating(StrEnum):
     Standard = 'Standard'
@@ -170,7 +24,19 @@ class TournamentRating(StrEnum):
     Blitz = 'Blitz'
 
     @classmethod
-    def from_db(cls, value):
+    def from_db(cls, value) -> Self:
+        match value:
+            case 'Standard':
+                return cls.Standard
+            case 'Rapide':
+                return cls.Rapid
+            case 'Blitz':
+                return cls.Blitz
+            case _:
+                raise ValueError(f'Unknown value: {value}')
+
+    @classmethod
+    def from_db_field(cls, value):
         match value:
             case 'Elo':
                 return cls.Standard
@@ -204,6 +70,18 @@ class TournamentRating(StrEnum):
                 return 'BlitzFide'
             case _:
                 raise ValueError(f'Unknown value: {self}')
+
+    @classmethod
+    def from_db_int(cls, value) -> Self:
+        match value:
+            case 1:
+                return cls.Standard
+            case 2:
+                return cls.Rapid
+            case 3:
+                return cls.Blitz
+            case _:
+                raise ValueError(f'Unknown value:  {value}')
 
 
 TOURNAMENT_RATING_STANDARD: int = 1
@@ -264,8 +142,8 @@ class PapiDatabase(AccessDatabase):
         """Reads the dabase and returns basic information about the
         tournament."""
         rounds: int = int(self.__read_var('NbrRondes'))
-        pairing = TournamentRating.from_db(self.__read_var('Pairing'))
-        rating = TournamentRating.from_db(self.__read_var('ClassElo'))
+        pairing = TournamentPairing.from_db(self.__read_var('Pairing'))
+        rating = TournamentRating.from_db_field(self.__read_var('ClassElo'))
         rating_limit1: int = int(self.__read_var('EloBase1'))
         rating_limit2: int = int(self.__read_var('EloBase2'))
         return TournamentInfo(rounds, pairing, rating, rating_limit1, rating_limit2)
@@ -287,17 +165,17 @@ class PapiDatabase(AccessDatabase):
             for round in range(1, rounds + 1):
                 round_str = f'Rd{round:0>2}'
                 color: str = row[f'{round_str}Cl']
-                if color in COLOR_DB_VALUES:
-                    color = COLOR_DB_VALUES[color]
+                with suppress(ValueError):
+                    color = Color.from_db(color)
                 pairings[round] = Pairing(
                     color, row[f'{round_str}Adv'],
-                    row[f'{round_str}Res'])
+                    Result.from_db_int(row[f'{round_str}Res']))
             players[row['Ref']] = Player(
                 row['Ref'], row['Nom'] or '', row['Prenom'] or '',
                 PlayerSex.from_db(row['Sexe']),
-                PlayerTitle.from_db(row['FideTitre'].strip()),
-                row[TOURNAMENT_RATING_DB_FIELDS[rating]],
-                row[TOURNAMENT_RATING_TYPE_DB_FIELDS[rating]],
+                PlayerTitle.from_db_str(row['FideTitre'].strip()),
+                row[TournamentRating.from_db(rating).db_field],
+                row[TournamentRating.from_db(rating).db_field_type],
                 row['Fixe'], pairings)
         return players
 

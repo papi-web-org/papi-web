@@ -1,79 +1,20 @@
 from functools import total_ordering
 from logging import Logger
 from dataclasses import dataclass, field
-from enum import StrEnum, Enum, IntEnum, auto
 from contextlib import suppress
 import warnings
 
 from data.pairing import Pairing
 from common.logger import get_logger
+from data.util import PlayerSex, PlayerTitle, Color
 
 logger: Logger = get_logger()
-
-
-class PlayerTitle(IntEnum):
-    """The possible FIDE titles: GM, WGM, IM, WIM, FM, WFM.
-    Also includes the "no title" case, but does not include CM nor WCM."""
-    g = 6
-    gf = 5
-    m = 4
-    mf = 3
-    f = 2
-    ff = 1
-    no = 0
-
-    @classmethod
-    def from_db(cls, value) -> 'PlayerTitle':
-        match value:
-            case 0:
-                return PlayerTitle.no
-            case 1:
-                return PlayerTitle.ff
-            case 2:
-                return PlayerTitle.f
-            case 3:
-                return PlayerTitle.mf
-            case 4:
-                return PlayerTitle.m
-            case 5:
-                return PlayerTitle.gf
-            case 6:
-                return PlayerTitle.g
-            case _:
-                raise ValueError(f"Unknown title value: {value}")
-
-    def __str__(self):
-        if self == PlayerTitle.no:
-            return ''
-        return f'{self.name}'
 
 
 PLAYER_TITLE_VALUES = {title.name: title.value for title in PlayerTitle}
 del PLAYER_TITLE_VALUES[PlayerTitle.no.name]
 PLAYER_TITLE_VALUES[''] = 0
 PLAYER_TITLE_STRINGS = {v: k for k, v in PLAYER_TITLE_VALUES.items()}
-
-
-class PlayerSex(StrEnum):
-    M = 'M'
-    F = 'F'
-
-    @classmethod
-    def from_bd(cls, value) -> PlayerSex | None:
-        match value:
-            case 'M':
-                return PlayerSex.M
-            case 'F':
-                return PlayerSex.F
-            case '':
-                return None
-            case _:
-                raise ValueError(f'Unknown value: {value}')
-
-
-class Color(StrEnum):
-    White = 'W'
-    Black = 'B'
 
 
 COLOR_WHITE: str = Color.White.value
@@ -122,7 +63,7 @@ class Player:
         """Computes and stores the points of the player,
         from round 1 to round `max_round` (returns None)"""
         # NOTE(Amaras) this does not rely on the fact that insertion order
-        # is preserved in 3.6+ dict, bacause I can't be sure insertion order
+        # is preserved in 3.6+ dict, because I can't be sure insertion order
         # is the correct (increasing) round order
         self.points = sum(
                 pairing.result.point_value
@@ -170,11 +111,11 @@ class Player:
         return 'Exempt' + ('e' if self.sex == PlayerSex.F else '')
 
     def set_board_id(self, board_id: int):
-        warnings.warn("Use direct assigment to board_id instead")
+        warnings.warn("Use direct assignment to board_id instead")
         self.board_id = board_id
 
     def set_board_number(self, board_number: int):
-        warnings.warn("Use direct assigment to board_number instead")
+        warnings.warn("Use direct assignment to board_number instead")
         self.board_number = board_number
 
     def set_color(self, color: Color):
@@ -191,7 +132,7 @@ class Player:
         if self.color is None:
             return ''
         else:
-            return COLOR_STRINGS[self.color]
+            return str(self.color)
 
     @property
     def handicap_initial_time_minutes(self) -> int | None:

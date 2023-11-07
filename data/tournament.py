@@ -4,12 +4,9 @@ from operator import attrgetter
 
 from common.config_reader import TMP_DIR
 from common.logger import get_logger
-from database.papi import PapiDatabase, RESULT_STRINGS
-from database.papi import RESULT_NOT_PAIRED, RESULT_LOSS, RESULT_DRAW_OR_BYE_05, \
-    RESULT_GAIN, RESULT_FORFEIT_LOSS, RESULT_DOUBLE_FORFEIT, RESULT_EXE_FORFEIT_GAIN_BYE_1
-from database.papi import TournamentPairing, Result
-from data.player import Color
-from common.exception import PapiException
+from database.papi import PapiDatabase
+from data.util import TournamentPairing, Result
+from data.util import Color
 from data.board import Board
 from data.player import Player
 from data.pairing import Pairing
@@ -50,48 +47,12 @@ class Tournament:
         return self.tournament_id
 
     @property
-    def name(self) -> str:
-        return self.name
-
-    @property
-    def file(self) -> Path:
-        return self.file
-
-    @property
-    def ffe_id(self) -> int | None:
-        return self.ffe_id
-
-    @property
-    def ffe_password(self) -> str | None:
-        return self.ffe_password
-
-    @property
     def ffe_upload_marker(self) -> Path:
         return TMP_DIR / f'{self.ffe_id}.ffe_upload'
 
     @property
     def handicap(self) -> bool:
         return self.handicap_initial_time is not None
-
-    @property
-    def handicap_initial_time(self) -> int | None:
-        return self.handicap_initial_time
-
-    @property
-    def handicap_increment(self) -> int | None:
-        return self.handicap_increment
-
-    @property
-    def handicap_penalty_step(self) -> int | None:
-        return self.handicap_penalty_step
-
-    @property
-    def handicap_penalty_value(self) -> int | None:
-        return self.handicap_penalty_value
-
-    @property
-    def handicap_min_time(self) -> int | None:
-        return self.handicap_min_time
 
     @property
     def rounds(self) -> int:
@@ -175,11 +136,11 @@ class Tournament:
             self._players_by_id = self.papi_database.read_players(self._rating, self._rounds)
             self.papi_database.close()
         self._papi_read = True
-        self.calculate_current_round()
-        self.calculate_points()
-        self.build_boards()
+        self._calculate_current_round()
+        self._calculate_points()
+        self._build_boards()
 
-    def __calculate_current_round(self):
+    def _calculate_current_round(self):
         round_infos: dict[int, dict[str, bool]] = {}
         paired_rounds: list[int] = []
         for round in range(1, self._rounds + 1):
@@ -208,7 +169,7 @@ class Tournament:
             if self._current_round == 0:
                 self._current_round = paired_rounds[-1]
 
-    def __calculate_points(self):
+    def _calculate_points(self):
         # NOTE(Amaras) WTF IS THIS A LIST WHEN A RANGE OBJECT IS GOOD ENOUGH?
         for player in self._players_by_id.values():
             if player.id == 1:
@@ -216,7 +177,7 @@ class Tournament:
             # real points
             player.compute_points(self._current_round)
             # virtual points
-            player.set_vpoints(0.0)
+            player.vpoints = 0.0
             if self._pairing == TournamentPairing.Haley:
                 if self._current_round <= 2:
                     if player.rating >= self._rating_limit1:
@@ -277,10 +238,10 @@ class Tournament:
                         # possibles sur l'échiquier (il est sous-évalué par
                         # le classement ELO)
                         if player.points * 2 >= self._rounds:
-                            player.set_vpoints(2)
+                            player.vpoints = 2
             player.add_vpoints(player.points)
 
-    def __build_boards(self):
+    def _build_boards(self):
         if not self._current_round:
             return
         self._boards = []
@@ -341,7 +302,7 @@ class Tournament:
                     f'{board.white_player.last_name} '
                     f'{board.white_player.first_name} '
                     f'{board.white_player.rating} '
-                    f'{RESULT_STRINGS[white_result]} '
+                    f'{white_result} '
                     f'{board.black_player.last_name} '
                     f'{board.black_player.first_name} '
                     f'{board.black_player.rating}')

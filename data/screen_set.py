@@ -22,7 +22,7 @@ class ScreenSet:
     name: str | None = field(default=None, kw_only=True)
     first_item: Any | None = field(default=None, init=False)
     last_item: Any | None = field(default=None, init=False)
-    items_list: list[list[Any]] | None = field(default=None, init=False)
+    items_lists: list[list[Any]] | None = field(default=None, init=False)
 
     @property
     def name_for_boards(self) -> str | None:

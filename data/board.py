@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import warnings
 
 from common.logger import get_logger
-from database.papi import Result
+from data.util import Result
 from data.player import Player
 
 logger: Logger = get_logger()

@@ -30,6 +30,8 @@ class AScreen:
     show_timer: bool
     menu_screens: list['AScreen'] | None = field(default=None, init=False)
 
+    def __post_init__(self):
+        self._type = '???'
     @property
     def id(self) -> str:
         return self.screen_id

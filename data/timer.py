@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 from logging import Logger
 from dataclasses import dataclass, field
 from collections import namedtuple
@@ -12,11 +12,11 @@ ROUND_DEFAULT_TEXT_BEFORE: str = 'Début de la ronde {} dans %s'
 ROUND_DEFAULT_TEXT_AFTER: str = 'Ronde {} commencée depuis %s'
 
 
-def timestamp_to_datetime(ts: int) -> datetime.datetime:
-    return datetime.datetime.fromtimestamp(ts)
+def timestamp_to_datetime(ts: int) -> dt.datetime:
+    return dt.datetime.fromtimestamp(ts)
 
 
-def datetime_to_str(dt: datetime.datetime) -> str:
+def datetime_to_str(dt: dt.datetime) -> str:
     return dt.strftime('%Y-%m-%d %H:%M')
 
 
@@ -31,7 +31,7 @@ class TimerHour:
     round: int | None = None
     text_before: str | None = None
     text_after: str | None = None
-    datetime: datetime.datetime = field(init=False)
+    datetime: dt.datetime = field(init=False)
     timestamp_1: int | None = field(default=None, init=False)
     timestamp_2: int | None = field(default=None, init=False)
     timestamp_3: int | None = field(default=None, init=False)
@@ -48,10 +48,6 @@ class TimerHour:
     @property
     def id(self) -> int | str:
         return self._id
-
-    @property
-    def timestamp(self) -> int:
-        return self.timestamp
 
     @property
     def datetime_str(self) -> str:
