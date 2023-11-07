@@ -2,7 +2,6 @@
 {% for set in screen.sets %}
     {% with tournament=set.tournament %}
         {% if tournament.current_round %}
-            {% if screen.boards_lists %}{% endif %}
             <h2 class="set-title">{{ set.name_for_boards }} (ronde {{ tournament.current_round }})</h2>
             <div class="row screen-set-row">
                 {% for boards in set.boards_lists %}

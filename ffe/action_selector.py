@@ -100,7 +100,7 @@ class ActionSelector:
                             upload = True
                         elif tournament.file.lstat().st_mtime <= tournament.ffe_upload_marker.lstat().st_mtime:
                             upload = False
-                        elif time.time() <= tournament.file.lstat().st_mtime + 5:
+                        elif time.time() <= tournament.file.lstat().st_mtime + 60:
                             upload = False
                         else:
                             upload = True

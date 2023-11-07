@@ -56,7 +56,7 @@ Papi-web
                             <i class="bi-people-fill" ></i>&nbsp;{{ event.tournaments | length }} tournoi{% if event.tournaments|length > 1 %}s{% endif %}
                             <i class="bi-arrows-fullscreen" ></i>&nbsp;{{ event.screens | length }} écran{% if event.screens|length > 1 %}s{% endif %}
                             <i class="bi-repeat" ></i>&nbsp;{{ event.rotators | length }} écran{% if event.rotators|length > 1 %}s{% endif %} rotatif{% if event.rotators|length > 1 %}s{% endif %}
-                            <i class="bi-calendar2-event-fill" ></i>&nbsp;{{ event.timer.hours | length }} horaire{% if event.timer.hours|length > 1 %}s{% endif %}
+                            <i class="bi-calendar2-event-fill" ></i>&nbsp;{% if event.timer %}{{ event.timer.hours | length }}{% else %}0{% endif %} horaire{% if event.timer %}{% if event.timer.hours|length > 1 %}s{% endif %}{% endif %}
                         </td>
                         {% with id='messages' errors_len=event.errors|length warnings_len=event.warnings|length infos_len=event.infos|length %}
                         {% with messages_len=errors_len|add:warnings_len|add:infos_len %}
