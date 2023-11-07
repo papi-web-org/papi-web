@@ -12,7 +12,7 @@ from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
 
-PAPI_WEB_VERSION: str = '2.0-rc15'
+PAPI_WEB_VERSION: str = '2.0-rc16'
 
 PAPI_WEB_URL = 'https://github.com/pascalaubry/papi-web'
 
@@ -24,19 +24,22 @@ DEFAULT_LOG_LEVEL: int = logging.INFO
 DEFAULT_WEB_HOST: str = '0.0.0.0'
 DEFAULT_WEB_PORT: int = 8080
 DEFAULT_WEB_LAUNCH_BROWSER: bool = True
+DEFAULT_FFE_UPLOAD_DELAY: int = 180
+MIN_FFE_UPLOAD_DELAY: int = 60
 
 
 @singleton
 class PapiWebConfig:
     def __init__(self):
         self.reader = ConfigReader(CONFIG_FILE, silent=False)
-        self.__log_level: int | None = None
-        self.__web_host: str | None = None
-        self.__web_port: int | None = None
-        self.__web_launch_browser: bool | None = None
-        self.__local_ip: str | None = None
-        self.__lan_ip: str | None = None
-        self.__log_levels: dict[int, str] = {
+        self.__log_level: Optional[int] = None
+        self.__web_host: Optional[str] = None
+        self.__web_port: Optional[int] = None
+        self.__web_launch_browser: Optional[bool] = None
+        self.__ffe_upload_delay: Optional[int] = None
+        self.__local_ip: Optional[str] = None
+        self.__lan_ip: Optional[str] = None
+        self.__log_levels: Dict[int, str] = {
             logging.DEBUG: 'DEBUG',
             logging.INFO: 'INFO',
             logging.WARNING: 'WARNING',
@@ -97,6 +100,20 @@ class PapiWebConfig:
                     if self.__web_launch_browser is None:
                         self.reader.add_error(
                             f'valeur invalide [{self.reader.get(section_key, key)}]', section_key, key)
+            section_key = 'ffe'
+            try:
+                options = self.reader[section_key]
+                key = 'upload_delay'
+                if key not in options:
+                    self.reader.add_warning(
+                        f'option absente, par défaut [{DEFAULT_FFE_UPLOAD_DELAY}]', section_key, key)
+                else:
+                    self.__ffe_upload_delay = self.reader.getint_safe(section_key, key)
+                    if self.ffe_upload_delay is None or self.ffe_upload_delay < MIN_FFE_UPLOAD_DELAY:
+                        self.reader.add_warning(f'délai non valide [{self.reader.get(section_key, key)}], par défaut '
+                                                f'[{DEFAULT_FFE_UPLOAD_DELAY}]', section_key, key)
+            except KeyError:
+                self.reader.add_warning(f'rubrique introuvable', section_key)
         else:
             self.reader.add_debug(f'configuration par défaut')
         if self.log_level is None:
@@ -128,6 +145,10 @@ class PapiWebConfig:
     @property
     def web_launch_browser(self) -> bool:
         return self.__web_launch_browser
+
+    @property
+    def ffe_upload_delay(self) -> int:
+        return self.__ffe_upload_delay
 
     @property
     def django_version(self) -> str:
