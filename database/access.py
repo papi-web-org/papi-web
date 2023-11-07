@@ -15,8 +15,8 @@ logger: Logger = get_logger()
 class AccessDatabase:
     """Base class for Access-based databases."""
     file: Path
-    database: pyodbc.Connection = field(init=False)
-    cursor: pyodbc.Cursor = field(init=False)
+    database: pyodbc.Connection | None = field(init=False, default=None)
+    cursor: pyodbc.Cursor | None = field(init=False, default=None)
 
     def __post_init__(self):
         self.database = None
@@ -47,15 +47,15 @@ class AccessDatabase:
                 msg += f'\nInstall driver [{access_driver}] (cf {install_url}) and retry.'
                 msg += f'\nNote: for 32bits/64bits compatibility, use accessdatabaseengine_X64.exe /passive'
                 raise PapiException(msg)
-            db_url: str = f'DRIVER={{{access_driver}}};DBQ={self.__file.resolve()};'
+            db_url: str = f'DRIVER={{{access_driver}}};DBQ={self.file.resolve()};'
             # Get rid of unresolved pyodbc.Error: ('HY000', 'The driver did not supply an error!')
-            while self.__database is None:
+            while self.database is None:
                 try:
-                    self.__database = pyodbc.connect(db_url)
+                    self.database = pyodbc.connect(db_url)
                 except pyodbc.Error as e:
-                    logger.error(f'Connection to file {self.__file} failed: {e.args}')
+                    logger.error(f'Connection to file {self.file} failed: {e.args}')
                     time.sleep(1)
-            self.__cursor = self.__database.cursor()
+            self.cursor = self.database.cursor()
 
     def _close(self):
         if self.database is not None:
