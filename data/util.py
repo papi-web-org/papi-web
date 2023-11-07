@@ -1,7 +1,7 @@
 """A file grouping all the "utility" classes/enum: Result, Color, PlayerTitle,
 PlayerSex, TournamentPairing, TournamentRating"""
 
-from enum import Enum, StrEnum, IntEnum
+from enum import StrEnum, IntEnum
 from typing import Self
 
 
@@ -247,6 +247,7 @@ class PlayerTitle(IntEnum):
                 return cls.g
             case _:
                 raise ValueError(f'Unknown title: {value}')
+
     def __str__(self):
         if self == PlayerTitle.no:
             return ''
@@ -285,4 +286,4 @@ class Color(StrEnum):
             case 'N':
                 return Color.Black
             case _:
-                raise ValueError(f'Unkown value: {value}')
+                raise ValueError(f'Unknown value: {value}')
