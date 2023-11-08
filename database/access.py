@@ -19,8 +19,8 @@ class AccessDatabase:
     cursor: pyodbc.Cursor | None = field(init=False, default=None)
 
     def __post_init__(self):
-        self.database = None
-        self._open()
+        self.database = None  # TODO(pascalaubry) is this really needed? Couldn't we wait for the first call?
+        self._open()  # TODO(pascalaubry) Is this really needed since _open() si called before each database operation?
 
     # TODO(Amaras) This is the start of the infrastructure to build a DB as a
     # context manager (making it possible to use it using the with statement).
