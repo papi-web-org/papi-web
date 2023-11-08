@@ -10,13 +10,14 @@ from data.util import PlayerSex, PlayerTitle, Color
 
 logger: Logger = get_logger()
 
-
+# TODO(pascalaubry) Remove these unused variables
 PLAYER_TITLE_VALUES = {title.name: title.value for title in PlayerTitle}
 del PLAYER_TITLE_VALUES[PlayerTitle.no.name]
 PLAYER_TITLE_VALUES[''] = 0
 PLAYER_TITLE_STRINGS = {v: k for k, v in PLAYER_TITLE_VALUES.items()}
 
 
+# TODO(pascalaubry) Remove these unused variables
 COLOR_WHITE: str = Color.White.value
 COLOR_BLACK: str = Color.White.value
 COLOR_DB_VALUES: dict[str, str] = {
