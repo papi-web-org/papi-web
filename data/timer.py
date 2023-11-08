@@ -152,19 +152,19 @@ class TimerBuilder:
             return None
         timer: Timer = Timer()
         for hour_id in hour_ids:
-            self.__add_hour(timer, hour_id)
+            self._add_hour(timer, hour_id)
         if not timer.hours:
             self.config_reader.add_warning(
                 'aucun horaire défini, le chronomètre ne sera pas disponible',
                 section_key
             )
             return None
-        self.__set_colors(timer)
-        self.__set_delays(timer)
+        self._set_colors(timer)
+        self._set_delays(timer)
         timer.set_hours_timestamps()
         return timer
 
-    def __add_hour(self, timer: Timer, hour_id: str):
+    def _add_hour(self, timer: Timer, hour_id: str):
         section_key = f'timer.hour.{hour_id}'
         timer_section = self.config_reader[section_key]
         section_keys: list[str] = ['date', 'text_before', 'text_after', ]
@@ -231,7 +231,7 @@ class TimerBuilder:
                 self.config_reader.add_warning('option inconnue', section_key, key)
         timer.hours.append(hour)
 
-    def __set_colors(self, timer: Timer):
+    def _set_colors(self, timer: Timer):
         section_key = 'timer.colors'
         try:
             color_section = self.config_reader[section_key]
@@ -290,7 +290,7 @@ class TimerBuilder:
                 )
                 timer.colors[color_id] = color_rbg
 
-    def __set_delays(self, timer: Timer):
+    def _set_delays(self, timer: Timer):
         section_key = 'timer.delays'
         try:
             delay_section = self.config_reader[section_key]
