@@ -170,6 +170,7 @@ class Tournament:
 
     def _calculate_points(self):
         # TODO(Amaras) WTF IS THIS A LIST WHEN A RANGE OBJECT IS GOOD ENOUGH?
+        # DONE(pascalaubry) Because player ids are not reused after player deletion, please remove if OK
         for player in self._players_by_id.values():
             if player.id == 1:
                 continue
@@ -187,6 +188,9 @@ class Tournament:
                 # Round 1: All players above rating_limit1 get 1 vpoint
                 # Round 2: All players above rating_limit1 get 1 vpoint
                 # Round 2: All other players get .5 vpoints
+                # DONE(pascalaubry) Checked (bottom of page #138 on
+                # https://dna.ffechecs.fr/wp-content/uploads/sites/2/2023/10/Livre-arbitre-octobre-2023.pdf),
+                # please remove if OK
                 if self._current_round <= 2:
                     if player.rating >= self.rating_limit1:
                         player.add_vpoints(1.0)
