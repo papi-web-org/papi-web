@@ -152,3 +152,17 @@ class ConfigReader(ConfigParser):
             if matches:
                 subsection_keys.append(matches.group(1))
         return subsection_keys
+
+    screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', ]
+
+    screen_keys: list[str] = [
+        'type',
+        'name',
+        'columns',
+        'menu_text',
+        'show_timer',
+        'menu',
+        'update',
+        'limit',
+    ]
+

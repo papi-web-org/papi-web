@@ -3,10 +3,12 @@ from typing import Any
 from logging import Logger
 from dataclasses import dataclass, field
 
+from common.config_reader import ConfigReader
 from common.logger import get_logger
 from data.board import Board
 from data.player import Player
 from data.tournament import Tournament
+from data.util import ScreenType
 
 logger: Logger = get_logger()
 
@@ -195,3 +197,158 @@ class ScreenSet:
             return f'{self.tournament.id} (jusqu\'à n°{self.last})'
         if self.part is not None:
             return f'{self.tournament.id} ({self.part}/{self.parts})'
+
+
+class ScreenSetBuilder:
+    def __init__(self, config_reader: ConfigReader, tournaments: dict[str, Tournament]):
+        self.config_reader = config_reader
+        self.tournaments: dict[str, Tournament] = tournaments
+
+    def read_screen_set_section_keys(self, screen_section_key: str, screen_type: ScreenType) -> list[str]:
+        screen_set_section_keys: list[str]
+        screen_set_single_section_key = f'{screen_section_key}.{screen_type.value}'
+        if screen_set_single_section_key in self.config_reader:
+            screen_set_section_keys = [screen_set_single_section_key, ]
+            for screen_set_sub_section_key in self.config_reader.get_subsection_keys_with_prefix(
+                    screen_set_single_section_key):
+                self.config_reader.add_warning(
+                    'rubrique non prise en compte, supprimez la rubrique '
+                    f'[{screen_set_single_section_key}] pour cela',
+                    f'{screen_set_single_section_key}.{screen_set_sub_section_key}'
+                )
+        else:
+            screen_set_section_keys = [
+                f'{screen_set_single_section_key}.{sub_section_key}'
+                for sub_section_key
+                in self.config_reader.get_subsection_keys_with_prefix(screen_set_single_section_key)
+            ]
+        if not screen_set_section_keys:
+            if len(self.tournaments) == 1:
+                self.config_reader[screen_set_single_section_key] = {}
+                screen_set_section_keys.append(screen_set_single_section_key)
+                self.config_reader.add_info(
+                    'un seul tournoi, la rubrique [{screen_set_single_section_key}] a été ajoutée',
+                    screen_section_key
+                )
+            else:
+                self.config_reader.add_warning('rubrique absente, écran ignoré', screen_set_single_section_key)
+        return screen_set_section_keys
+
+    def build_screen_set(self, section_key: str, columns: int) -> ScreenSet | None:
+        try:
+            current_section = self.config_reader[section_key]
+        except KeyError:
+            self.config_reader.add_error('rubrique non trouvée', section_key)
+            return None
+        key = 'tournament'
+        if key not in current_section:
+            if len(self.tournaments) == 1:
+                current_section[key] = list(self.tournaments.keys())[0]
+            else:
+                self.config_reader.add_warning(
+                    'option absente, partie d\'écran ignorée',
+                    section_key,
+                    key
+                )
+                return None
+        tournament_id: str = self.config_reader.get(section_key, key)
+        if tournament_id not in self.tournaments:
+            self.config_reader.add_warning(
+                f"le tournoi [{tournament_id}] n'existe pas, partie d\'écran ignorée",
+                section_key,
+                key
+            )
+            return None
+        if not self.tournaments[tournament_id].file:
+            self.config_reader.add_warning(
+                f"le fichier du tournoi [{tournament_id}] n'existe pas, partie d\'écran ignorée",
+                section_key,
+                key
+            )
+            return None
+        if (
+            ('first' in current_section or 'last' in current_section) and
+            ('part' in current_section or 'parts' in current_section)
+        ):
+            self.config_reader.add_warning(
+                'les options [part]/[parts] et [first]/[last] ne sont pas compatibles, partie d\'écran ignorée',
+                section_key
+            )
+            return None
+        key = 'first'
+        first: int | None = None
+        if key in current_section:
+            first = self.config_reader.getint_safe(section_key, key, minimum=1)
+            if first is None:
+                self.config_reader.add_warning(
+                    'un entier positif non nul est attendu, option ignorée',
+                    section_key,
+                    key
+                )
+        key = 'last'
+        last: int | None = None
+        if key in current_section:
+            last = self.config_reader.getint_safe(section_key, key)
+            if last is None:
+                self.config_reader.add_warning(
+                    'un entier positif non nul est attendu, option ignorée',
+                    section_key,
+                    key
+                )
+        if first is not None and last is not None and first > last:
+            self.config_reader.add_warning(
+                f'intervalle [{first}-{last}] non valide, partie d\'écran ignorée',
+                section_key
+            )
+            return None
+        key = 'part'
+        part: int | None = None
+        if key in current_section:
+            part = self.config_reader.getint_safe(section_key, key)
+            if part is None:
+                self.config_reader.add_warning(
+                    'un entier positif non nul est attendu, option ignorée',
+                    section_key,
+                    key
+                )
+        key = 'parts'
+        parts: int | None = None
+        if key in current_section:
+            parts = self.config_reader.getint_safe(section_key, key)
+            if parts is None:
+                self.config_reader.add_warning(
+                    'un entier positif non nul est attendu, option ignorée',
+                    section_key,
+                    key
+                )
+        if (
+            (part is None and parts is not None) or
+            (part is not None and parts is None)
+        ):
+            self.config_reader.add_warning(
+                'les options [part]/[parts] sont obligatoires ensemble, partie d\'écran ignorée',
+                section_key
+            )
+            return None
+        if part is not None and parts is not None:
+            if part > parts:
+                self.config_reader.add_warning(
+                    f"la partie [{part}] sur [{parts}] n'est pas valide, partie d\'écran ignorée",
+                    section_key
+                )
+                return None
+        key = 'name'
+        name: str | None = None
+        if key in current_section:
+            name = self.config_reader.get(section_key, key)
+        for key, value in self.config_reader.items(section_key):
+            if key not in self.config_reader.screen_set_keys:
+                self.config_reader.add_warning('option inconnue', section_key, key)
+        return ScreenSet(
+            self.tournaments[tournament_id],
+            columns,
+            first=first,
+            last=last,
+            part=part,
+            parts=parts,
+            name=name)

@@ -1,7 +1,7 @@
 """A file grouping all the "utility" classes/enum: Result, Color, PlayerTitle,
 PlayerSex, TournamentPairing, TournamentRating"""
 
-from enum import StrEnum, IntEnum
+from enum import StrEnum, IntEnum, auto
 from typing import Self
 
 
@@ -293,3 +293,36 @@ class Color(StrEnum):
                 return Color.Black
             case _:
                 raise ValueError(f'Unknown value: {value}')
+
+
+class ScreenType(StrEnum):
+    Boards = auto()
+    Players = auto()
+    Results = auto()
+
+    def __str__(self):
+        match self:
+            case ScreenType.Boards:
+                return "Appariements par table"
+            case ScreenType.Players:
+                return "Appariements par joueur.euse"
+            case ScreenType.Results:
+                return "Résultats"
+            case _:
+                raise ValueError
+
+    @classmethod
+    def from_str(cls, value) -> Self:
+        match value:
+            case 'boards':
+                return cls.Boards
+            case 'players':
+                return cls.Players
+            case 'results':
+                return cls.Results
+            case _:
+                raise ValueError(f'Invalid board type: {value}')
+
+    @classmethod
+    def names(cls) -> list[str]:
+        return [member.value for member in iter(cls)]
