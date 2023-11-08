@@ -39,7 +39,7 @@ class ScreenSet:
 
     def _extract_data(self, items: list[Any], force_even: bool = False):
         if not items:
-            self.items_lists: list[list[Any]] | None = [[], ] * self.columns
+            self.items_lists = [[], ] * self.columns
             return
         # at first select the desired items
         selected_first_index: int = 0

@@ -8,6 +8,7 @@ from data.screen_set import ScreenSet
 
 logger: Logger = get_logger()
 
+# TODO(Amaras) Change those constants into an Enum
 SCREEN_TYPE_BOARDS: str = 'boards'
 SCREEN_TYPE_PLAYERS: str = 'players'
 SCREEN_TYPE_RESULTS: str = 'results'
@@ -32,6 +33,7 @@ class AScreen:
 
     def __post_init__(self):
         self._type = '???'
+
     @property
     def id(self) -> str:
         return self.screen_id
@@ -93,7 +95,7 @@ class AScreenWithSets(AScreen):
 class ScreenBoards(AScreenWithSets):
     _update: bool
 
-    def __post__init__(self):
+    def __post_init__(self):
         self._type = SCREEN_TYPE_BOARDS
 
     @property
@@ -174,7 +176,7 @@ class ScreenResults(AScreen):
             menu_text: str | None, menu: str, show_timer: bool, limit: int):
         super().__init__(
             screen_id, family_id, name, columns, menu_text, menu, show_timer)
-        self._type = SCREEN_TYPE_PLAYERS
+        self._type = SCREEN_TYPE_RESULTS
         self.event_id = event_id
         self.limit: int = limit
 

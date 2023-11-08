@@ -1,15 +1,14 @@
-from pathlib import Path
 from logging import Logger
 from operator import attrgetter
+from pathlib import Path
 
 from common.config_reader import TMP_DIR
 from common.logger import get_logger
-from database.papi import PapiDatabase
-from data.util import TournamentPairing, Result
-from data.util import Color
 from data.board import Board
 from data.player import Player
-from data.pairing import Pairing
+from data.util import Color, TournamentPairing
+from data.util import TournamentPairing, Result
+from database.papi import PapiDatabase
 
 logger: Logger = get_logger()
 
@@ -60,7 +59,7 @@ class Tournament:
         return self._rounds
 
     @property
-    def pairing(self) -> int:
+    def pairing(self) -> TournamentPairing:
         self.read_papi()
         return self._pairing
 
@@ -87,7 +86,7 @@ class Tournament:
     @property
     def players_by_name(self) -> list[Player]:
         if self._players_by_name is None:
-            players: list[Player] = list(self._players_by_id.values())[1:]
+            players: list[Player] = list(self.players_by_id.values())[1:]
             self._players_by_name = sorted(
                 players, key=lambda player: (player.last_name, player.first_name))
         return self._players_by_name
@@ -170,7 +169,7 @@ class Tournament:
                 self._current_round = paired_rounds[-1]
 
     def _calculate_points(self):
-        # NOTE(Amaras) WTF IS THIS A LIST WHEN A RANGE OBJECT IS GOOD ENOUGH?
+        # TODO(Amaras) WTF IS THIS A LIST WHEN A RANGE OBJECT IS GOOD ENOUGH?
         for player in self._players_by_id.values():
             if player.id == 1:
                 continue
@@ -183,7 +182,7 @@ class Tournament:
                     if player.rating >= self._rating_limit1:
                         player.add_vpoints(1.0)
             elif self._pairing == TournamentPairing.HaleySoft:
-                # NOTE(Amaras) Is this right?
+                # TODO(Amaras) Is this right?
                 # The code implies this acceleration scheme:
                 # Round 1: All players above rating_limit1 get 1 vpoint
                 # Round 2: All players above rating_limit1 get 1 vpoint
@@ -195,7 +194,7 @@ class Tournament:
                         if self._current_round == 2:
                             player.add_vpoints(0.5)
             elif self._pairing == TournamentPairing.SAD:
-                # A l'appariement de l'avant-dernière ronde, les points
+                # À l'appariement de l'avant-dernière ronde, les points
                 # fictifs sont retirés et le système devient un système
                 # Suisse intégral.
                 if self._current_round <= self._rounds - 2:
@@ -249,7 +248,7 @@ class Tournament:
             opponent_id = player.pairings[self._current_round].opponent_id
             if opponent_id in self._players_by_id:
                 player_board: Board | None = None
-                # NOTE(Amaras) Why are you looping over indices?
+                # TODO(Amaras) Why are you looping over indices?
                 for board_number in range(len(self._boards)):
                     board = self._boards[board_number]
                     if board.white_player is not None and board.white_player.id == opponent_id:
