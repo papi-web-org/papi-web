@@ -59,6 +59,8 @@ class Board:
         # p1 < p2 calls p1.__lt__(p2)
         if not isinstance(other, Board):
             return NotImplemented
+        if self.board_id is not None and other.board_id is not None:
+            return self.board_id < other.board_id
         if self.black_player.id == 1:
             return True
         elif other.black_player.id == 1:
@@ -97,6 +99,8 @@ class Board:
         # p1 == p2 calls p1.__eq__(p2)
         if not isinstance(other, Board):
             return NotImplemented
+        if self.board_id is not None and other.board_id is not None:
+            return self.board_id == other.board_id
         if self.black_player == 1 or self.white_player.id == 1:
             return False
         self_player_1: Player

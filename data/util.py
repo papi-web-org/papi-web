@@ -133,9 +133,11 @@ class TournamentPairing(StrEnum):
     """An enumeration representing the supported types of tournament
     pairings.
     Currently, only Swiss Dutch, along with several accelerations, are supported.
-    A project for Berger-paired tournaments is in the TODO list.
-    PA: never thought of it because Berger-paired tournaments can be managed in Papi by
-    Berger-pairing all the rounds and setting the pairing-type back to Swiss in the end. """
+    A project for Berger-paired tournaments is in the TODO list."""
+    # NOTE(PA) never thought of it because Berger-paired tournaments can be managed in Papi by
+    # Berger-pairing all the rounds and setting the pairing-type back to Swiss in the end.
+    # NOTE(Amaras) Based on your remark, this sounds like a bad API design which
+    # is why I thought about doing something to make it better.
     Standard = 'Standard'
     Haley = 'Haley'
     HaleySoft = 'HaleySoft'

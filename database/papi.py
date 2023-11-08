@@ -85,28 +85,6 @@ class TournamentRating(StrEnum):
                 raise ValueError(f'Unknown value:  {value}')
 
 
-# TODO(Amaras) remember to remove those
-TOURNAMENT_RATING_STANDARD: int = 1
-TOURNAMENT_RATING_RAPID: int = 2
-TOURNAMENT_RATING_BLITZ: int = 3
-TOURNAMENT_RATING_DB_FIELDS: dict[int, str] = {
-    TOURNAMENT_RATING_STANDARD: 'Elo',
-    TOURNAMENT_RATING_RAPID: 'Rapide',
-    TOURNAMENT_RATING_BLITZ: 'Blitz',
-}
-TOURNAMENT_RATING_VALUES: dict[str, int] = {v: k for k, v in TOURNAMENT_RATING_DB_FIELDS.items()}
-TOURNAMENT_RATING_STRINGS: dict[int, str] = {
-    TOURNAMENT_RATING_STANDARD: 'Standard',
-    TOURNAMENT_RATING_RAPID: 'Rapide',
-    TOURNAMENT_RATING_BLITZ: 'Blitz',
-}
-TOURNAMENT_RATING_TYPE_DB_FIELDS: dict[int, str] = {
-    TOURNAMENT_RATING_STANDARD: 'Fide',
-    TOURNAMENT_RATING_RAPID: 'RapideFide',
-    TOURNAMENT_RATING_BLITZ: 'BlitzFide',
-}
-
-
 class TournamentInfo(NamedTuple):
     rounds: int
     pairing: TournamentPairing

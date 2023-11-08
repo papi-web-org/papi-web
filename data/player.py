@@ -10,26 +10,6 @@ from data.util import PlayerSex, PlayerTitle, Color
 
 logger: Logger = get_logger()
 
-# TODO(pascalaubry) Remove these unused variables
-PLAYER_TITLE_VALUES = {title.name: title.value for title in PlayerTitle}
-del PLAYER_TITLE_VALUES[PlayerTitle.no.name]
-PLAYER_TITLE_VALUES[''] = 0
-PLAYER_TITLE_STRINGS = {v: k for k, v in PLAYER_TITLE_VALUES.items()}
-
-
-# TODO(pascalaubry) Remove these unused variables
-COLOR_WHITE: str = Color.White.value
-COLOR_BLACK: str = Color.White.value
-COLOR_DB_VALUES: dict[str, str] = {
-    'B': COLOR_WHITE,
-    'N': COLOR_BLACK,
-}
-COLOR_VALUES: dict[str, str] = {v: k for k, v in COLOR_DB_VALUES.items()}
-COLOR_STRINGS: dict[str, str] = {
-    COLOR_WHITE: 'Blancs',
-    COLOR_BLACK: 'Noirs',
-}
-
 
 @dataclass
 @total_ordering
@@ -69,10 +49,13 @@ class Player:
         self.points = sum(
                 pairing.result.point_value
                 for round_index, pairing in self.pairings.items()
-                if round_index <= max_round)
+                # NOTE(Amaras) if you were to include the current round
+                # in the computation, boards regularly change their ordering
+                # during the current round as results are added
+                if round_index < max_round)
 
     @staticmethod
-    def __points_str(points: float | None) -> str:
+    def _points_str(points: float | None) -> str:
         if points is None:
             return ''
         if points == 0.5:
@@ -89,7 +72,7 @@ class Player:
 
     @property
     def points_str(self) -> str:
-        return self.__points_str(self.points)
+        return self._points_str(self.points)
 
     def set_vpoints(self, vpoints: float):
         warnings.warn("Use direct assignment to vpoints instead")
@@ -101,7 +84,7 @@ class Player:
 
     @property
     def vpoints_str(self) -> str:
-        return self.__points_str(self.vpoints)
+        return self._points_str(self.vpoints)
 
     @property
     def not_paired_str(self) -> str:
