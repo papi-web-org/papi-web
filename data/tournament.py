@@ -6,7 +6,7 @@ from common.config_reader import TMP_DIR
 from common.logger import get_logger
 from data.board import Board
 from data.player import Player
-from data.util import Color, TournamentPairing
+from data.util import Color
 from data.util import TournamentPairing, Result
 from database.papi import PapiDatabase
 
@@ -248,9 +248,7 @@ class Tournament:
             opponent_id = player.pairings[self._current_round].opponent_id
             if opponent_id in self._players_by_id:
                 player_board: Board | None = None
-                # TODO(Amaras) Why are you looping over indices?
-                for board_number in range(len(self._boards)):
-                    board = self._boards[board_number]
+                for board in self._boards:
                     if board.white_player is not None and board.white_player.id == opponent_id:
                         player_board = board
                         player_board.black_player = player
@@ -260,7 +258,7 @@ class Tournament:
                         player_board.white_player = player
                         break
                 if player_board is None:
-                    if player.pairings[self._current_round].color == 'W':
+                    if player.pairings[self._current_round].color == Color.White:
                         self._boards.append(Board(white_player=player))
                     else:
                         self._boards.append(Board(black_player=player))
