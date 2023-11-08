@@ -124,6 +124,10 @@ class Result(IntEnum):
             case _:
                 raise ValueError(f"Unknown value: {self}")
 
+    @classmethod
+    def inputtable_results(cls) -> tuple[Self, Self, Self]:
+        return cls.Gain, cls.DrawOrHPB, cls.Loss
+
 
 class TournamentPairing(StrEnum):
     """An enumeration representing the supported types of tournament

@@ -16,7 +16,7 @@ from data.event import Event, get_events_by_name
 from data.rotator import Rotator
 from data.screen import AScreen, ScreenType
 from data.tournament import Tournament
-from database.papi import RESULT_LOSS, RESULT_GAIN, RESULT_DRAW_OR_BYE_05
+from data.util import Result
 
 logger: Logger = get_logger()
 
@@ -187,10 +187,10 @@ def update_result(
         messages.error(
             request, f'Writing result failed (board [{board_id}] not found for tournament [{tournament.id}])')
         return redirect(screen_url(event.id, screen_id, ))
-    if result not in [RESULT_LOSS, RESULT_DRAW_OR_BYE_05, RESULT_GAIN]:
+    if result not in Result.inputtable_results():
         messages.error(request, f'Writing result failed (invalid result [{result}])')
         return redirect(screen_url(event.id, screen_id, ))
-    tournament.add_result(board, result)
+    tournament.add_result(board, Result.from_db_int(result))
     event.store_result(tournament, board, result)
     return redirect(screen_url(event_id, screen_id, ))
 

@@ -293,7 +293,7 @@ class Tournament:
                 weak_player.set_handicap(weak_time, self.handicap_increment, False)
 
     def add_result(self, board: Board, white_result: Result):
-        black_result: Result.opposite_result(white_result)
+        black_result = Result.opposite_result(white_result)
         self.papi_database.add_result(board.white_player.id, self._current_round, white_result)
         self.papi_database.add_result(board.black_player.id, self._current_round, black_result)
         self.papi_database.close()
