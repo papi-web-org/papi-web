@@ -85,6 +85,7 @@ class TournamentRating(StrEnum):
                 raise ValueError(f'Unknown value:  {value}')
 
 
+# TODO(Amaras) remember to remove those
 TOURNAMENT_RATING_STANDARD: int = 1
 TOURNAMENT_RATING_RAPID: int = 2
 TOURNAMENT_RATING_BLITZ: int = 3

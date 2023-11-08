@@ -55,6 +55,7 @@ class Board:
         self.result = result
 
     def __lt__(self, other):
+        # TODO(Amaras) for ordering, should this depend only on board id?
         # p1 < p2 calls p1.__lt__(p2)
         if not isinstance(other, Board):
             return NotImplemented
