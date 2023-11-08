@@ -1,6 +1,6 @@
 from pathlib import Path
 from logging import Logger
-from enum import Enum, StrEnum
+from enum import StrEnum
 from itertools import product
 from typing import NamedTuple, Self
 from contextlib import suppress
@@ -17,6 +17,7 @@ logger: Logger = get_logger()
 RESULT_LOSS = Result.Loss
 RESULT_GAIN = Result.Gain
 RESULT_DRAW_OR_BYE_05 = Result.DrawOrHPB
+
 
 class TournamentRating(StrEnum):
     Standard = 'Standard'
@@ -121,7 +122,7 @@ class PapiDatabase(AccessDatabase):
         super().__init__(file)
 
     def __enter__(self):
-        super().enter()
+        super().__enter__()
 
     def __exit__(self, exc_type, exc_value, traceback):
         self._close()
