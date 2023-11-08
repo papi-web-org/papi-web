@@ -125,15 +125,15 @@ class Tournament:
         if self._papi_read:
             return
         if self.file:
-            (
-                self._rounds,
-                self._pairing,
-                self._rating,
-                self._rating_limit1,
-                self._rating_limit2
-            ) = self.papi_database.read_info()
-            self._players_by_id = self.papi_database.read_players(self._rating, self._rounds)
-            self.papi_database.close()
+            with self.papi_database:
+                (
+                    self._rounds,
+                    self._pairing,
+                    self._rating,
+                    self._rating_limit1,
+                    self._rating_limit2
+                ) = self.papi_database.read_info()
+                self._players_by_id = self.papi_database.read_players(self._rating, self._rounds)
         self._papi_read = True
         self._calculate_current_round()
         self._calculate_points()
