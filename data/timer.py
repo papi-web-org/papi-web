@@ -62,11 +62,11 @@ class TimerHour:
         return self.datetime.strftime('%H:%M')
 
     def set_text_before(self, text: str):
-        warnings.warn("Use direct assigment to text_before instead")
+        warnings.warn("Use direct assignment to text_before instead")
         self.text_before = text
 
     def set_text_after(self, text: str):
-        warnings.warn("Use direct assigment to text_after instead")
+        warnings.warn("Use direct assignment to text_after instead")
         self.text_after = text
 
     def set_round(self, round: int):
