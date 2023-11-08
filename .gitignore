@@ -11,3 +11,6 @@ __pycache__/
 # Vim scratch files
 *.swp
 *.swo
+
+# Access database tmp files
+*.ldb

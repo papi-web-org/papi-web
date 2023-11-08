@@ -1,23 +1,20 @@
-from configparser import SectionProxy
-
 import datetime
 import re
-from functools import total_ordering
-from pathlib import Path
-from contextlib import suppress
-
 import time
-
-from typing import Iterator, NamedTuple
+from configparser import SectionProxy
+from contextlib import suppress
+from functools import total_ordering
 from logging import Logger
+from pathlib import Path
+from typing import Iterator, NamedTuple
 
 from common.config_reader import ConfigReader
 from common.logger import get_logger
 from data.board import Board
 from data.result import Result
 from data.rotator import Rotator, ROTATOR_DEFAULT_DELAY
-from data.screen import SCREEN_TYPE_NAMES, SCREEN_TYPE_BOARDS, SCREEN_TYPE_PLAYERS, SCREEN_TYPE_RESULTS
 from data.screen import ScreenSet, ScreenBoards, ScreenPlayers, ScreenResults, AScreen
+from data.screen import ScreenType
 from data.template import Template
 from data.timer import Timer, TimerHour
 from data.tournament import Tournament
@@ -119,7 +116,7 @@ class Event:
         except TypeError:
             # NOTE(Amaras) This could happen because of a TOC/TOU bug
             # https://en.wikipedia.org/wiki/Time-of-check_to_time-of-use
-            # After this, the secion has already been retrieved, so no future
+            # After this, the section has already been retrieved, so no future
             # access will throw a TypeError.
             self.reader.add_error(
                     'la rubrique est devenue une option, erreur fatale',
@@ -522,7 +519,7 @@ class Event:
         )
         for sub_section_key in subsection_keys:
             splitted = sub_section_key.split('.')
-            if splitted[0] not in SCREEN_TYPE_NAMES or len(splitted) > 2:
+            if splitted[0] not in ScreenType.names() or len(splitted) > 2:
                 self.reader.add_warning(
                     'rubrique de modèle non valide, ignorée',
                     f'{section_key}.{sub_section_key}'
@@ -588,23 +585,23 @@ class Event:
         # NOTE(Amaras) The walrus operator (:= aka assignment expression)
         # is available since Python 3.8 and this use case is one of the
         # motivational examples for its introduction, so let's use it.
-        if matches := re.match(r'^(\d+)-(\d+)$', range_str):
-            first_number = int(matches.group(1))
-            last_number = int(matches.group(2))
+        if matches := re.match(r'^(?P<first>\d+)-(?P<second>\d+)$', range_str):
+            first_number = int(matches.group('first'))
+            last_number = int(matches.group('second'))
             if first_number <= last_number:
                 family_indices = list(
                     map(str, range(first_number, last_number + 1))
                 )
-        elif matches := re.match('^([A-Z])-([A-Z])$', range_str):
-            first_letter = matches.group(1)
-            last_letter = matches.group(2)
+        elif matches := re.match('^(?P<first>[A-Z])-(?P<second>[A-Z])$', range_str):
+            first_letter = matches.group('first')
+            last_letter = matches.group('second')
             if ord(first_letter) <= ord(last_letter):
                 family_indices = list(
                     map(chr, range(ord(first_letter), ord(last_letter) + 1))
                 )
-        elif matches := re.match('^([a-z])-([a-z])$', range_str):
-            first_letter = matches.group(1)
-            last_letter = matches.group(2)
+        elif matches := re.match('^(?P<first>[a-z])-(?P<second>[a-z])$', range_str):
+            first_letter = matches.group('first')
+            last_letter = matches.group('second')
             if ord(first_letter) <= ord(last_letter):
                 family_indices = list(
                     map(chr, range(ord(first_letter), ord(last_letter) + 1))
@@ -645,41 +642,41 @@ class Event:
                 'aucun écran défini, ajout des écrans par défaut',
                 'screen.*'
             )
-            results_screen_id: str = f'auto-{SCREEN_TYPE_RESULTS}'
+            results_screen_id: str = f'auto-{ScreenType.Results.value}'
             if len(self.tournaments) > 1:
                 update_menu: str = ','.join([
-                    f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-update' for tournament_id in self.tournaments
+                    f'{tournament_id}-auto-{ScreenType.Boards.value}-update' for tournament_id in self.tournaments
                 ])
                 view_menu: str = ','.join([
-                    f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-view' for tournament_id in self.tournaments
+                    f'{tournament_id}-auto-{ScreenType.Boards.value}-view' for tournament_id in self.tournaments
                 ])
                 players_menu: str = ','.join([
-                    f'{tournament_id}-auto-{SCREEN_TYPE_PLAYERS}' for tournament_id in self.tournaments
+                    f'{tournament_id}-auto-{ScreenType.Players.value}' for tournament_id in self.tournaments
                 ])
                 results_menu: str = 'none'
             else:
                 tournament: Tournament = list(self.tournaments.values())[0]
                 update_menu: str = 'none'
                 view_menu: str = ','.join([
-                    f'{tournament.id}-auto-{SCREEN_TYPE_BOARDS}-view',
-                    f'{tournament.id}-auto-{SCREEN_TYPE_PLAYERS}',
-                    f'auto-{SCREEN_TYPE_RESULTS}',
+                    f'{tournament.id}-auto-{ScreenType.Boards.value}-view',
+                    f'{tournament.id}-auto-{ScreenType.Players.value}',
+                    f'auto-{ScreenType.Results.value}',
                 ])
                 players_menu: str = view_menu
                 results_menu: str = view_menu
             for tournament_id in self.tournaments:
                 tournament_name = self.tournaments[tournament_id].name
                 auto_screens: dict[str, dict[str, str]] = {
-                    f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-update': {
-                        'type': SCREEN_TYPE_BOARDS,
+                    f'{tournament_id}-auto-{ScreenType.Boards.value}-update': {
+                        'type': ScreenType.Boards.value,
                         'update': 'on',
                         'name': f'{f"{tournament_name} - " if len(self.tournaments) > 1 else ""}'
                                 f'Saisie des résultats',
                         'menu_text': tournament_name if len(self.tournaments) > 1 else '',
                         'menu': update_menu,
                     },
-                    f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-view': {
-                        'type': SCREEN_TYPE_BOARDS,
+                    f'{tournament_id}-auto-{ScreenType.Boards.value}-view': {
+                        'type': ScreenType.Boards.value,
                         'update': 'off',
                         'name': f'{f"{tournament_name} - " if len(self.tournaments) > 1 else ""}'
                                 f'Appariements par échiquier',
@@ -688,8 +685,8 @@ class Event:
                         else 'Appariements par échiquier',
                         'menu': view_menu,
                     },
-                    f'{tournament_id}-auto-{SCREEN_TYPE_PLAYERS}': {
-                        'type': SCREEN_TYPE_PLAYERS,
+                    f'{tournament_id}-auto-{ScreenType.Players.value}': {
+                        'type': ScreenType.Players.value,
                         'name': f'{f"{tournament_name} - " if len(self.tournaments) > 1 else ""}'
                                 f'Appariements par ordre alphabétique',
                         'columns': '2',
@@ -708,13 +705,13 @@ class Event:
                         'screen.*'
                     )
                 auto_screen_sets: dict[str, dict[str, str]] = {
-                    f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-update.{SCREEN_TYPE_BOARDS}': {
+                    f'{tournament_id}-auto-{ScreenType.Boards.value}-update.{ScreenType.Boards.value}': {
                         'tournament': tournament_id,
                     },
-                    f'{tournament_id}-auto-{SCREEN_TYPE_BOARDS}-view.{SCREEN_TYPE_BOARDS}': {
+                    f'{tournament_id}-auto-{ScreenType.Boards.value}-view.{ScreenType.Boards.value}': {
                         'tournament': tournament_id,
                     },
-                    f'{tournament_id}-auto-{SCREEN_TYPE_PLAYERS}.players': {
+                    f'{tournament_id}-auto-{ScreenType.Players.value}.players': {
                         'tournament': tournament_id,
                     },
                 }
@@ -722,7 +719,7 @@ class Event:
                     section_key: str = f'screen.{screen_set_id}'
                     self.reader[section_key] = options
             self.reader[f'screen.{results_screen_id}'] = {
-                'type': SCREEN_TYPE_RESULTS,
+                'type': ScreenType.Results.value,
                 'name': f'Derniers résultats',
                 'menu_text': f'Derniers résultats',
                 'menu': results_menu,
@@ -733,10 +730,10 @@ class Event:
             )
             screen_ids.append(results_screen_id)
             if len(self.tournaments) > 1:
-                self.reader[f'rotator.auto-{SCREEN_TYPE_BOARDS}'] = {
+                self.reader[f'rotator.auto-{ScreenType.Boards.value}'] = {
                     'screens': view_menu,
                 }
-                self.reader[f'rotator.auto-{SCREEN_TYPE_PLAYERS}'] = {
+                self.reader[f'rotator.auto-{ScreenType.Players.value}'] = {
                     'screens': players_menu,
                 }
             else:
@@ -831,7 +828,7 @@ class Event:
                 self.reader.add_debug(f"ajout de l'option [{key} = {value}]", new_section_key)
         key = 'type'
         try:
-            screen_type = screen_section[key]
+            maybe_screen_type = screen_section[key]
         except KeyError:
             self.reader.add_warning(
                 f"type d'écran non précisé, écran ignoré",
@@ -839,77 +836,88 @@ class Event:
                 key
             )
             return
-        screen_set_section_keys: list[str] = []
-        screen_set_single_section_key = f'{section_key}.{screen_type}'
-        if screen_type == SCREEN_TYPE_BOARDS:
-            if screen_set_single_section_key in self.reader:
-                screen_set_section_keys = [screen_set_single_section_key, ]
-                for screen_set_sub_section_key in self.reader.get_subsection_keys_with_prefix(
-                        screen_set_single_section_key):
-                    self.reader.add_warning(
-                        'rubrique non prise en compte, supprimez la rubrique '
-                        f'[{screen_set_single_section_key}] pour cela',
-                        f'{screen_set_single_section_key}.{screen_set_sub_section_key}'
-                    )
-            else:
-                screen_set_section_keys = [
-                    f'{screen_set_single_section_key}.{sub_section_key}'
-                    for sub_section_key
-                    in self.reader.get_subsection_keys_with_prefix(screen_set_single_section_key)
-                ]
-            if not screen_set_section_keys:
-                if len(self.tournaments) == 1:
-                    self.reader[screen_set_single_section_key] = {}
-                    screen_set_section_keys.append(screen_set_single_section_key)
-                    self.reader.add_info(
-                        'un seul tournoi, la rubrique '
-                        f'[{screen_set_single_section_key}] a été ajoutée',
-                        section_key
-                    )
-                else:
-                    self.reader.add_warning(
-                        'rubrique absente, écran ignoré',
-                        screen_set_single_section_key
-                    )
-                    return
-        elif screen_type == SCREEN_TYPE_PLAYERS:
-            if screen_set_single_section_key in self.reader:
-                screen_set_section_keys = [screen_set_single_section_key, ]
-                for screen_set_sub_section_key in self.reader.get_subsection_keys_with_prefix(
-                        screen_set_single_section_key):
-                    self.reader.add_warning(
-                        'rubrique non prise en compte, supprimez la rubrique '
-                        f'[{screen_set_single_section_key}] pour cela',
-                        f'{screen_set_single_section_key}.{screen_set_sub_section_key}'
-                    )
-            else:
-                screen_set_section_keys = [
-                    screen_set_single_section_key + '.' + sub_section_key
-                    for sub_section_key in self.reader.get_subsection_keys_with_prefix(screen_set_single_section_key)
-                ]
-            if not screen_set_section_keys:
-                if len(self.tournaments) == 1:
-                    self.reader[screen_set_single_section_key] = {}
-                    screen_set_section_keys.append(screen_set_single_section_key)
-                    self.reader.add_info(
-                        'un seul tournoi, la rubrique '
-                        f'[{screen_set_single_section_key}] a été ajoutée',
-                        section_key
-                    )
-                else:
-                    self.reader.add_warning(
-                        'rubrique absente, écran ignoré',
-                        screen_set_single_section_key
-                    )
-                    return
-        elif screen_type == SCREEN_TYPE_RESULTS:
-            pass
-        else:
+        try:
+            screen_type = ScreenType.from_str(maybe_screen_type)
+        except ValueError:
             self.reader.add_warning(
-                f"type d'écran [{screen_type}] inconnu, écran ignoré",
-                section_key
+                f"Type d'écran invalide {maybe_screen_type}",
+                section_key,
+                key
             )
             return
+        screen_set_section_keys: list[str] = []
+        screen_set_single_section_key = f'{section_key}.{screen_type.value}'
+        match screen_type:
+            case ScreenType.Boards:
+                if screen_set_single_section_key in self.reader:
+                    screen_set_section_keys = [screen_set_single_section_key, ]
+                    for screen_set_sub_section_key in self.reader.get_subsection_keys_with_prefix(
+                            screen_set_single_section_key):
+                        self.reader.add_warning(
+                            'rubrique non prise en compte, supprimez la rubrique '
+                            f'[{screen_set_single_section_key}] pour cela',
+                            f'{screen_set_single_section_key}.{screen_set_sub_section_key}'
+                        )
+                else:
+                    screen_set_section_keys = [
+                        f'{screen_set_single_section_key}.{sub_section_key}'
+                        for sub_section_key
+                        in self.reader.get_subsection_keys_with_prefix(screen_set_single_section_key)
+                    ]
+                if not screen_set_section_keys:
+                    if len(self.tournaments) == 1:
+                        self.reader[screen_set_single_section_key] = {}
+                        screen_set_section_keys.append(screen_set_single_section_key)
+                        self.reader.add_info(
+                            'un seul tournoi, la rubrique '
+                            f'[{screen_set_single_section_key}] a été ajoutée',
+                            section_key
+                        )
+                    else:
+                        self.reader.add_warning(
+                            'rubrique absente, écran ignoré',
+                            screen_set_single_section_key
+                        )
+                        return
+            case ScreenType.Players:
+                if screen_set_single_section_key in self.reader:
+                    screen_set_section_keys = [screen_set_single_section_key, ]
+                    for screen_set_sub_section_key in self.reader.get_subsection_keys_with_prefix(
+                            screen_set_single_section_key):
+                        self.reader.add_warning(
+                            'rubrique non prise en compte, supprimez la rubrique '
+                            f'[{screen_set_single_section_key}] pour cela',
+                            f'{screen_set_single_section_key}.{screen_set_sub_section_key}'
+                        )
+                else:
+                    screen_set_section_keys = [
+                        screen_set_single_section_key + '.' + sub_section_key
+                        for sub_section_key
+                        in self.reader.get_subsection_keys_with_prefix(screen_set_single_section_key)
+                    ]
+                if not screen_set_section_keys:
+                    if len(self.tournaments) == 1:
+                        self.reader[screen_set_single_section_key] = {}
+                        screen_set_section_keys.append(screen_set_single_section_key)
+                        self.reader.add_info(
+                            'un seul tournoi, la rubrique '
+                            f'[{screen_set_single_section_key}] a été ajoutée',
+                            section_key
+                        )
+                    else:
+                        self.reader.add_warning(
+                            'rubrique absente, écran ignoré',
+                            screen_set_single_section_key
+                        )
+                        return
+            case ScreenType.Results:
+                pass
+            case _:
+                self.reader.add_warning(
+                    f"type d'écran [{screen_type}] inconnu, écran ignoré",
+                    section_key
+                )
+                return
         key = 'columns'
         default_columns: int = 1
         try:
@@ -933,10 +941,10 @@ class Event:
             )
             columns = default_columns
         screen_sets: list[ScreenSet] | None = None
-        if screen_type in [SCREEN_TYPE_BOARDS, SCREEN_TYPE_PLAYERS, ]:
+        if screen_type in [ScreenType.Boards, ScreenType.Players, ]:
             screen_sets = self._build_screen_sets(screen_set_section_keys, columns)
             if not screen_sets:
-                if screen_type == SCREEN_TYPE_BOARDS:
+                if screen_type == ScreenType.Boards:
                     self.reader.add_warning(
                         "pas d'ensemble d'échiquiers déclaré, écran ignoré",
                         section_key
@@ -953,7 +961,7 @@ class Event:
         try:
             screen_name = screen_section[key]
         except KeyError:
-            if screen_type == SCREEN_TYPE_RESULTS:
+            if screen_type == ScreenType.Results:
                 screen_name = 'Derniers résultats'
                 self.reader.add_debug(
                     f'option absente, par défault [{screen_name}]',
@@ -980,7 +988,7 @@ class Event:
         elif menu == 'none':
             menu = None
         elif menu == 'family':
-            if screen_type == SCREEN_TYPE_RESULTS:
+            if screen_type == ScreenType.Results:
                 self.reader.add_warning(
                     "l'option [family] n'est pas autorisée pour les écrans de "
                     f'type [{screen_type}], aucun menu ne sera affiché',
@@ -1017,7 +1025,7 @@ class Event:
         key = 'update'
         default_update: bool = False
         update: bool | None = default_update
-        if screen_type == SCREEN_TYPE_BOARDS:
+        if screen_type == ScreenType.Boards:
             if key in screen_section:
                 update = self.reader.getboolean_safe(section_key, key)
                 if update is None:
@@ -1038,7 +1046,7 @@ class Event:
         key = 'limit'
         default_limit: int = 0
         limit: int | None = default_limit
-        if screen_type == SCREEN_TYPE_RESULTS:
+        if screen_type == ScreenType.Results:
             if key in screen_section:
                 limit = self.reader.getint_safe(section_key, key)
                 if limit is None:
@@ -1069,7 +1077,7 @@ class Event:
         family_id: str | None = None
         if key in screen_section:
             family_id: str = self.reader.get(section_key, key)
-        if screen_type == SCREEN_TYPE_BOARDS:
+        if screen_type == ScreenType.Boards:
             self.screens[screen_id] = ScreenBoards(
                 screen_id,
                 family_id,
@@ -1081,7 +1089,7 @@ class Event:
                 screen_sets,
                 update
             )
-        elif screen_type == SCREEN_TYPE_PLAYERS:
+        elif screen_type == ScreenType.Players:
             self.screens[screen_id] = ScreenPlayers(
                 screen_id,
                 family_id,
@@ -1092,7 +1100,7 @@ class Event:
                 show_timer,
                 screen_sets
             )
-        elif screen_type == SCREEN_TYPE_RESULTS:
+        elif screen_type == ScreenType.Results:
             self.screens[screen_id] = ScreenResults(
                 self.id,
                 screen_id,
@@ -1354,14 +1362,17 @@ class Event:
             previous_hour = timer.hours[-1]
         datetime_str = re.sub(r'\s+', ' ', str(timer_section.get(key)).strip().upper())
         timestamp: int | None = None
-        matches = re.match('^#?([0-9]{4})-([0-9]{1,2})-([0-9]{1,2}) ([0-9]{1,2}):([0-9]{1,2})$', datetime_str)
+        matches = re.match(
+            '^#?(?P<year>[0-9]{4})-(?P<month>[0-9]{1,2})-(?P<day>[0-9]{1,2}) '
+            '(?P<hour>[0-9]{1,2}):(?P<minute>[0-9]{1,2})$',
+            datetime_str)
         if matches:
             try:
                 timestamp = int(time.mktime(datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M').timetuple()))
             except ValueError:
                 pass
         else:
-            matches = re.match('^([0-9]{1,2}):([0-9]{1,2})$', datetime_str)
+            matches = re.match('^(?P<hour>[0-9]{1,2}):(?P<minute>[0-9]{1,2})$', datetime_str)
             if matches:
                 if previous_hour is None:
                     self.reader.add_warning(
@@ -1413,9 +1424,9 @@ class Event:
         except KeyError:
             return
         section_keys = [str(id) for id in range(1, 4)]
-        simplified_hex_pattern = re.compile('^#?([0-9A-F])([0-9A-F])([0-9A-F])$')
-        hex_pattern = re.compile('^#?([0-9A-F]{2})([0-9A-F]{2})([0-9A-F]{2})$')
-        rgb_pattern = re.compile(r'^(RBG)*\(([0-9]+),([0-9]+)([0-9]+)\)*$')
+        simplified_hex_pattern = re.compile('^#?(?P<R>[0-9A-F])(?P<G>[0-9A-F])(?P<B>[0-9A-F])$')
+        hex_pattern = re.compile('^#?(?P<R>[0-9A-F]{2})(?P<G>[0-9A-F]{2})(?P<B>[0-9A-F]{2})$')
+        rgb_pattern = re.compile(r'^(?:RBG)*\((?P<R>[0-9]+),(?P<G>[0-9]+)(?P<B>[0-9]+)\)*$')
         for key in color_section:
             if key not in section_keys:
                 self.reader.add_warning(
@@ -1431,21 +1442,21 @@ class Event:
             color_value: str = color_section.get(key).replace(' ', '').upper()
             if matches := simplified_hex_pattern.match(color_value):
                 color_rbg = (
-                    int(matches.group(1) * 2, 16),
-                    int(matches.group(2) * 2, 16),
-                    int(matches.group(3) * 2, 16),
+                    int(matches.group('R') * 2, 16),
+                    int(matches.group('G') * 2, 16),
+                    int(matches.group('B') * 2, 16),
                 )
             elif matches := hex_pattern.match(color_value):
                 color_rbg = (
-                    int(matches.group(1), 16),
-                    int(matches.group(2), 16),
-                    int(matches.group(3), 16),
+                    int(matches.group('R'), 16),
+                    int(matches.group('G'), 16),
+                    int(matches.group('B'), 16),
                 )
             elif matches := rgb_pattern.match(color_value):
                 color_rbg = (
-                    int(matches.group(1)),
-                    int(matches.group(2)),
-                    int(matches.group(3)),
+                    int(matches.group('R')),
+                    int(matches.group('G')),
+                    int(matches.group('B')),
                 )
                 if color_rbg[0] > 255 or color_rbg[1] > 255 or color_rbg[2] > 255:
                     color_rbg = None

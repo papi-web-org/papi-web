@@ -18,6 +18,7 @@ RESULT_LOSS = Result.Loss
 RESULT_GAIN = Result.Gain
 RESULT_DRAW_OR_BYE_05 = Result.DrawOrHPB
 
+
 class TournamentRating(StrEnum):
     Standard = 'Standard'
     Rapid = 'Rapide'
@@ -135,7 +136,7 @@ class PapiDatabase(AccessDatabase):
 
     def __read_var(self, name) -> str:
         query: str = 'SELECT Value FROM INFO WHERE Variable = ?'
-        self._execute(query, (name, ))
+        self._execute(query, (name,))
         return self._fetchval()
 
     def read_info(self) -> TournamentInfo:
@@ -156,7 +157,7 @@ class PapiDatabase(AccessDatabase):
             'Ref', 'Nom', 'Prenom', 'Sexe', 'FideTitre', 'Fixe',
             'Elo', 'Rapide', 'Blitz', 'Fide', 'RapideFide', 'BlitzFide',
         ]
-        for rd, suffix in product(range(1, rounds + 1),  ['Cl', 'Adv', 'Res']):
+        for rd, suffix in product(range(1, rounds + 1), ['Cl', 'Adv', 'Res']):
             player_fields.append(f'Rd{rd:0>2}{suffix}')
         query: str = f'SELECT {", ".join(player_fields)} FROM joueur ORDER BY Ref'
         self._execute(query)
@@ -182,4 +183,4 @@ class PapiDatabase(AccessDatabase):
     def add_result(self, player_id: int, round: int, result: Result):
         """Writes the given result to the database."""
         query: str = f'UPDATE joueur SET Rd{round:0>2}Res = ? WHERE Ref = ?'
-        self._query(query, (result.value, player_id, ))
+        self._query(query, (result.value, player_id,))
