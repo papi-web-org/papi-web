@@ -1,9 +1,14 @@
+import datetime
 import datetime as dt
+import re
+import time
+from contextlib import suppress
 from logging import Logger
 from dataclasses import dataclass, field
 from collections import namedtuple
 import warnings
 
+from common.config_reader import ConfigReader
 from common.logger import get_logger
 
 logger: Logger = get_logger()
@@ -129,3 +134,185 @@ class Timer:
 
     def __repr__(self):
         return f'{type(self).__name__}({self.colors} {self.delays} {self.hours})'
+
+
+class TimerBuilder:
+
+    def __init__(self, config_reader: ConfigReader):
+        self.__config_reader: ConfigReader = config_reader
+
+    def build_timer(self) -> Timer | None:
+        section_key = 'timer.hour'
+        hour_ids: list[str] = self.__config_reader.get_subsection_keys_with_prefix(section_key)
+        if not hour_ids:
+            self.__config_reader.add_debug(
+                'aucun horaire déclaré, le chronomètre ne sera pas disponible',
+                'timer.hour.*'
+            )
+            return None
+        timer: Timer = Timer()
+        for hour_id in hour_ids:
+            self.__add_hour(timer, hour_id)
+        if not timer.hours:
+            self.__config_reader.add_warning(
+                'aucun horaire défini, le chronomètre ne sera pas disponible',
+                section_key
+            )
+            return None
+        self.__set_colors(timer)
+        self.__set_delays(timer)
+        timer.set_hours_timestamps()
+        return timer
+
+    def __add_hour(self, timer: Timer, hour_id: str):
+        section_key = f'timer.hour.{hour_id}'
+        timer_section = self.__config_reader[section_key]
+        section_keys: list[str] = ['date', 'text_before', 'text_after', ]
+        key = 'date'
+        if key not in timer_section:
+            self.__config_reader.add_warning('option absente, horaire ignoré', section_key, key)
+            return
+        previous_hour: TimerHour | None = None
+        if timer.hours:
+            previous_hour = timer.hours[-1]
+        datetime_str = re.sub(r'\s+', ' ', str(timer_section.get(key)).strip().upper())
+        timestamp: int | None = None
+        matches = re.match(
+            '^#?(?P<year>[0-9]{4})-(?P<month>[0-9]{1,2})-(?P<day>[0-9]{1,2}) '
+            '(?P<hour>[0-9]{1,2}):(?P<minute>[0-9]{1,2})$',
+            datetime_str)
+        if matches:
+            try:
+                timestamp = int(time.mktime(datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M').timetuple()))
+            except ValueError:
+                pass
+        else:
+            matches = re.match('^(?P<hour>[0-9]{1,2}):(?P<minute>[0-9]{1,2})$', datetime_str)
+            if matches:
+                if previous_hour is None:
+                    self.__config_reader.add_warning(
+                        'le jour du premier horaire doit être spécifié, horaire ignoré', section_key, key)
+                    return
+                self.__config_reader.add_debug(
+                    f'jour non spécifié, [{datetime_str} {previous_hour}] pris en compte', section_key, key)
+                try:
+                    timestamp = int(time.mktime(datetime.datetime.strptime(
+                        previous_hour.date_str + ' ' + datetime_str, '%Y-%m-%d %H:%M').timetuple()))
+                except ValueError:
+                    pass
+        if timestamp is None:
+            self.__config_reader.add_warning(
+                f'date [{datetime_str}] non valide ([YYYY-MM-DD hh:mm] ou [hh:mm] attendu), horaire ignoré',
+                section_key, key)
+            return
+        hour: TimerHour = TimerHour(hour_id, timestamp)
+        if timer.hours:
+            previous_hour = timer.hours[-1]
+            if timestamp <= previous_hour.timestamp:
+                self.__config_reader.add_warning(
+                    f"l'horaire [{hour.datetime_str}] arrive avant l'horaire précédent [{previous_hour.datetime_str}], "
+                    f"horaire ignoré", section_key, key)
+                return
+
+        if hour_id.isdigit():
+            hour.set_round(int(hour_id))
+        key = 'text_before'
+        with suppress(KeyError):
+            hour.set_text_before(timer_section[key])
+        key = 'text_after'
+        with suppress(KeyError):
+            hour.set_text_after(timer_section[key])
+        if hour.text_before is None or hour.text_after is None:
+            self.__config_reader.add_warning(
+                'les options [text_before] et [text_after] sont attendues, horaire ignoré', section_key)
+            return
+        for key, value in self.__config_reader.items(section_key):
+            if key not in section_keys:
+                self.__config_reader.add_warning('option inconnue', section_key, key)
+        timer.hours.append(hour)
+
+    def __set_colors(self, timer: Timer):
+        section_key = 'timer.colors'
+        try:
+            color_section = self.__config_reader[section_key]
+        except KeyError:
+            return
+        section_keys = [str(id) for id in range(1, 4)]
+        simplified_hex_pattern = re.compile('^#?(?P<R>[0-9A-F])(?P<G>[0-9A-F])(?P<B>[0-9A-F])$')
+        hex_pattern = re.compile('^#?(?P<R>[0-9A-F]{2})(?P<G>[0-9A-F]{2})(?P<B>[0-9A-F]{2})$')
+        rgb_pattern = re.compile(r'^(?:RBG)*\((?P<R>[0-9]+),(?P<G>[0-9]+)(?P<B>[0-9]+)\)*$')
+        for key in color_section:
+            if key not in section_keys:
+                self.__config_reader.add_warning(
+                    'option de couleur invalide (acceptées : '
+                    f'[{", ".join(section_keys)}]), '
+                    'couleur ignorée',
+                    section_key,
+                    key
+                )
+                continue
+            color_id = int(key)
+            color_rbg: tuple[int, int, int] | None = None
+            color_value: str = color_section.get(key).replace(' ', '').upper()
+            if matches := simplified_hex_pattern.match(color_value):
+                color_rbg = (
+                    int(matches.group('R') * 2, 16),
+                    int(matches.group('G') * 2, 16),
+                    int(matches.group('B') * 2, 16),
+                )
+            elif matches := hex_pattern.match(color_value):
+                color_rbg = (
+                    int(matches.group('R'), 16),
+                    int(matches.group('G'), 16),
+                    int(matches.group('B'), 16),
+                )
+            elif matches := rgb_pattern.match(color_value):
+                color_rbg = (
+                    int(matches.group('R')),
+                    int(matches.group('G')),
+                    int(matches.group('B')),
+                )
+                if color_rbg[0] > 255 or color_rbg[1] > 255 or color_rbg[2] > 255:
+                    color_rbg = None
+            if color_rbg is None:
+                self.__config_reader.add_warning(
+                    f'couleur [{color_value}] non valide (#HHH, #HHHHHH ou '
+                    'RGB(RRR, GGG, BBB) attendu), la couleur par défaut sera '
+                    'utilisée',
+                    section_key,
+                    key
+                )
+            else:
+                self.__config_reader.add_info(
+                    f'couleur personnalisée [{color_rbg}] définie',
+                    section_key,
+                    key
+                )
+                timer.colors[color_id] = color_rbg
+
+    def __set_delays(self, timer: Timer):
+        section_key = 'timer.delays'
+        try:
+            delay_section = self.__config_reader[section_key]
+        except KeyError:
+            return
+        section_keys = ('1', '2', '3')
+        for key in delay_section:
+            if key not in section_keys:
+                self.__config_reader.add_warning(
+                    'option de délai non valide (acceptées: '
+                    f'[{", ".join(section_keys)}])',
+                    section_key,
+                    key
+                )
+                continue
+            delay_id = int(key)
+            delay: int | None = self.__config_reader.getint_safe(section_key, key, minimum=1)
+            if delay is None:
+                self.__config_reader.add_warning(
+                    'un entier positif est attendu, ignoré',
+                    section_key,
+                    key
+                )
+            else:
+                timer.delays[delay_id] = delay
