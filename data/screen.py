@@ -1,6 +1,8 @@
-from logging import Logger
-from dataclasses import dataclass, field
 import warnings
+from dataclasses import dataclass, field
+from enum import StrEnum, auto
+from logging import Logger
+from typing import Self
 
 from common.logger import get_logger
 from data.result import Result
@@ -8,15 +10,38 @@ from data.screen_set import ScreenSet
 
 logger: Logger = get_logger()
 
-# TODO(Amaras) Change those constants into an Enum
-SCREEN_TYPE_BOARDS: str = 'boards'
-SCREEN_TYPE_PLAYERS: str = 'players'
-SCREEN_TYPE_RESULTS: str = 'results'
-SCREEN_TYPE_NAMES: dict[str, str] = {
-    SCREEN_TYPE_BOARDS: 'Appariements par table',
-    SCREEN_TYPE_PLAYERS: 'Appariements par joueur.euse',
-    SCREEN_TYPE_RESULTS: 'Résultats',
-}
+
+class ScreenType(StrEnum):
+    Boards = auto()
+    Players = auto()
+    Results = auto()
+
+    def __str__(self):
+        match self:
+            case ScreenType.Boards:
+                return "Appariements par table"
+            case ScreenType.Players:
+                return "Appariements par joueur.euse"
+            case ScreenType.Results:
+                return "Résultats"
+            case _:
+                raise ValueError
+
+    @classmethod
+    def from_str(cls, value) -> Self:
+        match value:
+            case 'boards':
+                return cls.Boards
+            case 'players':
+                return cls.Players
+            case 'results':
+                return cls.Results
+            case _:
+                raise ValueError(f'Invalid board type: {value}')
+
+    @classmethod
+    def names(cls) -> list[str]:
+        return [member.value for member in iter(cls)]
 
 
 @dataclass
@@ -24,7 +49,7 @@ class AScreen:
     screen_id: str
     family_id: str | None
     _name: str
-    _type: str = field(init=False)
+    _type: ScreenType | None = field(init=False)
     columns: int
     _menu_text: str | None
     menu: str
@@ -32,7 +57,7 @@ class AScreen:
     menu_screens: list['AScreen'] | None = field(default=None, init=False)
 
     def __post_init__(self):
-        self._type = '???'
+        self._type = None
 
     @property
     def id(self) -> str:
@@ -43,7 +68,7 @@ class AScreen:
         return self._name
 
     @property
-    def type(self) -> str:
+    def type(self) -> ScreenType | None:
         return self._type
 
     @property
@@ -96,7 +121,7 @@ class ScreenBoards(AScreenWithSets):
     _update: bool
 
     def __post_init__(self):
-        self._type = SCREEN_TYPE_BOARDS
+        self._type = ScreenType.Boards
 
     @property
     def name(self) -> str:
@@ -139,7 +164,7 @@ class ScreenBoards(AScreenWithSets):
 class ScreenPlayers(AScreenWithSets):
 
     def __post_init__(self):
-        self._type = SCREEN_TYPE_PLAYERS
+        self._type = ScreenType.Players
 
     @property
     def name(self) -> str:
@@ -176,7 +201,7 @@ class ScreenResults(AScreen):
             menu_text: str | None, menu: str, show_timer: bool, limit: int):
         super().__init__(
             screen_id, family_id, name, columns, menu_text, menu, show_timer)
-        self._type = SCREEN_TYPE_RESULTS
+        self._type = ScreenType.Results
         self.event_id = event_id
         self.limit: int = limit
 

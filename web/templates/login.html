@@ -11,12 +11,12 @@
             <div class="modal-body">
                 <form method="POST">{% csrf_token %}
                     <div class="mb-3">
-                        <label for="event-id" class="form-label">Evènement</label>
+                        <label for="event-id" class="form-label">Évènement</label>
                         <input type="text" class="form-control" id="event-id" aria-describedby="event-id-help" value="{{ event.id }}" disabled>
                         <div id="event-id-help" class="form-text">Veuillez vous rapprocher de l'organisateur pour obtenir le code d'accès.</div>
                     </div>
                     <div class="mb-3">
-                        <label for="config-password" class="form-label">Password</label>
+                        <label for="event-password" class="form-label">Password</label>
                         <input type="password" class="form-control" id="event-password" aria-describedby="event-password-help" name="password">
                         <div id="event-password-help" class="form-text">Entrez ici le code d'accès défini dans le fichier events/{{ event.id }}.yml.</div>
                     </div>

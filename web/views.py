@@ -14,7 +14,7 @@ from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VE
 from data.board import Board
 from data.event import Event, get_events_by_name
 from data.rotator import Rotator
-from data.screen import AScreen, SCREEN_TYPE_RESULTS
+from data.screen import AScreen, ScreenType
 from data.tournament import Tournament
 from database.papi import RESULT_LOSS, RESULT_GAIN, RESULT_DRAW_OR_BYE_05
 
@@ -202,7 +202,7 @@ def get_screen_last_update(request: HttpRequest, event_id: str, screen_id: str) 
     try:
         screen: AScreen = event.screens[screen_id]
         screen_files: list[Path] = [event.ini_file]
-        if screen.type == SCREEN_TYPE_RESULTS:
+        if screen.type == ScreenType.Results:
             for tournament in event.tournaments.values():
                 if tournament.file not in screen_files:
                     screen_files.append(tournament.file)

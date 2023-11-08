@@ -32,14 +32,14 @@ MIN_FFE_UPLOAD_DELAY: int = 60
 class PapiWebConfig:
     def __init__(self):
         self.reader = ConfigReader(CONFIG_FILE, silent=False)
-        self.__log_level: Optional[int] = None
-        self.__web_host: Optional[str] = None
-        self.__web_port: Optional[int] = None
-        self.__web_launch_browser: Optional[bool] = None
-        self.__ffe_upload_delay: Optional[int] = None
-        self.__local_ip: Optional[str] = None
-        self.__lan_ip: Optional[str] = None
-        self.__log_levels: Dict[int, str] = {
+        self.__log_level: int | None = None
+        self.__web_host: str | None = None
+        self.__web_port: int | None = None
+        self.__web_launch_browser: bool | None = None
+        self.__ffe_upload_delay: int | None = None
+        self.__local_ip: str | None = None
+        self.__lan_ip: str | None = None
+        self.__log_levels: dict[int, str] = {
             logging.DEBUG: 'DEBUG',
             logging.INFO: 'INFO',
             logging.WARNING: 'WARNING',
