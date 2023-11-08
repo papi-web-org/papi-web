@@ -26,8 +26,6 @@ class Result(IntEnum):
                 return '1/2'
             case Result.NotPaired:
                 return ''
-            # NOTE(Amaras) This is not the behaviour from before the refactor
-            # TODO(Amaras) ensure this behaviour is the intended one
             case Result.ForfeitLoss:
                 return 'F-1'
             case Result.ExeForfeitGainFPB:
@@ -131,7 +129,9 @@ class TournamentPairing(StrEnum):
     """An enumeration representing the supported types of tournament
     pairings.
     Currently, only Swiss Dutch, along with several accelerations, are supported.
-    A project for Berger-paired tournaments is in the TODO list."""
+    A project for Berger-paired tournaments is in the TODO list.
+    PA: never thought of it because Berger-paired tournaments can be managed in Papi by
+    Berger-pairing all the rounds and setting the pairing-type back to Swiss in the end. """
     Standard = 'Standard'
     Haley = 'Haley'
     HaleySoft = 'HaleySoft'
