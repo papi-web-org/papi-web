@@ -753,13 +753,13 @@ class Event:
                     view_menu.append(screen)
         for screen in self.screens.values():
             if screen.menu is None:
-                screen.set_menu_screens([])
+                screen.menu_screens = ([])
                 continue
             if screen.menu == 'view':
-                screen.set_menu_screens(view_menu)
+                screen.menu_screens = (view_menu)
                 continue
             if screen.menu == 'update':
-                screen.set_menu_screens(update_menu)
+                screen.menu_screens = (update_menu)
                 continue
             if screen.menu == 'family':
                 if screen.family_id is None:
@@ -769,11 +769,9 @@ class Event:
                         f'screen.{screen.id}',
                         'menu'
                     )
-                    screen.set_menu_screens([])
+                    screen.menu_screens = ([])
                     continue
-                screen.set_menu_screens(
-                    self.screens_by_family_id[screen.family_id]
-                )
+                screen.menu_screens = self.screens_by_family_id[screen.family_id]
                 continue
             menu_screens: list[AScreen] = []
             for screen_id in screen.menu.replace(' ', '').split(','):
@@ -786,8 +784,8 @@ class Event:
                             f'screen.{screen.id}',
                             'menu'
                         )
-            screen.set_menu(', '.join([screen.id for screen in menu_screens]))
-            screen.set_menu_screens(menu_screens)
+            screen.menu = ', '.join([screen.id for screen in menu_screens])
+            screen.menu_screens = menu_screens
 
     screen_keys: list[str] = [
         'type',

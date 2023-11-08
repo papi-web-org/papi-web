@@ -130,7 +130,7 @@ class Timer:
                 hour.timestamp - self.delays[2] * 60,
                 hour.timestamp,
                 hour.timestamp + self.delays[3] * 60)
-        self.hours[-1].set_last(True)
+        self.hours[-1].last = True
 
     def __repr__(self):
         return f'{type(self).__name__}({self.colors} {self.delays} {self.hours})'
@@ -218,10 +218,10 @@ class TimerBuilder:
             hour.set_round(int(hour_id))
         key = 'text_before'
         with suppress(KeyError):
-            hour.set_text_before(timer_section[key])
+            hour.text_before = (timer_section[key])
         key = 'text_after'
         with suppress(KeyError):
-            hour.set_text_after(timer_section[key])
+            hour.text_after = (timer_section[key])
         if hour.text_before is None or hour.text_after is None:
             self.config_reader.add_warning(
                 'les options [text_before] et [text_after] sont attendues, horaire ignoré', section_key)
