@@ -197,56 +197,70 @@ class ScreenBuilder:
     def __init__(
             self, config_reader: ConfigReader, event_id: str, tournaments: dict[str, Tournament],
             templates: dict[str, Template], screens_by_family_id: dict[str, list[AScreen]]):
-        self.config_reader: ConfigReader = config_reader
-        self.event_id: str = event_id
-        self.tournaments: dict[str, Tournament] = tournaments
-        self.templates: dict[str, Template] = templates
-        self.screens_by_family_id: dict[str, list[AScreen]] = screens_by_family_id
+        self._config_reader: ConfigReader = config_reader
+        self._event_id: str = event_id
+        self._tournaments: dict[str, Tournament] = tournaments
+        self._templates: dict[str, Template] = templates
+        self._screens_by_family_id: dict[str, list[AScreen]] = screens_by_family_id
+        self._screens: dict[str, AScreen] = {}
+        screen_ids: list[str] = self._read_screen_ids()
+        if not screen_ids:
+            self._add_default_screens(screen_ids)
+        for screen_id in screen_ids:
+            if screen := self._build_screen(screen_id):
+                self._screens[screen.screen_id] = screen
+        if not self._screens:
+            self._config_reader.add_warning("aucun écran n'a été initialisé")
+        self._update_screens()
 
-    def read_screen_ids(self) -> list[str]:
-        return self.config_reader.get_subsection_keys_with_prefix('screen')
+    @property
+    def screens(self):
+        return self._screens
 
-    def build_screen(self, screen_id: str) -> AScreen | None:
+    def _read_screen_ids(self) -> list[str]:
+        return self._config_reader.get_subsection_keys_with_prefix('screen')
+
+    def _build_screen(self, screen_id: str) -> AScreen | None:
         screen_section_key = f'screen.{screen_id}'
-        screen_section = self.config_reader[screen_section_key]
+        screen_section = self._config_reader[screen_section_key]
         key = 'template'
         with suppress(KeyError):
             template_id = screen_section[key]
-            if template_id not in self.templates:
-                self.config_reader.add_warning(
+            if template_id not in self._templates:
+                self._config_reader.add_warning(
                     f"le modèle [{template_id}] n'existe pas, écran ignoré",
                     screen_section_key,
                     key
                 )
                 return None
-            template: Template = self.templates[template_id]
+            template: Template = self._templates[template_id]
             for sub_section_key, properties in template.data.items():
                 if sub_section_key is None:
                     new_section_key = screen_section_key
                 else:
                     new_section_key = f'{screen_section_key}.{sub_section_key}'
-                if not new_section_key not in self.config_reader:
-                    self.config_reader[new_section_key] = {}
-                    self.config_reader.add_debug(f"ajout de la rubrique [{new_section_key}]", screen_section_key)
+                if not new_section_key not in self._config_reader:
+                    self._config_reader[new_section_key] = {}
+                    self._config_reader.add_debug(f"ajout de la rubrique [{new_section_key}]", screen_section_key)
                 for key, value in properties.items():
-                    self.config_reader[new_section_key].setdefault(key, value)
-                self.config_reader.add_debug(f"ajout de l'option [{key} = {value}]", new_section_key)
+                    self._config_reader[new_section_key].setdefault(key, value)
+                self._config_reader.add_debug(f"ajout de l'option [{key} = {value}]", new_section_key)
         key = 'type'
         try:
             maybe_screen_type = screen_section[key]
         except KeyError:
-            self.config_reader.add_warning(f"type d'écran non précisé, écran ignoré", screen_section_key, key)
+            self._config_reader.add_warning(f"type d'écran non précisé, écran ignoré", screen_section_key, key)
             return None
         try:
             screen_type = ScreenType.from_str(maybe_screen_type)
         except ValueError:
-            self.config_reader.add_warning(f"Type d'écran invalide {maybe_screen_type}", screen_section_key, key)
+            self._config_reader.add_warning(f"Type d'écran invalide {maybe_screen_type}", screen_section_key, key)
             return None
         match screen_type:
             case ScreenType.Boards | ScreenType.Players | ScreenType.Results:
                 pass
             case _:
-                self.config_reader.add_warning(
+                self._config_reader.add_warning(
                     f"type d'écran [{screen_type}] inconnu, écran ignoré", screen_section_key)
                 return None
         key = 'columns'
@@ -257,24 +271,24 @@ class ScreenBuilder:
         except KeyError:
             columns = default_columns
         except ValueError:
-            self.config_reader.add_warning(
+            self._config_reader.add_warning(
                 f'un entier est attendu, par défault [{default_columns}]', screen_section_key, key)
             columns = default_columns
         except AssertionError:
-            self.config_reader.add_warning(
+            self._config_reader.add_warning(
                 'un entier strictement positif est attendu, par défaut [{default_columns}]', screen_section_key, key)
             columns = default_columns
         match screen_type:
             case ScreenType.Boards | ScreenType.Players | ScreenType.Results:
                 pass
             case _:
-                self.config_reader.add_warning(
+                self._config_reader.add_warning(
                     f"type d'écran [{screen_type}] inconnu, écran ignoré", screen_section_key)
                 return
         screen_sets: list[ScreenSet] | None = None
         if screen_type in [ScreenType.Boards, ScreenType.Players, ]:
             screen_sets = []
-            screen_set_builder: ScreenSetBuilder = ScreenSetBuilder(self.config_reader, self.tournaments)
+            screen_set_builder: ScreenSetBuilder = ScreenSetBuilder(self._config_reader, self._tournaments)
             for screen_set_section_key in screen_set_builder.read_screen_set_section_keys(
                     screen_section_key, screen_type):
                 screen_set = screen_set_builder.build_screen_set(screen_set_section_key, columns)
@@ -282,11 +296,11 @@ class ScreenBuilder:
                     screen_sets.append(screen_set)
             if not screen_sets:
                 if screen_type == ScreenType.Boards:
-                    self.config_reader.add_warning(
+                    self._config_reader.add_warning(
                         "pas d'ensemble d'échiquiers déclaré, écran ignoré", screen_section_key)
                     # NOTE(Amaras) should this return?
                 else:
-                    self.config_reader.add_warning(
+                    self._config_reader.add_warning(
                         "pas d'ensemble de joueur·euses déclaré, écran ignoré", screen_section_key)
                 return None
         key = 'name'
@@ -296,9 +310,9 @@ class ScreenBuilder:
         except KeyError:
             if screen_type == ScreenType.Results:
                 screen_name = 'Derniers résultats'
-                self.config_reader.add_debug(f'option absente, par défault [{screen_name}]', screen_section_key, key)
+                self._config_reader.add_debug(f'option absente, par défault [{screen_name}]', screen_section_key, key)
             else:
-                self.config_reader.add_debug(
+                self._config_reader.add_debug(
                     'option absente, le nom du premier ensemble sera utilisé', screen_section_key, key)
         key = 'menu_text'
         menu_text = screen_section.get(key)
@@ -307,13 +321,13 @@ class ScreenBuilder:
         if menu is None:
             pass
         elif menu == 'none':
-            self.config_reader.add_info(
+            self._config_reader.add_info(
                 'option absente, aucun menu ne sera affiché (indiquer [none] pour supprimer ce message)',
                 screen_section_key, key)
             menu = None
         elif menu == 'family':
             if screen_type == ScreenType.Results:
-                self.config_reader.add_warning(
+                self._config_reader.add_warning(
                     "l'option [family] n'est pas autorisée pour les écrans de type [{screen_type}], "
                     "aucun menu ne sera affiché", screen_section_key, key)
                 menu = None
@@ -324,7 +338,7 @@ class ScreenBuilder:
         elif ',' in menu:
             pass
         else:
-            self.config_reader.add_warning(
+            self._config_reader.add_warning(
                 '[none], [family], [view], [update] ou une liste d\'écrans séparés par des virgules sont attendus, '
                 'aucun menu ne sera affiché', screen_section_key, key)
             menu = None
@@ -332,22 +346,22 @@ class ScreenBuilder:
         default_show_timer: bool = True
         show_timer: bool = default_show_timer
         if key in screen_section:
-            show_timer = self.config_reader.getboolean(screen_section_key, key)
+            show_timer = self._config_reader.getboolean(screen_section_key, key)
             if show_timer is None:
-                self.config_reader.add_warning(
+                self._config_reader.add_warning(
                     f'un booléen est attendu, par défaut [{default_show_timer}]', screen_section_key, key)
         key = 'update'
         default_update: bool = False
         update: bool | None = default_update
         if screen_type == ScreenType.Boards:
             if key in screen_section:
-                update = self.config_reader.getboolean_safe(screen_section_key, key)
+                update = self._config_reader.getboolean_safe(screen_section_key, key)
                 if update is None:
-                    self.config_reader.add_warning('un booléen est attendu, écran ignoré', screen_section_key, key)
+                    self._config_reader.add_warning('un booléen est attendu, écran ignoré', screen_section_key, key)
                     return None
         else:
             if key in screen_section:
-                self.config_reader.add_warning(
+                self._config_reader.add_warning(
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
         key = 'limit'
@@ -355,25 +369,25 @@ class ScreenBuilder:
         limit: int | None = default_limit
         if screen_type == ScreenType.Results:
             if key in screen_section:
-                limit = self.config_reader.getint_safe(screen_section_key, key)
+                limit = self._config_reader.getint_safe(screen_section_key, key)
                 if limit is None:
-                    self.config_reader.add_warning(
+                    self._config_reader.add_warning(
                         f'un entier positif ou nul ets attendu, par défaut [{default_limit}]',
                         screen_section_key, key)
                     limit = default_limit
                 if limit > 0 and limit % columns > 0:
                     limit = columns * (limit // columns + 1)
-                    self.config_reader.add_info(
+                    self._config_reader.add_info(
                         f'positionné à [{limit}] pour tenir sur {columns} colonnes', screen_section_key, key)
         else:
             if key in screen_section:
-                self.config_reader.add_warning(
+                self._config_reader.add_warning(
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
         key = '__family__'
         family_id: str | None = None
         if key in screen_section:
-            family_id: str = self.config_reader.get(screen_section_key, key)
+            family_id: str = self._config_reader.get(screen_section_key, key)
         screen: AScreen | None = None
         if screen_type == ScreenType.Boards:
             screen = ScreenBoards(
@@ -400,7 +414,7 @@ class ScreenBuilder:
             )
         elif screen_type == ScreenType.Results:
             screen = ScreenResults(
-                self.event_id,
+                self._event_id,
                 screen_id,
                 family_id,
                 screen_name,
@@ -410,11 +424,152 @@ class ScreenBuilder:
                 show_timer,
                 limit
             )
-        for key, value in self.config_reader.items(screen_section_key):
+        for key, value in self._config_reader.items(screen_section_key):
             if key not in ConfigReader.screen_keys + ['template', '__family__', ]:
-                self.config_reader.add_warning('option absente', screen_section_key, key)
+                self._config_reader.add_warning('option absente', screen_section_key, key)
         if family_id is not None:
-            if family_id not in self.screens_by_family_id:
-                self.screens_by_family_id[family_id] = []
-            self.screens_by_family_id[family_id].append(screen)
+            if family_id not in self._screens_by_family_id:
+                self._screens_by_family_id[family_id] = []
+            self._screens_by_family_id[family_id].append(screen)
         return screen
+
+    def _update_screens(self):
+        view_menu: list[AScreen] = []
+        update_menu: list[AScreen] = []
+        for screen in self._screens.values():
+            if screen.menu_text:
+                if screen.update:
+                    update_menu.append(screen)
+                else:
+                    view_menu.append(screen)
+        for screen in self._screens.values():
+            if screen.menu is None:
+                screen.menu_screens = []
+                continue
+            if screen.menu == 'view':
+                screen.menu_screens = view_menu
+                continue
+            if screen.menu == 'update':
+                screen.menu_screens = update_menu
+                continue
+            if screen.menu == 'family':
+                if screen.family_id is None:
+                    self._config_reader.add_warning(
+                        "l'écran n'appartient pas à une famille, aucun menu ne sera affiché",
+                        f'screen.{screen.id}', 'menu')
+                    screen.menu_screens = []
+                    continue
+                screen.menu_screens = self._screens_by_family_id[screen.family_id]
+                continue
+            menu_screens: list[AScreen] = []
+            for screen_id in screen.menu.replace(' ', '').split(','):
+                if screen_id:
+                    if screen_id in self._screens:
+                        menu_screens.append(self._screens[screen_id])
+                    else:
+                        self._config_reader.add_warning(
+                            f"l'écran [{screen_id}] n'existe pas, ignoré",
+                            f'screen.{screen.id}', 'menu')
+            screen.menu = ', '.join([screen.id for screen in menu_screens])
+            screen.menu_screens = menu_screens
+
+    def _add_default_screens(self, screen_ids: list[str]):
+        self._config_reader.add_info('aucun écran défini, ajout des écrans par défaut', 'screen.*')
+        results_screen_id: str = f'auto-{ScreenType.Results.value}'
+        if len(self._tournaments) > 1:
+            update_menu: str = ','.join([
+                f'{tournament_id}-auto-{ScreenType.Boards.value}-update' for tournament_id in self._tournaments
+            ])
+            view_menu: str = ','.join([
+                f'{tournament_id}-auto-{ScreenType.Boards.value}-view' for tournament_id in self._tournaments
+            ])
+            players_menu: str = ','.join([
+                f'{tournament_id}-auto-{ScreenType.Players.value}' for tournament_id in self._tournaments
+            ])
+            results_menu: str = 'none'
+        else:
+            tournament: Tournament = list(self._tournaments.values())[0]
+            update_menu: str = 'none'
+            view_menu: str = ','.join([
+                f'{tournament.id}-auto-{ScreenType.Boards.value}-view',
+                f'{tournament.id}-auto-{ScreenType.Players.value}',
+                f'auto-{ScreenType.Results.value}',
+            ])
+            players_menu: str = view_menu
+            results_menu: str = view_menu
+        for tournament_id in self._tournaments:
+            tournament_name = self._tournaments[tournament_id].name
+            auto_screens: dict[str, dict[str, str]] = {
+                f'{tournament_id}-auto-{ScreenType.Boards.value}-update': {
+                    'type': ScreenType.Boards.value,
+                    'update': 'on',
+                    'name': f'{f"{tournament_name} - " if len(self._tournaments) > 1 else ""}'
+                            f'Saisie des résultats',
+                    'menu_text': tournament_name if len(self._tournaments) > 1 else '',
+                    'menu': update_menu,
+                },
+                f'{tournament_id}-auto-{ScreenType.Boards.value}-view': {
+                    'type': ScreenType.Boards.value,
+                    'update': 'off',
+                    'name': f'{f"{tournament_name} - " if len(self._tournaments) > 1 else ""}'
+                            f'Appariements par échiquier',
+                    'menu_text': tournament_name
+                    if len(self._tournaments) > 1
+                    else 'Appariements par échiquier',
+                    'menu': view_menu,
+                },
+                f'{tournament_id}-auto-{ScreenType.Players.value}': {
+                    'type': ScreenType.Players.value,
+                    'name': f'{f"{tournament_name} - " if len(self._tournaments) > 1 else ""}'
+                            f'Appariements par ordre alphabétique',
+                    'columns': '2',
+                    'menu_text': tournament_name
+                    if len(self._tournaments) > 1
+                    else 'Appariements par ordre alphabétique',
+                    'menu': players_menu,
+                },
+            }
+            for screen_id, options in auto_screens.items():
+                section_key: str = f'screen.{screen_id}'
+                self._config_reader[section_key] = options
+                screen_ids.append(screen_id)
+                self._config_reader.add_debug(
+                    f"l'écran [{screen_id}] a été ajouté",
+                    'screen.*'
+                )
+            auto_screen_sets: dict[str, dict[str, str]] = {
+                f'{tournament_id}-auto-{ScreenType.Boards.value}-update.{ScreenType.Boards.value}': {
+                    'tournament': tournament_id,
+                },
+                f'{tournament_id}-auto-{ScreenType.Boards.value}-view.{ScreenType.Boards.value}': {
+                    'tournament': tournament_id,
+                },
+                f'{tournament_id}-auto-{ScreenType.Players.value}.players': {
+                    'tournament': tournament_id,
+                },
+            }
+            for screen_set_id, options in auto_screen_sets.items():
+                section_key: str = f'screen.{screen_set_id}'
+                self._config_reader[section_key] = options
+        self._config_reader[f'screen.{results_screen_id}'] = {
+            'type': ScreenType.Results.value,
+            'name': f'Derniers résultats',
+            'menu_text': f'Derniers résultats',
+            'menu': results_menu,
+        }
+        self._config_reader.add_debug(
+            f"l'écran [{results_screen_id}] a été ajouté",
+            'screen.*'
+        )
+        screen_ids.append(results_screen_id)
+        if len(self._tournaments) > 1:
+            self._config_reader[f'rotator.auto-{ScreenType.Boards.value}'] = {
+                'screens': view_menu,
+            }
+            self._config_reader[f'rotator.auto-{ScreenType.Players.value}'] = {
+                'screens': players_menu,
+            }
+        else:
+            self._config_reader['rotator.auto'] = {
+                'screens': view_menu,
+            }

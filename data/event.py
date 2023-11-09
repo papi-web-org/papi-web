@@ -61,17 +61,19 @@ class Event:
         self._build_families()
         if self.reader.errors:
             return
-        self._build_screens()
+        self.screens = ScreenBuilder(
+            self.reader, self.event_id, self.tournaments, self.templates, self.screens_by_family_id
+        ).screens
         if self.reader.errors:
             return
         self.rotators = RotatorBuilder(
             self.reader, self.screens, self.screens_by_family_id
-        ).build_rotators()
+        ).rotators
         if self.reader.errors:
             return
         self.timer = TimerBuilder(
             self.reader
-        ).build_timer()
+        ).timer
 
     @property
     def id(self) -> str:
@@ -637,65 +639,6 @@ class Event:
                     self.reader.add_debug(f"ajout de l'option {key} = {new_value}", new_section_key)
             self.reader.add_debug(f'écran [{screen_id}] ajouté', section_key)
 
-    def _build_screens(self):
-        screen_builder: ScreenBuilder = ScreenBuilder(
-            self.reader, self.event_id, self.tournaments, self.templates, self.screens_by_family_id)
-        screen_ids: list[str] = screen_builder.read_screen_ids()
-        if not screen_ids:
-            self._add_default_screens(screen_ids)
-        for screen_id in screen_ids:
-            screen: AScreen = screen_builder.build_screen(screen_id)
-            if screen:
-                self.screens[screen.screen_id] = screen
-        if not len(self.screens):
-            self.reader.add_warning("aucun écran n'a été initialisé")
-        self._update_screens()
-
-    def _update_screens(self):
-        view_menu: list[AScreen] = []
-        update_menu: list[AScreen] = []
-        for screen in self.screens.values():
-            if screen.menu_text:
-                if screen.update:
-                    update_menu.append(screen)
-                else:
-                    view_menu.append(screen)
-        for screen in self.screens.values():
-            if screen.menu is None:
-                screen.menu_screens = ([])
-                continue
-            if screen.menu == 'view':
-                screen.menu_screens = (view_menu)
-                continue
-            if screen.menu == 'update':
-                screen.menu_screens = (update_menu)
-                continue
-            if screen.menu == 'family':
-                if screen.family_id is None:
-                    self.reader.add_warning(
-                        "l'écran n'appartient pas à une famille, aucun menu "
-                        "ne sera affiché",
-                        f'screen.{screen.id}',
-                        'menu'
-                    )
-                    screen.menu_screens = ([])
-                    continue
-                screen.menu_screens = self.screens_by_family_id[screen.family_id]
-                continue
-            menu_screens: list[AScreen] = []
-            for screen_id in screen.menu.replace(' ', '').split(','):
-                if screen_id:
-                    if screen_id in self.screens:
-                        menu_screens.append(self.screens[screen_id])
-                    else:
-                        self.reader.add_warning(
-                            f"l'écran [{screen_id}] n'existe pas, ignoré",
-                            f'screen.{screen.id}',
-                            'menu'
-                        )
-            screen.menu = ', '.join([screen.id for screen in menu_screens])
-            screen.menu_screens = menu_screens
-
     screen_keys: list[str] = [
         'type',
         'name',
@@ -706,107 +649,6 @@ class Event:
         'update',
         'limit',
     ]
-
-    def _add_default_screens(self, screen_ids: list[str]):
-        self.reader.add_info('aucun écran défini, ajout des écrans par défaut', 'screen.*')
-        results_screen_id: str = f'auto-{ScreenType.Results.value}'
-        if len(self.tournaments) > 1:
-            update_menu: str = ','.join([
-                f'{tournament_id}-auto-{ScreenType.Boards.value}-update' for tournament_id in self.tournaments
-            ])
-            view_menu: str = ','.join([
-                f'{tournament_id}-auto-{ScreenType.Boards.value}-view' for tournament_id in self.tournaments
-            ])
-            players_menu: str = ','.join([
-                f'{tournament_id}-auto-{ScreenType.Players.value}' for tournament_id in self.tournaments
-            ])
-            results_menu: str = 'none'
-        else:
-            tournament: Tournament = list(self.tournaments.values())[0]
-            update_menu: str = 'none'
-            view_menu: str = ','.join([
-                f'{tournament.id}-auto-{ScreenType.Boards.value}-view',
-                f'{tournament.id}-auto-{ScreenType.Players.value}',
-                f'auto-{ScreenType.Results.value}',
-            ])
-            players_menu: str = view_menu
-            results_menu: str = view_menu
-        for tournament_id in self.tournaments:
-            tournament_name = self.tournaments[tournament_id].name
-            auto_screens: dict[str, dict[str, str]] = {
-                f'{tournament_id}-auto-{ScreenType.Boards.value}-update': {
-                    'type': ScreenType.Boards.value,
-                    'update': 'on',
-                    'name': f'{f"{tournament_name} - " if len(self.tournaments) > 1 else ""}'
-                            f'Saisie des résultats',
-                    'menu_text': tournament_name if len(self.tournaments) > 1 else '',
-                    'menu': update_menu,
-                },
-                f'{tournament_id}-auto-{ScreenType.Boards.value}-view': {
-                    'type': ScreenType.Boards.value,
-                    'update': 'off',
-                    'name': f'{f"{tournament_name} - " if len(self.tournaments) > 1 else ""}'
-                            f'Appariements par échiquier',
-                    'menu_text': tournament_name
-                    if len(self.tournaments) > 1
-                    else 'Appariements par échiquier',
-                    'menu': view_menu,
-                },
-                f'{tournament_id}-auto-{ScreenType.Players.value}': {
-                    'type': ScreenType.Players.value,
-                    'name': f'{f"{tournament_name} - " if len(self.tournaments) > 1 else ""}'
-                            f'Appariements par ordre alphabétique',
-                    'columns': '2',
-                    'menu_text': tournament_name
-                    if len(self.tournaments) > 1
-                    else 'Appariements par ordre alphabétique',
-                    'menu': players_menu,
-                },
-            }
-            for screen_id, options in auto_screens.items():
-                section_key: str = f'screen.{screen_id}'
-                self.reader[section_key] = options
-                screen_ids.append(screen_id)
-                self.reader.add_debug(
-                    f"l'écran [{screen_id}] a été ajouté",
-                    'screen.*'
-                )
-            auto_screen_sets: dict[str, dict[str, str]] = {
-                f'{tournament_id}-auto-{ScreenType.Boards.value}-update.{ScreenType.Boards.value}': {
-                    'tournament': tournament_id,
-                },
-                f'{tournament_id}-auto-{ScreenType.Boards.value}-view.{ScreenType.Boards.value}': {
-                    'tournament': tournament_id,
-                },
-                f'{tournament_id}-auto-{ScreenType.Players.value}.players': {
-                    'tournament': tournament_id,
-                },
-            }
-            for screen_set_id, options in auto_screen_sets.items():
-                section_key: str = f'screen.{screen_set_id}'
-                self.reader[section_key] = options
-        self.reader[f'screen.{results_screen_id}'] = {
-            'type': ScreenType.Results.value,
-            'name': f'Derniers résultats',
-            'menu_text': f'Derniers résultats',
-            'menu': results_menu,
-        }
-        self.reader.add_debug(
-            f"l'écran [{results_screen_id}] a été ajouté",
-            'screen.*'
-        )
-        screen_ids.append(results_screen_id)
-        if len(self.tournaments) > 1:
-            self.reader[f'rotator.auto-{ScreenType.Boards.value}'] = {
-                'screens': view_menu,
-            }
-            self.reader[f'rotator.auto-{ScreenType.Players.value}'] = {
-                'screens': players_menu,
-            }
-        else:
-            self.reader['rotator.auto'] = {
-                'screens': view_menu,
-            }
 
     screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', ]
 

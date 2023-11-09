@@ -139,38 +139,41 @@ class Timer:
 class TimerBuilder:
 
     def __init__(self, config_reader: ConfigReader):
-        self.config_reader: ConfigReader = config_reader
-
-    def build_timer(self) -> Timer | None:
+        self._config_reader: ConfigReader = config_reader
+        self._timer: Timer | None = None
         section_key = 'timer.hour'
-        hour_ids: list[str] = self.config_reader.get_subsection_keys_with_prefix(section_key)
+        hour_ids: list[str] = self._config_reader.get_subsection_keys_with_prefix(section_key)
         if not hour_ids:
-            self.config_reader.add_debug(
+            self._config_reader.add_debug(
                 'aucun horaire déclaré, le chronomètre ne sera pas disponible',
                 'timer.hour.*'
             )
-            return None
+            return
         timer: Timer = Timer()
         for hour_id in hour_ids:
             self._add_hour(timer, hour_id)
         if not timer.hours:
-            self.config_reader.add_warning(
+            self._config_reader.add_warning(
                 'aucun horaire défini, le chronomètre ne sera pas disponible',
                 section_key
             )
-            return None
-        self._set_colors(timer)
-        self._set_delays(timer)
+            return
+        self._timer = timer
+        self._set_colors()
+        self._set_delays()
         timer.set_hours_timestamps()
-        return timer
+
+    @property
+    def timer(self) -> Timer | None:
+        return self._timer
 
     def _add_hour(self, timer: Timer, hour_id: str):
         section_key = f'timer.hour.{hour_id}'
-        timer_section = self.config_reader[section_key]
+        timer_section = self._config_reader[section_key]
         section_keys: list[str] = ['date', 'text_before', 'text_after', ]
         key = 'date'
         if key not in timer_section:
-            self.config_reader.add_warning('option absente, horaire ignoré', section_key, key)
+            self._config_reader.add_warning('option absente, horaire ignoré', section_key, key)
             return
         previous_hour: TimerHour | None = None
         if timer.hours:
@@ -190,10 +193,10 @@ class TimerBuilder:
             matches = re.match('^(?P<hour>[0-9]{1,2}):(?P<minute>[0-9]{1,2})$', datetime_str)
             if matches:
                 if previous_hour is None:
-                    self.config_reader.add_warning(
+                    self._config_reader.add_warning(
                         'le jour du premier horaire doit être spécifié, horaire ignoré', section_key, key)
                     return
-                self.config_reader.add_debug(
+                self._config_reader.add_debug(
                     f'jour non spécifié, [{datetime_str} {previous_hour}] pris en compte', section_key, key)
                 try:
                     timestamp = int(time.mktime(datetime.datetime.strptime(
@@ -201,7 +204,7 @@ class TimerBuilder:
                 except ValueError:
                     pass
         if timestamp is None:
-            self.config_reader.add_warning(
+            self._config_reader.add_warning(
                 f'date [{datetime_str}] non valide ([YYYY-MM-DD hh:mm] ou [hh:mm] attendu), horaire ignoré',
                 section_key, key)
             return
@@ -209,7 +212,7 @@ class TimerBuilder:
         if timer.hours:
             previous_hour = timer.hours[-1]
             if timestamp <= previous_hour.timestamp:
-                self.config_reader.add_warning(
+                self._config_reader.add_warning(
                     f"l'horaire [{hour.datetime_str}] arrive avant l'horaire précédent [{previous_hour.datetime_str}], "
                     f"horaire ignoré", section_key, key)
                 return
@@ -223,18 +226,18 @@ class TimerBuilder:
         with suppress(KeyError):
             hour.text_after = (timer_section[key])
         if hour.text_before is None or hour.text_after is None:
-            self.config_reader.add_warning(
+            self._config_reader.add_warning(
                 'les options [text_before] et [text_after] sont attendues, horaire ignoré', section_key)
             return
-        for key, value in self.config_reader.items(section_key):
+        for key, value in self._config_reader.items(section_key):
             if key not in section_keys:
-                self.config_reader.add_warning('option inconnue', section_key, key)
+                self._config_reader.add_warning('option inconnue', section_key, key)
         timer.hours.append(hour)
 
-    def _set_colors(self, timer: Timer):
+    def _set_colors(self):
         section_key = 'timer.colors'
         try:
-            color_section = self.config_reader[section_key]
+            color_section = self._config_reader[section_key]
         except KeyError:
             return
         section_keys = [str(id) for id in range(1, 4)]
@@ -243,7 +246,7 @@ class TimerBuilder:
         rgb_pattern = re.compile(r'^(?:RBG)*\((?P<R>[0-9]+),(?P<G>[0-9]+)(?P<B>[0-9]+)\)*$')
         for key in color_section:
             if key not in section_keys:
-                self.config_reader.add_warning(
+                self._config_reader.add_warning(
                     'option de couleur invalide (acceptées : '
                     f'[{", ".join(section_keys)}]), '
                     'couleur ignorée',
@@ -275,7 +278,7 @@ class TimerBuilder:
                 if color_rbg[0] > 255 or color_rbg[1] > 255 or color_rbg[2] > 255:
                     color_rbg = None
             if color_rbg is None:
-                self.config_reader.add_warning(
+                self._config_reader.add_warning(
                     f'couleur [{color_value}] non valide (#HHH, #HHHHHH ou '
                     'RGB(RRR, GGG, BBB) attendu), la couleur par défaut sera '
                     'utilisée',
@@ -283,23 +286,23 @@ class TimerBuilder:
                     key
                 )
             else:
-                self.config_reader.add_info(
+                self._config_reader.add_info(
                     f'couleur personnalisée [{color_rbg}] définie',
                     section_key,
                     key
                 )
-                timer.colors[color_id] = color_rbg
+                self._timer.colors[color_id] = color_rbg
 
-    def _set_delays(self, timer: Timer):
+    def _set_delays(self):
         section_key = 'timer.delays'
         try:
-            delay_section = self.config_reader[section_key]
+            delay_section = self._config_reader[section_key]
         except KeyError:
             return
         section_keys = ('1', '2', '3')
         for key in delay_section:
             if key not in section_keys:
-                self.config_reader.add_warning(
+                self._config_reader.add_warning(
                     'option de délai non valide (acceptées: '
                     f'[{", ".join(section_keys)}])',
                     section_key,
@@ -307,12 +310,12 @@ class TimerBuilder:
                 )
                 continue
             delay_id = int(key)
-            delay: int | None = self.config_reader.getint_safe(section_key, key, minimum=1)
+            delay: int | None = self._config_reader.getint_safe(section_key, key, minimum=1)
             if delay is None:
-                self.config_reader.add_warning(
+                self._config_reader.add_warning(
                     'un entier positif est attendu, ignoré',
                     section_key,
                     key
                 )
             else:
-                timer.delays[delay_id] = delay
+                self._timer.delays[delay_id] = delay
