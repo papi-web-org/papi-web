@@ -2,13 +2,14 @@
 
 # Papi-web - ChangeLog
 
-## Version 2.0 - Septembre 2023
+## Version 2.0.0 - 11 novembre 2023
 - Livraison sous forme d'un exécutable autonome (ne nécessite plus l'installation de XAMPP)
 - Configuration des évènements au format INI (plus simple que PHP)
 - Amélioration de la page d'acceuil
 - Ajout d'une page par évènement
 - Ajout d'écrans d'affichage des appariements par ordre alphabétique
 - Simplification de la configuration des écrans grâce aux modèles et aux familles d'écran
+- Ajout d'une temporisation pour le transfert des fichiers Papi sur le site fédéral
 
 ## Version 1.19 - 22 janvier 2023
 - Correction d'un bug de protection des pages de saisie des résultats

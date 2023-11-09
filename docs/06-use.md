@@ -34,6 +34,14 @@ launch_brower = on
 ```
 Par défaut, le navigateur web ouvre la page d'accueil au démarrage du serveur (pour ne pas ouvrir automatiquement la page d'accueil, utilisez `launch_browser = off`).
 
+### Site fédéral (`[ffe]`)
+#### upload_delay
+```
+[ffe]
+upload_delay = 300
+```
+Le délai minimum entre deux téléchargements sur le site fédéral est par défaut fixé à `180` secondes (minimum `60` secondes).
+
 ## Gestion du serveur Papi-web (`server.bat`)
 
 Le serveur Papi-web se lance en exécutant le script `server.bat` :
@@ -54,7 +62,7 @@ Quit the server with CTRL-BREAK.
 ```
 On arrête le serveur en tapant `Ctrl-C`.
 
-## Interface avec le site fédéral
+## Interface avec le site fédéral (`ffe.bat`)
 
 Les outils d'interface avec le site fédéral se lancent en exécutant le script `ffe.bat` :
 ```
