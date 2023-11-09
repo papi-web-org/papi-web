@@ -14,9 +14,11 @@ import sys
 from pathlib import Path
 from django.contrib.messages import constants as messages
 
+from common.papi_web_config import PapiWebConfig
+
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
@@ -25,7 +27,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': PapiWebConfig().log_level_str,
         },
     },
 }
