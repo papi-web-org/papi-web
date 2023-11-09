@@ -325,15 +325,11 @@ class TournamentBuilder:
     def __init__(self, config_reader: ConfigReader, default_tournament_path: Path):
         self._config_reader: ConfigReader = config_reader
         self._default_tournament_path: Path = default_tournament_path
-        self._tournaments: dict[str, Tournament] = {}
+        self.tournaments: dict[str, Tournament] = {}
         for tournament_id in self._read_tournament_ids():
             self._build_tournament(tournament_id)
-        if not self._tournaments:
+        if not self.tournaments:
             self._config_reader.add_error('aucun tournoi initialisé')
-
-    @property
-    def tournaments(self) -> dict[str, Tournament]:
-        return self._tournaments
 
     def _read_tournament_ids(self) -> list[str]:
         tournament_ids: list[str] = self._config_reader.get_subsection_keys_with_prefix('tournament')
@@ -483,7 +479,7 @@ class TournamentBuilder:
                 'les tournois à handicap ne devraient pas être homologués',
                 handicap_section_key
             )
-        self._tournaments[tournament_id] = Tournament(
+        self.tournaments[tournament_id] = Tournament(
             tournament_id, name, file, ffe_id, ffe_password, *handicap_values)
 
     def _build_tournament_handicap(self, section_key: str) -> HandicapTournament:

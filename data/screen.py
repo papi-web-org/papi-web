@@ -202,20 +202,16 @@ class ScreenBuilder:
         self._tournaments: dict[str, Tournament] = tournaments
         self._templates: dict[str, Template] = templates
         self._screens_by_family_id: dict[str, list[AScreen]] = screens_by_family_id
-        self._screens: dict[str, AScreen] = {}
+        self.screens: dict[str, AScreen] = {}
         screen_ids: list[str] = self._read_screen_ids()
         if not screen_ids:
             self._add_default_screens(screen_ids)
         for screen_id in screen_ids:
             if screen := self._build_screen(screen_id):
-                self._screens[screen.screen_id] = screen
-        if not self._screens:
+                self.screens[screen.screen_id] = screen
+        if not self.screens:
             self._config_reader.add_warning("aucun écran n'a été initialisé")
         self._update_screens()
-
-    @property
-    def screens(self):
-        return self._screens
 
     def _read_screen_ids(self) -> list[str]:
         return self._config_reader.get_subsection_keys_with_prefix('screen')
@@ -432,13 +428,13 @@ class ScreenBuilder:
     def _update_screens(self):
         view_menu: list[AScreen] = []
         update_menu: list[AScreen] = []
-        for screen in self._screens.values():
+        for screen in self.screens.values():
             if screen.menu_text:
                 if screen.update:
                     update_menu.append(screen)
                 else:
                     view_menu.append(screen)
-        for screen in self._screens.values():
+        for screen in self.screens.values():
             if screen.menu is None:
                 screen.menu_screens = []
                 continue
@@ -460,8 +456,8 @@ class ScreenBuilder:
             menu_screens: list[AScreen] = []
             for screen_id in screen.menu.replace(' ', '').split(','):
                 if screen_id:
-                    if screen_id in self._screens:
-                        menu_screens.append(self._screens[screen_id])
+                    if screen_id in self.screens:
+                        menu_screens.append(self.screens[screen_id])
                     else:
                         self._config_reader.add_warning(
                             f"l'écran [{screen_id}] n'existe pas, ignoré",

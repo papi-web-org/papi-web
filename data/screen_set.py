@@ -207,14 +207,10 @@ class ScreenSetBuilder:
         self._screen_section_key: str = screen_section_key
         self._screen_type: ScreenType = screen_type
         self._columns: int = columns
-        self._screen_sets = []
+        self.screen_sets = []
         for screen_set_section_key in self._read_screen_set_section_keys():
             if screen_set := self._build_screen_set(screen_set_section_key):
-                self._screen_sets.append(screen_set)
-
-    @property
-    def screen_sets(self):
-        return self._screen_sets
+                self.screen_sets.append(screen_set)
 
     def _read_screen_set_section_keys(self) -> list[str]:
         screen_set_section_keys: list[str]

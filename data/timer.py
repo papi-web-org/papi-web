@@ -140,7 +140,7 @@ class TimerBuilder:
 
     def __init__(self, config_reader: ConfigReader):
         self._config_reader: ConfigReader = config_reader
-        self._timer: Timer | None = None
+        self.timer: Timer | None = None
         section_key = 'timer.hour'
         hour_ids: list[str] = self._config_reader.get_subsection_keys_with_prefix(section_key)
         if not hour_ids:
@@ -158,14 +158,10 @@ class TimerBuilder:
                 section_key
             )
             return
-        self._timer = timer
+        self.timer = timer
         self._set_colors()
         self._set_delays()
         timer.set_hours_timestamps()
-
-    @property
-    def timer(self) -> Timer | None:
-        return self._timer
 
     def _add_hour(self, timer: Timer, hour_id: str):
         section_key = f'timer.hour.{hour_id}'
@@ -291,7 +287,7 @@ class TimerBuilder:
                     section_key,
                     key
                 )
-                self._timer.colors[color_id] = color_rbg
+                self.timer.colors[color_id] = color_rbg
 
     def _set_delays(self):
         section_key = 'timer.delays'
@@ -318,4 +314,4 @@ class TimerBuilder:
                     key
                 )
             else:
-                self._timer.delays[delay_id] = delay
+                self.timer.delays[delay_id] = delay
