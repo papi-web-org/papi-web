@@ -13,7 +13,6 @@ from data.family import FamilyBuilder
 from data.result import Result
 from data.rotator import Rotator, RotatorBuilder
 from data.screen import AScreen, ScreenBuilder
-from data.screen import ScreenType
 from data.template import Template, TemplateBuilder
 from data.timer import Timer, TimerBuilder
 from data.tournament import Tournament
@@ -488,71 +487,6 @@ class Event:
             penalty_value,
             min_time,
         )
-
-    def _build_templates(self):
-        template_ids: list[str] = self.reader.get_subsection_keys_with_prefix('template')
-        if not template_ids:
-            self.reader.add_debug('aucun modèle déclaré', 'template.*')
-            return
-        for template_id in template_ids:
-            self._build_template(template_id)
-        if not len(self.templates):
-            self.reader.add_debug('aucun modèle initialisé')
-
-    def _build_template(self, template_id: str):
-        template: Template = Template(template_id)
-        section_key = f'template.{template_id}'
-        template_section = self.reader[section_key]
-        for key, value in template_section.items():
-            if key not in self.screen_keys:
-                self.reader.add_warning(
-                    'option de modèle inconnue, ignorée',
-                    section_key,
-                    key
-                )
-            else:
-                template.add_data(None, key, value)
-                self.reader.add_debug(f'option {key} = {value}', section_key)
-        subsection_keys = self.reader.get_subsection_keys_with_prefix(
-            section_key,
-            first_level_only=False
-        )
-        for sub_section_key in subsection_keys:
-            splitted = sub_section_key.split('.')
-            if splitted[0] not in ScreenType.names() or len(splitted) > 2:
-                self.reader.add_warning(
-                    'rubrique de modèle non valide, ignorée',
-                    f'{section_key}.{sub_section_key}'
-                )
-                continue
-            # NOTE(Amaras) Nesting subsections in the Python INI parser
-            # (ConfigParser) only works because nested subsections have
-            # unique names. Is this behaviour expected?
-            subsection_key = f'{section_key}.{sub_section_key}'
-            for key, value in self.reader.items(subsection_key):
-                if key not in self.screen_set_keys:
-                    self.reader.add_warning(
-                        'option de modèle inconnue, ignorée',
-                        subsection_key,
-                        key
-                    )
-                else:
-                    template.add_data(sub_section_key, key, value)
-                    self.reader.add_debug(f'option [{sub_section_key}].{key} = {value}', section_key)
-        self.templates[template_id] = template
-
-    screen_keys: list[str] = [
-        'type',
-        'name',
-        'columns',
-        'menu_text',
-        'show_timer',
-        'menu',
-        'update',
-        'limit',
-    ]
-
-    screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', ]
 
     def store_result(self, tournament: Tournament, board: Board, result: int):
         results_dir: Path = Result.results_dir(self.id)
