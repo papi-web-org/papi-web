@@ -27,13 +27,22 @@ class RotatorBuilder:
         self.event_screens_by_family_id: dict[str, list[AScreen]] = screens_by_family_id
         self.event_screens: dict[str, AScreen] = screens
 
-    def read_rotator_ids(self) -> list[str]:
+    def build_rotators(self) -> dict[str, Rotator]:
+        rotators: dict[str, Rotator] = {}
+        for rotator_id in self._read_rotator_ids():
+            if rotator := self._build_rotator(rotator_id):
+                rotators[rotator_id] = rotator
+        if not rotators:
+            self.config_reader.add_debug('aucun écran rotatif défini')
+        return rotators
+
+    def _read_rotator_ids(self) -> list[str]:
         rotator_ids: list[str] = self.config_reader.get_subsection_keys_with_prefix('rotator')
         if not rotator_ids:
             self.config_reader.add_debug('aucun écran rotatif déclaré', 'rotator.*')
         return rotator_ids
 
-    def build_rotator(self, rotator_id: str) -> Rotator | None:
+    def _build_rotator(self, rotator_id: str) -> Rotator | None:
         section_key = f'rotator.{rotator_id}'
         rotator_section = self.config_reader[section_key]
         section_keys: list[str] = ['screens', 'families', 'delay', ]

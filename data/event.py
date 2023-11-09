@@ -64,10 +64,14 @@ class Event:
         self._build_screens()
         if self.reader.errors:
             return
-        self._build_rotators()
+        self.rotators = RotatorBuilder(
+            self.reader, self.screens, self.screens_by_family_id
+        ).build_rotators()
         if self.reader.errors:
             return
-        self.timer = TimerBuilder(self.reader).build_timer()
+        self.timer = TimerBuilder(
+            self.reader
+        ).build_timer()
 
     @property
     def id(self) -> str:
@@ -805,14 +809,6 @@ class Event:
             }
 
     screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', ]
-
-    def _build_rotators(self):
-        rotator_builder: RotatorBuilder = RotatorBuilder(self.reader, self.screens, self.screens_by_family_id)
-        for rotator_id in rotator_builder.read_rotator_ids():
-            if rotator := rotator_builder.build_rotator(rotator_id):
-                self.rotators[rotator_id] = rotator
-        if not self.rotators:
-            self.reader.add_debug('aucun écran rotatif défini')
 
     def store_result(self, tournament: Tournament, board: Board, result: int):
         results_dir: Path = Result.results_dir(self.id)
