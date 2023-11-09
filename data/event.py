@@ -14,7 +14,7 @@ from data.result import Result
 from data.rotator import Rotator, RotatorBuilder
 from data.screen import AScreen, ScreenBuilder
 from data.screen import ScreenType
-from data.template import Template
+from data.template import Template, TemplateBuilder
 from data.timer import Timer, TimerBuilder
 from data.tournament import Tournament
 
@@ -56,25 +56,20 @@ class Event:
         self._build_tournaments()
         if self.reader.errors:
             return
-        self._build_templates()
+        self.templates = TemplateBuilder(self.reader).templates
         if self.reader.errors:
             return
         FamilyBuilder(self.reader, self.templates)
         if self.reader.errors:
             return
         self.screens = ScreenBuilder(
-            self.reader, self.event_id, self.tournaments, self.templates, self.screens_by_family_id
-        ).screens
+            self.reader, self.event_id, self.tournaments, self.templates, self.screens_by_family_id).screens
         if self.reader.errors:
             return
-        self.rotators = RotatorBuilder(
-            self.reader, self.screens, self.screens_by_family_id
-        ).rotators
+        self.rotators = RotatorBuilder(self.reader, self.screens, self.screens_by_family_id).rotators
         if self.reader.errors:
             return
-        self.timer = TimerBuilder(
-            self.reader
-        ).timer
+        self.timer = TimerBuilder(self.reader).timer
 
     @property
     def id(self) -> str:
