@@ -2,7 +2,6 @@ import logging
 import re
 import socket
 from pathlib import Path
-from typing import Optional, Dict
 from logging import Logger
 
 from django import get_version
@@ -33,14 +32,14 @@ MIN_FFE_UPLOAD_DELAY: int = 60
 class PapiWebConfig:
     def __init__(self):
         self.reader = ConfigReader(CONFIG_FILE, silent=False)
-        self.__log_level: Optional[int] = None
-        self.__web_host: Optional[str] = None
-        self.__web_port: Optional[int] = None
-        self.__web_launch_browser: Optional[bool] = None
-        self.__ffe_upload_delay: Optional[int] = None
-        self.__local_ip: Optional[str] = None
-        self.__lan_ip: Optional[str] = None
-        self.__log_levels: Dict[int, str] = {
+        self.__log_level: int | None = None
+        self.__web_host: str | None = None
+        self.__web_port: int | None = None
+        self.__web_launch_browser: bool | None = None
+        self.__ffe_upload_delay: int | None = None
+        self.__local_ip: str | None = None
+        self.__lan_ip: str | None = None
+        self.__log_levels: dict[int, str] = {
             logging.DEBUG: 'DEBUG',
             logging.INFO: 'INFO',
             logging.WARNING: 'WARNING',
@@ -155,13 +154,13 @@ class PapiWebConfig:
     def django_version(self) -> str:
         return get_version()
 
-    def __url(self, ip: Optional[str]) -> Optional[str]:
+    def __url(self, ip: str | None) -> str | None:
         if ip is None:
             return None
         return f'http://{ip}{f":{self.web_port}" if self.web_port != 80 else ""}'
 
     @property
-    def lan_ip(self) -> Optional[str]:
+    def lan_ip(self) -> str | None:
         if self.__lan_ip is None:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.settimeout(0)

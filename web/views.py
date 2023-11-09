@@ -2,7 +2,6 @@ from pathlib import Path
 
 import math
 import time
-from typing import List, Dict, Optional, Tuple
 from django.contrib import messages
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import redirect, render
@@ -15,13 +14,13 @@ from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VE
 from data.board import Board
 from data.event import Event, get_events_by_name
 from data.rotator import Rotator
-from data.screen import AScreen, SCREEN_TYPE_RESULTS
+from data.screen import AScreen, ScreenType
 from data.tournament import Tournament
-from database.papi import RESULT_LOSS, RESULT_GAIN, RESULT_DRAW_OR_BYE_05
+from data.util import Result
 
 logger: Logger = get_logger()
 
-papi_web_info: Dict[str, str] = {
+papi_web_info: dict[str, str] = {
     'version': PAPI_WEB_VERSION,
     'url': PAPI_WEB_URL,
     'copyright': PAPI_WEB_COPYRIGHT,
@@ -67,7 +66,7 @@ def render_screen(
 
 
 def index(request: HttpRequest) -> HttpResponse:
-    events: List[Event] = get_events_by_name()
+    events: list[Event] = get_events_by_name()
     if len(events) == 0:
         messages.error(request, 'No event found')
     return render(request, 'index.html', {
@@ -77,7 +76,7 @@ def index(request: HttpRequest) -> HttpResponse:
     })
 
 
-def load_event(request: HttpRequest, event_id: str) -> Optional[Event]:
+def load_event(request: HttpRequest, event_id: str) -> Event | None:
     event: Event = Event(event_id)
     if event.errors:
         for error in event.errors:
@@ -105,7 +104,7 @@ def get_stored_password(request: HttpRequest, event: Event) -> str:
     return request.session.get(session_password_key(event), None)
 
 
-def check_auth(request: HttpRequest, event: Event) -> Tuple[bool, bool]:
+def check_auth(request: HttpRequest, event: Event) -> tuple[bool, bool]:
     # -> login_needed, do_redirect
     logger.debug(f'check_auth({event.id})...')
     if 'password' in request.POST:
@@ -188,10 +187,10 @@ def update_result(
         messages.error(
             request, f'Writing result failed (board [{board_id}] not found for tournament [{tournament.id}])')
         return redirect(screen_url(event.id, screen_id, ))
-    if result not in [RESULT_LOSS, RESULT_DRAW_OR_BYE_05, RESULT_GAIN]:
+    if result not in Result.inputtable_results():
         messages.error(request, f'Writing result failed (invalid result [{result}])')
         return redirect(screen_url(event.id, screen_id, ))
-    tournament.add_result(board, result)
+    tournament.add_result(board, Result.from_db_int(result))
     event.store_result(tournament, board, result)
     return redirect(screen_url(event_id, screen_id, ))
 
@@ -202,8 +201,8 @@ def get_screen_last_update(request: HttpRequest, event_id: str, screen_id: str) 
         return redirect('index')
     try:
         screen: AScreen = event.screens[screen_id]
-        screen_files: List[Path] = [event.ini_file]
-        if screen.type == SCREEN_TYPE_RESULTS:
+        screen_files: list[Path] = [event.ini_file]
+        if screen.type == ScreenType.Results:
             for tournament in event.tournaments.values():
                 if tournament.file not in screen_files:
                     screen_files.append(tournament.file)

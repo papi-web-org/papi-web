@@ -1,27 +1,20 @@
-from typing import Optional
 from logging import Logger
 from common.logger import get_logger
+from dataclasses import dataclass
+from data.util import Result
 
 logger: Logger = get_logger()
 
 
+@dataclass(frozen=True)
 class Pairing:
-    def __init__(self, color: str, opponent_id: int, result: int):
-        self.__color: Optional[str] = color
-        self.__opponent_id: Optional[int] = opponent_id
-        self.__result: Optional[int] = result
-
-    @property
-    def color(self) -> Optional[str]:
-        return self.__color
-
-    @property
-    def opponent_id(self) -> Optional[int]:
-        return self.__opponent_id
-
-    @property
-    def result(self) -> Optional[int]:
-        return self.__result
+    """A pairing (from the point of view of the `Player` class)"""
+    color: str | None = None
+    opponent_id: int | None = None
+    result: Result | None = None
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.color} {self.opponent_id} {self.result})'
+        return f'{self.__class__.__name__}({self.color} {self.opponent_id} {self.result})'
+
+    def __iter__(self):
+        yield from (self.color, self.opponent_id, self.result)

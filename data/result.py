@@ -3,63 +3,33 @@ from datetime import datetime
 from functools import total_ordering
 from logging import Logger
 from pathlib import Path
-from typing import List
+from dataclasses import dataclass
 
 from common.config_reader import TMP_DIR
 from common.logger import get_logger
-from database.papi import RESULT_STRINGS
+from data.util import Result as DataResult
 
 logger: Logger = get_logger()
 
 
+@dataclass
 @total_ordering
 class Result:
-    def __init__(
-            self, timestamp: float, tournament_id: str, round: int, board_id: int,
-            white_player: str, black_player: str, result: int):
-        self.__timestamp: float = timestamp
-        self.__tournament_id: str = tournament_id
-        self.__round: int = round
-        self.__board_id: int = board_id
-        self.__white_player: str = white_player
-        self.__black_player: str = black_player
-        self.__result: int = result
-
-    @property
-    def timestamp(self) -> float:
-        return self.__timestamp
+    timestamp: float
+    tournament_id: str
+    round: int
+    board_id: int
+    white_player: str
+    black_player: str
+    result: DataResult
 
     @property
     def timestamp_str(self) -> str:
-        return datetime.fromtimestamp(self.__timestamp).strftime('%H:%M')
-
-    @property
-    def tournament_id(self) -> str:
-        return self.__tournament_id
-
-    @property
-    def round(self) -> int:
-        return self.__round
-
-    @property
-    def board_id(self) -> int:
-        return self.__board_id
-
-    @property
-    def white_player(self) -> str:
-        return self.__white_player
-
-    @property
-    def black_player(self) -> str:
-        return self.__black_player
-
-    @property
-    def result(self) -> int:
-        return self.__result
+        return datetime.fromtimestamp(self.timestamp).strftime('%H:%M')
 
     @property
     def result_str(self) -> str:
-        return RESULT_STRINGS[self.result] if self.result else ''
+        return str(self.result) if self.result else ''
 
     def __lt__(self, other):
         # p1 < p2 calls p1.__lt__(p2)
@@ -70,7 +40,7 @@ class Result:
         return self.timestamp == other.timestamp
 
     def __repr__(self):
-        return (f'{type(self).__name__}('
+        return (f'{self.__class__.__name__}('
                 f'{self.timestamp_str} {self.tournament_id}.{self.board_id} '
                 f'{self.white_player} {self.result_str} {self.black_player})')
 
@@ -79,54 +49,55 @@ class Result:
         return TMP_DIR / event_id / 'results'
 
     @classmethod
-    def get_results(cls, event_id: str, limit: int) -> List['Result']:
-        results: List[Result] = []
+    def get_results(cls, event_id: str, limit: int) -> list['Result']:
+        results: list[Result] = []
         results_dir: Path = cls.results_dir(event_id)
         if not results_dir.is_dir():
             return results
-        files: List[Path] = list(results_dir.glob("*"))
+        files: list[Path] = list(results_dir.glob("*"))
         if not reversed(files):
             return results
-        prog = re.compile('^([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)$')
+        prog = re.compile(
+                r'^(?P<timestamp>[\d.]+) (?P<tournament_id>[^ ]+) '
+                r'(?P<round>\d+) (?P<board_id>\d+) (?P<white_player>[^ ]+) '
+                r'(?P<black_player>[^ ]+) (?P<result>[0-6])$')
         for file in files:
             matches = prog.match(Path(file).name)
             if not matches:
                 logger.warning(f'invalid result filename [{file}]')
                 continue
-            group: int = 1
+            group: str = 'timestamp'
             timestamp: float
             try:
                 timestamp = float(matches.group(group))
             except ValueError:
                 logger.warning(f'invalid timestamp [{matches.group(group)}] for result file [{file}]')
                 continue
-            group += 1
+            group = 'tournament_id'
             tournament_id: str = matches.group(group)
-            group += 1
+            group = 'round'
             round: int
             try:
                 round = int(matches.group(group))
             except ValueError:
                 logger.warning(f'invalid round number [{matches.group(group)}] for result file [{file}]')
                 continue
-            group += 1
+            group = 'board_id'
             board_id: int
             try:
                 board_id = int(matches.group(group))
             except ValueError:
                 logger.warning(f'invalid board id [{matches.group(group)}] for result file [{file}]')
                 continue
-            group += 1
+            group = 'white_player'
             white_player: str = matches.group(group).replace('_', ' ')
-            group += 1
+            group = 'black_player'
             black_player: str = matches.group(group).replace('_', ' ')
-            group += 1
-            result: int
+            group = 'result'
+            result: int | DataResult
             try:
                 result = int(matches.group(group))
-                if result not in RESULT_STRINGS:
-                    logger.warning(f'invalid result [{matches.group(group)}] for result file [{file}]')
-                    continue
+                result = DataResult.from_db_int(result)
             except ValueError:
                 logger.warning(f'invalid result [{matches.group(group)}] for result file [{file}]')
                 continue

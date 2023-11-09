@@ -2,7 +2,7 @@
 /venv/
 /papi/
 /events/
-/fees/
+fees/
 /docs/images/src/
 papi-web.ini
 tmp/
@@ -11,3 +11,6 @@ __pycache__/
 # Vim scratch files
 *.swp
 *.swo
+
+# Access database tmp files
+*.ldb
