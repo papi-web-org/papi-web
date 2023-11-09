@@ -28,7 +28,7 @@ class TemplateBuilder:
     def __init__(self, config_reader: ConfigReader):
         self._config_reader: ConfigReader = config_reader
         self._templates: dict[str, Template] = {}
-        template_ids: list[str] = self._read_family_ids()
+        template_ids: list[str] = self._read_template_ids()
         if not template_ids:
             self._config_reader.add_debug('aucun modèle déclaré', 'template.*')
             return
@@ -41,7 +41,7 @@ class TemplateBuilder:
     def templates(self) -> dict[str, Template]:
         return self._templates
 
-    def _read_family_ids(self) -> list[str]:
+    def _read_template_ids(self) -> list[str]:
         return self._config_reader.get_subsection_keys_with_prefix('template')
 
     def _build_template(self, template_id: str):
