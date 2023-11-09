@@ -3,9 +3,9 @@ from pathlib import Path
 
 import chardet
 from configparser import (
-        ConfigParser, DuplicateSectionError, DuplicateOptionError,
-        MissingSectionHeaderError, ParsingError, Error
-    )
+    ConfigParser, DuplicateSectionError, DuplicateOptionError,
+    MissingSectionHeaderError, ParsingError, Error, SectionProxy
+)
 from logging import Logger
 from common.logger import get_logger
 
@@ -16,6 +16,20 @@ TMP_DIR: Path = Path('tmp')
 
 # https://docs.python.org/3/library/configparser.html
 class ConfigReader(ConfigParser):
+
+    screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', ]
+
+    screen_keys: list[str] = [
+        'type',
+        'name',
+        'columns',
+        'menu_text',
+        'show_timer',
+        'menu',
+        'update',
+        'limit',
+    ]
+
     def __init__(self, ini_file: Path, silent: bool):
         super().__init__(interpolation=None, empty_lines_in_values=False)
         self.__ini_file: Path = ini_file
@@ -153,16 +167,36 @@ class ConfigReader(ConfigParser):
                 subsection_keys.append(matches.group(1))
         return subsection_keys
 
-    screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', ]
+    def rename_section(self, old_section_key: str, new_section_key: str):
+        # NOTE(Amaras) this can add values that are in DEFAULTSEC if any.
+        # This can also cause a crash if we're trying to delete DEFAULTSEC,
+        # as deleting DEFAUTLSEC causes a ValueError.
+        self[new_section_key] = self[old_section_key]
+        del self[old_section_key]
 
-    screen_keys: list[str] = [
-        'type',
-        'name',
-        'columns',
-        'menu_text',
-        'show_timer',
-        'menu',
-        'update',
-        'limit',
-    ]
-
+    def get_value_with_warning(
+        self,
+        section: SectionProxy,
+        section_key: str,
+        key: str,
+        target_type: type,
+        predicate,
+        default_value,
+        *messages,
+    ):
+        try:
+            value = target_type(section[key])
+            assert predicate(value)
+            return value
+        except TypeError:
+            self.add_error(messages[0], section_key)
+            return default_value
+        except KeyError:
+            self.add_warning(messages[1], section_key, key)
+            return default_value
+        except ValueError:
+            self.add_warning(messages[2], section_key, key)
+            return default_value
+        except AssertionError:
+            self.add_warning(messages[3], section_key, key)
+            return default_value

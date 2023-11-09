@@ -1,8 +1,10 @@
+import re
 from logging import Logger
 from operator import attrgetter
 from pathlib import Path
+from typing import NamedTuple
 
-from common.config_reader import TMP_DIR
+from common.config_reader import TMP_DIR, ConfigReader
 from common.logger import get_logger
 from data.board import Board
 from data.player import Player
@@ -307,3 +309,274 @@ class Tournament:
                     f'{board.black_player.last_name} '
                     f'{board.black_player.first_name} '
                     f'{board.black_player.rating}')
+
+
+class HandicapTournament(NamedTuple):
+    """A helper data structure to store the information needed to
+    compute handicap times if needed."""
+    initial_time: int | None = None
+    increment: int | None = None
+    penalty_step: int | None = None
+    penalty_value: int | None = None
+    min_time: int | None = None
+
+
+class TournamentBuilder:
+    def __init__(self, config_reader: ConfigReader, default_tournament_path: Path):
+        self._config_reader: ConfigReader = config_reader
+        self._default_tournament_path: Path = default_tournament_path
+        self._tournaments: dict[str, Tournament] = {}
+        for tournament_id in self._read_tournament_ids():
+            self._build_tournament(tournament_id)
+        if not self._tournaments:
+            self._config_reader.add_error('aucun tournoi initialisé')
+
+    @property
+    def tournaments(self) -> dict[str, Tournament]:
+        return self._tournaments
+
+    def _read_tournament_ids(self) -> list[str]:
+        tournament_ids: list[str] = self._config_reader.get_subsection_keys_with_prefix('tournament')
+        # NOTE(Amaras) Special case of tournament: handicap depends on
+        # the [tournament] section being there.
+        if 'handicap' in tournament_ids:
+            tournament_ids.remove('handicap')
+        if 'tournament' in self._config_reader:
+            if tournament_ids:
+                section_keys: str = ', '.join('[tournament.' + id + ']' for id in tournament_ids)
+                self._config_reader.add_error(
+                    f"la rubrique [tournament] ne doit être utilisée que lorsque l'évènement ne compte "
+                    f"qu'un tournoi, d'autres rubriques sont présentes ({section_keys})",
+                    'tournament.*'
+                )
+                return []
+            default_tournament_id: str = 'default'
+            old_tournament_section_key: str = 'tournament'
+            new_tournament_section_key: str = 'tournament.' + default_tournament_id
+            self._config_reader.rename_section(old_tournament_section_key, new_tournament_section_key)
+            self._config_reader.add_debug(
+                f'un seul tournoi, la rubrique [{old_tournament_section_key}] a '
+                f'été renommée [{new_tournament_section_key}]',
+                old_tournament_section_key
+            )
+            old_handicap_section_key: str = 'tournament.handicap'
+            if old_handicap_section_key in self._config_reader:
+                new_handicap_section_key = f'tournament.{default_tournament_id}.handicap'
+                self._config_reader.rename_section(old_handicap_section_key, new_handicap_section_key)
+                self._config_reader.add_debug(
+                    f'un seul tournoi, la rubrique [{old_handicap_section_key}] a '
+                    f'été renommée [{new_tournament_section_key}]'
+                )
+            tournament_ids.append(default_tournament_id)
+        elif not tournament_ids:
+            self._config_reader.add_error('aucun tournoi trouvé', 'tournament.*')
+        return tournament_ids
+
+    def _build_tournament(self, tournament_id: str):
+        section_key: str = f'tournament.{tournament_id}'
+        try:
+            section = self._config_reader[section_key]
+        except KeyError:
+            self._config_reader.add_error('Tournoi non trouvé', section_key)
+            return
+        key = 'path'
+        tournament_path: Path = self._default_tournament_path
+        try:
+            tournament_path = Path(section[key])
+        except KeyError:
+            self._config_reader.add_debug(
+                    f'option absente, par défault [{self._default_tournament_path}]',
+                    section_key, key)
+        except TypeError:
+            self._config_reader.add_error(
+                    f'La rubrique [{section_key}] est en fait une option',
+                    section_key)
+            return
+        # NOTE(Amaras) TOC/TOU bug
+        if not tournament_path.exists():
+            self._config_reader.add_error(
+                    f"le répertoire [{tournament_path}] n'existe pas, tournoi ignoré",
+                    section_key, key)
+            return
+        if not tournament_path.is_dir():
+            self._config_reader.add_error(
+                    f"[{tournament_path}] n'est pas un répertoire, tournoi ignoré",
+                    section_key, key)
+            return
+        key = 'filename'
+        filename: str | None = section.get(key)
+        key = 'ffe_id'
+        ffe_id: int | None = None
+        try:
+            ffe_id = int(section[key])
+            assert ffe_id >= 1
+        except KeyError:
+            pass
+        except ValueError:
+            self._config_reader.add_warning('un entier est attendu', section_key, key)
+            ffe_id = None
+        except AssertionError:
+            self._config_reader.add_warning(
+                    'un entier positif non nul est attendu',
+                    section_key,
+                    key
+            )
+            ffe_id = None
+        if filename is None and ffe_id is None:
+            self._config_reader.add_error(
+                    'ni [filename] ni [ffe_id] ne sont indiqués, tournoi ignoré',
+                    section_key
+            )
+            return
+        if filename is None:
+            filename = str(ffe_id)
+        file: Path = tournament_path / f'{filename}.papi'
+        # NOTE(Amaras) TOC/TOU bug
+        if not file.exists():
+            self._config_reader.add_error(f'le fichier [{file}] n\'existe pas, tournoi ignoré', section_key)
+            return
+        if not file.is_file():
+            self._config_reader.add_error(f'[{file}] n\'est pas un fichier, tournoi ignoré', section_key)
+            return
+        key = 'name'
+        default_name: str = tournament_id
+        try:
+            name = section[key]
+        except KeyError:
+            self._config_reader.add_info(
+                    f'option absente, par défaut [{default_name}]',
+                    section_key, key)
+            name = default_name
+        key = 'ffe_password'
+        ffe_password: str | None = None
+        if ffe_id is not None:
+            try:
+                ffe_password = section[key]
+                if not re.match('^[A-Z]{10}$', ffe_password):
+                    self._config_reader.add_warning(
+                        'un mot de 10 lettres majuscules est attendu, le mot de passe est ignoré (les '
+                        'opérations sur le site web de la FFE ne seront pas disponibles',
+                        section_key, key)
+                    ffe_password = None
+            except KeyError:
+                self._config_reader.add_info(
+                    'option absente, les opération sur le site web de la FFE ne seront pas disponibles',
+                    section_key, key)
+        elif key in section:
+            self._config_reader.add_info(
+                "option ignorée quand l'option [ffe_id] n'est pas indiquée",
+                section_key, key)
+        tournament_section_keys: list[str] = [
+                'path',
+                'filename',
+                'name',
+                'ffe_id',
+                'ffe_password',
+            ]
+        for key, value in section.items():
+            if key not in tournament_section_keys:
+                self._config_reader.add_warning('option inconnue', section_key, key)
+        handicap_section_key = 'tournament.' + tournament_id + '.handicap'
+        handicap_values = self._build_tournament_handicap(handicap_section_key)
+        if handicap_values[0] is not None and ffe_id is not None:
+            self._config_reader.add_warning(
+                'les tournois à handicap ne devraient pas être homologués',
+                handicap_section_key
+            )
+        self._tournaments[tournament_id] = Tournament(
+            tournament_id, name, file, ffe_id, ffe_password, *handicap_values)
+
+    def _build_tournament_handicap(self, section_key: str) -> HandicapTournament:
+        try:
+            handicap_section = self._config_reader[section_key]
+        except KeyError:
+            return HandicapTournament()
+        section_keys: list[str] = [
+            'initial_time',
+            'increment',
+            'penalty_step',
+            'penalty_value',
+            'min_time',
+        ]
+        for key in self._config_reader[section_key]:
+            if key not in section_keys:
+                self._config_reader.add_warning('option inconnue', section_key, key)
+        ignore_message = 'configuration de handicap ignorée'
+        positive_messages = (
+            f'La rubrique est en fait une option, {ignore_message}',
+            f'option absente, {ignore_message}',
+            f'un entier est attendu, {ignore_message}',
+            f'un entier strictement positif est attendu, {ignore_message}'
+        )
+        non_negative_messages = (
+            f'La rubrique est en fait une option, {ignore_message}'
+            f'option absente, {ignore_message}',
+            f'un entier est attendu, {ignore_message}',
+            f'un entier positif est attendu, {ignore_message}'
+        )
+        key = 'initial_time'
+        initial_time: int | None = self._config_reader.get_value_with_warning(
+            handicap_section,
+            section_key,
+            key,
+            int,
+            lambda x: x >= 1,
+            None,
+            *positive_messages
+        )
+        if initial_time is None:
+            return HandicapTournament()
+        key = 'increment'
+        increment: int | None = self._config_reader.get_value_with_warning(
+            handicap_section,
+            section_key,
+            key,
+            int,
+            lambda x: x >= 0,
+            None,
+            *non_negative_messages
+        )
+        if increment is None:
+            return HandicapTournament()
+        key = 'penalty_step'
+        penalty_step: int | None = self._config_reader.get_value_with_warning(
+            handicap_section,
+            section_key,
+            key,
+            int,
+            lambda x: x >= 1,
+            None,
+            *positive_messages
+        )
+        if penalty_step is None:
+            return HandicapTournament()
+        key = 'penalty_value'
+        penalty_value: int | None = self._config_reader.get_value_with_warning(
+            handicap_section,
+            section_key,
+            key,
+            int,
+            lambda x: x >= 1,
+            None,
+            *positive_messages
+        )
+        if penalty_value is None:
+            return HandicapTournament()
+        key = 'min_time'
+        min_time: int | None = self._config_reader.get_value_with_warning(
+            handicap_section,
+            section_key,
+            key,
+            int,
+            lambda x: x >= 1,
+            *positive_messages
+        )
+        if min_time is None:
+            return HandicapTournament()
+        return HandicapTournament(
+            initial_time,
+            increment,
+            penalty_step,
+            penalty_value,
+            min_time,
+        )
