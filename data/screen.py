@@ -287,13 +287,9 @@ class ScreenBuilder:
                 return
         screen_sets: list[ScreenSet] | None = None
         if screen_type in [ScreenType.Boards, ScreenType.Players, ]:
-            screen_sets = []
-            screen_set_builder: ScreenSetBuilder = ScreenSetBuilder(self._config_reader, self._tournaments)
-            for screen_set_section_key in screen_set_builder.read_screen_set_section_keys(
-                    screen_section_key, screen_type):
-                screen_set = screen_set_builder.build_screen_set(screen_set_section_key, columns)
-                if screen_set:
-                    screen_sets.append(screen_set)
+            screen_sets = ScreenSetBuilder(
+                self._config_reader, self._tournaments, screen_section_key, screen_type, columns
+            ).screen_sets
             if not screen_sets:
                 if screen_type == ScreenType.Boards:
                     self._config_reader.add_warning(
