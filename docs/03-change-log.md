@@ -31,7 +31,7 @@
 - Support du « bye »
 - Ajout du chronomètre
 - Amélioration du rafraichissement des pages
-- Rennomage de la propriété no-banner en no_banner
+- Renommage de la propriété no-banner en no_banner
 
 ## Version 1.14 - 9 avril 2019
 - Ajout des écrans d'affichage des résultats
@@ -48,8 +48,8 @@
 - Support des tournois à handicap
 
 ## Version 1.11 - 27 octobre 2018
-- Support du Suisse Accéléré Degressif (SAD)
-- Support de l'acélération de Haley
+- Support du Suisse Accéléré Dégressif (SAD)
+- Support de l'accélération de Haley
 
 ## Version 1.10 - 26 octobre 2018
 - Possibilité de tester les codes d'accès au site FFE
@@ -67,7 +67,7 @@
 - Recherche automatique des mises à jour
 
 ## Version 1.6 - 30 août 2018
-- Ecriture de la documentation
+- Écriture de la documentation
 - Diffusion sous forme d'une archive
 - Amélioration de l'affichage des participants avant les appariements
 - Amélioration des styles CSS (normalisation)
@@ -80,3 +80,8 @@
 ## Version 1.4 - 28 juillet 2018
 - Gestion de plusieurs écrans de saisie
 
+# Politique de numérotation des versions (`x.y.z`)
+
+- `x` : numéro majeur (changements complets du logiciel)
+- `y` : numéro mineur (modifications de configuration et évolutions fonctionnelles)
+- `z` : numéro de correctif (modification du code)
