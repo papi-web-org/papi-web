@@ -39,20 +39,23 @@ class AccessDatabase:
         if self.database is None:
             access_driver: str = 'Microsoft Access Driver (*.mdb, *.accdb)'
             if access_driver not in pyodbc.drivers():
-                msg: str = 'ODBC driver installed are:'
+                logger.error('Les pilotes ODBC installés sont les suivants :')
                 for driver in pyodbc.drivers():
-                    msg += f'\n - {driver}'
+                    logger.error(f' - {driver}')
+                logger.error(f'Pilote nécessaire : {access_driver}')
                 install_url: str = 'https://www.microsoft.com/en-us/download/details.aspx?id=54920'
-                msg += f'\nInstall driver [{access_driver}] (cf {install_url}) and retry.'
-                msg += f'\nNote: for 32bits/64bits compatibility, use accessdatabaseengine_X64.exe /passive'
-                raise PapiException(msg)
+                logger.error(f'Installer le pilote (cf {install_url}) et relancer.')
+                logger.error(f'Note : pour une compatibilité 32bits et 64bits, '
+                             f'utiliser la commande suivante à l\'installation :')
+                logger.error(f'accessdatabaseengine_X64.exe /passive')
+                raise PapiException('Pilote Microsoft Access introuvable')
             db_url: str = f'DRIVER={{{access_driver}}};DBQ={self.file.resolve()};'
             # Get rid of unresolved pyodbc.Error: ('HY000', 'The driver did not supply an error!')
             while self.database is None:
                 try:
                     self.database = pyodbc.connect(db_url)
                 except pyodbc.Error as e:
-                    logger.error(f'Connection to file {self.file} failed: {e.args}')
+                    logger.error(f'La connection au fichier {self.file} a échoué: {e.args}')
                     time.sleep(1)
             self.cursor = self.database.cursor()
 
