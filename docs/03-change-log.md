@@ -5,7 +5,7 @@
 ## Version 2.0.0 - 10 novembre 2023
 - Livraison sous forme d'un exécutable autonome (ne nécessite plus l'installation de XAMPP)
 - Configuration des évènements au format INI (plus simple que PHP)
-- Amélioration de la page d'acceuil
+- Amélioration de la page d'accueil
 - Ajout d'une page par évènement
 - Ajout d'écrans d'affichage des appariements par ordre alphabétique
 - Simplification de la configuration des écrans grâce aux modèles et aux familles d'écran
