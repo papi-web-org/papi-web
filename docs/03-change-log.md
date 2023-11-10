@@ -2,7 +2,7 @@
 
 # Papi-web - ChangeLog
 
-## Version 2.0.0 - 11 novembre 2023
+## Version 2.0.0 - 10 novembre 2023
 - Livraison sous forme d'un exécutable autonome (ne nécessite plus l'installation de XAMPP)
 - Configuration des évènements au format INI (plus simple que PHP)
 - Amélioration de la page d'acceuil
