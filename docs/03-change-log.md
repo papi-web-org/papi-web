@@ -8,8 +8,10 @@
 - Amélioration de la page d'accueil
 - Ajout d'une page par évènement
 - Ajout d'écrans d'affichage des appariements par ordre alphabétique
+- Ajout des écrans rotatifs
 - Simplification de la configuration des écrans grâce aux modèles et aux familles d'écran
 - Ajout d'une temporisation pour le transfert des fichiers Papi sur le site fédéral
+- Publication des sources
 
 ## Version 1.19 - 22 janvier 2023
 - Correction d'un bug de protection des pages de saisie des résultats
