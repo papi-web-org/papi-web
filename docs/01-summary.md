@@ -57,4 +57,21 @@ Le logiciel Papi-web peut être utilisé gratuitement et sans autorisation par t
 Vous n'en faites pas encore partie ? Lancez-vous en découvrant [les nouveautés de la version 2](02-v2-news.md) !
 
 Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonner à la liste de diffusion papi-web-news@echecs-bretagne.fr (demande par mail à pascal.aubry@echecs35.fr).
- 
+
+| Arbitre            | Titre | Ligue | Dép  | Club                            |
+|--------------------|-------|-------|------|---------------------------------|
+| AUBRY Pascal       | AFO2  | BRE   | 35   | Echiquier Domloupéen            |
+| BENETEAU Hubert    | AFE1  | NOR   | 50   | Agneaux Saint-Lô                |
+| DELMOTTE Eric      | AFE1  | BFC   | 71   | L'Echiquier Châlonnais          |
+| FRAYSSE Sébastien  | AFO2  | BRE   | 29   | Echiquier Quimpérois            |
+| GUINET Kevin       |       | PDL   | 72   | L'Echiquier Fertois             |
+| LABORDE Stephane   | AFO1  | OCC   | 66   | Perpignan - Les rois de la Tet  |
+| LAPEYRE Pierre     | AFE2  | NAQ   | 33   | Echiquier Bordelais             |
+| LECORNU Laurent    | AFE1  | BRE   | 29   | Echiquier Gouesnousien          |
+| LEFEBVRE Philippe  | AFO1  | BRE   | 29   | Echiquier Gouesnousien          |
+| LOUDIER Sarah      | AFC   | BRE   | 22   | Tregor Echecs                   |
+| PLAT Sammy         | AFO2  | BRE   | 35   | Rennes Paul Bert                |
+| REGAUD Denis       | AFE2  | NAQ   | 33   | Salon Nostradamus               |
+| RUHLMANN Dominique | AFE1  | BRE   | 35   | Echiquier Domloupéen            |
+| SALLETTE Alain     | AFE1  | NAQ   | 33   | Bordeaux Aspom Echecs           |
+| VIOLEAU Jean-Luc   | AFE1  | PDL   | 85   | Club Echecs La Roche sur Yon    |
