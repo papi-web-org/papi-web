@@ -235,7 +235,7 @@ class ScreenSetBuilder:
                 self._config_reader[screen_set_single_section_key] = {}
                 screen_set_section_keys.append(screen_set_single_section_key)
                 self._config_reader.add_info(
-                    'un seul tournoi, la rubrique [{screen_set_single_section_key}] a été ajoutée',
+                    f'un seul tournoi, la rubrique [{screen_set_single_section_key}] a été ajoutée',
                     self._screen_section_key)
             else:
                 self._config_reader.add_warning('rubrique absente, écran ignoré', screen_set_single_section_key)
