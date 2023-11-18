@@ -223,7 +223,7 @@ class FFESession(Session):
         if self.__auth_vars[SET_VISIBLE_LINK_ID] is None:
             logger.warning(f'Lien d\'affichage non trouvé (vérifier qu\'un fichier Papi a déjà été téléchargé)')
             return
-        if self.__auth_vars[SET_VISIBLE_LINK_ID].lower().startswith('desactiver'):
+        if self.__auth_vars[SET_VISIBLE_LINK_ID].lower().startswith('désactiver'):
             logger.info(f'Les données sont déjà affichées')
             return
         if not self.__auth_vars[SET_VISIBLE_LINK_ID].lower().startswith('activer'):
