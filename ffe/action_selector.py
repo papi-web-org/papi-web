@@ -103,11 +103,16 @@ class ActionSelector:
                         upload: bool
                         if not tournament.ffe_upload_marker.is_file():
                             upload = True
-                        elif (time.time() <= tournament.ffe_upload_marker.lstat().st_mtime
-                              + self.__config.ffe_upload_delay):
-                            upload = False
                         else:
-                            upload = True
+                            marker_time = tournament.ffe_upload_marker.lstat().st_mtime
+                            if marker_time > tournament.file.lstat().st_mtime:
+                                # last version already uploaded
+                                upload = False
+                            elif marker_time < time.time() + self.__config.ffe_upload_delay:
+                                # last upload too recent
+                                upload = False
+                            else:
+                                upload = True
                         if upload:
                             updated_tournaments.append(tournament)
                     if not updated_tournaments:
