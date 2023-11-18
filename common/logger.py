@@ -44,5 +44,8 @@ def print_interactive(string: str):
 def input_interactive(string: str) -> str:
     __flush_logger()
     print(Fore.CYAN + Style.BRIGHT + string + Style.RESET_ALL, end='')
-    result = input().strip().upper()
+    try:
+        result = input().strip().upper()
+    except UnicodeDecodeError:
+        raise KeyboardInterrupt()
     return result

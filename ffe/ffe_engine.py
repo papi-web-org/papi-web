@@ -9,6 +9,9 @@ logger: Logger = get_logger()
 
 class FFEEngine(Engine):
     def __init__(self):
-        super().__init__()
-        while EventSelector(self._config).run():
+        try:
+            super().__init__()
+            while EventSelector(self._config).run():
+                pass
+        except KeyboardInterrupt:
             pass
