@@ -57,7 +57,8 @@ class ConfigReader(ConfigParser):
             with open(self.__ini_file, "rb") as f:
                 encoding = chardet.detect(f.read())['encoding']
                 if encoding == 'MacRoman':
-                    logger.warning(f'{self.__ini_file}: MacRoman encoding detected, assuming utf-8.')
+                    if not silent:
+                        logger.warning(f'{self.__ini_file}: MacRoman encoding detected, assuming utf-8.')
                     encoding = 'utf-8'
             files_read = self.read(self.__ini_file, encoding=encoding)
             # NOTE(Amaras) There could still be a problem leading to not
