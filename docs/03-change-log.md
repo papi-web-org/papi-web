@@ -2,6 +2,9 @@
 
 # Papi-web - ChangeLog
 
+## Version 2.0.2 - 19 novembre 2023
+- Réduction _a minima_ des téléchargements des tournois vers le site fédéral 
+
 ## Version 2.0.1 - 18 novembre 2023
 - Amélioration de la détection de l'encodage des fichiers de configuration
 
