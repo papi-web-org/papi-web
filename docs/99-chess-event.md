@@ -53,7 +53,7 @@ L'URL de la requête sera https://services.breizh-chess-online.fr/chessevent/dow
 
 ### Paramètres
 
-Tous les paramètres seront passés en clair dans le corps de la requête HTTPS sous la forme de paramètres.
+Tous les paramètres seront passés en clair dans le corps de la requête HTTPS sous la forme de paramètres (méthode POST).
 
 | Paramètre       | Description                                                                      |
 |-----------------|----------------------------------------------------------------------------------|
