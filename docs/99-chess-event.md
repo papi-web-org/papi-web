@@ -1,6 +1,6 @@
 **[Retour au sommaire de la documentation](../README.md)**
 
-# Papi-web - Téléchargement des fichiers Papi depuis la plateforme d'inscription Chess Event
+# Papi-web - Création des fichiers Papi depuis la plateforme d'inscription Chess Event
 
 ## Généralités
 
@@ -8,42 +8,54 @@ Chess Event est une plateforme d'inscription aux évènements échiquéens déve
 
 - [Accéder à la plateforme Chess Event](https://services.breizh-chess-online.fr/chessevent)
 
-La version 2.1 de Papi-web permettra le téléchargement des fichiers Papi directement depuis la plateforme Chess Event. 
+La version 2.1 de Papi-web permettra la création des fichiers Papi directement à partir des données de la plateforme Chess Event. 
 
 ## Fonctionnement
 
 ### Utilisation
 
-Le téléchargement se fera en appelant un nouveau script chessevent.bat.
+Le téléchargement se fait en appelant un nouveau script chessevent.bat.
 
-Une confirmation devra être demandée à l'utilisateur·trice pour limiter les risques d'écrasement de fichiers déjà existants en cours de tournoi.
+Une confirmation est demandée à l'utilisateur·trice pour limiter les risques d'écrasement de fichiers déjà existants en cours de tournoi.
 
 ### Authentification
 
-Le téléchargement se fera sur authentification pour limiter la diffusion des coordonnées des joueur·euses (adresses mél et numéros de téléphone).
+Le téléchargement se fait sur authentification pour limiter la diffusion des coordonnées des joueur·euses (adresses mél et numéros de téléphone).
 
-Les identifiants utilisés seront ceux de la plateforme Chess Event, ils seront déclarés dans le fichier de configuration des évènements dans une nouvelle rubrique `[chessevent]`.
+Les identifiants utilisés pour l'authentification sur la plateforme Chess Event sont ceux de la plateforme Chess Event, ils sont déclarés dans le fichier de configuration des évènements dans une nouvelle rubrique `[chessevent]`.
 
-| Option     | Description                                                                      |
-|------------|----------------------------------------------------------------------------------|
-| `user_id`  | L'identifiant FFE de l'utilisateur·trice (de la forme XNNNNN, obligatoire).      |
-| `password` | Le mot de passe l'utilisateur·trice sur la plateforme Chess Event (obligatoire). |
+| Option     | Description                                                                                              |
+|------------|----------------------------------------------------------------------------------------------------------|
+| `user_id`  | L'identifiant FFE de l'utilisateur·trice sur la plateforme Chess Event (de la forme XNNNNN, facultatif). |
+| `password` | Le mot de passe l'utilisateur·trice sur la plateforme Chess Event (facultatif).                          |
+
+Ces valeurs sont utilisées par défaut pour tous les tournois de l'évènement Papi-web et peuvent être surchargées au niveau de chaque tournoi (options `chessevent_user_id` et `chessevent_password`).
 
 ### Désignation d'un évènement sur la plateforme Chess Event
 
 L'identifiant de l'évènement sur la plateforme Chess Event sera également indiqué dans la rubrique `[chessevent]` :
 
-| Option          | Description                                                 |
-|-----------------|-------------------------------------------------------------|
-| `chessevent_id` | L'identifiant de l'évènement sur la plateforme Chess Event. |
+| Option      | Description                                                 |
+|-------------|-------------------------------------------------------------|
+| `event_id`  | L'identifiant de l'évènement sur la plateforme Chess Event. |
 
-### Désignation de l'évènement Chess Event
+Cette valeur est utilisée par défaut pour tous les tournois de l'évènement Papi-web et peut être surchargée au niveau de chaque tournoi (option `chessevent_event_id`).
 
-L'identifiant d'un évènement sur la plateforme Chess Event sera également indiqué dans la déclaration du tournoi (rubrique `[tournament]` ou `[tournament.<tournament_id>]`) :
+### Désignation d'un tournoi Chess Event
 
-| Option          | Description                                                 |
-|-----------------|-------------------------------------------------------------|
-| `chessevent_id` | L'identifiant de l'évènement sur la plateforme Chess Event. |
+L'identifiant d'un tournoi sur la plateforme Chess Event sera indiqué dans la déclaration du tournoi (rubrique `[tournament]` ou `[tournament.<tournament_id>]`) :
+
+| Option                     | Description                                                 |
+|----------------------------|-------------------------------------------------------------|
+| `chessevent_tournament_id` | L'identifiant de l'évènement sur la plateforme Chess Event. |
+
+Comme indiqué précédemment, les valeurs des options de la rubrique `[chessevent]` peuvent être surchargées pour chaque tournoi : 
+
+| Option                | Description                                                                                                                                                    |
+|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `chessevent_user_id`  | L'identifiant FFE de l'utilisateur·trice sur la plateforme Chess Event (de la forme XNNNNN, facultatif, valeur définie par défaut par `[chessevent].user_id`). |
+| `chessevent_password` | Le mot de passe l'utilisateur·trice sur la plateforme Chess Event (facultatif, valeur définie par défaut par `[chessevent].password`).                         |
+| `chessevent_event_id` | L'identifiant de l'évènement sur la plateforme Chess Event (facultatif, valeur définie par défaut par `[chessevent].event_id`).                                |
 
 ## Requêtes de téléchargement
 
@@ -174,3 +186,19 @@ Les données attendues sont un dictionnaire au format JSON dans le corps de la r
 | `F`    | Fide               |
 | `N`    | National           |
 | `E`    | Estime             |
+
+## Codes d'erreur
+
+En cas d'erreur, la réponse au format JSON ne contient qu'un champ `error: str` qui précise l'erreur rencontrée. 
+
+Les codes d'erreur suivants sont utilisés :
+
+| Statut HTTP | Signification                                                                             | Champ `error`                               |
+|-------------|-------------------------------------------------------------------------------------------|---------------------------------------------|
+| 200         | _succès_                                                                                  |                                             |
+| 401         | Problème d'authentification (impossibilité de s'identifier sur la plateforme Chess Event) | `Unauthorized`                              |
+| 403         | Problème d'autorisation (identifiants non autorisés pour l'évènement demandé)             | `Access forbidden`                          |
+| 404         | Évènement ou tournoi non trouvé                                                           | `Event not found` ou `Tournament not found` |
+| 500         | Autres erreurs                                                                            | À préciser                                  |
+
+Le script de création des fichiers Papi devra également gérer les problèmes d'accès à l'URL de requête.
