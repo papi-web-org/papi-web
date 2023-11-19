@@ -12,7 +12,7 @@ from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
 
-PAPI_WEB_VERSION: str = '2.0.2'
+PAPI_WEB_VERSION: str = '2.0.3'
 
 PAPI_WEB_URL = 'https://github.com/pascalaubry/papi-web'
 
@@ -113,7 +113,7 @@ class PapiWebConfig:
                         self.reader.add_warning(f'délai non valide [{self.reader.get(section_key, key)}], par défaut '
                                                 f'[{DEFAULT_FFE_UPLOAD_DELAY}]', section_key, key)
             except KeyError:
-                self.reader.add_warning(f'rubrique introuvable', section_key)
+                self.reader.add_warning(f'rubrique introuvable, configuration par défaut', section_key)
         else:
             self.reader.add_debug(f'configuration par défaut')
         if self.log_level is None:
@@ -125,6 +125,8 @@ class PapiWebConfig:
             self.__web_port = DEFAULT_WEB_PORT
         if self.web_launch_browser is None:
             self.__web_launch_browser = DEFAULT_WEB_LAUNCH_BROWSER
+        if self.ffe_upload_delay is None:
+            self.__ffe_upload_delay = DEFAULT_FFE_UPLOAD_DELAY
 
     @property
     def log_level(self) -> int:

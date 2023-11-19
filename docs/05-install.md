@@ -16,7 +16,7 @@ L'installation de XAMPP ou d'autres outils tiers n'est plus nécessaire à parti
 Téléchargez la dernière version de Papi-web, décompressez et installez la 
 sur l'ordinateur qui jouera le rôle de serveur (sur lequel seront également les fichiers Papi).
 
-- **[Télécharger la dernière version (2.0.0)](https://github.com/pascalaubry/papi-web/releases/download/2.0.0/papi-web-2.0.0.zip)**
+- **[Télécharger la dernière version (2.0.3)](https://github.com/pascalaubry/papi-web/releases/download/2.0.3/papi-web-2.0.3.zip)**
 - **[Voir toutes les versions](https://github.com/pascalaubry/papi-web/releases)**
 
 | Fichiers et répertoires                                      | Signification                                                                                                                                               |

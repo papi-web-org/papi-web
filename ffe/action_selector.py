@@ -108,7 +108,7 @@ class ActionSelector:
                             if marker_time > tournament.file.lstat().st_mtime:
                                 # last version already uploaded
                                 upload = False
-                            elif marker_time < time.time() + self.__config.ffe_upload_delay:
+                            elif time.time() < marker_time + self.__config.ffe_upload_delay:
                                 # last upload too recent
                                 upload = False
                             else:
