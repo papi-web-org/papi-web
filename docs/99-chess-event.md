@@ -45,9 +45,9 @@ Cette valeur est utilisée par défaut pour tous les tournois de l'évènement P
 
 L'identifiant d'un tournoi sur la plateforme Chess Event sera indiqué dans la déclaration du tournoi (rubrique `[tournament]` ou `[tournament.<tournament_id>]`) :
 
-| Option                     | Description                                                 |
-|----------------------------|-------------------------------------------------------------|
-| `chessevent_tournament_id` | L'identifiant de l'évènement sur la plateforme Chess Event. |
+| Option                     | Description                                                              |
+|----------------------------|--------------------------------------------------------------------------|
+| `chessevent_tournament_id` | L'identifiant de l'évènement sur la plateforme Chess Event (facultatif). |
 
 Comme indiqué précédemment, les valeurs des options de la rubrique `[chessevent]` peuvent être surchargées pour chaque tournoi : 
 
@@ -92,8 +92,8 @@ Les données attendues sont un dictionnaire au format JSON dans le corps de la r
 | `tie_break_1`  | `enum`      | Le premier départage (énumération plus bas).   |
 | `tie_break_2`  | `enum`      | Le deuxième départage (énumération plus bas).  |
 | `tie_break_3`  | `enum`      | Le troisième départage (énumération plus bas). |
-| `ratings`      | `enum`      | Le classement utilisé (énumération plus bas).  |
-| `players`      | `dict`      | Les joueur·euses (détails plus bas).           |
+| `rating`       | `enum`      | Le classement utilisé (énumération plus bas).  |
+| `players`      | `list`      | Les joueur·euses (détails plus bas).           |
 
 ### Énumération des types de tournoi
 
@@ -159,15 +159,17 @@ Les données attendues sont un dictionnaire au format JSON dans le corps de la r
 
 ### Énumération des genres
 
-| Numéro | Genre               |
-|--------|---------------------|
-| `F`    | Féminin             |
-| `M`    | Masculin            |
+| Numéro | Genre    |
+|--------|----------|
+| `0`    | _aucun_  |
+| `1`    | Féminin  |
+| `2`    | Masculin |
 
 ### Énumération des catégories
 
 | Numéro | Catégorie |
 |--------|-----------|
+| `0`    | _aucune_  |
 | `1`    | U8 (Ppo)  |
 | `2`    | U10 (Pou) |
 | `3`    | U12 (Pup) |
@@ -183,9 +185,19 @@ Les données attendues sont un dictionnaire au format JSON dans le corps de la r
 
 | Numéro | Type de classement |
 |--------|--------------------|
-| `F`    | Fide               |
-| `N`    | National           |
-| `E`    | Estime             |
+| `0`    | _aucun_            |
+| `1`    | Estimé             |
+| `2`    | National           |
+| `3`    | Fide               |
+
+### Énumération des licences
+
+| Lettre | Licence                |
+|--------|------------------------|
+| `0`    | _aucune_               |
+| `1`    | Licence non renouvelée |
+| `2`    | Licence B              |
+| `3`    | Licence 3              |
 
 ## Codes d'erreur
 
@@ -193,12 +205,13 @@ En cas d'erreur, la réponse au format JSON ne contient qu'un champ `error: str`
 
 Les codes d'erreur suivants sont utilisés :
 
-| Statut HTTP | Signification                                                                             | Champ `error`                               |
-|-------------|-------------------------------------------------------------------------------------------|---------------------------------------------|
-| 200         | _succès_                                                                                  |                                             |
-| 401         | Problème d'authentification (impossibilité de s'identifier sur la plateforme Chess Event) | `Unauthorized`                              |
-| 403         | Problème d'autorisation (identifiants non autorisés pour l'évènement demandé)             | `Access forbidden`                          |
-| 404         | Évènement ou tournoi non trouvé                                                           | `Event not found` ou `Tournament not found` |
-| 500         | Autres erreurs                                                                            | À préciser                                  |
+| Statut HTTP | Signification                                                                             | Champ `error`          |
+|-------------|-------------------------------------------------------------------------------------------|------------------------|
+| 200         | _succès_                                                                                  |                        |
+| 401         | Problème d'authentification (impossibilité de s'identifier sur la plateforme Chess Event) | `Unauthorized`         |
+| 403         | Problème d'autorisation (identifiants non autorisés pour l'évènement demandé)             | `Access forbidden`     |
+| 498         | Tournoi non trouvé                                                                        | `Tournament not found` |
+| 499         | Évènement non trouvé                                                                      | `Event not found`      |
+| 500         | Autres erreurs                                                                            | À préciser             |
 
 Le script de création des fichiers Papi devra également gérer les problèmes d'accès à l'URL de requête.
