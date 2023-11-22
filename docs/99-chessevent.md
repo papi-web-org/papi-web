@@ -144,6 +144,7 @@ Exemple de tournoi :
 | `license`              | `enum`      | La licence :<br/>`0` = _aucune_<br/>`1` = Licence non renouvelée (N)<br/>`2` = Licence B<br/>`3` = Licence A                                                                                                            |
 | `federation`           | `str`       | Le code de la fédération (FED).                                                                                                                                                                                         |
 | `league`               | `str`       | Le code de la ligue (LIG).                                                                                                                                                                                              |
+| `club_id`              | `int`       | Le numéro d'identifiant du club.                                                                                                                                                                                        |
 | `club`                 | `str`       | Le club.                                                                                                                                                                                                                |
 | `email`                | `str`       | L'adresse électronique'.                                                                                                                                                                                                |
 | `phone`                | `str`       | Le numéro de téléphone.                                                                                                                                                                                                 |
@@ -173,6 +174,7 @@ Exemple de joueur·euse :
 &nbsp;&nbsp;`'license': 3,  # A`<br/>
 &nbsp;&nbsp;`'federation': 'FRA',`<br/>
 &nbsp;&nbsp;`'league': 'BRE',`<br/>
+&nbsp;&nbsp;`'club_id': 1918,`<br/>
 &nbsp;&nbsp;`'club': 'Echiquier Domloupéen',`<br/>
 &nbsp;&nbsp;`'email': 'pascal.aubry@echecs35.fr',`<br/>
 &nbsp;&nbsp;`'phone': '0677939521',`<br/>
