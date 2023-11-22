@@ -120,7 +120,7 @@ Exemple de tournoi :
 &nbsp;&nbsp;`'rating': 1,`  # Standard<br/> 
 &nbsp;&nbsp;`'players': [`<br/> 
 &nbsp;&nbsp;&nbsp;&nbsp;`...`<br/> 
-&nbsp;&nbsp;`'],`<br/> 
+&nbsp;&nbsp;`],`<br/> 
 `}`
 
 ### Description des joueur·euses
