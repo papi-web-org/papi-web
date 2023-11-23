@@ -44,6 +44,7 @@ def build_exe():
         '--noconfirm',
         '--name=' + basename,
         '--onefile',
+        '--hiddenimport=chessevent',
         '--hiddenimport=common',
         '--hiddenimport=data',
         '--hiddenimport=database',
