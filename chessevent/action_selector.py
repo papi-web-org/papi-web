@@ -9,9 +9,9 @@ from common.config_reader import TMP_DIR
 from common.logger import get_logger, print_interactive, input_interactive
 from common.papi_web_config import PapiWebConfig
 from common.singleton import singleton
+from data.chessevent_tournament import ChessEventTournament
 from data.event import Event
 from data.tournament import Tournament
-from data.util import ChessEventTournament
 from database.papi_template import create_empty_papi_database
 
 logger: Logger = get_logger()

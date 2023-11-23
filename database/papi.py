@@ -5,13 +5,14 @@ from itertools import product
 from typing import NamedTuple
 from contextlib import suppress
 
+from data.chessevent_player import ChessEventPlayer
+from data.chessevent_tournament import ChessEventTournament
 from database.access import AccessDatabase
 from data.pairing import Pairing
 from data.player import Player
 from common.logger import get_logger
 
-from data.util import Result, TournamentPairing, PlayerGender, PlayerTitle, Color, TournamentRating, \
-    ChessEventTournament, ChessEventPlayer
+from data.util import Result, TournamentPairing, PlayerGender, PlayerTitle, Color, TournamentRating
 
 logger: Logger = get_logger()
 

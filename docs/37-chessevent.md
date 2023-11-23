@@ -41,16 +41,6 @@ Dans la rubrique `[tournament.<tournament_id>]` d'un tournoi (la rubrique `[tour
 chessevent_tournament_id = mon_tournoi
 ```
 
-> [!NOTE]
-> Il est possible de redéfinir, pour chaque tournoi, l'accès à la plateforme Chess Event :
-> ```
-> [tournament.<tournament_id>]
-> chessevent_user_id = Y67890
-> chessevent_password = ********
-> chessevent_event_id = un_autre__evenement
-> chessevent_tournament_id = un_autre_tournoi
-> ```
-
 ## Création des fichiers Papi
 
 Il suffit de lancer le script `chessevent.bat` et suivre les instructions :
@@ -83,3 +73,30 @@ INFO     Le fichier papi\domloup-fide-36-A.papi a été créé (20 joueur·euses
 
 Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
 
+## Évènement Papi-web avec des tournois de plusieurs évènements Chess Event
+
+Dans ce cas particulier, il faut définir plusieurs connexions à Chess Event :
+
+```
+[chessevent.jeunes]
+user_id = X12345
+password = ********
+event_id = evenement_jeunes
+
+[chessevent.adultes]
+user_id = Y67890
+password = ********
+event_id = evenement_adultes
+```
+
+Puis indiquer pour chaque tournoi la connexion à Chess Event qu'il faut utiliser avec l'option `chessevent_connection_id` :
+
+```
+[tournament.jeunes]
+chessevent_connection_id = jeunes
+chessevent_tournament_id = tournoi_jeunes
+...
+[tournament.adultes]
+chessevent_connection_id = adultes
+chessevent_tournament_id = tournoi_adultes
+```

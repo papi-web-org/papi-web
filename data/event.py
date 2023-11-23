@@ -7,6 +7,7 @@ from typing import Iterator
 from common.config_reader import ConfigReader
 from common.logger import get_logger
 from data.board import Board
+from data.chessevent_connection import ChessEventConnection, ChessEventConnectionBuilder
 from data.family import FamilyBuilder
 from data.result import Result
 from data.rotator import Rotator, RotatorBuilder
@@ -29,9 +30,7 @@ class Event:
         self.path: Path = Path('papi')
         self.css: str | None = None
         self.update_password: str | None = None
-        self.chessevent_user_id: str | None = None
-        self.chessevent_password: str | None = None
-        self.chessevent_event_id: str | None = None
+        self.chessevent_connections: dict[str, ChessEventConnection] = {}
         self.tournaments: dict[str, Tournament] = {}
         self.templates: dict[str, Template] = {}
         self.screens_by_family_id: dict[str, list[AScreen]] = {}
@@ -43,8 +42,13 @@ class Event:
         self._build_root()
         if self.reader.errors:
             return
+        self.chessevent_connections = ChessEventConnectionBuilder(
+            self.reader
+        ).chessevent_connections
+        if self.reader.errors:
+            return
         self.tournaments = TournamentBuilder(
-            self.reader, self.path, self.chessevent_event_id, self.chessevent_user_id, self.chessevent_password
+            self.reader, self.path, self.chessevent_connections
         ).tournaments
         if self.reader.errors:
             return
@@ -160,59 +164,6 @@ class Event:
             )
 
         section_keys: list[str] = ['name', 'path', 'update_password', 'css', ]
-        for key, value in section.items():
-            if key not in section_keys:
-                self.reader.add_warning('option inconnue', section_key, key)
-
-        section_key: str = 'chessevent'
-        try:
-            section = self.reader[section_key]
-        except KeyError:
-            self.reader.add_debug('rubrique absente, les fichiers papi des tournois ne pourront pas être créés '
-                                  'à partir de la plateforme Chess Event', section_key)
-            return
-
-        key = 'event_id'
-        try:
-            self.chessevent_event_id = section[key]
-            if not self.chessevent_event_id:
-                self.reader.add_debug('option vide', section_key, key)
-        except KeyError:
-            self.reader.add_debug(f'option absente', section_key, key)
-        except TypeError:
-            self.reader.add_error('la rubrique est devenue une option, erreur fatale', section_key)
-            return
-
-        key = 'user_id'
-        try:
-            self.chessevent_user_id = section[key]
-            if not self.chessevent_event_id:
-                self.reader.add_debug('option vide', section_key, key)
-        except KeyError:
-            self.reader.add_debug(f'option absente', section_key, key)
-        except TypeError:
-            self.reader.add_error('la rubrique est devenue une option, erreur fatale', section_key)
-            return
-
-        key = 'password'
-        try:
-            self.chessevent_password = section[key]
-            if not self.chessevent_event_id:
-                self.reader.add_debug('option vide', section_key, key)
-        except KeyError:
-            self.reader.add_debug(f'option absente', section_key, key)
-        except TypeError:
-            self.reader.add_error('la rubrique est devenue une option, erreur fatale', section_key)
-            return
-
-        if not self.chessevent_event_id or not self.chessevent_user_id or not self.chessevent_password:
-            self.chessevent_event_id = None
-            self.chessevent_user_id = None
-            self.chessevent_password = None
-            self.reader.add_warning('les fichiers papi des tournois ne pourront pas être créés à partir de la '
-                                    'plateforme Chess Event', section_key)
-
-        section_keys: list[str] = ['user_id', 'password', 'event_id', ]
         for key, value in section.items():
             if key not in section_keys:
                 self.reader.add_warning('option inconnue', section_key, key)
