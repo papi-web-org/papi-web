@@ -15,21 +15,50 @@ Voir également :
 - [Gestion d'un petit tournoi amical](11-friendly.md)
 - [Gestion d'un tournoi homologué (interface avec le site fédéral)](12-qualified.md)
  
+## Accès à la plateforme Chess Event (`[chessevent]`, à partir de la version 2.1)
+
+Les options suivantes sont utilisées par défaut pour l'accès à la plateforme Chess Event pour tous les tournois de l'évènement, elles peuvent être surchargées pour chaque tournoi par les options `chessevent_*`.
+
+| Option            | Description                                                                                                                                                  |
+|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `user_id`         | L'identifiant utilisé par défaut pour se connecter à la plateforme Chess Event (peut être défini pour chaque tournoi avec l'option `chessevent_user_id`).    |
+| `password`        | Le mot de passe utilisé par défaut pour se connecter à la plateforme Chess Event (peut être défini pour chaque tournoi avec l'option `chessevent_password`). |
+| `event_id`        | L'identifiant de l'évènement sur la plateforme Chess Event (peut être défini pour chaque tournoi avec l'option `chessevent_event_id`).                       |
+
+Voir également :
+- [Créer le fichier Papi d'un tournoi depuis la plateforme Chess Event](37-chessevent.md)
+ 
 ## Tournois (`[tournament.<tournament_id>]` ou `[tournament]`)
 
 L'identifiant du tournoi (`<tournament_id>`) est facultatif si l'évènement ne comporte qu'un tournoi, obligatoire s'il y en a plusieurs (s'il n'est pas précisé, l'identifiant du tournoi sera `default`).
 
-| Option         | Description                                                                                                                                                                 |
-|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `name`         | Le nom du tournoi (facultatif) est utilisé sur la page de description de l'évènement et sur les écrans.<br/>S'il n'est pas précisé, le nom du tournoi est son identifiant.  |
-| `path`         | Le répertoire dans lequel est stocké le fichier Papi du tournoi (facultatif, par défaut la valeur donnée pour l'évènement dans `[event].path`).                             |
-| `filename`     | Le nom du fichier du tournoi (facultatif).<br/>Si l'option `filename` n'est pas utilisée, le nom du fichier sera par défaut le numéro d'homologation du tournoi (`ffe_id`). |
-| `ffe_id`       | Le numéro d'homologation du tournoi (facultatif).                                                                                                                           |
-| `ffe_password` | Le code d'accès à l'interface de gestion du tournoi sur le site fédéral (facultatif).                                                                                       |
+| Option                     | Description                                                                                                                                                                 |
+|----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `name`                     | Le nom du tournoi (facultatif) est utilisé sur la page de description de l'évènement et sur les écrans.<br/>S'il n'est pas précisé, le nom du tournoi est son identifiant.  |
+| `path`                     | Le répertoire dans lequel est stocké le fichier Papi du tournoi (facultatif, par défaut la valeur donnée pour l'évènement dans `[event].path`).                             |
+| `filename`                 | Le nom du fichier du tournoi (facultatif).<br/>Si l'option `filename` n'est pas utilisée, le nom du fichier sera par défaut le numéro d'homologation du tournoi (`ffe_id`). |
+| `ffe_id`                   | Le numéro d'homologation du tournoi (facultatif).                                                                                                                           |
+| `ffe_password`             | Le code d'accès à l'interface de gestion du tournoi sur le site fédéral (facultatif).                                                                                       |
+| `chessevent_user_id`       | L'identifiant utilisé pour se connecter à la plateforme Chess Event (facultatif, par défaut `[chessevent].user_id`, à partir de la version 2.1).                            |
+| `chessevent_password`      | Le mot de passe utilisé pour se connecter à la plateforme Chess Event (facultatif, par défaut `[chessevent].password`, à partir de la version 2.1).                         |
+| `chessevent_event_id`      | L'identifiant de l'évènement sur la plateforme Chess Event (facultatif, par défaut `[chessevent].event_id`, à partir de la version 2.1).                                    |
+| `chessevent_tournament_id` | L'identifiant du tournoi sur la plateforme Chess Event (facultatif, à partir de la version 2.1).                                                                            |
 
 > [!NOTE]
-> Si ni `filename` ni `ffe_id` ne sont utilisées ou si le fichier est introuvable, seules les opérations de test des accès et de récupération de la facture d'homologation sur le site fédérale seront disponiibles.
-> Si `ffe_id` ou `ffe_password` ne sont utilisées, les opérations sur le site fédéral ne seront pas disponibles.
+> Si ni `filename` ni `ffe_id` ne sont utilisées, le tournoi est ignoré.
+
+> [!NOTE]
+> Si le fichier du tournoi n'existe pas, seules les opérations suivantes sont disponibles :
+> - test des accès du tournoi sur le site fédéral (si `ffe_id` et `ffe_password` sont utilisées)
+> - récupération de la facture d'homologation sur le site fédéral (si `ffe_id` et `ffe_password` sont utilisées)
+> - création du fichier Papi à partir de la plateforme Chess Event (à partir de la version 2.1)
+
+> [!NOTE]
+> Les trois options suivantes doivent être définies pour créer le fichier Papi d'un tournoi à partir de la plateforme Chess Event (à partir de la version 2.1) :
+> - `chessevent_user_id` (ou `[chessevent].user_id`)
+> - `chessevent_password` (ou `[chessevent].password`)
+> - `chessevent_event_id` (ou `[chessevent].event_id`)
+> - `chessevent_tournament_id`
 
 Voir également : [Gestion d'un évènement avec plusieurs tournois](13-multi-tournaments.md)
 

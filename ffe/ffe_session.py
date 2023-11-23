@@ -1,7 +1,8 @@
 import re
 import webbrowser
 from pathlib import Path
-from typing import Optional, Dict, Any, Tuple
+from typing import Any
+
 from AdvancedHTMLParser import AdvancedHTMLParser, AdvancedTag
 from requests import Session, Response
 from logging import Logger
@@ -33,12 +34,12 @@ class FFESession(Session):
     def __init__(self, tournament: Tournament):
         super().__init__()
         self.__tournament = tournament
-        self.__init_vars: Optional[Dict[str, str]] = None
-        self.__auth_vars: Optional[Dict[str, str]] = None
-        self.__tournament_ffe_url: Optional[str] = None
+        self.__init_vars: dict[str, str] | None = None
+        self.__auth_vars: dict[str, str] | None = None
+        self.__tournament_ffe_url: str | None = None
 
-    def __read_url(self, url: str, data: Dict[str, str] = None, files: Dict[str, Path] = None) -> Optional[str]:
-        handlers: Dict[str, Any] = {}
+    def __read_url(self, url: str, data: dict[str, str] = None, files: dict[str, Path] = None) -> str | None:
+        handlers: dict[str, Any] = {}
         try:
             if not data and not files:
                 response: Response = self.get(url)
@@ -67,9 +68,9 @@ class FFESession(Session):
         return None
 
     @staticmethod
-    def __parse_html(html: str) -> Tuple[Optional[AdvancedHTMLParser], Optional[str]]:
+    def __parse_html(html: str) -> tuple[AdvancedHTMLParser | None, str | None]:
         parser: AdvancedHTMLParser = AdvancedHTMLParser()
-        error: Optional[str] = None
+        error: str | None = None
         parser.parseStr(html)
         tag: AdvancedTag = parser.getElementById('ctl00_ContentPlaceHolderMain_LabelError')
         if tag:
@@ -81,8 +82,8 @@ class FFESession(Session):
         return parser, error
 
     @staticmethod
-    def __get_state_vars(parser: AdvancedHTMLParser, url: str) -> Optional[Dict[str, str]]:
-        result: Dict[str, str] = {}
+    def __get_state_vars(parser: AdvancedHTMLParser, url: str) -> dict[str, str] | None:
+        result: dict[str, str] = {}
         for id in [VIEW_STATE_INPUT_ID, VIEW_STATE_GENERATOR_INPUT_ID, EVENT_VALIDATION_INPUT_ID, ]:
             tag: AdvancedTag = parser.getElementById(id)
             if not tag:
@@ -104,7 +105,7 @@ class FFESession(Session):
 
     def ffe_auth(self) -> bool:
         url = FFE_URL + '/Default.aspx'
-        post_data: Dict[str, str] = {
+        post_data: dict[str, str] = {
             VIEW_STATE_INPUT_ID: self.__init_vars[VIEW_STATE_INPUT_ID],
             VIEW_STATE_GENERATOR_INPUT_ID: self.__init_vars[VIEW_STATE_GENERATOR_INPUT_ID],
             EVENT_VALIDATION_INPUT_ID: self.__init_vars[EVENT_VALIDATION_INPUT_ID],
@@ -119,7 +120,7 @@ class FFESession(Session):
         parser, error = self.__parse_html(html)
         if error:
             return False
-        auth_vars: Dict[str, Optional[str]] = self.__get_state_vars(parser, url)
+        auth_vars: dict[str, str | None] = self.__get_state_vars(parser, url)
         for id in [SET_VISIBLE_LINK_ID, FEES_LINK_ID, UPLOAD_LINK_ID, ]:
             tag: AdvancedTag = parser.getElementById(id)
             auth_vars[id] = tag.innerText if tag else None
@@ -161,7 +162,7 @@ class FFESession(Session):
             logger.error(f'Lien de facturation non reconnu [{self.__auth_vars[FEES_LINK_ID]}]')
             return
         url = FFE_URL + '/MonTournoi.aspx'
-        post_data: Dict[str, str] = {
+        post_data: dict[str, str] = {
             '__EVENTTARGET': FEES_EVENT,
             '__EVENTARGUMENT': '',
             VIEW_STATE_INPUT_ID: self.__auth_vars[VIEW_STATE_INPUT_ID],
@@ -203,7 +204,7 @@ class FFESession(Session):
             logger.warning(f'Lien de mise en ligne non trouvé (vérifier que le tournoi n\'est pas terminé)')
             return
         url = FFE_URL + '/MonTournoi.aspx'
-        post: Dict[str, str] = {
+        post: dict[str, str] = {
             '__EVENTTARGET': UPLOAD_EVENT,
             '__EVENTARGUMENT': '',
             VIEW_STATE_INPUT_ID: self.__auth_vars[VIEW_STATE_INPUT_ID],
@@ -230,7 +231,7 @@ class FFESession(Session):
             logger.error(f'Lien d\'affichage non reconnu [{self.__auth_vars[SET_VISIBLE_LINK_ID]}]')
             return
         url = FFE_URL + '/MonTournoi.aspx'
-        post_data: Dict[str, str] = {
+        post_data: dict[str, str] = {
             '__EVENTTARGET': SET_VISIBLE_EVENT,
             '__EVENTARGUMENT': '',
             VIEW_STATE_INPUT_ID: self.__auth_vars[VIEW_STATE_INPUT_ID],

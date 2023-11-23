@@ -1,10 +1,11 @@
+from typing import List, Optional
 from logging import Logger
 
+from chessevent.action_selector import ActionSelector
 from common.papi_web_config import PapiWebConfig
 from common.singleton import singleton
 from common.logger import get_logger, print_interactive, input_interactive
 from data.event import Event, get_events_by_name
-from ffe.action_selector import ActionSelector
 
 logger: Logger = get_logger()
 
@@ -16,12 +17,12 @@ class EventSelector:
         self.__config: PapiWebConfig = config
 
     def run(self) -> bool:
-        events: list[Event] = get_events_by_name(silent=self.__silent, with_tournaments_only=True)
+        events: List[Event] = get_events_by_name(silent=self.__silent, with_tournaments_only=True)
         self.__silent = True  # verbose on the first call only
         if not events:
             logger.error(f'Aucun évènement trouvé')
             return False
-        event_num: int | None = None
+        event_num: Optional[int] = None
         if len(events) == 1:
             event_num = 1
             if input_interactive(f'Un seul évènement trouvé, tapez Entrée pour continuer (Q pour quitter) ') == 'Q':

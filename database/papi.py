@@ -1,8 +1,8 @@
+from datetime import datetime, timedelta
 from pathlib import Path
 from logging import Logger
-from enum import StrEnum
 from itertools import product
-from typing import NamedTuple, Self
+from typing import NamedTuple
 from contextlib import suppress
 
 from database.access import AccessDatabase
@@ -10,79 +10,10 @@ from data.pairing import Pairing
 from data.player import Player
 from common.logger import get_logger
 
-from data.util import Result, TournamentPairing, PlayerSex, PlayerTitle, Color
+from data.util import Result, TournamentPairing, PlayerGender, PlayerTitle, Color, TournamentRating, \
+    ChessEventTournament, ChessEventPlayer
 
 logger: Logger = get_logger()
-
-RESULT_LOSS = Result.Loss
-RESULT_GAIN = Result.Gain
-RESULT_DRAW_OR_BYE_05 = Result.DrawOrHPB
-
-
-class TournamentRating(StrEnum):
-    Standard = 'Standard'
-    Rapid = 'Rapide'
-    Blitz = 'Blitz'
-
-    @classmethod
-    def from_db(cls, value) -> Self:
-        match value:
-            case 'Standard':
-                return cls.Standard
-            case 'Rapide':
-                return cls.Rapid
-            case 'Blitz':
-                return cls.Blitz
-            case _:
-                raise ValueError(f'Unknown value: {value}')
-
-    @classmethod
-    def from_db_field(cls, value):
-        match value:
-            case 'Elo':
-                return cls.Standard
-            case 'Rapide':
-                return cls.Rapid
-            case 'Blitz':
-                return cls.Blitz
-            case _:
-                raise ValueError(f"Unknown value: {value}")
-
-    @property
-    def db_field(self):
-        match self:
-            case TournamentRating.Standard:
-                return 'Elo'
-            case TournamentRating.Rapid:
-                return 'Rapide'
-            case TournamentRating.Blitz:
-                return 'Blitz'
-            case _:
-                raise ValueError(f'Unknown value: {self}')
-
-    @property
-    def db_field_type(self):
-        match self:
-            case TournamentRating.Standard:
-                return 'Fide'
-            case TournamentRating.Rapid:
-                return 'RapideFide'
-            case TournamentRating.Blitz:
-                return 'BlitzFide'
-            case _:
-                raise ValueError(f'Unknown value: {self}')
-
-    @classmethod
-    def from_db_int(cls, value) -> Self:
-        match value:
-            case 1:
-                return cls.Standard
-            case 2:
-                return cls.Rapid
-            case 3:
-                return cls.Blitz
-            case _:
-                raise ValueError(f'Unknown value:  {value}')
 
 
 class TournamentInfo(NamedTuple):
@@ -104,31 +35,31 @@ class PapiDatabase(AccessDatabase):
         super().__enter__()
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self._close()
+        super().__exit__(exc_type, exc_value, traceback)
+        # self._close()
 
-    def _query(self, query: str, params: tuple = ()):
-        self._execute(query, params)
+    def commit(self):
         self._commit()
 
     def close(self):
         self._close()
 
-    def __read_var(self, name) -> str:
-        query: str = 'SELECT Value FROM INFO WHERE Variable = ?'
+    def __read_var(self, name: str) -> str:
+        query: str = 'SELECT `Value` FROM `info` WHERE `Variable` = ?'
         self._execute(query, (name,))
         return self._fetchval()
 
     def read_info(self) -> TournamentInfo:
-        """Reads the dabase and returns basic information about the
+        """Reads the database and returns basic information about the
         tournament."""
         rounds: int = int(self.__read_var('NbrRondes'))
-        pairing = TournamentPairing.from_db(self.__read_var('Pairing'))
-        rating = TournamentRating.from_db_field(self.__read_var('ClassElo'))
+        pairing: TournamentPairing = TournamentPairing.from_papi_value(self.__read_var('Pairing'))
+        rating: TournamentRating = TournamentRating.from_papi_value(self.__read_var('ClassElo'))
         rating_limit1: int = int(self.__read_var('EloBase1'))
         rating_limit2: int = int(self.__read_var('EloBase2'))
         return TournamentInfo(rounds, pairing, rating, rating_limit1, rating_limit2)
 
-    def read_players(self, rating: int, rounds: int) -> dict[int, Player]:
+    def read_players(self, tournament_rating: TournamentRating, rounds: int) -> dict[int, Player]:
         """Reads the database and fetches the Player identification, pairings
         and results."""
         players: dict[int, Player] = {}
@@ -146,20 +77,110 @@ class PapiDatabase(AccessDatabase):
                 round_str = f'Rd{round:0>2}'
                 color: str = row[f'{round_str}Cl']
                 with suppress(ValueError):
-                    color = Color.from_db(color)
+                    color = Color.from_papi_value(color)
                 pairings[round] = Pairing(
                     color, row[f'{round_str}Adv'],
-                    Result.from_db_int(row[f'{round_str}Res']))
+                    Result.from_papi_value(row[f'{round_str}Res']))
             players[row['Ref']] = Player(
                 row['Ref'], row['Nom'] or '', row['Prenom'] or '',
-                PlayerSex.from_db(row['Sexe']),
-                PlayerTitle.from_db_str(row['FideTitre'].strip()),
-                row[TournamentRating.from_db(rating).db_field],
-                row[TournamentRating.from_db(rating).db_field_type],
+                PlayerGender.from_papi_value(row['Sexe']),
+                PlayerTitle.from_papi_value(row['FideTitre']),
+                row[tournament_rating.papi_value_field],
+                row[tournament_rating.papi_type_field],
                 row['Fixe'], pairings)
         return players
 
-    def add_result(self, player_id: int, round: int, result: Result):
+    def add_board_result(self, player_id: int, round: int, result: Result):
         """Writes the given result to the database."""
-        query: str = f'UPDATE joueur SET Rd{round:0>2}Res = ? WHERE Ref = ?'
-        self._query(query, (result.value, player_id,))
+        query: str = f'UPDATE `joueur` SET `Rd{round:0>2}Res` = ? WHERE `Ref` = ?'
+        self._execute(query, (result.value, player_id, ))
+
+    @staticmethod
+    def __timestamp_to_papi_date(ts: float) -> str:
+        dt: datetime
+        if ts >= 0:
+            dt = datetime.fromtimestamp(ts)
+        else:
+            dt = datetime(1970, 1, 1) + timedelta(seconds=ts)
+        return dt.strftime('%d/%m/%Y')
+
+    def __write_var(self, name: str, value):
+        query: str = 'UPDATE `info` SET `Value` = ? WHERE `Variable` = ?'
+        self._execute(query, (value, name, ))
+
+    def write_chessevent_info(self, chessevent_tournament: ChessEventTournament):
+        """Writes vars to the database."""
+        data: dict[str, str | int] = {
+            'Nom': chessevent_tournament.name,
+            'Genre': chessevent_tournament.type.to_papi_value,
+            'NbrRondes': chessevent_tournament.rounds,
+            'Pairing': chessevent_tournament.pairing.to_papi_value,
+            'Cadence': chessevent_tournament.time_control,
+            'Lieu': chessevent_tournament.location,
+            'Arbitre': chessevent_tournament.arbiter,
+            'DateDebut': self.__timestamp_to_papi_date(chessevent_tournament.start),
+            'DateFin': self.__timestamp_to_papi_date(chessevent_tournament.end),
+            'Dep1': chessevent_tournament.tie_breaks[0].to_papi_value,
+            'Dep2': chessevent_tournament.tie_breaks[1].to_papi_value,
+            'Dep3': chessevent_tournament.tie_breaks[2].to_papi_value,
+            'ClassElo': chessevent_tournament.rating.to_papi_value,
+        }
+        # queries: list[str] = []
+        # params: list[str] = []
+        # for name, value in data.items():
+        #     queries.append('UPDATE `info` SET `Value` = ? WHERE `Variable` = ?')
+        #     params.extend([value, name, ])
+        # self._execute('; '.join(queries), tuple(params))
+        for name, value in data.items():
+            self._execute('UPDATE `info` SET `Value` = ? WHERE `Variable` = ?', (value, name, ))
+
+    def add_chessevent_player(self, player_id: int, player: ChessEventPlayer):
+        """Adds a player to the database."""
+        data: dict[str, str | int | float | None] = {
+            'Ref': player_id,
+            'RefFFE': 100000000 - player_id,
+            'NrFFE': player.ffe_id,
+            'Nom': player.last_name,
+            'Prenom': player.first_name,
+            'Sexe': player.gender.to_papi_value,
+            'NeLe': self.__timestamp_to_papi_date(player.birth),
+            'Cat': player.category.to_papi_value,
+            'AffType': player.license.to_papi_value,
+            'Elo': player.standard_rating,
+            'Rapide': player.rapid_rating,
+            'Blitz': player.blitz_rating,
+            'Federation': player.federation,
+            'ClubRef': player.club_id,
+            'Club': player.club,
+            'Ligue': player.league,
+            'Fide': player.standard_rating_type.to_papi_value,
+            'RapideFide': player.rapide_rating_type.to_papi_value,
+            'BlitzFide': player.blitz_rating_type.to_papi_value,
+            'FideCode': player.fide_id,
+            'FideTitre': player.title.to_papi_value,
+            'Pointe': player.check_in,
+            'InscriptionRegle': player.paid,
+            'InscriptionDu': player.fee,
+            'Tel': player.phone,
+            'EMail': player.email,
+            'Fixe': player.board,
+            'Flotteur': 'X' * 24,
+            'Pts': 0,
+            'PtA': 0,
+        }
+        for round in range(1, 25):
+            data[f'Rd{round:0>2}Adv'] = None
+            if round not in player.skipped_rounds:
+                data[f'Rd{round:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
+                data[f'Rd{round:0>2}Cl'] = 'R'
+            elif player.skipped_rounds[round] == 0.0:
+                data[f'Rd{round:0>2}Res'] = Result.FORFEIT_LOSS.to_papi_value
+                data[f'Rd{round:0>2}Cl'] = 'F'
+            elif player.skipped_rounds[round] == 0.5:
+                data[f'Rd{round:0>2}Res'] = Result.DRAW_OR_HPB.to_papi_value
+                data[f'Rd{round:0>2}Cl'] = 'F'
+            else:
+                raise ValueError
+        query: str = f'INSERT INTO `joueur`({", ".join(data.keys())}) VALUES ({", ".join(["?"] * len(data))})'
+        params = tuple(data.values())
+        self._execute(query, params)

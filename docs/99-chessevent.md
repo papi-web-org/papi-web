@@ -75,11 +75,12 @@ Tous les paramètres seront passés en clair dans le corps de la requête HTTPS 
 | `tournament_id` | L'identifiant du tournoi sur la plateforme Chess Event.                          |
 
 Exemple de paramètres :
+```
 - user_id=C69548
 - password=my-password
 - event_id=BRE_35_domloupfide36
 - tournament_id=TournoiA
-
+```
 
 ## Données attendues
 

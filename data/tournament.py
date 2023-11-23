@@ -8,7 +8,7 @@ from common.config_reader import TMP_DIR, ConfigReader
 from common.logger import get_logger
 from data.board import Board
 from data.player import Player
-from data.util import Color
+from data.util import Color, TournamentRating, ChessEventTournament
 from data.util import TournamentPairing, Result
 from database.papi import PapiDatabase
 
@@ -17,9 +17,9 @@ logger: Logger = get_logger()
 
 class Tournament:
     def __init__(self, tournament_id: str, name: str, file: Path, ffe_id: int | None, ffe_password: str | None,
-                 handicap_initial_time: int | None, handicap_increment: int | None,
-                 handicap_penalty_step: int | None, handicap_penalty_value: int | None,
-                 handicap_min_time: int | None):
+                 handicap_initial_time: int | None, handicap_increment: int | None, handicap_penalty_step: int | None,
+                 handicap_penalty_value: int | None, handicap_min_time: int | None, chessevent_event_id: str | None,
+                 chessevent_user_id: str | None, chessevent_password: str | None, chessevent_tournament_id: str | None):
         self.tournament_id: str = tournament_id
         self.name: str = name
         self.file: Path = file
@@ -30,16 +30,20 @@ class Tournament:
         self.handicap_penalty_step: int | None = handicap_penalty_step
         self.handicap_penalty_value: int | None = handicap_penalty_value
         self.handicap_min_time: int | None = handicap_min_time
+        self.chessevent_event_id: str | None = chessevent_event_id
+        self.chessevent_password: str | None = chessevent_password
+        self.chessevent_user_id: str | None = chessevent_user_id
+        self.chessevent_tournament_id: str | None = chessevent_tournament_id
         self.papi_database: PapiDatabase = PapiDatabase(self.file)
         self._rounds: int = 0
-        self._pairing: TournamentPairing = TournamentPairing.Standard
-        self._rating: int = 0
+        self._pairing: TournamentPairing = TournamentPairing.STANDARD
+        self._rating: TournamentRating | None = None
         self._players_by_id: dict[int, Player] = {}
         self._current_round: int = 0
         self._rating_limit1: int = 0
         self._rating_limit2: int = 0
         self._boards: list[Board] | None = None
-        self._papi_read = False
+        self._database_read = False
         self._players_by_name: list[Player] | None = None
         self._players_by_rating: list[Player] | None = None
 
@@ -57,32 +61,32 @@ class Tournament:
 
     @property
     def rounds(self) -> int:
-        self.read_papi()
+        self.read_database()
         return self._rounds
 
     @property
     def pairing(self) -> TournamentPairing:
-        self.read_papi()
+        self.read_database()
         return self._pairing
 
     @property
     def rating(self) -> int:
-        self.read_papi()
+        self.read_database()
         return self._rating
 
     @property
     def rating_limit1(self) -> int:
-        self.read_papi()
+        self.read_database()
         return self._rating_limit1
 
     @property
     def rating_limit2(self) -> int:
-        self.read_papi()
+        self.read_database()
         return self._rating_limit2
 
     @property
     def players_by_id(self) -> dict[int, Player]:
-        self.read_papi()
+        self.read_database()
         return self._players_by_id
 
     @property
@@ -103,12 +107,12 @@ class Tournament:
 
     @property
     def current_round(self) -> int | None:
-        self.read_papi()
+        self.read_database()
         return self._current_round
 
     @property
     def boards(self) -> list[Board] | None:
-        self.read_papi()
+        self.read_database()
         return self._boards
 
     @property
@@ -116,17 +120,17 @@ class Tournament:
         match self._pairing:
             case _ if self._current_round is None:
                 return False
-            case TournamentPairing.Haley | TournamentPairing.HaleySoft:
+            case TournamentPairing.HALEY | TournamentPairing.HALEY_SOFT:
                 return self._current_round <= 2
             case TournamentPairing.SAD if self._rounds is not None:
                 return self._current_round <= self._rounds - 2
             case _:
                 return False
 
-    def read_papi(self):
-        if self._papi_read:
+    def read_database(self):
+        if self._database_read:
             return
-        if self.file:
+        if self.file and self.file.exists():
             with self.papi_database:
                 (
                     self._rounds,
@@ -136,7 +140,7 @@ class Tournament:
                     self._rating_limit2
                 ) = self.papi_database.read_info()
                 self._players_by_id = self.papi_database.read_players(self._rating, self._rounds)
-        self._papi_read = True
+        self._database_read = True
         self._calculate_current_round()
         self._calculate_points()
         self._build_boards()
@@ -157,7 +161,7 @@ class Tournament:
                         paired_rounds.append(round)
                     # NOTE(Amaras) Why is it called RESULT_NOT_PAIRED if it also
                     # represents a missing result?
-                    if result == Result.NotPaired and opponent_id is not None:
+                    if result == Result.NOT_PAIRED and opponent_id is not None:
                         round_infos[round]['results_missing'] = True
                     if round_infos[round]['pairings_found'] and round_infos[round]['results_missing']:
                         break
@@ -180,11 +184,11 @@ class Tournament:
             player.compute_points(self._current_round)
             # virtual points
             player.vpoints = 0.0
-            if self._pairing == TournamentPairing.Haley:
+            if self._pairing == TournamentPairing.HALEY:
                 if self._current_round <= 2:
                     if player.rating >= self._rating_limit1:
                         player.add_vpoints(1.0)
-            elif self._pairing == TournamentPairing.HaleySoft:
+            elif self._pairing == TournamentPairing.HALEY_SOFT:
                 # TODO(Amaras) Is this right?
                 # The code implies this acceleration scheme:
                 # Round 1: All players above rating_limit1 get 1 vpoint
@@ -264,7 +268,7 @@ class Tournament:
                         player_board.white_player = player
                         break
                 if player_board is None:
-                    if player.pairings[self._current_round].color == Color.White:
+                    if player.pairings[self._current_round].color == Color.WHITE:
                         self._boards.append(Board(white_player=player))
                     else:
                         self._boards.append(Board(black_player=player))
@@ -274,8 +278,8 @@ class Tournament:
             board.id = index
             number: int = board.white_player.fixed or board.black_player.fixed or index
             board.number = number
-            board.white_player.set_board(index, number, Color.White)
-            board.black_player.set_board(index, number, Color.Black)
+            board.white_player.set_board(index, number, Color.WHITE)
+            board.black_player.set_board(index, number, Color.BLACK)
             board.result = board.white_player.pairings[self._current_round].result
             if self.handicap:
                 strong_player: Player
@@ -297,10 +301,11 @@ class Tournament:
                 weak_player.set_handicap(weak_time, self.handicap_increment, False)
 
     def add_result(self, board: Board, white_result: Result):
-        black_result = Result.opposite_result(white_result)
-        self.papi_database.add_result(board.white_player.id, self._current_round, white_result)
-        self.papi_database.add_result(board.black_player.id, self._current_round, black_result)
-        self.papi_database.close()
+        black_result = white_result.opposite_result
+        with self.papi_database:
+            self.papi_database.add_board_result(board.white_player.id, self._current_round, white_result)
+            self.papi_database.add_board_result(board.black_player.id, self._current_round, black_result)
+            self.papi_database.commit()
         logger.info(f'Added result: {self.id} {self._current_round}.{board.id} '
                     f'{board.white_player.last_name} '
                     f'{board.white_player.first_name} '
@@ -309,6 +314,16 @@ class Tournament:
                     f'{board.black_player.last_name} '
                     f'{board.black_player.first_name} '
                     f'{board.black_player.rating}')
+
+    def write_chessevent_info_to_database(self, chessevent_tournament: ChessEventTournament) -> int:
+        with self.papi_database:
+            self.papi_database.write_chessevent_info(chessevent_tournament)
+            player_id: int = 1
+            for chessevent_player in chessevent_tournament.players:
+                player_id += 1
+                self.papi_database.add_chessevent_player(player_id, chessevent_player)
+            self.papi_database.commit()
+        return player_id - 1
 
 
 class HandicapTournament(NamedTuple):
@@ -322,9 +337,14 @@ class HandicapTournament(NamedTuple):
 
 
 class TournamentBuilder:
-    def __init__(self, config_reader: ConfigReader, default_tournament_path: Path):
+    def __init__(
+            self, config_reader: ConfigReader, default_tournament_path: Path, default_chessevent_event_id: str | None,
+            default_chessevent_user_id: str | None, default_chessevent_password: str | None):
         self._config_reader: ConfigReader = config_reader
         self._default_tournament_path: Path = default_tournament_path
+        self._default_chessevent_event_id: str | None = default_chessevent_event_id
+        self._default_chessevent_user_id: str | None = default_chessevent_user_id
+        self._default_chessevent_password: str | None = default_chessevent_password
         self.tournaments: dict[str, Tournament] = {}
         for tournament_id in self._read_tournament_ids():
             self._build_tournament(tournament_id)
@@ -429,9 +449,8 @@ class TournamentBuilder:
         file: Path = tournament_path / f'{filename}.papi'
         # NOTE(Amaras) TOC/TOU bug
         if not file.exists():
-            self._config_reader.add_error(f'le fichier [{file}] n\'existe pas, tournoi ignoré', section_key)
-            return
-        if not file.is_file():
+            self._config_reader.add_warning(f'le fichier [{file}] n\'existe pas', section_key)
+        elif not file.is_file():
             self._config_reader.add_error(f'[{file}] n\'est pas un fichier, tournoi ignoré', section_key)
             return
         key = 'name'
@@ -451,7 +470,7 @@ class TournamentBuilder:
                 if not re.match('^[A-Z]{10}$', ffe_password):
                     self._config_reader.add_warning(
                         'un mot de 10 lettres majuscules est attendu, le mot de passe est ignoré (les '
-                        'opérations sur le site web de la FFE ne seront pas disponibles',
+                        'opérations sur le site web de la FFE ne seront pas disponibles)',
                         section_key, key)
                     ffe_password = None
             except KeyError:
@@ -462,13 +481,61 @@ class TournamentBuilder:
             self._config_reader.add_info(
                 "option ignorée quand l'option [ffe_id] n'est pas indiquée",
                 section_key, key)
+        key = 'chessevent_event_id'
+        chessevent_event_id: str | None = self._default_chessevent_event_id
+        try:
+            chessevent_event_id = section[key]
+        except KeyError:
+            if chessevent_event_id:
+                self._config_reader.add_info(
+                        f'option absente, par défaut [{chessevent_event_id}]',
+                        section_key, key)
+        key = 'chessevent_user_id'
+        chessevent_user_id: str | None = self._default_chessevent_user_id
+        try:
+            chessevent_user_id = section[key]
+        except KeyError:
+            if chessevent_user_id:
+                self._config_reader.add_info(
+                        f'option absente, par défaut [{chessevent_user_id}]',
+                        section_key, key)
+        key = 'chessevent_password'
+        chessevent_password: str | None = self._default_chessevent_password
+        try:
+            chessevent_password = section[key]
+        except KeyError:
+            if chessevent_password:
+                self._config_reader.add_info(
+                        f'option absente, par défaut [{chessevent_password}]',
+                        section_key, key)
+        key = 'chessevent_tournament_id'
+        chessevent_tournament_id: str | None = None
+        try:
+            chessevent_tournament_id = section[key]
+        except KeyError:
+            self._config_reader.add_info(
+                    f'option absente',
+                    section_key, key)
+        if not chessevent_event_id or not chessevent_user_id or not chessevent_password or not chessevent_tournament_id:
+            chessevent_event_id = None
+            chessevent_user_id = None
+            chessevent_password = None
+            chessevent_tournament_id = None
+            self._config_reader.add_warning(
+                'les fichiers papi des tournois ne pourront pas être créés à partir de la plateforme Chess Event',
+                section_key)
+
         tournament_section_keys: list[str] = [
-                'path',
-                'filename',
-                'name',
-                'ffe_id',
-                'ffe_password',
-            ]
+            'path',
+            'filename',
+            'name',
+            'ffe_id',
+            'ffe_password',
+            'chessevent_event_id',
+            'chessevent_user_id',
+            'chessevent_password',
+            'chessevent_tournament_id',
+        ]
         for key, value in section.items():
             if key not in tournament_section_keys:
                 self._config_reader.add_warning('option inconnue', section_key, key)
@@ -479,8 +546,10 @@ class TournamentBuilder:
                 'les tournois à handicap ne devraient pas être homologués',
                 handicap_section_key
             )
+
         self.tournaments[tournament_id] = Tournament(
-            tournament_id, name, file, ffe_id, ffe_password, *handicap_values)
+            tournament_id, name, file, ffe_id, ffe_password, *handicap_values,
+            chessevent_event_id, chessevent_user_id, chessevent_password, chessevent_tournament_id)
 
     def _build_tournament_handicap(self, section_key: str) -> HandicapTournament:
         try:

@@ -6,7 +6,7 @@ import warnings
 
 from data.pairing import Pairing
 from common.logger import get_logger
-from data.util import PlayerSex, PlayerTitle, Color
+from data.util import PlayerGender, PlayerTitle, Color
 
 logger: Logger = get_logger()
 
@@ -17,7 +17,7 @@ class Player:
     ref_id: int
     last_name: str
     first_name: str
-    sex: PlayerSex
+    sex: PlayerGender
     title: PlayerTitle
     rating: int
     rating_type: str
@@ -88,11 +88,11 @@ class Player:
 
     @property
     def not_paired_str(self) -> str:
-        return 'Non apparié' + ('e' if self.sex == PlayerSex.F else '')
+        return 'Non apparié' + ('e' if self.sex == PlayerGender.FEMALE else '')
 
     @property
     def exempt_str(self) -> str:
-        return 'Exempt' + ('e' if self.sex == PlayerSex.F else '')
+        return 'Exempt' + ('e' if self.sex == PlayerGender.FEMALE else '')
 
     def set_board_id(self, board_id: int):
         warnings.warn("Use direct assignment to board_id instead")

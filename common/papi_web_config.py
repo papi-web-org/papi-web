@@ -12,7 +12,7 @@ from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
 
-PAPI_WEB_VERSION: str = '2.0.3'
+PAPI_WEB_VERSION: str = '2.1-rc1'
 
 PAPI_WEB_URL = 'https://github.com/pascalaubry/papi-web'
 

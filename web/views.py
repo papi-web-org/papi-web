@@ -1,3 +1,4 @@
+from contextlib import suppress
 from pathlib import Path
 
 import math
@@ -187,10 +188,10 @@ def update_result(
         messages.error(
             request, f'Writing result failed (board [{board_id}] not found for tournament [{tournament.id}])')
         return redirect(screen_url(event.id, screen_id, ))
-    if result not in Result.inputtable_results():
+    if result not in Result.imputable_results():
         messages.error(request, f'Writing result failed (invalid result [{result}])')
         return redirect(screen_url(event.id, screen_id, ))
-    tournament.add_result(board, Result.from_db_int(result))
+    tournament.add_result(board, Result.from_papi_value(result))
     event.store_result(tournament, board, result)
     return redirect(screen_url(event_id, screen_id, ))
 
@@ -212,7 +213,8 @@ def get_screen_last_update(request: HttpRequest, event_id: str, screen_id: str) 
                     screen_files.append(set.tournament.file)
         mtime: float = 0.0
         for screen_file in screen_files:
-            mtime = max(mtime, screen_file.lstat().st_mtime)
+            with suppress(FileNotFoundError):
+                mtime = max(mtime, screen_file.lstat().st_mtime)
         return HttpResponse(str(math.ceil(mtime)), content_type='text/plain')
     except KeyError:
         messages.error(request, f'Screen [{screen_id}] not found')

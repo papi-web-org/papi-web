@@ -97,7 +97,7 @@ class Result:
             result: int | DataResult
             try:
                 result = int(matches.group(group))
-                result = DataResult.from_db_int(result)
+                result = DataResult.from_papi_value(result)
             except ValueError:
                 logger.warning(f'invalid result [{matches.group(group)}] for result file [{file}]')
                 continue

@@ -18,9 +18,6 @@ class AccessDatabase:
     database: pyodbc.Connection | None = field(init=False, default=None)
     cursor: pyodbc.Cursor | None = field(init=False, default=None)
 
-#    def __post_init__(self):
-#         self._open()  # TODO(pascalaubry) Is this really needed since _open() si called before each database operation?
-
     # NOTE(Amaras) This is the start of the infrastructure to build a DB as a
     # context manager (making it possible to use it using the with statement).
     # This function is responsible for opening the ressource and giving a way
