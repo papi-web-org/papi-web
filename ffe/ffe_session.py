@@ -1,5 +1,7 @@
 import re
+import time
 import webbrowser
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -7,8 +9,10 @@ from AdvancedHTMLParser import AdvancedHTMLParser, AdvancedTag
 from requests import Session, Response
 from logging import Logger
 
+from common.config_reader import TMP_DIR
 from data.tournament import Tournament
 from common.logger import get_logger
+from database.papi import PapiDatabase
 
 logger: Logger = get_logger()
 
@@ -92,7 +96,7 @@ class FFESession(Session):
             result[id] = tag.attributesDict['value']
         return result
 
-    def ffe_init(self) -> bool:
+    def __ffe_init(self) -> bool:
         url = FFE_URL
         html: str = self.__read_url(url)
         if not html:
@@ -103,7 +107,7 @@ class FFESession(Session):
         self.__init_vars = self.__get_state_vars(parser, url)
         return True
 
-    def ffe_auth(self) -> bool:
+    def __ffe_auth(self) -> bool:
         url = FFE_URL + '/Default.aspx'
         post_data: dict[str, str] = {
             VIEW_STATE_INPUT_ID: self.__init_vars[VIEW_STATE_INPUT_ID],
@@ -135,19 +139,19 @@ class FFESession(Session):
 
     def test(self):
         logger.info(f'Tournoi [{self.__tournament.ffe_id}] :')
-        if not self.ffe_init():
+        if not self.__ffe_init():
             return
         # logger.info('init OK')
-        if not self.ffe_auth():
+        if not self.__ffe_auth():
             return
         logger.info(f'auth OK: {self.__tournament_ffe_url}')
 
     def get_fees(self):
         logger.info(f'Tournoi [{self.__tournament_ffe_url}] :')
-        if not self.ffe_init():
+        if not self.__ffe_init():
             return
         # logger.info('init OK')
-        if not self.ffe_auth():
+        if not self.__ffe_auth():
             return
         logger.info(f'auth OK: {self.__tournament_ffe_url}')
         if self.__auth_vars[FEES_LINK_ID] is None:
@@ -194,10 +198,10 @@ class FFESession(Session):
 
     def upload(self, set_visible: bool):
         logger.info(f'Mise à jour du tournoi [{self.__tournament.ffe_id}] ({self.__tournament.file}):')
-        if not self.ffe_init():
+        if not self.__ffe_init():
             return
         # logger.info('init OK')
-        if not self.ffe_auth():
+        if not self.__ffe_auth():
             return
         logger.info(f'auth OK: {self.__tournament_ffe_url}')
         if self.__auth_vars[UPLOAD_LINK_ID] is None:
@@ -211,7 +215,17 @@ class FFESession(Session):
             VIEW_STATE_GENERATOR_INPUT_ID: self.__auth_vars[VIEW_STATE_GENERATOR_INPUT_ID],
             EVENT_VALIDATION_INPUT_ID: self.__auth_vars[EVENT_VALIDATION_INPUT_ID],
         }
-        html: str = self.__read_url(url, data=post, files={UPLOAD_FILE_ID: self.__tournament.file, })
+        date: str = datetime.fromtimestamp(time.time()).strftime("%Y%m%d%H%M%S")
+        tmp_file: Path = TMP_DIR / f'{self.__tournament.file.stem}-{date}{self.__tournament.file.suffix}'
+        logger.debug(f'Copie de {self.__tournament.file} vers {tmp_file}...')
+        tmp_file.write_bytes(self.__tournament.file.read_bytes())
+        logger.debug(f'Suppression des données personnelles des joueur·euses...')
+        tmp_database: PapiDatabase = PapiDatabase(tmp_file)
+        with tmp_database:
+            tmp_database.delete_players_personal_data()
+            tmp_database.commit()
+        html: str = self.__read_url(url, data=post, files={UPLOAD_FILE_ID: tmp_file, })
+        tmp_file.unlink()
         if not html:
             return
         parser, error = self.__parse_html(html)

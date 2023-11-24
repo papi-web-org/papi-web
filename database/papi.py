@@ -185,3 +185,7 @@ class PapiDatabase(AccessDatabase):
         query: str = f'INSERT INTO `joueur`({", ".join(data.keys())}) VALUES ({", ".join(["?"] * len(data))})'
         params = tuple(data.values())
         self._execute(query, params)
+
+    def delete_players_personal_data(self):
+        """Delete all personal data from the database."""
+        self._execute('UPDATE `joueur` SET Tel = ?, EMail = ?', ('', '', ))
