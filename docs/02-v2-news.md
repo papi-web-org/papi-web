@@ -225,12 +225,14 @@ screens = tournoi-E,tournoi-F
 
 A voir : [Écrans rotatifs](35-rotators.md)
 
-## Création des fichiers Papi des tournois à partir de la plateforme d'inscription en ligne Chess Event (à partir de la version 2.1)
-
-Les fichiers Papi des tournois peuvent être téléchargés depuis Papi-web sans nécessiter de logiciel supplémentaire sur l'ordinateur de l'arbitre.
-
 ## Sources accessibles
 
 Tous les sources de Papi-web sont accessibles sur GitHub : [https://github.com/pascalaubry/papi-web](https://github.com/pascalaubry/papi-web).
 
+## Création des fichiers Papi des tournois à partir de la plateforme d'inscription en ligne Chess Event (à partir de la version 2.1)
 
+Les fichiers Papi des tournois peuvent être téléchargés depuis Papi-web sans nécessiter de logiciel supplémentaire sur l'ordinateur de l'arbitre.
+
+## Meilleure protection des données personnelles des joueur·euses (à partir de la version 2.1)
+
+Les données personnelles des joueur·euses (numéro de téléphone et adresse électronique) sont systématiquement effacées des fichiers Papi avant téléchargement sur le site fédéral.
