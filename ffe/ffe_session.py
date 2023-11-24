@@ -197,7 +197,8 @@ class FFESession(Session):
         return
 
     def upload(self, set_visible: bool):
-        logger.info(f'Mise à jour du tournoi [{self.__tournament.ffe_id}] ({self.__tournament.file}):')
+        logger.info(
+            f'Mise à jour du tournoi [{self.__tournament.ffe_id}] ({self.__tournament.file}) sur le site fédéral :')
         if not self.__ffe_init():
             return
         # logger.info('init OK')
