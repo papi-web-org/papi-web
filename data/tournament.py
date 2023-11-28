@@ -492,30 +492,31 @@ class TournamentBuilder:
         else:
             key = 'chessevent_connection_id'
             chessevent_connection: ChessEventConnection | None = None
+            chessevent_connection_id: str | None = None
             try:
-                chessevent_connection_id: str = section[key]
-                if chessevent_connection_id:
-                    try:
-                        chessevent_connection = self._chessevent_connections[chessevent_connection_id]
-                    except KeyError:
-                        self._config_reader.add_warning(
-                            f'connexion à Chess Event [{chessevent_connection_id}] introuvable',
-                            section_key, 'chessevent_tournament_id')
-                        chessevent_tournament_id = None
-                else:
-                    if len(self._chessevent_connections) == 0:
-                        self._config_reader.add_warning(
-                            'aucune connexion à Chess Event définie', section_key, 'chessevent_tournament_id')
-                        chessevent_tournament_id = None
-                    elif len(self._chessevent_connections) > 1:
-                        self._config_reader.add_warning(
-                            f'plusieurs connexions à Chess Event sont définies, la connexion doit être précisée à '
-                            'l\'aide de l\'option chess_connection_id', section_key, 'chessevent_tournament_id')
-                        chessevent_tournament_id = None
-                    else:
-                        chessevent_connection = list(self._chessevent_connections.values())[0]
+                chessevent_connection_id = section[key]
             except KeyError:
                 pass
+            if chessevent_connection_id:
+                try:
+                    chessevent_connection = self._chessevent_connections[chessevent_connection_id]
+                except KeyError:
+                    self._config_reader.add_warning(
+                        f'connexion à Chess Event [{chessevent_connection_id}] introuvable',
+                        section_key, 'chessevent_tournament_id')
+                    chessevent_tournament_id = None
+            else:
+                if len(self._chessevent_connections) == 0:
+                    self._config_reader.add_warning(
+                        'aucune connexion à Chess Event définie', section_key, 'chessevent_tournament_id')
+                    chessevent_tournament_id = None
+                elif len(self._chessevent_connections) > 1:
+                    self._config_reader.add_warning(
+                        f'plusieurs connexions à Chess Event sont définies, la connexion doit être précisée à '
+                        'l\'aide de l\'option chess_connection_id', section_key, 'chessevent_tournament_id')
+                    chessevent_tournament_id = None
+                else:
+                    chessevent_connection = list(self._chessevent_connections.values())[0]
         if not chessevent_tournament_id:
             self._config_reader.add_info(
                 'la création du fichier Papi depuis la plateforme Chess Event ne sera pas disponible', section_key)
