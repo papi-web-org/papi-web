@@ -33,5 +33,7 @@ try:
         te: TestEngine = TestEngine()
     else:
         parser.print_help(sys.stderr)
+        logger.error('Ce programme ne devrait pas être lancé directement, utiliser les scripts '
+                     'server.bat, ffe.bat et chessevent.bat.')
 except KeyboardInterrupt:
     pass

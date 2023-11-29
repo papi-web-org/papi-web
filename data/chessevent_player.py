@@ -22,9 +22,9 @@ class ChessEventPlayer:
         self.blitz_rating: int = 0
         self.blitz_rating_type: PlayerRatingType = PlayerRatingType.NONE
         self.title: PlayerTitle = PlayerTitle.NONE
-        self.ffe_id: str = ''
+        self.ffe_id: int = 0
         self.ffe_license: PlayerFFELicense = PlayerFFELicense.NONE
-        self.ffe_licence_number: str = ''
+        self.ffe_license_number: str = ''
         self.ffe_league: str = ''
         self.ffe_club_id: int = 0
         self.ffe_club: str = ''
@@ -48,9 +48,9 @@ class ChessEventPlayer:
             if chessevent_player_info[key]:
                 self.gender = PlayerGender(int(chessevent_player_info[key]))
             self.birth = float(chessevent_player_info[key := 'birth'])
-            self.ffe_id = str(chessevent_player_info[key := 'ffe_id'])
+            self.ffe_id = int(chessevent_player_info[key := 'ffe_id'])
             self.ffe_license = PlayerFFELicense(int(chessevent_player_info[key := 'ffe_license']))
-            self.ffe_license = str(chessevent_player_info[key := 'ffe_license_number'])
+            self.ffe_license_number = str(chessevent_player_info[key := 'ffe_license_number'])
             self.ffe_league = str(chessevent_player_info[key := 'ffe_league'])
             key = 'ffe_club_id'
             if chessevent_player_info[key]:
@@ -96,7 +96,8 @@ class ChessEventPlayer:
         lines: list[str] = []
         lines.append(f'  - Nom : {self.last_name} {self.first_name}')
         lines.append(f'  - Titre / FFE / Fide : {self.title} / {self.ffe_id} / {self.fide_id}')
-        lines.append(f'  - Licence / Catégorie / Genre : {self.ffe_license} / {self.category} / {self.gender}')
+        lines.append(f'  - Licence / Numéro / Catégorie / Genre : '
+                     f'{self.ffe_license} / {self.ffe_license_number} / {self.category} / {self.gender}')
         lines.append(f'  - Date de naissance : {self.birth}')
         lines.append(f'  - Classements standard / rapide / blitz : {self.standard_rating}{self.standard_rating_type} '
                      f'/ {self.rapid_rating}{self.rapide_rating_type} / {self.blitz_rating}{self.blitz_rating_type}')

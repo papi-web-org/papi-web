@@ -139,8 +139,8 @@ class PapiDatabase(AccessDatabase):
         """Adds a player to the database."""
         data: dict[str, str | int | float | None] = {
             'Ref': player_id,
-            'RefFFE': 100000000 - player_id,
-            'NrFFE': player.ffe_id,
+            'RefFFE': player.ffe_id,
+            'NrFFE': player.ffe_license_number,
             'Nom': player.last_name,
             'Prenom': player.first_name,
             'Sexe': player.gender.to_papi_value,
