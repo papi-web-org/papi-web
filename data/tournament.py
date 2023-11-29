@@ -21,7 +21,7 @@ class Tournament:
     def __init__(self, tournament_id: str, name: str, file: Path, ffe_id: int | None, ffe_password: str | None,
                  handicap_initial_time: int | None, handicap_increment: int | None, handicap_penalty_step: int | None,
                  handicap_penalty_value: int | None, handicap_min_time: int | None,
-                 chessevent_connection: ChessEventConnection | None, chessevent_tournament_id: str | None):
+                 chessevent_connection: ChessEventConnection | None, chessevent_tournament_name: str | None):
         self.tournament_id: str = tournament_id
         self.name: str = name
         self.file: Path = file
@@ -33,7 +33,7 @@ class Tournament:
         self.handicap_penalty_value: int | None = handicap_penalty_value
         self.handicap_min_time: int | None = handicap_min_time
         self.chessevent_connection: ChessEventConnection | None = chessevent_connection
-        self.chessevent_tournament_id: str | None = chessevent_tournament_id
+        self.chessevent_tournament_name: str | None = chessevent_tournament_name
         self.papi_database: PapiDatabase = PapiDatabase(self.file)
         self._rounds: int = 0
         self._pairing: TournamentPairing = TournamentPairing.STANDARD
@@ -480,13 +480,13 @@ class TournamentBuilder:
                 "option ignorée quand l'option [ffe_id] n'est pas indiquée",
                 section_key, key)
 
-        key = 'chessevent_tournament_id'
-        chessevent_tournament_id: str | None = None
+        key = 'chessevent_tournament_name'
+        chessevent_tournament_name: str | None = None
         try:
-            chessevent_tournament_id: str = section[key]
+            chessevent_tournament_name: str = section[key]
         except KeyError:
             pass
-        if not chessevent_tournament_id:
+        if not chessevent_tournament_name:
             self._config_reader.add_info('option absente', section_key, key)
             chessevent_connection = None
         else:
@@ -503,21 +503,21 @@ class TournamentBuilder:
                 except KeyError:
                     self._config_reader.add_warning(
                         f'connexion à Chess Event [{chessevent_connection_id}] introuvable',
-                        section_key, 'chessevent_tournament_id')
-                    chessevent_tournament_id = None
+                        section_key, 'chessevent_tournament_name')
+                    chessevent_tournament_name = None
             else:
                 if len(self._chessevent_connections) == 0:
                     self._config_reader.add_warning(
-                        'aucune connexion à Chess Event définie', section_key, 'chessevent_tournament_id')
-                    chessevent_tournament_id = None
+                        'aucune connexion à Chess Event définie', section_key, 'chessevent_tournament_name')
+                    chessevent_tournament_name = None
                 elif len(self._chessevent_connections) > 1:
                     self._config_reader.add_warning(
                         f'plusieurs connexions à Chess Event sont définies, la connexion doit être précisée à '
-                        'l\'aide de l\'option chess_connection_id', section_key, 'chessevent_tournament_id')
-                    chessevent_tournament_id = None
+                        'l\'aide de l\'option chess_connection_id', section_key, 'chessevent_tournament_name')
+                    chessevent_tournament_name = None
                 else:
                     chessevent_connection = list(self._chessevent_connections.values())[0]
-        if not chessevent_tournament_id:
+        if not chessevent_tournament_name:
             self._config_reader.add_info(
                 'la création du fichier Papi depuis la plateforme Chess Event ne sera pas disponible', section_key)
 
@@ -528,7 +528,7 @@ class TournamentBuilder:
             'ffe_id',
             'ffe_password',
             'chessevent_connection_id',
-            'chessevent_tournament_id',
+            'chessevent_tournament_name',
         ]
         for key, value in section.items():
             if key not in tournament_section_keys:
@@ -543,7 +543,7 @@ class TournamentBuilder:
 
         self.tournaments[tournament_id] = Tournament(
             tournament_id, name, file, ffe_id, ffe_password, *handicap_values, chessevent_connection,
-            chessevent_tournament_id)
+            chessevent_tournament_name)
 
     def _build_tournament_handicap(self, section_key: str) -> HandicapTournament:
         try:

@@ -33,11 +33,11 @@ Cette valeur est utilisée pour tous les tournois de l'évènement Papi-web.
 
 ### Désignation d'un tournoi Chess Event
 
-L'identifiant d'un tournoi sur la plateforme Chess Event sera indiqué dans la déclaration du tournoi (rubrique `[tournament.<tournament_id>]` ou `[tournament]` s'il n'y a qu'un seul tournoi) :
+Le nom du tournoi sur la plateforme Chess Event est indiqué dans la déclaration du tournoi (rubrique `[tournament.<tournament_id>]` ou `[tournament]` s'il n'y a qu'un seul tournoi) :
 
-| Option                     | Description                                                              |
-|----------------------------|--------------------------------------------------------------------------|
-| `chessevent_tournament_id` | L'identifiant de l'évènement sur la plateforme Chess Event (facultatif). |
+| Option                       | Description                                                   |
+|------------------------------|---------------------------------------------------------------|
+| `chessevent_tournament_name` | Le nom du tournoi sur la plateforme Chess Event (facultatif). |
 
 ## Requêtes de téléchargement
 
@@ -49,19 +49,19 @@ L'URL de la requête sera https://services.breizh-chess-online.fr/chessevent/dow
 
 Tous les paramètres seront passés en clair dans le corps de la requête HTTPS sous la forme de paramètres (méthode POST).
 
-| Paramètre       | Description                                                                      |
-|-----------------|----------------------------------------------------------------------------------|
-| `user_id`       | L'identifiant FFE de l'utilisateur·trice (de la forme XNNNNN, obligatoire).      |
-| `password`      | Le mot de passe l'utilisateur·trice sur la plateforme Chess Event (obligatoire). |
-| `event_id`      | L'identifiant de l'évènement sur la plateforme Chess Event.                      |
-| `tournament_id` | L'identifiant du tournoi sur la plateforme Chess Event.                          |
+| Paramètre         | Description                                                                      |
+|-------------------|----------------------------------------------------------------------------------|
+| `user_id`         | L'identifiant FFE de l'utilisateur·trice (de la forme XNNNNN, obligatoire).      |
+| `password`        | Le mot de passe l'utilisateur·trice sur la plateforme Chess Event (obligatoire). |
+| `event_id`        | L'identifiant de l'évènement sur la plateforme Chess Event.                      |
+| `tournament_name` | Le nom du tournoi sur la plateforme Chess Event.                                 |
 
 Exemple de paramètres :
 ```
 - user_id=C69548
 - password=my-password
 - event_id=BRE_35_domloupfide36
-- tournament_id=TournoiA
+- tournament_name=Tournoi A
 ```
 
 ## Données attendues
@@ -112,10 +112,16 @@ Exemple de tournoi :
 |------------------------|-------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `last_name`            | `str`       | Le nom de famille.                                                                                                                                                                                                      |
 | `first_name`           | `str`       | Le prénom.                                                                                                                                                                                                              |
-| `ffe_id`               | `str`       | Le numéro de licence FFE (au format XNNNNN).                                                                                                                                                                            |
-| `fide_id`              | `int`       | L'identifiant Fide.                                                                                                                                                                                                     |
 | `gender`               | `enum`      | Le genre :<br/>`0` = _aucun_<br/>`1` = Féminin<br/>`2` = Masculin                                                                                                                                                       |
 | `birth`                | `timestamp` | La date de naissance.                                                                                                                                                                                                   |
+| `federation`           | `str`       | Le code de la fédération (FED).                                                                                                                                                                                         |
+| `fide_id`              | `int`       | L'identifiant Fide.                                                                                                                                                                                                     |
+| `ffe_id`               | `str`       | L'identifiant FFE (champ RefFFE dans Papi).                                                                                                                                                                             |
+| `ffe_license`          | `enum`      | La licence :<br/>`0` = _aucune_<br/>`1` = Licence non renouvelée (N)<br/>`2` = Licence B<br/>`3` = Licence A                                                                                                            |
+| `ffe_licence_number`   | `str`       | Le numéro de licence FFE (champ NrFFE dans Papi, au format XNNNNN).                                                                                                                                                     |
+| `ffe_league`           | `str`       | Le code de la ligue (LIG).                                                                                                                                                                                              |
+| `ffe_club_id`          | `int`       | Le numéro d'identifiant du club.                                                                                                                                                                                        |
+| `ffe_club`             | `str`       | Le club.                                                                                                                                                                                                                |
 | `category`             | `enum`      | La catégorie :<br/>`0` = _aucune_<br/>`1` = U8 (Ppo)<br/>`2` = U10 (Pou)<br/>`3` = U12 (Pup)<br/>`4` = U14 (Ben)<br/>`5` = U16 (Min)<br/>`6` = U18 (Cad)<br/>`7` = U20 (Jun)<br/>`8` = Sen<br/>`9` = Sep<br/>`10` = Vet |
 | `standard_rating`      | `int`       | Le classement standard.                                                                                                                                                                                                 |
 | `standard_rating_type` | `enum`      | Le type de classement standard :<br/>`1` = Estimé<br/>`2` = National<br/>`3` = Fide                                                                                                                                     |
@@ -124,11 +130,6 @@ Exemple de tournoi :
 | `blitz_rating`         | `int`       | Le classement blitz.                                                                                                                                                                                                    |
 | `blitz_rating_type`    | `enum`      | Le type de classement blitz (cf `standard_rating_type`).                                                                                                                                                                |
 | `title`                | `enum`      | Le titre :<br/>`0` = _aucun_<br/>`1` = Maître Fide féminin<br/>`2` = Maître Fide<br/>`3` = Maître International féminin<br/>`4` = Maître International<br/>`5` = Grand Maître féminin<br/>`6` = Grand Maître            |
-| `license`              | `enum`      | La licence :<br/>`0` = _aucune_<br/>`1` = Licence non renouvelée (N)<br/>`2` = Licence B<br/>`3` = Licence A                                                                                                            |
-| `federation`           | `str`       | Le code de la fédération (FED).                                                                                                                                                                                         |
-| `league`               | `str`       | Le code de la ligue (LIG).                                                                                                                                                                                              |
-| `club_id`              | `int`       | Le numéro d'identifiant du club.                                                                                                                                                                                        |
-| `club`                 | `str`       | Le club.                                                                                                                                                                                                                |
 | `email`                | `str`       | L'adresse électronique'.                                                                                                                                                                                                |
 | `phone`                | `str`       | Le numéro de téléphone.                                                                                                                                                                                                 |
 | `fee`                  | `float`     | Le montant de l'inscription.                                                                                                                                                                                            |
@@ -182,6 +183,7 @@ Les codes d'erreur suivants sont utilisés :
 | 200         | _succès_                                                                                  |                        |
 | 401         | Problème d'authentification (impossibilité de s'identifier sur la plateforme Chess Event) | `Unauthorized`         |
 | 403         | Problème d'autorisation (identifiants non autorisés pour l'évènement demandé)             | `Access forbidden`     |
+| 497         | Identifiant non trouvé                                                                    | `User not found`       |
 | 498         | Tournoi non trouvé                                                                        | `Tournament not found` |
 | 499         | Évènement non trouvé                                                                      | `Event not found`      |
 | 500         | Autres erreurs                                                                            | À préciser             |

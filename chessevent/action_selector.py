@@ -29,7 +29,7 @@ class ActionSelector:
             return []
         tournaments: list[Tournament] = []
         for tournament in event.tournaments.values():
-            if not tournament.chessevent_tournament_id:
+            if not tournament.chessevent_tournament_name:
                 logger.warning(f'Connexion à Chess Event non définie pour le tournoi [{tournament.id}]')
             elif not tournament.file:
                 logger.warning(f'Fichier non défini pour le tournoi [{tournament.id}]')

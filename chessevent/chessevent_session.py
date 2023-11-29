@@ -1,4 +1,5 @@
 import json
+import traceback
 
 from requests import Session, Response
 from logging import Logger
@@ -75,34 +76,46 @@ class ChessEventSession(Session):
                 'user_id': self.__tournament.chessevent_connection.user_id,
                 'password': self.__tournament.chessevent_connection.password,
                 'event_id': self.__tournament.chessevent_connection.event_id,
-                'tournament_id': self.__tournament.chessevent_tournament_id,
+                'tournament_name': self.__tournament.chessevent_tournament_name,
             }
-            response: Response = self.post(url, data=post)
+            chessevent_params: str = ', '.join([f'{var}=[{post[var]}]' for var in post])
+            logger.info(f'Paramètres de la requête à Chess Event : {chessevent_params}')
+            # Redirections a re handled manually to pass the data at each redirection
+            response: Response = self.post(url, data=post, allow_redirects=False)
+            while response.status_code in [301, 302]:
+                redirect_url = response.headers['location']
+                logger.debug(f'redirection vers {redirect_url}...')
+                response = self.post(redirect_url, data=post, allow_redirects=False)
+            logger.debug(f'Code HTTP de la réponse : {response.status_code}')
+            logger.debug(f'Entêtes de la réponse : {response.headers}')
             data: str = response.content.decode()
+            logger.debug(f'Données de la réponse : {data}')
+            if response.status_code == 200:
+                logger.info(f'Données récupérées de la plateforme Chess Event : {len(data)} octets')
+                return data
             match response.status_code:
-                case 200:
-                    logger.info(f'Données récupérées de la plateforme Chess Event : {len(data)} octets')
-                    return data
                 case 401:
-                    logger.error(f'Les identifiants {self.__tournament.chessevent_connection.user_id}/'
-                                 f'{self.__tournament.chessevent_connection.password} '
-                                 f'ont été rejetés par la plateforme Chess Event')
+                    logger.error(f'Les identifiants {post["user_id"]}/{post["password"]} '
+                                 f'ont été rejetés par la plateforme Chess Event (paramètres : {chessevent_params})')
                 case 403:
-                    logger.error(f'L\'accès au tournoi {self.__tournament.chessevent_tournament_id} n\'est pas '
-                                 f'autorisé pour les identifiants {self.__tournament.chessevent_connection.user_id}/'
-                                 f'{self.__tournament.chessevent_connection.password}')
-                case 404:  # TODO remove the case when the Chess Event gateway is available
-                    logger.error('Chess Event status code #404, temporarily sending self-made data...')
-                    return self.__self_made_json_data()
-                case 499:
-                    logger.error(f'L\'évènement {self.__tournament.chessevent_connection.event_id} est introuvable '
-                                 f'sur la plateforme Chess Event')
+                    logger.error(f'L\'accès au tournoi {post["tournament_name"]} n\'est pas '
+                                 f'autorisé pour les identifiants {post["user_id"]}/{post["password"]} '
+                                 f'(paramètres : {chessevent_params})')
+                case 496:
+                    logger.error(f'Un paramètre est manquant dans la requête à la plateforme Chess Event '
+                                 f'(paramètres : {chessevent_params}, code d\'erreur : {json.loads(data)["error"]})')
+                case 497:
+                    logger.error(f'L\'identifiant {post["user_id"]} est introuvable sur la plateforme Chess Event '
+                                 f'(paramètres : {chessevent_params}, code d\'erreur : {json.loads(data)["error"]})')
                 case 498:
-                    logger.error(f'Le tournoi {self.__tournament.chessevent_tournament_id} est introuvable '
-                                 f'sur la plateforme Chess Event')
+                    logger.error(f'Le tournoi {post["tournament_name"]} est introuvable sur la plateforme Chess Event '
+                                 f'(paramètres : {chessevent_params}, code d\'erreur : {json.loads(data)["error"]})')
+                case 499:
+                    logger.error(f'L\'évènement {post["event_id"]} est introuvable sur la plateforme Chess Event '
+                                 f'(paramètres : {chessevent_params}, code d\'erreur : {json.loads(data)["error"]})')
                 case _:
-                    logger.error(
-                        f'Réponse invalide de la plateforme Chess Event (code d\'erreur {response.status_code})')
+                    logger.error(f'Réponse invalide de la plateforme Chess Event '
+                                 f'(code d\'erreur {response.status_code}, paramètres : {chessevent_params})')
         except ConnectionError as e:
             logger.error(f'[{url}] [{e.__class__.__name__}] [{e}]')
             logger.error(f'Veuillez vérifier votre connection à internet')
