@@ -459,7 +459,7 @@ class PlayerGender(IntEnum):
                 raise ValueError(f'Unknown value: {self}')
 
 
-class PlayerLicense(IntEnum):
+class PlayerFFELicense(IntEnum):
     NONE = 0
     N = 1
     B = 2
@@ -482,26 +482,26 @@ class PlayerLicense(IntEnum):
     @property
     def to_papi_value(self) -> str:
         match self:
-            case PlayerLicense.NONE:
+            case PlayerFFELicense.NONE:
                 return ''
-            case PlayerLicense.N:
+            case PlayerFFELicense.N:
                 return 'N'
-            case PlayerLicense.B:
+            case PlayerFFELicense.B:
                 return 'B'
-            case PlayerLicense.A:
+            case PlayerFFELicense.A:
                 return 'A'
             case _:
                 raise ValueError(f'Unknown value: {self}')
 
     def __str__(self) -> str:
         match self:
-            case PlayerLicense.NONE:
+            case PlayerFFELicense.NONE:
                 return 'Aucune'
-            case PlayerLicense.N:
+            case PlayerFFELicense.N:
                 return 'Licence non renouvelée'
-            case PlayerLicense.B:
+            case PlayerFFELicense.B:
                 return 'Licence B'
-            case PlayerLicense.A:
+            case PlayerFFELicense.A:
                 return 'Licence A'
             case _:
                 raise ValueError(f'Unknown value: {self}')
