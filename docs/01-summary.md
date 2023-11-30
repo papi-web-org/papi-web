@@ -62,6 +62,8 @@ Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonne
 |--------------------|-------|-------|-----|--------------------------------------|
 | AUBRY Pascal       | AFO2  | BRE   | 35  | Echiquier Domloupéen                 |
 | BENETEAU Hubert    | AFE1  | NOR   | 50  | Agneaux Saint-Lô                     |
+| BENADDOU Khaled    | AFE2  | IDF   | 94  | Club d'Echecs de Saint-Maur          |
+| CLEMENCEAU Cyril   | AFC   | BRE   | 29  | Echiquier du Léon                    |
 | DELMOTTE Eric      | AFE1  | BFC   | 71  | L'Echiquier Châlonnais               |
 | FRAYSSE Sébastien  | AFO2  | BRE   | 29  | Echiquier Quimpérois                 |
 | GUINET Kevin       |       | PDL   | 72  | L'Echiquier Fertois                  |
@@ -73,7 +75,7 @@ Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonne
 | PLAT Sammy         | AFO2  | BRE   | 35  | Rennes Paul Bert                     |
 | PORTE Pierre       |       | ARA   | 73  | Academie d'Echecs d'Aix les bains    |
 | REGAUD Denis       | AFE2  | NAQ   | 33  | Salon Nostradamus                    |
-| RUHLMANN Dominique | AFE1  | BRE   | 35  | Echiquier Domloupéen                 |
+| RUHLMANN Dominique | AFE1  | BRE   | 35  | Echiquier du pays de Liffré          |
 | SALLETTE Alain     | AFE1  | NAQ   | 33  | Bordeaux Aspom Echecs                |
 | VIEVILLE Claude    | AFC   | HDF   | 85  | Cercle d'Echecs de Fournes en Weppes |
 | VIOLEAU Jean-Luc   | AFE1  | PDL   | 85  | Club Echecs La Roche sur Yon         |
