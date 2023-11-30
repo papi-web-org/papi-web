@@ -1,4 +1,5 @@
 import re
+import time
 from logging import Logger
 from operator import attrgetter
 from pathlib import Path
@@ -299,6 +300,19 @@ class Tournament:
                 strong_player.set_handicap(
                     strong_time, self.handicap_increment, penalties > 0)
                 weak_player.set_handicap(weak_time, self.handicap_increment, False)
+
+    def ffe_upload_needed(self, ffe_upload_delay) -> bool:
+        try:
+            marker_time = self.ffe_upload_marker.lstat().st_mtime
+            if marker_time > self.file.lstat().st_mtime:
+                # last version already uploaded
+                return False
+            if time.time() < marker_time + ffe_upload_delay:
+                # last upload too recent
+                return False
+            return True
+        except FileNotFoundError:
+            return True
 
     def add_result(self, board: Board, white_result: Result):
         black_result = white_result.opposite_result

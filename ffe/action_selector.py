@@ -101,20 +101,7 @@ class ActionSelector:
                         return True
                     updated_tournaments: list[Tournament] = []
                     for tournament in tournaments:
-                        upload: bool
-                        if not tournament.ffe_upload_marker.is_file():
-                            upload = True
-                        else:
-                            marker_time = tournament.ffe_upload_marker.lstat().st_mtime
-                            if marker_time > tournament.file.lstat().st_mtime:
-                                # last version already uploaded
-                                upload = False
-                            elif time.time() < marker_time + self.__config.ffe_upload_delay:
-                                # last upload too recent
-                                upload = False
-                            else:
-                                upload = True
-                        if upload:
+                        if tournament.ffe_upload_needed(self.__config.ffe_upload_delay):
                             updated_tournaments.append(tournament)
                     if not updated_tournaments:
                         logger.info(f'Tous les tournois sont à jour')
