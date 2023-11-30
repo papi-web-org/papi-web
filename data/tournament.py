@@ -19,11 +19,12 @@ logger: Logger = get_logger()
 
 
 class Tournament:
-    def __init__(self, tournament_id: str, name: str, file: Path, ffe_id: int | None, ffe_password: str | None,
+    def __init__(self, event_id: str, tournament_id: str, name: str, file: Path, ffe_id: int | None, ffe_password: str | None,
                  handicap_initial_time: int | None, handicap_increment: int | None, handicap_penalty_step: int | None,
                  handicap_penalty_value: int | None, handicap_min_time: int | None,
                  chessevent_connection: ChessEventConnection | None, chessevent_tournament_name: str | None):
-        self.tournament_id: str = tournament_id
+        self.event_id: str = event_id
+        self.id: str = tournament_id
         self.name: str = name
         self.file: Path = file
         self.ffe_id: int | None = ffe_id
@@ -49,16 +50,12 @@ class Tournament:
         self._players_by_rating: list[Player] | None = None
 
     @property
-    def id(self) -> str:
-        return self.tournament_id
-
-    @property
     def ffe_upload_marker(self) -> Path:
         return TMP_DIR / f'{self.ffe_id}.ffe_upload'
 
     @property
     def chessevent_download_marker_dir(self) -> Path:
-        return TMP_DIR / f'{self.id}' / 'chessevent'
+        return TMP_DIR / f'{self.event_id}'
 
     @property
     def chessevent_download_marker(self) -> Path:
@@ -360,9 +357,10 @@ class HandicapTournament(NamedTuple):
 
 class TournamentBuilder:
     def __init__(
-            self, config_reader: ConfigReader, default_tournament_path: Path,
+            self, config_reader: ConfigReader, event_id: str, default_tournament_path: Path,
             chessevent_connections: dict[str, ChessEventConnection]):
         self._config_reader: ConfigReader = config_reader
+        self._event_id: str = event_id
         self._default_tournament_path: Path = default_tournament_path
         self._chessevent_connections: dict[str, ChessEventConnection] = chessevent_connections
         self.tournaments: dict[str, Tournament] = {}
@@ -564,7 +562,7 @@ class TournamentBuilder:
             )
 
         self.tournaments[tournament_id] = Tournament(
-            tournament_id, name, file, ffe_id, ffe_password, *handicap_values, chessevent_connection,
+            self._event_id, tournament_id, name, file, ffe_id, ffe_password, *handicap_values, chessevent_connection,
             chessevent_tournament_name)
 
     def _build_tournament_handicap(self, section_key: str) -> HandicapTournament:

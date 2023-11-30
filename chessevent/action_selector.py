@@ -60,7 +60,7 @@ class ActionSelector:
                 logger.info(f'Action : création des fichiers Papi')
             else:
                 logger.info(f'Action : création des fichiers Papi et envoi sur le site fédéral')
-            print_interactive(f'Actions :')
+            print_interactive(f'Fréquence :')
             print_interactive(f'  - [1] Une seule fois')
             print_interactive(f'  - [C] En continu')
             print_interactive(f'  - [A] Abandonner')
@@ -76,7 +76,6 @@ class ActionSelector:
                     chessevent_timeout: int = chessevent_timeout_min
                     while True:
                         for tournament in tournaments:
-                            logger.info(f'Tournoi : {tournament.name}')
                             data: str | None = ChessEventSession(tournament).read_data()
                             if data is None:
                                 continue
@@ -86,7 +85,8 @@ class ActionSelector:
                             try:
                                 with open(tournament.chessevent_download_marker, 'r') as f:
                                     if data_md5 == f.read():
-                                        logger.info('Les données sur Chess Event n\'ont pas été modifiées.')
+                                        logger.info(f'Les données du tournoi [{tournament.name}] sur Chess Event '
+                                                    f'n\'ont pas été modifiées.')
                                         continue
                             except FileNotFoundError:
                                 pass

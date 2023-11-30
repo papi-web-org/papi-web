@@ -48,7 +48,7 @@ class Event:
         if self.reader.errors:
             return
         self.tournaments = TournamentBuilder(
-            self.reader, self.path, self.chessevent_connections
+            self.reader, self.event_id, self.path, self.chessevent_connections
         ).tournaments
         if self.reader.errors:
             return
