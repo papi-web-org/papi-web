@@ -232,7 +232,7 @@ update = on
 columns = 2
 menu = family
 menu_text = [%f - %l]
-[template.alpha.boards]
+[template.alpha.players]
 tournament = principal
 parts = 5
 part = ?
