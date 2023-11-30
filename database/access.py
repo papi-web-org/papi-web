@@ -59,12 +59,11 @@ class AccessDatabase:
     def _close(self):
         if self.database is not None:
             self.cursor.close()
-            self.database = None
             self.cursor = None
+            self.database.close()
+            self.database = None
 
     def _execute(self, query: str, params: tuple = ()):
-        # log_info(f'query={query}')
-        # log_info(f'params={params}')
         self._open()
         self.cursor.execute(query, params)
 

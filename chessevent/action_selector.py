@@ -40,12 +40,12 @@ class ActionSelector:
 
     def run(self, event_id: str) -> bool:
         event: Event = Event(event_id)
-        print_interactive(f'Évènement : {event.name}')
+        logger.info(f'Évènement : {event.name}')
         tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
         if not tournaments:
             logger.error(f'La création des fichiers Papi n\'est possible pour aucun tournoi')
             return False
-        print_interactive(f'Tournois : {", ".join([str(tournament.name) for tournament in tournaments])}')
+        logger.info(f'Tournois : {", ".join([str(tournament.name) for tournament in tournaments])}')
         print_interactive(f'Actions :')
         print_interactive(f'  - [C] Créer les fichiers Papi')
         print_interactive(f'  - [U] Créer les fichiers Papi et les envoyer sur le site fédéral')

@@ -10,7 +10,8 @@ logger: Logger = getLogger()
 def configure_logger(level: int):
     handler: StreamHandler = StreamHandler(sys.stdout)
     handler.setFormatter(ColoredFormatter(
-        fmt='%(log_color)s%(levelname)-8s %(message)s%(reset)s',
+        # fmt='%(log_color)s%(levelname)-8s %(message)s%(reset)s',
+        fmt='%(log_color)s%(message)s%(reset)s',
         datefmt=None,
         reset=True,
         log_colors={
