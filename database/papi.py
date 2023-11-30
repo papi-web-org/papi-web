@@ -157,7 +157,7 @@ class PapiDatabase(AccessDatabase):
             'Fide': player.standard_rating_type.to_papi_value,
             'RapideFide': player.rapide_rating_type.to_papi_value,
             'BlitzFide': player.blitz_rating_type.to_papi_value,
-            'FideCode': player.fide_id,
+            'FideCode': player.fide_id if player.fide_id else None,
             'FideTitre': player.title.to_papi_value,
             'Pointe': player.check_in,
             'InscriptionRegle': player.paid,
