@@ -57,6 +57,14 @@ class Tournament:
         return TMP_DIR / f'{self.ffe_id}.ffe_upload'
 
     @property
+    def chessevent_download_marker_dir(self) -> Path:
+        return TMP_DIR / f'{self.id}' / 'chessevent'
+
+    @property
+    def chessevent_download_marker(self) -> Path:
+        return self.chessevent_download_marker_dir / f'{self.id}.chessevent_download'
+
+    @property
     def handicap(self) -> bool:
         return self.handicap_initial_time is not None
 

@@ -2,10 +2,8 @@ import hashlib
 import json
 import time
 from logging import Logger
-from pathlib import Path
 
 from chessevent.chessevent_session import ChessEventSession
-from common.config_reader import TMP_DIR
 from common.logger import get_logger, print_interactive, input_interactive
 from common.papi_web_config import PapiWebConfig
 from common.singleton import singleton
@@ -85,9 +83,8 @@ class ActionSelector:
                             chessevent_tournament_info: dict[str, str | int | list[dict[bool | str, str | int | None]]]
                             chessevent_tournament_info = json.loads(data)
                             data_md5 = hashlib.md5(data.encode('utf-8')).hexdigest()
-                            chessevent_marker: Path = TMP_DIR / f'{tournament.id}.chessevent_md5'
                             try:
-                                with open(chessevent_marker, 'r') as f:
+                                with open(tournament.chessevent_download_marker, 'r') as f:
                                     if data_md5 == f.read():
                                         logger.info('Les données sur Chess Event n\'ont pas été modifiées.')
                                         continue
@@ -101,7 +98,8 @@ class ActionSelector:
                             create_empty_papi_database(tournament.file)
                             players_number: int = tournament.write_chessevent_info_to_database(chessevent_tournament)
                             logger.info(f'Le fichier {tournament.file} a été créé ({players_number} joueur·euses).')
-                            with open(chessevent_marker, 'w') as f:
+                            tournament.chessevent_download_marker_dir.mkdir(parents=True, exist_ok=True)
+                            with open(tournament.chessevent_download_marker, 'w') as f:
                                 f.write(data_md5)
                             if action_choice == 'U':
                                 if not tournament.ffe_id or not tournament.ffe_password:
