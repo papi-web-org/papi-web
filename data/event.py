@@ -171,12 +171,6 @@ class Event:
         results_dir: Path = Result.results_dir(self.id)
         if not results_dir.is_dir():
             results_dir.mkdir(parents=True)
-        now: float = time.time()
-        # delete old files
-        for file in results_dir.glob('*'):
-            if now - file.lstat().st_ctime > 3600:
-                file.unlink()
-                logger.debug(f'le fichier [{file}] a été supprimé')
         # add a new file
         white_str: str = (f'{board.white_player.last_name} {board.white_player.first_name} {board.white_player.rating}'
                           .replace(' ', '_'))

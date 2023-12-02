@@ -1,4 +1,5 @@
 import re
+import time
 from datetime import datetime
 from functools import total_ordering
 from logging import Logger
@@ -55,6 +56,17 @@ class Result:
         if not results_dir.is_dir():
             return results
         files: list[Path] = list(results_dir.glob("*"))
+        # delete too old files
+        limit_ts: float = time.time() - 3600
+        files_deleted: bool = False
+        for file in files:
+            if file.lstat().st_ctime < limit_ts:
+                file.unlink()
+                logger.debug(f'le fichier [{file}] a été supprimé')
+                files_deleted = True
+        if files_deleted:
+            logger.debug('de vieux fichiers de résultat ont été supprimés, rechargement...')
+            files = list(results_dir.glob("*"))
         if not reversed(files):
             return results
         prog = re.compile(
