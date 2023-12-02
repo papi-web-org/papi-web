@@ -7,7 +7,7 @@ from logging import Logger
 from django import get_version
 
 from common.singleton import singleton
-from common.config_reader import ConfigReader
+from common.config_reader import ConfigReader, TMP_DIR
 from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
@@ -31,7 +31,7 @@ MIN_FFE_UPLOAD_DELAY: int = 60
 @singleton
 class PapiWebConfig:
     def __init__(self):
-        self.reader = ConfigReader(CONFIG_FILE, silent=False)
+        self.reader = ConfigReader(CONFIG_FILE, TMP_DIR / 'papi-web.ini.read', silent=False)
         self.__log_level: int | None = None
         self.__web_host: str | None = None
         self.__web_port: int | None = None

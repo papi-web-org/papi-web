@@ -30,11 +30,9 @@ class ConfigReader(ConfigParser):
         'limit',
     ]
 
-    def __init__(self, ini_file: Path, silent: bool):
+    def __init__(self, ini_file: Path, ini_marker_file: Path, silent: bool):
         super().__init__(interpolation=None, empty_lines_in_values=False)
         self.__ini_file: Path = ini_file
-        ini_marker_dir: Path = TMP_DIR / self.ini_file.parent
-        ini_marker_file: Path = ini_marker_dir / f'{self.ini_file.name}.read'
         self.__infos: list[str] = []
         self.__warnings: list[str] = []
         self.__errors: list[str] = []
@@ -46,12 +44,13 @@ class ConfigReader(ConfigParser):
             self.add_error('not a file')
             return
         if silent:
-            if not ini_marker_file.is_file():
+            try:
+                if ini_marker_file.lstat().st_mtime > self.ini_file.lstat().st_mtime:
+                    self.__silent = True
+                else:
+                    logger.info(f'Configuration file [{self.ini_file}] has been modified, reloading...')
+            except FileNotFoundError:
                 logger.info(f'New configuration file [{self.ini_file}] found, loading...')
-            elif ini_marker_file.lstat().st_mtime > self.ini_file.lstat().st_mtime:
-                self.__silent = True
-            else:
-                logger.info(f'Configuration file [{self.ini_file}] has been modified, reloading...')
         try:
             encoding: str
             with open(self.__ini_file, "rb") as f:
@@ -70,8 +69,7 @@ class ConfigReader(ConfigParser):
             if str(self.__ini_file) not in files_read:
                 self.add_error(f'Could not read: {self.__ini_file}')
                 return
-            if not ini_marker_dir.is_dir():
-                ini_marker_dir.mkdir(parents=True)
+            ini_marker_file.parents[0].mkdir(parents=True, exist_ok=True)
             ini_marker_file.touch()
         except DuplicateSectionError as dse:
             self.__silent = False

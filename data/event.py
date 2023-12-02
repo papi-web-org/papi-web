@@ -4,7 +4,7 @@ from logging import Logger
 from pathlib import Path
 from typing import Iterator
 
-from common.config_reader import ConfigReader
+from common.config_reader import ConfigReader, TMP_DIR
 from common.logger import get_logger
 from data.board import Board
 from data.chessevent_connection import ChessEventConnection, ChessEventConnectionBuilder
@@ -25,7 +25,8 @@ EVENTS_PATH: Path = Path('events')
 class Event:
     def __init__(self, event_id: str, silent: bool = True):
         self.event_id: str = event_id
-        self.reader = ConfigReader(EVENTS_PATH / f'{self.id}.ini', silent=silent)
+        self.reader = ConfigReader(
+            EVENTS_PATH / f'{self.id}.ini', TMP_DIR / event_id / f'{event_id}.ini.read', silent=silent)
         self.name: str = self.event_id
         self.path: Path = Path('papi')
         self.css: str | None = None
