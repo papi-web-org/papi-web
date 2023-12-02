@@ -18,6 +18,7 @@ try:
     parser.add_argument('-s', '--server', help='start the web server', action='store_true')
     parser.add_argument('-f', '--ffe', help='run the FFE utilities', action='store_true')
     parser.add_argument('-c', '--chessevent', help='download Papi files from Chess Event', action='store_true')
+    # undocumented feature to start from a different folder and work with different configurations
     parser.add_argument('--path', default='.')
     parser.add_argument('-t', '--test', help='test the configuration', action='store_true')
     args = parser.parse_args()
