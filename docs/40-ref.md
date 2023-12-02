@@ -76,9 +76,12 @@ Voir également : [Configuration d'un tournoi à handicap](32-handicap.md)
 
 ## Modèles d'écran (`[template.<template_id>]`)
 
-| Option | Description                                    |
-|--------|------------------------------------------------|
-| `???`  | Toutes les options des écrans sont autorisées. |
+| Option | Description                                                                          |
+|--------|--------------------------------------------------------------------------------------|
+| `type` | seule cette option est obligatoire, avec une des deux valeurs `boards` ou `players`. |
+|        | Toutes les options des écrans sont autorisées sauf `template` (voir ci-dessous).     |
+
+En règle générale, on n'utilise pas les options `part`, `parts` et `number` dans les modèles mais plutôt dans les familles.
 
 Selon le type de l'écran, on pourra ajouter une rubrique `[template.<template_id>.boards]` ou `[template.<template_id>.players]`.
 
@@ -92,7 +95,7 @@ L'identifiant de l'écran (`<screen_id>`) est obligatoire.
 |--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `template`   | L'identifiant du modèle sur lequel l'écran est construit (facultatif).<br/>Cf [Modèles et familles d'écran](33-templates-families.md).                                                                                                                                                                                                                                                                                                                                                                                       |
 | `type`       | Le type de l'écran (obligatoire) :<br/>- `type = boards` : écran d'affichage des appariements par échiquier (affichage simple si `update = off`, saisie des scores si `update = on`).<br/>- `type = players` : écran d'affichage des appariements par ordre alphabétique.<br/>- `type = results` : affichage des derniers résultats de l'évènement.                                                                                                                                                                          |
-| `name`       | Le nom de l'écran (fazcultatif).<br/>Par défaut, le nom de l'écran sera `Derniers résultats` pour les écrans de résultats, ou le nom du premier ensemble d'échiquier et de joueur·euses pour les autres écrans (mieux, pour utiliser les _tokens_ `%t`, `%f` et `%l`).                                                                                                                                                                                                                                                       |
+| `name`       | Le nom de l'écran (facultatif).<br/>Par défaut, le nom de l'écran sera `Derniers résultats` pour les écrans de résultats, ou le nom du premier ensemble d'échiquier et de joueur·euses pour les autres écrans (mieux, pour utiliser les _tokens_ `%t`, `%f` et `%l`).                                                                                                                                                                                                                                                        |
 | `update`     | `update = on` pour les écrans de saisie ou `update = off` pour les écrans d'affichage des appariements par échiquier (facultatif, par défaut `update = off`).<br/>Cette option n'est pas autorisée pour les écrans d'affichage des appariements par ordre alphabétique et les écrans de résultats.                                                                                                                                                                                                                           |
 | `menu`       | Le menu qui sera affiché sur l'écran (facultatif, par défaut `menu = none`) :<br/>- `menu = none` : aucun menu.<br/>- `menu = view` : visualisation (tous les écrans de visualisation de l'évènement)).<br/>- `menu = update` : saisie (tous les écrans de saisie de l'évènement).<br/>- `menu = family` : famille (tous les écrans de la famille de l'écran, option autorisée seulement pour les écrans d'une famille).<br/>- `menu = <screen_id_1>, ...` : liste d'écrans (identifiants d'écran séparés par des virgules). |
 | `menu_text`  | Le texte du lien hypertexte utilisé sur cet écran.<br/>Les _tokens_ suivants peuvent être utilisés :<br/>- `%t` : remplacé par le nom du tournoi.<br/>- `%f` (_first_) et `%l` (_last_) : remplacés par les numéros des premier/dernier échiquiers (écrans de saisie ou d'affichage des appariements par échiquier) ou les trois premières lettres du nom de famille des premier·ère/dernier·ère joueur·euse (écran d'affichage des appariements par ordre alphabétique).                                                    |
@@ -106,7 +109,7 @@ Voir également :
 - [Affichage des appariements par ordre alphabétique](23-pairings-by-player.md)
 - [Affichage des derniers résultats saisis](24-last-results.md)
 
-### Ensembles d'échiquiers (`[screen.<screen_id>.boards]` ou `[screen.<screen_id>.boards].<screen_set_id>`)
+### Ensembles d'échiquiers (`[screen.<screen_id>.boards]` ou `[screen.<screen_id>.boards.<screen_set_id>]`)
 
 Les écrans qui affichent plusieurs ensembles d'échiquiers doivent utiliser pour chacun une rubrique `[screen.<screen_id>.boards.<screen_set_id>]` (où `<screen_set_id>` est l'identifiant de l'ensemble), alors ceux qui n'affichent q'un ensemble d'échiquier peuvent utiliser la rubrique `[screen.<screen_id>.boards]`.
 
@@ -118,10 +121,12 @@ Une rubrique `[screen.<screen_id>.boards]` (ou au moins une rubrique `[screen.<s
 | `name`       | Le nom de l'ensemble d'échiquiers (par défaut `%t` ou `%t [%f à %l]` si les options `first`/`last` ou `part`/`parts` sont utilisées).<br/>Les _tokens_ suivants peuvent être utilisés :<br/>- `%t` : remplacé par le nom du tournoi.<br/>- `%f` (_first_) et `%l` (_last_) : remplacés par les numéros des premier/dernier échiquiers. |
 | `first`      | Le numéro du premier échiquier à afficher (facultatif, par défaut `1`).                                                                                                                                                                                                                                                                |
 | `last`       | Le numéro du dernier échiquier à afficher (facultatif, par défaut le numéro du dernier échiquier).                                                                                                                                                                                                                                     |
-| `part`       | Le sous-ensemble d'échiquiers à afficher (facultatif, cf ``parts``).                                                                                                                                                                                                                                                                   |
-| `parts`      | Le nombre de sous-ensembles d'échiquiers du tournoi à considérer (facultatif, cf ``part``).                                                                                                                                                                                                                                            |
+| `part`       | Le sous-ensemble d'échiquiers à afficher (facultatif, doit être utilisée avec `parts` ou `number`).                                                                                                                                                                                                                                    |
+| `parts`      | Le nombre de sous-ensembles d'échiquiers du tournoi à considérer (facultatif, doit être utilisée avec `part`).                                                                                                                                                                                                                         |
+| `number`     | Le nombre d'échiquiers du tournoi à considérer (facultatif, peut être utilisée avec `first` ou `part`).                                                                                                                                                                                                                                |
 
 > [!NOTE]
+> - l'option `part` doit toujours être utilisée avec une des options `parts` (répartition des échiquiers sur un nombre donné d'écrans) ou `number` (nombre donné d'échiquiers par écran) ;
 > - les options `part`/`parts` doivent toujours être utilisées ensemble, et sont incompatibles avec les options `first`/`last` ;
 > - les options `first`/`last` sont incompatibles avec les options `part`/`parts`, par défaut `first` vaut 1 et `last` vaut le numéro du dernier échiquier.
 
@@ -138,9 +143,12 @@ Une rubrique `[screen.<screen_id>.players]` (ou au moins une rubrique `[screen.<
 | `first`      | Le numéro du·de la premier·ère joueur·euse à afficher (facultatif, par défaut `1`).                                                                                                                                                                                                                                                                      |
 | `last`       | Le numéro du·de la premier·ère joueur·euse à afficher (facultatif, par défaut le numéro du dernier échiquier).                                                                                                                                                                                                                                           |
 | `part`       | Le sous-ensemble de joueur·euses à afficher (facultatif, cf ``parts``).                                                                                                                                                                                                                                                                                  |
-| `parts`      | Le nombre de sous-ensembles de joueur·euses du tournoi à considérer (facultatif, cf ``part``).                                                                                                                                                                                                                                                           |
+| `parts`      | Le nombre de sous-ensembles de joueur·euses du tournoi à considérer (facultatif, doit être utilisée avec `part`).                                                                                                                                                                                                                                        |
+| `parts`      | Le nombre de sous-ensembles d'échiquiers du tournoi à considérer (facultatif, doit être utilisée avec `part`).                                                                                                                                                                                                                                           |
+| `number`     | Le nombre de joueur·euses du tournoi à considérer (facultatif, peut être utilisée avec `first` ou `part`).                                                                                                                                                                                                                                               |
 
 > [!NOTE]
+> - l'option `part` doit toujours être utilisée avec une des options `parts` (répartition des joueur·euses sur un nombre donné d'écrans) ou `number` (nombre donné de joueur·euses par écran) ;
 > - les options `part`/`parts` doivent toujours être utilisées ensemble, et sont incompatibles avec les options `first`/`last` ;
 > - les options `first`/`last` sont incompatibles avec les options `part`/`parts`, par défaut `first` vaut 1 et `last` vaut le numéro du dernier échiquier.
 
@@ -148,10 +156,12 @@ Une rubrique `[screen.<screen_id>.players]` (ou au moins une rubrique `[screen.<
 
 L'identifiant de la famille (`<family_id>`) est obligatoire et peut-être utilisé ultérieurement pour désigner la famille (dans un menu par exemple).
 
-| Option     | Description                                                                                                                                    |
-|------------|------------------------------------------------------------------------------------------------------------------------------------------------|
-| `template` | L'identifiant du modèle sur lequel la famille est basée (obligatoire).                                                                         |
-| `range`    | La plage de valeurs utilisée pour construire la famille (obligatoire), de chiffres ou de lettres (par exemple `range = 1-6` ou `range = A-F`). |
+| Option     | Description                                                                                                                                                                                                                                                                    |
+|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `template` | L'identifiant du modèle sur lequel la famille est basée (obligatoire).                                                                                                                                                                                                         |
+| `range`    | La plage de valeurs utilisée pour construire la famille, de chiffres ou de lettres (par exemple `range = 1-6` ou `range = A-F`).<br/>On utilise en général l'option `range` avec des lettres, ou bien avec des chiffres pour réduire une plage donnée par `parts` ou `number`. |
+| `parts`    | Le nombre d'écrans à créer (Papi-web calcule automatiquement le nombre d'échiquiers ou de joueur·euses à afficher sur chaque écran).                                                                                                                                           |
+| `number`   | Le nombre fixe d'échiquiers ou de joueur·euses à afficher sur chaque écran (Papi-web calcule automatiquement le nombre d'écrans nécessaires).                                                                                                                                  |
 
 
 ## Écrans rotatifs (`[rotator.<rotator_id>]`)

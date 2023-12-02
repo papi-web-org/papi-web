@@ -38,31 +38,31 @@ name = %t
 template = saisie
 menu_text = Tournoi A
 [screen.saisie-A.boards]
-Tournament = A
+tournament = A
 
 [screen.saisie-B]
 template = saisie
 menu_text = Tournoi B
 [screen.saisie-B.boards]
-Tournament = B
+tournament = B
 
 [screen.saisie-C]
 template = saisie
 menu_text = Tournoi C
 [screen.saisie-C.boards]
-Tournament = C
+tournament = C
 
 [screen.saisie-D]
 template = saisie
 menu_text = Tournoi D
 [screen.saisie-D.boards]
-Tournament = D
+tournament = D
 
 [screen.saisie-E]
 template = saisie
 menu_text = Tournoi E
 [screen.saisie-E.boards]
-Tournament = E
+tournament = E
 ```
 
 ### Exemple n°2 : écrans d'affichage des appariements par échiquier
@@ -180,7 +180,7 @@ update = on
 menu = family
 menu_text = Tournoi ?
 [screen.saisie.boards]
-Tournament = ?
+tournament = ?
 name = %t
 ```
 
@@ -194,7 +194,7 @@ range = A-E
 
 Cette déclaration crée automatiquement les écrans saisie-A à saisie-E, chaque écran affichant les échiquiers de son tournoi.
 
-### Exemple n°2 : écrans d'affichage des appariements par échiquier
+### Exemple n°2 : écrans d'affichage des appariements en plusieurs parties
 
 #### Déclaration du modèle
 
@@ -206,22 +206,37 @@ menu = family
 menu_text = Éch. [%f à %l]
 [template.appariements.boards]
 tournament = principal
-parts = 5
-part = ?
 name = Échiquiers %f à %l
 ```
 
-#### Déclaration de la famille d'écrans
+#### Déclaration de la famille d'écrans 
+
+##### 2.1 Distribution des appariements sur un nombre donné d'écrans
 
 ```
 [family.appariements]
 template = appariements
-range = 1-5
+parts = 5
 ```
 
-Cette déclaration crée automatiquement les écrans appariement-1 à appariements-5, chaque écran affichant les échiquiers de sa partie.
+Cette déclaration crée automatiquement les écrans appariement-1 à appariements-5, chaque écran affichant les échiquiers de sa partie (les appariements sont répartis à parts égales entre les écrans).
 
-### Exemple n°3 : écrans d'affichage des appariements par ordre alphabétique
+##### 2.2 Distribution des appariements sur des écrans de taille donnée
+
+On peut également préciser manuellement le nombre d'appariements par écran, en utilisant l'option `number` :
+
+```
+[family.appariements]
+template = appariements
+number = 50
+```
+
+Dans ce cas Papi-web calcule automatiquement le nombre d'écrans nécessaires.
+
+> [!NOTE]
+> Dans les deux cas (`parts` et `number`), on peut restreindre les écrans de la famille en utilisant par exemple `range = 3-5`.
+
+### Exemple n°3 : écrans d'affichage des appariements par ordre alphabétique en plusieurs parties
 
 #### Déclaration du modèle
 
@@ -234,20 +249,35 @@ menu = family
 menu_text = [%f - %l]
 [template.alpha.players]
 tournament = principal
-parts = 5
-part = ?
 name = Joueur·euses %f à %l
 ```
 
 #### Déclaration de la famille d'écrans
 
+##### 3.1 Distribution des appariements sur un nombre donné d'écrans
+
 ```
 [family.alpha]
 template = alpha
-range = 1-5
+parts = 5
 ```
 
-Cette déclaration crée automatiquement les écrans alpha-1 à alpha-5, chaque écran affichant les joueur·euses de sa partie.
+Cette déclaration crée automatiquement les écrans alpha-1 à alpha-5, chaque écran affichant les joueur·euses de sa partie (les joueur·euses sont réparti·es à parts égales entre les écrans).
+
+##### 3.2 Distribution des appariements sur des écrans de taille donnée
+
+On peut également préciser manuellement le nombre dde joueur·euses par écran, en utilisant l'option `number` :
+
+```
+[family.alpha]
+template = appariements
+number = 50
+```
+
+Dans ce cas Papi-web calcule automatiquement le nombre d'écrans nécessaires.
+
+> [!NOTE]
+> Dans les deux cas (`parts` et `number`), on peut restreindre les écrans de la famille en utilisant par exemple `range = 3-5`.
 
 Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
 

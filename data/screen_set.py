@@ -21,6 +21,7 @@ class ScreenSet:
     last: int | None = field(default=None, kw_only=True)
     part: int | None = field(default=None, kw_only=True)
     parts: int | None = field(default=None, kw_only=True)
+    number: int | None = field(default=None, kw_only=True)
     name: str | None = field(default=None, kw_only=True)
     first_item: Any | None = field(default=None, init=False)
     last_item: Any | None = field(default=None, init=False)
@@ -48,19 +49,31 @@ class ScreenSet:
         selected_last_index: int = 0
         first_index: int
         last_index: int
-        if self.first is None and self.last is None and self.part is None:
-            selected_first_index = 0
-            selected_last_index = len(items)
-        elif self.first is not None and self.last is not None:
+        # _
+        # first
+        # first and last
+        # first and number
+        # last
+        # part and parts
+        # number
+        # part and number
+        if self.first is not None:
             selected_first_index = self.first - 1
-            selected_last_index = self.last
-        elif self.first is not None:
-            selected_first_index = self.first - 1
-            selected_last_index = len(items)
+            if self.last is not None:
+                # first and last
+                selected_last_index = min(self.last, len(items))
+            elif self.number is not None:
+                # first and number
+                selected_last_index = selected_first_index + self.number
+            else:
+                # first
+                selected_last_index = len(items)
         elif self.last is not None:
+            # last
             selected_first_index = 0
             selected_last_index = self.last
-        else:  # self.part is not None
+        elif self.parts is not None:
+            # part and parts
             items_number = len(items)
             q, r = divmod(items_number, self.parts * self.columns)
             if r > 0:
@@ -75,6 +88,18 @@ class ScreenSet:
                     selected_last_index = last_index
                     break
                 first_index = last_index
+        elif self.part is not None:
+            # part and number
+            selected_first_index = min(self.number * self.part, len(items))
+            selected_last_index = min(selected_first_index + self.number, len(items))
+        elif self.number is not None:
+            # number
+            selected_first_index = 0
+            selected_last_index = min(self.number, len(items))
+        else:
+            # _
+            selected_first_index = 0
+            selected_last_index = len(items)
         selected_items = items[selected_first_index:selected_last_index]
         self.first_item = items[selected_first_index]
         self.last_item = items[selected_last_index - 1]
@@ -187,16 +212,31 @@ class ScreenSet:
         return self.last_item
 
     def __str__(self):
-        if self.first is None and self.last is None and self.part is None:
-            return f'{self.tournament.id} (tout)'
-        if self.first is not None and self.last is not None:
-            return f'{self.tournament.id} (de n°{self.first} à n°{self.last})'
         if self.first is not None:
-            return f'{self.tournament.id} (à partir de n°{self.first})'
-        if self.last is not None:
+            if self.last is not None:
+                # first and last
+                return f'{self.tournament.id} (de n°{self.first} à n°{self.last})'
+            elif self.number is not None:
+                # first and number
+                return f'{self.tournament.id} ({self.number} à partir de n°{self.first})'
+            else:
+                # first
+                return f'{self.tournament.id} (à partir de n°{self.first})'
+        elif self.last is not None:
+            # last
             return f'{self.tournament.id} (jusqu\'à n°{self.last})'
-        if self.part is not None:
+        elif self.parts is not None:
+            # part and parts
             return f'{self.tournament.id} ({self.part}/{self.parts})'
+        elif self.part is not None:
+            # part and number
+            return f'{self.tournament.id} ({self.number}, partie n°{self.part})'
+        elif self.number is not None:
+            # number
+            return f'{self.tournament.id} ({self.number} à partir de n°1)'
+        else:
+            # _
+            return f'{self.tournament.id} (tout)'
 
 
 class ScreenSetBuilder:
@@ -259,29 +299,32 @@ class ScreenSetBuilder:
                 )
                 return None
         tournament_id: str = self._config_reader.get(screen_set_section_key, key)
-        if tournament_id not in self._tournaments:
+        try:
+            tournament: Tournament = self._tournaments[tournament_id]
+        except KeyError:
             self._config_reader.add_warning(
                 f"le tournoi [{tournament_id}] n'existe pas, partie d\'écran ignorée",
                 screen_set_section_key,
                 key
             )
             return None
-        if not self._tournaments[tournament_id].file:
+        if not tournament.file:
             self._config_reader.add_warning(
-                f"le fichier du tournoi [{tournament_id}] n'existe pas, partie d\'écran ignorée",
+                f"le fichier du tournoi [{tournament.id}] n'est pas "
+                f"défini, partie d\'écran ignorée",
                 screen_set_section_key,
                 key
             )
             return None
-        if (
-            ('first' in current_section or 'last' in current_section) and
-            ('part' in current_section or 'parts' in current_section)
-        ):
+        if not tournament.file.exists():
             self._config_reader.add_warning(
-                'les options [part]/[parts] et [first]/[last] ne sont pas compatibles, partie d\'écran ignorée',
-                screen_set_section_key
+                f"le fichier du tournoi [{tournament.id}] ({tournament.file}) n'existe pas, "
+                f"partie d\'écran ignorée",
+                screen_set_section_key,
+                key
             )
             return None
+        # at first check that the options have valid values
         key = 'first'
         first: int | None = None
         if key in current_section:
@@ -302,12 +345,6 @@ class ScreenSetBuilder:
                     screen_set_section_key,
                     key
                 )
-        if first is not None and last is not None and first > last:
-            self._config_reader.add_warning(
-                f'intervalle [{first}-{last}] non valide, partie d\'écran ignorée',
-                screen_set_section_key
-            )
-            return None
         key = 'part'
         part: int | None = None
         if key in current_section:
@@ -328,22 +365,81 @@ class ScreenSetBuilder:
                     screen_set_section_key,
                     key
                 )
-        if (
-            (part is None and parts is not None) or
-            (part is not None and parts is None)
-        ):
-            self._config_reader.add_warning(
-                'les options [part]/[parts] sont obligatoires ensemble, partie d\'écran ignorée',
-                screen_set_section_key
-            )
-            return None
-        if part is not None and parts is not None:
-            if part > parts:
+        key = 'number'
+        number: int | None = None
+        if key in current_section:
+            number = self._config_reader.getint_safe(screen_set_section_key, key)
+            if number is None:
                 self._config_reader.add_warning(
-                    f"la partie [{part}] sur [{parts}] n'est pas valide, partie d\'écran ignorée",
-                    screen_set_section_key
+                    'un entier positif non nul est attendu, option ignorée',
+                    screen_set_section_key,
+                    key
                 )
+        # then check that the values are coherent
+        if first is not None and last is not None and first > last:
+            self._config_reader.add_warning(f'intervalle [{first}-{last}] non valide, partie d\'écran ignorée',
+                                            screen_set_section_key)
+            return None
+        if part is not None and parts is not None and part > parts:
+            self._config_reader.add_warning(f"la partie [{part}] sur [{parts}] n'est pas valide, "
+                                            f"partie d\'écran ignorée", screen_set_section_key)
+            return None
+        # eventually check that options are all compatible
+        if first is not None:
+            # first is set
+            if last is not None and number is not None:
+                self._config_reader.add_warning('les options [last] et [number] ne peuvent pas être utilisées '
+                                                'en même temps, partie d\'écran ignorée', screen_set_section_key)
                 return None
+            if part is not None or parts is not None:
+                self._config_reader.add_warning('les options [part] et [parts] ne peuvent pas être utilisées '
+                                                'en même temps que l\'option [first], partie d\'écran ignorée',
+                                                screen_set_section_key)
+                return None
+            # here we have: first | first + last | first + number
+        else:
+            # first is not set
+            if last is not None:
+                # first and last are not set
+                if part is not None or parts is not None or number is not None:
+                    self._config_reader.add_warning('l\'option [last] n\'est pas compatible avec les options '
+                                                    '[part], [parts] ou [number], partie d\'écran ignorée',
+                                                    screen_set_section_key)
+                    return None
+                # here we have: last
+            else:
+                # first and last are not set
+                if parts is not None and number is not None:
+                    self._config_reader.add_warning('les options [parts] et [number] ne peuvent pas être utilisées '
+                                                    'en même temps, partie d\'écran ignorée', screen_set_section_key)
+                    return None
+                if part is not None:
+                    if parts is None and number is None:
+                        self._config_reader.add_warning('l\'option [part] doit être utilisée avec une des options '
+                                                        '[parts] ou [number], partie d\'écran ignorée',
+                                                        screen_set_section_key)
+                        return None
+                else:
+                    if parts is not None:
+                        self._config_reader.add_warning('l\'option [parts] ne peut pas être utilisée sans '
+                                                        'l\'option [part], partie d\'écran ignorée',
+                                                        screen_set_section_key)
+                        return None
+                    if number is not None:
+                        self._config_reader.add_warning('l\'option [number] ne peut pas être utilisée sans '
+                                                        'une des options [first] ou [part], partie d\'écran ignorée',
+                                                        screen_set_section_key)
+                        return None
+                # here we have _ | number | part + parts | part + number
+        # at this stage, the following options are correctly set :
+        # _
+        # first
+        # first and last
+        # last
+        # first and number
+        # number
+        # part and parts
+        # part and number
         key = 'name'
         name: str | None = None
         if key in current_section:
@@ -358,4 +454,5 @@ class ScreenSetBuilder:
             last=last,
             part=part,
             parts=parts,
-            name=name)
+            name=name,
+            number=number)

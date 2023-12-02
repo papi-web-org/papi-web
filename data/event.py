@@ -55,7 +55,7 @@ class Event:
         self.templates = TemplateBuilder(self.reader).templates
         if self.reader.errors:
             return
-        FamilyBuilder(self.reader, self.templates)
+        FamilyBuilder(self.reader, self.tournaments, self.templates)
         if self.reader.errors:
             return
         self.screens = ScreenBuilder(

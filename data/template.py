@@ -54,6 +54,24 @@ class TemplateBuilder:
             else:
                 template.add_data(None, key, value)
                 self._config_reader.add_debug(f'option {key} = {value}', section_key)
+        key = 'type'
+        try:
+            template_type: ScreenType = ScreenType.from_str(template.data[None][key])
+            match template_type:
+                case ScreenType.Boards:
+                    pass
+                case ScreenType.Players:
+                    pass
+                case _:
+                    self._config_reader.add_warning(f'valeur non autorisée dans les modèles [{template_type}], '
+                                                    f'modèle ignoré', section_key, key)
+                    return
+        except KeyError:
+            self._config_reader.add_warning('option introuvable, modèle ignoré', section_key, key)
+            return
+        except ValueError:
+            self._config_reader.add_warning('valeur non valide, modèle ignoré', section_key, key)
+            return
         subsection_keys = self._config_reader.get_subsection_keys_with_prefix(
             section_key,
             first_level_only=False

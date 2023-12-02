@@ -17,7 +17,7 @@ TMP_DIR: Path = Path('tmp')
 # https://docs.python.org/3/library/configparser.html
 class ConfigReader(ConfigParser):
 
-    screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', ]
+    screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', 'number', ]
 
     screen_keys: list[str] = [
         'type',
