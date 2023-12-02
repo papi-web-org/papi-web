@@ -421,7 +421,7 @@ class ScreenBuilder:
             AScreen.set_screen_file_dependencies(
                 self._event_id,
                 screen_id,
-                [EVENTS_PATH, ] + [screen_set.tournament.file for screen_set in screen_sets]
+                [EVENTS_PATH / f'{self._event_id}.ini', ] + [screen_set.tournament.file for screen_set in screen_sets]
             )
         elif screen_type == ScreenType.Players:
             screen = ScreenPlayers(
@@ -437,7 +437,7 @@ class ScreenBuilder:
             AScreen.set_screen_file_dependencies(
                 self._event_id,
                 screen_id,
-                [EVENTS_PATH, ] + [screen_set.tournament.file for screen_set in screen_sets]
+                [EVENTS_PATH / f'{self._event_id}.ini', ] + [screen_set.tournament.file for screen_set in screen_sets]
             )
         elif screen_type == ScreenType.Results:
             screen = ScreenResults(
@@ -454,7 +454,8 @@ class ScreenBuilder:
             AScreen.set_screen_file_dependencies(
                 self._event_id,
                 screen_id,
-                [EVENTS_PATH, ] + [tournament.file for tournament in self._tournaments.values()]
+                [EVENTS_PATH / f'{self._event_id}.ini', ]
+                + [tournament.file for tournament in self._tournaments.values()]
             )
         for key, value in self._config_reader.items(screen_section_key):
             if key not in ConfigReader.screen_keys + ['template', '__family__', ]:

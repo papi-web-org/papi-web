@@ -172,6 +172,7 @@ class Event:
         if not results_dir.is_dir():
             results_dir.mkdir(parents=True)
         # add a new file
+        now: float = time.time()
         white_str: str = (f'{board.white_player.last_name} {board.white_player.first_name} {board.white_player.rating}'
                           .replace(' ', '_'))
         black_str: str = (f'{board.black_player.last_name} {board.black_player.first_name} {board.black_player.rating}'
