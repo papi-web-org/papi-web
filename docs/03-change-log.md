@@ -5,6 +5,7 @@
 ## Version 2.1 - Non publiée
 - Création des fichiers Papi des tournois à partir de la plateforme d'inscription en ligne Chess Event
 - Suppression des données personnelles des joueur·euses avant téléchargement sur le site fédéral
+- Ajout de la possibilité de fixer le nombre d'échiquiers ou de joueur·euses par écran
 
 ## Version 2.0.3 - 19 novembre 2023
 - Réduction _a minima_ des téléchargements des tournois vers le site fédéral 
