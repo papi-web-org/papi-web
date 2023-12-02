@@ -1,9 +1,11 @@
+import json
 import warnings
 from contextlib import suppress
 from dataclasses import dataclass, field
 from logging import Logger
+from pathlib import Path
 
-from common.config_reader import ConfigReader
+from common.config_reader import ConfigReader, TMP_DIR, EVENTS_PATH
 from common.logger import get_logger
 from data.result import Result
 from data.screen_set import ScreenSet, ScreenSetBuilder
@@ -68,6 +70,29 @@ class AScreen:
     @property
     def sets(self) -> list[ScreenSet]:
         return []
+
+    @classmethod
+    def __get_screen_file_dependencies_file(cls, event_id: str, screen_id: str) -> Path:
+        return TMP_DIR / event_id / 'screen_files' / f'{screen_id}.json'
+
+    @classmethod
+    def get_screen_file_dependencies(cls, event_id: str, screen_id: str) -> list[Path]:
+        tournament_files_file = cls.__get_screen_file_dependencies_file(event_id, screen_id)
+        try:
+            with open(tournament_files_file, 'r') as f:
+                return [Path(file) for file in json.load(f)]
+        except FileNotFoundError:
+            return []
+
+    @classmethod
+    def set_screen_file_dependencies(cls, event_id: str, screen_id: str, files: list[Path]):
+        tournament_files_file = cls.__get_screen_file_dependencies_file(event_id, screen_id)
+        try:
+            tournament_files_file.parents[0].mkdir(parents=True, exist_ok=True)
+            with open(tournament_files_file, 'w') as f:
+                return f.write(json.dumps([str(file) for file in files]))
+        except FileNotFoundError:
+            return []
 
 
 @dataclass
@@ -393,6 +418,11 @@ class ScreenBuilder:
                 screen_sets,
                 update
             )
+            AScreen.set_screen_file_dependencies(
+                self._event_id,
+                screen_id,
+                [EVENTS_PATH, ] + [screen_set.tournament.file for screen_set in screen_sets]
+            )
         elif screen_type == ScreenType.Players:
             screen = ScreenPlayers(
                 screen_id,
@@ -403,6 +433,11 @@ class ScreenBuilder:
                 menu,
                 show_timer,
                 screen_sets
+            )
+            AScreen.set_screen_file_dependencies(
+                self._event_id,
+                screen_id,
+                [EVENTS_PATH, ] + [screen_set.tournament.file for screen_set in screen_sets]
             )
         elif screen_type == ScreenType.Results:
             screen = ScreenResults(
@@ -415,6 +450,11 @@ class ScreenBuilder:
                 menu,
                 show_timer,
                 limit
+            )
+            AScreen.set_screen_file_dependencies(
+                self._event_id,
+                screen_id,
+                [EVENTS_PATH, ] + [tournament.file for tournament in self._tournaments.values()]
             )
         for key, value in self._config_reader.items(screen_section_key):
             if key not in ConfigReader.screen_keys + ['template', '__family__', ]:

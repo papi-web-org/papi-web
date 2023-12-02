@@ -15,7 +15,7 @@ from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VE
 from data.board import Board
 from data.event import Event, get_events_by_name
 from data.rotator import Rotator
-from data.screen import AScreen, ScreenType
+from data.screen import AScreen
 from data.tournament import Tournament
 from data.util import Result
 
@@ -197,25 +197,15 @@ def update_result(
 
 
 def get_screen_last_update(request: HttpRequest, event_id: str, screen_id: str) -> HttpResponse:
-    event: Event = load_event(request, event_id)
-    if event is None:
-        return redirect('index')
+    screen_files: list[Path] = AScreen.get_screen_file_dependencies(event_id, screen_id)
     try:
-        screen: AScreen = event.screens[screen_id]
-        screen_files: list[Path] = [event.ini_file]
-        if screen.type == ScreenType.Results:
-            for tournament in event.tournaments.values():
-                if tournament.file not in screen_files:
-                    screen_files.append(tournament.file)
-        else:
-            for set in screen.sets:
-                if set.tournament.file not in screen_files:
-                    screen_files.append(set.tournament.file)
-        mtime: float = 0.0
-        for screen_file in screen_files:
+        mtime: float = screen_files[0].lstat().st_mtime
+        for screen_file in screen_files[1:]:
             with suppress(FileNotFoundError):
                 mtime = max(mtime, screen_file.lstat().st_mtime)
-        return HttpResponse(str(math.ceil(mtime)), content_type='text/plain')
-    except KeyError:
+        last_update: int = math.ceil(mtime)
+        logger.debug(f'last_update({event_id}/{screen_id})={last_update}')
+        return HttpResponse(str(last_update), content_type='text/plain')
+    except FileNotFoundError:
         messages.error(request, f'Screen [{screen_id}] not found')
-        return redirect(event_url(event_id))
+        return HttpResponse(status=500)

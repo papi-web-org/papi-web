@@ -4,7 +4,7 @@ from logging import Logger
 from pathlib import Path
 from typing import Iterator
 
-from common.config_reader import ConfigReader, TMP_DIR
+from common.config_reader import ConfigReader, TMP_DIR, EVENTS_PATH
 from common.logger import get_logger
 from data.board import Board
 from data.chessevent_connection import ChessEventConnection, ChessEventConnectionBuilder
@@ -17,8 +17,6 @@ from data.timer import Timer, TimerBuilder
 from data.tournament import Tournament, TournamentBuilder
 
 logger: Logger = get_logger()
-
-EVENTS_PATH: Path = Path('events')
 
 
 @total_ordering

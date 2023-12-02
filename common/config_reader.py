@@ -13,6 +13,8 @@ logger: Logger = get_logger()
 
 TMP_DIR: Path = Path('tmp')
 
+EVENTS_PATH: Path = Path('events')
+
 
 # https://docs.python.org/3/library/configparser.html
 class ConfigReader(ConfigParser):
