@@ -1,7 +1,6 @@
 import os
 
 import django
-from data.event import get_events
 from django.core.management import call_command
 from webbrowser import open
 import socket
@@ -22,7 +21,6 @@ class ServerEngine(Engine):
         logger.info(f'local URL: {self._config.local_url}')
         if self._config.lan_url:
             logger.info(f'LAN/WAN URL: {self._config.lan_url}')
-        get_events(True, silent=False)
         logger.info(f'Setting up Django...')
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'web.settings')
         django.setup()

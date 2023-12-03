@@ -57,7 +57,8 @@ class ConfigReader(ConfigParser):
             files_read: list[str] = []
             encoding: str = 'utf-8'
             try:
-                logger.debug(f'lecture de {self.__ini_file} en {encoding}...')
+                if not self.__silent:
+                    logger.debug(f'lecture de {self.__ini_file} en {encoding}...')
                 files_read = self.read(self.__ini_file, encoding=encoding)
             except UnicodeDecodeError:
                 logger.debug(f'la lecture de {self.__ini_file} en {encoding} a échoué, recherche de l\'encodage...')

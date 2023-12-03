@@ -11,4 +11,4 @@ logger: Logger = get_logger()
 class TestEngine(Engine):
     def __init__(self):
         super().__init__()
-        events: List[Event] = get_events_by_name(True, silent=False, with_tournaments_only=True)
+        events: List[Event] = get_events_by_name(True, with_tournaments_only=True)

@@ -18,14 +18,17 @@ from data.tournament import Tournament, TournamentBuilder
 
 logger: Logger = get_logger()
 
+silent_event_ids: list[str] = []
+
 
 @total_ordering
 class Event:
-    def __init__(self, event_id: str, load_screens: bool, silent: bool = True):
-        self.event_id: str = event_id
+    def __init__(self, event_id: str, load_screens: bool):
+        self.id: str = event_id
         self.reader = ConfigReader(
-            EVENTS_PATH / f'{self.id}.ini', TMP_DIR / event_id / f'{event_id}.ini.read', silent=silent)
-        self.name: str = self.event_id
+            EVENTS_PATH / f'{self.id}.ini', TMP_DIR / event_id / f'{event_id}.ini.read',
+            silent=self.id in silent_event_ids)
+        self.name: str = self.id
         self.path: Path = Path('papi')
         self.css: str | None = None
         self.update_password: str | None = None
@@ -47,7 +50,7 @@ class Event:
         if self.reader.errors:
             return
         self.tournaments = TournamentBuilder(
-            self.reader, self.event_id, self.path, self.chessevent_connections
+            self.reader, self.id, self.path, self.chessevent_connections
         ).tournaments
         if self.reader.errors:
             return
@@ -60,17 +63,14 @@ class Event:
         if self.reader.errors:
             return
         self.screens = ScreenBuilder(
-            self.reader, self.event_id, self.tournaments, self.templates, self.screens_by_family_id).screens
+            self.reader, self.id, self.tournaments, self.templates, self.screens_by_family_id).screens
         if self.reader.errors:
             return
         self.rotators = RotatorBuilder(self.reader, self.screens, self.screens_by_family_id).rotators
         if self.reader.errors:
             return
         self.timer = TimerBuilder(self.reader).timer
-
-    @property
-    def id(self) -> str:
-        return self.event_id
+        silent_event_ids.append(self.id)
 
     @property
     def ini_file(self) -> Path:
@@ -97,7 +97,7 @@ class Event:
             return
 
         key = 'name'
-        default_name = self.event_id
+        default_name = self.id
         try:
             self.name = section[key]
             if not self.name:
@@ -195,18 +195,18 @@ class Event:
         return self.name == other.name
 
 
-def get_events(load_screens: bool, silent: bool = True, with_tournaments_only: bool = False) -> list[Event]:
+def __get_events(load_screens: bool, with_tournaments_only: bool = False) -> list[Event]:
     event_files: Iterator[Path] = EVENTS_PATH.glob('*.ini')
     events: list[Event] = []
     for event_file in event_files:
         event_id: str = event_file.stem
-        event: Event = Event(event_id, load_screens, silent=silent)
+        event: Event = Event(event_id, load_screens)
         if not with_tournaments_only or event.tournaments:
             events.append(event)
     return events
 
 
-def get_events_by_name(load_screens: bool, silent: bool = True, with_tournaments_only: bool = False) -> list[Event]:
+def get_events_by_name(load_screens: bool, with_tournaments_only: bool = False) -> list[Event]:
     return sorted(
-        get_events(load_screens, silent=silent, with_tournaments_only=with_tournaments_only),
+        __get_events(load_screens, with_tournaments_only=with_tournaments_only),
         key=lambda event: event.name)
