@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
-import sys
 from pathlib import Path
 from django.contrib.messages import constants as messages
 
@@ -18,16 +17,32 @@ from common.papi_web_config import PapiWebConfig
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'simple': {
+            '()': 'colorlog.ColoredFormatter',
+            'format': '%(log_color)s%(message)s%(reset)s',
+            "style": '%',
+            'log_colors': {
+                'DEBUG': 'white',
+                'INFO': 'light_white',
+                'WARNING': 'yellow',
+                'ERROR': 'red',
+                'CRITICAL': 'red,bg_light_white',
+            },
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'simple',
         },
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
             'level': PapiWebConfig().log_level_str,
+            'propagate': False,
         },
     },
 }
