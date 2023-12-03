@@ -46,14 +46,14 @@ class ActionSelector:
         return tournaments
 
     def run(self, event_id: str) -> bool:
-        event: Event = Event(event_id)
-        print_interactive(f'Évènement : {event.name}')
+        event: Event = Event(event_id, False)
+        logger.info(f'Évènement : {event.name}')
         tournaments = self.__get_qualified_tournaments(event)
         if not tournaments:
             logger.error(f'Aucun tournoi éligible aux opérations FFE pour cet évènement')
             return False
         choice: str | None = None
-        print_interactive(f'Tournois : {", ".join([str(tournament.ffe_id) for tournament in tournaments])}')
+        logger.info(f'Tournois : {", ".join([str(tournament.ffe_id) for tournament in tournaments])}')
         print_interactive(f'Actions :')
         print_interactive(f'  - [T] Tester les codes d\'accès des tournois')
         print_interactive(f'  - [V] Rendre les tournois visibles sur le site fédéral')
@@ -65,8 +65,8 @@ class ActionSelector:
         if choice == 'Q':
             return False
         if choice == 'T':
-            print_interactive(f'Action : test des codes d\'accès')
-            tournaments = self.__get_qualified_tournaments(Event(event_id))
+            logger.info(f'Action : test des codes d\'accès')
+            tournaments = self.__get_qualified_tournaments(Event(event_id, False))
             if not tournaments:
                 logger.error(f'Aucun tournoi éligible pour cette action')
                 return True
@@ -74,8 +74,8 @@ class ActionSelector:
                 FFESession(tournament).test()
             return True
         if choice == 'V':
-            print_interactive(f'Action : affichage des tournois en ligne')
-            tournaments = self.__get_qualified_tournaments_with_existing_file(Event(event_id))
+            logger.info(f'Action : affichage des tournois en ligne')
+            tournaments = self.__get_qualified_tournaments_with_existing_file(Event(event_id, False))
             if not tournaments:
                 logger.error(f'Aucun tournoi éligible pour cette action')
                 return True
@@ -83,8 +83,8 @@ class ActionSelector:
                 FFESession(tournament).upload(set_visible=True)
             return True
         if choice == 'H':
-            print_interactive(f'Action : téléchargement des factures d\'homologation')
-            tournaments = self.__get_qualified_tournaments(Event(event_id))
+            logger.info(f'Action : téléchargement des factures d\'homologation')
+            tournaments = self.__get_qualified_tournaments(Event(event_id, False))
             if not tournaments:
                 logger.error(f'Aucun tournoi éligible pour cette action')
                 return True
@@ -92,10 +92,10 @@ class ActionSelector:
                 FFESession(tournament).get_fees()
             return True
         if choice == 'U':
-            print_interactive(f'Action : mise en ligne des résultats')
+            (logger.info(f'Action : mise en ligne des résultats'))
             try:
                 while True:
-                    tournaments = self.__get_qualified_tournaments_with_existing_file(Event(event_id))
+                    tournaments = self.__get_qualified_tournaments_with_existing_file(Event(event_id, False))
                     if not tournaments:
                         logger.error(f'Aucun tournoi éligible pour cette action')
                         return True

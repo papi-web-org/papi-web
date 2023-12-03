@@ -19,9 +19,9 @@ logger: Logger = get_logger()
 
 
 class Tournament:
-    def __init__(self, event_id: str, tournament_id: str, name: str, file: Path, ffe_id: int | None, ffe_password: str | None,
-                 handicap_initial_time: int | None, handicap_increment: int | None, handicap_penalty_step: int | None,
-                 handicap_penalty_value: int | None, handicap_min_time: int | None,
+    def __init__(self, event_id: str, tournament_id: str, name: str, file: Path, ffe_id: int | None,
+                 ffe_password: str | None, handicap_initial_time: int | None, handicap_increment: int | None,
+                 handicap_penalty_step: int | None, handicap_penalty_value: int | None, handicap_min_time: int | None,
                  chessevent_connection: ChessEventConnection | None, chessevent_tournament_name: str | None):
         self.event_id: str = event_id
         self.id: str = tournament_id

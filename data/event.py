@@ -21,7 +21,7 @@ logger: Logger = get_logger()
 
 @total_ordering
 class Event:
-    def __init__(self, event_id: str, silent: bool = True):
+    def __init__(self, event_id: str, load_screens: bool, silent: bool = True):
         self.event_id: str = event_id
         self.reader = ConfigReader(
             EVENTS_PATH / f'{self.id}.ini', TMP_DIR / event_id / f'{event_id}.ini.read', silent=silent)
@@ -50,6 +50,8 @@ class Event:
             self.reader, self.event_id, self.path, self.chessevent_connections
         ).tournaments
         if self.reader.errors:
+            return
+        if not load_screens:
             return
         self.templates = TemplateBuilder(self.reader).templates
         if self.reader.errors:
@@ -193,16 +195,18 @@ class Event:
         return self.name == other.name
 
 
-def get_events(silent: bool = True, with_tournaments_only: bool = False) -> list[Event]:
+def get_events(load_screens: bool, silent: bool = True, with_tournaments_only: bool = False) -> list[Event]:
     event_files: Iterator[Path] = EVENTS_PATH.glob('*.ini')
     events: list[Event] = []
     for event_file in event_files:
         event_id: str = event_file.stem
-        event: Event = Event(event_id, silent=silent)
+        event: Event = Event(event_id, load_screens, silent=silent)
         if not with_tournaments_only or event.tournaments:
             events.append(event)
     return events
 
 
-def get_events_by_name(silent: bool = True, with_tournaments_only: bool = False) -> list[Event]:
-    return sorted(get_events(silent=silent, with_tournaments_only=with_tournaments_only), key=lambda event: event.name)
+def get_events_by_name(load_screens: bool, silent: bool = True, with_tournaments_only: bool = False) -> list[Event]:
+    return sorted(
+        get_events(load_screens, silent=silent, with_tournaments_only=with_tournaments_only),
+        key=lambda event: event.name)

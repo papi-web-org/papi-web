@@ -44,7 +44,7 @@ class ActionSelector:
         return tournaments
 
     def run(self, event_id: str) -> bool:
-        event: Event = Event(event_id)
+        event: Event = Event(event_id, False)
         logger.info(f'Évènement : {event.name}')
         tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
         if not tournaments:

@@ -67,7 +67,7 @@ def render_screen(
 
 
 def index(request: HttpRequest) -> HttpResponse:
-    events: list[Event] = get_events_by_name()
+    events: list[Event] = get_events_by_name(True)
     if len(events) == 0:
         messages.error(request, 'No event found')
     return render(request, 'index.html', {
@@ -78,7 +78,7 @@ def index(request: HttpRequest) -> HttpResponse:
 
 
 def load_event(request: HttpRequest, event_id: str) -> Event | None:
-    event: Event = Event(event_id)
+    event: Event = Event(event_id, True)
     if event.errors:
         for error in event.errors:
             messages.error(request, error)

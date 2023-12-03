@@ -16,7 +16,7 @@ class EventSelector:
         self.__config: PapiWebConfig = config
 
     def run(self) -> bool:
-        events: list[Event] = get_events_by_name(silent=self.__silent, with_tournaments_only=True)
+        events: list[Event] = get_events_by_name(False, silent=self.__silent, with_tournaments_only=True)
         self.__silent = True  # verbose on the first call only
         if not events:
             logger.error(f'Aucun évènement trouvé')
