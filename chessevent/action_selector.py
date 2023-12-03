@@ -1,9 +1,14 @@
 import hashlib
 import json
 import time
+from json import JSONDecodeError
 from logging import Logger
+from pathlib import Path
+
+import chardet
 
 from chessevent.chessevent_session import ChessEventSession
+from common.config_reader import TMP_DIR
 from common.logger import get_logger, print_interactive, input_interactive
 from common.papi_web_config import PapiWebConfig
 from common.singleton import singleton
@@ -79,8 +84,26 @@ class ActionSelector:
                             data: str | None = ChessEventSession(tournament).read_data()
                             if data is None:
                                 continue
+                            encoding = chardet.detect(data.encode())['encoding']
+                            if encoding == 'MacRoman':
+                                logger.warning(f'MacRoman encoding detected, assuming utf-8.')
+                                encoding = 'utf-8'
                             chessevent_tournament_info: dict[str, str | int | list[dict[bool | str, str | int | None]]]
-                            chessevent_tournament_info = json.loads(data)
+                            data = '\n'.join([line for line in data.split('\n')])
+                            try:
+                                chessevent_tournament_info = json.loads(data)
+                            except JSONDecodeError as jde:
+                                error_output: Path = (
+                                        TMP_DIR / event.id /
+                                        f'{tournament.id}_error_l{jde.lineno}_c{jde.colno}_p{jde.pos}.json'
+                                )
+                                error_output.parents[0].mkdir(parents=True, exist_ok=True)
+                                with open(error_output, 'w') as f:
+                                    f.write(data)
+                                logger.error(f'les données du tournoi (encodage {encoding}) n\'ont pas pu être '
+                                             f'décodées, elles ont été sauvegardées dans le fichier {error_output} '
+                                             f'(erreur ligne {jde.lineno}, colonne {jde.colno}, position {jde.pos})')
+                                continue
                             data_md5 = hashlib.md5(data.encode('utf-8')).hexdigest()
                             try:
                                 with open(tournament.chessevent_download_marker, 'r') as f:
