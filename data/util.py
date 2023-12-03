@@ -277,7 +277,7 @@ class TournamentPairing(IntEnum):
             case 'Nicois':
                 return cls.NICOIS
             case 'Berger':
-                raise NotImplementedError
+                return cls.BERGER
             case _:
                 raise ValueError(f'Unknown value: {value}')
 
@@ -295,7 +295,7 @@ class TournamentPairing(IntEnum):
             case TournamentPairing.NICOIS:
                 return 'Nicois'
             case TournamentPairing.BERGER:
-                raise NotImplementedError
+                return 'Berger'
             case _:
                 raise ValueError(f'Unknown value: {self}')
 
@@ -314,7 +314,7 @@ class TournamentPairing(IntEnum):
             case TournamentPairing.NICOIS:
                 return 'Système accéléré niçois'
             case TournamentPairing.BERGER:
-                raise NotImplementedError
+                return 'Berger'
             case _:
                 raise ValueError(f'Unknown pairing type: {self}')
 
