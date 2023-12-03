@@ -53,7 +53,7 @@
             {% with id='timer' %}
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="{{ id }}-tab" data-bs-toggle="tab" data-bs-target="#{{ id }}-tab-pane" type="button" role="tab" aria-controls="{{ id }}-tab-pane" aria-selected="true">
-                        <i class="bi-calendar2-event-fill" ></i>&nbsp;{{ event.timer.hours | length }} horaire{% if event.timer.hours|length > 1 %}s{% endif %}
+                        <i class="bi-calendar2-event-fill" ></i>&nbsp;{% if event.timer %}{{ event.timer.hours | length }} horaire{% if event.timer.hours|length > 1 %}s{% endif %}{% else %}0 horaire{% endif %}
                     </button>
                 </li>
             {% endwith %}
