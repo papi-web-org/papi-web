@@ -40,58 +40,58 @@ class ConfigReader(ConfigParser):
         self.__errors: list[str] = []
         self.__silent: bool = False
         if not self.ini_file.exists():
-            self.add_warning('file not found')
+            self.add_warning('fichier non trouvé')
             return
         if not self.ini_file.is_file():
-            self.add_error('not a file')
+            self.add_error(f'{self.ini_file} n\'est pas un fichier')
             return
         if silent:
             try:
                 if ini_marker_file.lstat().st_mtime > self.ini_file.lstat().st_mtime:
                     self.__silent = True
                 else:
-                    logger.info(f'Configuration file [{self.ini_file}] has been modified, reloading...')
+                    logger.info(f'le fichier de configuration [{self.ini_file}] a été modifié, rechargement...')
             except FileNotFoundError:
-                logger.info(f'New configuration file [{self.ini_file}] found, loading...')
+                logger.info(f'nouveau fichier de configuration [{self.ini_file}], chargement...')
         try:
-            encoding: str
-            with open(self.__ini_file, "rb") as f:
-                encoding = chardet.detect(f.read())['encoding']
-                if encoding == 'MacRoman':
-                    if not silent:
-                        logger.warning(f'{self.__ini_file}: MacRoman encoding detected, assuming utf-8.')
-                    encoding = 'utf-8'
-            files_read = self.read(self.__ini_file, encoding=encoding)
-            # NOTE(Amaras) There could still be a problem leading to not
-            # getting a configuration.
-            # Since a file raising an OSError is ignored, a file not existing
-            # (due to a TOC/TOU bug), a file being changed to a directory
-            # (e.g. by symlink switching), or a permission error (not accounted
-            # for by previous checks)
+            files_read: list[str] = []
+            encoding: str = 'utf-8'
+            try:
+                logger.debug(f'lecture de {self.__ini_file} en {encoding}...')
+                files_read = self.read(self.__ini_file, encoding=encoding)
+            except UnicodeDecodeError:
+                logger.debug(f'la lecture de {self.__ini_file} en {encoding} a échoué, recherche de l\'encodage...')
+                detected_encoding: str
+                with open(self.__ini_file, "rb") as f:
+                    detected_encoding: str = chardet.detect(f.read())['encoding']
+                logger.debug(f'encodage détecté : {detected_encoding}')
+                if detected_encoding != 'utf-8':
+                    logger.debug(f'lecture de {self.__ini_file} en {detected_encoding}...')
+                    files_read = self.read(self.__ini_file, encoding=detected_encoding)
             if str(self.__ini_file) not in files_read:
-                self.add_error(f'Could not read: {self.__ini_file}')
+                self.add_error(f'impossible de lire {self.__ini_file}')
                 return
             ini_marker_file.parents[0].mkdir(parents=True, exist_ok=True)
             ini_marker_file.touch()
         except DuplicateSectionError as dse:
             self.__silent = False
-            self.add_error(f'section is duplicated at line {dse.lineno}', dse.section)
+            self.add_error(f'rubrique dupliquée à la ligne {dse.lineno}', dse.section)
             return
         except DuplicateOptionError as doe:
             self.__silent = False
-            self.add_error(f'key is duplicated at line {doe.lineno}', doe.section, doe.option)
+            self.add_error(f'option dupliquée à la ligne {doe.lineno}', doe.section, doe.option)
             return
         except MissingSectionHeaderError as mshe:
             self.__silent = False
-            self.add_error(f'the first section is missing at line {mshe.lineno}')
+            self.add_error(f'la première rubrique manque à la ligne {mshe.lineno}')
             return
         except ParsingError as pe:
             self.__silent = False
-            self.add_error(f'parsing error: {pe.message}')
+            self.add_error(f'erreur de parsing: {pe.message}')
             return
         except Error as e:
             self.__silent = False
-            self.add_error(f'error: {e.message}')
+            self.add_error(f'erreur: {e.message}')
             return
 
     @property
