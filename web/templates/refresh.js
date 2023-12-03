@@ -1,4 +1,4 @@
-var screen_debug = false;
+var screen_debug = true;
 if (screen_debug) {
     console.info('logging to console...');
 }
@@ -24,23 +24,51 @@ function is_int(value) {
 	return (x | 0) === x;
 }
 function refresh_page_if_updated() {
-	var xmlHttp = null;
-	xmlHttp = new XMLHttpRequest();
+	var request = null;
+	request = new XMLHttpRequest();
 	url = "{% url 'get-screen-last-update' event.id screen.id %}";
     if (screen_debug) { console.info('refresh_page_if_updated(url=[' + url + '])...'); }
-	xmlHttp.open("GET", "{% url 'get-screen-last-update' event.id screen.id %}", false);
-	xmlHttp.send(null);
-	var response = xmlHttp.responseText;
-	if (is_int(response)) {
-		if (response > {{ now }}) {
-		    if (screen_debug) { console.info('refresh_page_if_updated(): response=[' + response + '] > ' + {{ now }} + ' => refresh...'); }
-			window.location = window.location;
-		} else {
-		    if (screen_debug) { console.info('refresh_page_if_updated(): response=[' + response + '] <= ' + {{ now }} + ' => no need to refresh.'); }
-		}
-	} else {
-        if (screen_debug) { console.info('refresh_page_if_updated(): response=[' + response + '] is not valid :-('); }
-	}
+    $.ajax({
+        url: url,
+        type: "GET",
+        success: function (data) {
+            if (is_int(data)) {
+                if (data > {{ now }}) {
+                    if (screen_debug) {
+                        console.info(
+                            'refresh_page_if_updated():'
+                            + ' response=[' + data + '] > ' + {{ now }}
+                            + ' => refresh...'
+                        );
+                    }
+                    window.location = window.location;
+                } else {
+                    if (screen_debug) {
+                        console.info(
+                            'refresh_page_if_updated():'
+                            + ' response=[' + data + '] <= ' + {{ now }}
+                            + ' => no need to refresh.'
+                        );
+                    }
+                }
+            } else {
+                if (screen_debug) {
+                    console.info(
+                        'refresh_page_if_updated():'
+                        + ' response=[' + data + '] is not valid :-('
+                    );
+                }
+            }
+        },
+        error: function (jqXHR, exception) {
+            console.log(
+                'refresh_page_if_updated() failed:'
+                + ' status_code=' + jqXHR.status +
+                ', exception=' + exception,
+                ', response=' + jqXHR.responseText
+            );
+        },
+    });
 }
 var refresh_interval;
 function start_refresh_interval() {
