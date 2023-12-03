@@ -140,7 +140,7 @@ class PapiDatabase(AccessDatabase):
         data: dict[str, str | int | float | None] = {
             'Ref': player_id,
             'RefFFE': player.ffe_id,
-            'NrFFE': player.ffe_license_number,
+            'NrFFE': player.ffe_license_number if player.ffe_license_number else None,
             'Nom': player.last_name,
             'Prenom': player.first_name,
             'Sexe': player.gender.to_papi_value,
