@@ -232,6 +232,7 @@ class FFESession(Session):
         parser, error = self.__parse_html(html)
         if error:
             return
+        self.__tournament.ffe_upload_marker.parents[0].mkdir(parents=True, exist_ok=True)
         self.__tournament.ffe_upload_marker.touch()
         logger.info(f'upload OK')
         if not set_visible:

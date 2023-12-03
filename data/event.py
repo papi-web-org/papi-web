@@ -1,3 +1,4 @@
+import os
 import time
 from functools import total_ordering
 from logging import Logger
@@ -26,7 +27,8 @@ class Event:
     def __init__(self, event_id: str, load_screens: bool):
         self.id: str = event_id
         self.reader = ConfigReader(
-            EVENTS_PATH / f'{self.id}.ini', TMP_DIR / event_id / f'{event_id}.ini.read',
+            EVENTS_PATH / f'{self.id}.ini',
+            TMP_DIR / 'events' / event_id / 'config' / f'{event_id}.ini.{os.getpid()}.read',
             silent=self.id in silent_event_ids)
         self.name: str = self.id
         self.path: Path = Path('papi')
@@ -171,8 +173,7 @@ class Event:
 
     def store_result(self, tournament: Tournament, board: Board, result: int):
         results_dir: Path = Result.results_dir(self.id)
-        if not results_dir.is_dir():
-            results_dir.mkdir(parents=True)
+        results_dir.mkdir(parents=True, exist_ok=True)
         # add a new file
         now: float = time.time()
         white_str: str = (f'{board.white_player.last_name} {board.white_player.first_name} {board.white_player.rating}'
@@ -180,9 +181,9 @@ class Event:
         black_str: str = (f'{board.black_player.last_name} {board.black_player.first_name} {board.black_player.rating}'
                           .replace(' ', '_'))
         filename: str = f'{now} {tournament.id} {tournament.current_round} {board.id} {white_str} {black_str} {result}'
-        result_file: Path = Path(results_dir, filename)
+        result_file: Path = results_dir / filename
         result_file.touch()
-        logger.info(f'le fichier [{result_file}] a été ajouté')
+        logger.info(f'le fichier [{result_file}] a été créé')
 
     def __lt__(self, other: 'Event'):
         # p1 < p2 calls p1.__lt__(p2)

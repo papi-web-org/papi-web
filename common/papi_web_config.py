@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 import socket
 from pathlib import Path
@@ -31,7 +32,7 @@ MIN_FFE_UPLOAD_DELAY: int = 60
 @singleton
 class PapiWebConfig:
     def __init__(self):
-        self.reader = ConfigReader(CONFIG_FILE, TMP_DIR / 'papi-web.ini.read', silent=False)
+        self.reader = ConfigReader(CONFIG_FILE, TMP_DIR / 'config' / f'papi-web.ini.{os.getpid()}.read', silent=False)
         self.__log_level: int | None = None
         self.__web_host: str | None = None
         self.__web_port: int | None = None

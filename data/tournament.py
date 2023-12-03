@@ -51,15 +51,11 @@ class Tournament:
 
     @property
     def ffe_upload_marker(self) -> Path:
-        return TMP_DIR / f'{self.ffe_id}.ffe_upload'
-
-    @property
-    def chessevent_download_marker_dir(self) -> Path:
-        return TMP_DIR / f'{self.event_id}'
+        return TMP_DIR / 'ffe' / f'{self.ffe_id}.upload'
 
     @property
     def chessevent_download_marker(self) -> Path:
-        return self.chessevent_download_marker_dir / f'{self.id}.chessevent_download'
+        return TMP_DIR / 'events' / f'{self.event_id}' / 'chessevent' / f'{self.id}.download'
 
     @property
     def handicap(self) -> bool:

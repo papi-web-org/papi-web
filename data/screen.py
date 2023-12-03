@@ -73,7 +73,7 @@ class AScreen:
 
     @classmethod
     def __get_screen_file_dependencies_file(cls, event_id: str, screen_id: str) -> Path:
-        return TMP_DIR / event_id / 'screen_file_dependencies' / f'{screen_id}.json'
+        return TMP_DIR / 'events' / event_id / 'screen_file_dependencies' / f'{screen_id}.json'
 
     @classmethod
     def get_screen_file_dependencies(cls, event_id: str, screen_id: str) -> list[Path]:

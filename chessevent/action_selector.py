@@ -121,7 +121,7 @@ class ActionSelector:
                             create_empty_papi_database(tournament.file)
                             players_number: int = tournament.write_chessevent_info_to_database(chessevent_tournament)
                             logger.info(f'Le fichier {tournament.file} a été créé ({players_number} joueur·euses).')
-                            tournament.chessevent_download_marker_dir.mkdir(parents=True, exist_ok=True)
+                            tournament.chessevent_download_marker.parents[0].mkdir(parents=True, exist_ok=True)
                             with open(tournament.chessevent_download_marker, 'w') as f:
                                 f.write(data_md5)
                             if action_choice == 'U':

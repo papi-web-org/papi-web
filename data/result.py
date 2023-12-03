@@ -47,14 +47,12 @@ class Result:
 
     @classmethod
     def results_dir(cls, event_id: str) -> Path:
-        return TMP_DIR / event_id / 'results'
+        return TMP_DIR / 'events' / event_id / 'results'
 
     @classmethod
     def get_results(cls, event_id: str, limit: int) -> list['Result']:
         results: list[Result] = []
         results_dir: Path = cls.results_dir(event_id)
-        if not results_dir.is_dir():
-            return results
         files: list[Path] = list(results_dir.glob("*"))
         # delete too old files
         limit_ts: float = time.time() - 3600
