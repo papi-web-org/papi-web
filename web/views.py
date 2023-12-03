@@ -69,7 +69,7 @@ def render_screen(
 def index(request: HttpRequest) -> HttpResponse:
     events: list[Event] = get_events_by_name(True)
     if len(events) == 0:
-        messages.error(request, 'No event found')
+        messages.error(request, 'Aucun évènement trouvé')
     return render(request, 'index.html', {
         'papi_web_info': papi_web_info,
         'papi_web_config': PapiWebConfig(),
@@ -109,7 +109,7 @@ def check_auth(request: HttpRequest, event: Event) -> tuple[bool, bool]:
     # -> login_needed, do_redirect
     logger.debug(f'check_auth({event.id})...')
     if 'password' in request.POST:
-        logger.debug(f'POST.password={request.POST["password"]}')
+        logger.debug(f'POST.password={"*" * len(request.POST["password"])}')
         if request.POST['password'] == event.update_password:
             messages.success(request, f'Authentification réussie.')
             store_password(request, event, request.POST['password'])
@@ -117,7 +117,7 @@ def check_auth(request: HttpRequest, event: Event) -> tuple[bool, bool]:
         messages.error(request, f'Code d\'accès incorrect.')
         return True, True
     session_password: str = get_stored_password(request, event)
-    logger.debug(f'session_password={session_password}')
+    logger.debug(f'session_password={"*" * len(session_password)}')
     if session_password is None:
         messages.error(request, f'Un code d\'accès est nécessaire pour accéder à l\'interface de saisie des résultats.')
         return True, False
@@ -132,7 +132,7 @@ def show_screen(request: HttpRequest, event_id: str, screen_id: str) -> HttpResp
     if event is None:
         return redirect('index')
     if screen_id not in event.screens:
-        messages.error(request, f'Screen [{screen_id}] not found')
+        messages.error(request, f'Écran [{screen_id}] introuvable')
         return redirect(event_url(event_id))
     screen: AScreen = event.screens[screen_id]
     login_needed: bool = False
@@ -150,7 +150,7 @@ def show_rotator(request: HttpRequest, event_id: str, rotator_id: str, screen_in
     if event is None:
         return redirect('index')
     if rotator_id not in event.rotators:
-        messages.error(request, f'Rotator [{rotator_id}] not found')
+        messages.error(request, f'Écran rotatif [{rotator_id}] non trouvé')
         return redirect(event_url(event_id))
     rotator: Rotator = event.rotators[rotator_id]
     screen_index: int = screen_index % len(rotator.screens)
@@ -179,17 +179,18 @@ def update_result(
     try:
         tournament = event.tournaments[tournament_id]
     except KeyError:
-        messages.error(request, f'Tournament [{tournament_id}] not found')
+        messages.error(request, f'Tournoi [{tournament_id}] non trouvé')
         return redirect(event_url(event_id))
     board: Board
     try:
         board = tournament.boards[board_id - 1]
     except KeyError:
         messages.error(
-            request, f'Writing result failed (board [{board_id}] not found for tournament [{tournament.id}])')
+            request,
+            f'L\'écriture du résultat à échoué (échiquier [{board_id}] non trouvé pour le tournoi [{tournament.id}])')
         return redirect(screen_url(event.id, screen_id, ))
     if result not in Result.imputable_results():
-        messages.error(request, f'Writing result failed (invalid result [{result}])')
+        messages.error(request, f'L\'écriture du résultat à échoué (résultat invalide [{result}])')
         return redirect(screen_url(event.id, screen_id, ))
     tournament.add_result(board, Result.from_papi_value(result))
     event.store_result(tournament, board, result)
@@ -207,5 +208,5 @@ def get_screen_last_update(request: HttpRequest, event_id: str, screen_id: str) 
         logger.debug(f'last_update({event_id}/{screen_id})={last_update}')
         return HttpResponse(str(last_update), content_type='text/plain')
     except FileNotFoundError:
-        messages.error(request, f'Screen [{screen_id}] not found')
+        messages.error(request, f'Écran [{screen_id}] non trouvé')
         return HttpResponse(status=500)
