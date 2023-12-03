@@ -56,22 +56,21 @@ class Event:
         ).tournaments
         if self.reader.errors:
             return
-        if not load_screens:
-            return
-        self.templates = TemplateBuilder(self.reader).templates
-        if self.reader.errors:
-            return
-        FamilyBuilder(self.reader, self.tournaments, self.templates)
-        if self.reader.errors:
-            return
-        self.screens = ScreenBuilder(
-            self.reader, self.id, self.tournaments, self.templates, self.screens_by_family_id).screens
-        if self.reader.errors:
-            return
-        self.rotators = RotatorBuilder(self.reader, self.screens, self.screens_by_family_id).rotators
-        if self.reader.errors:
-            return
-        self.timer = TimerBuilder(self.reader).timer
+        if load_screens:
+            self.templates = TemplateBuilder(self.reader).templates
+            if self.reader.errors:
+                return
+            FamilyBuilder(self.reader, self.tournaments, self.templates)
+            if self.reader.errors:
+                return
+            self.screens = ScreenBuilder(
+                self.reader, self.id, self.tournaments, self.templates, self.screens_by_family_id).screens
+            if self.reader.errors:
+                return
+            self.rotators = RotatorBuilder(self.reader, self.screens, self.screens_by_family_id).rotators
+            if self.reader.errors:
+                return
+            self.timer = TimerBuilder(self.reader).timer
         silent_event_ids.append(self.id)
 
     @property
