@@ -1,4 +1,4 @@
-var screen_debug = true;
+var screen_debug = false;
 if (screen_debug) {
     console.info('logging to console...');
 }
