@@ -188,4 +188,4 @@ Les codes d'erreur suivants sont utilisés :
 | 499         | Évènement non trouvé                                                                      | `Event not found`      |
 | 500         | Autres erreurs                                                                            | À préciser             |
 
-Le script de création des fichiers Papi devra également gérer les problèmes d'accès à l'URL de requête.
+

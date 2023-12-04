@@ -3,7 +3,8 @@
 # Papi-web - Création des fichiers Papi des tournois à partir de la plateforme d'inscription en ligne Chess Event
 
 > [!NOTE]
-> Cette fonctionnalité n'est disponible qu'à partir de la version 2.1.
+> Cette fonctionnalité n'est disponible qu'à partir de la version 2.1.<br/>
+> Les aspects techniques de la récupération des données sur la plateforme Chess Events sont décrits sur [cette page](99-chessevent.md).
 
 ## Généralités
 
