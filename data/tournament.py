@@ -36,7 +36,6 @@ class Tournament:
         self.handicap_min_time: int | None = handicap_min_time
         self.chessevent_connection: ChessEventConnection | None = chessevent_connection
         self.chessevent_tournament_name: str | None = chessevent_tournament_name
-        self.papi_database: PapiDatabase = PapiDatabase(self.file)
         self._rounds: int = 0
         self._pairing: TournamentPairing = TournamentPairing.STANDARD
         self._rating: TournamentRating | None = None
@@ -133,15 +132,15 @@ class Tournament:
         if self._database_read:
             return
         if self.file and self.file.exists():
-            with self.papi_database:
+            with PapiDatabase(self.file, 'r') as papi_database:
                 (
                     self._rounds,
                     self._pairing,
                     self._rating,
                     self._rating_limit1,
                     self._rating_limit2
-                ) = self.papi_database.read_info()
-                self._players_by_id = self.papi_database.read_players(self._rating, self._rounds)
+                ) = papi_database.read_info()
+                self._players_by_id = papi_database.read_players(self._rating, self._rounds)
         self._database_read = True
         self._calculate_current_round()
         self._calculate_points()
@@ -317,10 +316,10 @@ class Tournament:
 
     def add_result(self, board: Board, white_result: Result):
         black_result = white_result.opposite_result
-        with self.papi_database:
-            self.papi_database.add_board_result(board.white_player.id, self._current_round, white_result)
-            self.papi_database.add_board_result(board.black_player.id, self._current_round, black_result)
-            self.papi_database.commit()
+        with PapiDatabase(self.file, 'w') as papi_database:
+            papi_database.add_board_result(board.white_player.id, self._current_round, white_result)
+            papi_database.add_board_result(board.black_player.id, self._current_round, black_result)
+            papi_database.commit()
         logger.info(f'Added result: {self.id} {self._current_round}.{board.id} '
                     f'{board.white_player.last_name} '
                     f'{board.white_player.first_name} '
@@ -331,13 +330,13 @@ class Tournament:
                     f'{board.black_player.rating}')
 
     def write_chessevent_info_to_database(self, chessevent_tournament: ChessEventTournament) -> int:
-        with self.papi_database:
-            self.papi_database.write_chessevent_info(chessevent_tournament)
+        with PapiDatabase(self.file, 'w') as papi_database:
+            papi_database.write_chessevent_info(chessevent_tournament)
             player_id: int = 1
             for chessevent_player in chessevent_tournament.players:
                 player_id += 1
-                self.papi_database.add_chessevent_player(player_id, chessevent_player)
-            self.papi_database.commit()
+                papi_database.add_chessevent_player(player_id, chessevent_player)
+            papi_database.commit()
         return player_id - 1
 
 

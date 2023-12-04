@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from logging import Logger
 from itertools import product
-from typing import NamedTuple
+from typing import NamedTuple, Self
 from contextlib import suppress
 
 from data.chessevent_player import ChessEventPlayer
@@ -29,23 +29,19 @@ class PapiDatabase(AccessDatabase):
     """The database class, using the Papi format of the French Chess Federation
     Tournament manager."""
 
-    def __init__(self, file: Path):
-        super().__init__(file)
+    def __init__(self, file: Path, method: str):
+        super().__init__(file, method)
 
-    def __enter__(self):
-        super().__enter__()
+    def __enter__(self) -> Self:
+        return super().__enter__()
 
     def __exit__(self, exc_type, exc_value, traceback):
         super().__exit__(exc_type, exc_value, traceback)
-        # self._close()
 
     def commit(self):
         self._commit()
 
-    def close(self):
-        self._close()
-
-    def __read_var(self, name: str) -> str:
+    def _read_var(self, name: str) -> str:
         query: str = 'SELECT `Value` FROM `info` WHERE `Variable` = ?'
         self._execute(query, (name,))
         return self._fetchval()
@@ -53,11 +49,11 @@ class PapiDatabase(AccessDatabase):
     def read_info(self) -> TournamentInfo:
         """Reads the database and returns basic information about the
         tournament."""
-        rounds: int = int(self.__read_var('NbrRondes'))
-        pairing: TournamentPairing = TournamentPairing.from_papi_value(self.__read_var('Pairing'))
-        rating: TournamentRating = TournamentRating.from_papi_value(self.__read_var('ClassElo'))
-        rating_limit1: int = int(self.__read_var('EloBase1'))
-        rating_limit2: int = int(self.__read_var('EloBase2'))
+        rounds: int = int(self._read_var('NbrRondes'))
+        pairing: TournamentPairing = TournamentPairing.from_papi_value(self._read_var('Pairing'))
+        rating: TournamentRating = TournamentRating.from_papi_value(self._read_var('ClassElo'))
+        rating_limit1: int = int(self._read_var('EloBase1'))
+        rating_limit2: int = int(self._read_var('EloBase2'))
         return TournamentInfo(rounds, pairing, rating, rating_limit1, rating_limit2)
 
     def read_players(self, tournament_rating: TournamentRating, rounds: int) -> dict[int, Player]:
@@ -97,7 +93,7 @@ class PapiDatabase(AccessDatabase):
         self._execute(query, (result.value, player_id, ))
 
     @staticmethod
-    def __timestamp_to_papi_date(ts: float) -> str:
+    def _timestamp_to_papi_date(ts: float) -> str:
         dt: datetime
         if ts >= 0:
             dt = datetime.fromtimestamp(ts)
@@ -119,8 +115,8 @@ class PapiDatabase(AccessDatabase):
             'Cadence': chessevent_tournament.time_control,
             'Lieu': chessevent_tournament.location,
             'Arbitre': chessevent_tournament.arbiter,
-            'DateDebut': self.__timestamp_to_papi_date(chessevent_tournament.start),
-            'DateFin': self.__timestamp_to_papi_date(chessevent_tournament.end),
+            'DateDebut': self._timestamp_to_papi_date(chessevent_tournament.start),
+            'DateFin': self._timestamp_to_papi_date(chessevent_tournament.end),
             'Dep1': chessevent_tournament.tie_breaks[0].to_papi_value,
             'Dep2': chessevent_tournament.tie_breaks[1].to_papi_value,
             'Dep3': chessevent_tournament.tie_breaks[2].to_papi_value,
@@ -144,7 +140,7 @@ class PapiDatabase(AccessDatabase):
             'Nom': player.last_name,
             'Prenom': player.first_name,
             'Sexe': player.gender.to_papi_value,
-            'NeLe': self.__timestamp_to_papi_date(player.birth),
+            'NeLe': self._timestamp_to_papi_date(player.birth),
             'Cat': player.category.to_papi_value,
             'AffType': player.ffe_license.to_papi_value,
             'Elo': player.standard_rating,

@@ -221,8 +221,7 @@ class FFESession(Session):
         logger.debug(f'Copie de {self.__tournament.file} vers {tmp_file}...')
         tmp_file.write_bytes(self.__tournament.file.read_bytes())
         logger.debug(f'Suppression des données personnelles des joueur·euses...')
-        tmp_database: PapiDatabase = PapiDatabase(tmp_file)
-        with tmp_database:
+        with PapiDatabase(tmp_file, 'w') as tmp_database:
             tmp_database.delete_players_personal_data()
             tmp_database.commit()
         html: str = self.__read_url(url, data=post, files={UPLOAD_FILE_ID: tmp_file, })

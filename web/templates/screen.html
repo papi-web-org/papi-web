@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-{{ screen.menu_text }} ({{ event.id }})
+{% if screen.menu_label %}{{ screen.menu_label }}{% else %}screen.id{% endif %} ({{ event.id }})
 {% endblock title %}
 
 {% block page_title %}{% endblock page_title %}
@@ -26,7 +26,7 @@
         <div id="#menu" class="menu">
             {% for entry in screen.menu_screens %}
                 <a href="{% url 'show-screen' event.id entry.id %}" class="menu-item {% if screen.id == entry.id %}selected{% endif %}">{% spaceless %}
-                    {{ entry.menu_text }}
+                    {{ entry.menu_label }}
                     {% endspaceless %}</a>
             {% endfor %}
         </div>

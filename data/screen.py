@@ -55,6 +55,10 @@ class AScreen:
     def menu_text(self) -> str | None:
         return self._menu_text
 
+    @property
+    def menu_label(self) -> str | None:
+        return self._menu_text
+
     def set_menu(self, menu: str):
         warnings.warn("Use direct assignment to menu instead")
         self.menu = menu
@@ -125,7 +129,7 @@ class ScreenBoards(AScreenWithSets):
         return self._name
 
     @property
-    def menu_text(self) -> str | None:
+    def menu_label(self) -> str | None:
         if self._menu_text is None:
             return None
         text: str = self._menu_text
@@ -168,7 +172,7 @@ class ScreenPlayers(AScreenWithSets):
         return self._name
 
     @property
-    def menu_text(self) -> str | None:
+    def menu_label(self) -> str | None:
         if self._menu_text is None:
             return None
         text: str = self._menu_text
