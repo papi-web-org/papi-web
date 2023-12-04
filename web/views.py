@@ -101,7 +101,7 @@ def store_password(request: HttpRequest, event: Event, password: int):
     request.session[session_password_key(event)] = password
 
 
-def get_stored_password(request: HttpRequest, event: Event) -> str:
+def get_stored_password(request: HttpRequest, event: Event) -> str | None:
     return request.session.get(session_password_key(event), None)
 
 
@@ -116,8 +116,8 @@ def check_auth(request: HttpRequest, event: Event) -> tuple[bool, bool]:
             return False, True
         messages.error(request, f'Code d\'accès incorrect.')
         return True, True
-    session_password: str = get_stored_password(request, event)
-    logger.debug(f'session_password={"*" * len(session_password)}')
+    session_password: str | None = get_stored_password(request, event)
+    logger.debug(f'session_password={"*" * len(session_password) if session_password else 0}')
     if session_password is None:
         messages.error(request, f'Un code d\'accès est nécessaire pour accéder à l\'interface de saisie des résultats.')
         return True, False
