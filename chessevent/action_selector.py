@@ -107,7 +107,7 @@ class ActionSelector:
                             data_md5 = hashlib.md5(data.encode('utf-8')).hexdigest()
                             try:
                                 with open(tournament.chessevent_download_marker, 'r') as f:
-                                    if data_md5 == f.read():
+                                    if data_md5 == f.read() and tournament.file.exists():
                                         logger.info(f'Les données du tournoi [{tournament.name}] sur Chess Event '
                                                     f'n\'ont pas été modifiées.')
                                         continue
@@ -128,7 +128,7 @@ class ActionSelector:
                                 if not tournament.ffe_id or not tournament.ffe_password:
                                     logger.warning(f'Identifiants de connexion au site fédéral non définis pour le '
                                                    f'tournoi [{tournament.name}], l\'envoi sur le site fédéral est '
-                                                   f'impossible')
+                                                   f'impossible.')
                                 else:
                                     FFESession(tournament).upload(set_visible=True)
                         if times_choice == '1':
@@ -137,7 +137,7 @@ class ActionSelector:
                         chessevent_timeout = min(chessevent_timeout_max, int(chessevent_timeout * 1.2))
                         tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
                         if not tournaments:
-                            logger.error(f'Plus aucun tournoi n\'est éligible pour la création des fichiers Papi')
+                            logger.error(f'Plus aucun tournoi n\'est éligible pour la création des fichiers Papi.')
                             return False
                 except KeyboardInterrupt:
                     return False

@@ -107,6 +107,11 @@ class PapiDatabase(AccessDatabase):
 
     def write_chessevent_info(self, chessevent_tournament: ChessEventTournament):
         """Writes vars to the database."""
+        default_rounds: int = 7
+        if not chessevent_tournament.rounds:
+            logger.warning(
+                f'Le nombre de rondes n\'a pas été indiqué sur Chess Event, défini par défaut à {default_rounds}.')
+            chessevent_tournament.rounds = default_rounds
         data: dict[str, str | int] = {
             'Nom': chessevent_tournament.name,
             'Genre': chessevent_tournament.type.to_papi_value,
