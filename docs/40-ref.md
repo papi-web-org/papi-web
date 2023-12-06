@@ -43,8 +43,8 @@ L'identifiant du tournoi (`<tournament_id>`) est facultatif si l'évènement ne 
 | `filename`                   | Le nom du fichier du tournoi (facultatif).<br/>Si l'option `filename` n'est pas utilisée, le nom du fichier sera par défaut le numéro d'homologation du tournoi (`ffe_id`). |
 | `ffe_id`                     | Le numéro d'homologation du tournoi (facultatif).                                                                                                                           |
 | `ffe_password`               | Le code d'accès à l'interface de gestion du tournoi sur le site fédéral (facultatif).                                                                                       |
-| `chessevent_connection_id`   | L'identifiant utilisé pour se connecter à la plateforme Chess Event, lorsque plusieurs connexions sont utilisées (facultatif, à partir de la version 2.1).                  |
 | `chessevent_tournament_name` | L'identifiant du tournoi sur la plateforme Chess Event (facultatif, à partir de la version 2.1).                                                                            |
+| `chessevent_connection_id`   | L'identifiant utilisé pour se connecter à la plateforme Chess Event, lorsque plusieurs connexions sont utilisées (facultatif, à partir de la version 2.1).                  |
 
 > [!NOTE]
 > Si ni `filename` ni `ffe_id` ne sont utilisées, le tournoi est ignoré.

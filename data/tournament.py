@@ -521,17 +521,28 @@ class TournamentBuilder:
                         section_key, 'chessevent_tournament_name')
                     chessevent_tournament_name = None
             else:
-                if len(self._chessevent_connections) == 0:
-                    self._config_reader.add_warning(
-                        'aucune connexion à Chess Event définie', section_key, 'chessevent_tournament_name')
-                    chessevent_tournament_name = None
-                elif len(self._chessevent_connections) > 1:
-                    self._config_reader.add_warning(
-                        f'plusieurs connexions à Chess Event sont définies, la connexion doit être précisée à '
-                        'l\'aide de l\'option chess_connection_id', section_key, 'chessevent_tournament_name')
-                    chessevent_tournament_name = None
-                else:
-                    chessevent_connection = list(self._chessevent_connections.values())[0]
+                try:
+                    chessevent_connection = self._chessevent_connections[tournament_id]
+                    self._config_reader.add_info(
+                        f'l\'option chess_connection_id n\'est pas définie, utilisation par défaut de la connexion '
+                        f'à Chess Event [{tournament_id}]',
+                        section_key, 'chessevent_tournament_name')
+                except KeyError:
+                    if len(self._chessevent_connections) == 0:
+                        self._config_reader.add_warning(
+                            'aucune connexion à Chess Event définie', section_key, 'chessevent_tournament_name')
+                        chessevent_tournament_name = None
+                    elif len(self._chessevent_connections) > 1:
+                        self._config_reader.add_warning(
+                            f'plusieurs connexions à Chess Event sont définies, la connexion doit être précisée à '
+                            'l\'aide de l\'option chess_connection_id', section_key, 'chessevent_tournament_name')
+                        chessevent_tournament_name = None
+                    else:
+                        self._config_reader.add_warning(
+                            f'une seule connexion à Chess Event est définie '
+                            f'[{list(self._chessevent_connections.keys())[0]}], on l\'utilise',
+                            section_key, 'chessevent_tournament_name')
+                        chessevent_connection = list(self._chessevent_connections.values())[0]
         if not chessevent_tournament_name:
             self._config_reader.add_info(
                 'la création du fichier Papi depuis la plateforme Chess Event ne sera pas disponible', section_key)
