@@ -63,7 +63,7 @@ def create_project():
     shutil.copytree(DATA_DIR, PROJECT_DIR)
     dist_exe_file: Path = Path(DIST_DIR, EXE_FILENAME)
     logger.info(f'Moving {dist_exe_file} to {PROJECT_DIR}...')
-    shutil.move(str(dist_exe_file), str(PROJECT_DIR))
+    shutil.move(str(dist_exe_file), str(PROJECT_DIR / 'bin'))
     target_dir: Path = Path(PROJECT_DIR, CUSTOM_DIR)
     logger.info(f'Copying {CUSTOM_DIR} to {target_dir}...')
     shutil.copytree(CUSTOM_DIR, target_dir)
@@ -71,25 +71,25 @@ def create_project():
     logger.info(f'Creating batch file {target_file}...')
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
-                f'echo Starting Papi-web server engine, please wait...\n'
+                f'echo Démarrage du serveur Papi-web, veuillez patienter...\n'
                 f'@rem Papi-web {PAPI_WEB_VERSION} - {PAPI_WEB_COPYRIGHT} - {PAPI_WEB_URL}\n'
-                f'{EXE_FILENAME} --server\n'
+                f'bin\\{EXE_FILENAME} --server\n'
                 f'pause\n')
     target_file = Path(PROJECT_DIR, 'ffe.bat')
     logger.info(f'Creating batch file {target_file}...')
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
-                f'echo Starting Papi-web FFE engine, please wait...\n'
+                f'echo Connexion de Papi-web au serveur fédéral, veuillez patienter...\n'
                 f'@rem Papi-web {PAPI_WEB_VERSION} - {PAPI_WEB_COPYRIGHT} - {PAPI_WEB_URL}\n'
-                f'{EXE_FILENAME} --ffe\n'
+                f'bin\\{EXE_FILENAME} --ffe\n'
                 f'pause\n')
     target_file = Path(PROJECT_DIR, 'chessevent.bat')
     logger.info(f'Creating batch file {target_file}...')
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
-                f'echo Starting Papi-web Chess Event engine, please wait...\n'
+                f'echo Connexion de Papi-web à Chess Event, veuillez patienter...\n'
                 f'@rem Papi-web {PAPI_WEB_VERSION} - {PAPI_WEB_COPYRIGHT} - {PAPI_WEB_URL}\n'
-                f'{EXE_FILENAME} --chessevent\n'
+                f'bin\\{EXE_FILENAME} --chessevent\n'
                 f'pause\n')
 
 
