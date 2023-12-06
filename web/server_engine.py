@@ -40,6 +40,6 @@ class ServerEngine(Engine):
         )
 
     @staticmethod
-    def __port_in_use(port: int):
+    def __port_in_use(port: int) -> bool:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             return s.connect_ex(('localhost', port)) == 0
