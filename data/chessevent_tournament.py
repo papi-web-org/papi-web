@@ -26,7 +26,7 @@ class ChessEventTournament:
             self.name = str(chessevent_tournament_info[key := 'name'])
             self.type = TournamentType(int(chessevent_tournament_info[key := 'type']))
             self.rounds = int(chessevent_tournament_info[key := 'rounds'])
-            if self.rounds not in range(1, 25):
+            if self.rounds not in range(25):  # the 0-value is set by default later
                 raise ValueError
             self.pairing = TournamentPairing(int(chessevent_tournament_info[key := 'pairing']))
             self.time_control = str(chessevent_tournament_info[key := 'time_control'])
