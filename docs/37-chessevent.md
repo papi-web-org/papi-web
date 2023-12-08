@@ -35,11 +35,11 @@ event_id = mon_evenement
 
 ## Configuration de l'identifiant d'un tournoi sur la plateforme Chess Event
 
-Dans la rubrique `[tournament.<tournament_id>]` d'un tournoi (la rubrique `[tournament]` si l'évènement ne compte qu'un seul tournoi), l'option suivante permet d'indiquer l'identifiant du tournoi sur la plateforme Chess Event :
+Dans la rubrique `[tournament.<tournament_id>]` d'un tournoi (la rubrique `[tournament]` si l'évènement Papi-web ne compte qu'un seul tournoi), l'option suivante permet d'indiquer l'identifiant du tournoi sur la plateforme Chess Event :
 
 ```
 [tournament.<tournament_id>]
-chessevent_tournament_id = mon_tournoi
+chessevent_tournament_name = <le nom du tournoi sur Chess Event>
 ```
 
 ## Création des fichiers Papi
@@ -59,15 +59,16 @@ Votre choix : 6
 Évènement : Open Fide de Domloup
 Tournois : A, B, C, D, E, F, X
 Actions :
-  - [C] Créer les fichiers Papi des tournois
+  - [C] Créer les fichiers Papi
+  - [U] Créer les fichiers Papi et les envoyer sur le site fédéral
   - [Q] Revenir à la liste des évènements
 Entrez votre choix : c
-Action : création des fichiers Papi des tournois
-Tournoi : A
-Configuration Chess Event : C12345:********@BRE_35_domloupfide36/TournoiA
-INFO     Données récupérées de la plateforme Chess Event : 2413 octets
-Le fichier papi\domloup-fide-36-A.papi existe, voulez-vous le remplacer [o/n] ? o
-INFO     Le fichier papi\domloup-fide-36-A.papi a été sauvegardé sous tmp\domloup-fide-36-A-20231122235718.papi.
+Action : création des fichiers Papi
+Fréquence :
+  - [1] Une seule fois
+  - [C] En continu
+  - [A] Abandonner
+Entrez votre choix : 1
 INFO     Le fichier papi\domloup-fide-36-A.papi a été créé (20 joueur·euses).
 [...]
 ```
@@ -95,9 +96,9 @@ Puis indiquer pour chaque tournoi la connexion à Chess Event qu'il faut utilise
 ```
 [tournament.jeunes]
 chessevent_connection_id = jeunes
-chessevent_tournament_id = tournoi_jeunes
+chessevent_tournament_name = Tournoi jeunes
 ...
 [tournament.adultes]
 chessevent_connection_id = adultes
-chessevent_tournament_id = tournoi_adultes
+chessevent_tournament_name = Tournoi adultes
 ```
