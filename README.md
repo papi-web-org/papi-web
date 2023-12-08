@@ -32,3 +32,12 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 - [Écrans rotatifs](docs/35-rotators.md)
 - [Personnalisation du rendu des écrans (CSS)](docs/36-css.md)
 - [Création des fichiers Papi depuis la plateforme Chess Event](docs/37-chessevent.md) (à partir de la version 2.1)
+
+## [Annexes techniques](docs/80-technical-annexes.md)
+
+- Interface avec Chess Event
+
+## [Bac à sable](docs/90-sandbox.md)
+
+- Stockage de données
+- Moteurs d'appariement

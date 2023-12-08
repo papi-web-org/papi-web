@@ -1,6 +1,6 @@
 **[Retour au sommaire de la documentation](../README.md)**
 
-# Papi-web - Interfaçage avec Chess Event
+# Papi-web - Annexe technique : interfaçage avec Chess Event
 
 La configuration de Papi-web pour l'accès à la plateforme Chess Event est décrite dans la documentation utilisateur :
 

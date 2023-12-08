@@ -26,3 +26,9 @@ Cette page est dédiée à une analyse comparée des moteurs d'appariements.
 
 [...] après la sortie de bbpPairings en août 2016, JaVaFo ne peut plus être considéré comme le meilleur produit du marché [...] (source : [JaVaFo](http://www.rrweb.org/javafo/JaVaFo.htm))
 
+## Intégration dans Papi-web
+
+Le plus simple pour effectuer les appariements semble être :
+- de générer le tournoi au format TRF
+- utiliser une version compilée de BBP Pairings
+- mettre à jour les données à partir du TRF produit par BBP Pairings
