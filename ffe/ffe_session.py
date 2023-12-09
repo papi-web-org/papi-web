@@ -7,6 +7,7 @@ from typing import Any
 
 from AdvancedHTMLParser import AdvancedHTMLParser, AdvancedTag
 from requests import Session, Response
+from requests.exceptions import ConnectionError, Timeout, RequestException
 from logging import Logger
 
 from common.config_reader import TMP_DIR
@@ -60,13 +61,11 @@ class FFESession(Session):
                 handler.close()
             return content
         except ConnectionError as e:
-            logger.error(f'[{url}] [{e.__class__.__name__}] [{e}]')
-            logger.error(f'Veuillez vérifier votre connection à internet')
-        except TimeoutError as e:
-            logger.error(f'[{url}] [{e.__class__.__name__}] [{e}]')
-            logger.error('Le site fédéral est indisponible')
-        except Exception as e:
-            logger.error(f'[{url}] [{e.__class__.__name__}] [{e}]')
+            logger.error(f'Veuillez vérifier votre connection à internet [{url}] : {e}')
+        except Timeout as e:
+            logger.error(f'Le site fédéral est indisponible [{url}] : {e}')
+        except RequestException as e:
+            logger.error(f'Le site fédéral a renvoyé une erreur [{url}] : {e}')
         for handler in handlers.values():
             handler.close()
         return None

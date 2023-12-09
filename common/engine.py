@@ -6,8 +6,8 @@ from json import JSONDecodeError
 from logging import Logger
 from typing import Any
 
-from requests import Response, Session
-
+from requests import Response, get
+from requests.exceptions import ConnectionError, Timeout, RequestException, HTTPError
 from common.config_reader import TMP_DIR
 from common.papi_web_config import PapiWebConfig, PAPI_WEB_VERSION
 from common.logger import get_logger, configure_logger
@@ -45,21 +45,17 @@ class Engine:
             logger.warning(f'Une version stable plus récente que la vôtre est disponible ({last_stable_version})')
             return
         logger.info(f'Vous utilisez une version non stabilisée plus récente que la dernière version stable '
-                       f'disponible ({last_stable_version})')
+                    f'disponible ({last_stable_version})')
 
     @staticmethod
     def _get_last_stable_version() -> str | None:
         url: str = 'https://api.github.com/repos/pascalaubry/papi-web/releases'
         try:
             logger.debug(f'Recherche d\'une version plus récente sur GitHub ({url})...')
-            response: Response = Session().get(url, allow_redirects=True)
+            response: Response = get(url, allow_redirects=True)
+            response.raise_for_status()
             if not response:
                 logger.debug(f'Pas de réponse reçue de GitHub ({url})')
-                return None
-            if response.status_code != 200:
-                logger.debug(f'Réponse de GitHub ({url}) non valide')
-                logger.debug(f'Code HTTP de la réponse : {response.status_code}')
-                logger.debug(f'Entêtes de la réponse : {response.headers}')
                 return None
             data: str = response.content.decode()
             logger.debug(f'Données de la réponse : {data}')
@@ -86,11 +82,15 @@ class Engine:
             logger.debug(f'releases={versions}')
             return versions[-1]
         except ConnectionError as e:
-            logger.debug(f'Erreur lors de l\'accès à la plateforme GitHub : {e}')
-            logger.error(f'Veuillez vérifier votre connection à internet')
-        except TimeoutError as e:
-            logger.debug(f'Erreur lors de l\'accès à la plateforme GitHub : {e}')
-            logger.error('La plateforme GitHub est indisponible')
-        except Exception as e:
-            logger.debug(f'Erreur lors de l\'accès à la plateforme GitHub : {e}')
-        return None
+            logger.warning(f'{e}')
+            logger.warning(f'Veuillez vérifier votre connection à internet')
+            return None
+        except Timeout as e:
+            logger.warning(f'La plateforme Github est indisponible : {e}')
+            return None
+        except HTTPError as e:
+            logger.warning(f'La plateforme Github a renvoyé une erreur : {e}')
+            return None
+        except RequestException as e:
+            logger.warning(f'La plateforme Github a renvoyé l\'erreur {e.errno} {e.strerror}')
+            return None

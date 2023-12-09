@@ -1,6 +1,7 @@
 import json
 
 from requests import Session, Response
+from requests.exceptions import ConnectionError, Timeout, RequestException
 from logging import Logger
 
 from data.tournament import Tournament
@@ -71,11 +72,9 @@ class ChessEventSession(Session):
                                  f'({chessevent_string}, code d\'erreur {response.status_code} - '
                                  f'{response.status_code})')
         except ConnectionError as e:
-            logger.error(f'[{url}] [{e.__class__.__name__}] [{e}]')
-            logger.error(f'Veuillez vérifier votre connection à internet')
-        except TimeoutError as e:
-            logger.error(f'[{url}] [{e.__class__.__name__}] [{e}]')
-            logger.error('Le site Chess Event est indisponible')
-        except Exception as e:
-            logger.error(f'[{url}] [{e.__class__.__name__}] [{e}]')
+            logger.error(f'Veuillez vérifier votre connection à internet [{url}] : {e}')
+        except Timeout as e:
+            logger.error(f'La plateforme Chess Event est indisponible [{url}] : {e}')
+        except RequestException as e:
+            logger.error(f'La plateforme Chess Event a renvoyé une erreur [{url}] : {e}')
         return None
