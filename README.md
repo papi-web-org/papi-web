@@ -42,5 +42,6 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 ## [Bac à sable](docs/90-sandbox.md)
 
 - TODO
+- Communication vers les joueur·euses
 - Stockage de données
 - Moteurs d'appariement
