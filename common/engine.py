@@ -60,7 +60,7 @@ class Engine:
             data: str = response.content.decode()
             logger.debug(f'Données de la réponse : {data}')
             if response.status_code == 200:
-                logger.debug(f'Données récupérées de la plateforme Chess Event : {len(data)} octets')
+                logger.debug(f'Données récupérées de la plateforme GitHub : {len(data)} octets')
             try:
                 entries: list[dict[str, Any]] = json.loads(data)
             except JSONDecodeError as jde:
@@ -82,15 +82,14 @@ class Engine:
             logger.debug(f'releases={versions}')
             return versions[-1]
         except ConnectionError as e:
-            logger.warning(f'{e}')
-            logger.warning(f'Veuillez vérifier votre connection à internet')
+            logger.warning(f'Veuillez vérifier votre connection à internet : {e}')
             return None
         except Timeout as e:
             logger.warning(f'La plateforme Github est indisponible : {e}')
             return None
         except HTTPError as e:
-            logger.warning(f'La plateforme Github a renvoyé une erreur : {e}')
+            logger.warning(f'La plateforme Github a renvoyé l\'erreur {e.errno} {e.strerror}')
             return None
         except RequestException as e:
-            logger.warning(f'La plateforme Github a renvoyé l\'erreur {e.errno} {e.strerror}')
+            logger.warning(f'La plateforme Github a renvoyé une erreur : {e}')
             return None
