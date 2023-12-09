@@ -17,7 +17,7 @@ class Player:
     ref_id: int
     last_name: str
     first_name: str
-    sex: PlayerGender
+    gender: PlayerGender
     title: PlayerTitle
     rating: int
     rating_type: str
@@ -88,11 +88,11 @@ class Player:
 
     @property
     def not_paired_str(self) -> str:
-        return 'Non apparié' + ('e' if self.sex == PlayerGender.FEMALE else '')
+        return 'Non apparié' + ('e' if self.gender == PlayerGender.FEMALE else '')
 
     @property
     def exempt_str(self) -> str:
-        return 'Exempt' + ('e' if self.sex == PlayerGender.FEMALE else '')
+        return 'Exempt' + ('e' if self.gender == PlayerGender.FEMALE else '')
 
     def set_board_id(self, board_id: int):
         warnings.warn("Use direct assignment to board_id instead")
