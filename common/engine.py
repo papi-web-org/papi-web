@@ -1,8 +1,15 @@
+import json
 import logging
+import re
+from distutils.version import StrictVersion
+from json import JSONDecodeError
 from logging import Logger
+from typing import Any
+
+from requests import Response, Session
 
 from common.config_reader import TMP_DIR
-from common.papi_web_config import PapiWebConfig
+from common.papi_web_config import PapiWebConfig, PAPI_WEB_VERSION
 from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
@@ -15,3 +22,75 @@ class Engine:
             TMP_DIR.mkdir(parents=True)
         logger.info('Reading configuration file...')
         self._config = PapiWebConfig()
+        self._check_version()
+
+    def _check_version(self):
+        last_stable_version: str | None = self._get_last_stable_version()
+        if not last_stable_version:
+            logger.warning('La vérification de la version a échoué')
+            return
+        if last_stable_version == PAPI_WEB_VERSION:
+            logger.info(f'Votre version de Papi-web est à jour')
+            return
+        if re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$', PAPI_WEB_VERSION):
+            logger.warning(f'Une version plus récente que la vôtre est disponible ({last_stable_version})')
+            return
+        last_stable_matches = re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$', last_stable_version)
+        if not (matches := re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)-rc(?P<rc>\d+).*$', PAPI_WEB_VERSION)):
+            raise ValueError('Version de Papi-web invalide')
+        if last_stable_matches.group('major') > matches.group('major'):
+            logger.warning(f'Une version majeure plus récente que la vôtre est disponible ({last_stable_version})')
+            return
+        if last_stable_matches.group('minor') > matches.group('minor'):
+            logger.warning(f'Une version stable plus récente que la vôtre est disponible ({last_stable_version})')
+            return
+        logger.info(f'Vous utilisez une version non stabilisée plus récente que la dernière version stable '
+                       f'disponible ({last_stable_version})')
+
+    @staticmethod
+    def _get_last_stable_version() -> str | None:
+        url: str = 'https://api.github.com/repos/pascalaubry/papi-web/releases'
+        try:
+            logger.debug(f'Recherche d\'une version plus récente sur GitHub ({url})...')
+            response: Response = Session().get(url, allow_redirects=True)
+            if not response:
+                logger.debug(f'Pas de réponse reçue de GitHub ({url})')
+                return None
+            if response.status_code != 200:
+                logger.debug(f'Réponse de GitHub ({url}) non valide')
+                logger.debug(f'Code HTTP de la réponse : {response.status_code}')
+                logger.debug(f'Entêtes de la réponse : {response.headers}')
+                return None
+            data: str = response.content.decode()
+            logger.debug(f'Données de la réponse : {data}')
+            if response.status_code == 200:
+                logger.debug(f'Données récupérées de la plateforme Chess Event : {len(data)} octets')
+            try:
+                entries: list[dict[str, Any]] = json.loads(data)
+            except JSONDecodeError as jde:
+                logger.debug(f'Impossible de décoder le JSON reçu: {jde}')
+                return None
+            versions: list[str] = []
+            for entry in entries:
+                name: str = entry['name']
+                if matches := re.match(r'.*(\d+\.\d+\.\d+).*', name):
+                    version: str = matches.group(1)
+                    logger.debug(f'name=[{name}] > version=[{version}]')
+                    versions.append(version)
+                else:
+                    logger.debug(f'name=[{name}]: no stable version number')
+            if not versions:
+                logger.debug('Aucune version stable trouvée')
+                return None
+            versions.sort(key=StrictVersion)
+            logger.debug(f'releases={versions}')
+            return versions[-1]
+        except ConnectionError as e:
+            logger.debug(f'Erreur lors de l\'accès à la plateforme GitHub : {e}')
+            logger.error(f'Veuillez vérifier votre connection à internet')
+        except TimeoutError as e:
+            logger.debug(f'Erreur lors de l\'accès à la plateforme GitHub : {e}')
+            logger.error('La plateforme GitHub est indisponible')
+        except Exception as e:
+            logger.debug(f'Erreur lors de l\'accès à la plateforme GitHub : {e}')
+        return None

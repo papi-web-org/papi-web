@@ -2,6 +2,9 @@
 
 # Papi-web - ChangeLog
 
+## Version 2.2 - Non publiée
+- Vérification de la dernière version disponible au démarrage
+
 ## Version 2.1.0 - 9 décembre 2023
 - Création des fichiers Papi des tournois à partir de la plateforme d'inscription en ligne Chess Event
 - Suppression des données personnelles des joueur·euses avant téléchargement sur le site fédéral
