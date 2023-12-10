@@ -27,72 +27,92 @@ Note : la rupture avec le stockage actuel peut être perturbante (aujourd'hui : 
 
 ## Données à stocker
 
+Les données sont décrites ci-dessous dans l'hypothèse d'un stockage global des données.
+
 ### Évènement (table INFO)
 
-| Champ            | Type | Remarque                                                                         |
-|------------------|------|----------------------------------------------------------------------------------|
-| `version`        | int  | Pour permettre la migration des bases de données par l'application au chargement |
-| `admin_password` | str  | Le mot de passe d'administration (création et suppression des tournois)          |
+| Champ            | Type         | Remarque                                                                         |
+|------------------|--------------|----------------------------------------------------------------------------------|
+| `version`        | int not null | Pour permettre la migration des bases de données par l'application au chargement |
+| `admin_password` | str          | Le mot de passe d'administration (création et suppression des tournois)          |
 
 ### Évènement (table EVENT)
 
-| Champ                     | Type | Remarque                                           |
-|---------------------------|------|----------------------------------------------------|
-| `id`                      | int  | L'identifiant unique sur la machine                |
-| `name`                    | str  |                                                    |
-| `update_password`         | str  | Le mot de passe pour entrer les résultats          |
-| `edit_password`           | str  | Le mot de passe pour éditer l'évènement            |
-| `timer_enabled`           | bool |                                                    |
-| `timer_text_before_round` | str  | Le texte du chronomètre avant le début d'une ronde |
-| `timer_text_after_round`  | str  | Le texte du chronomètre après le début d'une ronde |
-| `ffe_upload`              | bool |                                                    |
-| `chessevent_download`     | bool |                                                    |
+| Champ                       | Type          | Remarque                                                                                                        |
+|-----------------------------|---------------|-----------------------------------------------------------------------------------------------------------------|
+| `id`                        | autoincrement | PK                                                                                                              |
+| `name`                      | str           |                                                                                                                 |
+| `update_password`           | str           | Le mot de passe pour entrer les résultats (pourquoi en NUMERIC dans SQLite ?)                                   |
+| `edit_password`             | str           | Le mot de passe pour éditer l'évènement                                                                         |
+| `timer_enabled`             | bool          |                                                                                                                 |
+| `timer_text_before_round`   | str           | Le texte du chronomètre avant le début d'une ronde                                                              |
+| `timer_text_after_round`    | str           | Le texte du chronomètre après le début d'une ronde                                                              |
+| `ffe_upload_enabled`        | bool          | true si le téléchargement sur le site fédéral est activé pour le tournoi (note : plus parlant que `ffe_upload`) |
+| `chessevent_update_enabled` | bool          | true si la mise à jour depuis Chess Event est activée (note : plus parlant que `chessevent_download`)           |
 
-### ### Connexions à Chess Event (table CHESSEVENT)
+### ### Connexions à Chess Event (table CHESSEVENT_CONNECTION)
 
-| Champ         | Type | Remarque      |
-|---------------|------|---------------|
-| `id`          | int  |               |
-| `event_id`    | int  | \> `EVENT.id` |
-| `ce_user_id`  | str  |               |
-| `ce_password` | str  |               |
-| `ce_event_id` | str  |               |
+| Champ         | Type          | Remarque                          |
+|---------------|---------------|-----------------------------------|
+| `id`          | autoincrement | PK                                |
+| `event_id`    | int not null  | FK(`EVENT.id`)                    |
+| `ce_user_id`  | str           |                                   |
+| `ce_password` | str           |                                   |
+| `ce_event_id` | str           | `ce_event_id` ou `ce_event_str` ? |
+
+### Couleurs de démarrage (table START_COLOR)
+
+| Champ   | Type          | Remarque                  |
+|---------|---------------|---------------------------|
+| `id`    | autoincrement | PK                        |
+| `label` | str not null  |                           |
+| `name`  | str not null  | Utile ? l10n-compatible ? |
+
+Les données de cette table sont pré-remplies et jamais modifiées.
+
+| `id` | `label` | `name`      |
+|------|---------|-------------|
+| 1    | `R`     | `Aléatoire` |
+| 2    | `W`     | `Blancs`    |
+| 3    | `B`     | `Noirs`     |
 
 ### Tournoi (table TOURNAMENT)
 
-| Champ                        | Type      | Remarque                                                                 |
-|------------------------------|-----------|--------------------------------------------------------------------------|
-| `id`                         | int       |                                                                          |
-| `event_id`                   | int       | \> `EVENT.id`                                                            |
-| `name`                       | str       |                                                                          |
-| `time_control_initial_time`  | int       |                                                                          |
-| `time_control_increment`     | int       |                                                                          |
-| `handicap_penalty_step`      | int       |                                                                          |
-| `handicap_penalty_value`     | int       |                                                                          |
-| `handicap_min_time`          | int       |                                                                          |
-| `rounds`                     | int       |                                                                          |
-| `top_seed_start_color`       | enum      | Random, White, Black                                                     |
-| `points_paired_bye`          | float     | Points d'exempt                                                          |
-| `pairing_engine`             | enum      |                                                                          |
-| `acceleration_ceil_1`        | int       |                                                                          |
-| `accelaration_ceil_2`        | int       |                                                                          |
-| `rating_used`                | enum      |                                                                          |
-| `pairings_published`         | bool      |                                                                          |
-| `chief_arbiter`              | int       | Fide id ? Faut-il mettre d'autres arbitres ?                             |
-| `start`                      | timestamp |                                                                          |
-| `end`                        | timestamp |                                                                          |
-| `tie_break_1`                | enum      | Cf remarque plus bas sur le stockage des départages                      |
-| `tie_break_2`                | enum      |                                                                          |
-| `tie_break_3`                | enum      |                                                                          |
-| `tie_break_4`                | enum      |                                                                          |
-| `ffe_id`                     | str       |                                                                          |
-| `ffe_password`               | str       |                                                                          |
-| `ffe_upload`                 | bool      | true si le téléchargement sur le site fédéral est activé pour le tournoi |
-| `current_round`              | int       |                                                                          |
-| `chessevent_connection_id`   | int       | \> CHESSEVENT.id                                                         |
-| `chessevent_tournament_name` | str       |                                                                          |
-| `chessevent_update`          | bool      | true si la mise à jour depuis Chess Event est activée                    |
-| `last_then_first_name`       | bool      |                                                                          |
+| Champ                        | Type          | Remarque                                                                 |
+|------------------------------|---------------|--------------------------------------------------------------------------|
+| `id`                         | autoincrement | PK                                                                       |
+| `event_id`                   | int not null  | FK(`EVENT.id`)                                                           |
+| `name`                       | str           |                                                                          |
+| `time_control_initial_time`  | int           |                                                                          |
+| `time_control_increment`     | int           |                                                                          |
+| `handicap_penalty_step`      | int           |                                                                          |
+| `handicap_penalty_value`     | int           |                                                                          |
+| `handicap_min_time`          | int           |                                                                          |
+| `rounds`                     | int           |                                                                          |
+| `top_seed_start_color_id`    | enum          | FK(`START_COLOR.id`)                                                     |
+| `points_paired_bye`          | float         | Points d'exempt                                                          |
+| `maximum player_byes`        | int           | Le nombre maximum de byes pendant le tournoi                             |
+| `last_round_no_player_byes`  | int           | Le nombre des dernières rondes où les byes ne sont pas autorisés         |
+| `pairing_engine`             | enum          |                                                                          |
+| `acceleration_ceil_1`        | int           |                                                                          |
+| `accelaration_ceil_2`        | int           |                                                                          |
+| `rating_used`                | enum          |                                                                          |
+| `pairings_published`         | bool          |                                                                          |
+| `chief_arbiter`              | int           | Fide id ? Faut-il mettre d'autres arbitres ?                             |
+| `start`                      | timestamp     |                                                                          |
+| `end`                        | timestamp     |                                                                          |
+| `tie_break_1`                | enum          | Cf remarque plus bas sur le stockage des départages                      |
+| `tie_break_2`                | enum          |                                                                          |
+| `tie_break_3`                | enum          |                                                                          |
+| `tie_break_4`                | enum          |                                                                          |
+| `ffe_id`                     | str           |                                                                          |
+| `ffe_password`               | str           |                                                                          |
+| `ffe_upload_enabled`         | bool          | true si le téléchargement sur le site fédéral est activé pour le tournoi |
+| `current_round`              | int           |                                                                          |
+| `chessevent_connection_id`   | int           | FK(`CHESSEVENT_CONNECTION.id`)                                           |
+| `chessevent_tournament_name` | str           |                                                                          |
+| `chessevent_update_enabled`  | bool          | true si la mise à jour depuis Chess Event est activée                    |
+| `last_then_first_name`       | bool          |                                                                          |
 
 Un choix doit être fait pour le stockage des départages (`tie_break_x`) :
 - un champ principal `tie_break_x` et des champs annexes pour les paramètres :
@@ -114,76 +134,230 @@ Un choix doit être fait pour le stockage des départages (`tie_break_x`) :
 - un champ principal `tie_break_x` et un champ annexe `tie_break_x_parameters` au format JSON pour les paramètres
 - un champ principal `tie_break_x` au format JSON 
 
+### Types de licence FFE (table PLAYER_FFE_STATUS)
+
+| Champ   | Type          | Remarque                  |
+|---------|---------------|---------------------------|
+| `id`    | autoincrement | PK                        |
+| `label` | str not null  |                           |
+| `name`  | str not null  | Utile ? l10n-compatible ? |
+
+Les données de cette table sont pré-remplies et jamais modifiées.
+
+| `id` | `label` | `name`                    |
+|------|---------|---------------------------|
+| 1    | ``      | ``                        |
+| 2    | `N`     | `License non renouvelée`  |
+| 3    | `B`     | `License B (loisir)`      |
+| 4    | `A`     | `License A (compétition)` |
+
+### Titres des joueur·euses (table PLAYER_TITLE)
+
+| Champ   | Type          | Remarque                  |
+|---------|---------------|---------------------------|
+| `id`    | autoincrement | PK                        |
+| `label` | str not null  |                           |
+| `name`  | str not null  | Utile ? l10n-compatible ? |
+
+Les données de cette table sont pré-remplies et jamais modifiées.
+
+| `id` | `label` | `name`                       |
+|------|---------|------------------------------|
+| 1    | ``      | ``                           |
+| 2    | `WFM`   | `Woman Fide Master`          |
+| 3    | `FM`    | `Fide Master`                |
+| 4    | `WIM`   | `Woman International Master` |
+| 5    | `IM`    | `International Master`       |
+| 6    | `WGM`   | `Woman Grand Master`         |
+| 7    | `GM`    | `Grand Master`               |
+
+### Genres des joueur·euses (table PLAYER_GENDER)
+
+| Champ   | Type          | Remarque                  |
+|---------|---------------|---------------------------|
+| `id`    | autoincrement | PK                        |
+| `label` | str not null  |                           |
+| `name`  | str not null  | Utile ? l10n-compatible ? |
+
+Les données de cette table sont pré-remplies et jamais modifiées.
+
+| `id` | `label` | `name`          |
+|------|---------|-----------------|
+| 1    | ``      | `Non identifié` |
+| 2    | `F`     | `Femme`         |
+| 3    | `M`     | `Homme`         |
+
+### Catégories des joueur·euses (table PLAYER_CATEGORY)
+
+| Champ     | Type          | Remarque |
+|-----------|---------------|----------|
+| `id`      | autoincrement | PK       |
+| `label`   | str not null  |          |
+| `min_age` | int           |          |
+| `max_age` | int           |          |
+
+Les données de cette table sont pré-remplies et jamais modifiées.
+
+| `id` | `label` | `name`  | `min_age` | `max_age` |
+|------|---------|---------|-----------|-----------|
+| 1    | ``      | ``      |           |           |
+| 2    | `u8`    | `U8`    |           | `7`       |
+| 3    | `u10`   | `U8`    | `8`       | `9`       |
+| 4    | `u12`   | `U8`    | `10`      | `11`      |
+| 5    | `u14`   | `U8`    | `12`      | `13`      |
+| 6    | `u16`   | `U8`    | `14`      | `15`      |
+| 7    | `u18`   | `U8`    | `16`      | `17`      |
+| 8    | `u20`   | `U8`    | `18`      | `19`      |
+| 9    | `adult` | `Sen`   | `20`      | `49`      |
+| 10   | `o50`   | `Sep`   | `50`      | `64`      |
+| 11   | `o65`   | `Vet`   | `65`      |           |
+
+### Niveau de classement des joueur·euses (table PLAYER_RATING_LEVEL)
+
+| Champ     | Type          | Remarque                  |
+|-----------|---------------|---------------------------|
+| `id`      | autoincrement | PK                        |
+| `label`   | str not null  |                           |
+| `name`    | str not null  | Utile ? l10n-compatible ? |
+
+Les données de cette table sont pré-remplies et jamais modifiées.
+
+| `id` | `label` | `name`                |
+|------|---------|-----------------------|
+| 1    | ``      | `Aucun classement`    |
+| 2    | `E`     | `Classement estimé`   |
+| 3    | `N`     | `Classement national` |
+| 4    | `F`     | `Classement Fide`     |
+
+### Statut des joueur·euses dans le tournoi (table PLAYER_STATUS)
+
+| Champ     | Type          | Remarque                  |
+|-----------|---------------|---------------------------|
+| `id`      | autoincrement | PK                        |
+| `label`   | str not null  |                           |
+| `name`    | str not null  | Utile ? l10n-compatible ? |
+
+Les données de cette table sont pré-remplies et jamais modifiées.
+
+| `id` | `label` | `name`    |
+|------|---------|-----------|
+| 1    | ``      | ``        |
+| 2    | `P`     | `Joue`    |
+| 3    | `W`     | `Abandon` |
+
 ### Joueur·euses (table PLAYER)
 
-| Champ                       | Type  | Remarque                                                         |
-|-----------------------------|-------|------------------------------------------------------------------|
-| `id`                        | int   |                                                                  |
-| `tournament_id`             | int   | \> `TOURNAMENT.id`                                               |
-| `ffe_id`                    | int   |                                                                  |
-| `ffe_license`               | enum  |                                                                  |
-| `ffe_license_number`        | str   |                                                                  |
-| `fide_id`                   | int   |                                                                  |
-| `title`                     | enum  |                                                                  |
-| `last_name`                 | str   |                                                                  |
-| `first_name`                | str   |                                                                  |
-| `gender`                    | enum  |                                                                  |
-| `birth`                     | int   |                                                                  |
-| `category`                  | enum  |                                                                  |
-| `standard_rating`           | int   |                                                                  |
-| `standard_rating_type`      | enum  |                                                                  |
-| `rapid_rating`              | int   |                                                                  |
-| `rapid_rating_type`         | enum  |                                                                  |
-| `blitz_rating`              | int   |                                                                  |
-| `blitz_rating_type`         | enum  |                                                                  |
-| `federation`                | str   |                                                                  |
-| `league`                    | str   |                                                                  |
-| `club_id`                   | int   |                                                                  |
-| `club_name`                 | str   |                                                                  |
-| `check_in`                  | bool  |                                                                  |
-| `phone`                     | str   |                                                                  |
-| `mail`                      | str   |                                                                  |
-| `points`                    | float | Nombre de points total                                           |
-| `standings_points`          | float | Nombre de points réels                                           |
-| `virtual_points`            | float | Nombre de points fictifs                                         |
-| `tie_break_1`               | float |                                                                  |
-| `tie_break_2`               | float |                                                                  |
-| `tie_break_3`               | float |                                                                  |
-| `tie_break_4`               | float |                                                                  |
-| `status`                    | enum  | Playing or Withdrawn                                             |
-| `rank`                      | int   | Classement                                                       |
-| `board`                     | int   | L'échiquier fixe                                                 |
-| `maximum player_byes`       | int   | Le nombre maximum de byes pendant le tournoi                     |
-| `last_round_no_player_byes` | int   | Le nombre des dernières rondes où les byes ne sont pas autorisés |
+| Champ                | Type          | Remarque                     |
+|----------------------|---------------|------------------------------|
+| `id`                 | autoincrement | PK                           |
+| `tournament_id`      | int not null  | FK(`TOURNAMENT.id`)          |
+| `ffe_id`             | int           |                              |
+| `ffe_status_id`      | int           | FK(`PLAYER_FFE_STATUS.id`)   |
+| `ffe_license_number` | str           | Note : peut être null        |
+| `fide_id`            | int           | Note : peut être null        |
+| `title_id`           | int not null  | FK(`PLAYER_TITLE.id`)        |
+| `last_name`          | str not null  |                              |
+| `first_name`         | str           |                              |
+| `gender_id`          | int not null  | FK(`PLAYER_GENDER.id`)       |
+| `birth`              | int           |                              |
+| `category_id`        | int not null  | FK(`PLAYER_CATEGORY.id`)     |
+| `s_rating`           | int           | Note : peut être null        |
+| `s_rating_level_id`  | int not null  | FK(`PLAYER_RATING_LEVEL.id`) |
+| `r_rating`           | int           | Note : peut être null        |
+| `r_rating_level_id`  | int not null  | FK(`PLAYER_RATING_LEVEL.id`) |
+| `b_rating`           | int           | Note : peut être null        |
+| `b_rating_level_id`  | int not null  | FK(`PLAYER_RATING_LEVEL.id`) |
+| `federation`         | str           | Note : peut être null        |
+| `ffe_league`         | str           |                              |
+| `ffe_club_id`        | int           |                              |
+| `ffe_club_name`      | str           |                              |
+| `check_in`           | bool          |                              |
+| `phone`              | str           |                              |
+| `mail`               | str           |                              |
+| `points`             | float         | Nombre de points total       |
+| `standings_points`   | float         | Nombre de points réels       |
+| `virtual_points`     | float         | Nombre de points fictifs     |
+| `tie_break_1`        | float         |                              |
+| `tie_break_2`        | float         |                              |
+| `tie_break_3`        | float         |                              |
+| `tie_break_4`        | float         |                              |
+| `status`             | int not null  | FK(`PLAYER_STATUS_.id`)      |
+| `rank`               | int           | Classement                   |
+| `board`              | int           | L'échiquier fixe             |
 
 ### Ronde (table ROUND)
 
-| Champ            | Type      | Remarque                              |
-|------------------|-----------|---------------------------------------|
-| `id`             | int       |                                       |
-| `tournament_id`  | int       | \> `TOURNAMENT.id`                    |
-| `date`           | timestamp |                                       |
+| Champ            | Type          | Remarque            |
+|------------------|---------------|---------------------|
+| `id`             | autoincrement | PK                  |
+| `tournament_id`  | int not null  | FK(`TOURNAMENT.id`) |
+| `date`           | timestamp     |                     |
+
+### Couleur des appariements (table PAIRING_COLOR)
+
+| Champ     | Type          | Remarque                  |
+|-----------|---------------|---------------------------|
+| `id`      | autoincrement | PK                        |
+| `label`   | str not null  |                           |
+| `name`    | str not null  | Utile ? l10n-compatible ? |
+
+Les données de cette table sont pré-remplies et jamais modifiées.
+
+| `id` | `label` | `name`   |
+|------|---------|----------|
+| 1    | ``      | ``       |
+| 2    | `W`     | `Blancs` |
+| 3    | `B`     | `Noirs`  |
+
+### Couleur des appariements (table RESULT)
+
+| Champ     | Type          | Remarque                  |
+|-----------|---------------|---------------------------|
+| `id`      | autoincrement | PK                        |
+| `label`   | str not null  |                           |
+| `name`    | str not null  | Utile ? l10n-compatible ? |
+
+Les données de cette table sont pré-remplies et jamais modifiées.
+
+| `id` | `trf` | `name`                         |
+|------|-------|--------------------------------|
+| 1    | ``    | ``                             |
+| 2    | `-`   | `Défaite par forfait`          |
+| 3    | `+`   | `Victoire par forfait`         |
+| 4    | `W`   | `Victoire (non comptabilisée)` |
+| 5    | `D`   | `Nulle (non comptabilisée)`    |
+| 6    | `L`   | `Défaite (non comptabilisée)`  |
+| 7    | `1`   | `Victoire`                     |
+| 8    | `=`   | `Nulle`                        |
+| 9    | `0`   | `Défaite`                      |
+| 10   | `H`   | `Bye 0,5 point`                |
+| 11   | `F`   | `Bye 1 point`                  |
+| 12   | `U`   | `Exempt`                       |
+| 13   | `Z`   | `Non apparié·e`                |
+
+Une implémentation libre de parser TRF : https://github.com/sklangen/TRF
 
 ### Appariement (table PAIRING)
 
-| Champ          | Type | Remarque       |
-|----------------|------|----------------|
-| `id`           | int  |                |
-| `round_id`     | int  | \> `ROUND.id`  |
-| `player_id`    | int  | \> `PLAYER.id` |
-| `color`        | enum |                |
-| `result`       | enum |                |
-| `board_number` | int  |                |
+| Champ          | Type          | Remarque               |
+|----------------|---------------|------------------------|
+| `id`           | autoincrement | PK                     |
+| `round_id`     | int not null  | FK(`ROUND.id`)         |
+| `player_id`    | int not null  | FK(`PLAYER.id`)        |
+| `opponent_id`  | int           | FK(`PLAYER.id`)        |
+| `color_id`     | int not null  | FK(`PAIRING_COLOR.id`) |
+| `result_id`    | int not null  | FK(`RESULT.id`)        |
+| `board_number` | int           |                        |
 
 ### ### Chronomètre (table TIMER)
 
-| Champ         | Type      | Remarque                              |
-|---------------|-----------|---------------------------------------|
-| `id`          | int       |                                       |
-| `event_id`    | int       | \> `EVENT.id`                         |
-| `order`       | int       |                                       |
-| `name`        | str       | Un entier pour les numéros des rondes |
-| `date`        | timestamp |                                       |
-| `text_before` | str       |                                       |
-| `text_after`  | str       |                                       |
+| Champ         | Type          | Remarque                              |
+|---------------|---------------|---------------------------------------|
+| `id`          | autoincrement | PK                                    |
+| `event_id`    | int not null  | FK(`EVENT.id`)                        |
+| `order`       | int           |                                       |
+| `name`        | str           | Un entier pour les numéros des rondes |
+| `date`        | timestamp     |                                       |
+| `text_before` | str           |                                       |
+| `text_after`  | str           |                                       |
 
