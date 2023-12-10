@@ -32,10 +32,14 @@ class Engine:
         if last_stable_version == PAPI_WEB_VERSION:
             logger.info(f'Votre version de Papi-web est à jour')
             return
-        if re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$', PAPI_WEB_VERSION):
-            logger.warning(f'Une version plus récente que la vôtre est disponible ({last_stable_version})')
-            return
         last_stable_matches = re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$', last_stable_version)
+        if re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$', PAPI_WEB_VERSION):
+            if last_stable_version > PAPI_WEB_VERSION:
+                logger.warning(f'Une version plus récente que la vôtre est disponible ({last_stable_version})')
+            else:
+                logger.warning(f'Vous utilisez une version plus récente que la dernière version stable disponible, '
+                               f'vous ne seriez pas développeur des fois ?')
+            return
         if not (matches := re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)-rc(?P<rc>\d+).*$', PAPI_WEB_VERSION)):
             raise ValueError('Version de Papi-web invalide')
         if last_stable_matches.group('major') > matches.group('major'):
