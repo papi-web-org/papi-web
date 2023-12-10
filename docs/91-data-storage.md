@@ -68,7 +68,7 @@ Les données sont décrites ci-dessous dans l'hypothèse d'un stockage global de
 | `label` | str not null  |                           |
 | `name`  | str not null  | Utile ? l10n-compatible ? |
 
-Les données de cette table sont pré-remplies et jamais modifiées.
+#### Données pré-remplies
 
 | `id` | `label` | `name`      |
 |------|---------|-------------|
@@ -142,7 +142,7 @@ Un choix doit être fait pour le stockage des départages (`tie_break_x`) :
 | `label` | str not null  |                           |
 | `name`  | str not null  | Utile ? l10n-compatible ? |
 
-Les données de cette table sont pré-remplies et jamais modifiées.
+#### Données pré-remplies
 
 | `id` | `label` | `name`                    |
 |------|---------|---------------------------|
@@ -159,7 +159,7 @@ Les données de cette table sont pré-remplies et jamais modifiées.
 | `label` | str not null  |                           |
 | `name`  | str not null  | Utile ? l10n-compatible ? |
 
-Les données de cette table sont pré-remplies et jamais modifiées.
+#### Données pré-remplies
 
 | `id` | `label` | `name`                       |
 |------|---------|------------------------------|
@@ -179,7 +179,7 @@ Les données de cette table sont pré-remplies et jamais modifiées.
 | `label` | str not null  |                           |
 | `name`  | str not null  | Utile ? l10n-compatible ? |
 
-Les données de cette table sont pré-remplies et jamais modifiées.
+#### Données pré-remplies
 
 | `id` | `label` | `name`          |
 |------|---------|-----------------|
@@ -196,7 +196,7 @@ Les données de cette table sont pré-remplies et jamais modifiées.
 | `min_age` | int           |          |
 | `max_age` | int           |          |
 
-Les données de cette table sont pré-remplies et jamais modifiées.
+#### Données pré-remplies
 
 | `id` | `label` | `name`  | `min_age` | `max_age` |
 |------|---------|---------|-----------|-----------|
@@ -220,7 +220,7 @@ Les données de cette table sont pré-remplies et jamais modifiées.
 | `label`   | str not null  |                           |
 | `name`    | str not null  | Utile ? l10n-compatible ? |
 
-Les données de cette table sont pré-remplies et jamais modifiées.
+#### Données pré-remplies
 
 | `id` | `label` | `name`                |
 |------|---------|-----------------------|
@@ -237,7 +237,7 @@ Les données de cette table sont pré-remplies et jamais modifiées.
 | `label`   | str not null  |                           |
 | `name`    | str not null  | Utile ? l10n-compatible ? |
 
-Les données de cette table sont pré-remplies et jamais modifiées.
+#### Données pré-remplies
 
 | `id` | `label` | `name`    |
 |------|---------|-----------|
@@ -301,7 +301,7 @@ Les données de cette table sont pré-remplies et jamais modifiées.
 | `label`   | str not null  |                           |
 | `name`    | str not null  | Utile ? l10n-compatible ? |
 
-Les données de cette table sont pré-remplies et jamais modifiées.
+#### Données pré-remplies
 
 | `id` | `label` | `name`   |
 |------|---------|----------|
@@ -317,7 +317,7 @@ Les données de cette table sont pré-remplies et jamais modifiées.
 | `label`   | str not null  |                           |
 | `name`    | str not null  | Utile ? l10n-compatible ? |
 
-Les données de cette table sont pré-remplies et jamais modifiées.
+#### Données pré-remplies
 
 | `id` | `trf` | `name`                         |
 |------|-------|--------------------------------|
@@ -349,7 +349,7 @@ Une implémentation libre de parser TRF : https://github.com/sklangen/TRF
 | `result_id`    | int not null  | FK(`RESULT.id`)        |
 | `board_number` | int           |                        |
 
-### ### Chronomètre (table TIMER)
+### Chronomètre (table TIMER)
 
 | Champ         | Type          | Remarque                              |
 |---------------|---------------|---------------------------------------|
