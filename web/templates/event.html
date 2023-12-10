@@ -147,7 +147,7 @@
                                     <td>{% if screen.type == 'results' %}{% if screen.limit %}{{ screen.limit }} max.{% else %}Tous{% endif %}{% else %}{{ screen.sets_str }}{% endif %}</td>
                                     <td>{{ screen.columns }}</td>
                                     <td>{% if screen.menu %}{% if screen.menu == 'view' %}Visualisation{% else %}{% if screen.menu == 'update' %}Saisie{% else %}{% if screen.menu == 'family' %}{{ screen.family_id }}-*{% else %}{% if screen.menu %}{{ screen.menu }}{%else %}<em>-</em>{% endif %}{% endif %}{% endif %}{% endif %}{% endif %}</td>
-                                    <td>{% if screen.menu_text %}{{ screen.menu_text }}{% else %}<em>-</em>{% endif %}</td>
+                                    <td>{% if screen.menu_label %}{{ screen.menu_label }}{% else %}<em>-</em>{% endif %}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
