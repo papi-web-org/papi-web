@@ -37,6 +37,7 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 
 ## [Annexes techniques](docs/80-technical-annexes.md)
 
+- URLs utilisées par le serveur web 
 - Interface avec Chess Event
 
 ## [Bac à sable](docs/90-sandbox.md)

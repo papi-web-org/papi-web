@@ -29,7 +29,7 @@ Note : la rupture avec le stockage actuel peut être perturbante (aujourd'hui : 
 
 Les données sont décrites ci-dessous dans l'hypothèse d'un stockage global des données.
 
-### Évènement (table INFO)
+### Informations générales (table INFO)
 
 | Champ            | Type         | Remarque                                                                         |
 |------------------|--------------|----------------------------------------------------------------------------------|
@@ -78,41 +78,42 @@ Les données sont décrites ci-dessous dans l'hypothèse d'un stockage global de
 
 ### Tournoi (table TOURNAMENT)
 
-| Champ                        | Type          | Remarque                                                                 |
-|------------------------------|---------------|--------------------------------------------------------------------------|
-| `id`                         | autoincrement | PK                                                                       |
-| `event_id`                   | int not null  | FK(`EVENT.id`)                                                           |
-| `name`                       | str           |                                                                          |
-| `time_control_initial_time`  | int           |                                                                          |
-| `time_control_increment`     | int           |                                                                          |
-| `handicap_penalty_step`      | int           |                                                                          |
-| `handicap_penalty_value`     | int           |                                                                          |
-| `handicap_min_time`          | int           |                                                                          |
-| `rounds`                     | int           |                                                                          |
-| `top_seed_start_color_id`    | enum          | FK(`START_COLOR.id`)                                                     |
-| `points_paired_bye`          | float         | Points d'exempt                                                          |
-| `maximum player_byes`        | int           | Le nombre maximum de byes pendant le tournoi                             |
-| `last_round_no_player_byes`  | int           | Le nombre des dernières rondes où les byes ne sont pas autorisés         |
-| `pairing_engine`             | enum          |                                                                          |
-| `acceleration_ceil_1`        | int           |                                                                          |
-| `accelaration_ceil_2`        | int           |                                                                          |
-| `rating_used`                | enum          |                                                                          |
-| `pairings_published`         | bool          |                                                                          |
-| `chief_arbiter`              | int           | Fide id ? Faut-il mettre d'autres arbitres ?                             |
-| `start`                      | timestamp     |                                                                          |
-| `end`                        | timestamp     |                                                                          |
-| `tie_break_1`                | enum          | Cf remarque plus bas sur le stockage des départages                      |
-| `tie_break_2`                | enum          |                                                                          |
-| `tie_break_3`                | enum          |                                                                          |
-| `tie_break_4`                | enum          |                                                                          |
-| `ffe_id`                     | str           |                                                                          |
-| `ffe_password`               | str           |                                                                          |
-| `ffe_upload_enabled`         | bool          | true si le téléchargement sur le site fédéral est activé pour le tournoi |
-| `current_round`              | int           |                                                                          |
-| `chessevent_connection_id`   | int           | FK(`CHESSEVENT_CONNECTION.id`)                                           |
-| `chessevent_tournament_name` | str           |                                                                          |
-| `chessevent_update_enabled`  | bool          | true si la mise à jour depuis Chess Event est activée                    |
-| `last_then_first_name`       | bool          |                                                                          |
+| Champ                        | Type          | Remarque                                                                  |
+|------------------------------|---------------|---------------------------------------------------------------------------|
+| `id`                         | autoincrement | PK                                                                        |
+| `event_id`                   | int not null  | FK(`EVENT.id`)                                                            |
+| `name`                       | str           |                                                                           |
+| `time_control_initial_time`  | int           |                                                                           |
+| `time_control_increment`     | int           |                                                                           |
+| `handicap_penalty_step`      | int           |                                                                           |
+| `handicap_penalty_value`     | int           |                                                                           |
+| `handicap_min_time`          | int           |                                                                           |
+| `rounds`                     | int           |                                                                           |
+| `top_seed_start_color_id`    | enum          | FK(`START_COLOR.id`)                                                      |
+| `points_paired_bye`          | float         | Points d'exempt                                                           |
+| `maximum player_byes`        | int           | Le nombre maximum de byes pendant le tournoi                              |
+| `last_round_no_player_byes`  | int           | Le nombre des dernières rondes où les byes ne sont pas autorisés          |
+| `pairing_engine`             | enum          |                                                                           |
+| `acceleration_ceil_1`        | int           |                                                                           |
+| `accelaration_ceil_2`        | int           |                                                                           |
+| `rating_used`                | enum          |                                                                           |
+| `pairings_published`         | bool          |                                                                           |
+| `chief_arbiter`              | int           | Fide id ? Faut-il mettre d'autres arbitres ?                              |
+| `start`                      | timestamp     |                                                                           |
+| `end`                        | timestamp     |                                                                           |
+| `tie_break_1`                | enum          | Cf remarque plus bas sur le stockage des départages                       |
+| `tie_break_2`                | enum          |                                                                           |
+| `tie_break_3`                | enum          |                                                                           |
+| `tie_break_4`                | enum          |                                                                           |
+| `ffe_id`                     | str           |                                                                           |
+| `ffe_password`               | str           |                                                                           |
+| `ffe_upload_enabled`         | bool          | true si le téléchargement sur le site fédéral est activé pour le tournoi  |
+| `current_round`              | int           |                                                                           |
+| `chessevent_connection_id`   | int           | FK(`CHESSEVENT_CONNECTION.id`)                                            |
+| `chessevent_tournament_name` | str           |                                                                           |
+| `chessevent_update_enabled`  | bool          | true si la mise à jour depuis Chess Event est activée                     |
+| `last_then_first_name`       | bool          |                                                                           |
+| `last_update`                | timestamp     | Car on ne peut plus s'appuyer sur la date de modification du fichier papi |
 
 Un choix doit être fait pour le stockage des départages (`tie_break_x`) :
 - un champ principal `tie_break_x` et des champs annexes pour les paramètres :
@@ -164,12 +165,16 @@ Un choix doit être fait pour le stockage des départages (`tie_break_x`) :
 | `id` | `label` | `name`                       |
 |------|---------|------------------------------|
 | 1    | ``      | ``                           |
-| 2    | `WFM`   | `Woman Fide Master`          |
-| 3    | `FM`    | `Fide Master`                |
-| 4    | `WIM`   | `Woman International Master` |
-| 5    | `IM`    | `International Master`       |
-| 6    | `WGM`   | `Woman Grand Master`         |
-| 7    | `GM`    | `Grand Master`               |
+| 2    | `WCM`   | `Woman Candidate Master`     |
+| 3    | `WFM`   | `Woman Fide Master`          |
+| 4    | `CM`    | `Candidate Master`           |
+| 5    | `WIM`   | `Woman International Master` |
+| 6    | `FM`    | `Fide Master`                |
+| 7    | `WGM`   | `Woman Grand Master`         |
+| 8    | `IM`    | `International Master`       |
+| 9    | `GM`    | `Grand Master`               |
+
+Note : dans l'ordre GM-IM-WGM-FM-WIM-CM-WFM-WCM-none (cf https://handbook.fide.com/chapter/C0402)
 
 ### Genres des joueur·euses (table PLAYER_GENDER)
 
@@ -361,3 +366,73 @@ Une implémentation libre de parser TRF : https://github.com/sklangen/TRF
 | `text_before` | str           |                                       |
 | `text_after`  | str           |                                       |
 
+### Types d'écran (table SCREEN_TYPE)
+
+| Champ     | Type          | Remarque                  |
+|-----------|---------------|---------------------------|
+| `id`      | autoincrement | PK                        |
+| `label`   | str not null  |                           |
+| `name`    | str not null  | Utile ? l10n-compatible ? |
+
+#### Données pré-remplies
+
+| `id` | `trf`     | `name`                                |
+|------|-----------|---------------------------------------|
+| 1    | `boards`  | `Appariements par échiquier`          |
+| 2    | `players` | `Appariements par ordre alphabétique` |
+| 3    | `results` | `Derniers résultats`                  |
+
+### Types d'écran (table SCREEN_MENU_TYPE)
+
+| Champ     | Type          | Remarque                  |
+|-----------|---------------|---------------------------|
+| `id`      | autoincrement | PK                        |
+| `label`   | str not null  |                           |
+| `name`    | str not null  | Utile ? l10n-compatible ? |
+
+#### Données pré-remplies
+
+| `id` | `label`  | `name`                                |
+|------|----------|---------------------------------------|
+| 1    | `view`   | `Écrans d'affichage des appariements` |
+| 2    | `update` | `Écrans de saisie des scores`         |
+| 3    | `family` | `Écrans de la famille`                |
+| 4    | `list`   | `Liste d'écrans`                      |
+
+### Écrans (table SCREEN)
+
+| Champ                | Type          | Remarque                                              |
+|----------------------|---------------|-------------------------------------------------------|
+| `id`                 | autoincrement | PK                                                    |
+| `screen_id`          | int not null  | FK(`SCREEN.id`)                                       |
+| `label`              | str           | Optionnel, pour utilisation dans `menu_screen_labels` |
+| `name`               | str           |                                                       |
+| `screen_type_id`     | int not null  | FK(`SCREEN_TYPE.id`)                                  |
+| `family_id`          | int           | FK(`SCREEN_FAMILY.id`)                                |
+| `menu_text`          | str           |                                                       |
+| `menu_type_id`       | int not null  | FK(`SCREEN_MENU_TYPE.id`)                             |
+| `menu_screen_labels` | str           | Liste de labels d'écran séparés par des virgules      |
+| `show_timer`         | bool          |                                                       |
+| `boards_update`      | bool          |                                                       |
+| `results_columns`    | int not null  |                                                       |
+| `results_limit`      | int           |                                                       |
+
+### Parties d'écran (table SCREEN_SET)
+
+| Champ           | Type          | Remarque            |
+|-----------------|---------------|---------------------|
+| `id`            | autoincrement | PK                  |
+| `screen_id`     | int not null  | FK(`SCREEN.id`)     |
+| `order`         | int           |                     |
+| `name`          | str           |                     |
+| `tournament_id` | int not null  | FK(`TOURNAMENT.id`) |
+| `columns`       | int not null  |                     |
+| `date`          | timestamp     |                     |
+| `text_before`   | str           |                     |
+| `text_after`    | str           |                     |
+| `first`         | int           |                     |
+| `last`          | int           |                     |
+| `part`          | int           |                     |
+| `parts`         | int           |                     |
+
+Note : les structures de données des modèles et des familles méritent d'être revues.

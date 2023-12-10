@@ -4,7 +4,7 @@
 
 > [!NOTE]
 > Cette fonctionnalité n'est disponible qu'à partir de la version 2.1 de Papi-web.<br/>
-> Les aspects techniques de la récupération des données sur la plateforme Chess Events sont décrits sur [cette page](81-chessevent.md).
+> Les aspects techniques de la récupération des données sur la plateforme Chess Events sont décrits sur [cette page](82-chessevent.md).
 
 ## Généralités
 
