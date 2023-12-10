@@ -10,5 +10,6 @@
 
 ## Autres réflexions en cours
 
+- Poser une ou plusieurs licences sur le code de Papi-web ([détails](94-license.md))
 - Remplacement des fichiers de configuration INI par une interface web
 - Envoi des appariements aux joueur·euses par mél et texto
