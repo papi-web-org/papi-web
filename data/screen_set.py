@@ -90,7 +90,7 @@ class ScreenSet:
                 first_index = last_index
         elif self.part is not None:
             # part and number
-            selected_first_index = min(self.number * self.part, len(items))
+            selected_first_index = min(self.number * (self.part - 1), len(items))
             selected_last_index = min(selected_first_index + self.number, len(items))
         elif self.number is not None:
             # number
