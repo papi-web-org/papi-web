@@ -1,6 +1,9 @@
 import os
+from threading import Thread
+from time import sleep
 
 import django
+import requests
 from django.core.management import call_command
 from webbrowser import open
 import socket
@@ -12,8 +15,21 @@ from common.engine import Engine
 logger: Logger = get_logger()
 
 
+def launch_browser(url: str):
+    logger.info(f'Opening the welcome page [{url}] in a browser...')
+    while True:
+        try:
+            requests.get(url)
+            break
+        except requests.RequestException as e:
+            logger.debug(f'Web server not started yet ({e.__class__.__name__}), waiting...')
+            sleep(1)
+    open(url, new=2)
+
+
 class ServerEngine(Engine):
     def __init__(self):
+        logger.info(f'Starting Papi-web server, please wait...')
         super().__init__()
         logger.info(f'log: {self._config.log_level_str}')
         logger.info(f'host: {self._config.web_host}')
@@ -28,9 +44,7 @@ class ServerEngine(Engine):
             logger.error(f'Port [{self._config.web_port}] already in use, can not start Papi-web server')
             return
         if self._config.web_launch_browser:
-            logger.info(f'Opening the welcome page [{self._config.local_url}] in a browser...')
-            open(self._config.local_url, new=2)
-        logger.info(f'Starting Papi-web server, please wait...')
+            Thread(target=launch_browser, args=(self._config.local_url, )).start()
         call_command(
             'runserver',
             [
