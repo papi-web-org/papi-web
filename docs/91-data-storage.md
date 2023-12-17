@@ -49,6 +49,7 @@ Les données sont décrites ci-dessous dans l'hypothèse d'un stockage global de
 | `timer_text_after_round`    | str           | Le texte du chronomètre après le début d'une ronde                                                              |
 | `ffe_upload_enabled`        | bool          | true si le téléchargement sur le site fédéral est activé pour le tournoi (note : plus parlant que `ffe_upload`) |
 | `chessevent_update_enabled` | bool          | true si la mise à jour depuis Chess Event est activée (note : plus parlant que `chessevent_download`)           |
+| `css`                       | str           |                                                                                                                 |
 
 ### ### Connexions à Chess Event (table CHESSEVENT_CONNECTION)
 
