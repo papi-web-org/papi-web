@@ -15,7 +15,7 @@ from common.singleton import singleton
 from data.chessevent_tournament import ChessEventTournament
 from data.event import Event
 from data.tournament import Tournament
-from database.papi_template import create_empty_papi_database
+from database.papi_template import create_empty_papi_database, PAPI_VERSIONS
 from ffe.ffe_session import FFESession
 
 logger: Logger = get_logger()
@@ -56,7 +56,7 @@ class ActionSelector:
         print_interactive(f'  - [U] Créer les fichiers Papi et les envoyer sur le site fédéral')
         print_interactive(f'  - [Q] Revenir à la liste des évènements')
         action_choice: str | None = None
-        while not action_choice:
+        while action_choice not in ['C', 'U', 'Q', ]:
             action_choice = input_interactive(f'Entrez votre choix : ').upper()
         if action_choice == 'Q':
             return False
@@ -70,11 +70,30 @@ class ActionSelector:
             print_interactive(f'  - [C] En continu')
             print_interactive(f'  - [A] Abandonner')
             times_choice: str | None = None
-            while not times_choice:
+            while times_choice not in ['1', 'C', 'A', ]:
                 times_choice = input_interactive(f'Entrez votre choix : ').upper()
             if times_choice == 'A':
                 return False
             if times_choice in ['1', 'C']:
+                if len(PAPI_VERSIONS) > 1:
+                    default_papi_version = PAPI_VERSIONS[-1]
+                    print_interactive(f'Version de Papi :')
+                    version_choices = [str(i + 1) for i in range(len(PAPI_VERSIONS))] + ['A', ]
+                    for i in range(len(PAPI_VERSIONS)):
+                        print_interactive(f'  - [{i + 1}] {PAPI_VERSIONS[i]}')
+                    print_interactive(f'  - [A] Abandonner')
+                    version_choice: str | None = None
+                    while version_choice not in version_choices:
+                        version_choice = input_interactive(
+                            f'Entrez votre choix (par défaut {len(PAPI_VERSIONS)} = {default_papi_version}) : ').upper()
+                        if not version_choice:
+                            version_choice = str(len(PAPI_VERSIONS))
+                    if version_choice == 'A':
+                        return False
+                    papi_version = default_papi_version
+                else:
+                    papi_version = PAPI_VERSIONS[-1]
+                logger.info(f'Version de Papi : {papi_version}')
                 try:
                     chessevent_timeout_min: int = 10
                     chessevent_timeout_max: int = 180
@@ -118,7 +137,7 @@ class ActionSelector:
                                 continue
                             chessevent_timeout = chessevent_timeout_min
                             tournament.file.unlink(missing_ok=True)
-                            create_empty_papi_database(tournament.file)
+                            create_empty_papi_database(tournament.file, papi_version)
                             players_number: int = tournament.write_chessevent_info_to_database(chessevent_tournament)
                             logger.info(f'Le fichier {tournament.file} a été créé ({players_number} joueur·euses).')
                             tournament.chessevent_download_marker.parents[0].mkdir(parents=True, exist_ok=True)
