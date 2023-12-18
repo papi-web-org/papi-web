@@ -3,6 +3,7 @@ from threading import Thread
 from time import sleep
 
 import django
+import pyodbc
 import requests
 from django.core.management import call_command
 from webbrowser import open
@@ -11,6 +12,7 @@ from logging import Logger
 
 from common.logger import get_logger
 from common.engine import Engine
+import platform
 
 logger: Logger = get_logger()
 
@@ -31,6 +33,13 @@ class ServerEngine(Engine):
     def __init__(self):
         logger.info(f'Starting Papi-web server, please wait...')
         super().__init__()
+        logger.debug('ODBC drivers found:')
+        for driver in pyodbc.drivers():
+            logger.debug(f' - {driver}')
+        logger.debug('System information:')
+        logger.debug(f' - Machine/processor: {platform.machine()}/{platform.processor()}')
+        logger.debug(f' - Platform: {platform.platform()}')
+        logger.debug(f' - Architecture: {" ".join(platform.architecture())}')
         logger.info(f'log: {self._config.log_level_str}')
         logger.info(f'host: {self._config.web_host}')
         logger.info(f'port: {self._config.web_port}')
