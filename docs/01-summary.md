@@ -69,6 +69,7 @@ Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonne
 | GUINET Kevin       |       | PDL   | 72  | L'Echiquier Fertois                  |
 | LABORDE Stephane   | AFO1  | OCC   | 66  | Perpignan - Les rois de la Tet       |
 | LAPEYRE Pierre     | AFE2  | NAQ   | 33  | Echiquier Bordelais                  |
+| LAUER Alban        | AF01  | IDF   | 95  | L'Echiquéenne de Survilliers         |
 | LECORNU Laurent    | AFE1  | BRE   | 29  | Echiquier Gouesnousien               |
 | LEFEBVRE Philippe  | AFO1  | BRE   | 29  | Echiquier Gouesnousien               |
 | LOUDIER Sarah      | AFC   | BRE   | 22  | Tregor Echecs                        |
