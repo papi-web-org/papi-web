@@ -9,7 +9,7 @@ Papi-web est désormais livré sous la forme d'un exécutable Windows autonome.
 > [!IMPORTANT]
 > L'installation de XAMPP (ou d'un autre serveur Apache/PHP) n'est plus nécessaire.
 
-A voir : [Installation et mise à jour](05-install.md)
+À voir : [Installation et mise à jour](05-install.md)
 
 ## Configuration plus simple
 
@@ -227,7 +227,7 @@ A voir : [Écrans rotatifs](35-rotators.md)
 
 ## Sources accessibles
 
-Tous les sources de Papi-web sont accessibles sur GitHub : [https://github.com/pascalaubry/papi-web](https://github.com/pascalaubry/papi-web).
+Tous les sources de Papi-web sont accessibles sur GitHub : [https://github.com/papi-web-org/papi-web](https://github.com/pascalaubry/papi-web).
 
 ## Création des fichiers Papi des tournois à partir de la plateforme d'inscription en ligne Chess Event (à partir de la version 2.1)
 

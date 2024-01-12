@@ -53,7 +53,7 @@ class Engine:
 
     @staticmethod
     def _get_last_stable_version() -> str | None:
-        url: str = 'https://api.github.com/repos/pascalaubry/papi-web/releases'
+        url: str = 'https://api.github.com/repos/papi-web-org/papi-web/releases'
         try:
             logger.debug(f'Recherche d\'une version plus récente sur GitHub ({url})...')
             response: Response = get(url, allow_redirects=True)

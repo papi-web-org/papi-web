@@ -15,7 +15,7 @@ logger: Logger = get_logger()
 
 PAPI_WEB_VERSION: str = '2.1.1'
 
-PAPI_WEB_URL = 'https://github.com/pascalaubry/papi-web'
+PAPI_WEB_URL = 'https://github.com/papi-web-org/papi-web'
 
 PAPI_WEB_COPYRIGHT: str = '© Pascal AUBRY 2013-2023'
 
