@@ -30,7 +30,7 @@ name = Tournoi amical 17 juin 2023
 filename = amical-20230617
 ```
 
-A voir :
+À voir :
 - [Configuration et utilisation](06-use.md)
 - [Guide de référence de la configuration des évènements](40-ref.md)
 
