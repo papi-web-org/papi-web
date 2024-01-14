@@ -126,6 +126,7 @@ class PapiDatabase(AccessDatabase):
             'Dep2': chessevent_tournament.tie_breaks[1].to_papi_value,
             'Dep3': chessevent_tournament.tie_breaks[2].to_papi_value,
             'ClassElo': chessevent_tournament.rating.to_papi_value,
+            'Homologation': str(chessevent_tournament.ffe_id),
         }
         # queries: list[str] = []
         # params: list[str] = []

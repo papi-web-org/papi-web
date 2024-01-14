@@ -16,9 +16,11 @@ class ChessEventTournament:
         self.time_control: str = ''
         self.location: str = ''
         self.arbiter: str = ''
-        self.dates: list[float, float] = [0.0, ] * 2
+        self.start: float = 0.0
+        self.end: float = 0.0
         self.tie_breaks: list[TournamentTieBreak] = [TournamentTieBreak.NONE, ] * 3
         self.rating: TournamentRating = TournamentRating.UNKNOWN
+        self.ffe_id: int = 0
         self.players: list[ChessEventPlayer] = []
         self.error = True
         key: str = ''
@@ -39,6 +41,9 @@ class ChessEventTournament:
                 if chessevent_tournament_info[key]:
                     self.tie_breaks[tie_break_index] = TournamentTieBreak(int(chessevent_tournament_info[key]))
             self.rating = TournamentRating(int(chessevent_tournament_info[key := 'rating']))
+            ffe_id = chessevent_tournament_info[key := 'ffe_id']
+            if ffe_id:
+                self.ffe_id = int(ffe_id)
             key = 'players'
             for chessevent_player_info in chessevent_tournament_info[key]:
                 chessevent_player: ChessEventPlayer = ChessEventPlayer(chessevent_player_info)
@@ -64,8 +69,9 @@ class ChessEventTournament:
         lines.append(f'  - Cadence : {self.time_control}')
         lines.append(f'  - Lieu : {self.location}')
         lines.append(f'  - Arbitre : {self.arbiter}')
-        lines.append(f'  - Dates : {self.dates[0]} - {self.dates[1]}')
+        lines.append(f'  - Dates : {self.start} - {self.end}')
         for tie_break_index in range(1, 4):
             lines.append(f'  - Départage n°{tie_break_index} : {self.tie_breaks[tie_break_index]}')
         lines.append(f'  - Classement utilisé : {self.rating}')
+        lines.append(f'  - Homologation : {self.ffe_id}')
         return '\n'.join(lines)
