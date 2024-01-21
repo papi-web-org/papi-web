@@ -5,6 +5,14 @@
 ## Version 2.2 - Non publiée
 - Vérification de la dernière version disponible au démarrage
 
+## Version 2.1.2 - 21 janvier 2024
+- Mise en forfait général des joueur·euses non pointé·es dans ChessEvent dans les fichiers Papi
+- Ajout du numéro d'homologation de ChessEvent dans les fichiers Papi
+
+## Version 2.1.1 - 10 décembre 2023
+- Possibilité de fixer le nombre d'échiquiers ou de joueur·euses par écran
+- Possibilité de fonctionner en réseau local sans aucune connexion internet (intégration des bibliothèques CSS et Javascript)
+
 ## Version 2.1.0 - 9 décembre 2023
 - Création des fichiers Papi des tournois à partir de la plateforme d'inscription en ligne Chess Event
 - Suppression des données personnelles des joueur·euses avant téléchargement sur le site fédéral
