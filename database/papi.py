@@ -173,10 +173,10 @@ class PapiDatabase(AccessDatabase):
         }
         for round in range(1, 25):
             data[f'Rd{round:0>2}Adv'] = None
-            if round not in player.skipped_rounds:
+            if round not in player.skipped_rounds and not player.check_in:
                 data[f'Rd{round:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
                 data[f'Rd{round:0>2}Cl'] = 'R'
-            elif player.skipped_rounds[round] == 0.0:
+            elif player.check_in or player.skipped_rounds[round] == 0.0:
                 data[f'Rd{round:0>2}Res'] = Result.FORFEIT_LOSS.to_papi_value
                 data[f'Rd{round:0>2}Cl'] = 'F'
             elif player.skipped_rounds[round] == 0.5:
