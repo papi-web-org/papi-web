@@ -56,10 +56,8 @@ class ActionSelector:
         print_interactive(f'  - [U] Créer les fichiers Papi et les envoyer sur le site fédéral')
         print_interactive(f'  - [Q] Revenir à la liste des évènements')
         action_choice: str | None = None
-        while action_choice not in ['C', 'U', 'Q', '', ]:
-            action_choice = input_interactive(f'Entrez votre choix (par défaut C) : ').upper()
-        if not action_choice:
-            action_choice = 'C'
+        while action_choice not in ['C', 'U', 'Q', ]:
+            action_choice = input_interactive(f'Entrez votre choix (par défaut C) : ').upper() or 'C'
         if action_choice == 'Q':
             return False
         if action_choice in ['C', 'U']:
@@ -72,10 +70,8 @@ class ActionSelector:
             print_interactive(f'  - [C] En continu')
             print_interactive(f'  - [A] Abandonner')
             times_choice: str | None = None
-            while times_choice not in ['1', 'C', 'A', '', ]:
-                times_choice = input_interactive(f'Entrez votre choix (par défaut 1) : ').upper()
-            if not times_choice:
-                times_choice = '1'
+            while times_choice not in ['1', 'C', 'A', ]:
+                times_choice = input_interactive(f'Entrez votre choix (par défaut 1) : ').upper() or '1'
             if times_choice == 'A':
                 return False
             if times_choice in ['1', 'C']:
