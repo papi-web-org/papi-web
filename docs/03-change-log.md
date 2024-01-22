@@ -5,8 +5,10 @@
 ## Version 2.2 - Non publiée
 - Vérification de la dernière version disponible au démarrage
 
-## Version 2.1.2 - 21 janvier 2024
+## Version 2.1.3 - 22 janvier 2024
 - Mise en forfait général des joueur·euses non pointé·es dans ChessEvent dans les fichiers Papi
+
+## Version 2.1.2 - 21 janvier 2024
 - Ajout du numéro d'homologation de ChessEvent dans les fichiers Papi
 
 ## Version 2.1.1 - 10 décembre 2023
