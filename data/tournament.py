@@ -91,11 +91,22 @@ class Tournament:
         return self._players_by_id
 
     @property
-    def players_by_name(self) -> list[Player]:
+    def players_by_name_with_unpaired(self) -> list[Player]:
         if self._players_by_name is None:
             players: list[Player] = list(self.players_by_id.values())[1:]
             self._players_by_name = sorted(
                 players, key=lambda player: (player.last_name, player.first_name))
+        return self._players_by_name
+
+    @property
+    def players_by_name_without_unpaired(self) -> list[Player]:
+        if self._players_by_name is None:
+            players: list[Player] = []
+            for player in list(self.players_by_id.values())[1:]:
+                if not self.current_round or player.board_id:
+                    players.append(player)
+            self._players_by_name = sorted(
+                players, key=lambda p: (p.last_name, p.first_name))
         return self._players_by_name
 
     @property
@@ -176,8 +187,6 @@ class Tournament:
                 self._current_round = paired_rounds[-1]
 
     def _calculate_points(self):
-        # TODO(Amaras) WTF IS THIS A LIST WHEN A RANGE OBJECT IS GOOD ENOUGH?
-        # DONE(pascalaubry) Because player ids are not reused after player deletion, please remove if OK
         for player in self._players_by_id.values():
             if player.id == 1:
                 continue
@@ -190,12 +199,10 @@ class Tournament:
                     if player.rating >= self._rating_limit1:
                         player.add_vpoints(1.0)
             elif self._pairing == TournamentPairing.HALEY_SOFT:
-                # TODO(Amaras) Is this right?
-                # The code implies this acceleration scheme:
                 # Round 1: All players above rating_limit1 get 1 vpoint
                 # Round 2: All players above rating_limit1 get 1 vpoint
                 # Round 2: All other players get .5 vpoints
-                # DONE(pascalaubry) Checked (bottom of page #138 on
+                # bottom of page #138 on
                 # https://dna.ffechecs.fr/wp-content/uploads/sites/2/2023/10/Livre-arbitre-octobre-2023.pdf),
                 # please remove if OK
                 if self._current_round <= 2:

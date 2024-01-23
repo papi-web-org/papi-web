@@ -115,7 +115,7 @@
                                     <th scope="row">{{ tournament.id }}</th>
                                     <td>{{ tournament.name }}</td>
                                     <td>{% if tournament.file %}{{ tournament.file }}{% else %}<em>-</em>{% endif %}</td>
-                                    <td>{% if tournament.file %}{{ tournament.players_by_name | length }}{% else %}<em>-</em>{% endif %}</td>
+                                    <td>{% if tournament.file %}{{ tournament.players_by_name_with_unpaired | length }}{% else %}<em>-</em>{% endif %}</td>
                                     <td>{% if tournament.file %}{{ tournament.current_round }} / {{ tournament.rounds }}{% else %}<em>-</em>{% endif %}</td>
                                     <td>{% if tournament.ffe_id %}{{ tournament.ffe_id }}{% else %}<em>Aucun</em>{% endif %}</td>
                                     <td>{% if tournament.ffe_password %}**********{% else %}<em>Aucun</em>{% endif %}</td>

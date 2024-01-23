@@ -17,6 +17,7 @@ logger: Logger = get_logger()
 class ScreenSet:
     tournament: Tournament
     columns: int
+    show_unpaired: bool
     first: int | None = field(default=None, kw_only=True)
     last: int | None = field(default=None, kw_only=True)
     part: int | None = field(default=None, kw_only=True)
@@ -147,7 +148,10 @@ class ScreenSet:
 
     def _extract_players_by_name(self):
         if self.items_lists is None:
-            self._extract_data(self.tournament.players_by_name, force_even=False)
+            if self.show_unpaired:
+                self._extract_data(self.tournament.players_by_name_with_unpaired, force_even=False)
+            else:
+                self._extract_data(self.tournament.players_by_name_without_unpaired, force_even=False)
             if self.name is None:
                 if self.first or self.last or self.part:
                     self.name = '%t %f à %l'
@@ -241,12 +245,13 @@ class ScreenSet:
 
 class ScreenSetBuilder:
     def __init__(self, config_reader: ConfigReader, tournaments: dict[str, Tournament], screen_section_key: str,
-                 screen_type: ScreenType, columns: int):
+                 screen_type: ScreenType, columns: int, show_unpaired: bool):
         self._config_reader = config_reader
         self._tournaments: dict[str, Tournament] = tournaments
         self._screen_section_key: str = screen_section_key
         self._screen_type: ScreenType = screen_type
         self._columns: int = columns
+        self._show_unpaired = show_unpaired
         self.screen_sets = []
         for screen_set_section_key in self._read_screen_set_section_keys():
             if screen_set := self._build_screen_set(screen_set_section_key):
@@ -450,6 +455,7 @@ class ScreenSetBuilder:
         return ScreenSet(
             self._tournaments[tournament_id],
             self._columns,
+            self._show_unpaired,
             first=first,
             last=last,
             part=part,

@@ -161,6 +161,7 @@ class ScreenBoards(AScreenWithSets):
 
 @dataclass
 class ScreenPlayers(AScreenWithSets):
+    _show_unpaired: bool
 
     def __post_init__(self):
         self._type = ScreenType.Players
@@ -192,6 +193,10 @@ class ScreenPlayers(AScreenWithSets):
     @property
     def icon_str(self) -> str:
         return 'bi-people-fill'
+
+    @property
+    def show_unpaired(self) -> bool:
+        return self._show_unpaired
 
 
 class ScreenResults(AScreen):
@@ -310,20 +315,6 @@ class ScreenBuilder:
                 self._config_reader.add_warning(
                     f"type d'écran [{screen_type}] inconnu, écran ignoré", screen_section_key)
                 return
-        screen_sets: list[ScreenSet] | None = None
-        if screen_type in [ScreenType.Boards, ScreenType.Players, ]:
-            screen_sets = ScreenSetBuilder(
-                self._config_reader, self._tournaments, screen_section_key, screen_type, columns
-            ).screen_sets
-            if not screen_sets:
-                if screen_type == ScreenType.Boards:
-                    self._config_reader.add_warning(
-                        "pas d'ensemble d'échiquiers déclaré, écran ignoré", screen_section_key)
-                    # NOTE(Amaras) should this return?
-                else:
-                    self._config_reader.add_warning(
-                        "pas d'ensemble de joueur·euses déclaré, écran ignoré", screen_section_key)
-                return None
         key = 'name'
         screen_name: str | None = None
         try:
@@ -385,6 +376,20 @@ class ScreenBuilder:
                 self._config_reader.add_warning(
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
+        key = 'show_unpaired'
+        default_show_unpaired: bool = False
+        show_unpaired: bool | None = default_show_unpaired
+        if screen_type == ScreenType.Players:
+            if key in screen_section:
+                show_unpaired = self._config_reader.getboolean_safe(screen_section_key, key)
+                if show_unpaired is None:
+                    self._config_reader.add_warning('un booléen est attendu, écran ignoré', screen_section_key, key)
+                    return None
+        else:
+            if key in screen_section:
+                self._config_reader.add_warning(
+                    f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
+                    screen_section_key, key)
         key = 'limit'
         default_limit: int = 0
         limit: int | None = default_limit
@@ -405,6 +410,20 @@ class ScreenBuilder:
                 self._config_reader.add_warning(
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
+        screen_sets: list[ScreenSet] | None = None
+        if screen_type in [ScreenType.Boards, ScreenType.Players, ]:
+            screen_sets = ScreenSetBuilder(
+                self._config_reader, self._tournaments, screen_section_key, screen_type, columns, show_unpaired
+            ).screen_sets
+            if not screen_sets:
+                if screen_type == ScreenType.Boards:
+                    self._config_reader.add_warning(
+                        "pas d'ensemble d'échiquiers déclaré, écran ignoré", screen_section_key)
+                    # NOTE(Amaras) should this return?
+                else:
+                    self._config_reader.add_warning(
+                        "pas d'ensemble de joueur·euses déclaré, écran ignoré", screen_section_key)
+                return None
         key = '__family__'
         family_id: str | None = None
         if key in screen_section:
@@ -436,7 +455,8 @@ class ScreenBuilder:
                 menu_text,
                 menu,
                 show_timer,
-                screen_sets
+                screen_sets,
+                show_unpaired
             )
             AScreen.set_screen_file_dependencies(
                 self._event_id,

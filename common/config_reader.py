@@ -29,6 +29,7 @@ class ConfigReader(ConfigParser):
         'show_timer',
         'menu',
         'update',
+        'show_unpaired',
         'limit',
     ]
 
