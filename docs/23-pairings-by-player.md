@@ -26,6 +26,10 @@ Si vous n'avez qu'un seul tournoi dans votre évènement (`default`), alors vous
 
 ![Appariements par ordre alphabétique](images/friendly-players.jpg)
 
+> [!NOTE]
+> Par défaut, seul·es les joueur·euses apparié·es sont affiché·es.
+> Pour afficher les joueur·euses non apparié·s, il faut utiliser l'option `show_unpaired = on` (par défaut `off`).
+
 
 ## Déclaration d'un écran par ordre alphabétique classique  (`[screen.<screen_id>.players]`)
 
