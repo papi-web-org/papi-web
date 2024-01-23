@@ -2,9 +2,6 @@
 
 # Papi-web - ChangeLog
 
-## Version 2.2 - Non publiée
-- Vérification de la dernière version disponible au démarrage
-
 ## Version 2.1.4 - 23 janvier 2024
 - Ajout de l'option `show_unpaired` pour limiter l'affichage des appariements par ordre alphabétique aux joueur·euses apparié·es
 
