@@ -178,10 +178,10 @@ class PapiDatabase(AccessDatabase):
                     data[f'Rd{round:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
                     data[f'Rd{round:0>2}Cl'] = 'R'
                 else:
-                    data[f'Rd{round:0>2}Res'] = Result.FORFEIT_LOSS.to_papi_value
+                    data[f'Rd{round:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
                     data[f'Rd{round:0>2}Cl'] = 'F'
             elif player.skipped_rounds[round] == 0.0:
-                data[f'Rd{round:0>2}Res'] = Result.FORFEIT_LOSS.to_papi_value
+                data[f'Rd{round:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
                 data[f'Rd{round:0>2}Cl'] = 'F'
             elif player.skipped_rounds[round] == 0.5:
                 data[f'Rd{round:0>2}Res'] = Result.DRAW_OR_HPB.to_papi_value
