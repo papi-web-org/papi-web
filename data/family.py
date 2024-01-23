@@ -1,7 +1,7 @@
 import re
-from contextlib import suppress
 from math import ceil
 
+import common.logger
 from common.config_reader import ConfigReader
 from data.template import Template
 from data.tournament import Tournament
@@ -36,14 +36,29 @@ class FamilyBuilder:
         try:
             template_id = family_section[key]
         except KeyError:
-            self._config_reader.add_warning('option absente, famille ignorée', section_key, key)
-            return
+            if family_id in self._templates:
+                template_id = family_id
+                self._config_reader.add_info(
+                    f'option absente, utilisation par défaut du modèle du même nom [{template_id}]',
+                    section_key, key)
+            elif len(self._templates) == 1:
+                template_id = list(self._templates.keys())[0]
+                self._config_reader.add_info(
+                    f'option absente, utilisation par défaut de l\'unique modèle [{template_id}]',
+                    section_key, key)
+            else:
+                self._config_reader.add_warning(
+                    f'option absente et modèle [{family_id}] non trouvé, famille ignorée',
+                    section_key, key)
+                return
         if template_id not in self._templates:
             self._config_reader.add_warning(
                 f"le modèle [{template_id}] n'existe pas, famille ignorée",
                 section_key, key)
             return
         template: Template = self._templates[template_id]
+        template_type: ScreenType = ScreenType(template.data[None]['type'])
+        # note: template_type is boards or players (control done by TemplateBuilder)
         key = 'number'
         number: int | None = None
         if key in family_section:
@@ -83,11 +98,13 @@ class FamilyBuilder:
                 family_indices = list(
                     map(str, range(first_number, last_number + 1))
                 )
+            else:
+                self._config_reader.add_warning(
+                    f'valeurs [{first_number}-{last_number}] non valides, famille ignorée', section_key)
+                return
         elif number is not None:
             key = 'number'
             # need the total number of items of the tournament
-            template_type: ScreenType = ScreenType(template.data[None]['type'])
-            # note: template_type is boards or players (control done by TemplateBuilder)
             tournament: Tournament | None = None
             for sub_section_key, properties in template.data.items():
                 if sub_section_key is not None and 'tournament' in properties:
@@ -99,30 +116,46 @@ class FamilyBuilder:
                                                         f'n\'existe pas, famille ignorée', section_key, key)
                         return
             if tournament is None:
-                self._config_reader.add_warning(f'le tournoi du modèle [{template.id}] n\'est pas défini, '
-                                                f'famille ignorée', section_key, key)
-                return
+                if len(self._tournaments) == 1:
+                    tournament = list(self._tournaments.values())[0]
+                else:
+                    self._config_reader.add_warning(f'le tournoi du modèle [{template.id}] n\'est pas défini, '
+                                                    f'famille ignorée', section_key, key)
+                    return
             total_items_number: int
             if template_type == ScreenType.Boards:
-                total_items_number = ceil(len(tournament.players_by_id) / 2)
+                if tournament.current_round:
+                    total_items_number = len(tournament.boards)
+                else:
+                    total_items_number = ceil(len(tournament.players_by_id) / 2)
             else:  # Players
+                # PA: there may be fewer players to show when unpaired players are no listed
+                # but there is no simple way to know whether they should be listed or not at this stage
                 total_items_number = len(tournament.players_by_id)
             if not total_items_number:
                 self._config_reader.add_warning(f'Il n\'y a aucun élément à afficher pour le tournoi '
                                                 f'[{tournament.id}], famille ignorée', section_key, key)
                 return
-            number_parts: int = total_items_number // number
-            first_number: int = 0
-            last_number: int = 0
+            number_parts: int = ceil(total_items_number / number)
+            first_number: int
+            last_number: int
             if range_str is not None:
                 if matches := re.match(r'^(?P<first>\d+)-(?P<second>\d+)$', range_str):
                     first_number = int(matches.group('first'))
                     last_number = min(number_parts, int(matches.group('second')))
+                else:
+                    self._config_reader.add_warning(
+                        f'valeurs [{range_str}] non valides, famille ignorée', section_key)
+                    return
             else:
                 first_number = 1
                 last_number = number_parts
             if first_number <= last_number:
                 family_indices = list(map(str, range(first_number, last_number + 1)))
+            else:
+                self._config_reader.add_warning(
+                    f'valeurs [{first_number}-{last_number}] non valides, famille ignorée', section_key)
+                return
         else:
             key = 'range'
             if range_str is None:
@@ -149,17 +182,22 @@ class FamilyBuilder:
                     family_indices = list(
                         map(chr, range(ord(first_letter), ord(last_letter) + 1))
                     )
-        if family_indices is None:
-            self._config_reader.add_warning(f'valeurs [{range_str}] non valides, famille ignorée',
-                                            section_key, key)
-            return
+            if family_indices is None:
+                self._config_reader.add_warning(f'valeurs [{range_str}] non valides, famille ignorée',
+                                                section_key, key)
+                return
         self._config_reader.add_debug(f"valeurs : {' '.join(family_indices)}", section_key, key)
         for screen_index in family_indices:
             screen_id = f'{section_key.split(".")[1]}-{screen_index}'
             screen_section_key = f'screen.{screen_id}'
             self._config_reader.setdefault(screen_section_key, {})
             self._config_reader[screen_section_key]['__family__'] = family_id
-            for sub_section_key, properties in template.data.items():
+            template_extended_data: dict[str | None, dict[str, str]] = template.data
+            if template_type.value not in template.data:
+                # this way parts, number and part will be set below even if [template.<template_id>.template_type]
+                # is not declared
+                template_extended_data[str(template_type.value)] = {}
+            for sub_section_key, properties in template_extended_data.items():
                 if sub_section_key is None:
                     new_section_key = screen_section_key
                 else:

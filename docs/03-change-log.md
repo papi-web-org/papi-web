@@ -2,6 +2,12 @@
 
 # Papi-web - ChangeLog
 
+## Version 2.1.5 - 24 janvier 2024
+- Simplification de la configuration des évènements :
+  - Pour un modèle, suppression de l'obligation de préciser la rubrique `[template.<template_id>.boards]`/`[template.<template_id>.players]` lorsque l'évènement ne compte qu'un seul tournoi
+  - Pour une famille, utilisation par défaut du modèle du même nom
+  - Pour un écran rotatif, utilisation par défaut de la famille du même nom
+
 ## Version 2.1.4 - 23 janvier 2024
 - Ajout de l'option `show_unpaired` pour limiter l'affichage des appariements par ordre alphabétique aux joueur·euses apparié·es
 

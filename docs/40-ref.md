@@ -83,7 +83,7 @@ Voir également : [Configuration d'un tournoi à handicap](32-handicap.md)
 
 En règle générale, on n'utilise pas les options `part`, `parts` et `number` dans les modèles mais plutôt dans les familles.
 
-Selon le type de l'écran, on pourra ajouter une rubrique `[template.<template_id>.boards]` ou `[template.<template_id>.players]`.
+Selon le type de l'écran, on pourra ajouter une rubrique `[template.<template_id>.boards]` ou `[template.<template_id>.players]` (mais ce n'est pas nécessaire si l'évènement ne compte qu'un seul tournoi).
 
 Voir également : [Modèles et familles d'écran](33-templates-families.md)
 
@@ -114,7 +114,7 @@ Voir également :
 
 Les écrans qui affichent plusieurs ensembles d'échiquiers doivent utiliser pour chacun une rubrique `[screen.<screen_id>.boards.<screen_set_id>]` (où `<screen_set_id>` est l'identifiant de l'ensemble), alors ceux qui n'affichent q'un ensemble d'échiquier peuvent utiliser la rubrique `[screen.<screen_id>.boards]`.
 
-Une rubrique `[screen.<screen_id>.boards]` (ou au moins une rubrique `[screen.<screen_id>.boards.<screen_set_id>]`) est obligatoire pour les écrans de type `boards` (saisie et affichage des appariements par échiquier). 
+Une rubrique `[screen.<screen_id>.boards]` (ou au moins une rubrique `[screen.<screen_id>.boards.<screen_set_id>]`) est obligatoire pour les écrans de type `boards` (saisie et affichage des appariements par échiquier) dès lors que l'évènement comporte plusieurs tournois. 
 
 | Option       | Description                                                                                                                                                                                                                                                                                                                            |
 |--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -159,24 +159,32 @@ L'identifiant de la famille (`<family_id>`) est obligatoire et peut-être utilis
 
 | Option     | Description                                                                                                                                                                                                                                                                    |
 |------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `template` | L'identifiant du modèle sur lequel la famille est basée (obligatoire).                                                                                                                                                                                                         |
+| `template` | L'identifiant du modèle sur lequel la famille est basée (facultatif, utilisation par défaut du modèle du même nom `<family_id>` ou d'un unique modèle de l'évènement).                                                                                                         |
 | `range`    | La plage de valeurs utilisée pour construire la famille, de chiffres ou de lettres (par exemple `range = 1-6` ou `range = A-F`).<br/>On utilise en général l'option `range` avec des lettres, ou bien avec des chiffres pour réduire une plage donnée par `parts` ou `number`. |
 | `parts`    | Le nombre d'écrans à créer (Papi-web calcule automatiquement le nombre d'échiquiers ou de joueur·euses à afficher sur chaque écran).                                                                                                                                           |
 | `number`   | Le nombre fixe d'échiquiers ou de joueur·euses à afficher sur chaque écran (Papi-web calcule automatiquement le nombre d'écrans nécessaires).                                                                                                                                  |
 
+> [!NOTE]
+> Si l'option `template` n'est par définie, on utilise par défaut :
+> - le modèle de même nom (`<family_id>`)
+> - l'unique modèle de l'évènement si c'est le cas
+> Sinon la famille est ignorée.
 
 ## Écrans rotatifs (`[rotator.<rotator_id>]`)
 
 L'identifiant de l'écran (`<rotator_id>`) est obligatoire.
 
-| Option     | Description                                                                    |
-|------------|--------------------------------------------------------------------------------|
-| `families` | Les identifiants des familles des écrans à afficher, séparés par les virgules. |
-| `screens`  | Les identifiants des écrans à afficher, séparés par les virgules.              |
-| `delay`    | Le délai de transition entre deux écrans, en secondes (par défaut `15`).       |
+| Option     | Description                                                                                                |
+|------------|------------------------------------------------------------------------------------------------------------|
+| `families` | Les identifiants des familles des écrans à afficher, séparés par les virgules (facultatif, cf ci-dessous). |
+| `screens`  | Les identifiants des écrans à afficher, séparés par les virgules (facultatif, cf ci-dessous).              |
+| `delay`    | Le délai de transition entre deux écrans, en secondes (par défaut `15`).                                   |
 
 > [!NOTE]
-> Au moins une des deux options `screens` ou `families` doit être utilisée pour préciser les écrans à afficher.
+> Si aucune des deux options `screens` ou `families` n'est définie, on utilise par défaut :
+> - la famille de même nom (`<rotator_id>`)
+> - l'unique famille de l'évènement si c'est le cas
+> Sinon l'écran rotatif est ignoré.
 
 ## Chronomètre
 

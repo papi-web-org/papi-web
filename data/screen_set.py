@@ -121,8 +121,8 @@ class ScreenSet:
         if self.items_lists is None:
             self._extract_data(self.tournament.boards, force_even=False)
             if self.name is None:
-                if self.first or self.last or self.part:
-                    self.name = '%t [%f à %l]'
+                if self.first or self.last or self.part or self.number:
+                    self.name = 'Ech. %f à %l'
                 else:
                     self.name = '%t'
             self.name = self.name.replace('%t', str(self.tournament.name))
@@ -153,8 +153,8 @@ class ScreenSet:
             else:
                 self._extract_data(self.tournament.players_by_name_without_unpaired, force_even=False)
             if self.name is None:
-                if self.first or self.last or self.part:
-                    self.name = '%t %f à %l'
+                if self.first or self.last or self.part or self.number:
+                    self.name = '%f à %l'
                 else:
                     self.name = '%t'
             self.name = self.name.replace('%t', str(self.tournament.name))
@@ -182,8 +182,8 @@ class ScreenSet:
         if self.items_lists is None:
             self._extract_data(self.tournament.players_by_rating, force_even=True)
             if self.name is None:
-                if self.first or self.last or self.part:
-                    self.name = '%t %f à %l'
+                if self.first or self.last or self.part or self.number:
+                    self.name = 'Elo %f à %l'
                 else:
                     self.name = '%t'
             self.name = self.name.replace('%t', str(self.tournament.name))

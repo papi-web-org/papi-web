@@ -65,12 +65,27 @@ class RotatorBuilder:
                     key
                 )
         if 'screens' not in rotator_section and 'families' not in rotator_section:
-            self._config_reader.add_info(
-                'au moins une option parmi [screens] et [families] doit être '
-                'définie, écran rotatif ignoré',
-                section_key
-            )
-            return None
+            if rotator_id in self._event_screens_by_family_id:
+                self._config_reader.add_info(
+                    f'les options [screens] et [families] ne sont pas définies, '
+                    f'utilisation de la famille [{rotator_id}] par défaut',
+                    section_key
+                )
+                rotator_section['families'] = rotator_id
+            elif len(self._event_screens_by_family_id) == 1:
+                self._config_reader.add_info(
+                    f'les options [screens] et [families] ne sont pas définies, '
+                    f'utilisation par défaut de l\'unique famille [{rotator_id}] par défaut',
+                    section_key
+                )
+                rotator_section['families'] = list(self._event_screens_by_family_id.keys())[0]
+            else:
+                self._config_reader.add_info(
+                    'au moins une option parmi [screens] et [families] doit être '
+                    'définie, écran rotatif ignoré',
+                    section_key
+                )
+                return None
         rotator_screens: list[AScreen] = []
         key = 'families'
         if key in rotator_section:
@@ -108,4 +123,3 @@ class RotatorBuilder:
             self._config_reader.add_warning('aucun écran, écran rotatif ignoré', section_key, key)
             return None
         return Rotator(rotator_id, delay, rotator_screens)
-
