@@ -14,12 +14,12 @@ DIST_DIR: Path = Path('dist')
 DATA_DIR: Path = Path('export-data')
 CUSTOM_DIR: Path = Path('custom')
 basename: str = f'papi-web-{PAPI_WEB_VERSION}'
-EXPORT_DIR: Path = Path('..', 'export')
-PROJECT_DIR: Path = Path(EXPORT_DIR, basename)
-ZIP_FILE: Path = Path(str(PROJECT_DIR) + '.zip')
-EXE_FILENAME = basename + '.exe'
-SPEC_FILE: Path = Path(basename + '.spec')
-TEST_DIR: Path = Path('..', 'test')
+EXPORT_DIR: Path = Path('..') / 'export'
+PROJECT_DIR: Path = EXPORT_DIR / basename
+ZIP_FILE: Path = EXPORT_DIR / f'{basename}.zip'
+EXE_FILENAME: str = basename + '.exe'
+SPEC_FILE: Path = Path('.') / f'{basename}.spec'
+TEST_DIR: Path = Path('..') / 'test'
 
 
 def clean(clean_zip: bool):
@@ -61,13 +61,13 @@ def create_project():
     os.chdir(Path(__file__).resolve().parents[0])
     logger.info(f'Creating folder {PROJECT_DIR} from {DATA_DIR}...')
     shutil.copytree(DATA_DIR, PROJECT_DIR)
-    dist_exe_file: Path = Path(DIST_DIR, EXE_FILENAME)
+    dist_exe_file: Path = DIST_DIR / EXE_FILENAME
     logger.info(f'Moving {dist_exe_file} to {PROJECT_DIR}...')
     shutil.move(str(dist_exe_file), str(PROJECT_DIR / 'bin'))
-    target_dir: Path = Path(PROJECT_DIR, CUSTOM_DIR)
+    target_dir: Path = PROJECT_DIR / CUSTOM_DIR
     logger.info(f'Copying {CUSTOM_DIR} to {target_dir}...')
     shutil.copytree(CUSTOM_DIR, target_dir)
-    target_file: Path = Path(PROJECT_DIR, 'server.bat')
+    target_file: Path = PROJECT_DIR / 'server.bat'
     logger.info(f'Creating batch file {target_file}...')
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
@@ -75,7 +75,7 @@ def create_project():
                 f'@rem Papi-web {PAPI_WEB_VERSION} - {PAPI_WEB_COPYRIGHT} - {PAPI_WEB_URL}\n'
                 f'bin\\{EXE_FILENAME} --server\n'
                 f'pause\n')
-    target_file = Path(PROJECT_DIR, 'ffe.bat')
+    target_file = PROJECT_DIR / 'ffe.bat'
     logger.info(f'Creating batch file {target_file}...')
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
@@ -83,7 +83,7 @@ def create_project():
                 f'@rem Papi-web {PAPI_WEB_VERSION} - {PAPI_WEB_COPYRIGHT} - {PAPI_WEB_URL}\n'
                 f'bin\\{EXE_FILENAME} --ffe\n'
                 f'pause\n')
-    target_file = Path(PROJECT_DIR, 'chessevent.bat')
+    target_file = PROJECT_DIR / 'chessevent.bat'
     logger.info(f'Creating batch file {target_file}...')
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
