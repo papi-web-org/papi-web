@@ -20,6 +20,7 @@ ZIP_FILE: Path = EXPORT_DIR / f'{basename}.zip'
 EXE_FILENAME: str = basename + '.exe'
 SPEC_FILE: Path = Path('.') / f'{basename}.spec'
 TEST_DIR: Path = Path('..') / 'test'
+ICON_FILE: Path = Path('.') / 'web' / 'static' / 'images' / 'papi-web.ico'
 
 
 def clean(clean_zip: bool):
@@ -52,6 +53,7 @@ def build_exe():
         '--hiddenimport=test',
         '--hiddenimport=web',
         '--paths=.',
+        '--icon=web/static/images/papi-web.ico',
         'papi_web.py',
     ]
     run(pyinstaller_params)
