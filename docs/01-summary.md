@@ -67,6 +67,7 @@ Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonne
 | DELMOTTE Eric      | AFE1  | BFC   | 71  | L'Echiquier Châlonnais               |
 | FRAYSSE Sébastien  | AFO2  | BRE   | 29  | Echiquier Quimpérois                 |
 | GUINET Kevin       |       | PDL   | 72  | L'Echiquier Fertois                  |
+| JOLY Christian     | AFO1  | ARA   | 42  | Echiquier Sportif de St Etienne      |
 | LABORDE Stephane   | AFO1  | OCC   | 66  | Perpignan - Les rois de la Tet       |
 | LAPEYRE Pierre     | AFE2  | NAQ   | 33  | Echiquier Bordelais                  |
 | LAUER Alban        | AF01  | IDF   | 95  | L'Echiquéenne de Survilliers         |
