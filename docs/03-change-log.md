@@ -2,6 +2,9 @@
 
 # Papi-web - ChangeLog
 
+## Version 2.1.6 - 4 février 2024
+- Affichage des pilotes ODBC sur la page d'accueil
+
 ## Version 2.1.5 - 24 janvier 2024
 - Simplification de la configuration des évènements :
   - Pour un modèle, suppression de l'obligation de préciser la rubrique `[template.<template_id>.boards]`/`[template.<template_id>.players]` lorsque l'évènement ne compte qu'un seul tournoi
