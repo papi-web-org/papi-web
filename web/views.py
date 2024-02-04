@@ -18,6 +18,7 @@ from data.rotator import Rotator
 from data.screen import AScreen
 from data.tournament import Tournament
 from data.util import Result
+from database.access import access_driver, odbc_drivers
 
 logger: Logger = get_logger()
 
@@ -74,6 +75,8 @@ def index(request: HttpRequest) -> HttpResponse:
         'papi_web_info': papi_web_info,
         'papi_web_config': PapiWebConfig(),
         'events': events,
+        'odbc_drivers': odbc_drivers(),
+        'access_driver': access_driver(),
     })
 
 

@@ -2,3 +2,6 @@
 .table tbody td {
     background: transparent;
 }
+.access-driver {
+    font-weight: bold;
+}
