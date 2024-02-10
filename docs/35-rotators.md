@@ -19,7 +19,7 @@ Deux options permettent de spécifier les écrans qui seront projetés alternati
 [template.appariements]
 type = boards
 menu_text = Tournoi ?
-[template.saisie.boards]
+[template.appariements.boards]
 tournament = domloup-fide-?
 
 # 6 écrans d'affichage des appariements pour les tournois A à F
@@ -38,8 +38,8 @@ families = appariements
 [template.tournoi]
 type = boards
 menu_text = Tournoi ?
-[template.saisie.boards]
-tournament = domloup-fide-?
+[template.tournoi.boards]
+tournament = tournoi-?
 
 # 6 écrans d'affichage des appariements pour les tournois A à F (tournois nommés tournoi-A à tournoi-F)
 [family.tournoi]

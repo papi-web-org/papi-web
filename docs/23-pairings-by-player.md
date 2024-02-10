@@ -35,7 +35,7 @@ Si vous n'avez qu'un seul tournoi dans votre évènement (`default`), alors vous
 
 Si vous avez plusieurs tournois dans votre évènement, vous devez préciser celui qui sera affiché en ajoutant une rubrique `[screen.<screen_id>.players]` de la manière suivante :
 ```
-[screen.saisie.players]
+[screen.alpha.players]
 tournament = principal
 ```
 

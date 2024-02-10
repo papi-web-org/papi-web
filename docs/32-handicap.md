@@ -15,7 +15,7 @@ penalty_value = 30
 min_time = 60
 ```
 
-Lorsqu'un évènement ne comprend qu'un seul évènement alors l'identifiant `<tournament_id>` peut être omis (on utilise simplement `[tournament.handicap]`).
+Lorsqu'un évènement ne comprend qu'un seul tournoi alors l'identifiant `<tournament_id>` peut être omis (on utilise simplement `[tournament.handicap]`).
 
 ![Affichage des appariements d'un tournoi à handicap](images/handicap.jpg)
 

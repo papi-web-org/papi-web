@@ -165,10 +165,11 @@ L'identifiant de la famille (`<family_id>`) est obligatoire et peut-être utilis
 | `number`   | Le nombre fixe d'échiquiers ou de joueur·euses à afficher sur chaque écran (Papi-web calcule automatiquement le nombre d'écrans nécessaires).                                                                                                                                  |
 
 > [!NOTE]
-> Si l'option `template` n'est par définie, on utilise par défaut :
-> - le modèle de même nom (`<family_id>`)
+> Si l'option `template` n'est pas définie, on utilise par défaut :
+> - le modèle de même nom (`<family_id>`) ;
 > - l'unique modèle de l'évènement si c'est le cas
-> Sinon la famille est ignorée.
+>
+> Si aucun de ces critères n'est rempli, la famille est ignorée.
 
 ## Écrans rotatifs (`[rotator.<rotator_id>]`)
 
@@ -182,9 +183,10 @@ L'identifiant de l'écran (`<rotator_id>`) est obligatoire.
 
 > [!NOTE]
 > Si aucune des deux options `screens` ou `families` n'est définie, on utilise par défaut :
-> - la famille de même nom (`<rotator_id>`)
+> - la famille de même nom (`<rotator_id>`) ;
 > - l'unique famille de l'évènement si c'est le cas
-> Sinon l'écran rotatif est ignoré.
+>
+> Si aucun de ces critères n'est rempli, l'écran rotatif est ignoré.
 
 ## Chronomètre
 

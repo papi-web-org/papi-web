@@ -18,9 +18,9 @@ La plateforme d'inscription en ligne Chess Event permet :
 - aux arbitres/organisateur·trices de gérer le pointage en ligne ;
 - aux arbitres de télécharger les fichiers Papi des tournois sur leur ordinateur à la fin du pointage.
 
-Le téléchargement des fichiers Papi des tournois depuis la plateforme Chess Event est possible mais nécessite l'installation d'un logiciel tiers (un moteur PHP, par exemple celui de XAMPP).
+Le téléchargement des fichiers Papi des tournois depuis la plateforme Chess Event nécessite l'installation d'un logiciel tiers (un moteur PHP, par exemple celui de XAMPP) pour les versions antérieures à 2.1.
 
-A partir de la version 2.1, les fichiers Papi des tournois peuvent être téléchargés sur l'ordinateur de l'arbitre sans installation supplémentaire. 
+À partir de la version 2.1, les fichiers Papi des tournois peuvent être téléchargés sur l'ordinateur de l'arbitre sans installation supplémentaire. 
 
 ## Configuration de l'accès à la plateforme Chess Event
 
