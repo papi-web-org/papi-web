@@ -61,6 +61,7 @@ Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonne
 | Arbitre            | Titre | Ligue | Dép | Club                                 |
 |--------------------|-------|-------|-----|--------------------------------------|
 | AUBRY Pascal       | AFO2  | BRE   | 35  | Echiquier Domloupéen                 |
+| AVENIA Adrien      |       | BFC   | 25  | Tour Prends Garde! Besancon          |
 | BENETEAU Hubert    | AFE1  | NOR   | 50  | Agneaux Saint-Lô                     |
 | BENADDOU Khaled    | AFE2  | IDF   | 94  | Club d'Echecs de Saint-Maur          |
 | CLEMENCEAU Cyril   | AFC   | BRE   | 29  | Echiquier du Léon                    |
