@@ -7,7 +7,7 @@ L'utilisation de Papi-web nécessite un peu d'apprentissage : il vous sera très
 ## Configuration (`papi-web.ini`)
 La configuration fournie par défaut dans le fichier `papi-web.ini` est suffisante pour la très grande majorité des cas.
 
-### Messages (`[loggin]`)
+### Messages (`[logging]`)
 #### level
 ```
 [logging]
@@ -20,7 +20,7 @@ Pour obtenir plus de messages utiliser `level = DEBUG`.
 [web]
 host = 0.0.0.0
 ```
-La valeur `0.0.0.0` rend Papi-web accessible depuis tous les clients de votrer réseau local (consulter votre administrateur·trice réseau pour restreindre les plages IP autorisées).
+La valeur `0.0.0.0` rend Papi-web accessible depuis tous les clients de votre réseau local (consulter votre administrateur·trice réseau pour restreindre les plages IP autorisées).
 #### port
 ```
 [web]
@@ -30,7 +30,7 @@ La valeur par défaut `80` est celle classiquement utilisée par les serveurs we
 #### launch_browser
 ```
 [web]
-launch_brower = on
+launch_browser = on
 ```
 Par défaut, le navigateur web ouvre la page d'accueil au démarrage du serveur (pour ne pas ouvrir automatiquement la page d'accueil, utilisez `launch_browser = off`).
 

@@ -2,7 +2,7 @@
 
 # Papi-web - Utilisation d'un chronomètre
 
-L'article 4.4 des règles générales pour les compétitions Fide mentionne à l'article 4.4 concernant la préparation de la salle de jeu :
+L'article 4.4 des règles générales pour les compétitions FIDE mentionne concernant la préparation de la salle de jeu :
 
 > _Pour les événements FIDE de type L1 avec 30 joueurs ou plus, pour toute la compétition, un grand chronomètre numérique ou une horloge doit être installé dans l'aire de jeu. Pour les événements FIDE inférieurs à 30 joueurs, une annonce en bonne et due forme doit être faite 5 minutes avant le début des parties puis une autre 1 minute avant le début des parties._ 
 
@@ -53,7 +53,7 @@ date = 2023-07-09 09:30
 date = 13:30
 ```
 
-Les horaires dont les identifiants sont des numéros correspondent aux horaires de début des rondes. Pour ces horaires particuliers, les textes affichés sur le bandeau du chronomètre sont par défaut `text_before = Début de la ronde <round_id> dans %s` et `text_after = Ronde <round_id>> commencée depuis %s`.
+Les horaires dont les identifiants sont des numéros correspondent aux horaires de début des rondes. Pour ces horaires particuliers, les textes affichés sur le bandeau du chronomètre sont par défaut `text_before = Début de la ronde <round_id> dans %s` et `text_after = Ronde <round_id> commencée depuis %s`.
 
 ```
 [timer.hour.remise-des-prix]

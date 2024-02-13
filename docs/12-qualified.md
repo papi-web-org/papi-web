@@ -11,8 +11,8 @@ name = Tournoi homologué 17 juin 2023
 ffe_id = 57777
 ffe_password = KJGYREIOBZ
 ```
-[!NOTE]
-Lorsque l'on précise le numéro d'homologation (`ffe_id`), si `filename` n'est pas précisé alors Papi-web cherchera un fichier dont le nom est le numéro d'homologation (ici `57777.papi`), dans le répertoire précisé par `path` ou dans le répertoire `papi/` par défaut.
+> [!NOTE]
+> Lorsque l'on précise le numéro d'homologation (`ffe_id`), si `filename` n'est pas précisé alors Papi-web cherchera un fichier dont le nom est le numéro d'homologation (ici `57777.papi`), dans le répertoire précisé par `path` ou dans le répertoire `papi/` par défaut.
 
 En précisant simplement `ffe_id` et `ffe_password`, les opérations sur le site fédéral seront accessibles en lançant le script `ffe.bat`.
 

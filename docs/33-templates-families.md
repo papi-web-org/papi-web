@@ -117,7 +117,6 @@ part = 5
 ```
 [template.alpha]
 type = players
-update = on
 columns = 2
 menu = alpha-1,alpha-2,alpha-3,alpha-4,alpha-5
 menu_text = [%f - %l]
@@ -160,7 +159,7 @@ part = 5
 
 Les familles servent à générer tout un ensemble d'écrans à partir d'un modèle, en se basant sur une plage de valeurs. Le bénéfice de l'utilisation des familles réside en la facilité d'ajouter et modifier des écrans basés sur un même modèle, de les personnaliser (nom et menus).
 
-Une famille d'écrans se déclare à l'aide d'une rubrique `[family.<family_id>]`, où `family_id` sera l'identifiant du modèle. Dans la rubrique `[family.<family_id>]` doivent se trouver :
+Une famille d'écrans se déclare à l'aide d'une rubrique `[family.<family_id>]`, où `family_id` sera l'identifiant de la famille. Dans la rubrique `[family.<family_id>]` doivent se trouver :
 - le modèle sur lequel sont basés les écrans (option `template`) ;
 - la plage de valeurs à partir de laquelle seront construits les écrans (option `range`) peuvent être des entiers ou des lettres.
 
@@ -179,7 +178,7 @@ type = boards
 update = on
 menu = family
 menu_text = Tournoi ?
-[screen.saisie.boards]
+[template.saisie.boards]
 tournament = ?
 name = %t
 ```
@@ -243,7 +242,6 @@ Dans ce cas Papi-web calcule automatiquement le nombre d'écrans nécessaires.
 ```
 [template.alpha]
 type = players
-update = on
 columns = 2
 menu = family
 menu_text = [%f - %l]
@@ -266,7 +264,7 @@ Cette déclaration crée automatiquement les écrans alpha-1 à alpha-5, chaque 
 
 ##### 3.2 Distribution des appariements sur des écrans de taille donnée
 
-On peut également préciser manuellement le nombre dde joueur·euses par écran, en utilisant l'option `number` :
+On peut également préciser manuellement le nombre de joueur·euses par écran, en utilisant l'option `number` :
 
 ```
 [family.alpha]

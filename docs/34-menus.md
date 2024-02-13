@@ -14,30 +14,30 @@ L'option `menu` peut avoir les valeurs suivantes :
 
 ### Aucun menu : `menu = none`
 
-aucun menu ne sera affiché sur cet écran (par exemple, il n'est en général pas nécessaire d'afficher des liens hypertextes puisque la navigation entre les écrans est automatique). `menu = none` est la valeur par défaut.
+Aucun menu ne sera affiché sur cet écran (par exemple, il n'est en général pas nécessaire d'afficher des liens hypertextes puisque la navigation entre les écrans est automatique). `menu = none` est la valeur par défaut.
 
 ### Visualisation : `menu = view`
 
-le menu contiendra des liens vers tous les écrans de l'évènement :
+Le menu contiendra des liens vers tous les écrans de l'évènement :
 - affichage des appariements par échiquier
 - affichage des appariements par ordre alphabétique
 - affichage des résultats
 
 ### Saisie : `menu = update`
 
-le menu contiendra des liens vers tous les écrans de saisie de l'évènement.
+Le menu contiendra des liens vers tous les écrans de saisie de l'évènement.
 
 ### Famille (de l'écran) : `menu = family`
 
-le menu contiendra des liens vers tous les écrans de la famille de l'écran (cette valeur n'est autorisée que pour les écrans d'une famille).
+Le menu contiendra des liens vers tous les écrans de la famille de l'écran (cette valeur n'est autorisée que pour les écrans d'une famille).
 
 ### Liste d'écrans : `menu = <écran n°1, ...>`
 
-le menu contiendra des liens vers les écrans dont on indique la liste des identifiants, séparés par des virgules.
+Le menu contiendra des liens vers les écrans dont on indique la liste des identifiants, séparés par des virgules.
 
 ## Définition du lien hypertexte d'un écran
 
-L'option `menu_text` est uen chaîne de caractère libre.
+L'option `menu_text` est une chaîne de caractère libre.
 
 Avant d'être affichée à l'écran, les remplacements suivants sont effectués :
 - `%t` est remplacé par le nom du tournoi concerné par l'écran
@@ -45,7 +45,7 @@ Avant d'être affichée à l'écran, les remplacements suivants sont effectués 
 - `%l` (l = last) est remplacé par le numéro du dernier échiquier ou les trois premières lettres du nom du·de la dernier·ère joueur·euse
 
 > [!NOTE]
-- Si l'écran présente plusieurs ensembles concernant plusieurs tournois, le tournoi du premier ensemble sera considéré pour les remplacements.
+> Si l'écran présente plusieurs ensembles concernant plusieurs tournois, le tournoi du premier ensemble sera considéré pour les remplacements.
 
 ### Exemples
 
@@ -84,7 +84,7 @@ part = ?
 
 [screen.j]
 template = commun
-[screen.b.boards]
+[screen.j.boards]
 tournament = j
 ```
 

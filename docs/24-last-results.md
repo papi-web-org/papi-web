@@ -6,7 +6,7 @@ Dans les évènements avec plusieurs tournois, il peut être utile de suivre l'i
 
 Tous les résultats saisis via les écrans de saisie sont automatiquement répertoriés et affichés en commençant par les plus récents sur les écrans de résultats.
 
-Comme dit dans la partie [Gestion d'un petit tournoi amical](11-friendly.md), la simple déclaration d'un tournoi crée automatiquement plusieurs écrans, dont un écran d'affichage par ordre alphabétique. Pour personnaliser son ou ses écrans de résultats, il faut le ou les déclarer manuellement.
+Comme dit dans la partie [Gestion d'un petit tournoi amical](11-friendly.md), la simple déclaration d'un tournoi crée automatiquement plusieurs écrans, dont un écran de résultats. Pour personnaliser son ou ses écrans de résultats, il faut le ou les déclarer manuellement.
 
 ## Déclaration d'un écran de résultats (`type = results`)
 
