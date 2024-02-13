@@ -90,7 +90,7 @@ class ActionSelector:
                             version_choice = str(len(PAPI_VERSIONS))
                     if version_choice == 'A':
                         return False
-                    papi_version = default_papi_version
+                    papi_version = PAPI_VERSIONS[int(version_choice) - 1]
                 else:
                     papi_version = PAPI_VERSIONS[-1]
                 logger.info(f'Version de Papi : {papi_version}')
