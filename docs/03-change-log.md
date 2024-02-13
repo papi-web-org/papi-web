@@ -2,6 +2,9 @@
 
 # Papi-web - ChangeLog
 
+## Version 2.1.7 - 13 février 2024
+- Corrections et amélioration de la documentation
+
 ## Version 2.1.6 - 4 février 2024
 - Affichage des pilotes ODBC sur la page d'accueil
 
