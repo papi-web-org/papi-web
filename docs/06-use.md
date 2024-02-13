@@ -2,7 +2,7 @@
 
 # Papi-web - Configuration et utilisation
 
-L'utilisation de Papi-web nécessite un peu d'apprentissage : il vous sera très vite indispensable, en particulier pour gérer de grois évènements, mais il est fortement conseillé de s'entrainer sur des évènements modestes dans un premier temps.
+L'utilisation de Papi-web nécessite un peu d'apprentissage : il vous sera très vite indispensable, en particulier pour gérer de gros évènements, mais il est fortement conseillé de s'entrainer sur des évènements modestes dans un premier temps.
 
 ## Configuration (`papi-web.ini`)
 La configuration fournie par défaut dans le fichier `papi-web.ini` est suffisante pour la très grande majorité des cas.
