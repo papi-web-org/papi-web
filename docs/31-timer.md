@@ -10,6 +10,9 @@ Cet affichage est parfaitement pris en charge par Papi-web grâce à son chronom
 
 ## Fonctionnement du chronomètre
 
+> [!NOTE]
+> Par défaut, le chronomètre est affiché sur les écrans dès lors qu'il est défini, sauf si l'option `show_timer = off` est utilisée.
+
 Plusieurs horaires sont définis dans la configuration d'un évènement pour permettre d'afficher aux joueur·euses le déroulé de la compétition, en particulier le démarrage des rondes.
 
 Papi-web affiche en permanence le temps restant avant l'horaire suivant, sous la forme d'un bandeau :

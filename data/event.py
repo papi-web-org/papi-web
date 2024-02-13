@@ -71,6 +71,16 @@ class Event:
             if self.reader.errors:
                 return
             self.timer = TimerBuilder(self.reader).timer
+            if not self.timer:
+                screen_ids: list[str] = []
+                for screen_id in self.screens:
+                    if self.screens[screen_id].show_timer:
+                        screen_ids.append(screen_id)
+                if screen_ids:
+                    self.reader.add_warning(
+                        'le chronomètre ([timer.hour.*]) n\'est pas défini',
+                        section_key=f'screen.{",".join(screen_ids)}',
+                        key='show_timer')
         silent_event_ids.append(self.id)
 
     @property
