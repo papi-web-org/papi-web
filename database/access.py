@@ -10,6 +10,9 @@ from common.logger import get_logger
 
 logger: Logger = get_logger()
 
+pyodbc.pooling = False
+logger.info(f'Pooling ODBC : {"activé" if pyodbc.pooling else "désactivé"}')
+
 
 @dataclass
 class AccessDatabase:
@@ -63,8 +66,10 @@ class AccessDatabase:
     def __exit__(self, exc_type, exc_value, tb):
         if self.database is not None:
             self.cursor.close()
+            del self.cursor
             self.cursor = None
             self.database.close()
+            del self.database
             self.database = None
 
     def _execute(self, query: str, params: tuple = ()):
