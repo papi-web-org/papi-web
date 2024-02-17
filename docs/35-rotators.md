@@ -12,6 +12,9 @@ Deux options permettent de spécifier les écrans qui seront projetés alternati
 - `screens`, qui permet d'afficher une liste précise d'écrans ;
 - `families`, qui permet de désigner d'un coup tous les écrans de familles.
 
+> [!NOTE]
+> Il est possible d'utiliser à la fois `families` et `screens`.
+
 ## Exemple n°1 : rotation entre les écrans d'une famille (`families`)
 
 ```
@@ -31,7 +34,7 @@ range = A-F
 families = appariements
 ```
 
-## Exemple n°1 : rotation entre une liste d'écrans (`screens`)
+## Exemple n°2 : rotation entre une liste d'écrans (`screens`)
 
 ```
 # modèle d'affichage des tournois
@@ -57,7 +60,32 @@ screens = tournoi-E,tournoi-F
 ```
 
 > [!NOTE]
-> Il est possible d'utiliser à la fois `families` et `screens`.
+> Pour l'option `families`, il est possible de préciser plusieurs familles (séparées par des virgules).
+
+```
+[template.a]
+type = boards
+menu_text = Tournoi a
+[template.a.boards]
+tournament = a
+
+[family.a]
+template = a
+parts = 3
+
+[template.b]
+type = boards
+menu_text = Tournoi b
+[template.b.boards]
+tournament = b
+
+[family.b]
+template = b
+parts = 2
+
+[rotator.tournoi-AB]
+families = a,b
+```
 
 Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
 

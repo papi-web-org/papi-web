@@ -147,7 +147,7 @@ template = alpha
 part = 2
 ```
 
-A voir : [Modèles et familles d'écran](33-templates-families.md)
+A voir : [Modèles et familles d'écran](34-templates-families.md)
 
 ## Création de familles d'écrans multiples
 
@@ -172,7 +172,7 @@ range = 1-10
 
 Dans l'exemple ci-dessus, 10 écrans de saisie des résultats sont automatiquement créés !
 
-A voir : [Modèles et familles d'écran](33-templates-families.md)
+A voir : [Modèles et familles d'écran](34-templates-families.md)
 
 ## Écrans rotatifs
 

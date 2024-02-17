@@ -8,6 +8,9 @@ Dans la rubrique `[screen.<screen_id>]` d'un écran, deux options servent à gé
 - `menu` permet de définir le menu qui sera affiché sur l'écran ;
 - `menu_text` permet de définir le texte du lien hypertexte de cet écran dans les menus.
 
+> [!NOTE]
+> L'option `menu_text` est nécessaire pour qu'un écran apparaisse dans les menus.
+
 ## Définition du menu affiché sur un écran
 
 L'option `menu` peut avoir les valeurs suivantes :
@@ -47,7 +50,7 @@ Avant d'être affichée à l'écran, les remplacements suivants sont effectués 
 > [!NOTE]
 > Si l'écran présente plusieurs ensembles concernant plusieurs tournois, le tournoi du premier ensemble sera considéré pour les remplacements.
 
-### Exemples
+## Exemple
 
 ```
 [tournament.a]
@@ -62,68 +65,44 @@ name = B
 ffe_id = 60000
 name = jeunes
 
-[template.commun]
+[screen.a-1]
 type = boards
 update = on
-menu = a-1, a-2, a-3, b-1, b-2, j
+menu = a-1, a-2, b, j
 menu_text = %t
-
-[family.a]
-template = commun
-[family.a.boards]
+[screen.a-1.boards]
 tournament = a
-parts = 3
-part = ?
-
-[family.b]
-template = commun
-[family.b.boards]
-tournament = b
 parts = 2
-part = ?
+part = 1
+
+[screen.a-2]
+type = boards
+update = on
+menu = a-1, a-2, b, j
+menu_text = %t
+[screen.a-2.boards]
+tournament = a
+parts = 2
+part = 2
+
+[screen.b]
+type = boards
+update = on
+menu = a-1, a-2, b, j
+menu_text = %t
+[screen.b.boards]
+tournament = b
 
 [screen.j]
-template = commun
+type = boards
+update = on
+menu = a-1, a-2, b, j
+menu_text = %t
 [screen.j.boards]
 tournament = j
 ```
 
-![Exemple de menu](images/menus-0.jpg)
-
-```
-[template.saisie]
-type = boards
-update = on
-show_timer = off
-menu = family
-menu_text = %t
-[template.saisie.boards]
-tournament = ?
-
-[family.saisie]
-template = saisie
-range = A-F
-```
-
-![Exemple de menu](images/menus-1.jpg)
-
-```
-[template.alpha]
-type = players
-columns = 2
-menu = family
-menu_text = [%f-%l]
-[template.alpha.players]
-part = ?
-parts = 12
-name = Appariements de %f à %l
-
-[family.alpha]
-template = alpha
-range = 1-12
-```
-
-![Exemple de menu](images/menus-2.jpg)
+![Exemple de menu](images/menus-3.jpg)
 
 Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
 

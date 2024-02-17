@@ -29,8 +29,8 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 
 - [Utilisation d'un chronomètre](docs/31-timer.md)
 - [Configuration d'un tournoi à handicap](docs/32-handicap.md)
-- [Modèles et familles d'écran](docs/33-templates-families.md)
-- [Configuration des menus des écrans](docs/34-menus.md)
+- [Configuration des menus des écrans](docs/33-menus.md)
+- [Modèles et familles d'écran](docs/34-templates-families.md)
 - [Écrans rotatifs](docs/35-rotators.md)
 - [Personnalisation du rendu des écrans (CSS)](docs/36-css.md)
 - [Création des fichiers Papi depuis la plateforme Chess Event](docs/37-chessevent.md)

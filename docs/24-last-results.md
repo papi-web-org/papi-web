@@ -24,7 +24,7 @@ Le paramètre `limit` permet de limiter le nombre de résultats affichés (ici 3
 > - les résultats sont conservés au maximum une heure sur le serveur.
 
 > [!NOTE]
-> Les options de personnalisation des menus sont décrites sur la page [Configuration des menus des écrans](34-menus.md).
+> Les options de personnalisation des menus sont décrites sur la page [Configuration des menus des écrans](33-menus.md).
 
 Voir également : [Guide de référence de la configuration des évènements](40-ref.md)
 

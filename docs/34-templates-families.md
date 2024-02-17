@@ -5,7 +5,7 @@
 Les modèles et les familles ont été introduits dans Papi-web en version 2 pour simplifier la configuration des écrans multiples.
 
 > [!NOTE]
-> Les options `menu` et `menu_text` sont décrites sur la page [Configuration des menus des écrans](34-menus.md).
+> Les options `menu` et `menu_text` sont décrites sur la page [Configuration des menus des écrans](33-menus.md).
 
 ## Les modèles d'écran
 

@@ -2,6 +2,9 @@
 
 # Papi-web - ChangeLog
 
+## Version 2.1.8 - 16 février 2024
+- Suppression du _pooling_ ODBC
+
 ## Version 2.1.7 - 13 février 2024
 - Corrections et amélioration de la documentation
 
