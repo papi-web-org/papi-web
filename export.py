@@ -65,7 +65,9 @@ def create_project():
     shutil.copytree(DATA_DIR, PROJECT_DIR)
     dist_exe_file: Path = DIST_DIR / EXE_FILENAME
     logger.info(f'Moving {dist_exe_file} to {PROJECT_DIR}...')
-    shutil.move(str(dist_exe_file), str(PROJECT_DIR / 'bin'))
+    bin_dir: Path = PROJECT_DIR / 'bin'
+    bin_dir.mkdir(exist_ok=True)
+    shutil.move(dist_exe_file, bin_dir)
     target_dir: Path = PROJECT_DIR / CUSTOM_DIR
     logger.info(f'Copying {CUSTOM_DIR} to {target_dir}...')
     shutil.copytree(CUSTOM_DIR, target_dir)
