@@ -7,6 +7,7 @@ import warnings
 from data.pairing import Pairing
 from common.logger import get_logger
 from data.util import PlayerGender, PlayerTitle, Color
+import trf
 
 logger: Logger = get_logger()
 
@@ -160,6 +161,10 @@ class Player:
             self.title == other.title and self.last_name == other.last_name and
             self.first_name == other.first_name
         )
+
+    def to_trf(self) -> trf.Player.Player:
+        pass
+
 
     def __repr__(self):
         if self.id == 1:
