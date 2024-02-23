@@ -9,7 +9,7 @@ from common.logger import get_logger
 
 logger: Logger = get_logger()
 
-CHESSEVENT_URL: str = 'https://services.breizh-chess-online.fr/chessevent/download'
+CHESSEVENT_URL: str = 'https://chessevent.echecs-bretagne.fr/download'
 
 
 class ChessEventSession(Session):
