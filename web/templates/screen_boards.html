@@ -8,20 +8,22 @@
                     <div class="col screen-set-col">
                         <table class="table table-striped table-sm {% if screen.update %}table-hover{% endif %}">
                             <thead class="table-dark">
-                                <th scope="col" class="board-number">Ech</th>
-                                <th scope="col" class="points">Pts</th>
-                                {% if tournament.print_real_points %}<th scope="col" class="points">&nbsp;</th>{% endif %}
-                                <th scope="col" class="player">Blancs{% if tournament.handicap %} (temps){% endif %}</th>
-                                <th scope="col" class="score">Score</th>
-                                <th scope="col" class="player">Noirs{% if tournament.handicap %} (temps){% endif %}</th>
-                                {% if tournament.print_real_points %}<th scope="col" class="points">&nbsp;</th>{% endif %}
-                                <th scope="col" class="points">Pts</th>
+                                <tr>
+                                    <th scope="col" class="board-number">Ech</th>
+                                    <th scope="col" class="points">Pts</th>
+                                    {% if tournament.print_real_points %}<th scope="col" class="points">&nbsp;</th>{% endif %}
+                                    <th scope="col" class="player">Blancs{% if tournament.handicap %} (temps){% endif %}</th>
+                                    <th scope="col" class="score">Score</th>
+                                    <th scope="col" class="player">Noirs{% if tournament.handicap %} (temps){% endif %}</th>
+                                    {% if tournament.print_real_points %}<th scope="col" class="points">&nbsp;</th>{% endif %}
+                                    <th scope="col" class="points">Pts</th>
+                                </tr>
                             </thead>
                             <tbody>
                             {% for board in boards %}
                                 {% with wp=board.white_player %}{% with bp=board.black_player %}
                                 <tr
-                                    id="board-{{ board.id }}-row"
+                                    id="board-{{ tournament.id }}-{{ board.id }}-row"
                                     class="board-row {% if board.result_str %}board-row-result{% else %}board-row-no-result{% endif %}"
                                     {% if not board.result_str %}data-bs-toggle="modal" data-bs-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-modal"{% endif %}
                                 >
@@ -60,7 +62,8 @@ $(document).ready(function(){
     $('#tournament-{{ tournament.id }}-board-{{ board.id }}-modal').on('hidden.bs.modal', function () {
         start_refresh_interval();
     });
-});                                    </script>
+});
+                                    </script>
                                     <div
                                             id="tournament-{{ tournament.id }}-board-{{ board.id }}-modal" class="modal fade board-modal"
                                             data-bs-backdrop="static" data-bs-keyboard="false"

@@ -56,7 +56,10 @@ def render_screen(
         request: HttpRequest, event: Event, screen: AScreen, login_needed: bool, rotator_next_url: str = None,
         rotator_delay: int = None
 ) -> HttpResponse:
-    return render(request, 'screen.html', {
+    last_result_entered: dict[str, int | str | float] | None = None
+    with suppress(KeyError):
+        last_result_entered = request.session['last_result_entered']
+    response: HttpResponse = render(request, 'screen.html', {
         'papi_web_info': papi_web_info,
         'event': event,
         'screen': screen,
@@ -64,7 +67,9 @@ def render_screen(
         'login_needed': login_needed,
         'rotator_next_url': rotator_next_url,
         'rotator_delay': rotator_delay,
+        'last_result_entered': last_result_entered,
     })
+    return response
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -197,6 +202,11 @@ def update_result(
         return redirect(screen_url(event.id, screen_id, ))
     tournament.add_result(board, Result.from_papi_value(result))
     event.store_result(tournament, board, result)
+    request.session['last_result_entered']: dict[str, int | str | float] = {
+        'tournament_id': tournament_id,
+        'board_id': board_id,
+        'expiration': time.time() + 10,
+    }
     return redirect(screen_url(event_id, screen_id, ))
 
 

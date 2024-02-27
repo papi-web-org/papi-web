@@ -19,6 +19,15 @@
     {% endif %}
 {% endif %}
 </script>
+<style>
+{% if last_result_entered %}
+    {% if last_result_entered.expiration > now %}
+        #board-{{ last_result_entered|get_item:'tournament_id' }}-{{ last_result_entered|get_item:'board_id' }}-row > * {
+            color: red;
+        }
+    {% endif %}
+{% endif %}
+</style>
 {% endblock head %}
 
 {% block content %}
