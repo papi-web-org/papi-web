@@ -58,28 +58,29 @@ Vous n'en faites pas encore partie ? Lancez-vous en découvrant [les nouveautés
 
 Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonner à la liste de diffusion papi-web-news@echecs-bretagne.fr (demande par mail à pascal.aubry@echecs35.fr).
 
-| Arbitre            | Titre | Ligue | Dép | Club                                 |
-|--------------------|-------|-------|-----|--------------------------------------|
-| AUBRY Pascal       | AFO2  | BRE   | 35  | Echiquier Domloupéen                 |
-| AVENIA Adrien      |       | BFC   | 25  | Tour Prends Garde! Besancon          |
-| BENETEAU Hubert    | AFE1  | NOR   | 50  | Agneaux Saint-Lô                     |
-| BENADDOU Khaled    | AFE2  | IDF   | 94  | Club d'Echecs de Saint-Maur          |
-| CLEMENCEAU Cyril   | AFC   | BRE   | 29  | Echiquier du Léon                    |
-| DELMOTTE Eric      | AFE1  | BFC   | 71  | L'Echiquier Châlonnais               |
-| FRAYSSE Sébastien  | AFO2  | BRE   | 29  | Echiquier Quimpérois                 |
-| GUINET Kevin       |       | PDL   | 72  | L'Echiquier Fertois                  |
-| JOLY Christian     | AFO1  | ARA   | 42  | Echiquier Sportif de St Etienne      |
-| LABORDE Stephane   | AFO1  | OCC   | 66  | Perpignan - Les rois de la Tet       |
-| LAPEYRE Pierre     | AFE2  | NAQ   | 33  | Echiquier Bordelais                  |
-| LAUER Alban        | AF01  | IDF   | 95  | L'Echiquéenne de Survilliers         |
-| LECORNU Laurent    | AFE1  | BRE   | 29  | Echiquier Gouesnousien               |
-| LEFEBVRE Philippe  | AFO1  | BRE   | 29  | Echiquier Gouesnousien               |
-| LOUDIER Sarah      | AFC   | BRE   | 22  | Tregor Echecs                        |
-| PERCHE Ludovic     | AFO2  | NAQ   | 16  | Echiquier Couronnais                 |
-| PLAT Sammy         | AFO2  | BRE   | 35  | Rennes Paul Bert                     |
-| PORTE Pierre       |       | ARA   | 73  | Academie d'Echecs d'Aix les bains    |
-| REGAUD Denis       | AFE2  | NAQ   | 33  | Salon Nostradamus                    |
-| RUHLMANN Dominique | AFE1  | BRE   | 35  | Echiquier du pays de Liffré          |
-| SALLETTE Alain     | AFE1  | NAQ   | 33  | Bordeaux Aspom Echecs                |
-| VIEVILLE Claude    | AFC   | HDF   | 85  | Cercle d'Echecs de Fournes en Weppes |
-| VIOLEAU Jean-Luc   | AFE1  | PDL   | 85  | Club Echecs La Roche sur Yon         |
+| Arbitre             | Titre | Ligue | Dép | Club                                           |
+|---------------------|-------|-------|-----|------------------------------------------------|
+| AUBRY Pascal        | AFO2  | BRE   | 35  | Echiquier Domloupéen                           |
+| AVENIA Adrien       |       | BFC   | 25  | Tour Prends Garde! Besancon                    |
+| BENETEAU Hubert     | AFE1  | NOR   | 50  | Agneaux Saint-Lô                               |
+| BENADDOU Khaled     | AFE2  | IDF   | 94  | Club d'Echecs de Saint-Maur                    |
+| CLEMENCEAU Cyril    | AFC   | BRE   | 29  | Echiquier du Léon                              |
+| DELMOTTE Eric       | AFE1  | BFC   | 71  | L'Echiquier Châlonnais                         |
+| FRAYSSE Sébastien   | AFO2  | BRE   | 29  | Echiquier Quimpérois                           |
+| GUINET Kevin        |       | PDL   | 72  | L'Echiquier Fertois                            |
+| JOLY Christian      | AFO1  | ARA   | 42  | Echiquier Sportif de St Etienne                |
+| LABORDE Stephane    | AFO1  | OCC   | 66  | Perpignan - Les rois de la Tet                 |
+| LAPEYRE Pierre      | AFE2  | NAQ   | 33  | Echiquier Bordelais                            |
+| LAUER Alban         | AF01  | IDF   | 95  | L'Echiquéenne de Survilliers                   |
+| LECORNU Laurent     | AFE1  | BRE   | 29  | Echiquier Gouesnousien                         |
+| LEFEBVRE Philippe   | AFO1  | BRE   | 29  | Echiquier Gouesnousien                         |
+| LOUDIER Sarah       | AFC   | BRE   | 22  | Tregor Echecs                                  |
+| PERCHE Ludovic      | AFO2  | NAQ   | 16  | Echiquier Couronnais                           |
+| PLAT Sammy          | AFO2  | BRE   | 35  | Rennes Paul Bert                               |
+| PORTE Pierre        |       | ARA   | 73  | Academie d'Echecs d'Aix les bains              |
+| REGAUD Denis        | AFE2  | NAQ   | 33  | Salon Nostradamus                              |
+| RUHLMANN Dominique  | AFE1  | BRE   | 35  | Echiquier du pays de Liffré                    |
+| SALLETTE Alain      | AFE1  | NAQ   | 33  | Bordeaux Aspom Echecs                          |
+| TRAVAILLOUX Dimitri | AFO1  | ARA   | 74  | Cercle d'échecs de l'agglomération Annécienne  |
+| VIEVILLE Claude     | AFC   | HDF   | 85  | Cercle d'Echecs de Fournes en Weppes           |
+| VIOLEAU Jean-Luc    | AFE1  | PDL   | 85  | Club Echecs La Roche sur Yon                   |
