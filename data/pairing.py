@@ -2,6 +2,8 @@ from logging import Logger
 from common.logger import get_logger
 from dataclasses import dataclass
 from data.util import Result
+# from trf.Player import Game
+import trf.Player as trf
 
 logger: Logger = get_logger()
 
@@ -18,3 +20,10 @@ class Pairing:
 
     def __iter__(self):
         yield from (self.color, self.opponent_id, self.result)
+
+    def to_trf(self, round_number) -> trf.Game:
+        return trf.Game(
+                self.opponent_id,
+                self.color,
+                self.result.to_trf(),
+                round_number)

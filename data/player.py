@@ -12,20 +12,38 @@ import trf
 logger: Logger = get_logger()
 
 
+# TODO(Amaras) Make sure the initialization is correctly changed
+# NOTE(Amaras) Maybe we should use pydantic here?
 @dataclass
 @total_ordering
 class Player:
+    # NOTE(Amaras) what is this ref_id: starting rank or FFE database id?
     ref_id: int
     last_name: str
     first_name: str
     gender: PlayerGender
     title: PlayerTitle
     rating: int
+    # NOTE(Amaras)
+    fide_id: int
+    # NOTE(Amaras) change from 2.1: required for TRF
+    federation: str
+    # NOTE(Amaras) change from 2.1: required for TRF
+    # exports to YYYY.01.01
+    birth_year: int
+    # TODO(Amaras) this should be a data.util.TournamentRating, and not
+    # exported in TRF file
     rating_type: str
+    # NOTE(Amaras) not exported in TRF file
     fixed: int
     pairings: dict[int, Pairing]
+    # TODO(Amaras) The points field could be stored in a fixed-point format
+    # the TRF format only specifies points in a XX.X format.
+    # However, this implies changing the API, which is not something I'm
+    # willing to do just yet.
     points: float | None = field(default=None, init=False)
     vpoints: float | None = field(default=None, init=False)
+    # NOTE(Amaras) The following fields are not exported in the TRF file
     board_id: int | None = field(default=None, init=False)
     board_number: int | None = field(default=None, init=False)
     color: Color | None = field(default=None, init=False)
@@ -163,7 +181,25 @@ class Player:
         )
 
     def to_trf(self) -> trf.Player.Player:
-        pass
+        # NOTE(Amaras) This assumes Player.ref_id is the startrank
+        return trf.Player.Player(
+                self.ref_id,
+                f'{self.last_name}, {self.first_name}',
+                self.gender.to_trf(),
+                self.title.to_trf(),
+                self.federation,
+                self.fide_id,
+                f'{self.birth_year}.01.01',
+                self.points,
+                None,
+                list(
+                    map(
+                        lambda round_, pairing: pairing.to_trf(round_),
+                        enumerate(self.pairings, start=1)
+                        )
+                    )
+                )
+
 
 
     def __repr__(self):
