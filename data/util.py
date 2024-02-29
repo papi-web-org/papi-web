@@ -13,9 +13,12 @@ logger: Logger = get_logger()
 class Result(IntEnum):
     """An enum representing the results in the database.
     Should be subclassed if the point value is not the default"""
+    # TODO(Amaras) differentiate between draw (=) and HPB (H);
+    # between PAB (U), forfeit gain (+) and Full-point Bye (F);
+    # between Zero-point Bye (Z) and a round not paired yet.
     NOT_PAIRED = 0
     LOSS = 1
-    DRAW_OR_HPB = 2  # HPB = Halp Point Bye
+    DRAW_OR_HPB = 2  # HPB = Half Point Bye
     GAIN = 3
     FORFEIT_LOSS = 4
     DOUBLE_FORFEIT = 5
@@ -138,6 +141,28 @@ class Result(IntEnum):
     @classmethod
     def imputable_results(cls) -> tuple[Self, Self, Self]:
         return cls.GAIN, cls.DRAW_OR_HPB, cls.LOSS
+
+    # TODO(Amaras) see todo item at top of class: it is not yet possible to
+    # correctly differentiate between several possible results
+    def to_trf(self, unrated: bool = False) -> str:
+        match self:
+            case Result.LOSS:
+                return 'L' if unrated else '0'
+            case Result.GAIN:
+                return 'W' if unrated else '1'
+            case Result.DRAW_OR_HPB:
+                # TODO(Amaras) this should take into account HPB or not
+                return '=' if unrated else 'D'
+            case Result.FORFEIT_LOSS:
+                return '-'
+            case Result.PAB_OR_FORFEIT_GAIN_OR_FPB:
+                return '+'
+            case Result.DOUBLE_FORFEIT:
+                return '-'
+            case Result.NOT_PAIRED:
+                return 'Z'
+            case _:
+                raise ValueError(f"Unknown value: {self}")
 
 
 class TournamentType(IntEnum):
