@@ -17,8 +17,11 @@ def screen_url(request: Request, event_id: str, screen_id: str) -> str:
     return request.app.route_reverse('show-screen', event_id=event_id, screen_id=screen_id)
 
 
-def rotator_url(request: Request, event_id: str, rotator_id: str, screen_index: int = 0) -> str:
+def rotator_url(request: Request, event_id: str, rotator_id: str) -> str:
     return request.app.route_reverse(
-        'show-rotator', event_id=event_id, rotator_id=rotator_id, screen_index=screen_index)
+        'show-rotator', event_id=event_id, rotator_id=rotator_id)
 
 
+def rotator_screen_url(request: Request, event_id: str, rotator_id: str, screen_index: int) -> str:
+    return request.app.route_reverse(
+        'show-rotator-screen', event_id=event_id, rotator_id=rotator_id, screen_index=screen_index)

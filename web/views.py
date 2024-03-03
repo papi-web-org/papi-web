@@ -24,7 +24,7 @@ from data.tournament import Tournament
 from data.util import Result
 from database.access import access_driver, odbc_drivers
 from web.messages import Message
-from web.urls import index_url, event_url, screen_url, rotator_url
+from web.urls import index_url, event_url, screen_url, rotator_screen_url
 
 logger: Logger = get_logger()
 
@@ -190,18 +190,17 @@ async def show_screen(request: Request, event_id: str, screen_id: str) -> Templa
     return render_screen(request, event, screen, login_needed)
 
 
-@get(
-    path=[
-        '/rotator/{event_id:str}/{rotator_id:str}',
-        '/rotator/{event_id:str}/{rotator_id:str}/{screen_index:int}',
-    ],
-    name='show-rotator')
+@get(path='/rotator/{event_id:str}/{rotator_id:str}', name='show-rotator')
 async def show_rotator(
-        request: Request, event_id: str, rotator_id: str, screen_index: int = None) -> Template | Redirect:
-    if screen_index is None:
-        return Redirect(
-            path=rotator_url(request, event_id, rotator_id, 0),
-            status_code=HTTP_307_TEMPORARY_REDIRECT)
+        request: Request, event_id: str, rotator_id: str) -> Redirect:
+    return Redirect(
+        path=rotator_screen_url(request, event_id, rotator_id, 0),
+        status_code=HTTP_307_TEMPORARY_REDIRECT)
+
+
+@get(path='/rotator/{event_id:str}/{rotator_id:str}/{screen_index:int}', name='show-rotator-screen')
+async def show_rotator_screen(
+        request: Request, event_id: str, rotator_id: str, screen_index: int) -> Template | Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
@@ -218,7 +217,7 @@ async def show_rotator(
     login_needed: bool = event_login_needed(request, event, screen)
     return render_screen(
         request, event, screen, login_needed,
-        rotator_next_url=rotator_url(request, event_id, rotator_id, (screen_index + 1) % len(rotator.screens)),
+        rotator_next_url=rotator_screen_url(request, event_id, rotator_id, (screen_index + 1) % len(rotator.screens)),
         rotator_delay=rotator.delay)
 
 

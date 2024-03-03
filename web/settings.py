@@ -30,6 +30,7 @@ route_handlers: Sequence[ControllerRouterHandler] = [
     views.login,
     views.show_screen,
     views.show_rotator,
+    views.show_rotator_screen,
     views.update_result,
     views.get_screen_last_update,
     static_files_router,
