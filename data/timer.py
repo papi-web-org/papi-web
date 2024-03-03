@@ -1,5 +1,4 @@
-import datetime
-import datetime as dt
+from datetime import datetime
 import re
 import time
 from contextlib import suppress
@@ -17,11 +16,11 @@ ROUND_DEFAULT_TEXT_BEFORE: str = 'Début de la ronde {} dans %s'
 ROUND_DEFAULT_TEXT_AFTER: str = 'Ronde {} commencée depuis %s'
 
 
-def timestamp_to_datetime(ts: int) -> dt.datetime:
-    return dt.datetime.fromtimestamp(ts)
+def timestamp_to_datetime(ts: int) -> datetime:
+    return datetime.fromtimestamp(ts)
 
 
-def datetime_to_str(dt: dt.datetime) -> str:
+def datetime_to_str(dt: datetime) -> str:
     return dt.strftime('%Y-%m-%d %H:%M')
 
 
@@ -36,7 +35,7 @@ class TimerHour:
     round: int | None = None
     text_before: str | None = None
     text_after: str | None = None
-    datetime: dt.datetime = field(init=False)
+    datetime: datetime = field(init=False)
     timestamp_1: int | None = field(default=None, init=False)
     timestamp_2: int | None = field(default=None, init=False)
     timestamp_3: int | None = field(default=None, init=False)
@@ -182,7 +181,7 @@ class TimerBuilder:
             datetime_str)
         if matches:
             try:
-                timestamp = int(time.mktime(datetime.datetime.strptime(datetime_str, '%Y-%m-%d %H:%M').timetuple()))
+                timestamp = int(time.mktime(datetime.strptime(datetime_str, '%Y-%m-%d %H:%M').timetuple()))
             except ValueError:
                 pass
         else:
@@ -195,7 +194,7 @@ class TimerBuilder:
                 self._config_reader.add_debug(
                     f'jour non spécifié, [{datetime_str} {previous_hour}] pris en compte', section_key, key)
                 try:
-                    timestamp = int(time.mktime(datetime.datetime.strptime(
+                    timestamp = int(time.mktime(datetime.strptime(
                         previous_hour.date_str + ' ' + datetime_str, '%Y-%m-%d %H:%M').timetuple()))
                 except ValueError:
                     pass

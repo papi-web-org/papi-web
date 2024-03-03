@@ -28,7 +28,7 @@ Au fur et à mesure du temps, le bandeau change de couleur pour indiquer aux jou
 
 Le synopsis de l'affichage du bandeau est le suivant :
 
-![Bandeau chronomètre (sysnopsis)](images/timer-synopsis.jpg)
+![Bandeau chronomètre (synopsis)](images/timer-synopsis.jpg)
 
 ## Configuration des horaires
 

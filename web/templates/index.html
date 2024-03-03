@@ -1,12 +1,11 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block title %}
 Papi-web
 {% endblock title %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'css/index.css' %}" type="text/css" />
+<link rel="stylesheet" href="{{ url_for('static', file_path='/css/index.css') }}" type="text/css" />
 {% endblock head %}
 
 {% block content %}
@@ -22,8 +21,8 @@ Papi-web
             </thead>
             <tbody>
                 <tr>
-                    <th scope="row">Configuration réseau</th>
-                    <td>{{ papi_web_config.web_host }}:{{ papi_web_config.web_port }}</td>
+                    <th scope="row">Port</th>
+                    <td>{{ papi_web_config.web_port }}</td>
                 </tr>
                 <tr>
                     <th scope="row">Accès depuis le serveur Papi-web</th>
@@ -39,7 +38,15 @@ Papi-web
                 </tr>
                 <tr>
                     <th scope="row">Version de Papi-web</th>
-                    <td>{{ papi_web_info|get_item:'version' }}</td>
+                    <td>{{ papi_web_info['version'] }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Version de LiteStar</th>
+                    <td>{{ papi_web_config.litestar_version }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Version de PyODBC</th>
+                    <td>{{ papi_web_config.pyodbc_version }}</td>
                 </tr>
                 <tr>
                     <th scope="row">Pilote Access</th>
@@ -73,19 +80,17 @@ Papi-web
             <tbody>
                 {% for event in events %}
                     <tr>
-                        <th scope="row"><a href="{% url 'show-event' event.id %}" target="_blank">{{ event.name }}</a></th>
+                        <th scope="row"><a href="{{ url_for('show-event', event_id=event.id) }}" target="_blank">{{ event.name }}</a></th>
                         <td>
-                            <i class="bi-people-fill" ></i>&nbsp;{{ event.tournaments | length }} tournoi{% if event.tournaments|length > 1 %}s{% endif %}
-                            <i class="bi-arrows-fullscreen" ></i>&nbsp;{{ event.screens | length }} écran{% if event.screens|length > 1 %}s{% endif %}
-                            <i class="bi-repeat" ></i>&nbsp;{{ event.rotators | length }} écran{% if event.rotators|length > 1 %}s{% endif %} rotatif{% if event.rotators|length > 1 %}s{% endif %}
-                            <i class="bi-calendar2-event-fill" ></i>&nbsp;{% if event.timer %}{{ event.timer.hours | length }}{% else %}0{% endif %} horaire{% if event.timer %}{% if event.timer.hours|length > 1 %}s{% endif %}{% endif %}
+                            <i class="bi-people-fill" ></i>&nbsp;{{ event.tournaments|length }} tournoi{% if event.tournaments|length > 1 %}s{% endif %}
+                            <i class="bi-arrows-fullscreen" ></i>&nbsp;{{ event.screens|length }} écran{% if event.screens|length > 1 %}s{% endif %}
+                            <i class="bi-repeat" ></i>&nbsp;{{ event.rotators|length }} écran{% if event.rotators|length > 1 %}s{% endif %} rotatif{% if event.rotators|length > 1 %}s{% endif %}
+                            <i class="bi-calendar2-event-fill" ></i>&nbsp;{% if event.timer %}{{ event.timer.hours|length }}{% else %}0{% endif %} horaire{% if event.timer %}{% if event.timer.hours|length > 1 %}s{% endif %}{% endif %}
                         </td>
-                        {% with id='messages' errors_len=event.errors|length warnings_len=event.warnings|length infos_len=event.infos|length %}
-                        {% with messages_len=errors_len|add:warnings_len|add:infos_len %}
+                        {% with messages_len=event.errors|length + event.warnings|length + event.infos|length %}
                             <td>
-                                <i class="bi-chat-fill" ></i>&nbsp;{{ messages_len }} message{% if messages_len > 1 %}s{% endif %}&nbsp;:&nbsp;&nbsp;<i class="bi-bug" ></i>&nbsp;{{ errors_len }}&nbsp;&nbsp;<i class="bi-exclamation-triangle" ></i>&nbsp;{{ warnings_len }}&nbsp;&nbsp;<i class="bi-info-circle" ></i>&nbsp;{{ infos_len }}
+                                <i class="bi-chat-fill" ></i>&nbsp;{{ messages_len }} message{% if messages_len > 1 %}s{% endif %}&nbsp;:&nbsp;&nbsp;<i class="bi-bug" ></i>&nbsp;{{ event.errors|length }}&nbsp;&nbsp;<i class="bi-exclamation-triangle" ></i>&nbsp;{{ event.warnings|length }}&nbsp;&nbsp;<i class="bi-info-circle" ></i>&nbsp;{{ event.infos|length }}
                             </td>
-                        {% endwith %}
                         {% endwith %}
                     </tr>
                 {% endfor %}

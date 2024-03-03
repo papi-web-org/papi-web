@@ -41,7 +41,7 @@ class Event:
         self.screens: dict[str, AScreen] = {}
         self.rotators: dict[str, Rotator] = {}
         self.timer: Timer | None = None
-        if self.reader.errors or self.reader.warnings:  # warning when the configuration file is not found
+        if self.reader.errors:
             return
         self._build_root()
         if self.reader.errors:
@@ -146,14 +146,14 @@ class Event:
         # NOTE(Amaras) This could be a TOC/TOU bug
         # What would our threat model be for this?
         if not self.path.exists():
-            self.reader.add_error(
+            self.reader.add_warning(
                     f"le répertoire [{self.path}] n'existe pas",
                     section_key,
                     key
             )
             return
         elif not self.path.is_dir():
-            self.reader.add_error(
+            self.reader.add_warning(
                     f"[{self.path}] n'est pas un répertoire",
                     section_key,
                     key

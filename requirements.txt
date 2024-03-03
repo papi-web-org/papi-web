@@ -1,6 +1,5 @@
 AdvancedHTMLParser~=9.0.2
 requests~=2.31.0
-Django~=5.0.1
 pip~=23.2.1
 configparser~=6.0.0
 lxml~=5.1.0
@@ -18,5 +17,7 @@ setuptools~=69.0.3
 pyinstaller~=6.3.0
 QueryableList~=3.1.0
 pyodbc~=5.0.1
-django-mathfilters~=1.0.0
 chardet~=5.2.0
+uvicorn~=0.27.1
+litestar~=2.6.1
+Jinja2~=3.1.3

@@ -546,8 +546,8 @@ class TournamentBuilder:
                         chessevent_tournament_name = None
                     else:
                         self._config_reader.add_warning(
-                            f'une seule connexion à Chess Event est définie '
-                            f'[{list(self._chessevent_connections.keys())[0]}], on l\'utilise',
+                            f'utilisation de l\'unique connexion à Chess Event '
+                            f'[{list(self._chessevent_connections.keys())[0]}]',
                             section_key, 'chessevent_tournament_name')
                         chessevent_connection = list(self._chessevent_connections.values())[0]
         if not chessevent_tournament_name:

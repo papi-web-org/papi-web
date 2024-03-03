@@ -2,7 +2,7 @@
 
 # Papi-web - Licence
 
-Aujourd'hui le code de Papi-web n'est pas soumis à license, on trouve juste un copyright (common.papi_web_config.PAPI_WEB_COPYRIGHT) au démarrage du programmme et sur la page d'accueil. 
+Aujourd'hui le code de Papi-web n'est pas soumis à license, on trouve juste un copyright (common.papi_web_config.PAPI_WEB_COPYRIGHT) au démarrage du programme et sur la page d'accueil. 
 
 - [Tableau comparatif des licences libres et open-source](https://en.wikipedia.org/wiki/Comparison_of_free_and_open-source_software_licenses)
 

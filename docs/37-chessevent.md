@@ -14,8 +14,8 @@ Chess Event est une plateforme d'inscription aux évènements échiquéens déve
 
 La plateforme d'inscription en ligne Chess Event permet :
 - aux joueur·euses de s'inscrire en ligne ;
-- aux organisateur·trices de gérer en ligne les inscriptions à leurs tournois ;
-- aux arbitres/organisateur·trices de gérer le pointage en ligne ;
+- aux organisateur·ices de gérer en ligne les inscriptions à leurs tournois ;
+- aux arbitres/organisateur·ices de gérer le pointage en ligne ;
 - aux arbitres de télécharger les fichiers Papi des tournois sur leur ordinateur à la fin du pointage.
 
 Le téléchargement des fichiers Papi des tournois depuis la plateforme Chess Event nécessite l'installation d'un logiciel tiers (un moteur PHP, par exemple celui de XAMPP) pour les versions antérieures à 2.1.

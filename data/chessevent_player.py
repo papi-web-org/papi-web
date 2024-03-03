@@ -101,7 +101,9 @@ class ChessEventPlayer:
         lines.append(f'  - Date de naissance : {self.birth}')
         lines.append(f'  - Classements standard / rapide / blitz : {self.standard_rating}{self.standard_rating_type} '
                      f'/ {self.rapid_rating}{self.rapide_rating_type} / {self.blitz_rating}{self.blitz_rating_type}')
-        lines.append(f'  - Fédération / Ligue / Club : {self.federation} / {self.ffe_league} / {self.ffe_club_id} {self.ffe_club}')
+        lines.append(
+            f'  - Fédération / Ligue / Club : '
+            f'{self.federation} / {self.ffe_league} / {self.ffe_club_id} {self.ffe_club}')
         lines.append(f'  - Mél / Tél : {self.email} / {self.phone}')
         lines.append(f'  - Dû / Payé / Pointé·e : {self.fee} / {self.paid} / {self.check_in}')
         lines.append(f'  - Fixe / Rondes : {self.board} / {self.skipped_rounds}')

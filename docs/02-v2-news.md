@@ -76,9 +76,9 @@ Une page par évènement précise toutes les caractéristiques de l'évènement.
 
 ![Tournois](images/event-tournaments.jpg)
 
-![Ecrans](images/event-screens.jpg)
+![Écrans](images/event-screens.jpg)
 
-![Ecrans rotatifs](images/event-rotators.jpg)
+![Écrans rotatifs](images/event-rotators.jpg)
 
 ![Timer](images/event-timer.jpg)
 
@@ -118,7 +118,7 @@ type = players
 
 ![Appariements par ordre alphabétique](images/screen-players.jpg)
 
-A voir : [Affichage des appariements par ordre alphabétique](23-pairings-by-player.md)
+À voir : [Affichage des appariements par ordre alphabétique](23-pairings-by-player.md)
 
 ## Créations des écrans multiples à l'aide de modèles
 
@@ -147,7 +147,7 @@ template = alpha
 part = 2
 ```
 
-A voir : [Modèles et familles d'écran](34-templates-families.md)
+À voir : [Modèles et familles d'écran](34-templates-families.md)
 
 ## Création de familles d'écrans multiples
 
@@ -172,7 +172,7 @@ range = 1-10
 
 Dans l'exemple ci-dessus, 10 écrans de saisie des résultats sont automatiquement créés !
 
-A voir : [Modèles et familles d'écran](34-templates-families.md)
+À voir : [Modèles et familles d'écran](34-templates-families.md)
 
 ## Écrans rotatifs
 
@@ -223,7 +223,7 @@ screens = tournoi-C,tournoi-D
 screens = tournoi-E,tournoi-F
 ```
 
-A voir : [Écrans rotatifs](35-rotators.md)
+À voir : [Écrans rotatifs](35-rotators.md)
 
 ## Sources accessibles
 

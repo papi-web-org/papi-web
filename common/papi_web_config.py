@@ -1,11 +1,12 @@
 import logging
 import os
-import re
 import socket
 from pathlib import Path
 from logging import Logger
 
-from django import get_version
+import jinja2
+import litestar
+import pyodbc
 
 from common.singleton import singleton
 from common.config_reader import ConfigReader, TMP_DIR
@@ -13,7 +14,7 @@ from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
 
-PAPI_WEB_VERSION: str = '2.1.8'
+PAPI_WEB_VERSION: str = '2.2.0-rc1'
 
 PAPI_WEB_URL = 'https://github.com/papi-web-org/papi-web'
 
@@ -22,7 +23,6 @@ PAPI_WEB_COPYRIGHT: str = '© Pascal AUBRY 2013-2024'
 CONFIG_FILE: Path = Path('papi-web.ini')
 
 DEFAULT_LOG_LEVEL: int = logging.INFO
-DEFAULT_WEB_HOST: str = '0.0.0.0'
 DEFAULT_WEB_PORT: int = 8080
 DEFAULT_WEB_LAUNCH_BROWSER: bool = True
 DEFAULT_FFE_UPLOAD_DELAY: int = 180
@@ -34,7 +34,6 @@ class PapiWebConfig:
     def __init__(self):
         self.reader = ConfigReader(CONFIG_FILE, TMP_DIR / 'config' / f'papi-web.ini.{os.getpid()}.read', silent=False)
         self.__log_level: int | None = None
-        self.__web_host: str | None = None
         self.__web_port: int | None = None
         self.__web_launch_browser: bool | None = None
         self.__ffe_upload_delay: int | None = None
@@ -67,22 +66,6 @@ class PapiWebConfig:
                 self.reader.add_warning(f'rubrique introuvable', section_key)
             else:
                 web_section = self.reader[section_key]
-                key = 'host'
-                if key not in web_section:
-                    self.reader.add_warning(f'option absente', section_key, key)
-                else:
-                    self.__web_host = self.reader.get(section_key, key)
-                    matches = re.match(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)$', self.__web_host)
-                    if matches:
-                        for i in range(4):
-                            if int(matches.group(i + 1)) > 255:
-                                self.__web_host = None
-                    else:
-                        self.__web_host = None
-                    if self.web_host is None:
-                        self.reader.add_warning(
-                            f'configuration d\'hôte invalide [{self.reader.get(section_key, key)}], par défaut '
-                            f'[{DEFAULT_WEB_HOST}]', section_key, key)
                 key = 'port'
                 if key not in web_section:
                     self.reader.add_warning(f'option absente, par défaut [{DEFAULT_WEB_PORT}]', section_key, key)
@@ -120,8 +103,6 @@ class PapiWebConfig:
         if self.log_level is None:
             self.__log_level = DEFAULT_LOG_LEVEL
         configure_logger(self.log_level)
-        if self.web_host is None:
-            self.__web_host = DEFAULT_WEB_HOST
         if self.web_port is None:
             self.__web_port = DEFAULT_WEB_PORT
         if self.web_launch_browser is None:
@@ -138,10 +119,6 @@ class PapiWebConfig:
         return self.__log_levels[self.__log_level]
 
     @property
-    def web_host(self) -> str:
-        return self.__web_host
-
-    @property
     def web_port(self) -> int:
         return self.__web_port
 
@@ -154,8 +131,16 @@ class PapiWebConfig:
         return self.__ffe_upload_delay
 
     @property
-    def django_version(self) -> str:
-        return get_version()
+    def litestar_version(self) -> str:
+        return litestar.__version__.formatted(short=True)
+
+    @property
+    def jinja2_version(self) -> str:
+        return jinja2.__version__
+
+    @property
+    def pyodbc_version(self) -> str:
+        return pyodbc.version
 
     def __url(self, ip: str | None) -> str | None:
         if ip is None:

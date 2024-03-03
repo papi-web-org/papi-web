@@ -1,18 +1,26 @@
-import os
+from os import urandom
+from pathlib import Path
 from threading import Thread
 from time import sleep
 
-import django
 import pyodbc
 import requests
-from django.core.management import call_command
 from webbrowser import open
 import socket
 from logging import Logger
+from litestar import Litestar
+import uvicorn
+from litestar.contrib.jinja import JinjaTemplateEngine
+from litestar.static_files import create_static_files_router
+from litestar.template import TemplateConfig
+from litestar.middleware.session.client_side import CookieBackendConfig
 
 from common.logger import get_logger
 from common.engine import Engine
 import platform
+
+from web import views
+from web.settings import route_handlers, template_config, middlewares
 
 logger: Logger = get_logger()
 
@@ -41,26 +49,22 @@ class ServerEngine(Engine):
         logger.debug(f' - Platform: {platform.platform()}')
         logger.debug(f' - Architecture: {" ".join(platform.architecture())}')
         logger.info(f'log: {self._config.log_level_str}')
-        logger.info(f'host: {self._config.web_host}')
         logger.info(f'port: {self._config.web_port}')
         logger.info(f'local URL: {self._config.local_url}')
         if self._config.lan_url:
             logger.info(f'LAN/WAN URL: {self._config.lan_url}')
-        logger.info(f'Setting up Django...')
-        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'web.settings')
-        django.setup()
         if self.__port_in_use(self._config.web_port):
             logger.error(f'Port [{self._config.web_port}] already in use, can not start Papi-web server')
             return
         if self._config.web_launch_browser:
             Thread(target=launch_browser, args=(self._config.local_url, )).start()
-        call_command(
-            'runserver',
-            [
-                f'{self._config.web_host}:{self._config.web_port}',
-                '--noreload',
-            ]
+        app: Litestar = Litestar(
+            debug=True,
+            route_handlers=route_handlers,
+            template_config=template_config,
+            middleware=middlewares,
         )
+        uvicorn.run(app, port=self._config.web_port, log_level='info')
 
     @staticmethod
     def __port_in_use(port: int) -> bool:

@@ -3,12 +3,16 @@ from pathlib import Path
 
 import math
 import time
-from django.contrib import messages
-from django.http import HttpResponse, HttpRequest
-from django.shortcuts import redirect, render
-from django.urls import reverse
-from django.template.defaulttags import register
+
 from logging import Logger
+from typing import Annotated
+
+from litestar import Request, get, post
+from litestar.enums import RequestEncodingType
+from litestar.exceptions import HTTPException
+from litestar.params import Body
+from litestar.response import Template, Redirect
+from litestar.status_codes import HTTP_303_SEE_OTHER, HTTP_307_TEMPORARY_REDIRECT
 
 from common.logger import get_logger
 from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION, PapiWebConfig
@@ -19,6 +23,8 @@ from data.screen import AScreen
 from data.tournament import Tournament
 from data.util import Result
 from database.access import access_driver, odbc_drivers
+from web.messages import Message
+from web.urls import index_url, event_url, screen_url, rotator_url
 
 logger: Logger = get_logger()
 
@@ -29,188 +35,234 @@ papi_web_info: dict[str, str] = {
 }
 
 
-@register.filter
-def get_item(dictionary, key):
-    return dictionary.get(key)
-
-
-def event_url(event_id: str) -> str:
-    return reverse('show-event', kwargs={'event_id': event_id, })
-
-
-def screen_url(event_id: str, screen_id: str) -> str:
-    return reverse('show-screen', kwargs={'event_id': event_id, 'screen_id': screen_id, })
-
-
-def rotator_url(event_id: str, rotator_id: str) -> str:
-    return reverse('show-rotator', kwargs={'event_id': event_id, 'rotator_id': rotator_id, })
-
-
-def rotator_screen_url(event_id: str, rotator_id: str, screen_index: int) -> str:
-    return reverse(
-        'show-rotator-screen',
-        kwargs={'event_id': event_id, 'rotator_id': rotator_id, 'screen_index': screen_index, })
-
-
-def render_screen(
-        request: HttpRequest, event: Event, screen: AScreen, login_needed: bool, rotator_next_url: str = None,
-        rotator_delay: int = None
-) -> HttpResponse:
-    last_result_entered: dict[str, int | str | float] | None = None
-    with suppress(KeyError):
-        last_result_entered = request.session['last_result_entered']
-    response: HttpResponse = render(request, 'screen.html', {
-        'papi_web_info': papi_web_info,
-        'event': event,
-        'screen': screen,
-        'now': math.floor(time.time()),
-        'login_needed': login_needed,
-        'rotator_next_url': rotator_next_url,
-        'rotator_delay': rotator_delay,
-        'last_result_entered': last_result_entered,
-    })
-    return response
-
-
-def index(request: HttpRequest) -> HttpResponse:
+@get(path='/', name='index')
+async def index(request: Request) -> Template:
     events: list[Event] = get_events_by_name(True)
     if len(events) == 0:
-        messages.error(request, 'Aucun évènement trouvé')
-    return render(request, 'index.html', {
-        'papi_web_info': papi_web_info,
-        'papi_web_config': PapiWebConfig(),
-        'events': events,
-        'odbc_drivers': odbc_drivers(),
-        'access_driver': access_driver(),
-    })
+        Message.error(request, 'Aucun évènement trouvé')
+    return Template(
+        template_name="index.html",
+        context={
+            'papi_web_info': papi_web_info,
+            'papi_web_config': PapiWebConfig(),
+            'events': events,
+            'odbc_drivers': odbc_drivers(),
+            'access_driver': access_driver(),
+            'messages': Message.messages(request),
+        })
 
 
-def load_event(request: HttpRequest, event_id: str) -> Event | None:
+def load_event(request: Request, event_id: str) -> Event | None:
     event: Event = Event(event_id, True)
     if event.errors:
         for error in event.errors:
-            messages.error(request, error)
+            Message.error(request, error)
         return None
     return event
 
 
-def show_event(request: HttpRequest, event_id: str) -> HttpResponse:
+@get(path='/event/{event_id:str}', name='show-event')
+async def show_event(request: Request, event_id: str) -> Template | Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
-        return redirect('index')
-    return render(request, 'event.html', {'papi_web_info': papi_web_info, 'event': event, })
+        return Redirect(
+            path=index_url(request),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
+    return Template(
+        template_name="event.html",
+        context={
+            'papi_web_info': papi_web_info,
+            'event': event,
+            'messages': Message.messages(request),
+        })
 
 
 def session_password_key(event: Event) -> str:
     return 'auth-' + event.id
 
 
-def store_password(request: HttpRequest, event: Event, password: int):
+def store_password(request: Request, event: Event, password: str | None):
     request.session[session_password_key(event)] = password
 
 
-def get_stored_password(request: HttpRequest, event: Event) -> str | None:
+def get_stored_password(request: Request, event: Event) -> str | None:
     return request.session.get(session_password_key(event), None)
 
 
-def check_auth(request: HttpRequest, event: Event) -> tuple[bool, bool]:
-    # -> login_needed, do_redirect
-    logger.debug(f'check_auth({event.id})...')
-    if 'password' in request.POST:
-        logger.debug(f'POST.password={"*" * len(request.POST["password"])}')
-        if request.POST['password'] == event.update_password:
-            messages.success(request, f'Authentification réussie.')
-            store_password(request, event, request.POST['password'])
-            return False, True
-        messages.error(request, f'Code d\'accès incorrect.')
-        return True, True
-    session_password: str | None = get_stored_password(request, event)
-    logger.debug(f'session_password={"*" * len(session_password) if session_password else 0}')
-    if session_password is None:
-        messages.error(request, f'Un code d\'accès est nécessaire pour accéder à l\'interface de saisie des résultats.')
-        return True, False
-    if session_password != event.update_password:
-        messages.error(request, f'Code d\'accès incorrect.')
-        return True, False
-    return False, False
+def render_screen(
+        request: Request, event: Event, screen: AScreen, login_needed: bool, rotator_next_url: str = None,
+        rotator_delay: int = None
+) -> Template:
+    last_result_entered: dict[str, int | str | float] | None = None
+    try:
+        last_result_entered = request.session['last_result_entered']
+    except KeyError:
+        pass
+    return Template(
+        template_name="screen.html",
+        context={
+            'papi_web_info': papi_web_info,
+            'event': event,
+            'screen': screen,
+            'now': math.floor(time.time()),
+            'login_needed': login_needed,
+            'rotator_next_url': rotator_next_url,
+            'rotator_delay': rotator_delay,
+            'last_result_entered': last_result_entered,
+            'messages': Message.messages(request),
+        })
 
 
-def show_screen(request: HttpRequest, event_id: str, screen_id: str) -> HttpResponse:
+@post(
+    path='/login/{event_id:str}/{screen_id:str}',
+    name='login',
+)
+async def login(
+        request: Request,
+        data: Annotated[
+            dict[str, str],
+            Body(media_type=RequestEncodingType.URL_ENCODED),
+        ],
+        event_id: str,
+        screen_id: str
+) -> Redirect:
+    # HTTP_303_SEE_OTHER is used in this POST handler to be redirected with a GET method (otherwise POST is used)
     event: Event = load_event(request, event_id)
     if event is None:
-        return redirect('index')
+        return Redirect(
+            path=index_url(request),
+            status_code=HTTP_303_SEE_OTHER,
+        )
     if screen_id not in event.screens:
-        messages.error(request, f'Écran [{screen_id}] introuvable')
-        return redirect(event_url(event_id))
+        Message.error(request, f'Écran [{screen_id}] introuvable')
+        return Redirect(
+            path=event_url(request, event_id),
+            status_code=HTTP_303_SEE_OTHER)
+    if 'password' not in data:
+        Message.warning(request, 'Veuillez indiquer le code d\'accès.')
+    elif data['password'] == event.update_password:
+        Message.success(request, f'Authentification réussie.')
+        store_password(request, event, data['password'])
+    else:
+        Message.error(request, f'Code d\'accès incorrect.')
+        store_password(request, event, None)
+    return Redirect(
+        path=screen_url(request, event_id, screen_id),
+        status_code=HTTP_303_SEE_OTHER)
+
+
+def event_login_needed(request: Request, event: Event, screen: AScreen | None = None) -> bool:
+    if screen is not None:
+        if not screen.update:
+            return False
+    if not event.update_password:
+        return False
+    session_password: str | None = get_stored_password(request, event)
+    logger.info(f'session_password={"*" * len(session_password) if session_password else 0}')
+    if session_password is None:
+        Message.error(request,
+                      f'Un code d\'accès est nécessaire pour accéder à l\'interface de saisie des résultats.')
+        return True
+    if session_password != event.update_password:
+        Message.error(request, f'Code d\'accès incorrect.')
+        store_password(request, event, None)
+        return True
+    return False
+
+
+@get(
+    path='/screen/{event_id:str}/{screen_id:str}',
+    name='show-screen',
+)
+async def show_screen(request: Request, event_id: str, screen_id: str) -> Template | Redirect:
+    event: Event = load_event(request, event_id)
+    if event is None:
+        return Redirect(
+            path=index_url(request),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
+    if screen_id not in event.screens:
+        Message.error(request, f'Écran [{screen_id}] introuvable')
+        return Redirect(
+            path=event_url(request, event_id),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
     screen: AScreen = event.screens[screen_id]
-    login_needed: bool = False
-    if event.update_password and screen.update:
-        login_needed, do_redirect = check_auth(request, event)
-        if do_redirect:
-            return redirect(screen_url(event.id, screen.id, ))
+    login_needed: bool = event_login_needed(request, event, screen)
     return render_screen(request, event, screen, login_needed)
 
 
-def show_rotator(request: HttpRequest, event_id: str, rotator_id: str, screen_index: int = None) -> HttpResponse:
+@get(
+    path=[
+        '/rotator/{event_id:str}/{rotator_id:str}',
+        '/rotator/{event_id:str}/{rotator_id:str}/{screen_index:int}',
+    ],
+    name='show-rotator')
+async def show_rotator(
+        request: Request, event_id: str, rotator_id: str, screen_index: int = None) -> Template | Redirect:
     if screen_index is None:
-        return redirect(rotator_screen_url(event_id, rotator_id, 0))
+        return Redirect(
+            path=rotator_url(request, event_id, rotator_id, 0),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
     event: Event = load_event(request, event_id)
     if event is None:
-        return redirect('index')
+        return Redirect(
+            path=index_url(request),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
     if rotator_id not in event.rotators:
-        messages.error(request, f'Écran rotatif [{rotator_id}] non trouvé')
-        return redirect(event_url(event_id))
+        Message.error(request, f'Écran rotatif [{rotator_id}] non trouvé')
+        return Redirect(
+            path=event_url(request, event_id),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
     rotator: Rotator = event.rotators[rotator_id]
     screen_index: int = screen_index % len(rotator.screens)
     screen: AScreen = rotator.screens[screen_index]
-    login_needed: bool = False
-    if event.update_password and screen.update:
-        login_needed, do_redirect = check_auth(request, event)
-        if do_redirect:
-            return redirect(rotator_screen_url(event.id, rotator.id, screen_index))
+    login_needed: bool = event_login_needed(request, event, screen)
     return render_screen(
-        request, event, rotator.screens[screen_index], login_needed,
-        rotator_screen_url(event.id, rotator.id, (screen_index + 1) % len(rotator.screens)), rotator.delay)
+        request, event, screen, login_needed,
+        rotator_next_url=rotator_url(request, event_id, rotator_id, (screen_index + 1) % len(rotator.screens)),
+        rotator_delay=rotator.delay)
 
 
-def update_result(
-        request: HttpRequest, event_id: str, screen_id: str, tournament_id: str, board_id: int, result: int
-) -> HttpResponse:
+@get(
+    path='/result/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{result:int}',
+    name='update-result'
+)
+async def update_result(
+        request: Request, event_id: str, screen_id: str, tournament_id: str, board_id: int, result: int
+) -> Template | Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
-        return redirect('index')
-    if event.update_password:
-        login_needed, do_redirect = check_auth(request, event)
-        if login_needed or do_redirect:
-            return redirect(screen_url(event.id, screen_id, ))
-    tournament: Tournament
-    try:
-        tournament = event.tournaments[tournament_id]
-    except KeyError:
-        messages.error(request, f'Tournoi [{tournament_id}] non trouvé')
-        return redirect(event_url(event_id))
-    board: Board
-    try:
-        board = tournament.boards[board_id - 1]
-    except KeyError:
-        messages.error(
-            request,
-            f'L\'écriture du résultat à échoué (échiquier [{board_id}] non trouvé pour le tournoi [{tournament.id}])')
-        return redirect(screen_url(event.id, screen_id, ))
-    if result not in Result.imputable_results():
-        messages.error(request, f'L\'écriture du résultat à échoué (résultat invalide [{result}])')
-        return redirect(screen_url(event.id, screen_id, ))
-    tournament.add_result(board, Result.from_papi_value(result))
-    event.store_result(tournament, board, result)
-    request.session['last_result_entered']: dict[str, int | str | float] = {
-        'tournament_id': tournament_id,
-        'board_id': board_id,
-        'expiration': time.time() + 10,
-    }
-    return redirect(screen_url(event_id, screen_id, ))
+        return Redirect(
+            path=request.app.route_reverse('index'),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
+    if not event_login_needed(request, event):
+        tournament: Tournament
+        try:
+            tournament = event.tournaments[tournament_id]
+            board: Board
+            try:
+                board = tournament.boards[board_id - 1]
+                if result not in Result.imputable_results():
+                    Message.error(request, f'L\'écriture du résultat à échoué (résultat invalide [{result}])')
+                else:
+                    tournament.add_result(board, Result.from_papi_value(result))
+                    event.store_result(tournament, board, result)
+                    request.session['last_result_entered']: dict[str, int | str | float] = {
+                        'tournament_id': tournament_id,
+                        'board_id': board_id,
+                        'expiration': time.time() + 10,
+                    }
+            except KeyError:
+                Message.error(
+                    request, f'L\'échiquier [{board_id}] est introuvable pour le tournoi [{tournament.id}])')
+        except KeyError:
+            Message.error(request, f'Tournoi [{tournament_id}] non trouvé')
+    return Redirect(
+        path=screen_url(request, event_id, screen_id),
+        status_code=HTTP_307_TEMPORARY_REDIRECT)
 
 
-def get_screen_last_update(request: HttpRequest, event_id: str, screen_id: str) -> HttpResponse:
+@get(path='/screen-last-update/{event_id:str}/{screen_id:str}', name='get-screen-last-update')
+async def get_screen_last_update(request: Request, event_id: str, screen_id: str) -> str:
     screen_files: list[Path] = AScreen.get_screen_file_dependencies(event_id, screen_id)
     try:
         mtime: float = screen_files[0].lstat().st_mtime
@@ -219,7 +271,8 @@ def get_screen_last_update(request: HttpRequest, event_id: str, screen_id: str) 
                 mtime = max(mtime, screen_file.lstat().st_mtime)
         last_update: int = math.ceil(mtime)
         logger.debug(f'last_update({event_id}/{screen_id})={last_update}')
-        return HttpResponse(str(last_update), content_type='text/plain')
+        return str(last_update)
     except FileNotFoundError:
-        messages.error(request, f'Écran [{screen_id}] non trouvé')
-        return HttpResponse(status=500)
+        error: str = f'Aucun tournoi pour l\'écran [{screen_id}]'
+        Message.error(request, error)
+        raise HTTPException(detail=error, status_code=500)

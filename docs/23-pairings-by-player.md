@@ -31,7 +31,7 @@ Si vous n'avez qu'un seul tournoi dans votre évènement (`default`), alors vous
 > Pour afficher les joueur·euses non apparié·s, il faut utiliser l'option `show_unpaired = on` (par défaut `off`).
 
 
-## Déclaration d'un écran par ordre alphabétique classique  (`[screen.<screen_id>.players]`)
+## Déclaration d'un écran par ordre alphabétique classique (`[screen.<screen_id>.players]`)
 
 Si vous avez plusieurs tournois dans votre évènement, vous devez préciser celui qui sera affiché en ajoutant une rubrique `[screen.<screen_id>.players]` de la manière suivante :
 ```

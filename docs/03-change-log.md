@@ -93,7 +93,7 @@
 - Possibilité de tester les codes d'accès au site FFE
 - Possibilité de rendre les données visibles sur le site FFE
 - Possibilité de télécharger les factures d'homologation depuis le site FFE
-- Renommage du script upload.bat en ffe.bat
+- Renommage du script `upload.bat` en `ffe.bat`
 
 ## Version 1.9 - 23 octobre 2018
 - Correction de la mise en ligne sur le site fédéral

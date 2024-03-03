@@ -1,7 +1,6 @@
 import re
 from math import ceil
 
-import common.logger
 from common.config_reader import ConfigReader
 from data.template import Template
 from data.tournament import Tournament

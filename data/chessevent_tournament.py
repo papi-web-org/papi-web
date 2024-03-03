@@ -8,7 +8,12 @@ logger: Logger = get_logger()
 
 
 class ChessEventTournament:
-    def __init__(self, chessevent_tournament_info: dict[str, str | int | float | list[dict[str, bool | str | int | dict[int, float] | None]]]):
+    def __init__(
+            self,
+            chessevent_tournament_info: dict[
+                str,
+                str | int | float | list[dict[str, bool | str | int | dict[int, float] | None]]
+            ]):
         self.name: str = ''
         self.type: TournamentType = TournamentType.UNKNOWN
         self.rounds: int = 0

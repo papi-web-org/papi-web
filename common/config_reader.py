@@ -41,7 +41,7 @@ class ConfigReader(ConfigParser):
         self.__errors: list[str] = []
         self.__silent: bool = False
         if not self.ini_file.exists():
-            self.add_warning('fichier non trouvé')
+            self.add_error('fichier non trouvé')
             return
         if not self.ini_file.is_file():
             self.add_error(f'{self.ini_file} n\'est pas un fichier')

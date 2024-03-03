@@ -12,7 +12,7 @@ ffe_id = 57777
 ffe_password = KJGYREIOBZ
 ```
 > [!NOTE]
-> Lorsque l'on précise le numéro d'homologation (`ffe_id`), si `filename` n'est pas précisé alors Papi-web cherchera un fichier dont le nom est le numéro d'homologation (ici `57777.papi`), dans le répertoire précisé par `path` ou dans le répertoire `papi/` par défaut.
+> Lorsque l'on précise le numéro d'homologation (`ffe_id`), si `filename` n'est pas précisé alors Papi-web cherchera un fichier dont le nom est le numéro d'homologation (ici `57777.papi`), dans le répertoire indiqué par `path` ou dans le répertoire `papi/` par défaut.
 
 En précisant simplement `ffe_id` et `ffe_password`, les opérations sur le site fédéral seront accessibles en lançant le script `ffe.bat`.
 
@@ -63,7 +63,7 @@ INFO     auth OK: http://www.echecs.asso.fr/FicheTournoi.aspx?Ref=47778
 ## Affichage du tournoi sur le site fédéral
 
 > [!IMPORTANT]
-> - Les tournois ne sont pas visibles au public tant qu'ils n'ont pas été rendus visbles par cette opération.
+> - Les tournois ne sont pas visibles au public tant qu'ils n'ont pas été rendus visibles par cette opération.
 > - Pour rendre un tournoi visible, Papi-web commence par mettre en ligne le fichier du tournoi.
 
 ```
