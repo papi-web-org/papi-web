@@ -1,5 +1,3 @@
-from os import urandom
-from pathlib import Path
 from threading import Thread
 from time import sleep
 
@@ -10,16 +8,11 @@ import socket
 from logging import Logger
 from litestar import Litestar
 import uvicorn
-from litestar.contrib.jinja import JinjaTemplateEngine
-from litestar.static_files import create_static_files_router
-from litestar.template import TemplateConfig
-from litestar.middleware.session.client_side import CookieBackendConfig
 
 from common.logger import get_logger
 from common.engine import Engine
 import platform
 
-from web import views
 from web.settings import route_handlers, template_config, middlewares
 
 logger: Logger = get_logger()
