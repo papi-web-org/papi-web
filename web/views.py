@@ -1,3 +1,5 @@
+from zipfile import ZipFile, ZipInfo
+from io import BytesIO
 from contextlib import suppress
 from pathlib import Path
 
@@ -7,7 +9,7 @@ import time
 from logging import Logger
 from typing import Annotated
 
-from litestar import Request, get, post
+from litestar import Request, get, post, Response
 from litestar.enums import RequestEncodingType
 from litestar.exceptions import HTTPException
 from litestar.params import Body
@@ -231,7 +233,7 @@ async def update_result(
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
-            path=request.app.route_reverse('index'),
+            path=index_url(request),
             status_code=HTTP_307_TEMPORARY_REDIRECT)
     if not event_login_needed(request, event):
         tournament: Tournament
@@ -275,3 +277,28 @@ async def get_screen_last_update(request: Request, event_id: str, screen_id: str
         error: str = f'Aucun tournoi pour l\'écran [{screen_id}]'
         Message.error(request, error)
         raise HTTPException(detail=error, status_code=500)
+
+
+@get(path='/download/{event_id:str}', name='download-event-files')
+async def download_event_files(request: Request, event_id: str) -> Response[bytes] | Redirect:
+    event: Event = load_event(request, event_id)
+    if event is None:
+        return Redirect(
+            path=index_url(request),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
+    tournament_files: list[Path] = []
+    for tournament in event.tournaments.values():
+        if tournament.file.exists():
+            tournament_files.append(tournament.file)
+    if not tournament_files:
+        Message.error(request, f'Aucun fichier de tournoi pour l\'évènement [{event_id}]')
+        return Redirect(
+            path=event_url(request, event_id),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
+    archive = BytesIO()
+    with ZipFile(archive, 'w') as zip_archive:
+        for tournament_file in tournament_files:
+            zip_entry: ZipInfo = ZipInfo(tournament_file.name)
+            with open(tournament_file, 'rb') as tournament_handler:
+                zip_archive.writestr(zip_entry, tournament_handler.read())
+    return Response(content=bytes(archive.getbuffer()), media_type='application/zip')

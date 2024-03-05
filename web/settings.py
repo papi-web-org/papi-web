@@ -10,6 +10,7 @@ from litestar.template import TemplateConfig
 from litestar.types import ControllerRouterHandler, Middleware
 
 from web import views
+from web.views import download_event_files
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,6 +34,7 @@ route_handlers: Sequence[ControllerRouterHandler] = [
     views.show_rotator_screen,
     views.update_result,
     views.get_screen_last_update,
+    download_event_files,
     static_files_router,
 ]
 

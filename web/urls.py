@@ -25,3 +25,8 @@ def rotator_url(request: Request, event_id: str, rotator_id: str) -> str:
 def rotator_screen_url(request: Request, event_id: str, rotator_id: str, screen_index: int) -> str:
     return request.app.route_reverse(
         'show-rotator-screen', event_id=event_id, rotator_id=rotator_id, screen_index=screen_index)
+
+
+def download_event_files_url(request: Request, event_id: str) -> str:
+    return request.app.route_reverse(
+        'download-event-files', event_id=event_id)
