@@ -58,7 +58,7 @@ class ServerEngine(Engine):
             template_config=template_config,
             middleware=middlewares,
             allowed_hosts=AllowedHostsConfig(
-                allowed_hosts=["*"],
+                allowed_hosts=["*."],
             ),
         )
         uvicorn.run(app, port=self._config.web_port, log_level='info')
