@@ -8,6 +8,7 @@ import socket
 from logging import Logger
 from litestar import Litestar
 import uvicorn
+from litestar.config.allowed_hosts import AllowedHostsConfig
 
 from common.logger import get_logger
 from common.engine import Engine
@@ -56,6 +57,9 @@ class ServerEngine(Engine):
             route_handlers=route_handlers,
             template_config=template_config,
             middleware=middlewares,
+            allowed_hosts=AllowedHostsConfig(
+                allowed_hosts=["*"],
+            ),
         )
         uvicorn.run(app, port=self._config.web_port, log_level='info')
 
