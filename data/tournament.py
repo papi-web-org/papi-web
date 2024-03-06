@@ -49,6 +49,10 @@ class Tournament:
         self._players_by_rating: list[Player] | None = None
 
     @property
+    def download_allowed(self) -> bool:
+        return self.file.exists()
+
+    @property
     def ffe_upload_marker(self) -> Path:
         return TMP_DIR / 'ffe' / f'{self.ffe_id}.upload'
 

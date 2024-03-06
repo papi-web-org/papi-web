@@ -13,7 +13,7 @@ from litestar import Request, get, post, Response
 from litestar.enums import RequestEncodingType
 from litestar.exceptions import HTTPException
 from litestar.params import Body
-from litestar.response import Template, Redirect
+from litestar.response import Template, Redirect, File
 from litestar.status_codes import HTTP_303_SEE_OTHER, HTTP_307_TEMPORARY_REDIRECT
 
 from common.logger import get_logger
@@ -279,8 +279,8 @@ async def get_screen_last_update(request: Request, event_id: str, screen_id: str
         raise HTTPException(detail=error, status_code=500)
 
 
-@get(path='/download/{event_id:str}', name='download-event-files')
-async def download_event_files(request: Request, event_id: str) -> Response[bytes] | Redirect:
+@get(path='/download-event/{event_id:str}', name='download-event')
+async def download_event(request: Request, event_id: str) -> Response[bytes] | Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
@@ -302,3 +302,27 @@ async def download_event_files(request: Request, event_id: str) -> Response[byte
             with open(tournament_file, 'rb') as tournament_handler:
                 zip_archive.writestr(zip_entry, tournament_handler.read())
     return Response(content=bytes(archive.getbuffer()), media_type='application/zip')
+
+
+@get(path='/download-tournament/{event_id:str}/{tournament_id:str}', name='download-tournament')
+async def download_tournament(request: Request, event_id: str, tournament_id: str) -> File | Redirect:
+    event: Event = load_event(request, event_id)
+    if event is None:
+        return Redirect(
+            path=index_url(request),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
+    tournament: Tournament
+    try:
+        tournament = event.tournaments[tournament_id]
+        if tournament.file.exists():
+            return File(path=tournament.file, filename=tournament.file.name)
+        else:
+            Message.error(request, f'Aucun fichier de tournoi pour l\'évènement [{event_id}]')
+            return Redirect(
+                path=event_url(request, event_id),
+                status_code=HTTP_307_TEMPORARY_REDIRECT)
+    except KeyError:
+        Message.error(request, f'Le tournoi [{tournament_id}] n\'existe pas pour l\'évènement [{event_id}]')
+        return Redirect(
+            path=event_url(request, event_id),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)

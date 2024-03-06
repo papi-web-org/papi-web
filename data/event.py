@@ -88,6 +88,13 @@ class Event:
         return self.reader.ini_file
 
     @property
+    def download_allowed(self) -> bool:
+        for tournament in self.tournaments.values():
+            if tournament.download_allowed:
+                return True
+        return False
+
+    @property
     def errors(self) -> list[str]:
         return self.reader.errors
 

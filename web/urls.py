@@ -27,6 +27,11 @@ def rotator_screen_url(request: Request, event_id: str, rotator_id: str, screen_
         'show-rotator-screen', event_id=event_id, rotator_id=rotator_id, screen_index=screen_index)
 
 
-def download_event_files_url(request: Request, event_id: str) -> str:
+def download_event_url(request: Request, event_id: str) -> str:
     return request.app.route_reverse(
-        'download-event-files', event_id=event_id)
+        'download-event', event_id=event_id)
+
+
+def download_tournament_url(request: Request, event_id: str, tournament_id: str) -> str:
+    return request.app.route_reverse(
+        'download-tournament', event_id=event_id, tournament_id=tournament_id)
