@@ -57,11 +57,8 @@ class ServerEngine(Engine):
             route_handlers=route_handlers,
             template_config=template_config,
             middleware=middlewares,
-            allowed_hosts=AllowedHostsConfig(
-                allowed_hosts=["*."],
-            ),
         )
-        uvicorn.run(app, port=self._config.web_port, log_level='info')
+        uvicorn.run(app, host="0.0.0.0", port=self._config.web_port, log_level='info',)
 
     @staticmethod
     def __port_in_use(port: int) -> bool:
