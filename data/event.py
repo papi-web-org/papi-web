@@ -107,6 +107,12 @@ class Event:
             self.reader.add_error('rubrique absente', section_key)
             return
 
+        key = 'css'
+        try:
+            self.css = section[key]
+        except KeyError:
+            self.reader.add_debug('option absente', section_key, key)
+
         key = 'name'
         default_name = self.id
         try:
@@ -158,12 +164,6 @@ class Event:
                     section_key,
                     key
             )
-
-        key = 'css'
-        try:
-            self.css = section[key]
-        except KeyError:
-            self.reader.add_debug('option absente', section_key, key)
 
         key = 'update_password'
         try:
