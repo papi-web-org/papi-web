@@ -1,4 +1,11 @@
 {% include 'login.html' %}
+<script>
+$(document).ready(function(){
+    $('.illegal-move-flag').on('click', function (event) {
+        event.stopPropagation();
+    });
+});
+</script>
 {% for set in screen.sets %}
     {% with tournament=set.tournament %}
         {% if tournament.current_round %}
@@ -38,7 +45,9 @@
                                             {% for _ in range(board.white_illegal_moves) %}
                                                 <i class="bi-flag-fill"></i>
                                             {% endfor %}
-                                            <a href="/illegal-move/{{ event.id }}/{{ screen.id }}/{{ tournament.id }}/{{ board.id }}/w"><i class="bi-flag"></i></a>
+                                            <a class="illegal-move-flag" href="/illegal-move/{{ event.id }}/{{ screen.id }}/{{ tournament.id }}/{{ board.id }}/w">
+                                                <i class="bi-flag"></i>
+                                            </a>
                                         {% endif %}
                                     </td>
                                     <td class="score">{% if board.result_str %}{{ board.result_str }}{% else %}n°{{ board.number }}{% endif %}</td>
@@ -50,7 +59,7 @@
                                             {% for _ in range(board.black_illegal_moves) %}
                                                 <i class="bi-flag-fill"></i>
                                             {% endfor %}
-                                            <a href="/illegal-move/{{ event.id }}/{{ screen.id }}/{{ tournament.id }}/{{ board.id }}/b"><i class="bi-flag"></i></a>
+                                            <a class="illegal-move-flag" href="/illegal-move/{{ event.id }}/{{ screen.id }}/{{ tournament.id }}/{{ board.id }}/b"><i class="bi-flag"></i></a>
                                         {% endif %}
                                     </td>
                                     {% if tournament.print_real_points %}<td class="points">{% if bp.id != 1 %}[{{ bp.points_str }}]{% endif %}</td>{% endif %}
