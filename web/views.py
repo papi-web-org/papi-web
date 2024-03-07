@@ -281,14 +281,14 @@ async def add_illegal_move(
             board: Board
             try:
                 board = tournament.boards[board_id - 1]
-                if color.upper() not in Color:
+                if (color := color.upper()) not in Color:
                     Message.error(request, f'L\'écriture du résultat à échoué (couleur invalide [{color}])')
                 else:
                     tournament.store_illegal_move(board, Color(color))
                     request.session['last_illegal_move_added']: dict[str, int | str | float] = {
                         'tournament_id': tournament_id,
                         'board_id': board_id,
-                        'color': str,
+                        'color': color,
                         'expiration': time.time() + 10,
                     }
             except KeyError:
