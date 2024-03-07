@@ -270,7 +270,7 @@ class Tournament:
     def store_illegal_move(self, board: Board, color: Color):
         self.illegal_moves_dir.mkdir(parents=True, exist_ok=True)
         # add a new file
-        filename: str = f'{time.time()} {self.id} {self.current_round} {board.id} {color}'
+        filename: str = f'{time.time()} {self.id} {self.current_round} {board.id} {color.value}'
         illegal_move_file: Path = self.illegal_moves_dir / filename
         illegal_move_file.touch()
         logger.info(f'le fichier [{illegal_move_file}] a été créé')
@@ -281,7 +281,7 @@ class Tournament:
         glob_pattern: str = f'* {self.id} {self.current_round} *'
         regex = re.compile(r'.* (\d+) ([BW])$')
         for file in illegal_moves_dir.glob(glob_pattern):
-            if matches := regex.match(file.stem):
+            if matches := regex.match(file.name):
                 illegal_moves[int(matches.group(1))][Color(matches.group(2))] += 1
         return dict(illegal_moves)
 
