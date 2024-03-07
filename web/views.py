@@ -281,7 +281,7 @@ async def add_illegal_move(
             board: Board
             try:
                 board = tournament.boards[board_id - 1]
-                if (color := color.upper()) not in Color:
+                if (color := color.upper()) not in (Color.WHITE, Color.BLACK):
                     Message.error(request, f'L\'écriture du résultat à échoué (couleur invalide [{color}])')
                 else:
                     tournament.store_illegal_move(board, Color(color))
