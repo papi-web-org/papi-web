@@ -22,6 +22,7 @@ class Player:
     rating: int
     rating_type: str
     fixed: int
+    check_in : bool
     pairings: dict[int, Pairing]
     points: float | None = field(default=None, init=False)
     vpoints: float | None = field(default=None, init=False)

@@ -63,6 +63,7 @@ class PapiDatabase(AccessDatabase):
         player_fields: list[str] = [
             'Ref', 'Nom', 'Prenom', 'Sexe', 'FideTitre', 'Fixe',
             'Elo', 'Rapide', 'Blitz', 'Fide', 'RapideFide', 'BlitzFide',
+            'Pointe'
         ]
         for rd, suffix in product(range(1, rounds + 1), ['Cl', 'Adv', 'Res']):
             player_fields.append(f'Rd{rd:0>2}{suffix}')
@@ -84,7 +85,9 @@ class PapiDatabase(AccessDatabase):
                 PlayerTitle.from_papi_value(row['FideTitre']),
                 row[tournament_rating.papi_value_field],
                 row[tournament_rating.papi_type_field],
-                row['Fixe'], pairings)
+                row['Fixe'] == 1,
+                row['Pointe'],
+                pairings)
         return players
 
     def add_board_result(self, player_id: int, round: int, result: Result):
