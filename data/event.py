@@ -1,5 +1,7 @@
 import os
+import re
 import time
+from collections import defaultdict, Counter
 from functools import total_ordering
 from logging import Logger
 from pathlib import Path
@@ -16,6 +18,7 @@ from data.screen import AScreen, ScreenBuilder
 from data.template import Template, TemplateBuilder
 from data.timer import Timer, TimerBuilder
 from data.tournament import Tournament, TournamentBuilder
+from data.util import Color
 
 logger: Logger = get_logger()
 
@@ -130,9 +133,9 @@ class Event:
         except KeyError:
             self.name = default_name
             self.reader.add_info(
-                   f'option absente, par défaut [{default_name}]',
-                   section_key,
-                   key
+                f'option absente, par défaut [{default_name}]',
+                section_key,
+                key
             )
         except TypeError:
             # NOTE(Amaras) This could happen because of a TOC/TOU bug
@@ -140,8 +143,8 @@ class Event:
             # After this, the section has already been retrieved, so no future
             # access will throw a TypeError.
             self.reader.add_error(
-                    'la rubrique est devenue une option, erreur fatale',
-                    section_key
+                'la rubrique est devenue une option, erreur fatale',
+                section_key
             )
             return
 
@@ -152,24 +155,24 @@ class Event:
         except KeyError:
             self.path = default_path
             self.reader.add_debug(
-                    f'option absente, par défaut [{default_path}]',
-                    section_key,
-                    key
+                f'option absente, par défaut [{default_path}]',
+                section_key,
+                key
             )
         # NOTE(Amaras) This could be a TOC/TOU bug
         # What would our threat model be for this?
         if not self.path.exists():
             self.reader.add_warning(
-                    f"le répertoire [{self.path}] n'existe pas",
-                    section_key,
-                    key
+                f"le répertoire [{self.path}] n'existe pas",
+                section_key,
+                key
             )
             return
         elif not self.path.is_dir():
             self.reader.add_warning(
-                    f"[{self.path}] n'est pas un répertoire",
-                    section_key,
-                    key
+                f"[{self.path}] n'est pas un répertoire",
+                section_key,
+                key
             )
 
         key = 'update_password'

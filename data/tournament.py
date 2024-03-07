@@ -1,5 +1,6 @@
 import re
 import time
+from collections import defaultdict, Counter
 from logging import Logger
 from operator import attrgetter
 from pathlib import Path
@@ -262,6 +263,28 @@ class Tournament:
                             player.vpoints = 2
             player.add_vpoints(player.points)
 
+    @property
+    def illegal_moves_dir(self) -> Path:
+        return TMP_DIR / 'events' / self.event_id / 'illegal_moves'
+
+    def store_illegal_move(self, board: Board, color: Color):
+        self.illegal_moves_dir.mkdir(parents=True, exist_ok=True)
+        # add a new file
+        filename: str = f'{time.time()} {self.id} {self.current_round} {board.id} {color}'
+        illegal_move_file: Path = self.illegal_moves_dir / filename
+        illegal_move_file.touch()
+        logger.info(f'le fichier [{illegal_move_file}] a été créé')
+
+    def get_illegal_moves(self) -> dict[int, Counter[Color]]:
+        illegal_moves: defaultdict[int, Counter[Color]] = defaultdict(Counter)
+        illegal_moves_dir: Path = self.illegal_moves_dir
+        glob_pattern: str = f'* {self.id} {self.current_round} *'
+        regex = re.compile(r'.* (\d+) ([BW])$')
+        for file in illegal_moves_dir.glob(glob_pattern):
+            if matches := regex.match(file.stem):
+                illegal_moves[int(matches.group(1))][Color(matches.group(2))] += 1
+        return dict(illegal_moves)
+
     def _build_boards(self):
         if not self._current_round:
             return
@@ -284,7 +307,8 @@ class Tournament:
                         self._boards.append(Board(white_player=player))
                     else:
                         self._boards.append(Board(black_player=player))
-        # sort the boards
+        # search for illegal moves files
+        illegal_moves: dict[int, Counter[Color]] = self.get_illegal_moves()
         self._boards = sorted(self._boards, reverse=True)
         for index, board in enumerate(self._boards, start=1):
             board.id = index
@@ -293,6 +317,8 @@ class Tournament:
             board.white_player.set_board(index, number, Color.WHITE)
             board.black_player.set_board(index, number, Color.BLACK)
             board.result = board.white_player.pairings[self._current_round].result
+            board.white_illegal_moves = illegal_moves.get(index, Counter())[Color.WHITE]
+            board.black_illegal_moves = illegal_moves.get(index, Counter())[Color.BLACK]
             if self.handicap:
                 strong_player: Player
                 weak_player: Player

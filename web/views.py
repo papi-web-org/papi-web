@@ -23,7 +23,7 @@ from data.event import Event, get_events_by_name
 from data.rotator import Rotator
 from data.screen import AScreen
 from data.tournament import Tournament
-from data.util import Result
+from data.util import Result, Color
 from database.access import access_driver, odbc_drivers
 from web.messages import Message
 from web.urls import index_url, event_url, screen_url, rotator_screen_url
@@ -250,6 +250,45 @@ async def update_result(
                     request.session['last_result_entered']: dict[str, int | str | float] = {
                         'tournament_id': tournament_id,
                         'board_id': board_id,
+                        'expiration': time.time() + 10,
+                    }
+            except KeyError:
+                Message.error(
+                    request, f'L\'échiquier [{board_id}] est introuvable pour le tournoi [{tournament.id}])')
+        except KeyError:
+            Message.error(request, f'Tournoi [{tournament_id}] non trouvé')
+    return Redirect(
+        path=screen_url(request, event_id, screen_id),
+        status_code=HTTP_307_TEMPORARY_REDIRECT)
+
+
+@get(
+    path='/illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
+    name='add-illegal-move'
+)
+async def add_illegal_move(
+        request: Request, event_id: str, screen_id: str, tournament_id: str, board_id: int, color: str
+) -> Template | Redirect:
+    event: Event = load_event(request, event_id)
+    if event is None:
+        return Redirect(
+            path=index_url(request),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
+    if not event_login_needed(request, event):
+        tournament: Tournament
+        try:
+            tournament = event.tournaments[tournament_id]
+            board: Board
+            try:
+                board = tournament.boards[board_id - 1]
+                if color.upper() not in Color:
+                    Message.error(request, f'L\'écriture du résultat à échoué (couleur invalide [{color}])')
+                else:
+                    tournament.store_illegal_move(board, Color(color))
+                    request.session['last_illegal_move_added']: dict[str, int | str | float] = {
+                        'tournament_id': tournament_id,
+                        'board_id': board_id,
+                        'color': str,
                         'expiration': time.time() + 10,
                     }
             except KeyError:
