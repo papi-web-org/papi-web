@@ -40,21 +40,18 @@ filename = amical-20230617
 Le lancement du serveur indique les URL à accéder (depuis le serveur et depuis un client du réseau local) :
 
 ```
-C:\OneDrive\echecs\papi-web\dev\venv\Scripts\python.exe C:\OneDrive\echecs\papi-web\dev\papi_web.py --server 
-INFO     Papi-web 2.0-rc2 Copyright © Pascal AUBRY 2013-2023
-INFO     Reading configuration file...
-INFO     log: INFO
-INFO     host: 0.0.0.0
-INFO     port: 80
-INFO     local URL: http://127.0.0.1
-INFO     LAN/WAN URL: http://192.168.1.79
-INFO     Setting up Django...
-INFO     Opening the welcome page [http://127.0.0.1] in a browser...
-INFO     Starting Papi-web server, please wait...
-August 30, 2023 - 23:44:43
-Django version 4.2.3, using settings 'web.settings'
-Starting development server at http://0.0.0.0:80/
-Quit the server with CTRL-BREAK.
+C:\...\papi-web-<version>$ server.bat
+Papi-web <version>> Copyright © Pascal AUBRY 2013-2024
+Starting Papi-web server, please wait...
+Reading configuration file...
+log: INFO
+port: 80
+local URL: http://127.0.0.1
+LAN/WAN URL: http://192.168.43.85
+INFO:     Started server process [XXXXX]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:80 (Press CTRL+C to quit)
 ```
 
 A voir :
