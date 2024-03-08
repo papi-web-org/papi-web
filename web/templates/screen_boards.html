@@ -42,8 +42,7 @@ $(document).ready(function(){
                                     <td class="points">{{ wp.vpoints_str }}</td>
                                     {% if tournament.print_real_points %}<td class="points">[{{ wp.points_str }}]</td>{% endif %}
                                     <td class="player">{% if wp.title_str %}{{ wp.title_str }}&nbsp;{% endif %}{{ wp.last_name }} {{ wp.first_name }} {{ wp.rating }}{{ wp.rating_type }}
-                                        {% if tournament.handicap and bp.id != 1 %}(<span class="{%if wp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">
-                                                    {%if wp.handicap_initial_time_minutes %}<span class="minutes">{{ wp.handicap_initial_time_minutes }}'</span>{% endif %}{%if wp.handicap_initial_time_seconds %}<span class="seconds">{{ wp.handicap_initial_time_seconds }}"</span>{% endif %}
+                                        {% if tournament.handicap and bp.id != 1 %}(<span class="{%if wp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">{%if wp.handicap_initial_time_minutes %}<span class="minutes">{{ wp.handicap_initial_time_minutes }}'</span>{% endif %}{%if wp.handicap_initial_time_seconds %}<span class="seconds">{{ wp.handicap_initial_time_seconds }}"</span>{% endif %}
                                                     {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}
                                         {% if screen.update and screen.record_illegal_moves %}
                                             {% for _ in range(board.white_illegal_moves) %}
@@ -56,8 +55,7 @@ $(document).ready(function(){
                                     </td>
                                     <td class="score">{% if board.result_str %}{{ board.result_str }}{% else %}n°{{ board.number }}{% endif %}</td>
                                     <td class="player">{% if bp.id == 1 %}<em>EXEMPT</em>{% else %}{% if bp.title_str %}{{ bp.title_str }}&nbsp;{% endif %}{{ bp.last_name }} {{ bp.first_name }} {{ bp.rating }}{{ bp.rating_type }}
-                                        {% if tournament.handicap %}(<span class="{%if bp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">
-                                            {%if bp.handicap_initial_time_minutes %}<span class="minutes">{{ bp.handicap_initial_time_minutes }}'</span>{% endif %}{%if bp.handicap_initial_time_seconds %}<span class="seconds">{{ bp.handicap_initial_time_seconds }}"</span>{% endif %}
+                                        {% if tournament.handicap %}(<span class="{%if bp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">{%if bp.handicap_initial_time_minutes %}<span class="minutes">{{ bp.handicap_initial_time_minutes }}'</span>{% endif %}{%if bp.handicap_initial_time_seconds %}<span class="seconds">{{ bp.handicap_initial_time_seconds }}"</span>{% endif %}
                                                     {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}{% endif %}
                                         {% if screen.update and screen.record_illegal_moves %}
                                             {% for _ in range(board.black_illegal_moves) %}
