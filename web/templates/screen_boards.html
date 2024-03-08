@@ -1,8 +1,12 @@
 {% include 'login.html' %}
 <script>
 $(document).ready(function(){
-    $('.illegal-move-flag').on('click', function (event) {
+    $('.illegal-move-flag').click(function (event) {
+        //alert('before');
+        window.location=$(this).attr('url');
         event.stopPropagation();
+        //alert('after');
+        return false;
     });
 });
 </script>
@@ -38,16 +42,16 @@ $(document).ready(function(){
                                     <td class="points">{{ wp.vpoints_str }}</td>
                                     {% if tournament.print_real_points %}<td class="points">[{{ wp.points_str }}]</td>{% endif %}
                                     <td class="player">{% if wp.title_str %}{{ wp.title_str }}&nbsp;{% endif %}{{ wp.last_name }} {{ wp.first_name }} {{ wp.rating }}{{ wp.rating_type }}
-                                        {% if tournament.handicap %}(<span class="{%if wp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">
+                                        {% if tournament.handicap and bp.id != 1 %}(<span class="{%if wp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">
                                                     {%if wp.handicap_initial_time_minutes %}<span class="minutes">{{ wp.handicap_initial_time_minutes }}'</span>{% endif %}{%if wp.handicap_initial_time_seconds %}<span class="seconds">{{ wp.handicap_initial_time_seconds }}"</span>{% endif %}
                                                     {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}
                                         {% if screen.update and screen.record_illegal_moves %}
                                             {% for _ in range(board.white_illegal_moves) %}
                                                 <i class="bi-flag-fill"></i>
                                             {% endfor %}
-                                            <a class="illegal-move-flag" href="/illegal-move/{{ event.id }}/{{ screen.id }}/{{ tournament.id }}/{{ board.id }}/w">
+                                            <span class="illegal-move-flag" url="/illegal-move/{{ event.id }}/{{ screen.id }}/{{ tournament.id }}/{{ board.id }}/w">
                                                 <i class="bi-flag"></i>
-                                            </a>
+                                            </span>
                                         {% endif %}
                                     </td>
                                     <td class="score">{% if board.result_str %}{{ board.result_str }}{% else %}n°{{ board.number }}{% endif %}</td>
@@ -59,7 +63,9 @@ $(document).ready(function(){
                                             {% for _ in range(board.black_illegal_moves) %}
                                                 <i class="bi-flag-fill"></i>
                                             {% endfor %}
-                                            <a class="illegal-move-flag" href="/illegal-move/{{ event.id }}/{{ screen.id }}/{{ tournament.id }}/{{ board.id }}/b"><i class="bi-flag"></i></a>
+                                            <a class="illegal-move-flag" href="/illegal-move/{{ event.id }}/{{ screen.id }}/{{ tournament.id }}/{{ board.id }}/b">
+                                                <i class="bi-flag"></i>
+                                            </a>
                                         {% endif %}
                                     </td>
                                     {% if tournament.print_real_points %}<td class="points">{% if bp.id != 1 %}[{{ bp.points_str }}]{% endif %}</td>{% endif %}
