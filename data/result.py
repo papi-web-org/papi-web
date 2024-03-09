@@ -65,13 +65,13 @@ class Result:
         if files_deleted:
             logger.debug('de vieux fichiers de résultat ont été supprimés, rechargement...')
             files = list(results_dir.glob("*"))
-        if not reversed(files):
+        if not files:
             return results
         prog = re.compile(
                 r'^(?P<timestamp>[\d.]+) (?P<tournament_id>[^ ]+) '
                 r'(?P<round>\d+) (?P<board_id>\d+) (?P<white_player>[^ ]+) '
                 r'(?P<black_player>[^ ]+) (?P<result>[0-6])$')
-        for file in files:
+        for file in reversed(files):
             matches = prog.match(Path(file).name)
             if not matches:
                 logger.warning(f'invalid result filename [{file}]')
