@@ -1,4 +1,5 @@
 import json
+from typing import Self
 import warnings
 from contextlib import suppress
 from dataclasses import dataclass, field
@@ -26,7 +27,7 @@ class AScreen:
     _menu_text: str | None
     menu: str
     show_timer: bool
-    menu_screens: list['AScreen'] | None = field(default=None, init=False)
+    menu_screens: list[Self] | None = field(default=None, init=False)
 
     def __post_init__(self):
         self._type = None
@@ -83,7 +84,7 @@ class AScreen:
     def get_screen_file_dependencies(cls, event_id: str, screen_id: str) -> list[Path]:
         tournament_files_file = cls.__get_screen_file_dependencies_file(event_id, screen_id)
         try:
-            with open(tournament_files_file, 'r') as f:
+            with open(tournament_files_file, 'r', encoding='utf-8') as f:
                 return [Path(file) for file in json.load(f)]
         except FileNotFoundError:
             return []
@@ -93,7 +94,7 @@ class AScreen:
         tournament_files_file = cls.__get_screen_file_dependencies_file(event_id, screen_id)
         try:
             tournament_files_file.parents[0].mkdir(parents=True, exist_ok=True)
-            with open(tournament_files_file, 'w') as f:
+            with open(tournament_files_file, 'w', encoding='utf-8') as f:
                 return f.write(json.dumps([str(file) for file in files]))
         except FileNotFoundError:
             return []
@@ -110,15 +111,14 @@ class AScreenWithSets(AScreen):
     @property
     def sets_str(self) -> str:
         strings: list[str] = []
-        for set in self._sets:
-            strings.append(str(set))
+        for screen_set in self._sets:
+            strings.append(str(screen_set))
         return ' + '.join(strings)
 
 
 @dataclass
 class ScreenBoards(AScreenWithSets):
-    update: bool = False
-    record_illegal_moves: bool = False
+    _update: bool
 
     def __post_init__(self):
         self._type = ScreenType.Boards
@@ -135,16 +135,16 @@ class ScreenBoards(AScreenWithSets):
             return None
         text: str = self._menu_text
         if self.sets:
-            set: ScreenSet = self.sets[0]
-            text = text.replace('%t', set.tournament.name)
-            if set.tournament.current_round:
-                text = text.replace('%f', str(set.first_board.id))
-                text = text.replace('%l', str(set.last_board.id))
+            screen_set: ScreenSet = self.sets[0]
+            text = text.replace('%t', screen_set.tournament.name)
+            if screen_set.tournament.current_round:
+                text = text.replace('%f', str(screen_set.first_board.id))
+                text = text.replace('%l', str(screen_set.last_board.id))
             else:
-                if set.first_player_by_rating:
-                    text = text.replace('%f', str(set.first_player_by_rating.rating))
-                if set.last_player_by_rating:
-                    text = text.replace('%l', str(set.last_player_by_rating.rating))
+                if screen_set.first_player_by_rating:
+                    text = text.replace('%f', str(screen_set.first_player_by_rating.rating))
+                if screen_set.last_player_by_rating:
+                    text = text.replace('%l', str(screen_set.last_player_by_rating.rating))
         return text
 
     @property
@@ -154,6 +154,10 @@ class ScreenBoards(AScreenWithSets):
     @property
     def icon_str(self) -> str:
         return 'bi-pencil-fill' if self.update else 'bi-card-list'
+
+    @property
+    def update(self) -> bool:
+        return self._update
 
 
 @dataclass
@@ -175,12 +179,12 @@ class ScreenPlayers(AScreenWithSets):
             return None
         text: str = self._menu_text
         if self.sets:
-            set: ScreenSet = self.sets[0]
-            text = text.replace('%t', set.tournament.name)
-            if set.first_player_by_name:
-                text = text.replace('%f', str(set.first_player_by_name.last_name)[:3])
-            if set.last_player_by_name:
-                text = text.replace('%l', str(set.last_player_by_name.last_name)[:3])
+            screen_set: ScreenSet = self.sets[0]
+            text = text.replace('%t', screen_set.tournament.name)
+            if screen_set.first_player_by_name:
+                text = text.replace('%f', str(screen_set.first_player_by_name.last_name)[:3])
+            if screen_set.last_player_by_name:
+                text = text.replace('%l', str(screen_set.last_player_by_name.last_name)[:3])
         return text
 
     @property
@@ -271,12 +275,12 @@ class ScreenBuilder:
                     self._config_reader.add_debug(f"ajout de la rubrique [{new_section_key}]", screen_section_key)
                 for key, value in properties.items():
                     self._config_reader[new_section_key].setdefault(key, value)
-                self._config_reader.add_debug(f"ajout de l'option [{key} = {value}]", new_section_key)
+                    self._config_reader.add_debug(f"ajout de l'option [{key} = {value}]", new_section_key)
         key = 'type'
         try:
             maybe_screen_type = screen_section[key]
         except KeyError:
-            self._config_reader.add_warning(f"type d'écran non précisé, écran ignoré", screen_section_key, key)
+            self._config_reader.add_warning("type d'écran non précisé, écran ignoré", screen_section_key, key)
             return None
         try:
             screen_type = ScreenType.from_str(maybe_screen_type)
@@ -373,20 +377,6 @@ class ScreenBuilder:
                 self._config_reader.add_warning(
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
-        key = 'record_illegal_moves'
-        default_record_illegal_moves: bool = False
-        record_illegal_moves: bool | None = default_record_illegal_moves
-        if screen_type == ScreenType.Boards:
-            if key in screen_section:
-                record_illegal_moves = self._config_reader.getboolean_safe(screen_section_key, key)
-                if record_illegal_moves is None:
-                    self._config_reader.add_warning('un booléen est attendu, écran ignoré', screen_section_key, key)
-                    return None
-        else:
-            if key in screen_section:
-                self._config_reader.add_warning(
-                    f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
-                    screen_section_key, key)
         key = 'show_unpaired'
         default_show_unpaired: bool = False
         show_unpaired: bool | None = default_show_unpaired
@@ -450,8 +440,7 @@ class ScreenBuilder:
                 menu,
                 show_timer,
                 screen_sets,
-                update,
-                record_illegal_moves,
+                update
             )
             AScreen.set_screen_file_dependencies(
                 self._event_id,
@@ -622,8 +611,8 @@ class ScreenBuilder:
                 self._config_reader[section_key] = options
         self._config_reader[f'screen.{results_screen_id}'] = {
             'type': ScreenType.Results.value,
-            'name': f'Derniers résultats',
-            'menu_text': f'Derniers résultats',
+            'name': 'Derniers résultats',
+            'menu_text': 'Derniers résultats',
             'menu': results_menu,
         }
         self._config_reader.add_debug(

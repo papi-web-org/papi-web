@@ -73,9 +73,9 @@ class TimerHour:
         warnings.warn("Use direct assignment to text_after instead")
         self.text_after = text
 
-    def set_round(self, round: int):
-        self.text_before = ROUND_DEFAULT_TEXT_BEFORE.format(round)
-        self.text_after = ROUND_DEFAULT_TEXT_AFTER.format(round)
+    def set_round(self, round_: int):
+        self.text_before = ROUND_DEFAULT_TEXT_BEFORE.format(round_)
+        self.text_after = ROUND_DEFAULT_TEXT_AFTER.format(round_)
 
     @property
     def datetime_str_1(self) -> str:
@@ -224,7 +224,7 @@ class TimerBuilder:
             self._config_reader.add_warning(
                 'les options [text_before] et [text_after] sont attendues, horaire ignoré', section_key)
             return
-        for key, value in self._config_reader.items(section_key):
+        for key, _ in self._config_reader.items(section_key):
             if key not in section_keys:
                 self._config_reader.add_warning('option inconnue', section_key, key)
         timer.hours.append(hour)

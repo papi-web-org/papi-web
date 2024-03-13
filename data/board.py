@@ -32,9 +32,9 @@ class Board:
     def id(self, new_id):
         self.board_id = new_id
 
-    def set_id(self, id: int):
+    def set_id(self, board_id: int):
         warnings.warn('Use direct assignment to id instead')
-        self.board_id = id
+        self.board_id = board_id
 
     def set_number(self, number: int):
         warnings.warn('Use direct assignment to number instead')

@@ -109,7 +109,7 @@ class ScreenSet:
         q, r = divmod(items_number, self.columns)
         first_index = 0
         self.items_lists = []
-        for column in range(1, self.columns + 1):
+        for _ in range(1, self.columns + 1):
             last_index = first_index + q
             more: int = min(r, 1)
             last_index += more
@@ -449,7 +449,7 @@ class ScreenSetBuilder:
         name: str | None = None
         if key in current_section:
             name = self._config_reader.get(screen_set_section_key, key)
-        for key, value in self._config_reader.items(screen_set_section_key):
+        for key, _ in self._config_reader.items(screen_set_section_key):
             if key not in self._config_reader.screen_set_keys:
                 self._config_reader.add_warning('option inconnue', screen_set_section_key, key)
         return ScreenSet(

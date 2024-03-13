@@ -1,7 +1,5 @@
 import os
-import re
 import time
-from collections import defaultdict, Counter
 from functools import total_ordering
 from logging import Logger
 from pathlib import Path
@@ -18,7 +16,6 @@ from data.screen import AScreen, ScreenBuilder
 from data.template import Template, TemplateBuilder
 from data.timer import Timer, TimerBuilder
 from data.tournament import Tournament, TournamentBuilder
-from data.util import Color
 
 logger: Logger = get_logger()
 
@@ -186,7 +183,7 @@ class Event:
             )
 
         section_keys: list[str] = ['name', 'path', 'update_password', 'css', ]
-        for key, value in section.items():
+        for key, _ in section.items():
             if key not in section_keys:
                 self.reader.add_warning('option inconnue', section_key, key)
 
@@ -202,7 +199,7 @@ class Event:
         filename: str = f'{now} {tournament.id} {tournament.current_round} {board.id} {white_str} {black_str} {result}'
         result_file: Path = results_dir / filename
         result_file.touch()
-        logger.info(f'le fichier [{result_file}] a été créé')
+        logger.info('le fichier [%s] a été créé', result_file)
 
     def __lt__(self, other: 'Event'):
         # p1 < p2 calls p1.__lt__(p2)

@@ -60,7 +60,7 @@ class Result:
         for file in files:
             if file.lstat().st_ctime < limit_ts:
                 file.unlink()
-                logger.debug(f'le fichier [{file}] a été supprimé')
+                logger.debug('le fichier [%s] a été supprimé', file)
                 files_deleted = True
         if files_deleted:
             logger.debug('de vieux fichiers de résultat ont été supprimés, rechargement...')
@@ -74,30 +74,33 @@ class Result:
         for file in reversed(files):
             matches = prog.match(Path(file).name)
             if not matches:
-                logger.warning(f'invalid result filename [{file}]')
+                logger.warning('invalid result filename [%s]', file)
                 continue
             group: str = 'timestamp'
             timestamp: float
             try:
                 timestamp = float(matches.group(group))
             except ValueError:
-                logger.warning(f'invalid timestamp [{matches.group(group)}] for result file [{file}]')
+                logger.warning('invalid timestamp [%s] for result file [%s]',
+                               matches.match(group), file)
                 continue
             group = 'tournament_id'
             tournament_id: str = matches.group(group)
             group = 'round'
-            round: int
+            round_: int
             try:
-                round = int(matches.group(group))
+                round_ = int(matches.group(group))
             except ValueError:
-                logger.warning(f'invalid round number [{matches.group(group)}] for result file [{file}]')
+                logger.warning('invalid round number [%s] for result file [%s]',
+                               matches.group(group), file)
                 continue
             group = 'board_id'
             board_id: int
             try:
                 board_id = int(matches.group(group))
             except ValueError:
-                logger.warning(f'invalid board id [{matches.group(group)}] for result file [{file}]')
+                logger.warning('invalid board id [%s] for result file [%s]',
+                               matches.group(group), file)
                 continue
             group = 'white_player'
             white_player: str = matches.group(group).replace('_', ' ')
@@ -109,9 +112,10 @@ class Result:
                 result = int(matches.group(group))
                 result = DataResult.from_papi_value(result)
             except ValueError:
-                logger.warning(f'invalid result [{matches.group(group)}] for result file [{file}]')
+                logger.warning('invalid result [%s] for result file [%s]',
+                               matches.group(group), file)
                 continue
-            results.append(Result(timestamp, tournament_id, round, board_id, white_player, black_player, result))
+            results.append(Result(timestamp, tournament_id, round_, board_id, white_player, black_player, result))
             if limit and len(results) > limit:
                 break
         return results

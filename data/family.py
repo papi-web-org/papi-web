@@ -73,8 +73,8 @@ class FamilyBuilder:
                 self._config_reader.add_warning('un entier positif non nul est attendu, option ignorée',
                                                 section_key, key)
         if parts is not None and number is not None:
-            self._config_reader.add_warning(f"les options [parts] et [number] ne sont pas compatibles, "
-                                            f"famille ignorée", section_key)
+            self._config_reader.add_warning("les options [parts] et [number] ne sont pas compatibles, "
+                                            "famille ignorée", section_key)
             return
         key = 'range'
         range_str: str | None
@@ -158,8 +158,8 @@ class FamilyBuilder:
         else:
             key = 'range'
             if range_str is None:
-                self._config_reader.add_warning(f"une des options [parts], [number] ou [range] est obligatoire, "
-                                                f"famille ignorée", section_key)
+                self._config_reader.add_warning("une des options [parts], [number] ou [range] est obligatoire, "
+                                                "famille ignorée", section_key)
                 return
             if matches := re.match(r'^(?P<first>\d+)-(?P<second>\d+)$', range_str):
                 first_number = int(matches.group('first'))
