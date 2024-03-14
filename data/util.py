@@ -40,27 +40,6 @@ class Result(IntEnum):
             case _:
                 raise ValueError(f'Unknown value: {self}')
 
-    ''' TODO remove this method (seems to be unused)
-    @classmethod
-    def from_db_str(cls, value: str) -> Self:
-        """Decode the result value from the result string"""
-        match value:
-            case '':
-                return Result.NOT_PAIRED
-            case '1-0':
-                return Result.GAIN
-            case '0-1':
-                return Result.LOSS
-            case '1/2':
-                return Result.DRAW_OR_HPB
-            case '1-F':
-                return Result.PAB_OR_FORFEIT_GAIN_OR_FPB
-            case 'F-1':
-                return Result.FORFEIT_LOSS
-            case 'F-F':
-                return Result.DOUBLE_FORFEIT
-            case _:
-                raise ValueError(f'Unknown value: {value}')'''
 
     @classmethod
     def from_papi_value(cls, value: int) -> Self:

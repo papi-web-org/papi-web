@@ -1,9 +1,9 @@
 import time
 from pathlib import Path
 from typing import Any, Self
-import pyodbc
 from logging import Logger
 from dataclasses import dataclass, field
+import pyodbc
 
 from common.exception import PapiException
 from common.logger import get_logger
@@ -11,7 +11,7 @@ from common.logger import get_logger
 logger: Logger = get_logger()
 
 pyodbc.pooling = False
-logger.info(f'Pooling ODBC : {"activé" if pyodbc.pooling else "désactivé"}')
+logger.info('Pooling ODBC : %s', f"{'des' if not pyodbc.pooling else ''}activé")
 
 
 @dataclass
@@ -41,13 +41,13 @@ class AccessDatabase:
         if needed_driver not in pyodbc.drivers():
             logger.error('Les pilotes ODBC installés sont les suivants :')
             for driver in odbc_drivers():
-                logger.error(f' - {driver}')
-            logger.error(f'Pilote nécessaire : {needed_driver}')
+                logger.error(' - %s', driver)
+            logger.error('Pilote nécessaire : %s', needed_driver)
             install_url: str = 'https://www.microsoft.com/en-us/download/details.aspx?id=54920'
-            logger.error(f'Installer le pilote (cf {install_url}) et relancer.')
-            logger.error(f'Note : pour une compatibilité 32bits et 64bits, '
-                         f'utiliser la commande suivante à l\'installation :')
-            logger.error(f'accessdatabaseengine_X64.exe /passive')
+            logger.error('Installer le pilote (cf %s) et relancer.', install_url)
+            logger.error('Note : pour une compatibilité 32bits et 64bits, '
+                         'utiliser la commande suivante à l\'installation :')
+            logger.error('accessdatabaseengine_X64.exe /passive')
             raise PapiException('Pilote Microsoft Access introuvable')
         db_url: str = f'DRIVER={{{needed_driver}}};DBQ={self.file.resolve()};'
         # Get rid of unresolved pyodbc.Error: ('HY000', 'The driver did not supply an error!')
@@ -55,7 +55,7 @@ class AccessDatabase:
             try:
                 self.database = pyodbc.connect(db_url, readonly=self.read_only)
             except pyodbc.Error as e:
-                logger.error(f'La connection au fichier {self.file} a échoué: {e.args}')
+                logger.error('La connection au fichier %s a échoué: %s', self.file, e.args)
                 time.sleep(1)
         self.cursor = self.database.cursor()
         return self

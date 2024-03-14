@@ -63,15 +63,15 @@ class PapiWebConfig:
                     self.reader.add_warning(
                         f'option absente, par défaut [{self.__log_levels[DEFAULT_LOG_LEVEL]}]', section_key, key)
             except KeyError:
-                self.reader.add_warning(f'rubrique introuvable', section_key)
+                self.reader.add_warning('rubrique introuvable', section_key)
             section_key = 'web'
             if section_key not in self.reader:
-                self.reader.add_warning(f'rubrique introuvable', section_key)
+                self.reader.add_warning('rubrique introuvable', section_key)
             else:
                 web_section = self.reader[section_key]
                 key = 'host'
                 if key not in web_section:
-                    self.reader.add_warning(f'option absente', section_key, key)
+                    self.reader.add_warning('option absente', section_key, key)
                 else:
                     self.__web_host = self.reader.get(section_key, key)
                     matches = re.match(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)$', self.__web_host)
@@ -116,9 +116,9 @@ class PapiWebConfig:
                         self.reader.add_warning(f'délai non valide [{self.reader.get(section_key, key)}], par défaut '
                                                 f'[{DEFAULT_FFE_UPLOAD_DELAY}]', section_key, key)
             except KeyError:
-                self.reader.add_warning(f'rubrique introuvable, configuration par défaut', section_key)
+                self.reader.add_warning('rubrique introuvable, configuration par défaut', section_key)
         else:
-            self.reader.add_debug(f'configuration par défaut')
+            self.reader.add_debug('configuration par défaut')
         if self.log_level is None:
             self.__log_level = DEFAULT_LOG_LEVEL
         configure_logger(self.log_level)
@@ -180,7 +180,7 @@ class PapiWebConfig:
             try:
                 s.connect(('10.254.254.254', 1))  # doesn't even have to be reachable
                 self.__lan_ip = s.getsockname()[0]
-            except Exception:
+            except Exception: #pylint: disable=broad-exception-caught
                 pass
             finally:
                 s.close()

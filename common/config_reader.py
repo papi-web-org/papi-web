@@ -1,12 +1,12 @@
 import re
 from pathlib import Path
 
-import chardet
 from configparser import (
     ConfigParser, DuplicateSectionError, DuplicateOptionError,
     MissingSectionHeaderError, ParsingError, Error, SectionProxy
 )
 from logging import Logger
+import chardet
 from common.logger import get_logger
 
 logger: Logger = get_logger()
@@ -52,24 +52,26 @@ class ConfigReader(ConfigParser):
                 if ini_marker_file.lstat().st_mtime > self.ini_file.lstat().st_mtime:
                     self.__silent = True
                 else:
-                    logger.info(f'le fichier de configuration [{self.ini_file}] a été modifié, rechargement...')
+                    logger.info('le fichier de configuration [%s] a été modifié, rechargement...',
+                                self.ini_file)
             except FileNotFoundError:
-                logger.info(f'nouveau fichier de configuration [{self.ini_file}], chargement...')
+                logger.info('nouveau fichier de configuration [%s], chargement...', self.ini_file)
         try:
             files_read: list[str] = []
             encoding: str = 'utf-8'
             try:
                 if not self.__silent:
-                    logger.debug(f'lecture de {self.__ini_file} en {encoding}...')
+                    logger.debug('lecture de %s en %s...', self.ini_file, encoding)
                 files_read = self.read(self.__ini_file, encoding=encoding)
             except UnicodeDecodeError:
-                logger.debug(f'la lecture de {self.__ini_file} en {encoding} a échoué, recherche de l\'encodage...')
+                logger.debug('la lecture de %s en %s a échoué, recherche de l\'encodage...',
+                             self.ini_file, encoding)
                 detected_encoding: str
                 with open(self.__ini_file, "rb") as f:
                     detected_encoding: str = chardet.detect(f.read())['encoding']
-                logger.debug(f'encodage détecté : {detected_encoding}')
+                logger.debug('encodage détecté : %s', detected_encoding)
                 if detected_encoding != 'utf-8':
-                    logger.debug(f'lecture de {self.__ini_file} en {detected_encoding}...')
+                    logger.debug('lecture de %s en %s...', self.ini_file, detected_encoding)
                     files_read = self.read(self.__ini_file, encoding=detected_encoding)
             if str(self.__ini_file) not in files_read:
                 self.add_error(f'impossible de lire {self.__ini_file}')
@@ -106,7 +108,7 @@ class ConfigReader(ConfigParser):
             return f'{self.ini_file.name}: {text}'
         elif key is None:
             return f'{self.ini_file.name}[{section_key}]: {text}'
-        else: 
+        else:
             return f'{self.ini_file.name}[{section_key}].{key}: {text}'
 
     def add_debug(self, text: str, section_key: str | None = None, key: str | None = None):

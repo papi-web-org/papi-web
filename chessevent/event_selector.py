@@ -20,22 +20,22 @@ class EventSelector:
         events: List[Event] = get_events_by_name(False, with_tournaments_only=True)
         self.__silent = True  # verbose on the first call only
         if not events:
-            logger.error(f'Aucun évènement trouvé')
+            logger.error('Aucun évènement trouvé')
             return False
         event_num: Optional[int] = None
         if len(events) == 1:
             event_num = 1
-            if input_interactive(f'Un seul évènement trouvé, tapez Entrée pour continuer (Q pour quitter) ') == 'Q':
+            if input_interactive('Un seul évènement trouvé, tapez Entrée pour continuer (Q pour quitter) ') == 'Q':
                 return False
         else:
-            print_interactive(f'Veuillez entrer le numéro de votre évènement :')
+            print_interactive('Veuillez entrer le numéro de votre évènement :')
             event_range = range(1, len(events) + 1)
             for num in event_range:
                 event: Event = events[num - 1]
                 print_interactive(f'  - [{num}] {event.name} ({event.id}.ini)')
             print_interactive('  - [Q] Quitter')
             while event_num is None:
-                choice: str = input_interactive(f'Votre choix : ')
+                choice: str = input_interactive('Votre choix : ')
                 if choice == 'Q':
                     return False
                 try:
