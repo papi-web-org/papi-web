@@ -26,7 +26,7 @@ class ChessEventSession(Session):
                 'event_id': self._tournament.chessevent_connection.event_id,
                 'tournament_name': self._tournament.chessevent_tournament_name,
             }
-            chessevent_string: str = (f'{post["user_id"]}:{"*" * min(len(post["password"]), 8)}'
+            chessevent_string: str = (f'{post["user_id"]}:{"*" * 8}'
                                       f'@{post["event_id"]}/{post["tournament_name"]}')
             logger.debug('Interrogation de la plateforme Chess Event %s...', chessevent_string)
             # Redirections are handled manually to pass the data at each redirection
@@ -45,7 +45,7 @@ class ChessEventSession(Session):
                 return data
             match response.status_code:
                 case 401:
-                    logger.error('Les identifiants pour %d '
+                    logger.error('Les identifiants pour %s '
                                  'ont été rejetés par la plateforme Chess Event (%s), '
                                  'code d\'erreur : %s',
                                  post["user_id"], chessevent_string, response.status_code)
