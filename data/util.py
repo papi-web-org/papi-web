@@ -1,7 +1,7 @@
 """A file grouping all the "utility" classes/enum: Result, Color, PlayerTitle,
 PlayerSex, TournamentPairing, TournamentRating"""
 
-from enum import StrEnum, IntEnum, auto
+from enum import Enum, StrEnum, IntEnum, auto
 from logging import Logger
 from typing import Self
 
@@ -39,7 +39,6 @@ class Result(IntEnum):
                 return 'F-F'
             case _:
                 raise ValueError(f'Unknown value: {self}')
-
 
     @classmethod
     def from_papi_value(cls, value: int) -> Self:
@@ -752,3 +751,18 @@ class ScreenType(StrEnum):
     @classmethod
     def names(cls) -> list[str]:
         return [member.value for member in iter(cls)]
+
+
+class NeedsUpload(Enum):
+    YES = 0
+    NO_CHANGE = 1
+    RECENT_CHANGE = 2
+
+    def __bool__(self):
+        match self:
+            case NeedsUpload.YES:
+                return True
+            case NeedsUpload.NO_CHANGE | NeedsUpload.RECENT_CHANGE:
+                return False
+            case _:
+                raise ValueError(f"Unknown value: {self}")

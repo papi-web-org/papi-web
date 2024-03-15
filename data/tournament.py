@@ -12,7 +12,7 @@ from data.board import Board
 from data.chessevent_connection import ChessEventConnection
 from data.chessevent_tournament import ChessEventTournament
 from data.player import Player
-from data.util import Color, TournamentRating
+from data.util import Color, NeedsUpload, TournamentRating
 from data.util import TournamentPairing, Result
 from database.papi import PapiDatabase
 
@@ -149,6 +149,7 @@ class Tournament:
             return
         if self.file and self.file.exists():
             with PapiDatabase(self.file, 'r') as papi_database:
+                papi_database: PapiDatabase
                 (
                     self._rounds,
                     self._pairing,
@@ -165,28 +166,28 @@ class Tournament:
     def _calculate_current_round(self):
         round_infos: dict[int, dict[str, bool]] = {}
         paired_rounds: list[int] = []
-        for round in range(1, self._rounds + 1):
-            round_infos[round] = {
+        for round_ in range(1, self._rounds + 1):
+            round_infos[round_] = {
                 'pairings_found': False,
                 'results_missing': False,
             }
             for player in self._players_by_id.values():
                 if player.id != 1:
-                    color, opponent_id, result = player.pairings[round]
+                    color, opponent_id, result = player.pairings[round_]
                     if color in ['W', 'B', ]:
-                        round_infos[round]['pairings_found'] = True
-                        paired_rounds.append(round)
+                        round_infos[round_]['pairings_found'] = True
+                        paired_rounds.append(round_)
                     # NOTE(Amaras) Why is it called RESULT_NOT_PAIRED if it also
                     # represents a missing result?
                     if result == Result.NOT_PAIRED and opponent_id is not None:
-                        round_infos[round]['results_missing'] = True
-                    if round_infos[round]['pairings_found'] and round_infos[round]['results_missing']:
+                        round_infos[round_]['results_missing'] = True
+                    if round_infos[round_]['pairings_found'] and round_infos[round_]['results_missing']:
                         break
         # the current round is the first one with pairings and no missing result
         if paired_rounds:
-            for round in paired_rounds:
-                if round_infos[round]['results_missing']:
-                    self._current_round = round
+            for round_ in paired_rounds:
+                if round_infos[round_]['results_missing']:
+                    self._current_round = round_
                     break
             if self._current_round == 0:
                 self._current_round = paired_rounds[-1]
@@ -273,7 +274,21 @@ class Tournament:
         filename: str = f'{time.time()} {self.id} {self.current_round} {board.id} {color.value}'
         illegal_move_file: Path = self.illegal_moves_dir / filename
         illegal_move_file.touch()
-        logger.info(f'le fichier [{illegal_move_file}] a été créé')
+        logger.info('le fichier [%s] a été créé', illegal_move_file)
+    
+    def delete_illegal_move(self, board: Board, color: Color) -> bool:
+        """Tries to find all illegal moves for the current round of the
+        tournament, and delete one of them.
+        Returns True if a file was found and deleted, False if no such
+        file was found"""
+        illegal_moves_dir: Path = self.illegal_moves_dir
+        glob_pattern: str = f'* {self.id}, {self.current_round} {board.id} {color}'
+        for file in illegal_moves_dir.glob(glob_pattern):
+            file.unlink()
+            logger.info('le fichier [%s] a été supprimé', file)
+            return True
+        logger.debug('Aucun fichier de coup illégal trouvé pour le motif [%s]', glob_pattern)
+        return False
 
     def get_illegal_moves(self) -> dict[int, Counter[Color]]:
         illegal_moves: defaultdict[int, Counter[Color]] = defaultdict(Counter)
@@ -338,36 +353,35 @@ class Tournament:
                     strong_time, self.handicap_increment, penalties > 0)
                 weak_player.set_handicap(weak_time, self.handicap_increment, False)
 
-    def ffe_upload_needed(self, ffe_upload_delay) -> bool:
+    def ffe_upload_needed(self, ffe_upload_delay) -> NeedsUpload:
         try:
             marker_time = self.ffe_upload_marker.lstat().st_mtime
             if marker_time > self.file.lstat().st_mtime:
                 # last version already uploaded
-                return False
+                return NeedsUpload.NO_CHANGE
             if time.time() < marker_time + ffe_upload_delay:
                 # last upload too recent
-                return False
-            return True
+                return NeedsUpload.RECENT_CHANGE
+            return NeedsUpload.YES
         except FileNotFoundError:
-            return True
+            return NeedsUpload.YES
 
     def add_result(self, board: Board, white_result: Result):
         black_result = white_result.opposite_result
         with PapiDatabase(self.file, 'w') as papi_database:
+            papi_database: PapiDatabase
             papi_database.add_board_result(board.white_player.id, self._current_round, white_result)
             papi_database.add_board_result(board.black_player.id, self._current_round, black_result)
             papi_database.commit()
-        logger.info(f'Added result: {self.id} {self._current_round}.{board.id} '
-                    f'{board.white_player.last_name} '
-                    f'{board.white_player.first_name} '
-                    f'{board.white_player.rating} '
-                    f'{white_result} '
-                    f'{board.black_player.last_name} '
-                    f'{board.black_player.first_name} '
-                    f'{board.black_player.rating}')
+        logger.info('Added result: %s %d.%d %s %s %d %s %s %s %d',
+                    self.id, self._current_round, board.id, board.white_player.last_name,
+                    board.white_player.first_name, board.white_player.rating, white_result,
+                    board.black_player.last_name, board.black_player.first_name,
+                    board.black_player.rating)
 
     def write_chessevent_info_to_database(self, chessevent_tournament: ChessEventTournament) -> int:
         with PapiDatabase(self.file, 'w') as papi_database:
+            papi_database: PapiDatabase
             papi_database.write_chessevent_info(chessevent_tournament)
             player_id: int = 1
             for chessevent_player in chessevent_tournament.players:
@@ -571,7 +585,7 @@ class TournamentBuilder:
                         chessevent_tournament_name = None
                     elif len(self._chessevent_connections) > 1:
                         self._config_reader.add_warning(
-                            f'plusieurs connexions à Chess Event sont définies, la connexion doit être précisée à '
+                            'plusieurs connexions à Chess Event sont définies, la connexion doit être précisée à '
                             'l\'aide de l\'option chess_connection_id', section_key, 'chessevent_tournament_name')
                         chessevent_tournament_name = None
                     else:
@@ -593,7 +607,7 @@ class TournamentBuilder:
             'chessevent_connection_id',
             'chessevent_tournament_name',
         ]
-        for key, value in section.items():
+        for key, _ in section.items():
             if key not in tournament_section_keys:
                 self._config_reader.add_warning('option inconnue', section_key, key)
         handicap_section_key = 'tournament.' + tournament_id + '.handicap'

@@ -9,7 +9,7 @@ import time
 from logging import Logger
 from typing import Annotated
 
-from litestar import Request, get, post, Response
+from litestar import Request, delete, get, post, Response
 from litestar.enums import RequestEncodingType
 from litestar.exceptions import HTTPException
 from litestar.params import Body
@@ -282,7 +282,7 @@ async def add_illegal_move(
             try:
                 board = tournament.boards[board_id - 1]
                 if (color := color.upper()) not in (Color.WHITE, Color.BLACK):
-                    Message.error(request, f'L\'écriture du résultat à échoué (couleur invalide [{color}])')
+                    Message.error(request, f'L\'écriture du coup illégal à échoué (couleur invalide [{color}])')
                 else:
                     tournament.store_illegal_move(board, Color(color))
                     request.session['last_illegal_move_added']: dict[str, int | str | float] = {
@@ -300,6 +300,46 @@ async def add_illegal_move(
         path=screen_url(request, event_id, screen_id),
         status_code=HTTP_307_TEMPORARY_REDIRECT)
 
+@delete(
+    path='/illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
+    name='delete-illegal-move'
+)
+async def delete_illegal_move(
+        request: Request, event_id: str, screen_id: str, tournament_id: str, board_id: int, color: str
+) -> Template | Redirect:
+    event: Event = load_event(request, event_id)
+    if event is None:
+        return Redirect(
+            path=index_url(request),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
+    if not event_login_needed(request, event):
+        tournament: Tournament
+        try:
+            tournament = event.tournaments[tournament_id]
+            board: Board
+            try:
+                board = tournament.boards[board_id - 1]
+                if (color := color.upper()) not in (Color.WHITE, Color.BLACK):
+                    Message.error(request, f'La suppression du coup illégal à échoué (couleur invalide [{color}])')
+                else:
+                    if tournament.delete_illegal_move(board, Color(color)):
+                        request.session['last_illegal_move_removed']: dict[str, int | str | float] = {
+                            'tournament_id': tournament_id,
+                            'board_id': board_id,
+                            'color': color,
+                            'expiration': time.time() + 10,
+                        }
+                    else:
+                        Message.warning(request,
+                            f"Pas de coup illégal trouvé pour [{tournament.id}] : {board_id} ({color})")
+            except KeyError:
+                Message.error(
+                    request, f'L\'échiquier [{board_id}] est introuvable pour le tournoi [{tournament.id}])')
+        except KeyError:
+            Message.error(request, f'Tournoi [{tournament_id}] non trouvé')
+    return Redirect(
+        path=screen_url(request, event_id, screen_id),
+        status_code=HTTP_307_TEMPORARY_REDIRECT)
 
 @get(path='/screen-last-update/{event_id:str}/{screen_id:str}', name='get-screen-last-update')
 async def get_screen_last_update(request: Request, event_id: str, screen_id: str) -> str:
@@ -310,12 +350,12 @@ async def get_screen_last_update(request: Request, event_id: str, screen_id: str
             with suppress(FileNotFoundError):
                 mtime = max(mtime, screen_file.lstat().st_mtime)
         last_update: int = math.ceil(mtime)
-        logger.debug(f'last_update({event_id}/{screen_id})={last_update}')
+        logger.debug('last_update(%s/%s)=%s', event_id, screen_id, last_update)
         return str(last_update)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         error: str = f'Aucun tournoi pour l\'écran [{screen_id}]'
         Message.error(request, error)
-        raise HTTPException(detail=error, status_code=500)
+        raise HTTPException(detail=error, status_code=500) from e
 
 
 @get(path='/download-event/{event_id:str}', name='download-event')

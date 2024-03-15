@@ -9,7 +9,7 @@ from litestar.static_files import create_static_files_router
 from litestar.template import TemplateConfig
 from litestar.types import ControllerRouterHandler, Middleware
 
-from web.views import (index, show_event, login, show_screen, show_rotator, show_rotator_screen, update_result,
+from web.views import (delete_illegal_move, index, show_event, login, show_screen, show_rotator, show_rotator_screen, update_result,
                        get_screen_last_update, download_event, download_tournament, add_illegal_move)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -34,6 +34,7 @@ route_handlers: Sequence[ControllerRouterHandler] = [
     show_rotator_screen,
     update_result,
     add_illegal_move,
+    delete_illegal_move,
     get_screen_last_update,
     download_event,
     download_tournament,
