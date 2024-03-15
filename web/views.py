@@ -300,6 +300,7 @@ async def add_illegal_move(
         path=screen_url(request, event_id, screen_id),
         status_code=HTTP_307_TEMPORARY_REDIRECT)
 
+
 @delete(
     path='/illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
     name='delete-illegal-move'
@@ -330,8 +331,8 @@ async def delete_illegal_move(
                             'expiration': time.time() + 10,
                         }
                     else:
-                        Message.warning(request,
-                            f"Pas de coup illégal trouvé pour [{tournament.id}] : {board_id} ({color})")
+                        Message.warning(
+                            request, f"Pas de coup illégal trouvé pour [{tournament.id}] : {board_id} ({color})")
             except KeyError:
                 Message.error(
                     request, f'L\'échiquier [{board_id}] est introuvable pour le tournoi [{tournament.id}])')
@@ -340,6 +341,7 @@ async def delete_illegal_move(
     return Redirect(
         path=screen_url(request, event_id, screen_id),
         status_code=HTTP_307_TEMPORARY_REDIRECT)
+
 
 @get(path='/screen-last-update/{event_id:str}/{screen_id:str}', name='get-screen-last-update')
 async def get_screen_last_update(request: Request, event_id: str, screen_id: str) -> str:
