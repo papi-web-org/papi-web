@@ -9,6 +9,8 @@
         <link rel="stylesheet" href="{{ url_for('static', file_path='/css/base.css') }}" type="text/css" />
         {# https://jquery.com/download/ #}
         <script src="{{ url_for('static', file_path='/lib/jquery/jquery-3.7.1.min.js') }}"></script>
+        {# https://htmx.org/docs/#installing #}
+        <script src="{{ url_for('static', file_path='/lib/htmx/htmx.min.js') }}"></script>
         <script>
 $(document).ready(function(){
     setTimeout(function(){
@@ -40,7 +42,7 @@ $(document).ready(function(){
             </div>
         </div>
 	    <div id="please-wait-wrapper"><div id="please-wait"></div></div>
-        <div class="modal please-wait-modal" id="please-wait-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="please-wait-modal-label" aria-hidden="true">
+        <div class="modal please-wait-modal htmx-indicator" id="please-wait-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="please-wait-modal-label" aria-hidden="true">
             <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content">
                     <div class="modal-header">
