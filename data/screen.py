@@ -118,7 +118,8 @@ class AScreenWithSets(AScreen):
 
 @dataclass
 class ScreenBoards(AScreenWithSets):
-    _update: bool
+    update: bool = False
+    record_illegal_moves: bool = False
 
     def __post_init__(self):
         self._type = ScreenType.Boards
@@ -154,10 +155,6 @@ class ScreenBoards(AScreenWithSets):
     @property
     def icon_str(self) -> str:
         return 'bi-pencil-fill' if self.update else 'bi-card-list'
-
-    @property
-    def update(self) -> bool:
-        return self._update
 
 
 @dataclass
@@ -377,6 +374,20 @@ class ScreenBuilder:
                 self._config_reader.add_warning(
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
+        key = 'record_illegal_moves'
+        default_record_illegal_moves: bool = False
+        record_illegal_moves: bool | None = default_record_illegal_moves
+        if screen_type == ScreenType.Boards:
+            if key in screen_section:
+                record_illegal_moves = self._config_reader.getboolean_safe(screen_section_key, key)
+                if record_illegal_moves is None:
+                    self._config_reader.add_warning('un booléen est attendu, écran ignoré', screen_section_key, key)
+                    return None
+        else:
+            if key in screen_section:
+                self._config_reader.add_warning(
+                    f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
+                    screen_section_key, key)
         key = 'show_unpaired'
         default_show_unpaired: bool = False
         show_unpaired: bool | None = default_show_unpaired
@@ -440,7 +451,8 @@ class ScreenBuilder:
                 menu,
                 show_timer,
                 screen_sets,
-                update
+                update,
+                record_illegal_moves,
             )
             AScreen.set_screen_file_dependencies(
                 self._event_id,
