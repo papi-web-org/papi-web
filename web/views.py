@@ -114,6 +114,57 @@ def render_screen(
             'messages': Message.messages(request),
         })
 
+def render_board(
+        request: Request, event: Event, tournament: Tournament, board: Board,
+        update: bool,
+) -> Template:
+    return Template(
+        template_name="board.html",
+        context={
+            'event': event,
+            'tournament': tournament,
+            'board': board,
+            'update': update,
+            'messages': Message.messages(request),
+        }
+    )
+
+def render_result_modal(
+        request: Request, event: Event, tournament: Tournament, board: Board,
+        arbiter: bool,
+) -> Template:
+    return Template(
+        template_name="result_modal.html",
+        context={
+            'event': event,
+            'tournament': tournament,
+            'board': board,
+            'arbiter': arbiter,
+            'messages': Message.messages(request),
+        }
+    )
+
+@get(
+        path='result-modal/{event_id:str}/{tournament_id:str}/{board_id:str}'
+        name='result-login'
+)
+async def show_modal_result(
+    request: Request, event_id: str, tournament_id:str
+) -> Redirect | Template:
+    event: Event = load_event(request, event)
+    if event is None:
+        return Redirect(
+            path=index_url(request),
+            status_code=HTTP_307_TEMPORARY_REDIRECT,
+        )
+    try:
+        tournament: Tournament = event.tournaments[tournament_id]
+    except KeyError:
+        Message.error(request, f'Tournoi [{tournament_id}] non trouvé')
+    return Redirect(
+        path=event_url(request, event_id),
+        status_code=HTTP_307_TEMPORARY_REDIRECT
+    )
 
 @post(
     path='/login/{event_id:str}/{screen_id:str}',
@@ -143,10 +194,10 @@ async def login(
     if 'password' not in data:
         Message.warning(request, 'Veuillez indiquer le code d\'accès.')
     elif data['password'] == event.update_password:
-        Message.success(request, f'Authentification réussie.')
+        Message.success(request, 'Authentification réussie.')
         store_password(request, event, data['password'])
     else:
-        Message.error(request, f'Code d\'accès incorrect.')
+        Message.error(request, 'Code d\'accès incorrect.')
         store_password(request, event, None)
     return Redirect(
         path=screen_url(request, event_id, screen_id),
@@ -160,13 +211,13 @@ def event_login_needed(request: Request, event: Event, screen: AScreen | None = 
     if not event.update_password:
         return False
     session_password: str | None = get_stored_password(request, event)
-    logger.info(f'session_password={"*" * len(session_password) if session_password else 0}')
+    logger.info('session_password=%s', "*" * (len(session_password if session_password else 0)))
     if session_password is None:
         Message.error(request,
-                      f'Un code d\'accès est nécessaire pour accéder à l\'interface de saisie des résultats.')
+                      'Un code d\'accès est nécessaire pour accéder à l\'interface de saisie des résultats.')
         return True
     if session_password != event.update_password:
-        Message.error(request, f'Code d\'accès incorrect.')
+        Message.error(request, 'Code d\'accès incorrect.')
         store_password(request, event, None)
         return True
     return False
@@ -191,6 +242,34 @@ async def show_screen(request: Request, event_id: str, screen_id: str) -> Templa
     login_needed: bool = event_login_needed(request, event, screen)
     return render_screen(request, event, screen, login_needed)
 
+@get(
+        path='/board/{event_id:str}/{tournament_id:str}/{board_id:int}',
+        name='show-board'
+)
+async def show_board(
+    request: Request, event_id: str, tournament_id: str, board_id: int) -> Template | Redirect:
+    
+    event: Event = load_event(request, event_id)
+    if event is None:
+        return Redirect(
+            path=index_url(request),
+            status_code=HTTP_307_TEMPORARY_REDIRECT
+        )
+    try:
+        tournament = event.tournaments[tournament_id]
+        board: Board
+        try:
+            board = tournament.boards[board_id - 1]
+
+
+        except (IndexError, TypeError):
+            Message.error(request, f"L'échiquier [{board_id}] est introuvable pour le tournoi [{tournament_id}]")
+    except KeyError:
+        Message.error(request, f'Tournoi [{tournament_id}] non trouvé')
+    return Redirect(
+        path=event_url(request, event_id),
+        status_code=HTTP_307_TEMPORARY_REDIRECT
+    )
 
 @get(path='/rotator/{event_id:str}/{rotator_id:str}', name='show-rotator')
 async def show_rotator(
