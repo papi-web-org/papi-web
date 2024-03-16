@@ -2,9 +2,9 @@
 <script>
 $(document).ready(function(){
     $('.illegal-move-flag').click(function (event) {
+        event.stopImmediatePropagation();
         //alert('before');
         window.location=$(this).attr('url');
-        event.stopPropagation();
         //alert('after');
         return false;
     });
@@ -36,7 +36,7 @@ $(document).ready(function(){
                                 <tr
                                     id="board-{{ tournament.id }}-{{ board.id }}-row"
                                     class="board-row {% if board.result_str %}board-row-result{% else %}board-row-no-result{% endif %}"
-                                    {% if not board.result_str %} data-bs-toggle="modal" data-bs-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-modal"{% endif %}
+                                    {% if screen.update and not board.result_str %} data-bs-toggle="modal" data-bs-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-modal"{% endif %}
                                 >
                                     <th scope="row" class="board-number">{{ board.number }}.</th>
                                     <td class="points">{{ wp.vpoints_str }}</td>
@@ -61,9 +61,9 @@ $(document).ready(function(){
                                             {% for _ in range(board.black_illegal_moves) %}
                                                 <i class="bi-flag-fill"></i>
                                             {% endfor %}
-                                            <a class="illegal-move-flag" href="/illegal-move/{{ event.id }}/{{ screen.id }}/{{ tournament.id }}/{{ board.id }}/b">
+                                            <span class="illegal-move-flag" url="/illegal-move/{{ event.id }}/{{ screen.id }}/{{ tournament.id }}/{{ board.id }}/b">
                                                 <i class="bi-flag"></i>
-                                            </a>
+                                            </span>
                                         {% endif %}
                                     </td>
                                     {% if tournament.print_real_points %}<td class="points">{% if bp.id != 1 %}[{{ bp.points_str }}]{% endif %}</td>{% endif %}
