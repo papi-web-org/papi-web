@@ -229,7 +229,7 @@ async def show_rotator_screen(
 )
 async def update_result(
         request: Request, event_id: str, screen_id: str, tournament_id: str, board_id: int, result: int
-) -> Template | Redirect:
+) -> Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
@@ -268,7 +268,7 @@ async def update_result(
 )
 async def add_illegal_move(
         request: Request, event_id: str, screen_id: str, tournament_id: str, board_id: int, color: str
-) -> Template | Redirect:
+) -> Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
@@ -303,11 +303,12 @@ async def add_illegal_move(
 
 @delete(
     path='/illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
-    name='delete-illegal-move'
+    name='delete-illegal-move',
+    status_code=HTTP_307_TEMPORARY_REDIRECT,
 )
 async def delete_illegal_move(
         request: Request, event_id: str, screen_id: str, tournament_id: str, board_id: int, color: str
-) -> Template | Redirect:
+) -> Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
