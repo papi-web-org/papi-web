@@ -126,8 +126,7 @@ def render_board(
             'board': board,
             'update': update,
             'messages': Message.messages(request),
-        }
-    )
+        })
 
 def render_result_modal(
         request: Request, event: Event, tournament: Tournament, board: Board,
@@ -141,11 +140,10 @@ def render_result_modal(
             'board': board,
             'arbiter': arbiter,
             'messages': Message.messages(request),
-        }
-    )
+        })
 
 @get(
-        path='result-modal/{event_id:str}/{tournament_id:str}/{board_id:str}'
+        path='result-modal/{event_id:str}/{tournament_id:str}/{board_id:str}',
         name='result-login'
 )
 async def show_modal_result(
