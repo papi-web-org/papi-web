@@ -77,18 +77,20 @@ class ChessEventPlayer:
             self.board = int(chessevent_player_info[key := 'board'])
             self.skipped_rounds = {}
             key = 'skipped_rounds'
-            for round in chessevent_player_info[key]:
-                if int(round) in range(1, 25) and chessevent_player_info[key][round] in [0.0, 0.5]:
-                    self.skipped_rounds[int(round)] = chessevent_player_info[key][round]
+            for round_ in chessevent_player_info[key]:
+                if int(round_) in range(1, 25) and chessevent_player_info[key][round_] in [0.0, 0.5]:
+                    self.skipped_rounds[int(round_)] = chessevent_player_info[key][round_]
                 else:
                     raise ValueError
         except KeyError:
-            logger.error(f'Champ {key} non trouvé pour le·la joueur·euse [{self.last_name} {self.first_name}]')
+            logger.error('Champ %s non trouvé pour le·la joueur·euse [%s %s]',
+                         key ,self.last_name, self.first_name)
             return
         except (TypeError, ValueError):
             logger.error(
-                f'Valeur du champ {key} non valide ([{chessevent_player_info[key]}]) '
-                f'pour le·la joueur·euse [{self.last_name} {self.first_name}]')
+                'Valeur du champ %s non valide ([%s]) '
+                'pour le·la joueur·euse [%s %s]',
+                key, chessevent_player_info[key], self.last_name, self.first_name)
             return
         self.error = False
 
@@ -101,7 +103,9 @@ class ChessEventPlayer:
         lines.append(f'  - Date de naissance : {self.birth}')
         lines.append(f'  - Classements standard / rapide / blitz : {self.standard_rating}{self.standard_rating_type} '
                      f'/ {self.rapid_rating}{self.rapide_rating_type} / {self.blitz_rating}{self.blitz_rating_type}')
-        lines.append(f'  - Fédération / Ligue / Club : {self.federation} / {self.ffe_league} / {self.ffe_club_id} {self.ffe_club}')
+        lines.append(
+            f'  - Fédération / Ligue / Club : '
+            f'{self.federation} / {self.ffe_league} / {self.ffe_club_id} {self.ffe_club}')
         lines.append(f'  - Mél / Tél : {self.email} / {self.phone}')
         lines.append(f'  - Dû / Payé / Pointé·e : {self.fee} / {self.paid} / {self.check_in}')
         lines.append(f'  - Fixe / Rondes : {self.board} / {self.skipped_rounds}')

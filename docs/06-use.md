@@ -47,18 +47,17 @@ Le délai minimum entre deux téléchargements sur le site fédéral est par dé
 Le serveur Papi-web se lance en exécutant le script `server.bat` :
 ```
 C:\...\papi-web-<version>$ server.bat
-INFO     log level: INFO
-INFO     host: 0.0.0.0
-INFO     port: 80
-INFO     local URL: http://127.0.0.1
-INFO     LAN/WAN URL: http://192.168.1.79
-INFO     Setting up Django...
-INFO     Opening the welcome page [http://127.0.0.1] in a browser...
-INFO     Starting Papi-web server, please wait...
-August 25, 2023 - 22:48:04
-Django version 4.2.3, using settings 'web.settings'
-Starting development server at http://0.0.0.0:80/
-Quit the server with CTRL-BREAK.
+Papi-web <version>> Copyright © Pascal AUBRY 2013-2024
+Starting Papi-web server, please wait...
+Reading configuration file...
+log: INFO
+port: 80
+local URL: http://127.0.0.1
+LAN/WAN URL: http://192.168.43.85
+INFO:     Started server process [XXXXX]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:80 (Press CTRL+C to quit)
 ```
 On arrête le serveur en tapant `Ctrl-C`.
 

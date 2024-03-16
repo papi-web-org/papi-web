@@ -21,6 +21,8 @@ class Board:
     white_player: Player | None = None
     black_player: Player | None = None
     result: Result | None = None
+    white_illegal_moves: int = 0
+    black_illegal_moves: int = 0
 
     @property
     def id(self) -> int | None:
@@ -30,9 +32,9 @@ class Board:
     def id(self, new_id):
         self.board_id = new_id
 
-    def set_id(self, id: int):
+    def set_id(self, board_id: int):
         warnings.warn('Use direct assignment to id instead')
-        self.board_id = id
+        self.board_id = board_id
 
     def set_number(self, number: int):
         warnings.warn('Use direct assignment to number instead')

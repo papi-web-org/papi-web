@@ -23,11 +23,11 @@ Si vous n'avez qu'un seul tournoi dans votre évènement (`default`), alors vous
 
 ![Écran de saisie d'un tournoi](images/friendly-update-2.jpg)
 
-Les utilisateurs peuvent entrer le résultat des parties en cliquant sur les échiquier présentés :
+Les utilisateurs peuvent entrer le résultat des parties en cliquant sur les échiquiers présentés :
 
 ![Entrée d'un résultat sur un écran de saisie d'un tournoi](images/friendly-update-3.jpg)
 
-## Déclaration d'un écran de saisie classique  (`[screen.<screen_id>.boards]`)
+## Déclaration d'un écran de saisie classique (`[screen.<screen_id>.boards]`)
 
 Si vous avez plusieurs tournois dans votre évènement, vous devez préciser celui qui sera affiché en ajoutant une rubrique `[screen.<screen_id>.boards]` de la manière suivante :
 ```
@@ -82,7 +82,7 @@ Ce code devra être renseigné lors du premier accès à l'écran de saisie :
 ![Écran de saisie d'un tournoi](images/friendly-update-5.jpg)
 
 > [!IMPORTANT]
-> La protection mise en place reste succinte, elle a essentiellement pour objectif de limiter les mauvaises manipulations. En particulier, l'intrusion sur le réseau local utilisé par Papi-Web peut mener à des attaques de type « man-in-the-middle » puisque les communications HTTP avec le serveur Papi-web ne sont pas chiffrées. Afin de complètement se protéger, l'accès au réseau local (filaire ou Wi-Fi) doit être limité aux arbitres et aux organisateur·trices (par exemple, la clé Wi-Fi du réseau local ne doit pas être partagée).
+> La protection mise en place reste succinte, elle a essentiellement pour objectif de limiter les mauvaises manipulations. En particulier, l'intrusion sur le réseau local utilisé par Papi-Web peut mener à des attaques de type « man-in-the-middle » puisque les communications HTTP avec le serveur Papi-web ne sont pas chiffrées. Afin de complètement se protéger, l'accès au réseau local (filaire ou Wi-Fi) doit être limité aux arbitres et aux organisateur·ices (par exemple, la clé Wi-Fi du réseau local ne doit pas être partagée).
 
 
 ## Saisie de résultats de plusieurs tournois sur un même écran (`[screen.<screen_id>.boards.<set_id>]`)

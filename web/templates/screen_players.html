@@ -16,7 +16,7 @@
                         <tbody>
                         {% for player in players %}
                             {% if tournament.current_round %}
-                                {% with pairing=player.pairings|get_item:tournament.current_round %}
+                                {% with pairing=player.pairings[tournament.current_round] %}
                                 {% with opponent_id=pairing.opponent_id %}
                                     <tr class=" player-row {% if not opponent_id or opponent_id == 1 %}not-paired{% else %}paired{% endif %}">
                                         <td  class="player">{% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }} [{{ player.vpoints_str }}]</td>
@@ -25,7 +25,7 @@
                                         {% elif opponent_id == 1 %}
                                             <td colspan="2"><em>{{ player.exempt_str }}</em></td>
                                         {% else %}
-                                            {% with opponent=tournament.players_by_id|get_item:opponent_id %}
+                                            {% with opponent=tournament.players_by_id[opponent_id] %}
                                                 <td class="pairing">Table n°{{ player.board_number }} {{ player.color_str }}</td>
                                                 <td class="opponent">{% if opponent.title_str %}{{ opponent.title_str }}&nbsp;{% endif %}{{ opponent.last_name }} {{ opponent.first_name }} {{ opponent.rating }}{{ opponent.rating_type }} [{{ opponent.vpoints_str }}]</td>
                                             {% endwith %}

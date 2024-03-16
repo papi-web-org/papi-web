@@ -1,16 +1,14 @@
-{% load static %}
-{% load mathfilters %}
 <html>
     <head>
         <title>{% block title %}Base title{% endblock %}</title>
-        <link rel="shortcut icon" type="image/png" href="{% static 'images/papi-web.ico' %}"/>
+        <link rel="shortcut icon" type="image/png" href="{{ url_for('static', file_path='/images/papi-web.ico') }}"/>
         {# https://github.com/twbs/bootstrap/releases #}
-        <link href="{% static 'lib/bootstrap/bootstrap-5.3.2-dist/css/bootstrap.min.css' %}" rel="stylesheet">
+        <link href="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-5.3.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
         {# https://github.com/twbs/icons/releases #}
-        <link rel="stylesheet" href="{% static 'lib/bootstrap-icons/bootstrap-icons-1.11.2/font/bootstrap-icons.min.css' %}">
-        <link rel="stylesheet" href="{% static 'css/base.css' %}" type="text/css" />
+        <link rel="stylesheet" href="{{ url_for('static', file_path='/lib/bootstrap-icons/bootstrap-icons-1.11.2/font/bootstrap-icons.min.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', file_path='/css/base.css') }}" type="text/css" />
         {# https://jquery.com/download/ #}
-        <script src="{% static 'lib/jquery/jquery-3.7.1.min.js' %}"></script>
+        <script src="{{ url_for('static', file_path='/lib/jquery/jquery-3.7.1.min.js') }}"></script>
         <script>
 $(document).ready(function(){
     setTimeout(function(){
@@ -23,20 +21,22 @@ $(document).ready(function(){
         {% endblock %}
     </head>
     <body>
-        {% if messages %}{% for message in messages %}
+        {% if messages %}
             <div id="messages">
-                <div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
+            {% for message in messages %}
+                <div class="alert {{ message.tag }} alert-dismissible fade show" role="alert">
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    {{ message }}
+                    {{ message.text }}
                 </div>
+            {% endfor %}
             </div>
-        {% endfor %}{% endif %}
+        {% endif %}
         {% block content %}
             Body content
         {% endblock %}
         <div id="copyright-wrapper" class="copyright-wrapper">
             <div id="copyright" class="copyright">
-                Papi-web {{ papi_web_info|get_item:'version' }} - {{ papi_web_info|get_item:'copyright' }} - <a href="{{ papi_web_info|get_item:'url' }}" target="_blank">{{ papi_web_info|get_item:'url' }}</a>
+                Papi-web {{ papi_web_info.version }} - {{ papi_web_info.copyright }} - <a href="{{ papi_web_info.url }}" rel = "noopener noreferrer" target="_blank">{{ papi_web_info.url }}</a>
             </div>
         </div>
 	    <div id="please-wait-wrapper"><div id="please-wait"></div></div>
@@ -51,7 +51,7 @@ $(document).ready(function(){
                 </div>
             </div>
         </div>
-        <script src="{% static 'lib/bootstrap/bootstrap-5.3.2-dist/js/bootstrap.bundle.min.js' %}"></script>
+        <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-5.3.2-dist/js/bootstrap.bundle.min.js') }}"></script>
     </body>
     {% block footer %}
     {% endblock %}

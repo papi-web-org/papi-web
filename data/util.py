@@ -1,7 +1,7 @@
 """A file grouping all the "utility" classes/enum: Result, Color, PlayerTitle,
 PlayerSex, TournamentPairing, TournamentRating"""
 
-from enum import StrEnum, IntEnum, auto
+from enum import Enum, StrEnum, IntEnum, auto
 from logging import Logger
 from typing import Self
 
@@ -39,28 +39,6 @@ class Result(IntEnum):
                 return 'F-F'
             case _:
                 raise ValueError(f'Unknown value: {self}')
-
-    ''' TODO remove this method (seems to be unused)
-    @classmethod
-    def from_db_str(cls, value: str) -> Self:
-        """Decode the result value from the result string"""
-        match value:
-            case '':
-                return Result.NOT_PAIRED
-            case '1-0':
-                return Result.GAIN
-            case '0-1':
-                return Result.LOSS
-            case '1/2':
-                return Result.DRAW_OR_HPB
-            case '1-F':
-                return Result.PAB_OR_FORFEIT_GAIN_OR_FPB
-            case 'F-1':
-                return Result.FORFEIT_LOSS
-            case 'F-F':
-                return Result.DOUBLE_FORFEIT
-            case _:
-                raise ValueError(f'Unknown value: {value}')'''
 
     @classmethod
     def from_papi_value(cls, value: int) -> Self:
@@ -773,3 +751,18 @@ class ScreenType(StrEnum):
     @classmethod
     def names(cls) -> list[str]:
         return [member.value for member in iter(cls)]
+
+
+class NeedsUpload(Enum):
+    YES = 0
+    NO_CHANGE = 1
+    RECENT_CHANGE = 2
+
+    def __bool__(self):
+        match self:
+            case NeedsUpload.YES:
+                return True
+            case NeedsUpload.NO_CHANGE | NeedsUpload.RECENT_CHANGE:
+                return False
+            case _:
+                raise ValueError(f"Unknown value: {self}")

@@ -41,7 +41,7 @@ class Event:
         self.screens: dict[str, AScreen] = {}
         self.rotators: dict[str, Rotator] = {}
         self.timer: Timer | None = None
-        if self.reader.errors or self.reader.warnings:  # warning when the configuration file is not found
+        if self.reader.errors:
             return
         self._build_root()
         if self.reader.errors:
@@ -88,6 +88,13 @@ class Event:
         return self.reader.ini_file
 
     @property
+    def download_allowed(self) -> bool:
+        for tournament in self.tournaments.values():
+            if tournament.download_allowed:
+                return True
+        return False
+
+    @property
     def errors(self) -> list[str]:
         return self.reader.errors
 
@@ -107,6 +114,12 @@ class Event:
             self.reader.add_error('rubrique absente', section_key)
             return
 
+        key = 'css'
+        try:
+            self.css = section[key]
+        except KeyError:
+            self.reader.add_debug('option absente', section_key, key)
+
         key = 'name'
         default_name = self.id
         try:
@@ -117,9 +130,9 @@ class Event:
         except KeyError:
             self.name = default_name
             self.reader.add_info(
-                   f'option absente, par défaut [{default_name}]',
-                   section_key,
-                   key
+                f'option absente, par défaut [{default_name}]',
+                section_key,
+                key
             )
         except TypeError:
             # NOTE(Amaras) This could happen because of a TOC/TOU bug
@@ -127,8 +140,8 @@ class Event:
             # After this, the section has already been retrieved, so no future
             # access will throw a TypeError.
             self.reader.add_error(
-                    'la rubrique est devenue une option, erreur fatale',
-                    section_key
+                'la rubrique est devenue une option, erreur fatale',
+                section_key
             )
             return
 
@@ -139,31 +152,25 @@ class Event:
         except KeyError:
             self.path = default_path
             self.reader.add_debug(
-                    f'option absente, par défaut [{default_path}]',
-                    section_key,
-                    key
+                f'option absente, par défaut [{default_path}]',
+                section_key,
+                key
             )
         # NOTE(Amaras) This could be a TOC/TOU bug
         # What would our threat model be for this?
         if not self.path.exists():
-            self.reader.add_error(
-                    f"le répertoire [{self.path}] n'existe pas",
-                    section_key,
-                    key
+            self.reader.add_warning(
+                f"le répertoire [{self.path}] n'existe pas",
+                section_key,
+                key
             )
             return
         elif not self.path.is_dir():
-            self.reader.add_error(
-                    f"[{self.path}] n'est pas un répertoire",
-                    section_key,
-                    key
+            self.reader.add_warning(
+                f"[{self.path}] n'est pas un répertoire",
+                section_key,
+                key
             )
-
-        key = 'css'
-        try:
-            self.css = section[key]
-        except KeyError:
-            self.reader.add_debug('option absente', section_key, key)
 
         key = 'update_password'
         try:
@@ -176,7 +183,7 @@ class Event:
             )
 
         section_keys: list[str] = ['name', 'path', 'update_password', 'css', ]
-        for key, value in section.items():
+        for key, _ in section.items():
             if key not in section_keys:
                 self.reader.add_warning('option inconnue', section_key, key)
 
@@ -192,7 +199,7 @@ class Event:
         filename: str = f'{now} {tournament.id} {tournament.current_round} {board.id} {white_str} {black_str} {result}'
         result_file: Path = results_dir / filename
         result_file.touch()
-        logger.info(f'le fichier [{result_file}] a été créé')
+        logger.info('le fichier [%s] a été créé', result_file)
 
     def __lt__(self, other: 'Event'):
         # p1 < p2 calls p1.__lt__(p2)

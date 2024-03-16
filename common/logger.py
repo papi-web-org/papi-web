@@ -47,6 +47,6 @@ def input_interactive(string: str) -> str:
     print(Fore.CYAN + Style.BRIGHT + string + Style.RESET_ALL, end='')
     try:
         result = input().strip().upper()
-    except UnicodeDecodeError:
-        raise KeyboardInterrupt()
+    except UnicodeDecodeError as exc:
+        raise KeyboardInterrupt() from exc
     return result

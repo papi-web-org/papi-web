@@ -1,8 +1,8 @@
 import json
 
-from requests import Session, Response
-from requests.exceptions import ConnectionError, Timeout, RequestException
 from logging import Logger
+from requests import Session, Response
+from requests.exceptions import ConnectionError, Timeout, RequestException # pylint: disable=redefined-builtin
 
 from data.tournament import Tournament
 from common.logger import get_logger
@@ -15,66 +15,74 @@ CHESSEVENT_URL: str = 'https://chessevent.echecs-bretagne.fr/download'
 class ChessEventSession(Session):
     def __init__(self, tournament: Tournament):
         super().__init__()
-        self.__tournament = tournament
+        self._tournament = tournament
 
     def read_data(self) -> str | None:
         url: str = CHESSEVENT_URL
         try:
             post: dict[str, str] = {
-                'user_id': self.__tournament.chessevent_connection.user_id,
-                'password': self.__tournament.chessevent_connection.password,
-                'event_id': self.__tournament.chessevent_connection.event_id,
-                'tournament_name': self.__tournament.chessevent_tournament_name,
+                'user_id': self._tournament.chessevent_connection.user_id,
+                'password': self._tournament.chessevent_connection.password,
+                'event_id': self._tournament.chessevent_connection.event_id,
+                'tournament_name': self._tournament.chessevent_tournament_name,
             }
-            chessevent_string: str = (f'{post["user_id"]}:{"*" * min(len(post["password"]), 8)}'
+            chessevent_string: str = (f'{post["user_id"]}:{"*" * 8}'
                                       f'@{post["event_id"]}/{post["tournament_name"]}')
-            logger.debug(f'Interrogation de la plateforme Chess Event {chessevent_string}...')
+            logger.debug('Interrogation de la plateforme Chess Event %s...', chessevent_string)
             # Redirections are handled manually to pass the data at each redirection
             response: Response = self.post(url, data=post, allow_redirects=False)
             while response.status_code in [301, 302]:
                 redirect_url = response.headers['location']
-                logger.debug(f'redirection vers {redirect_url}...')
+                logger.debug('redirection vers %s...', redirect_url)
                 response = self.post(redirect_url, data=post, allow_redirects=False)
-            logger.debug(f'Code HTTP de la réponse : {response.status_code}')
-            logger.debug(f'Entêtes de la réponse : {response.headers}')
+            logger.debug('Code HTTP de la réponse : %s', response.status_code)
+            logger.debug('Entêtes de la réponse : %s', response.headers)
             data: str = response.content.decode()
-            logger.debug(f'Données de la réponse : {data}')
+            logger.debug('Données de la réponse : %s', data)
             if response.status_code == 200:
-                logger.debug(f'Données récupérées de la plateforme Chess Event : {len(data)} octets')
+                logger.debug('Données récupérées de la plateforme Chess Event : %s octets',
+                             len(data))
                 return data
             match response.status_code:
                 case 401:
-                    logger.error(f'Les identifiants {post["user_id"]}/{post["password"]} '
-                                 f'ont été rejetés par la plateforme Chess Event ({chessevent_string}), '
-                                 f'code d\'erreur : {response.status_code}')
+                    logger.error('Les identifiants pour %s '
+                                 'ont été rejetés par la plateforme Chess Event (%s), '
+                                 'code d\'erreur : %s',
+                                 post["user_id"], chessevent_string, response.status_code)
                 case 403:
-                    logger.error(f'L\'accès au tournoi {post["tournament_name"]} n\'est pas '
-                                 f'autorisé pour les identifiants {post["user_id"]}/{post["password"]} '
-                                 f'({chessevent_string}), code d\'erreur : {response.status_code}')
+                    logger.error('L\'accès au tournoi %s n\'est pas '
+                                 'autorisé pour %s '
+                                 '(%s), code d\'erreur : %s',
+                                 post["tournament_name"], post["user_id"],
+                                 chessevent_string, response.status_code)
                 case 496:
-                    logger.error(f'Un paramètre est manquant dans la requête à la plateforme Chess Event '
-                                 f'({chessevent_string}, code d\'erreur : {response.status_code} - '
-                                 f'{json.loads(data)["error"]})')
+                    logger.error('Un paramètre est manquant dans la requête à la plateforme Chess Event '
+                                 '(%s, code d\'erreur : %s - '
+                                 '%s)',
+                                 chessevent_string, response.status_code, json.loads(data)["error"])
                 case 497:
-                    logger.error(f'L\'identifiant {post["user_id"]} est introuvable sur la plateforme Chess Event '
-                                 f'({chessevent_string}, code d\'erreur : {response.status_code} - '
-                                 f'{json.loads(data)["error"]})')
+                    logger.error('L\'identifiant %s est introuvable sur la plateforme Chess Event '
+                                 '(%s, code d\'erreur : %s - %s)',
+                                 post["user_id"], chessevent_string, response.status_code,
+                                 json.loads(data)["error"])
                 case 498:
-                    logger.error(f'Le tournoi {post["tournament_name"]} est introuvable sur la plateforme Chess Event '
-                                 f'({chessevent_string}, code d\'erreur : {response.status_code} - '
-                                 f'{json.loads(data)["error"]})')
+                    logger.error('Le tournoi %s est introuvable sur la plateforme Chess Event '
+                                 '(%s, code d\'erreur : %s - %s)',
+                                 post["tournament_name"], chessevent_string, response.status_code,
+                                 json.loads(data)["error"])
                 case 499:
-                    logger.error(f'L\'évènement {post["event_id"]} est introuvable sur la plateforme Chess Event '
-                                 f'({chessevent_string}, code d\'erreur : {response.status_code} - '
-                                 f'{json.loads(data)["error"]})')
+                    logger.error('L\'évènement %s est introuvable sur la plateforme Chess Event '
+                                 '(%s, code d\'erreur : %s - %s)',
+                                 post["event_id"], chessevent_string, response.status_code,
+                                 json.loads(data)["error"])
                 case _:
-                    logger.error(f'Réponse invalide de la plateforme Chess Event '
-                                 f'({chessevent_string}, code d\'erreur {response.status_code} - '
-                                 f'{response.status_code})')
+                    logger.error('Réponse invalide de la plateforme Chess Event '
+                                 '(%s, code d\'erreur %s - %s)',
+                                 chessevent_string, response.status_code, response.status_code)
         except ConnectionError as e:
-            logger.error(f'Veuillez vérifier votre connection à internet [{url}] : {e}')
+            logger.error('Veuillez vérifier votre connection à internet [%s] : %s', url, e)
         except Timeout as e:
-            logger.error(f'La plateforme Chess Event est indisponible [{url}] : {e}')
+            logger.error('La plateforme Chess Event est indisponible [%s] : %s', url, e)
         except RequestException as e:
-            logger.error(f'La plateforme Chess Event a renvoyé une erreur [{url}] : {e}')
+            logger.error('La plateforme Chess Event a renvoyé une erreur [%s] : %s', url, e)
         return None

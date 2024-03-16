@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block title %}
 {% if screen.menu_label %}{{ screen.menu_label }}{% else %}{{ screen.id }}{% endif %} ({{ event.id }})
@@ -8,9 +7,9 @@
 {% block page_title %}{% endblock page_title %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'css/timer.css' %}" type="text/css" />
-<link rel="stylesheet" href="{% static 'css/screen.css' %}" type="text/css" />
-{% if event.css %}<link rel="stylesheet" href="{% static event.css %}" type="text/css" />{% endif %}
+<link rel="stylesheet" href="{{ url_for('static', file_path='css/timer.css') }}" type="text/css" />
+<link rel="stylesheet" href="{{ url_for('static', file_path='css/screen.css') }}" type="text/css" />
+{% if event.css %}<link rel="stylesheet" href="{{ url_for('static', file_path=event.css) }}" type="text/css" />{% endif %}
 <script>
 {% include 'refresh.js' %}
 {% if event.timer %}
@@ -22,7 +21,7 @@
 <style>
 {% if last_result_entered %}
     {% if last_result_entered.expiration > now %}
-        #board-{{ last_result_entered|get_item:'tournament_id' }}-{{ last_result_entered|get_item:'board_id' }}-row > * {
+        #board-{{ last_result_entered.tournament_id }}-{{ last_result_entered.board_id }}-row > * {
             color: red;
         }
     {% endif %}
@@ -34,9 +33,7 @@
     {% if screen.menu_screens %}
         <div id="#menu" class="menu">
             {% for entry in screen.menu_screens %}
-                <a href="{% url 'show-screen' event.id entry.id %}" class="menu-item {% if screen.id == entry.id %}selected{% endif %}">{% spaceless %}
-                    {{ entry.menu_label }}
-                    {% endspaceless %}</a>
+                <a href="{{ url_for('show-screen', event_id=event.id, screen_id=entry.id) }}" class="menu-item {% if screen.id == entry.id %}selected{% endif %}">{{ entry.menu_label }}</a>
             {% endfor %}
         </div>
     {% endif %}

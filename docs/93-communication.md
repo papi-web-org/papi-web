@@ -67,7 +67,7 @@ Tous les messages doivent être personnalisables à l'aide des *tokens* suivants
 |                              | `{{op_points}}`           | Le nombre de points de l'adversaire                                                |
 |                              | `{{op_standings_points}}` | Le nombre de points réels du·de la joueur·euse                                     |
 
-Le moteur de modèles de Django est utilisé pour la personnalisation des contenus, ce qui permet par exemple l'utilisation des alternatives `{% if %}`...`{% else %}`...`{% endif %}` :
+Le moteur de modèles Jinja est utilisé pour la personnalisation des contenus, ce qui permet par exemple l'utilisation des alternatives `{% if %}`...`{% else %}`...`{% endif %}` :
 
 ```
 Bonjour {{pl_first_name}},

@@ -4,7 +4,7 @@
 
 Il est possible de personnaliser le rendu des écrans à l'aide de fichiers CSS (Cascading Style Sheets).
 
-Les personnalisations doivent être déposées dans le répertoire `custom/`, au format CSS.  Vous pouvez également déposer dans le réperoire `custom/` des images, d'autres fichiers CSS, ...
+Les personnalisations doivent être déposées dans le répertoire `custom/`, au format CSS. Vous pouvez également déposer dans le répertoire `custom/` des images, d'autres fichiers CSS, ...
 
 ## Utilisation d'une personnalisation (`[event] css`)
 

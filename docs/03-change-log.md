@@ -2,6 +2,10 @@
 
 # Papi-web - ChangeLog
 
+## Version 2.2.0 - 7 mars 2024
+- Remplacement de Django par Litestar
+- Affichage du pointage des joueur·euses
+
 ## Version 2.1.8 - 16 février 2024
 - Suppression du _pooling_ ODBC
 
@@ -93,7 +97,7 @@
 - Possibilité de tester les codes d'accès au site FFE
 - Possibilité de rendre les données visibles sur le site FFE
 - Possibilité de télécharger les factures d'homologation depuis le site FFE
-- Renommage du script upload.bat en ffe.bat
+- Renommage du script `upload.bat` en `ffe.bat`
 
 ## Version 1.9 - 23 octobre 2018
 - Correction de la mise en ligne sur le site fédéral

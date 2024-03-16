@@ -56,6 +56,32 @@ def build_exe():
         '--icon=web/static/images/papi-web.ico',
         'papi_web.py',
     ]
+    files: list[Path] = []
+    files += [file for file in Path('web/templates').glob('**/*') if file.is_file()]
+    files += [file for file in Path('web/static/images').glob('**/*') if file.is_file()]
+    files += [file for file in Path('web/static/css').glob('**/*') if file.is_file()]
+    files += [file for file in Path('web/static/js').glob('**/*') if file.is_file()]
+    files += [
+        Path('web/static/lib/bootstrap/bootstrap-5.3.2-dist/css/bootstrap.min.css'),
+        Path('web/static/lib/bootstrap/bootstrap-5.3.2-dist/css/bootstrap.min.css.map'),
+        Path('web/static/lib/bootstrap/bootstrap-5.3.2-dist/js/bootstrap.bundle.min.js'),
+        Path('web/static/lib/bootstrap/bootstrap-5.3.2-dist/js/bootstrap.bundle.min.js.map'),
+        Path('web/static/lib/bootstrap-icons/bootstrap-icons-1.11.2/font/bootstrap-icons.min.css'),
+    ]
+    files += [
+        file for file in Path('web/static/lib/bootstrap-icons/bootstrap-icons-1.11.2/font/fonts').glob('**/*')
+        if file.is_file()
+    ]
+    files += [Path('web/static/lib/jquery/jquery-3.7.1.min.js')]
+    for file in files:
+        pyinstaller_params.append(f'--add-data={file};{file.parent}')
+    files: list[Path] = []
+    files += [
+        file for file in Path('venv/Lib/site-packages/litestar/middleware/exceptions/templates').glob('**/*')
+        if file.is_file()
+    ]
+    for file in files:
+        pyinstaller_params.append(f'--add-data={file};litestar/middleware/exceptions/templates')
     run(pyinstaller_params)
 
 

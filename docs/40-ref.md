@@ -81,7 +81,7 @@ Voir également : [Configuration d'un tournoi à handicap](32-handicap.md)
 | `type` | seule cette option est obligatoire, avec une des deux valeurs `boards` ou `players`. |
 |        | Toutes les options des écrans sont autorisées sauf `template` (voir ci-dessous).     |
 
-En règle générale, on n'utilise pas les options `part`, `parts` et `number` dans les modèles mais plutôt dans les familles.
+En règle générale, on n'utilise pas les options `part`, `parts` et `number` dans les modèles, mais plutôt dans les familles.
 
 Selon le type de l'écran, on pourra ajouter une rubrique `[template.<template_id>.boards]` ou `[template.<template_id>.players]` (mais ce n'est pas nécessaire si l'évènement ne compte qu'un seul tournoi).
 

@@ -65,7 +65,7 @@ class ChessEventConnectionBuilder:
             key = 'event_id'
             event_id = section[key]
         except KeyError:
-            self._config_reader.add_warning(f'option absente, connexion à Chess Event ignorée', section_key, key)
+            self._config_reader.add_warning('option absente, connexion à Chess Event ignorée', section_key, key)
             return
         except TypeError:
             self._config_reader.add_error(f'La rubrique [{section_key}] est en fait une option', section_key)
@@ -76,7 +76,7 @@ class ChessEventConnectionBuilder:
             'password',
             'event_id',
         ]
-        for key, value in section.items():
+        for key, _ in section.items():
             if key not in chessevent_connection_section_keys:
                 self._config_reader.add_warning('option inconnue', section_key, key)
 

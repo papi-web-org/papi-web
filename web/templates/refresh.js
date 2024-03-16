@@ -26,7 +26,7 @@ function is_int(value) {
 function refresh_page_if_updated() {
 	var request = null;
 	request = new XMLHttpRequest();
-	url = "{% url 'get-screen-last-update' event.id screen.id %}";
+	url = "{{ url_for('get-screen-last-update', event_id=event.id, screen_id=screen.id) }}";
     if (screen_debug) { console.info('refresh_page_if_updated(url=[' + url + '])...'); }
     $.ajax({
         url: url,

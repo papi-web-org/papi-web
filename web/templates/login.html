@@ -9,7 +9,7 @@
                 <h5 class="modal-title" id="login-modal-label">Veuillez entrer le code d'accès à l'interface de saisie des résultats :</h5>
             </div>
             <div class="modal-body">
-                <form method="POST">{% csrf_token %}
+                <form method="POST" action="{{ url_for('login', event_id=event.id, screen_id=screen.id) }}">
                     <div class="mb-3">
                         <label for="event-id" class="form-label">Évènement</label>
                         <input type="text" class="form-control" id="event-id" aria-describedby="event-id-help" value="{{ event.id }}" disabled>

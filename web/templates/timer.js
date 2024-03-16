@@ -1,10 +1,9 @@
-{% load mathfilters %}
 {% with timer=event.timer %}
-{% with color_1=timer.colors|get_item:1 color_2=timer.colors|get_item:2 color_3=timer.colors|get_item:3 %}
-{% with color_1_r=color_1.0 color_1_g=color_1.1 color_1_b=color_1.2 %}
-{% with color_2_r=color_2.0 color_2_g=color_2.1 color_2_b=color_2.2 %}
-{% with color_3_r=color_3.0 color_3_g=color_3.1 color_3_b=color_3.2 %}
-{% with delay_1=timer.delays|get_item:1 delay_2=timer.delays|get_item:2 delay_3=timer.delays|get_item:3 %}
+{% with color_1=timer.colors.1, color_2=timer.colors.2, color_3=timer.colors.3 %}
+{% with color_1_r=color_1.0, color_1_g=color_1.1, color_1_b=color_1.2 %}
+{% with color_2_r=color_2.0, color_2_g=color_2.1, color_2_b=color_2.2 %}
+{% with color_3_r=color_3.0, color_3_g=color_3.1, color_3_b=color_3.2 %}
+{% with delay_1=timer.delays.1, delay_2=timer.delays.2, delay_3=timer.delays.3 %}
 var timer;
 var timer_clock;
 var timer_text;
@@ -62,9 +61,9 @@ function update_timer() {
 		return;
 	}
 	if (time < {{ hour.timestamp_2 }}) { // {{ hour.datetime_str_2 }} color_1 -> color_2 {{ hour.text_before }}
-		color_r = Math.floor({{ color_1_r }} + (time - {{ hour.timestamp_1 }})/({{ delay_1|mul:60 }})*({{ color_2_r|sub:color_1_r }}));
-		color_g = Math.floor({{ color_1_g }} + (time - {{ hour.timestamp_1 }})/({{ delay_1|mul:60 }})*({{ color_2_g|sub:color_1_g }}));
-		color_b = Math.floor({{ color_1_b }} + (time - {{ hour.timestamp_1 }})/({{ delay_1|mul:60 }})*({{ color_2_b|sub:color_1_b }}));
+		color_r = Math.floor({{ color_1_r }} + (time - {{ hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_r - color_1_r }}));
+		color_g = Math.floor({{ color_1_g }} + (time - {{ hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_g - color_1_g }}));
+		color_b = Math.floor({{ color_1_b }} + (time - {{ hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_b - color_1_b }}));
 		color = 'rgb(' + color_r + ',' + color_g + ',' + color_b + ')';
 		dur = duration({{ hour.timestamp }} - time);
 		text_html = '{{ hour.text_before }}'.replace('%s', dur);
@@ -72,9 +71,9 @@ function update_timer() {
 		return;
 	}
 	if (time < {{ hour.timestamp_3 }}) { // {{ hour.datetime_str_3 }} color_2 -> color_3 {{ hour.text_before }}
-		color_r = Math.floor({{ color_2_r }} + (time - {{ hour.timestamp_2 }})/({{ delay_2|mul:60 }})*({{ color_3_r|sub:color_2_r }}));
-		color_g = Math.floor({{ color_2_g }} + (time - {{ hour.timestamp_2 }})/({{ delay_2|mul:60 }})*({{ color_3_g|sub:color_2_g }}));
-		color_b = Math.floor({{ color_2_b }} + (time - {{ hour.timestamp_2 }})/({{ delay_2|mul:60 }})*({{ color_3_b|sub:color_2_b }}));
+		color_r = Math.floor({{ color_2_r }} + (time - {{ hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_r - color_2_r }}));
+		color_g = Math.floor({{ color_2_g }} + (time - {{ hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_g - color_2_g }}));
+		color_b = Math.floor({{ color_2_b }} + (time - {{ hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_b - color_2_b }}));
 		color = 'rgb(' + color_r + ',' + color_g + ',' + color_b + ')';
 		dur = duration({{ hour.timestamp }} - time);
 		text_html = '{{ hour.text_before }}'.replace('%s', dur);

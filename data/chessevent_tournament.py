@@ -8,7 +8,12 @@ logger: Logger = get_logger()
 
 
 class ChessEventTournament:
-    def __init__(self, chessevent_tournament_info: dict[str, str | int | float | list[dict[str, bool | str | int | dict[int, float] | None]]]):
+    def __init__(
+            self,
+            chessevent_tournament_info: dict[
+                str,
+                str | int | float | list[dict[str, bool | str | int | dict[int, float] | None]]
+            ]):
         self.name: str = ''
         self.type: TournamentType = TournamentType.UNKNOWN
         self.rounds: int = 0
@@ -51,12 +56,12 @@ class ChessEventTournament:
                     return
                 self.players.append(chessevent_player)
         except KeyError:
-            logger.error(f'Champ {key} non trouvé dans la réponse de Chess Event')
+            logger.error('Champ %s non trouvé dans la réponse de Chess Event', key)
             return
         except (TypeError, ValueError):
             logger.error(
-                f'Valeur du champ {key} non valide ([{chessevent_tournament_info[key]}]) '
-                f'dans la réponse de Chess Event')
+                'Valeur du champ %s non valide ([%s]) '
+                'dans la réponse de Chess Event', key, chessevent_tournament_info[key])
             return
         self.error = False
 
