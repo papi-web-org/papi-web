@@ -76,7 +76,7 @@ class ChessEventConnectionBuilder:
             'password',
             'event_id',
         ]
-        for key, _ in section.items():
+        for key in section:
             if key not in chessevent_connection_section_keys:
                 self._config_reader.add_warning('option inconnue', section_key, key)
 

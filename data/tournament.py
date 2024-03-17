@@ -266,23 +266,21 @@ class Tournament:
 
     @property
     def illegal_moves_dir(self) -> Path:
-        return TMP_DIR / 'events' / self.event_id / 'illegal_moves'
+        return TMP_DIR / 'events' / self.event_id / 'illegal_moves' / self.id
 
     def store_illegal_move(self, board: Board, color: Color):
         self.illegal_moves_dir.mkdir(parents=True, exist_ok=True)
         # add a new file
-        filename: str = f'{time.time()} {self.id} {self.current_round} {board.id} {color.value}'
+        filename: str = f'{time.time()} {self.current_round} {board.id} {color.value}'
         illegal_move_file: Path = self.illegal_moves_dir / filename
         illegal_move_file.touch()
         logger.info('le fichier [%s] a été créé', illegal_move_file)
     
     def delete_illegal_move(self, board: Board, color: Color) -> bool:
-        """Tries to find all illegal moves for the current round of the
-        tournament, and delete one of them.
-        Returns True if a file was found and deleted, False if no such
-        file was found"""
+        """Tries to find all illegal moves for the current round of the tournament, and delete one of them.
+        Returns True if a file was found and deleted, False if no such file was found"""
         illegal_moves_dir: Path = self.illegal_moves_dir
-        glob_pattern: str = f'* {self.id}, {self.current_round} {board.id} {color}'
+        glob_pattern: str = f'* {self.current_round} {board.id} {color.value}'
         for file in illegal_moves_dir.glob(glob_pattern):
             file.unlink()
             logger.info('le fichier [%s] a été supprimé', file)
@@ -293,7 +291,7 @@ class Tournament:
     def get_illegal_moves(self) -> dict[int, Counter[Color]]:
         illegal_moves: defaultdict[int, Counter[Color]] = defaultdict(Counter)
         illegal_moves_dir: Path = self.illegal_moves_dir
-        glob_pattern: str = f'* {self.id} {self.current_round} *'
+        glob_pattern: str = f'* {self.current_round} *'
         regex = re.compile(r'.* (\d+) ([BW])$')
         for file in illegal_moves_dir.glob(glob_pattern):
             if matches := regex.match(file.name):

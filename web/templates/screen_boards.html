@@ -1,15 +1,4 @@
 {% include 'login.html' %}
-<script>
-$(document).ready(function(){
-    $('.illegal-move-flag').click(function (event) {
-        event.stopImmediatePropagation();
-        //alert('before');
-        window.location=$(this).attr('url');
-        //alert('after');
-        return false;
-    });
-});
-</script>
 {% for set in screen.sets %}
     {% with tournament=set.tournament %}
         {% if tournament.current_round %}
@@ -34,9 +23,10 @@ $(document).ready(function(){
                             {% for board in boards %}
                                 {% with wp=board.white_player %}{% with bp=board.black_player %}
                                 <tr
-                                    id="board-{{ tournament.id }}-{{ board.id }}-row"
+                                    data-tournament-id="{{ tournament.id }}"
+                                    data-board-id="{{ board.id }}"
                                     class="board-row {% if board.result_str %}board-row-result{% else %}board-row-no-result{% endif %}"
-                                    {% if screen.update and not board.result_str %} data-bs-toggle="modal" data-bs-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-modal"{% endif %}
+                                    {% if screen.update and not board.result_str %} XXXXXX-data-bs-toggle="modal" XXXXXX-data-bs-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-modal"{% endif %}
                                 >
                                     <th scope="row" class="board-number">{{ board.number }}.</th>
                                     <td class="points">{{ wp.vpoints_str }}</td>
@@ -45,12 +35,20 @@ $(document).ready(function(){
                                         {% if tournament.handicap and bp.id != 1 %}(<span class="{%if wp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">{%if wp.handicap_initial_time_minutes %}<span class="minutes">{{ wp.handicap_initial_time_minutes }}'</span>{% endif %}{%if wp.handicap_initial_time_seconds %}<span class="seconds">{{ wp.handicap_initial_time_seconds }}"</span>{% endif %}
                                                     {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}
                                         {% if screen.update and screen.record_illegal_moves %}
-                                            {% for _ in range(board.white_illegal_moves) %}
-                                                <i class="bi-flag-fill"></i>
+                                            {% for _ in range([board.white_illegal_moves, screen.record_illegal_moves]|min) %}
+                                                <i
+                                                    class="{% if board.result_str %}bi-file-fill{% else %}bi-file-excel-fill{% endif %} illegal-move-flag {% if not board.result_str %}delete{% endif %} player-{{ tournament.id }}-{{ board.id }}-W"
+                                                    data-tournament-id="{{ tournament.id }}"
+                                                    data-board-id="{{ board.id }}"
+                                                    data-color="W"></i>
                                             {% endfor %}
-                                            <span class="illegal-move-flag" url="/illegal-move/{{ event.id }}/{{ screen.id }}/{{ tournament.id }}/{{ board.id }}/w">
-                                                <i class="bi-flag"></i>
-                                            </span>
+                                            {% if not board.result_str and board.white_illegal_moves < screen.record_illegal_moves %}
+                                                <i
+                                                    class="bi-flag illegal-move-flag add player-{{ tournament.id }}-{{ board.id }}-W"
+                                                    data-tournament-id="{{ tournament.id }}"
+                                                    data-board-id="{{ board.id }}"
+                                                    data-color="W"></i>
+                                            {%endif %}
                                         {% endif %}
                                     </td>
                                     <td class="score">{% if board.result_str %}{{ board.result_str }}{% else %}n°{{ board.number }}{% endif %}</td>
@@ -58,62 +56,71 @@ $(document).ready(function(){
                                         {% if tournament.handicap %}(<span class="{%if bp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">{%if bp.handicap_initial_time_minutes %}<span class="minutes">{{ bp.handicap_initial_time_minutes }}'</span>{% endif %}{%if bp.handicap_initial_time_seconds %}<span class="seconds">{{ bp.handicap_initial_time_seconds }}"</span>{% endif %}
                                                     {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}{% endif %}
                                         {% if screen.update and screen.record_illegal_moves %}
-                                            {% for _ in range(board.black_illegal_moves) %}
-                                                <i class="bi-flag-fill"></i>
+                                            {% for _ in range([board.black_illegal_moves, screen.record_illegal_moves]|min) %}
+                                                <i
+                                                    class="{% if board.result_str %}bi-file-fill{% else %}bi-file-excel-fill{% endif %} illegal-move-flag {% if not board.result_str %}delete{% endif %} player-{{ tournament.id }}-{{ board.id }}-B"
+                                                    data-tournament-id="{{ tournament.id }}"
+                                                    data-board-id="{{ board.id }}"
+                                                    data-color="B"></i>
                                             {% endfor %}
-                                            <span class="illegal-move-flag" url="/illegal-move/{{ event.id }}/{{ screen.id }}/{{ tournament.id }}/{{ board.id }}/b">
-                                                <i class="bi-flag"></i>
-                                            </span>
+                                            {% if not board.result_str and board.black_illegal_moves < screen.record_illegal_moves %}
+                                                <i
+                                                    class="bi-flag illegal-move-flag add player-{{ tournament.id }}-{{ board.id }}-B"
+                                                    data-tournament-id="{{ tournament.id }}"
+                                                    data-board-id="{{ board.id }}"
+                                                    data-color="B"></i>
+                                            {%endif %}
                                         {% endif %}
                                     </td>
                                     {% if tournament.print_real_points %}<td class="points">{% if bp.id != 1 %}[{{ bp.points_str }}]{% endif %}</td>{% endif %}
                                     <td class="points">{% if bp.id != 1 %}{{ bp.vpoints_str }}{% endif %}</td>
                                 </tr>
                                 {% if screen.update and not board.result_str %}
-                                    <script>
-$(document).ready(function(){
-    $('#tournament-{{ tournament.id }}-board-{{ board.id }}-modal').on('shown.bs.modal', function () {
-        stop_refresh_interval();
-    });
-    $('#tournament-{{ tournament.id }}-board-{{ board.id }}-white-result').click(function(e){
-        add_result('{{ tournament.id }}', {{ board.id }}, 3);
-    });
-    $('#tournament-{{ tournament.id }}-board-{{ board.id }}-draw-result').click(function(){
-        add_result('{{ tournament.id }}', {{ board.id }}, 2);
-    });
-    $('#tournament-{{ tournament.id }}-board-{{ board.id }}-black-result').click(function(){
-        add_result('{{ tournament.id }}', {{ board.id }}, 1);
-    });
-    $('#tournament-{{ tournament.id }}-board-{{ board.id }}-modal').on('hidden.bs.modal', function () {
-        start_refresh_interval();
-    });
-});
-                                    </script>
                                     <div
-                                            id="tournament-{{ tournament.id }}-board-{{ board.id }}-modal" class="modal fade board-modal"
+                                            id="tournament-{{ tournament.id }}-board-{{ board.id }}-modal" class="modal board-modal"
                                             data-bs-backdrop="static" data-bs-keyboard="false"
                                             tabindex="-1" aria-labelledby="tournament-{{ tournament.id }}-board-{{ board.id }}-modal-label" aria-hidden="true">
                                         <div class="modal-dialog modal-fullscreen">
                                             <div class="modal-content">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title" id="tournament-{{ tournament.id }}-board-{{ board.id }}-modal-label">Entrez le résultat :</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                                                    <!--button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button-->
                                                 </div>
                                                 <div class="modal-body">
                                                     <div class="row d-flex align-items-center justify-content-center">
-                                                        <button id="tournament-{{ tournament.id }}-board-{{ board.id }}-white-result" class="result-button result-button-white col-3 ms-auto me-auto btn">
+                                                        <button
+                                                            class="result-button result-button-white col-3 ms-auto me-auto btn board-modal-result-input"
+                                                            data-tournament-id="{{ tournament.id }}"
+                                                            data-board-id="{{ board.id }}"
+                                                            data-result="3"
+                                                        >
                                                             <div class="result-text"><br/>GAIN BLANCS<br/>1 - 0<br/><br/>{{ wp.last_name }}<br/>{{ wp.first_name }}<br/>{{ wp.rating }}{{ wp.rating_type }}<br/>&nbsp;</div>
                                                         </button>
-                                                        <button id="tournament-{{ tournament.id }}-board-{{ board.id }}-draw-result" class="result-button result-button-draw col-3 ms-auto me-auto btn">
+                                                        <button
+                                                            class="result-button result-button-draw col-3 ms-auto me-auto btn board-modal-result-input"
+                                                            data-tournament-id="{{ tournament.id }}"
+                                                            data-board-id="{{ board.id }}"
+                                                            data-result="2"
+                                                        >
                                                             <div class="result-text"><br/>NULLE<br/>½ - ½<br/><br/><br/><br/><br/>&nbsp;</div>
                                                         </button>
-                                                        <button id="tournament-{{ tournament.id }}-board-{{ board.id }}-black-result" class="result-button result-button-black col-3 ms-auto me-auto btn">
+                                                        <button
+                                                            class="result-button result-button-black col-3 ms-auto me-auto btn board-modal-result-input"
+                                                            data-tournament-id="{{ tournament.id }}"
+                                                            data-board-id="{{ board.id }}"
+                                                            data-result="1"
+                                                        >
                                                             <div class="result-text"><br/>GAIN NOIRS<br/>0 - 1<br/><br/>{{ bp.last_name }}<br/>{{ bp.first_name }}<br/>{{ bp.rating }}{{ bp.rating_type }}<br/>&nbsp;</div>
                                                         </button>
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer justify-content-center">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-secondary board-modal-cancel-button"
+                                                        data-tournament-id="{{ tournament.id }}"
+                                                        data-board-id="{{ board.id }}"
+                                                    >Annuler</button>
                                                 </div>
                                             </div>
                                         </div>

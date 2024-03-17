@@ -16,6 +16,7 @@ from data.screen import AScreen, ScreenBuilder
 from data.template import Template, TemplateBuilder
 from data.timer import Timer, TimerBuilder
 from data.tournament import Tournament, TournamentBuilder
+from data.util import DEFAULT_RECORD_ILLEGAL_MOVES
 
 logger: Logger = get_logger()
 
@@ -34,6 +35,7 @@ class Event:
         self.path: Path = Path('papi')
         self.css: str | None = None
         self.update_password: str | None = None
+        self.record_illegal_moves: int = 0
         self.chessevent_connections: dict[str, ChessEventConnection] = {}
         self.tournaments: dict[str, Tournament] = {}
         self.templates: dict[str, Template] = {}
@@ -64,7 +66,8 @@ class Event:
             if self.reader.errors:
                 return
             self.screens = ScreenBuilder(
-                self.reader, self.id, self.tournaments, self.templates, self.screens_by_family_id).screens
+                self.reader, self.id, self.tournaments, self.templates, self.screens_by_family_id,
+                self.record_illegal_moves).screens
             if self.reader.errors:
                 return
             self.rotators = RotatorBuilder(self.reader, self.screens, self.screens_by_family_id).rotators
@@ -182,7 +185,27 @@ class Event:
                 key
             )
 
-        section_keys: list[str] = ['name', 'path', 'update_password', 'css', ]
+        key = 'record_illegal_moves'
+        if key in section:
+            record_illegal_moves_bool: bool | None = self.reader.getboolean_safe(section_key, key)
+            if record_illegal_moves_bool is not None:
+                if record_illegal_moves_bool:
+                    self.record_illegal_moves = DEFAULT_RECORD_ILLEGAL_MOVES
+                else:
+                    self.record_illegal_moves = 0
+            else:
+                record_illegal_moves_int: int | None = self.reader.getint_safe(section_key, key, minimum=0)
+                if record_illegal_moves_int is None:
+                    self.reader.add_warning(
+                        f'un booléen ou un entier positif ou nul est attendu, par défaut [{self.record_illegal_moves}]',
+                        section_key,
+                        key)
+                else:
+                    self.record_illegal_moves = record_illegal_moves_int
+        else:
+            self.reader.add_debug(f'option absente, par défaut [{self.record_illegal_moves}]')
+
+        section_keys: list[str] = ['name', 'path', 'update_password', 'css', 'record_illegal_moves', ]
         for key, _ in section.items():
             if key not in section_keys:
                 self.reader.add_warning('option inconnue', section_key, key)

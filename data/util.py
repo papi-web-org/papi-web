@@ -9,6 +9,8 @@ from common.logger import get_logger
 
 logger: Logger = get_logger()
 
+DEFAULT_RECORD_ILLEGAL_MOVES: int = 2
+
 
 class Result(IntEnum):
     """An enum representing the results in the database.

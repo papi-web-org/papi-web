@@ -2,9 +2,10 @@
 
 # Papi-web - ChangeLog
 
-## Version 2.2.0 - 7 mars 2024
-- Remplacement de Django par Litestar
+## Version 2.2.0 - mars 2024
+- Allègement du moteur web (remplacement de Django par Litestar)
 - Affichage du pointage des joueur·euses
+- Enregistrement des coups illégaux (option `record_illegal_moves`)
 
 ## Version 2.1.8 - 16 février 2024
 - Suppression du _pooling_ ODBC

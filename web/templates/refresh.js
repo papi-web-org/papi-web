@@ -1,4 +1,4 @@
-var screen_debug = false;
+var screen_debug = true;
 if (screen_debug) {
     console.info('logging to console...');
 }
@@ -13,9 +13,12 @@ $(document).ready(function(){
 function please_wait() {
     $('#please-wait-modal').show();
 }
-function refresh() {
+function redirect(url) {
 	please_wait();
-	window.location = '';
+	window.location = url;
+}
+function refresh() {
+	redirect(window.location);
 }
 function is_int(value) {
 	var x;
@@ -32,21 +35,22 @@ function refresh_page_if_updated() {
         url: url,
         type: "GET",
         success: function (data) {
+            delay = 2
             if (is_int(data)) {
-                if (data > {{ now }}) {
+                if (data > ({{ now }} + delay)) {
                     if (screen_debug) {
                         console.info(
                             'refresh_page_if_updated():'
-                            + ' response=[' + data + '] > ' + {{ now }}
+                            + ' response=[' + data + '] > ' + ({{ now }} + delay)
                             + ' => refresh...'
                         );
                     }
-                    window.location = window.location;
+                    refresh();
                 } else {
                     if (screen_debug) {
                         console.info(
                             'refresh_page_if_updated():'
-                            + ' response=[' + data + '] <= ' + {{ now }}
+                            + ' response=[' + data + '] <= ' + ({{ now }} + delay)
                             + ' => no need to refresh.'
                         );
                     }
