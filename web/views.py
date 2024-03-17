@@ -9,7 +9,7 @@ import time
 from logging import Logger
 from typing import Annotated
 
-from litestar import Request, delete, get, post, Response
+from litestar import Request, get, post, Response
 from litestar.enums import RequestEncodingType
 from litestar.exceptions import HTTPException
 from litestar.params import Body
@@ -385,8 +385,8 @@ async def add_illegal_move(
         status_code=HTTP_307_TEMPORARY_REDIRECT)
 
 
-@delete(
-    path='/illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
+@get(
+    path='/delete-illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
     name='delete-illegal-move',
     status_code=HTTP_307_TEMPORARY_REDIRECT,
 )
