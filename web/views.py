@@ -9,7 +9,7 @@ import time
 from logging import Logger
 from typing import Annotated
 
-from litestar import Request, get, post, Response
+from litestar import Request, delete, get, post, Response
 from litestar.enums import RequestEncodingType
 from litestar.exceptions import HTTPException
 from litestar.params import Body
@@ -133,8 +133,7 @@ def render_board(
             'board': board,
             'update': update,
             'messages': Message.messages(request),
-        }
-    )
+        })
 
 
 def render_result_modal(
@@ -149,13 +148,12 @@ def render_result_modal(
             'board': board,
             'arbiter': arbiter,
             'messages': Message.messages(request),
-        }
-    )
+        })
 
 
-"""@get(
+@get(
         path='result-modal/{event_id:str}/{tournament_id:str}/{board_id:str}',
-        name='result-login',
+        name='result-login'
 )
 async def show_modal_result(
     request: Request, event_id: str, tournament_id: str
@@ -176,7 +174,7 @@ async def show_modal_result(
     )
 
 
-"""@post(
+@post(
     path='/login/{event_id:str}/{screen_id:str}',
     name='login',
 )
@@ -253,11 +251,13 @@ async def show_screen(request: Request, event_id: str, screen_id: str) -> Templa
     return render_screen(request, event, screen, login_needed)
 
 
-"""@get(
+@get(
         path='/board/{event_id:str}/{tournament_id:str}/{board_id:int}',
-        name='show-board',
+        name='show-board'
 )
-async def show_board(request: Request, event_id: str, tournament_id: str, board_id: int) -> Template | Redirect:
+async def show_board(
+        request: Request, event_id: str, tournament_id: str, board_id: int) -> Template | Redirect:
+    
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
@@ -265,7 +265,7 @@ async def show_board(request: Request, event_id: str, tournament_id: str, board_
             status_code=HTTP_307_TEMPORARY_REDIRECT
         )
     try:
-        tournament = event.tournaments[tournament_id]
+        tournament: Tournament = event.tournaments[tournament_id]
         try:
             tournament.boards[board_id - 1]
         except (IndexError, TypeError):
@@ -278,7 +278,7 @@ async def show_board(request: Request, event_id: str, tournament_id: str, board_
     )
 
 
-"""@get(path='/rotator/{event_id:str}/{rotator_id:str}', name='show-rotator')
+@get(path='/rotator/{event_id:str}/{rotator_id:str}', name='show-rotator')
 async def show_rotator(
         request: Request, event_id: str, rotator_id: str) -> Redirect:
     return Redirect(
@@ -385,9 +385,10 @@ async def add_illegal_move(
         status_code=HTTP_307_TEMPORARY_REDIRECT)
 
 
-@get(
-    path='/delete-illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
+@delete(
+    path='/illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
     name='delete-illegal-move',
+    status_code=HTTP_307_TEMPORARY_REDIRECT,
 )
 async def delete_illegal_move(
         request: Request, event_id: str, screen_id: str, tournament_id: str, board_id: int, color: str
