@@ -11,21 +11,95 @@
 <link rel="stylesheet" href="{{ url_for('static', file_path='css/screen.css') }}" type="text/css" />
 {% if event.css %}<link rel="stylesheet" href="{{ url_for('static', file_path=event.css) }}" type="text/css" />{% endif %}
 <script>
-{% include 'refresh.js' %}
-{% if event.timer %}
-    {% if screen.show_timer %}
-        {% include 'timer.js' %}
+    {% include 'refresh.js' %}
+    {% if event.timer %}
+        {% if screen.show_timer %}
+            {% include 'timer.js' %}
+        {% endif %}
     {% endif %}
-{% endif %}
+    $(document).ready(function(){
+        $('.menu').click(function () {
+            refresh();
+        });
+        $('.screen .set-title').click(function () {
+            refresh();
+        });
+        $('.screen-boards thead').click(function () {
+            refresh();
+        });
+        $('.screen-boards .board-row-result').click(function () {
+            refresh();
+        });
+        $('.board-row-no-result').click(function(e){
+            {% if screen.update %}
+                // open the board modal
+                stop_refresh_interval();
+                $('#tournament-' + $(this).attr('data-tournament-id') + '-board-' + $(this).attr('data-board-id') + '-modal').show()
+            {% else %}
+                // just refresh
+                refresh();
+            {% endif %}
+        });
+        $('.board-modal-cancel-button').click(function(e){
+            // close the board modal
+            $('#tournament-' + $(this).attr('data-tournament-id') + '-board-' + $(this).attr('data-board-id') + '-modal').hide()
+            start_refresh_interval();
+        });
+        $('.screen-results table').click(function () {
+            refresh();
+        });
+        $('.screen-players table').click(function () {
+            refresh();
+        });
+        {% if screen.update %}
+            // update a board result by sending to the update URL
+            $('.board-modal-result-input').click(function(e){
+                stop_refresh_interval();
+                redirect('/update-result/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-board-id') + '/' + $(this).attr('data-result'));
+                return false;
+            });
+            // restore the tournament update checks when hiding board modals
+            $('.board-modal').on('hidden.bs.modal', function () {
+                start_refresh_interval();
+            });
+            {% if screen.record_illegal_moves %}
+                // add or delete an illegal move by sending to the appropriate URL
+                $('.illegal-move-flag.add').click(function (event) {
+                    stop_refresh_interval();
+                    redirect('/add-illegal-move/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-board-id') + '/' + $(this).attr('data-color'));
+                    return false;
+                });
+                $('.illegal-move-flag.delete').click(function (event) {
+                    stop_refresh_interval();
+                    redirect('/delete-illegal-move/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-board-id') + '/' + $(this).attr('data-color'));
+                    return false;
+                });
+            {% endif %}
+        {% endif %}
+        {% if rotator_next_url %}
+            setTimeout(function(){
+                redirect('{{ rotator_next_url }}');
+            }, {{ rotator_delay }} * 1000)
+        {% endif %}
+    });
 </script>
 <style>
-{% if last_result_entered %}
-    {% if last_result_entered.expiration > now %}
-        #board-{{ last_result_entered.tournament_id }}-{{ last_result_entered.board_id }}-row > * {
-            color: red;
-        }
+    {% if screen.update %}
+        {% if last_result_updated %}
+            {% if last_result_updated.expiration > now %}
+                #board-{{ last_result_updated.tournament_id }}-{{ last_result_updated.board_id }}-row > * {
+                    color: red;
+                }
+            {% endif %}
+        {% endif %}
+        {% if last_illegal_move_updated %}
+            {% if last_illegal_move_updated.expiration > now %}
+                .illegal-move-flag.player-{{ last_illegal_move_updated.tournament_id }}-{{ last_illegal_move_updated.board_id }}-{{ last_illegal_move_updated.color }} {
+                    color: red;
+                }
+            {% endif %}
+        {% endif %}
     {% endif %}
-{% endif %}
 </style>
 {% endblock head %}
 
@@ -60,43 +134,4 @@
 {% endblock content %}
 
 {% block footer %}
-    <script>
-    {% if screen.update %}
-        function add_result(tournament_id, board_id, result) {
-            stop_refresh_interval();
-            please_wait();
-            window.location = '/result/{{ event.id }}/{{ screen.id }}/' + tournament_id + '/' + board_id + '/' + result;
-        }
-    {% endif %}
-    $(document).ready(function(){
-        $('.menu').click(function () {
-            refresh();
-        });
-        $('.screen .set-title').click(function () {
-            refresh();
-        });
-        $('.screen-boards thead').click(function () {
-            refresh();
-        });
-        $('.screen-boards .board-row-result').click(function () {
-            refresh();
-        });
-        $('.screen-boards-view-only .board-row-no-result').click(function () {
-            refresh();
-        });
-        $('.screen-results table').click(function () {
-            refresh();
-        });
-        $('.screen-players table').click(function () {
-            refresh();
-        });
-    });
-    {% if rotator_next_url %}
-        $(document).ready(function(){
-            setTimeout(function(){
-                window.location = '{{ rotator_next_url }}';
-            }, {{ rotator_delay }} * 1000)
-        });
-    {% endif %}
-    </script>
 {% endblock footer %}

@@ -9,7 +9,7 @@ import time
 from logging import Logger
 from typing import Annotated
 
-from litestar import Request, delete, get, post, Response
+from litestar import Request, get, post, Response
 from litestar.enums import RequestEncodingType
 from litestar.exceptions import HTTPException
 from litestar.params import Body
@@ -95,9 +95,14 @@ def render_screen(
         request: Request, event: Event, screen: AScreen, login_needed: bool, rotator_next_url: str = None,
         rotator_delay: int = None
 ) -> Template:
-    last_result_entered: dict[str, int | str | float] | None = None
+    last_result_updated: dict[str, int | str | float] | None = None
     try:
-        last_result_entered = request.session['last_result_entered']
+        last_result_updated = request.session['last_result_updated']
+    except KeyError:
+        pass
+    last_illegal_move_updated: dict[str, int | str | float] | None = None
+    try:
+        last_illegal_move_updated = request.session['last_illegal_move_updated']
     except KeyError:
         pass
     return Template(
@@ -110,9 +115,11 @@ def render_screen(
             'login_needed': login_needed,
             'rotator_next_url': rotator_next_url,
             'rotator_delay': rotator_delay,
-            'last_result_entered': last_result_entered,
+            'last_result_updated': last_result_updated,
+            'last_illegal_move_updated': last_illegal_move_updated,
             'messages': Message.messages(request),
         })
+
 
 def render_board(
         request: Request, event: Event, tournament: Tournament, board: Board,
@@ -129,6 +136,7 @@ def render_board(
         }
     )
 
+
 def render_result_modal(
         request: Request, event: Event, tournament: Tournament, board: Board,
         arbiter: bool,
@@ -144,21 +152,22 @@ def render_result_modal(
         }
     )
 
-@get(
-        path='result-modal/{event_id:str}/{tournament_id:str}/{board_id:str}'
-        name='result-login'
+
+"""@get(
+        path='result-modal/{event_id:str}/{tournament_id:str}/{board_id:str}',
+        name='result-login',
 )
 async def show_modal_result(
-    request: Request, event_id: str, tournament_id:str
+    request: Request, event_id: str, tournament_id: str
 ) -> Redirect | Template:
-    event: Event = load_event(request, event)
+    event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
             path=index_url(request),
             status_code=HTTP_307_TEMPORARY_REDIRECT,
         )
     try:
-        tournament: Tournament = event.tournaments[tournament_id]
+        event.tournaments[tournament_id]
     except KeyError:
         Message.error(request, f'Tournoi [{tournament_id}] non trouvé')
     return Redirect(
@@ -166,7 +175,8 @@ async def show_modal_result(
         status_code=HTTP_307_TEMPORARY_REDIRECT
     )
 
-@post(
+
+"""@post(
     path='/login/{event_id:str}/{screen_id:str}',
     name='login',
 )
@@ -242,13 +252,12 @@ async def show_screen(request: Request, event_id: str, screen_id: str) -> Templa
     login_needed: bool = event_login_needed(request, event, screen)
     return render_screen(request, event, screen, login_needed)
 
-@get(
+
+"""@get(
         path='/board/{event_id:str}/{tournament_id:str}/{board_id:int}',
-        name='show-board'
+        name='show-board',
 )
-async def show_board(
-    request: Request, event_id: str, tournament_id: str, board_id: int) -> Template | Redirect:
-    
+async def show_board(request: Request, event_id: str, tournament_id: str, board_id: int) -> Template | Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
@@ -257,11 +266,8 @@ async def show_board(
         )
     try:
         tournament = event.tournaments[tournament_id]
-        board: Board
         try:
-            board = tournament.boards[board_id - 1]
-
-
+            tournament.boards[board_id - 1]
         except (IndexError, TypeError):
             Message.error(request, f"L'échiquier [{board_id}] est introuvable pour le tournoi [{tournament_id}]")
     except KeyError:
@@ -271,7 +277,8 @@ async def show_board(
         status_code=HTTP_307_TEMPORARY_REDIRECT
     )
 
-@get(path='/rotator/{event_id:str}/{rotator_id:str}', name='show-rotator')
+
+"""@get(path='/rotator/{event_id:str}/{rotator_id:str}', name='show-rotator')
 async def show_rotator(
         request: Request, event_id: str, rotator_id: str) -> Redirect:
     return Redirect(
@@ -303,7 +310,7 @@ async def show_rotator_screen(
 
 
 @get(
-    path='/result/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{result:int}',
+    path='/update-result/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{result:int}',
     name='update-result'
 )
 async def update_result(
@@ -342,7 +349,7 @@ async def update_result(
 
 
 @get(
-    path='/illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
+    path='/add-illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
     name='add-illegal-move'
 )
 async def add_illegal_move(
@@ -354,17 +361,15 @@ async def add_illegal_move(
             path=index_url(request),
             status_code=HTTP_307_TEMPORARY_REDIRECT)
     if not event_login_needed(request, event):
-        tournament: Tournament
         try:
-            tournament = event.tournaments[tournament_id]
-            board: Board
+            tournament: Tournament = event.tournaments[tournament_id]
             try:
-                board = tournament.boards[board_id - 1]
-                if (color := color.upper()) not in (Color.WHITE, Color.BLACK):
+                board: Board = tournament.boards[board_id - 1]
+                if color not in (Color.WHITE, Color.BLACK):
                     Message.error(request, f'L\'écriture du coup illégal à échoué (couleur invalide [{color}])')
                 else:
                     tournament.store_illegal_move(board, Color(color))
-                    request.session['last_illegal_move_added']: dict[str, int | str | float] = {
+                    request.session['last_illegal_move_updated']: dict[str, int | str | float] = {
                         'tournament_id': tournament_id,
                         'board_id': board_id,
                         'color': color,
@@ -380,10 +385,9 @@ async def add_illegal_move(
         status_code=HTTP_307_TEMPORARY_REDIRECT)
 
 
-@delete(
-    path='/illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
+@get(
+    path='/delete-illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
     name='delete-illegal-move',
-    status_code=HTTP_307_TEMPORARY_REDIRECT,
 )
 async def delete_illegal_move(
         request: Request, event_id: str, screen_id: str, tournament_id: str, board_id: int, color: str
@@ -394,17 +398,15 @@ async def delete_illegal_move(
             path=index_url(request),
             status_code=HTTP_307_TEMPORARY_REDIRECT)
     if not event_login_needed(request, event):
-        tournament: Tournament
         try:
-            tournament = event.tournaments[tournament_id]
-            board: Board
+            tournament: Tournament = event.tournaments[tournament_id]
             try:
-                board = tournament.boards[board_id - 1]
-                if (color := color.upper()) not in (Color.WHITE, Color.BLACK):
+                board: Board = tournament.boards[board_id - 1]
+                if color not in (Color.WHITE, Color.BLACK):
                     Message.error(request, f'La suppression du coup illégal à échoué (couleur invalide [{color}])')
                 else:
                     if tournament.delete_illegal_move(board, Color(color)):
-                        request.session['last_illegal_move_removed']: dict[str, int | str | float] = {
+                        request.session['last_illegal_move_updated']: dict[str, int | str | float] = {
                             'tournament_id': tournament_id,
                             'board_id': board_id,
                             'color': color,
@@ -412,7 +414,9 @@ async def delete_illegal_move(
                         }
                     else:
                         Message.warning(
-                            request, f"Pas de coup illégal trouvé pour [{tournament.id}] : {board_id} ({color})")
+                            request,
+                            f'Pas de coup illégal trouvé pour le·la joueur·euse {Color(color)} '
+                            f'de l\'échiquier {board.id} du tournoi [{tournament.id}]')
             except KeyError:
                 Message.error(
                     request, f'L\'échiquier [{board_id}] est introuvable pour le tournoi [{tournament.id}])')

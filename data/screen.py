@@ -12,7 +12,7 @@ from data.result import Result
 from data.screen_set import ScreenSet, ScreenSetBuilder
 from data.template import Template
 from data.tournament import Tournament
-from data.util import ScreenType
+from data.util import ScreenType, DEFAULT_RECORD_ILLEGAL_MOVES
 
 logger: Logger = get_logger()
 
@@ -99,6 +99,10 @@ class AScreen:
         except FileNotFoundError:
             return []
 
+    @property
+    def record_illegal_moves(self) -> int:
+        return 0
+
 
 @dataclass
 class AScreenWithSets(AScreen):
@@ -119,7 +123,7 @@ class AScreenWithSets(AScreen):
 @dataclass
 class ScreenBoards(AScreenWithSets):
     update: bool = False
-    record_illegal_moves: bool = False
+    record_illegal_moves: int = 0
 
     def __post_init__(self):
         self._type = ScreenType.Boards
@@ -228,12 +232,14 @@ class ScreenResults(AScreen):
 class ScreenBuilder:
     def __init__(
             self, config_reader: ConfigReader, event_id: str, tournaments: dict[str, Tournament],
-            templates: dict[str, Template], screens_by_family_id: dict[str, list[AScreen]]):
+            templates: dict[str, Template], screens_by_family_id: dict[str, list[AScreen]],
+            default_record_illegal_moves: int):
         self._config_reader: ConfigReader = config_reader
         self._event_id: str = event_id
         self._tournaments: dict[str, Tournament] = tournaments
         self._templates: dict[str, Template] = templates
         self._screens_by_family_id: dict[str, list[AScreen]] = screens_by_family_id
+        self.default_record_illegal_moves: int = default_record_illegal_moves
         self.screens: dict[str, AScreen] = {}
         screen_ids: list[str] = self._read_screen_ids()
         if not screen_ids:
@@ -375,14 +381,34 @@ class ScreenBuilder:
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
         key = 'record_illegal_moves'
-        default_record_illegal_moves: bool = False
-        record_illegal_moves: bool | None = default_record_illegal_moves
+        record_illegal_moves: int = self.default_record_illegal_moves
         if screen_type == ScreenType.Boards:
             if key in screen_section:
-                record_illegal_moves = self._config_reader.getboolean_safe(screen_section_key, key)
-                if record_illegal_moves is None:
-                    self._config_reader.add_warning('un booléen est attendu, écran ignoré', screen_section_key, key)
-                    return None
+                if update:
+                    record_illegal_moves_bool: bool | None = self._config_reader.getboolean_safe(screen_section_key, key)
+                    if record_illegal_moves_bool is None:
+                        record_illegal_moves_int: int | None = self._config_reader.getint_safe(
+                            screen_section_key, key, minimum=0)
+                        if record_illegal_moves_int is None:
+                            self._config_reader.add_warning(
+                                'un booléen ou un entier positif ou nul est attendu, écran ignoré', screen_section_key, key)
+                            return None
+                        else:
+                            record_illegal_moves = record_illegal_moves_int
+                    else:
+                        if record_illegal_moves_bool:
+                            record_illegal_moves = DEFAULT_RECORD_ILLEGAL_MOVES
+                        else:
+                            record_illegal_moves = 0
+                else:
+                    self._config_reader.add_warning(
+                        f"l'option n'est autorisée que pour les écrans de saisie, ignorée",
+                        screen_section_key, key)
+            else:
+                if update:
+                    self._config_reader.add_debug(f'option absente, par défaut [{record_illegal_moves}]')
+                else:
+                    record_illegal_moves = 0
         else:
             if key in screen_section:
                 self._config_reader.add_warning(
@@ -441,6 +467,7 @@ class ScreenBuilder:
         if key in screen_section:
             family_id: str = self._config_reader.get(screen_section_key, key)
         screen: AScreen | None = None
+        file_dependencies: list[Path] = [EVENTS_PATH / f'{self._event_id}.ini', ]
         if screen_type == ScreenType.Boards:
             screen = ScreenBoards(
                 screen_id,
@@ -454,11 +481,9 @@ class ScreenBuilder:
                 update,
                 record_illegal_moves,
             )
-            AScreen.set_screen_file_dependencies(
-                self._event_id,
-                screen_id,
-                [EVENTS_PATH / f'{self._event_id}.ini', ] + [screen_set.tournament.file for screen_set in screen_sets]
-            )
+            file_dependencies += [screen_set.tournament.file for screen_set in screen_sets]
+            if record_illegal_moves:
+                file_dependencies += [screen_set.tournament.illegal_moves_dir for screen_set in screen_sets]
         elif screen_type == ScreenType.Players:
             screen = ScreenPlayers(
                 screen_id,
@@ -471,11 +496,7 @@ class ScreenBuilder:
                 screen_sets,
                 show_unpaired
             )
-            AScreen.set_screen_file_dependencies(
-                self._event_id,
-                screen_id,
-                [EVENTS_PATH / f'{self._event_id}.ini', ] + [screen_set.tournament.file for screen_set in screen_sets]
-            )
+            file_dependencies += [screen_set.tournament.file for screen_set in screen_sets]
         elif screen_type == ScreenType.Results:
             screen = ScreenResults(
                 self._event_id,
@@ -488,12 +509,8 @@ class ScreenBuilder:
                 show_timer,
                 limit
             )
-            AScreen.set_screen_file_dependencies(
-                self._event_id,
-                screen_id,
-                [EVENTS_PATH / f'{self._event_id}.ini', ]
-                + [tournament.file for tournament in self._tournaments.values()]
-            )
+            file_dependencies += [tournament.file for tournament in self._tournaments.values()]
+        AScreen.set_screen_file_dependencies(self._event_id, screen_id, file_dependencies, )
         for key, value in self._config_reader.items(screen_section_key):
             if key not in ConfigReader.screen_keys + ['template', '__family__', ]:
                 self._config_reader.add_warning('option absente', screen_section_key, key)

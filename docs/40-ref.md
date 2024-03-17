@@ -4,16 +4,18 @@
 
 ## Généralités (`[event]`)
 
-| Option            | Description                                                                                                                                                              |
-|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `name`            | Le nom de l'évènement (obligatoire), utilisé sur la page d'accueil de Papi-web (liste des évènements) et sur la page de description de l'évènement.                      |
-| `path`            | Le répertoire par défaut dans lequel sont stockés les fichiers Papi des tournois (facultatif, par défaut `papi/`). Cette valeur peut être modifiée pour chaque tournoi.  |
-| `update_password` | Le code d'accès aux pages de saisie des scores (facultatif).                                                                                                             |
-| `css`             | La personnalisation CSS de l'évènement (facultative).<br/>Pour utiliser `custom/ffe/ffe.css`, on utilisera `css = ffe/ffe.css`.                                          |
+| Option                 | Description                                                                                                                                                                                                                                                                                                                                                           |
+|------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `name`                 | Le nom de l'évènement (obligatoire), utilisé sur la page d'accueil de Papi-web (liste des évènements) et sur la page de description de l'évènement.                                                                                                                                                                                                                   |
+| `path`                 | Le répertoire par défaut dans lequel sont stockés les fichiers Papi des tournois (facultatif, par défaut `papi/`). Cette valeur peut être modifiée pour chaque tournoi.                                                                                                                                                                                               |
+| `update_password`      | Le code d'accès aux pages de saisie des scores (facultatif).                                                                                                                                                                                                                                                                                                          |
+| `css`                  | La personnalisation CSS de l'évènement (facultative).<br/>Pour utiliser `custom/ffe/ffe.css`, on utilisera `css = ffe/ffe.css`.                                                                                                                                                                                                                                       |
+| `record_illegal_moves` | Le nombre maximum de coups illégaux que l'on peut enregistrer pour un·joueur·euse (facultatif, par défaut `off`).<br/>Les valeurs booléennes peuvent être utilisées :<ul><li>`on` : la valeur par défaut (`2`)</li><li>`off` (équivaut à `0`) : pas d'enregistrement.</li></ul>Cette valeur est valable pour tous les écrans, et peut être changée pour chaque écran. |
 
 Voir également :
 - [Gestion d'un petit tournoi amical](11-friendly.md)
 - [Gestion d'un tournoi homologué (interface avec le site fédéral)](12-qualified.md)
+- [Enregistrement des coups illégaux](38-illegal_moves.md)
  
 ## Accès à la plateforme Chess Event (`[chessevent]` ou `[chessevent.<connection_id>]`)
 
