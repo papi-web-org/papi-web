@@ -431,6 +431,8 @@ async def delete_illegal_move(
 @get(path='/screen-last-update/{event_id:str}/{screen_id:str}', name='get-screen-last-update')
 async def get_screen_last_update(request: Request, event_id: str, screen_id: str) -> str:
     screen_files: list[Path] = AScreen.get_screen_file_dependencies(event_id, screen_id)
+    if not screen_files:
+        return f'no file dependencies found, probably the event [{event_id}] does not exist'
     try:
         mtime: float = screen_files[0].lstat().st_mtime
         for screen_file in screen_files[1:]:
