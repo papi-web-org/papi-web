@@ -19,15 +19,15 @@
                                 {% with pairing=player.pairings[tournament.current_round] %}
                                 {% with opponent_id=pairing.opponent_id %}
                                     <tr class=" player-row {% if not opponent_id or opponent_id == 1 %}not-paired{% else %}paired{% endif %}">
-                                        <td  class="player">{% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }} [{{ player.vpoints_str }}]</td>
+                                        <td  class="player {% if opponent_id and opponent_id != 1 %}{% if player.color == 'W' %}white{%else %}black{%endif %}{%endif %}">{% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }} [{{ player.vpoints_str }}]</td>
                                         {% if not opponent_id %}
-                                            <td colspan="2"><em>{{ player.not_paired_str }}</em></td>
+                                            <td colspan="2">{{ player.not_paired_str }}</td>
                                         {% elif opponent_id == 1 %}
-                                            <td colspan="2"><em>{{ player.exempt_str }}</em></td>
+                                            <td colspan="2">{{ player.exempt_str }}</td>
                                         {% else %}
                                             {% with opponent=tournament.players_by_id[opponent_id] %}
-                                                <td class="pairing">Table n°{{ player.board_number }} {{ player.color_str }}</td>
-                                                <td class="opponent">{% if opponent.title_str %}{{ opponent.title_str }}&nbsp;{% endif %}{{ opponent.last_name }} {{ opponent.first_name }} {{ opponent.rating }}{{ opponent.rating_type }} [{{ opponent.vpoints_str }}]</td>
+                                                <td class="pairing {% if player.color == 'W' %}white{%else %}black{%endif %}">Table n°{{ player.board_number }} avec les {{ player.color_str }}</td>
+                                                <td class="opponent {% if player.color == 'W' %}white{%else %}black{%endif %}">contre {% if opponent.title_str %}{{ opponent.title_str }}&nbsp;{% endif %}{{ opponent.last_name }} {{ opponent.first_name }} {{ opponent.rating }}{{ opponent.rating_type }} [{{ opponent.vpoints_str }}]</td>
                                             {% endwith %}
                                         {% endif %}
                                     </tr>

@@ -19,7 +19,15 @@
 .screen-players .not-paired {
     font-style: italic
 }
-.screen-boards .board-row-no-result {
+.screen-players .paired .pairing.black, .screen-players .paired .player.black, .screen-players .paired .opponent.black {
+    background-color: black;
+    color: white;
+}
+.screen-players .paired .pairing.white, .screen-players .paired .player.white, .screen-players .paired .opponent.white {
+    background-color: white;
+    color: black;
+}
+.screen-boards .board-row-no-result{
     font-weight: bold
 }
 .screen-boards .board-number {
