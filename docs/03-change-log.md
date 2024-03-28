@@ -6,6 +6,7 @@
 - Allègement du moteur web (remplacement de Django par Litestar)
 - Affichage du pointage des joueur·euses
 - Enregistrement des coups illégaux (option `record_illegal_moves`)
+- Mise à jour de l'URL de ChessEvent suite au déménagement de la plateforme
 
 ## Version 2.1.8 - 16 février 2024
 - Suppression du _pooling_ ODBC

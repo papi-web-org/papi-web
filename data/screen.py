@@ -124,6 +124,7 @@ class AScreenWithSets(AScreen):
 class ScreenBoards(AScreenWithSets):
     update: bool = False
     record_illegal_moves: int = 0
+    check_in_players: bool = False
 
     def __post_init__(self):
         self._type = ScreenType.Boards
@@ -233,13 +234,14 @@ class ScreenBuilder:
     def __init__(
             self, config_reader: ConfigReader, event_id: str, tournaments: dict[str, Tournament],
             templates: dict[str, Template], screens_by_family_id: dict[str, list[AScreen]],
-            default_record_illegal_moves: int):
+            default_record_illegal_moves: int, default_check_in_players: bool):
         self._config_reader: ConfigReader = config_reader
         self._event_id: str = event_id
         self._tournaments: dict[str, Tournament] = tournaments
         self._templates: dict[str, Template] = templates
         self._screens_by_family_id: dict[str, list[AScreen]] = screens_by_family_id
         self.default_record_illegal_moves: int = default_record_illegal_moves
+        self.default_check_in_players: bool = default_check_in_players
         self.screens: dict[str, AScreen] = {}
         screen_ids: list[str] = self._read_screen_ids()
         if not screen_ids:
@@ -414,6 +416,37 @@ class ScreenBuilder:
                 self._config_reader.add_warning(
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
+        self._config_reader.add_info(f'default_record_illegal_moves = [{self.default_record_illegal_moves}]', screen_section_key, key)
+        self._config_reader.add_info(f'record_illegal_moves = [{record_illegal_moves}]', screen_section_key, key)
+        key = 'check_in_players'
+        check_in_players: bool = self.default_check_in_players
+        if screen_type == ScreenType.Boards:
+            if key in screen_section:
+                if update:
+                    check_in_players_bool: bool | None = self._config_reader.getboolean_safe(screen_section_key, key)
+                    if check_in_players_bool is None:
+                        self._config_reader.add_warning(
+                            'un booléen est attendu, écran ignoré', screen_section_key, key)
+                        return None
+                    else:
+                        check_in_players = check_in_players_bool
+                else:
+                    self._config_reader.add_warning(
+                        f"l'option n'est autorisée que pour les écrans de saisie, ignorée",
+                        screen_section_key, key)
+                    check_in_players = False
+            else:
+                if update:
+                    self._config_reader.add_debug(f'option absente, par défaut [{check_in_players}]')
+                else:
+                    check_in_players = False
+        else:
+            if key in screen_section:
+                self._config_reader.add_warning(
+                    f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
+                    screen_section_key, key)
+        self._config_reader.add_info(f'default_check_in_players = [{self.default_check_in_players}]', screen_section_key, key)
+        self._config_reader.add_info(f'check_in_players = [{check_in_players}]', screen_section_key, key)
         key = 'show_unpaired'
         default_show_unpaired: bool = False
         show_unpaired: bool | None = default_show_unpaired
@@ -480,6 +513,7 @@ class ScreenBuilder:
                 screen_sets,
                 update,
                 record_illegal_moves,
+                check_in_players,
             )
             file_dependencies += [screen_set.tournament.file for screen_set in screen_sets]
             if record_illegal_moves:
@@ -513,7 +547,7 @@ class ScreenBuilder:
         AScreen.set_screen_file_dependencies(self._event_id, screen_id, file_dependencies, )
         for key, value in self._config_reader.items(screen_section_key):
             if key not in ConfigReader.screen_keys + ['template', '__family__', ]:
-                self._config_reader.add_warning('option absente', screen_section_key, key)
+                self._config_reader.add_warning('option inconnue', screen_section_key, key)
         if family_id is not None:
             if family_id not in self._screens_by_family_id:
                 self._screens_by_family_id[family_id] = []
