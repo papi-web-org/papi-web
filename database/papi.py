@@ -199,3 +199,8 @@ class PapiDatabase(AccessDatabase):
     def delete_players_personal_data(self):
         """Delete all personal data from the database."""
         self._execute('UPDATE `joueur` SET Tel = ?, EMail = ?', ('', '', ))
+
+    def toggle_player_check_in(self, player_id: int):
+        query: str = f'UPDATE `joueur` SET Pointe = NOT(Pointe) WHERE Ref = ?'
+        params = tuple((player_id, ))
+        self._execute(query, params)

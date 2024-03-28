@@ -151,7 +151,11 @@
                                         <tbody>
                                         {% for player in players_by_rating %}
                                             <tr class="player-row">
-                                                <td class="player"><i class="bi-{% if player.check_in %}check-square-fill{% else %}square{% endif %}"></i> {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }} </td>
+                                                <td class="player">
+                                                    <i
+                                                        class="bi-{% if player.check_in %}check-square-fill{% else %}square{% endif %} player-check-in"
+                                                        data-tournament-id="{{ tournament.id }}"
+                                                        data-player-id="{{ player.id }}"></i> {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }} </td>
                                             </tr>
                                         {% endfor %}
                                         </tbody>

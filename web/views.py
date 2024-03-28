@@ -20,6 +20,7 @@ from common.logger import get_logger
 from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION, PapiWebConfig
 from data.board import Board
 from data.event import Event, get_events_by_name
+from data.player import Player
 from data.rotator import Rotator
 from data.screen import AScreen
 from data.tournament import Tournament
@@ -271,7 +272,7 @@ async def show_board(
         except (IndexError, TypeError):
             Message.error(request, f"L'échiquier [{board_id}] est introuvable pour le tournoi [{tournament_id}]")
     except KeyError:
-        Message.error(request, f'Tournoi [{tournament_id}] non trouvé')
+        Message.error(request, f'Le tournoi [{tournament_id}] est introuvable')
     return Redirect(
         path=event_url(request, event_id),
         status_code=HTTP_307_TEMPORARY_REDIRECT
@@ -295,7 +296,7 @@ async def show_rotator_screen(
             path=index_url(request),
             status_code=HTTP_307_TEMPORARY_REDIRECT)
     if rotator_id not in event.rotators:
-        Message.error(request, f'Écran rotatif [{rotator_id}] non trouvé')
+        Message.error(request, f'L\'écran rotatif [{rotator_id}] est introuvable')
         return Redirect(
             path=event_url(request, event_id),
             status_code=HTTP_307_TEMPORARY_REDIRECT)
@@ -342,7 +343,7 @@ async def update_result(
                 Message.error(
                     request, f'L\'échiquier [{board_id}] est introuvable pour le tournoi [{tournament.id}])')
         except KeyError:
-            Message.error(request, f'Tournoi [{tournament_id}] non trouvé')
+            Message.error(request, f'Le tournoi [{tournament_id}] est introuvable')
     return Redirect(
         path=screen_url(request, event_id, screen_id),
         status_code=HTTP_307_TEMPORARY_REDIRECT)
@@ -379,7 +380,7 @@ async def add_illegal_move(
                 Message.error(
                     request, f'L\'échiquier [{board_id}] est introuvable pour le tournoi [{tournament.id}])')
         except KeyError:
-            Message.error(request, f'Tournoi [{tournament_id}] non trouvé')
+            Message.error(request, f'Le tournoi [{tournament_id}] est introuvable')
     return Redirect(
         path=screen_url(request, event_id, screen_id),
         status_code=HTTP_307_TEMPORARY_REDIRECT)
@@ -422,7 +423,40 @@ async def delete_illegal_move(
                 Message.error(
                     request, f'L\'échiquier [{board_id}] est introuvable pour le tournoi [{tournament.id}])')
         except KeyError:
-            Message.error(request, f'Tournoi [{tournament_id}] non trouvé')
+            Message.error(request, f'Le tournoi [{tournament_id}] est introuvable')
+    return Redirect(
+        path=screen_url(request, event_id, screen_id),
+        status_code=HTTP_307_TEMPORARY_REDIRECT)
+
+
+@get(
+    path='/toggle-player-check-in/{event_id:str}/{screen_id:str}/{tournament_id:str}/{player_id:int}',
+    name='toggle-player-check-in',
+)
+async def toggle_player_check_in(
+        request: Request, event_id: str, screen_id: str, tournament_id: str, player_id: int
+) -> Redirect:
+    event: Event = load_event(request, event_id)
+    if event is None:
+        return Redirect(
+            path=index_url(request),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
+    if not event_login_needed(request, event):
+        try:
+            tournament: Tournament = event.tournaments[tournament_id]
+            try:
+                player: Player = tournament.players_by_id[player_id]
+                tournament.toggle_player_check_in(player.id)
+                request.session['last_check_in_updated']: dict[str, int | str | float] = {
+                    'tournament_id': tournament_id,
+                    'player_id': player_id,
+                    'expiration': time.time() + 10,
+                }
+            except KeyError:
+                Message.error(
+                    request, f'Le·la joueur·euse [{player_id}] est introuvable pour le tournoi [{tournament.id}])')
+        except KeyError:
+            Message.error(request, f'Le tournoi [{tournament_id}] est introuvable')
     return Redirect(
         path=screen_url(request, event_id, screen_id),
         status_code=HTTP_307_TEMPORARY_REDIRECT)

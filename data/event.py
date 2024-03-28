@@ -36,6 +36,7 @@ class Event:
         self.css: str | None = None
         self.update_password: str | None = None
         self.record_illegal_moves: int = 0
+        self.check_in_players: bool = False
         self.chessevent_connections: dict[str, ChessEventConnection] = {}
         self.tournaments: dict[str, Tournament] = {}
         self.templates: dict[str, Template] = {}
@@ -67,7 +68,7 @@ class Event:
                 return
             self.screens = ScreenBuilder(
                 self.reader, self.id, self.tournaments, self.templates, self.screens_by_family_id,
-                self.record_illegal_moves).screens
+                self.record_illegal_moves, self.check_in_players).screens
             if self.reader.errors:
                 return
             self.rotators = RotatorBuilder(self.reader, self.screens, self.screens_by_family_id).rotators
@@ -205,7 +206,22 @@ class Event:
         else:
             self.reader.add_debug(f'option absente, par défaut [{self.record_illegal_moves}]')
 
-        section_keys: list[str] = ['name', 'path', 'update_password', 'css', 'record_illegal_moves', ]
+        key = 'check_in_players'
+        if key in section:
+            check_in_players_bool: bool | None = self.reader.getboolean_safe(section_key, key)
+            if check_in_players_bool is None:
+                self.reader.add_warning(
+                    f'un booléen est attendu, par défaut [{self.check_in_players}]',
+                    section_key,
+                    key)
+            else:
+                self.check_in_players = check_in_players_bool
+        else:
+            self.reader.add_debug(f'option absente, par défaut [{self.check_in_players}]')
+
+        section_keys: list[str] = [
+            'name', 'path', 'update_password', 'css', 'record_illegal_moves', 'check_in_players',
+        ]
         for key, _ in section.items():
             if key not in section_keys:
                 self.reader.add_warning('option inconnue', section_key, key)

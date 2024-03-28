@@ -388,6 +388,12 @@ class Tournament:
             papi_database.commit()
         return player_id - 1
 
+    def toggle_player_check_in(self, player_id: int):
+        with PapiDatabase(self.file, 'w') as papi_database:
+            papi_database: PapiDatabase
+            papi_database.toggle_player_check_in(player_id)
+            papi_database.commit()
+
 
 class HandicapTournament(NamedTuple):
     """A helper data structure to store the information needed to
