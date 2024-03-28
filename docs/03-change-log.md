@@ -2,6 +2,9 @@
 
 # Papi-web - ChangeLog
 
+## Version 2.2.1 - 28 mars 2024
+- Correction d'un bug de configuration
+
 ## Version 2.2.0 - 27 mars 2024
 - Allègement du moteur web (remplacement de Django par Litestar)
 - Affichage du pointage des joueur·euses
