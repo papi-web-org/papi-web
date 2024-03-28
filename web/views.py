@@ -219,7 +219,7 @@ def event_login_needed(request: Request, event: Event, screen: AScreen | None = 
     if not event.update_password:
         return False
     session_password: str | None = get_stored_password(request, event)
-    logger.info('session_password=%s', "*" * (len(session_password if session_password else 0)))
+    logger.info('session_password=%s', "*" * (len(session_password) if session_password else 0))
     if session_password is None:
         Message.error(request,
                       'Un code d\'accès est nécessaire pour accéder à l\'interface de saisie des résultats.')
