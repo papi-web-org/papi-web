@@ -340,7 +340,7 @@ async def update_result(
                 else:
                     tournament.add_result(board, Result.from_papi_value(result))
                     event.store_result(tournament, board, result)
-                    request.session['last_result_entered']: dict[str, int | str | float] = {
+                    request.session['last_result_updated']: dict[str, int | str | float] = {
                         'tournament_id': tournament_id,
                         'board_id': board_id,
                         'expiration': time.time() + 10,

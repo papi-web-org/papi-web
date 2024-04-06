@@ -23,11 +23,10 @@
                             {% for board in boards %}
                                 {% with wp=board.white_player %}{% with bp=board.black_player %}
                                 <tr
+                                    id="board-{{ tournament.id }}-{{ board.id }}-row"
                                     data-tournament-id="{{ tournament.id }}"
                                     data-board-id="{{ board.id }}"
-                                    class="board-row {% if board.result_str %}board-row-result{% else %}board-row-no-result{% endif %}"
-                                    {% if screen.update and not board.result_str %} XXXXXX-data-bs-toggle="modal" XXXXXX-data-bs-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-modal"{% endif %}
-                                >
+                                    class="board-row {% if board.result_str %}board-row-result{% else %}board-row-no-result{% endif %}">
                                     <th scope="row" class="board-number">{{ board.number }}.</th>
                                     <td class="points">{{ wp.vpoints_str }}</td>
                                     {% if tournament.print_real_points %}<td class="points">[{{ wp.points_str }}]</td>{% endif %}
