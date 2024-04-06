@@ -23,21 +23,29 @@
                             {% for board in boards %}
                                 {% with wp=board.white_player %}{% with bp=board.black_player %}
                                 <tr
-                                    id="board-{{ tournament.id }}-{{ board.id }}-row"
                                     data-tournament-id="{{ tournament.id }}"
                                     data-board-id="{{ board.id }}"
-                                    class="board-row {% if board.result_str %}board-row-result{% else %}board-row-no-result{% endif %}">
+                                    class="
+                                        board-row
+                                        {% if board.result_str %}board-row-result{% else %}board-row-no-result{% endif %}
+                                        board-{{ tournament.id }}-{{ board.id }}-row">
                                     <th scope="row" class="board-number">{{ board.number }}.</th>
                                     <td class="points">{{ wp.vpoints_str }}</td>
                                     {% if tournament.print_real_points %}<td class="points">[{{ wp.points_str }}]</td>{% endif %}
-                                    <td class="player">{% if wp.title_str %}{{ wp.title_str }}&nbsp;{% endif %}{{ wp.last_name }} {{ wp.first_name }} {{ wp.rating }}{{ wp.rating_type }}
+                                    <td class="
+                                        player
+                                        player-{{ tournament.id }}-{{ wp.id }}-cell">
+                                        {% if wp.title_str %}{{ wp.title_str }}&nbsp;{% endif %}{{ wp.last_name }} {{ wp.first_name }} {{ wp.rating }}{{ wp.rating_type }}
                                         {% if tournament.handicap and bp.id != 1 %}(<span class="{%if wp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">{%if wp.handicap_initial_time_minutes %}<span class="minutes">{{ wp.handicap_initial_time_minutes }}'</span>{% endif %}{%if wp.handicap_initial_time_seconds %}<span class="seconds">{{ wp.handicap_initial_time_seconds }}"</span>{% endif %}
                                                     {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}
                                         {% if screen.update and screen.record_illegal_moves %}
                                             {% for _ in range([wp.illegal_moves, screen.record_illegal_moves]|min) %}
                                                 <i
-                                                    class="{% if board.result_str %}bi-file-fill{% else %}bi-file-excel-fill{% endif %} illegal-move-flag {% if not board.result_str %}delete{% endif %} player-{{ tournament.id }}-{{ wp.id }}"
                                                     data-tournament-id="{{ tournament.id }}"
+                                                    class="
+                                                        {% if board.result_str %}bi-file-fill{% else %}bi-file-excel-fill{% endif %}
+                                                        illegal-move-flag
+                                                        {% if not board.result_str %}delete{% endif %}"
                                                     data-player-id="{{ wp.id }}"></i>
                                             {% endfor %}
                                             {% if not board.result_str and wp.illegal_moves < screen.record_illegal_moves %}
@@ -49,7 +57,10 @@
                                         {% endif %}
                                     </td>
                                     <td class="score">{% if board.result_str %}{{ board.result_str }}{% else %}n°{{ board.number }}{% endif %}</td>
-                                    <td class="player">{% if bp.id == 1 %}<em>EXEMPT</em>{% else %}{% if bp.title_str %}{{ bp.title_str }}&nbsp;{% endif %}{{ bp.last_name }} {{ bp.first_name }} {{ bp.rating }}{{ bp.rating_type }}
+                                    <td class="
+                                        player
+                                        player-{{ tournament.id }}-{{ bp.id }}-cell">
+                                        {% if bp.id == 1 %}<em>EXEMPT</em>{% else %}{% if bp.title_str %}{{ bp.title_str }}&nbsp;{% endif %}{{ bp.last_name }} {{ bp.first_name }} {{ bp.rating }}{{ bp.rating_type }}
                                         {% if tournament.handicap %}(<span class="{%if bp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">{%if bp.handicap_initial_time_minutes %}<span class="minutes">{{ bp.handicap_initial_time_minutes }}'</span>{% endif %}{%if bp.handicap_initial_time_seconds %}<span class="seconds">{{ bp.handicap_initial_time_seconds }}"</span>{% endif %}
                                                     {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}{% endif %}
                                         {% if screen.update and screen.record_illegal_moves %}
@@ -146,9 +157,10 @@
                                         <tbody>
                                         {% for player in players_by_rating %}
                                             <tr class="player-row">
-                                                <td class="player">
+                                                <td
+                                                    class="player player-{{ tournament.id }}-{{ player.id }}-cell">
                                                     <i
-                                                        class="{% if player.check_in %}bi-check-square-fill player-check-out{% else %}bi-square player-check-in{% endif %} player-{{ tournament.id }}-{{ player.id }}"
+                                                        class="{% if player.check_in %}bi-check-square-fill player-check-out{% else %}bi-square player-check-in{% endif %}"
                                                         data-tournament-id="{{ tournament.id }}"
                                                         data-player-id="{{ player.id }}"></i> {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }} </td>
                                             </tr>

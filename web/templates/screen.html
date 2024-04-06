@@ -101,23 +101,22 @@
     {% if screen.update %}
         {% if last_result_updated %}
             {% if last_result_updated.expiration > now %}
-                #board-{{ last_result_updated.tournament_id }}-{{ last_result_updated.board_id }}-row > * {
-                    color: red;
+                .board-{{ last_result_updated.tournament_id }}-{{ last_result_updated.board_id }}-row > * {
+                    color: red !important;
                 }
             {% endif %}
         {% endif %}
         {% if last_illegal_move_updated %}
             {% if last_illegal_move_updated.expiration > now %}
-                .illegal-move-flag.player-{{ last_illegal_move_updated.tournament_id }}-{{ last_illegal_move_updated.player_id }} {
-                    color: red;
+                .player-{{ last_illegal_move_updated.tournament_id }}-{{ last_illegal_move_updated.player_id }}-cell {
+                    color: red !important;
                 }
             {% endif %}
         {% endif %}
         {% if last_check_in_updated %}
             {% if last_check_in_updated.expiration > now %}
-                .player-check-in.player-{{ last_check_in_updated.tournament_id }}-{{ last_check_in_updated.player_id }},
-                .player-check-out.player-{{ last_check_in_updated.tournament_id }}-{{ last_check_in_updated.player_id }} {
-                    color: red;
+                .player-{{ last_check_in_updated.tournament_id }}-{{ last_check_in_updated.player_id }}-cell {
+                    color: red !important;
                 }
             {% endif %}
         {% endif %}
