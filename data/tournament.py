@@ -1,6 +1,6 @@
 import re
 import time
-from collections import defaultdict, Counter
+from collections import Counter
 from logging import Logger
 from operator import attrgetter
 from pathlib import Path
@@ -160,6 +160,7 @@ class Tournament:
                 self._players_by_id = papi_database.read_players(self._rating, self._rounds)
         self._database_read = True
         self._calculate_current_round()
+        self._set_players_illegal_moves()  # load illegal moves for the current round
         self._calculate_points()
         self._build_boards()
 
@@ -268,19 +269,19 @@ class Tournament:
     def illegal_moves_dir(self) -> Path:
         return TMP_DIR / 'events' / self.event_id / 'illegal_moves' / self.id
 
-    def store_illegal_move(self, board: Board, color: Color):
+    def store_illegal_move(self, player: Player):
         self.illegal_moves_dir.mkdir(parents=True, exist_ok=True)
         # add a new file
-        filename: str = f'{time.time()} {self.current_round} {board.id} {color.value}'
+        filename: str = f'{time.time()} {self.current_round} {player.id}'
         illegal_move_file: Path = self.illegal_moves_dir / filename
         illegal_move_file.touch()
         logger.info('le fichier [%s] a été créé', illegal_move_file)
     
-    def delete_illegal_move(self, board: Board, color: Color) -> bool:
+    def delete_illegal_move(self, player: Player) -> bool:
         """Tries to find all illegal moves for the current round of the tournament, and delete one of them.
         Returns True if a file was found and deleted, False if no such file was found"""
         illegal_moves_dir: Path = self.illegal_moves_dir
-        glob_pattern: str = f'* {self.current_round} {board.id} {color.value}'
+        glob_pattern: str = f'* {self.current_round} {player.id}'
         for file in illegal_moves_dir.glob(glob_pattern):
             file.unlink()
             logger.info('le fichier [%s] a été supprimé', file)
@@ -288,15 +289,22 @@ class Tournament:
         logger.debug('Aucun fichier de coup illégal trouvé pour le motif [%s]', glob_pattern)
         return False
 
-    def get_illegal_moves(self) -> dict[int, Counter[Color]]:
-        illegal_moves: defaultdict[int, Counter[Color]] = defaultdict(Counter)
+    def get_illegal_moves(self) -> Counter[int]:
+        illegal_moves: Counter[int] = Counter[int]()
         illegal_moves_dir: Path = self.illegal_moves_dir
         glob_pattern: str = f'* {self.current_round} *'
-        regex = re.compile(r'.* (\d+) ([BW])$')
+        regex = re.compile(r'.* (\d+)$')
         for file in illegal_moves_dir.glob(glob_pattern):
             if matches := regex.match(file.name):
-                illegal_moves[int(matches.group(1))][Color(matches.group(2))] += 1
-        return dict(illegal_moves)
+                illegal_moves[int(matches.group(1))] += 1
+        return illegal_moves
+
+    def _set_players_illegal_moves(self):
+        illegal_moves: Counter[int] = self.get_illegal_moves()
+        for player in self._players_by_id.values():
+            if player.id == 1:
+                continue
+            player.illegal_moves = illegal_moves[player.id]
 
     def _build_boards(self):
         if not self._current_round:
@@ -320,8 +328,6 @@ class Tournament:
                         self._boards.append(Board(white_player=player))
                     else:
                         self._boards.append(Board(black_player=player))
-        # search for illegal moves files
-        illegal_moves: dict[int, Counter[Color]] = self.get_illegal_moves()
         self._boards = sorted(self._boards, reverse=True)
         for index, board in enumerate(self._boards, start=1):
             board.id = index
@@ -330,8 +336,6 @@ class Tournament:
             board.white_player.set_board(index, number, Color.WHITE)
             board.black_player.set_board(index, number, Color.BLACK)
             board.result = board.white_player.pairings[self._current_round].result
-            board.white_illegal_moves = illegal_moves.get(index, Counter())[Color.WHITE]
-            board.black_illegal_moves = illegal_moves.get(index, Counter())[Color.BLACK]
             if self.handicap:
                 strong_player: Player
                 weak_player: Player
@@ -388,10 +392,16 @@ class Tournament:
             papi_database.commit()
         return player_id - 1
 
-    def toggle_player_check_in(self, player_id: int):
+    def check_in_player(self, player_id: int):
         with PapiDatabase(self.file, 'w') as papi_database:
             papi_database: PapiDatabase
-            papi_database.toggle_player_check_in(player_id)
+            papi_database.check_in_player(player_id)
+            papi_database.commit()
+
+    def check_out_player(self, player_id: int):
+        with PapiDatabase(self.file, 'w') as papi_database:
+            papi_database: PapiDatabase
+            papi_database.check_out_player(player_id)
             papi_database.commit()
 
 

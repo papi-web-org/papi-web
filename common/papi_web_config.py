@@ -15,7 +15,7 @@ from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
 
-PAPI_WEB_VERSION: str = '2.2.1'
+PAPI_WEB_VERSION: str = '2.2.2'
 
 PAPI_WEB_URL = 'https://github.com/papi-web-org/papi-web'
 
@@ -180,7 +180,7 @@ class PapiWebConfig:
             try:
                 s.connect(('10.254.254.254', 1))  # doesn't even have to be reachable
                 self.__lan_ip = s.getsockname()[0]
-            except Exception: #pylint: disable=broad-exception-caught
+            except Exception:  # pylint: disable=broad-exception-caught
                 pass
             finally:
                 s.close()

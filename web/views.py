@@ -24,7 +24,7 @@ from data.player import Player
 from data.rotator import Rotator
 from data.screen import AScreen
 from data.tournament import Tournament
-from data.util import Result, Color
+from data.util import Result
 from database.access import access_driver, odbc_drivers
 from web.messages import Message
 from web.urls import index_url, event_url, screen_url, rotator_screen_url
@@ -106,6 +106,11 @@ def render_screen(
         last_illegal_move_updated = request.session['last_illegal_move_updated']
     except KeyError:
         pass
+    last_check_in_updated: dict[str, int | str | float] | None = None
+    try:
+        last_check_in_updated = request.session['last_check_in_updated']
+    except KeyError:
+        pass
     return Template(
         template_name="screen.html",
         context={
@@ -118,6 +123,7 @@ def render_screen(
             'rotator_delay': rotator_delay,
             'last_result_updated': last_result_updated,
             'last_illegal_move_updated': last_illegal_move_updated,
+            'last_check_in_updated': last_check_in_updated,
             'messages': Message.messages(request),
         })
 
@@ -220,7 +226,7 @@ def event_login_needed(request: Request, event: Event, screen: AScreen | None = 
     if not event.update_password:
         return False
     session_password: str | None = get_stored_password(request, event)
-    logger.info('session_password=%s', "*" * (len(session_password) if session_password else 0))
+    logger.debug('session_password=%s', "*" * (8 if session_password else 0))
     if session_password is None:
         Message.error(request,
                       'Un code d\'accès est nécessaire pour accéder à l\'interface de saisie des résultats.')
@@ -350,11 +356,11 @@ async def update_result(
 
 
 @get(
-    path='/add-illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
+    path='/add-illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{player_id:int}',
     name='add-illegal-move'
 )
 async def add_illegal_move(
-        request: Request, event_id: str, screen_id: str, tournament_id: str, board_id: int, color: str
+        request: Request, event_id: str, screen_id: str, tournament_id: str, player_id: int,
 ) -> Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
@@ -365,20 +371,16 @@ async def add_illegal_move(
         try:
             tournament: Tournament = event.tournaments[tournament_id]
             try:
-                board: Board = tournament.boards[board_id - 1]
-                if color not in (Color.WHITE, Color.BLACK):
-                    Message.error(request, f'L\'écriture du coup illégal à échoué (couleur invalide [{color}])')
-                else:
-                    tournament.store_illegal_move(board, Color(color))
-                    request.session['last_illegal_move_updated']: dict[str, int | str | float] = {
-                        'tournament_id': tournament_id,
-                        'board_id': board_id,
-                        'color': color,
-                        'expiration': time.time() + 10,
-                    }
+                player: Player = tournament.players_by_id[player_id]
+                tournament.store_illegal_move(player)
+                request.session['last_illegal_move_updated']: dict[str, int | str | float] = {
+                    'tournament_id': tournament_id,
+                    'player_id': player_id,
+                    'expiration': time.time() + 10,
+                }
             except KeyError:
                 Message.error(
-                    request, f'L\'échiquier [{board_id}] est introuvable pour le tournoi [{tournament.id}])')
+                    request, f'Le·la joueur·euse [{player_id}] est introuvable pour le tournoi [{tournament.id}])')
         except KeyError:
             Message.error(request, f'Le tournoi [{tournament_id}] est introuvable')
     return Redirect(
@@ -387,12 +389,12 @@ async def add_illegal_move(
 
 
 @get(
-    path='/delete-illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{board_id:int}/{color:str}',
+    path='/delete-illegal-move/{event_id:str}/{screen_id:str}/{tournament_id:str}/{player_id:int}',
     name='delete-illegal-move',
     status_code=HTTP_307_TEMPORARY_REDIRECT,
 )
 async def delete_illegal_move(
-        request: Request, event_id: str, screen_id: str, tournament_id: str, board_id: int, color: str
+        request: Request, event_id: str, screen_id: str, tournament_id: str, player_id: int,
 ) -> Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
@@ -403,25 +405,21 @@ async def delete_illegal_move(
         try:
             tournament: Tournament = event.tournaments[tournament_id]
             try:
-                board: Board = tournament.boards[board_id - 1]
-                if color not in (Color.WHITE, Color.BLACK):
-                    Message.error(request, f'La suppression du coup illégal à échoué (couleur invalide [{color}])')
+                player: Player = tournament.players_by_id[player_id]
+                if tournament.delete_illegal_move(player):
+                    request.session['last_illegal_move_updated']: dict[str, int | str | float] = {
+                        'tournament_id': tournament_id,
+                        'player_id': player_id,
+                        'expiration': time.time() + 10,
+                    }
                 else:
-                    if tournament.delete_illegal_move(board, Color(color)):
-                        request.session['last_illegal_move_updated']: dict[str, int | str | float] = {
-                            'tournament_id': tournament_id,
-                            'board_id': board_id,
-                            'color': color,
-                            'expiration': time.time() + 10,
-                        }
-                    else:
-                        Message.warning(
-                            request,
-                            f'Pas de coup illégal trouvé pour le·la joueur·euse {Color(color)} '
-                            f'de l\'échiquier {board.id} du tournoi [{tournament.id}]')
+                    Message.warning(
+                        request,
+                        f'Pas de coup illégal trouvé pour le·la joueur·euse {player_id} '
+                        f'dans le tournoi [{tournament.id}]')
             except KeyError:
                 Message.error(
-                    request, f'L\'échiquier [{board_id}] est introuvable pour le tournoi [{tournament.id}])')
+                    request, f'Le·la joueur·euse [{player_id}] est introuvable pour le tournoi [{tournament.id}])')
         except KeyError:
             Message.error(request, f'Le tournoi [{tournament_id}] est introuvable')
     return Redirect(
@@ -430,10 +428,10 @@ async def delete_illegal_move(
 
 
 @get(
-    path='/toggle-player-check-in/{event_id:str}/{screen_id:str}/{tournament_id:str}/{player_id:int}',
-    name='toggle-player-check-in',
+    path='/check-in-player/{event_id:str}/{screen_id:str}/{tournament_id:str}/{player_id:int}',
+    name='check-in-player',
 )
-async def toggle_player_check_in(
+async def check_in_player(
         request: Request, event_id: str, screen_id: str, tournament_id: str, player_id: int
 ) -> Redirect:
     event: Event = load_event(request, event_id)
@@ -446,7 +444,40 @@ async def toggle_player_check_in(
             tournament: Tournament = event.tournaments[tournament_id]
             try:
                 player: Player = tournament.players_by_id[player_id]
-                tournament.toggle_player_check_in(player.id)
+                tournament.check_in_player(player.id)
+                request.session['last_check_in_updated']: dict[str, int | str | float] = {
+                    'tournament_id': tournament_id,
+                    'player_id': player_id,
+                    'expiration': time.time() + 10,
+                }
+            except KeyError:
+                Message.error(
+                    request, f'Le·la joueur·euse [{player_id}] est introuvable pour le tournoi [{tournament.id}])')
+        except KeyError:
+            Message.error(request, f'Le tournoi [{tournament_id}] est introuvable')
+    return Redirect(
+        path=screen_url(request, event_id, screen_id),
+        status_code=HTTP_307_TEMPORARY_REDIRECT)
+
+
+@get(
+    path='/check-out-player/{event_id:str}/{screen_id:str}/{tournament_id:str}/{player_id:int}',
+    name='check-out-player',
+)
+async def check_out_player(
+        request: Request, event_id: str, screen_id: str, tournament_id: str, player_id: int
+) -> Redirect:
+    event: Event = load_event(request, event_id)
+    if event is None:
+        return Redirect(
+            path=index_url(request),
+            status_code=HTTP_307_TEMPORARY_REDIRECT)
+    if not event_login_needed(request, event):
+        try:
+            tournament: Tournament = event.tournaments[tournament_id]
+            try:
+                player: Player = tournament.players_by_id[player_id]
+                tournament.check_out_player(player.id)
                 request.session['last_check_in_updated']: dict[str, int | str | float] = {
                     'tournament_id': tournament_id,
                     'player_id': player_id,

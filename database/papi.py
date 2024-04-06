@@ -200,7 +200,28 @@ class PapiDatabase(AccessDatabase):
         """Delete all personal data from the database."""
         self._execute('UPDATE `joueur` SET Tel = ?, EMail = ?', ('', '', ))
 
-    def toggle_player_check_in(self, player_id: int):
-        query: str = f'UPDATE `joueur` SET Pointe = NOT(Pointe) WHERE Ref = ?'
-        params = tuple((player_id, ))
+    def check_in_player(self, player_id: int):
+        data: dict[str, str | int | float | None] = {
+            'Pointe': True,
+        }
+        for round_ in range(1, 25):
+            data[f'Rd{round_:0>2}Adv'] = None
+            data[f'Rd{round_:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
+            data[f'Rd{round_:0>2}Cl'] = 'R'
+        actions: str = ', '.join([f'`{key}` = ?' for key in data.keys()])
+        query: str = f'UPDATE `joueur` SET {actions} WHERE Ref = ?'
+        params = tuple(list(data.values()) + [player_id, ])
+        self._execute(query, params)
+
+    def check_out_player(self, player_id: int):
+        data: dict[str, str | int | float | None] = {
+            'Pointe': False,
+        }
+        for round_ in range(1, 25):
+            data[f'Rd{round_:0>2}Adv'] = None
+            data[f'Rd{round_:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
+            data[f'Rd{round_:0>2}Cl'] = 'F'
+        actions: str = ', '.join([f'`{key}` = ?' for key in data.keys()])
+        query: str = f'UPDATE `joueur` SET {actions} WHERE Ref = ?'
+        params = tuple(list(data.values()) + [player_id, ])
         self._execute(query, params)

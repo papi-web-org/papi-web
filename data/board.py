@@ -21,8 +21,6 @@ class Board:
     white_player: Player | None = None
     black_player: Player | None = None
     result: Result | None = None
-    white_illegal_moves: int = 0
-    black_illegal_moves: int = 0
 
     @property
     def id(self) -> int | None:

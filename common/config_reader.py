@@ -30,7 +30,6 @@ class ConfigReader(ConfigParser):
         'menu',
         'update',
         'record_illegal_moves',
-        'check_in_players',
         'show_unpaired',
         'limit',
     ]
