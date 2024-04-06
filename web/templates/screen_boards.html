@@ -35,19 +35,17 @@
                                         {% if tournament.handicap and bp.id != 1 %}(<span class="{%if wp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">{%if wp.handicap_initial_time_minutes %}<span class="minutes">{{ wp.handicap_initial_time_minutes }}'</span>{% endif %}{%if wp.handicap_initial_time_seconds %}<span class="seconds">{{ wp.handicap_initial_time_seconds }}"</span>{% endif %}
                                                     {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}
                                         {% if screen.update and screen.record_illegal_moves %}
-                                            {% for _ in range([board.white_illegal_moves, screen.record_illegal_moves]|min) %}
+                                            {% for _ in range([wp.illegal_moves, screen.record_illegal_moves]|min) %}
                                                 <i
-                                                    class="{% if board.result_str %}bi-file-fill{% else %}bi-file-excel-fill{% endif %} illegal-move-flag {% if not board.result_str %}delete{% endif %} player-{{ tournament.id }}-{{ board.id }}-W"
+                                                    class="{% if board.result_str %}bi-file-fill{% else %}bi-file-excel-fill{% endif %} illegal-move-flag {% if not board.result_str %}delete{% endif %} player-{{ tournament.id }}-{{ wp.id }}"
                                                     data-tournament-id="{{ tournament.id }}"
-                                                    data-board-id="{{ board.id }}"
-                                                    data-color="W"></i>
+                                                    data-player-id="{{ wp.id }}"></i>
                                             {% endfor %}
-                                            {% if not board.result_str and board.white_illegal_moves < screen.record_illegal_moves %}
+                                            {% if not board.result_str and wp.illegal_moves < screen.record_illegal_moves %}
                                                 <i
-                                                    class="bi-flag illegal-move-flag add player-{{ tournament.id }}-{{ board.id }}-W"
+                                                    class="bi-flag illegal-move-flag add player-{{ tournament.id }}-{{ wp.id }}"
                                                     data-tournament-id="{{ tournament.id }}"
-                                                    data-board-id="{{ board.id }}"
-                                                    data-color="W"></i>
+                                                    data-player-id="{{ wp.id }}"></i>
                                             {%endif %}
                                         {% endif %}
                                     </td>
@@ -56,19 +54,17 @@
                                         {% if tournament.handicap %}(<span class="{%if bp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">{%if bp.handicap_initial_time_minutes %}<span class="minutes">{{ bp.handicap_initial_time_minutes }}'</span>{% endif %}{%if bp.handicap_initial_time_seconds %}<span class="seconds">{{ bp.handicap_initial_time_seconds }}"</span>{% endif %}
                                                     {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}{% endif %}
                                         {% if screen.update and screen.record_illegal_moves %}
-                                            {% for _ in range([board.black_illegal_moves, screen.record_illegal_moves]|min) %}
+                                            {% for _ in range([bp.illegal_moves, screen.record_illegal_moves]|min) %}
                                                 <i
-                                                    class="{% if board.result_str %}bi-file-fill{% else %}bi-file-excel-fill{% endif %} illegal-move-flag {% if not board.result_str %}delete{% endif %} player-{{ tournament.id }}-{{ board.id }}-B"
+                                                    class="{% if board.result_str %}bi-file-fill{% else %}bi-file-excel-fill{% endif %} illegal-move-flag {% if not board.result_str %}delete{% endif %} player-{{ tournament.id }}-{{ bp.id }}"
                                                     data-tournament-id="{{ tournament.id }}"
-                                                    data-board-id="{{ board.id }}"
-                                                    data-color="B"></i>
+                                                    data-player-id="{{ bp.id }}"></i>
                                             {% endfor %}
-                                            {% if not board.result_str and board.black_illegal_moves < screen.record_illegal_moves %}
+                                            {% if not board.result_str and bp.illegal_moves < screen.record_illegal_moves %}
                                                 <i
-                                                    class="bi-flag illegal-move-flag add player-{{ tournament.id }}-{{ board.id }}-B"
+                                                    class="bi-flag illegal-move-flag add player-{{ tournament.id }}-{{ bp.id }}"
                                                     data-tournament-id="{{ tournament.id }}"
-                                                    data-board-id="{{ board.id }}"
-                                                    data-color="B"></i>
+                                                    data-player-id="{{ bp.id }}"></i>
                                             {%endif %}
                                         {% endif %}
                                     </td>
@@ -153,7 +149,7 @@
                                             <tr class="player-row">
                                                 <td class="player">
                                                     <i
-                                                        class="bi-{% if player.check_in %}check-square-fill{% else %}square{% endif %} player-check-in"
+                                                        class="{% if player.check_in %}bi-check-square-fill player-check-out{% else %}bi-square player-check-in{% endif %} player-{{ tournament.id }}-{{ player.id }}"
                                                         data-tournament-id="{{ tournament.id }}"
                                                         data-player-id="{{ player.id }}"></i> {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }} </td>
                                             </tr>

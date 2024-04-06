@@ -22,13 +22,14 @@ class Player:
     rating: int
     rating_type: str
     fixed: int
-    check_in : bool
+    check_in: bool
     pairings: dict[int, Pairing]
     points: float | None = field(default=None, init=False)
     vpoints: float | None = field(default=None, init=False)
     board_id: int | None = field(default=None, init=False)
     board_number: int | None = field(default=None, init=False)
     color: Color | None = field(default=None, init=False)
+    illegal_moves: int = 0
     handicap_initial_time: int | None = field(default=None, init=False)
     handicap_increment: int | None = field(default=None, init=False)
     handicap_time_modified: bool | None = field(default=None, init=False)

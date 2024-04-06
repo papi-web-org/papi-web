@@ -124,7 +124,6 @@ class AScreenWithSets(AScreen):
 class ScreenBoards(AScreenWithSets):
     update: bool = False
     record_illegal_moves: int = 0
-    check_in_players: bool = False
 
     def __post_init__(self):
         self._type = ScreenType.Boards
@@ -387,13 +386,15 @@ class ScreenBuilder:
         if screen_type == ScreenType.Boards:
             if key in screen_section:
                 if update:
-                    record_illegal_moves_bool: bool | None = self._config_reader.getboolean_safe(screen_section_key, key)
+                    record_illegal_moves_bool: bool | None = self._config_reader.getboolean_safe(
+                        screen_section_key, key)
                     if record_illegal_moves_bool is None:
                         record_illegal_moves_int: int | None = self._config_reader.getint_safe(
                             screen_section_key, key, minimum=0)
                         if record_illegal_moves_int is None:
                             self._config_reader.add_warning(
-                                'un booléen ou un entier positif ou nul est attendu, écran ignoré', screen_section_key, key)
+                                'un booléen ou un entier positif ou nul est attendu, écran ignoré',
+                                screen_section_key, key)
                             return None
                         else:
                             record_illegal_moves = record_illegal_moves_int
@@ -416,37 +417,6 @@ class ScreenBuilder:
                 self._config_reader.add_warning(
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
-        self._config_reader.add_info(f'default_record_illegal_moves = [{self.default_record_illegal_moves}]', screen_section_key, key)
-        self._config_reader.add_info(f'record_illegal_moves = [{record_illegal_moves}]', screen_section_key, key)
-        key = 'check_in_players'
-        check_in_players: bool = self.default_check_in_players
-        if screen_type == ScreenType.Boards:
-            if key in screen_section:
-                if update:
-                    check_in_players_bool: bool | None = self._config_reader.getboolean_safe(screen_section_key, key)
-                    if check_in_players_bool is None:
-                        self._config_reader.add_warning(
-                            'un booléen est attendu, écran ignoré', screen_section_key, key)
-                        return None
-                    else:
-                        check_in_players = check_in_players_bool
-                else:
-                    self._config_reader.add_warning(
-                        f"l'option n'est autorisée que pour les écrans de saisie, ignorée",
-                        screen_section_key, key)
-                    check_in_players = False
-            else:
-                if update:
-                    self._config_reader.add_debug(f'option absente, par défaut [{check_in_players}]')
-                else:
-                    check_in_players = False
-        else:
-            if key in screen_section:
-                self._config_reader.add_warning(
-                    f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
-                    screen_section_key, key)
-        self._config_reader.add_info(f'default_check_in_players = [{self.default_check_in_players}]', screen_section_key, key)
-        self._config_reader.add_info(f'check_in_players = [{check_in_players}]', screen_section_key, key)
         key = 'show_unpaired'
         default_show_unpaired: bool = False
         show_unpaired: bool | None = default_show_unpaired
@@ -513,7 +483,6 @@ class ScreenBuilder:
                 screen_sets,
                 update,
                 record_illegal_moves,
-                check_in_players,
             )
             file_dependencies += [screen_set.tournament.file for screen_set in screen_sets]
             if record_illegal_moves:

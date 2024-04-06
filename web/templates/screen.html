@@ -66,20 +66,26 @@
                 // add or delete an illegal move by sending to the appropriate URL
                 $('.illegal-move-flag.add').click(function (event) {
                     stop_refresh_interval();
-                    redirect('/add-illegal-move/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-board-id') + '/' + $(this).attr('data-color'));
+                    redirect('/add-illegal-move/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
                     return false;
                 });
                 $('.illegal-move-flag.delete').click(function (event) {
                     stop_refresh_interval();
-                    redirect('/delete-illegal-move/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-board-id') + '/' + $(this).attr('data-color'));
+                    redirect('/delete-illegal-move/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
                     return false;
                 });
             {% endif %}
-            {% if screen.check_in_players %}
-                // toggle check-in by sending to the appropriate URL
+            {% if screen.update %}
+                // check-in player by sending to the appropriate URL
                 $('.player-check-in').click(function (event) {
                     stop_refresh_interval();
-                    redirect('/toggle-player-check-in/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
+                    redirect('/check-in-player/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
+                    return false;
+                });
+                // check-out player by sending to the appropriate URL
+                $('.player-check-out').click(function (event) {
+                    stop_refresh_interval();
+                    redirect('/check-out-player/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
                     return false;
                 });
             {% endif %}
@@ -102,7 +108,15 @@
         {% endif %}
         {% if last_illegal_move_updated %}
             {% if last_illegal_move_updated.expiration > now %}
-                .illegal-move-flag.player-{{ last_illegal_move_updated.tournament_id }}-{{ last_illegal_move_updated.board_id }}-{{ last_illegal_move_updated.color }} {
+                .illegal-move-flag.player-{{ last_illegal_move_updated.tournament_id }}-{{ last_illegal_move_updated.player_id }} {
+                    color: red;
+                }
+            {% endif %}
+        {% endif %}
+        {% if last_check_in_updated %}
+            {% if last_check_in_updated.expiration > now %}
+                .player-check-in.player-{{ last_check_in_updated.tournament_id }}-{{ last_check_in_updated.player_id }},
+                .player-check-out.player-{{ last_check_in_updated.tournament_id }}-{{ last_check_in_updated.player_id }} {
                     color: red;
                 }
             {% endif %}

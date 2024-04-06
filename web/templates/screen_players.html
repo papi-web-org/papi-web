@@ -18,8 +18,10 @@
                             {% if tournament.current_round %}
                                 {% with pairing=player.pairings[tournament.current_round] %}
                                 {% with opponent_id=pairing.opponent_id %}
-                                    <tr class=" player-row {% if not opponent_id or opponent_id == 1 %}not-paired{% else %}paired{% endif %}">
-                                        <td  class="player {% if opponent_id and opponent_id != 1 %}{% if player.color == 'W' %}white{%else %}black{%endif %}{%endif %}">{% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }} [{{ player.vpoints_str }}]</td>
+                                    <tr class="player-row {% if not opponent_id or opponent_id == 1 %}not-paired{% else %}paired{% endif %}">
+                                        <td  class="player {% if opponent_id and opponent_id != 1 %}{% if player.color == 'W' %}white{%else %}black{%endif %}{%endif %}">
+                                            {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }} [{{ player.vpoints_str }}]
+                                        </td>
                                         {% if not opponent_id %}
                                             <td colspan="2">{{ player.not_paired_str }}</td>
                                         {% elif opponent_id == 1 %}
@@ -34,8 +36,17 @@
                                 {% endwith %}
                                 {% endwith %}
                             {% else %}
-                                <tr class="not-paired">
-                                    <td  class="player">{% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}</td>
+                                <tr class="player-row not-paired">
+                                    <td class="player">
+                                        <i class="
+                                            {% if player.check_in %}
+                                                bi-check-square-fill player-check-out
+                                            {% else %}
+                                                bi-square player-check-in
+                                            {% endif %}
+                                            player-{{ tournament.id }}-{{ player.id }}"></i>
+                                        {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}
+                                    </td>
                                     <td colspan="2"><em>{{ player.not_paired_str }}</em></td>
                                 </tr>
                             {% endif %}
