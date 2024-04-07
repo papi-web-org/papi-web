@@ -642,6 +642,7 @@ class TournamentBuilder:
                     record_illegal_moves = 0
         else:
             self._config_reader.add_debug(f'option absente, par défaut [{record_illegal_moves}]')
+        self._config_reader.add_info(f'= [{record_illegal_moves}]')
 
         tournament_section_keys: list[str] = [
             'path',
