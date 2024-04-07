@@ -140,13 +140,13 @@
                 {% endfor %}
             </div>
         {% else %}
-            {% if set.players_by_rating_tuple_lists %}{% endif %}
+            {% if set.players_by_name_tuple_lists %}{% endif %}
             <h2 class="set-title">{{ set.name_for_boards }} (aucun appariement)</h2>
             <div class="row screen-set-row">
-                {% for players_by_rating_tuple in set.players_by_rating_tuple_lists %}
+                {% for players_by_name_tuple in set.players_by_name_tuple_lists %}
                     <div class="col screen-set-col">
                         <div class="row screen-set-tuple-row">
-                            {% for players_by_rating in players_by_rating_tuple %}
+                            {% for players_by_name in players_by_name_tuple %}
                                 <div class="col screen-set-tuple-col">
                                     <table class="table table-striped table-sm">
                                         <thead class="table-dark">
@@ -155,7 +155,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                        {% for player in players_by_rating %}
+                                        {% for player in players_by_name %}
                                             <tr class="player-row">
                                                 <td
                                                     class="player player-{{ tournament.id }}-{{ player.id }}-cell">

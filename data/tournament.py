@@ -50,7 +50,6 @@ class Tournament:
         self._boards: list[Board] | None = None
         self._database_read = False
         self._players_by_name: list[Player] | None = None
-        self._players_by_rating: list[Player] | None = None
 
     @property
     def download_allowed(self) -> bool:
@@ -116,14 +115,6 @@ class Tournament:
             self._players_by_name = sorted(
                 players, key=lambda p: (p.last_name, p.first_name))
         return self._players_by_name
-
-    @property
-    def players_by_rating(self) -> list[Player]:
-        if self._players_by_rating is None:
-            players: list[Player] = list(self._players_by_id.values())[1:]
-            self._players_by_rating = sorted(
-                players, key=lambda player: (-player.rating, player.last_name, player.first_name))
-        return self._players_by_rating
 
     @property
     def current_round(self) -> int | None:

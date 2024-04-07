@@ -2,6 +2,11 @@
 
 # Papi-web - ChangeLog
 
+## Version 2.2.2 - Avril 2024
+- Correction d'un problème de couleurs sur les appariements par ordre alphabétique
+- Affichage des joueur·euses par ordre alphabétique avant appariement
+- Ajout de la [Foire Aux Questions](50-faq.md)
+
 ## Version 2.2.1 - 28 mars 2024
 - Correction d'un bug de configuration
 

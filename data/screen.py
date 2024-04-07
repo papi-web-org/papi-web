@@ -141,10 +141,10 @@ class ScreenBoards(AScreenWithSets):
                 text = text.replace('%f', str(screen_set.first_board.id))
                 text = text.replace('%l', str(screen_set.last_board.id))
             else:
-                if screen_set.first_player_by_rating:
-                    text = text.replace('%f', str(screen_set.first_player_by_rating.rating))
-                if screen_set.last_player_by_rating:
-                    text = text.replace('%l', str(screen_set.last_player_by_rating.rating))
+                if screen_set.first_player_by_name:
+                    text = text.replace('%f', str(screen_set.first_player_by_name.last_name[:3]).upper())
+                if screen_set.last_player_by_name:
+                    text = text.replace('%l', str(screen_set.last_player_by_name.last_name[:3]).upper())
         return text
 
     @property
@@ -178,9 +178,9 @@ class ScreenPlayers(AScreenWithSets):
             screen_set: ScreenSet = self.sets[0]
             text = text.replace('%t', screen_set.tournament.name)
             if screen_set.first_player_by_name:
-                text = text.replace('%f', str(screen_set.first_player_by_name.last_name)[:3])
+                text = text.replace('%f', str(screen_set.first_player_by_name.last_name)[:3].upper())
             if screen_set.last_player_by_name:
-                text = text.replace('%l', str(screen_set.last_player_by_name.last_name)[:3])
+                text = text.replace('%l', str(screen_set.last_player_by_name.last_name)[:3].upper())
         return text
 
     @property

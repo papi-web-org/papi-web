@@ -33,7 +33,7 @@ class ScreenSet:
         if self.tournament.current_round:
             self._extract_boards()
         else:
-            self._extract_players_by_rating()
+            self._extract_players_by_name()
         return self.name
 
     @property
@@ -169,6 +169,19 @@ class ScreenSet:
         return self.items_lists
 
     @property
+    def players_by_name_tuple_lists(self) -> list[tuple[list[Player], list[Player]]]:
+        self._extract_players_by_name()
+        players_by_name_lists: list[list[Player]] = self.items_lists
+        players_by_name_tuple_lists: list[tuple[list[Player], list[Player]]] = []
+        for players_by_name in players_by_name_lists:
+            players_by_name_tuple_lists.append(
+                (
+                    players_by_name[:math.ceil(len(players_by_name) / 2)],
+                    players_by_name[math.ceil(len(players_by_name) / 2):],
+                ))
+        return players_by_name_tuple_lists
+
+    @property
     def first_player_by_name(self) -> Player:
         self._extract_players_by_name()
         return self.first_item
@@ -176,43 +189,6 @@ class ScreenSet:
     @property
     def last_player_by_name(self) -> Player:
         self._extract_players_by_name()
-        return self.last_item
-
-    def _extract_players_by_rating(self):
-        if self.items_lists is None:
-            self._extract_data(self.tournament.players_by_rating, force_even=True)
-            if self.name is None:
-                if self.first or self.last or self.part or self.number:
-                    self.name = 'Elo %f à %l'
-                else:
-                    self.name = '%t'
-            self.name = self.name.replace('%t', str(self.tournament.name))
-            if self.first_player_by_rating:
-                self.name = self.name.replace('%f', str(self.first_player_by_rating.rating))
-            if self.last_player_by_rating:
-                self.name = self.name.replace('%l', str(self.last_player_by_rating.rating))
-
-    @property
-    def players_by_rating_tuple_lists(self) -> list[tuple[list[Player], list[Player]]]:
-        self._extract_players_by_rating()
-        players_by_rating_lists: list[list[Player]] = self.items_lists
-        players_by_rating_tuple_lists: list[tuple[list[Player], list[Player]]] = []
-        for players_by_rating in players_by_rating_lists:
-            players_by_rating_tuple_lists.append(
-                (
-                    players_by_rating[:math.ceil(len(players_by_rating) / 2)],
-                    players_by_rating[math.ceil(len(players_by_rating) / 2):],
-                ))
-        return players_by_rating_tuple_lists
-
-    @property
-    def first_player_by_rating(self) -> Player:
-        self._extract_players_by_rating()
-        return self.first_item
-
-    @property
-    def last_player_by_rating(self) -> Player:
-        self._extract_players_by_rating()
         return self.last_item
 
     def __str__(self):
