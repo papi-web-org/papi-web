@@ -38,8 +38,8 @@
                                         {% if wp.title_str %}{{ wp.title_str }}&nbsp;{% endif %}{{ wp.last_name }} {{ wp.first_name }} {{ wp.rating }}{{ wp.rating_type }}
                                         {% if tournament.handicap and bp.id != 1 %}(<span class="{%if wp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">{%if wp.handicap_initial_time_minutes %}<span class="minutes">{{ wp.handicap_initial_time_minutes }}'</span>{% endif %}{%if wp.handicap_initial_time_seconds %}<span class="seconds">{{ wp.handicap_initial_time_seconds }}"</span>{% endif %}
                                                     {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}
-                                        {% if screen.update and screen.record_illegal_moves %}
-                                            {% for _ in range([wp.illegal_moves, screen.record_illegal_moves]|min) %}
+                                        {% if screen.update and tournament.record_illegal_moves %}
+                                            {% for _ in range([wp.illegal_moves, tournament.record_illegal_moves]|min) %}
                                                 <i
                                                     data-tournament-id="{{ tournament.id }}"
                                                     class="
@@ -48,7 +48,7 @@
                                                         {% if not board.result_str %}delete{% endif %}"
                                                     data-player-id="{{ wp.id }}"></i>
                                             {% endfor %}
-                                            {% if not board.result_str and wp.illegal_moves < screen.record_illegal_moves %}
+                                            {% if not board.result_str and wp.illegal_moves < tournament.record_illegal_moves %}
                                                 <i
                                                     class="bi-flag illegal-move-flag add player-{{ tournament.id }}-{{ wp.id }}"
                                                     data-tournament-id="{{ tournament.id }}"
@@ -63,14 +63,14 @@
                                         {% if bp.id == 1 %}<em>EXEMPT</em>{% else %}{% if bp.title_str %}{{ bp.title_str }}&nbsp;{% endif %}{{ bp.last_name }} {{ bp.first_name }} {{ bp.rating }}{{ bp.rating_type }}
                                         {% if tournament.handicap %}(<span class="{%if bp.handicap_time_modified %}modified-time{% else %}base-time{% endif %}">{%if bp.handicap_initial_time_minutes %}<span class="minutes">{{ bp.handicap_initial_time_minutes }}'</span>{% endif %}{%if bp.handicap_initial_time_seconds %}<span class="seconds">{{ bp.handicap_initial_time_seconds }}"</span>{% endif %}
                                                     {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}{% endif %}
-                                        {% if screen.update and screen.record_illegal_moves %}
-                                            {% for _ in range([bp.illegal_moves, screen.record_illegal_moves]|min) %}
+                                        {% if screen.update and tournament.record_illegal_moves %}
+                                            {% for _ in range([bp.illegal_moves, tournament.record_illegal_moves]|min) %}
                                                 <i
                                                     class="{% if board.result_str %}bi-file-fill{% else %}bi-file-excel-fill{% endif %} illegal-move-flag {% if not board.result_str %}delete{% endif %} player-{{ tournament.id }}-{{ bp.id }}"
                                                     data-tournament-id="{{ tournament.id }}"
                                                     data-player-id="{{ bp.id }}"></i>
                                             {% endfor %}
-                                            {% if not board.result_str and bp.illegal_moves < screen.record_illegal_moves %}
+                                            {% if not board.result_str and bp.illegal_moves < tournament.record_illegal_moves %}
                                                 <i
                                                     class="bi-flag illegal-move-flag add player-{{ tournament.id }}-{{ bp.id }}"
                                                     data-tournament-id="{{ tournament.id }}"

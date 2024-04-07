@@ -12,7 +12,7 @@ from data.result import Result
 from data.screen_set import ScreenSet, ScreenSetBuilder
 from data.template import Template
 from data.tournament import Tournament
-from data.util import ScreenType, DEFAULT_RECORD_ILLEGAL_MOVES
+from data.util import ScreenType
 
 logger: Logger = get_logger()
 
@@ -99,10 +99,6 @@ class AScreen:
         except FileNotFoundError:
             return []
 
-    @property
-    def record_illegal_moves(self) -> int:
-        return 0
-
 
 @dataclass
 class AScreenWithSets(AScreen):
@@ -123,7 +119,6 @@ class AScreenWithSets(AScreen):
 @dataclass
 class ScreenBoards(AScreenWithSets):
     update: bool = False
-    record_illegal_moves: int = 0
 
     def __post_init__(self):
         self._type = ScreenType.Boards
@@ -232,15 +227,12 @@ class ScreenResults(AScreen):
 class ScreenBuilder:
     def __init__(
             self, config_reader: ConfigReader, event_id: str, tournaments: dict[str, Tournament],
-            templates: dict[str, Template], screens_by_family_id: dict[str, list[AScreen]],
-            default_record_illegal_moves: int, default_check_in_players: bool):
+            templates: dict[str, Template], screens_by_family_id: dict[str, list[AScreen]]):
         self._config_reader: ConfigReader = config_reader
         self._event_id: str = event_id
         self._tournaments: dict[str, Tournament] = tournaments
         self._templates: dict[str, Template] = templates
         self._screens_by_family_id: dict[str, list[AScreen]] = screens_by_family_id
-        self.default_record_illegal_moves: int = default_record_illegal_moves
-        self.default_check_in_players: bool = default_check_in_players
         self.screens: dict[str, AScreen] = {}
         screen_ids: list[str] = self._read_screen_ids()
         if not screen_ids:
@@ -382,41 +374,10 @@ class ScreenBuilder:
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
         key = 'record_illegal_moves'
-        record_illegal_moves: int = self.default_record_illegal_moves
-        if screen_type == ScreenType.Boards:
-            if key in screen_section:
-                if update:
-                    record_illegal_moves_bool: bool | None = self._config_reader.getboolean_safe(
-                        screen_section_key, key)
-                    if record_illegal_moves_bool is None:
-                        record_illegal_moves_int: int | None = self._config_reader.getint_safe(
-                            screen_section_key, key, minimum=0)
-                        if record_illegal_moves_int is None:
-                            self._config_reader.add_warning(
-                                'un booléen ou un entier positif ou nul est attendu, écran ignoré',
-                                screen_section_key, key)
-                            return None
-                        else:
-                            record_illegal_moves = record_illegal_moves_int
-                    else:
-                        if record_illegal_moves_bool:
-                            record_illegal_moves = DEFAULT_RECORD_ILLEGAL_MOVES
-                        else:
-                            record_illegal_moves = 0
-                else:
-                    self._config_reader.add_warning(
-                        f"l'option n'est autorisée que pour les écrans de saisie, ignorée",
-                        screen_section_key, key)
-            else:
-                if update:
-                    self._config_reader.add_debug(f'option absente, par défaut [{record_illegal_moves}]')
-                else:
-                    record_illegal_moves = 0
-        else:
-            if key in screen_section:
-                self._config_reader.add_warning(
-                    f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
-                    screen_section_key, key)
+        if key in screen_section:
+            self._config_reader.add_warning(
+                f"l'option doit désormais être utilisée dans les rubriques des tournois, ignorée",
+                screen_section_key, key)
         key = 'show_unpaired'
         default_show_unpaired: bool = False
         show_unpaired: bool | None = default_show_unpaired
@@ -482,11 +443,13 @@ class ScreenBuilder:
                 show_timer,
                 screen_sets,
                 update,
-                record_illegal_moves,
             )
             file_dependencies += [screen_set.tournament.file for screen_set in screen_sets]
-            if record_illegal_moves:
-                file_dependencies += [screen_set.tournament.illegal_moves_dir for screen_set in screen_sets]
+            file_dependencies += [
+                screen_set.tournament.illegal_moves_dir
+                for screen_set in screen_sets
+                if screen_set.tournament.record_illegal_moves
+            ]
         elif screen_type == ScreenType.Players:
             screen = ScreenPlayers(
                 screen_id,

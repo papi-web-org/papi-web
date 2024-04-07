@@ -15,6 +15,7 @@ from data.player import Player
 from data.util import Color, NeedsUpload, TournamentRating
 from data.util import TournamentPairing, Result
 from database.papi import PapiDatabase
+from data.util import DEFAULT_RECORD_ILLEGAL_MOVES_ENABLE, DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER
 
 logger: Logger = get_logger()
 
@@ -37,6 +38,7 @@ class Tournament:
         self.handicap_min_time: int | None = handicap_min_time
         self.chessevent_connection: ChessEventConnection | None = chessevent_connection
         self.chessevent_tournament_name: str | None = chessevent_tournament_name
+        self.record_illegal_moves: int = 0
         self._rounds: int = 0
         self._pairing: TournamentPairing = TournamentPairing.STANDARD
         self._rating: TournamentRating | None = None
@@ -418,11 +420,12 @@ class HandicapTournament(NamedTuple):
 class TournamentBuilder:
     def __init__(
             self, config_reader: ConfigReader, event_id: str, default_tournament_path: Path,
-            chessevent_connections: dict[str, ChessEventConnection]):
+            chessevent_connections: dict[str, ChessEventConnection], default_record_illegal_moves: int):
         self._config_reader: ConfigReader = config_reader
         self._event_id: str = event_id
         self._default_tournament_path: Path = default_tournament_path
         self._chessevent_connections: dict[str, ChessEventConnection] = chessevent_connections
+        self.default_record_illegal_moves: int = default_record_illegal_moves
         self.tournaments: dict[str, Tournament] = {}
         for tournament_id in self._read_tournament_ids():
             self._build_tournament(tournament_id)
@@ -611,6 +614,20 @@ class TournamentBuilder:
         if not chessevent_tournament_name:
             self._config_reader.add_info(
                 'la création du fichier Papi depuis la plateforme Chess Event ne sera pas disponible', section_key)
+        key = 'record_illegal_moves'
+        record_illegal_moves: int = DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER if DEFAULT_RECORD_ILLEGAL_MOVES_ENABLE else 0
+        if key in section:
+            record_illegal_moves_bool: bool | None = self._config_reader.getboolean_safe(section_key, key)
+            if record_illegal_moves_bool is None:
+                record_illegal_moves_int: int | None = self._config_reader.getint_safe(section_key, key, minimum=0)
+                if record_illegal_moves_int is None:
+                    self._config_reader.add_warning(
+                        'un booléen ou un entier positif ou nul est attendu, écran ignoré', section_key, key)
+                    return None
+                else:
+                    record_illegal_moves = record_illegal_moves_int
+        else:
+            self._config_reader.add_debug(f'option absente, par défaut [{record_illegal_moves}]')
 
         tournament_section_keys: list[str] = [
             'path',
@@ -620,6 +637,7 @@ class TournamentBuilder:
             'ffe_password',
             'chessevent_connection_id',
             'chessevent_tournament_name',
+            'record_illegal_moves',
         ]
         for key, _ in section.items():
             if key not in tournament_section_keys:
@@ -634,7 +652,7 @@ class TournamentBuilder:
 
         self.tournaments[tournament_id] = Tournament(
             self._event_id, tournament_id, name, file, ffe_id, ffe_password, *handicap_values, chessevent_connection,
-            chessevent_tournament_name)
+            chessevent_tournament_name, record_illegal_moves)
 
     def _build_tournament_handicap(self, section_key: str) -> HandicapTournament:
         try:
