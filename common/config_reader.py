@@ -163,7 +163,7 @@ class ConfigReader(ConfigParser):
         except ValueError:
             return None
 
-    def get_subsection_keys_with_prefix(self, prefix: str, first_level_only: int = True) -> list[str]:
+    def get_subsection_keys_with_prefix(self, prefix: str, first_level_only: bool = True) -> list[str]:
         subsection_keys: list[str] = []
         for section_key in self.sections():
             if first_level_only:
