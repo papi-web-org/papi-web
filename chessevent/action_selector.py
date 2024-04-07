@@ -93,7 +93,7 @@ class ActionSelector:
                     papi_version = PAPI_VERSIONS[int(version_choice) - 1]
                 else:
                     papi_version = PAPI_VERSIONS[-1]
-                logger.info('Version de Papi : {papi_version}')
+                logger.info('Version de Papi : %s', papi_version)
                 try:
                     chessevent_timeout_min: int = 10
                     chessevent_timeout_max: int = 180
