@@ -64,6 +64,7 @@ Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonne
 | AVENIA Adrien       |       | BFC   | 25  | Tour Prends Garde! Besancon                   |
 | BENETEAU Hubert     | AFE1  | NOR   | 50  | Agneaux Saint-Lô                              |
 | BENADDOU Khaled     | AFE2  | IDF   | 94  | Club d'Echecs de Saint-Maur                   |
+| BLEUZEN Christian   | AFE1  | BRE   | 35  | Rennes Paul Bert                              |
 | CHANTIER Pierre     | AFO1  | EST   | 10  | Verrières Animation Loisirs                   |
 | CLEMENCEAU Cyril    | AFC   | BRE   | 29  | Echiquier du Léon                             |
 | DELMOTTE Eric       | AFE1  | BFC   | 71  | L'Echiquier Châlonnais                        |
