@@ -141,7 +141,7 @@ class PapiDatabase(AccessDatabase):
         for name, value in data.items():
             self._execute('UPDATE `info` SET `Value` = ? WHERE `Variable` = ?', (value, name, ))
 
-    def add_chessevent_player(self, player_id: int, player: ChessEventPlayer):
+    def add_chessevent_player(self, player_id: int, player: ChessEventPlayer, rounds: int):
         """Adds a player to the database."""
         data: dict[str, str | int | float | None] = {
             'Ref': player_id,
@@ -177,21 +177,25 @@ class PapiDatabase(AccessDatabase):
         }
         for round_ in range(1, 25):
             data[f'Rd{round_:0>2}Adv'] = None
-            if round_ not in player.skipped_rounds:
-                if player.check_in:
-                    data[f'Rd{round_:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
-                    data[f'Rd{round_:0>2}Cl'] = 'R'
-                else:
+            if round_ > rounds:
+                data[f'Rd{round_:0>2}Res'] = None
+                data[f'Rd{round_:0>2}Cl'] = None
+            else:
+                if round_ not in player.skipped_rounds:
+                    if player.check_in:
+                        data[f'Rd{round_:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
+                        data[f'Rd{round_:0>2}Cl'] = 'R'
+                    else:
+                        data[f'Rd{round_:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
+                        data[f'Rd{round_:0>2}Cl'] = 'F'
+                elif player.skipped_rounds[round_] == 0.0:
                     data[f'Rd{round_:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
                     data[f'Rd{round_:0>2}Cl'] = 'F'
-            elif player.skipped_rounds[round_] == 0.0:
-                data[f'Rd{round_:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
-                data[f'Rd{round_:0>2}Cl'] = 'F'
-            elif player.skipped_rounds[round_] == 0.5:
-                data[f'Rd{round_:0>2}Res'] = Result.DRAW_OR_HPB.to_papi_value
-                data[f'Rd{round_:0>2}Cl'] = 'F'
-            else:
-                raise ValueError
+                elif player.skipped_rounds[round_] == 0.5:
+                    data[f'Rd{round_:0>2}Res'] = Result.DRAW_OR_HPB.to_papi_value
+                    data[f'Rd{round_:0>2}Cl'] = 'F'
+                else:
+                    raise ValueError
         query: str = f'INSERT INTO `joueur`({", ".join(data.keys())}) VALUES ({", ".join(["?"] * len(data))})'
         params = tuple(data.values())
         self._execute(query, params)

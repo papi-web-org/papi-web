@@ -382,7 +382,7 @@ class Tournament:
             player_id: int = 1
             for chessevent_player in chessevent_tournament.players:
                 player_id += 1
-                papi_database.add_chessevent_player(player_id, chessevent_player)
+                papi_database.add_chessevent_player(player_id, chessevent_player, chessevent_tournament.rounds)
             papi_database.commit()
         return player_id - 1
 
