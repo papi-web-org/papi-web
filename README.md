@@ -36,6 +36,8 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 - [Création des fichiers Papi depuis la plateforme Chess Event](docs/37-chessevent.md)
 - [Enregistrement des coups illégaux](docs/38-illegal_moves.md)
 
+## [Foire Aux Questions](docs/50-faq.md)
+
 ## [Annexes techniques](docs/80-technical-annexes.md)
 
 - URLs utilisées par le serveur web 
