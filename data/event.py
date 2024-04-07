@@ -16,7 +16,7 @@ from data.screen import AScreen, ScreenBuilder
 from data.template import Template, TemplateBuilder
 from data.timer import Timer, TimerBuilder
 from data.tournament import Tournament, TournamentBuilder
-from data.util import DEFAULT_RECORD_ILLEGAL_MOVES
+from data.util import DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER, DEFAULT_RECORD_ILLEGAL_MOVES_ENABLE
 
 logger: Logger = get_logger()
 
@@ -55,7 +55,7 @@ class Event:
         if self.reader.errors:
             return
         self.tournaments = TournamentBuilder(
-            self.reader, self.id, self.path, self.chessevent_connections
+            self.reader, self.id, self.path, self.chessevent_connections, self.record_illegal_moves
         ).tournaments
         if self.reader.errors:
             return
@@ -67,8 +67,8 @@ class Event:
             if self.reader.errors:
                 return
             self.screens = ScreenBuilder(
-                self.reader, self.id, self.tournaments, self.templates, self.screens_by_family_id,
-                self.record_illegal_moves, self.check_in_players).screens
+                self.reader, self.id, self.tournaments, self.templates, self.screens_by_family_id
+            ).screens
             if self.reader.errors:
                 return
             self.rotators = RotatorBuilder(self.reader, self.screens, self.screens_by_family_id).rotators
@@ -187,11 +187,14 @@ class Event:
             )
 
         key = 'record_illegal_moves'
+        self.record_illegal_moves: int = (
+            DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER if DEFAULT_RECORD_ILLEGAL_MOVES_ENABLE else 0
+        )
         if key in section:
             record_illegal_moves_bool: bool | None = self.reader.getboolean_safe(section_key, key)
             if record_illegal_moves_bool is not None:
                 if record_illegal_moves_bool:
-                    self.record_illegal_moves = DEFAULT_RECORD_ILLEGAL_MOVES
+                    self.record_illegal_moves = DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER
                 else:
                     self.record_illegal_moves = 0
             else:

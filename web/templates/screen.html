@@ -62,33 +62,29 @@
             $('.board-modal').on('hidden.bs.modal', function () {
                 start_refresh_interval();
             });
-            {% if screen.record_illegal_moves %}
-                // add or delete an illegal move by sending to the appropriate URL
-                $('.illegal-move-flag.add').click(function (event) {
-                    stop_refresh_interval();
-                    redirect('/add-illegal-move/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
-                    return false;
-                });
-                $('.illegal-move-flag.delete').click(function (event) {
-                    stop_refresh_interval();
-                    redirect('/delete-illegal-move/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
-                    return false;
-                });
-            {% endif %}
-            {% if screen.update %}
-                // check-in player by sending to the appropriate URL
-                $('.player-check-in').click(function (event) {
-                    stop_refresh_interval();
-                    redirect('/check-in-player/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
-                    return false;
-                });
-                // check-out player by sending to the appropriate URL
-                $('.player-check-out').click(function (event) {
-                    stop_refresh_interval();
-                    redirect('/check-out-player/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
-                    return false;
-                });
-            {% endif %}
+            // add or delete an illegal move by sending to the appropriate URL
+            $('.illegal-move-flag.add').click(function (event) {
+                stop_refresh_interval();
+                redirect('/add-illegal-move/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
+                return false;
+            });
+            $('.illegal-move-flag.delete').click(function (event) {
+                stop_refresh_interval();
+                redirect('/delete-illegal-move/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
+                return false;
+            });
+            // check-in player by sending to the appropriate URL
+            $('.player-check-in').click(function (event) {
+                stop_refresh_interval();
+                redirect('/check-in-player/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
+                return false;
+            });
+            // check-out player by sending to the appropriate URL
+            $('.player-check-out').click(function (event) {
+                stop_refresh_interval();
+                redirect('/check-out-player/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
+                return false;
+            });
         {% endif %}
         {% if rotator_next_url %}
             setTimeout(function(){
