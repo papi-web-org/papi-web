@@ -463,6 +463,12 @@ class TournamentBuilder:
 
     def _build_tournament(self, tournament_id: str):
         section_key: str = f'tournament.{tournament_id}'
+        if tournament_id.find('/') != -1:
+            self._config_reader.add_error(
+                f"le caractère « / » n\'est pas autorisé dans les identifiants des tournois, tournoi ignoré",
+                section_key
+            )
+            return None
         try:
             section = self._config_reader[section_key]
         except KeyError:
@@ -478,7 +484,7 @@ class TournamentBuilder:
                     section_key, key)
         except TypeError:
             self._config_reader.add_error(
-                    f'La rubrique [{section_key}] est en fait une option',
+                    f'La rubrique [{section_key}] est en fait une option, tournoi ignoré',
                     section_key)
             return
         # NOTE(Amaras) TOC/TOU bug
