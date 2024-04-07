@@ -19,7 +19,7 @@ logger: Logger = get_logger()
 
 @dataclass
 class AScreen:
-    screen_id: str
+    id: str
     family_id: str | None
     _name: str
     _type: ScreenType | None = field(init=False)
@@ -31,10 +31,6 @@ class AScreen:
 
     def __post_init__(self):
         self._type = None
-
-    @property
-    def id(self) -> str:
-        return self.screen_id
 
     @property
     def name(self) -> str:
@@ -239,7 +235,7 @@ class ScreenBuilder:
             self._add_default_screens(screen_ids)
         for screen_id in screen_ids:
             if screen := self._build_screen(screen_id):
-                self.screens[screen.screen_id] = screen
+                self.screens[screen.id] = screen
         if not self.screens:
             self._config_reader.add_warning("aucun écran n'a été initialisé")
         self._update_screens()
@@ -249,6 +245,12 @@ class ScreenBuilder:
 
     def _build_screen(self, screen_id: str) -> AScreen | None:
         screen_section_key = f'screen.{screen_id}'
+        if screen_id.find('/') != -1:
+            self._config_reader.add_error(
+                f"le caractère « / » n\'est pas autorisé dans les identifiants des écrans, écran ignoré",
+                screen_section_key
+            )
+            return None
         screen_section = self._config_reader[screen_section_key]
         key = 'template'
         with suppress(KeyError):
