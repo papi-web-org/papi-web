@@ -33,12 +33,12 @@ On peut également spécifier un entier positif (`0` équivaut à `off`) :
 record_illegal_moves = 1
 ```
 
-## Configuration sur un écran spécifique
+## Configuration pour un tournoi spécifique
 
-La valeur par défaut spécifiée dans la rubrique `[event]` peut être modifiée pour chaque écran :
+La valeur par défaut spécifiée dans la rubrique `[event]` peut être modifiée pour chaque tournoi :
 
 ```
-[screen.saisie-ecoles]
+[tournament.ecoles]
 record_illegal_moves = 3
 ```
 
