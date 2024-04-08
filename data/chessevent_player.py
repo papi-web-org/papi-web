@@ -75,7 +75,7 @@ class ChessEventPlayer:
             self.paid = float(chessevent_player_info[key := 'paid'])
             self.check_in = bool(chessevent_player_info[key := 'check_in'])
             self.board = int(chessevent_player_info[key := 'board'])
-            self.skipped_rounds = {}
+            self.skipped_rounds: dict[int, float] = {}
             key = 'skipped_rounds'
             for round_ in chessevent_player_info[key]:
                 if int(round_) in range(1, 25) and chessevent_player_info[key][round_] in [0.0, 0.5]:
@@ -95,18 +95,19 @@ class ChessEventPlayer:
         self.error = False
 
     def __str__(self) -> str:
-        lines: list[str] = []
-        lines.append(f'  - Nom : {self.last_name} {self.first_name}')
-        lines.append(f'  - Titre / FFE / Fide : {self.title} / {self.ffe_id} / {self.fide_id}')
-        lines.append(f'  - Licence / Numéro / Catégorie / Genre : '
-                     f'{self.ffe_license} / {self.ffe_license_number} / {self.category} / {self.gender}')
-        lines.append(f'  - Date de naissance : {self.birth}')
-        lines.append(f'  - Classements standard / rapide / blitz : {self.standard_rating}{self.standard_rating_type} '
-                     f'/ {self.rapid_rating}{self.rapide_rating_type} / {self.blitz_rating}{self.blitz_rating_type}')
-        lines.append(
-            f'  - Fédération / Ligue / Club : '
-            f'{self.federation} / {self.ffe_league} / {self.ffe_club_id} {self.ffe_club}')
-        lines.append(f'  - Mél / Tél : {self.email} / {self.phone}')
-        lines.append(f'  - Dû / Payé / Pointé·e : {self.fee} / {self.paid} / {self.check_in}')
-        lines.append(f'  - Fixe / Rondes : {self.board} / {self.skipped_rounds}')
-        return '\n'.join(lines)
+        return '\n'.join(
+            [
+                f'  - Nom : {self.last_name} {self.first_name}',
+                f'  - Titre / FFE / Fide : {self.title} / {self.ffe_id} / {self.fide_id}',
+                f'  - Licence / Numéro / Catégorie / Genre : '
+                f'{self.ffe_license} / {self.ffe_license_number} / {self.category} / {self.gender}',
+                f'  - Date de naissance : {self.birth}',
+                f'  - Classements standard / rapide / blitz : {self.standard_rating}{self.standard_rating_type} '
+                f'/ {self.rapid_rating}{self.rapide_rating_type} / {self.blitz_rating}{self.blitz_rating_type}',
+                f'  - Fédération / Ligue / Club : '
+                f'{self.federation} / {self.ffe_league} / {self.ffe_club_id} {self.ffe_club}',
+                f'  - Mél / Tél : {self.email} / {self.phone}',
+                f'  - Dû / Payé / Pointé·e : {self.fee} / {self.paid} / {self.check_in}',
+                f'  - Fixe / Rondes : {self.board} / {self.skipped_rounds}',
+            ]
+        )

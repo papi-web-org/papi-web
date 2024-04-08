@@ -28,6 +28,7 @@ class ChessEventTournament:
         self.ffe_id: int = 0
         self.players: list[ChessEventPlayer] = []
         self.error = True
+        self.check_in_started: bool = False
         key: str = ''
         try:
             self.name = str(chessevent_tournament_info[key := 'name'])
@@ -52,6 +53,8 @@ class ChessEventTournament:
             key = 'players'
             for chessevent_player_info in chessevent_tournament_info[key]:
                 chessevent_player: ChessEventPlayer = ChessEventPlayer(chessevent_player_info)
+                if chessevent_player.check_in:
+                    self.check_in_started = True
                 if chessevent_player.error:
                     return
                 self.players.append(chessevent_player)

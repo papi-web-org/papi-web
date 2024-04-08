@@ -234,14 +234,17 @@ Les fichiers Papi des tournois peuvent être téléchargés depuis Papi-web sans
 
 Les données personnelles des joueur·euses (numéro de téléphone et adresse électronique) sont systématiquement effacées des fichiers Papi avant téléchargement sur le site fédéral.
 
-## Affichage du pointage des joueur·euses (à partir de la version 2.2)
-
-Le statut (pointé·e/non pointé·e) est indiqué en temps-réel sur la liste des joueur·euses avant l'affichage des premiers appariements.
-
-![Affichage du pointage](images/check-in.jpg)
-
 ## Enregistrement des coups illégaux des joueur·euses (à partir de la version 2.2)
 
 Les écrans de saisie permettent d'enregistrer les coups illégaux des joueur·euses.
 
 ![Enregistrement des coups illégaux](images/illegal-moves.jpg)
+
+## Pointage des joueur·euses (à partir de la version 2.2.2)
+
+Le statut (pointé·e/non pointé·e) est indiqué en temps-réel sur la liste des joueur·euses avant l'affichage des premiers appariements.
+
+Le pointage peut être réalisé depuis les écrans de saisie.
+
+![Affichage du pointage](images/check-in.jpg)
+
