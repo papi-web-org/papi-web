@@ -240,11 +240,14 @@ Les écrans de saisie permettent d'enregistrer les coups illégaux des joueur·e
 
 ![Enregistrement des coups illégaux](images/illegal-moves.jpg)
 
-## Pointage des joueur·euses (à partir de la version 2.2.2)
+## Pointage des joueur·euses (à partir de la version 2.3)
 
 Le statut (pointé·e/non pointé·e) est indiqué en temps-réel sur la liste des joueur·euses avant l'affichage des premiers appariements.
 
 Le pointage peut être réalisé depuis les écrans de saisie.
 
 ![Affichage du pointage](images/check-in.jpg)
+
+> [!NOTE]
+> Le pointage effectué sur la plateforme ChessEvent remplace celui fait dans les fichiers Papi ; il est donc déconseillé d'utiliser à la fois ChessEvent et Papi-web pour le pointage.
 

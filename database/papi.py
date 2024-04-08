@@ -256,9 +256,7 @@ class PapiDatabase(AccessDatabase):
         """Return the number players already checked in."""
         query: str = 'SELECT COUNT(`Ref`) FROM `joueur` WHERE `Pointe` AND `Ref` > 1'
         self._execute(query)
-        number: int = self._fetchval()
-        logger.warning('checked_in_players_number = %s', number)
-        return number
+        return self._fetchval()
 
     def check_in_player(self, player_id: int):
         logger.debug('Checking in player %d', player_id)
