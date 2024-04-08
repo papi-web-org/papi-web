@@ -758,8 +758,8 @@ class ScreenType(StrEnum):
 
 class NeedsUpload(Enum):
     YES = 0
-    NO_CHANGE = 1
-    RECENT_CHANGE = 2
+    RECENT_CHANGE = 1
+    NO_CHANGE = 2
 
     def __bool__(self):
         match self:

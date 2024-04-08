@@ -2,10 +2,13 @@
 
 # Papi-web - ChangeLog
 
-## Version 2.2.2 - Avril 2024
-- Correction d'un problème de couleurs sur les appariements par ordre alphabétique
+## Version 2.3.0 - 8 avril 2024
 - Affichage des joueur·euses par ordre alphabétique avant appariement
+- Ajout du pointage sur les écrans de saisie
 - Ajout de la [Foire Aux Questions](50-faq.md)
+- Correction d'un problème d'affichage du classement et des grilles américaines sur le site fédéral pour les fichiers Papi générés depuis ChessEvent
+- Correction d'un problème de couleurs sur les appariements par ordre alphabétique
+- Interdiction du caractère `/` dans les identifiants des écrans et des tournois
 
 ## Version 2.2.1 - 28 mars 2024
 - Correction d'un bug de configuration

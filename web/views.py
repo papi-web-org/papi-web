@@ -444,7 +444,7 @@ async def check_in_player(
             tournament: Tournament = event.tournaments[tournament_id]
             try:
                 player: Player = tournament.players_by_id[player_id]
-                tournament.check_in_player(player.id)
+                tournament.check_in_player(player)
                 request.session['last_check_in_updated']: dict[str, int | str | float] = {
                     'tournament_id': tournament_id,
                     'player_id': player_id,
@@ -477,7 +477,7 @@ async def check_out_player(
             tournament: Tournament = event.tournaments[tournament_id]
             try:
                 player: Player = tournament.players_by_id[player_id]
-                tournament.check_out_player(player.id)
+                tournament.check_out_player(player)
                 request.session['last_check_in_updated']: dict[str, int | str | float] = {
                     'tournament_id': tournament_id,
                     'player_id': player_id,

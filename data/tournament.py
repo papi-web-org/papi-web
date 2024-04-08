@@ -142,7 +142,7 @@ class Tournament:
         if self._database_read:
             return
         if self.file and self.file.exists():
-            with PapiDatabase(self.file, 'r') as papi_database:
+            with PapiDatabase(self.event_id, self.id, self.file, 'r') as papi_database:
                 papi_database: PapiDatabase
                 (
                     self._rounds,
@@ -285,10 +285,9 @@ class Tournament:
 
     def get_illegal_moves(self) -> Counter[int]:
         illegal_moves: Counter[int] = Counter[int]()
-        illegal_moves_dir: Path = self.illegal_moves_dir
         glob_pattern: str = f'* {self.current_round} *'
         regex = re.compile(r'.* (\d+)$')
-        for file in illegal_moves_dir.glob(glob_pattern):
+        for file in self.illegal_moves_dir.glob(glob_pattern):
             if matches := regex.match(file.name):
                 illegal_moves[int(matches.group(1))] += 1
         return illegal_moves
@@ -364,38 +363,41 @@ class Tournament:
 
     def add_result(self, board: Board, white_result: Result):
         black_result = white_result.opposite_result
-        with PapiDatabase(self.file, 'w') as papi_database:
+        with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
             papi_database: PapiDatabase
             papi_database.add_board_result(board.white_player.id, self._current_round, white_result)
             papi_database.add_board_result(board.black_player.id, self._current_round, black_result)
             papi_database.commit()
-        logger.info('Added result: %s %d.%d %s %s %d %s %s %s %d',
-                    self.id, self._current_round, board.id, board.white_player.last_name,
+        logger.info('Added result: %s %s %d.%d %s %s %d %s %s %s %d',
+                    self.event_id, self.id, self._current_round, board.id, board.white_player.last_name,
                     board.white_player.first_name, board.white_player.rating, white_result,
                     board.black_player.last_name, board.black_player.first_name,
                     board.black_player.rating)
 
     def write_chessevent_info_to_database(self, chessevent_tournament: ChessEventTournament) -> int:
-        with PapiDatabase(self.file, 'w') as papi_database:
+        with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
             papi_database: PapiDatabase
+            papi_database.delete_skipped_rounds()
             papi_database.write_chessevent_info(chessevent_tournament)
             player_id: int = 1
             for chessevent_player in chessevent_tournament.players:
                 player_id += 1
-                papi_database.add_chessevent_player(player_id, chessevent_player, chessevent_tournament.rounds)
+                papi_database.store_player_skipped_rounds(player_id, chessevent_player.skipped_rounds)
+                papi_database.add_chessevent_player(
+                    player_id, chessevent_player, chessevent_tournament.check_in_started)
             papi_database.commit()
         return player_id - 1
 
-    def check_in_player(self, player_id: int):
-        with PapiDatabase(self.file, 'w') as papi_database:
+    def check_in_player(self, player: Player):
+        with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
             papi_database: PapiDatabase
-            papi_database.check_in_player(player_id)
+            papi_database.check_in_player(player.id)
             papi_database.commit()
 
-    def check_out_player(self, player_id: int):
-        with PapiDatabase(self.file, 'w') as papi_database:
+    def check_out_player(self, player: Player):
+        with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
             papi_database: PapiDatabase
-            papi_database.check_out_player(player_id)
+            papi_database.check_out_player(player.id)
             papi_database.commit()
 
 
@@ -631,7 +633,6 @@ class TournamentBuilder:
                     record_illegal_moves = 0
         else:
             self._config_reader.add_debug(f'option absente, par défaut [{record_illegal_moves}]')
-        self._config_reader.add_info(f'= [{record_illegal_moves}]')
 
         tournament_section_keys: list[str] = [
             'path',
