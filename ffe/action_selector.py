@@ -6,6 +6,7 @@ from common.papi_web_config import PapiWebConfig
 from common.singleton import singleton
 from data.event import Event
 from data.tournament import Tournament
+from data.util import NeedsUpload
 from ffe.ffe_session import FFESession
 
 logger: Logger = get_logger()
@@ -100,11 +101,23 @@ class ActionSelector:
                         logger.error('Aucun tournoi éligible pour cette action')
                         return True
                     updated_tournaments: list[Tournament] = []
+                    recently_updated_tournaments: int = 0
                     for tournament in tournaments:
-                        if tournament.ffe_upload_needed(self.__config.ffe_upload_delay):
-                            updated_tournaments.append(tournament)
+                        needs_upload: NeedsUpload = tournament.ffe_upload_needed(self.__config.ffe_upload_delay)
+                        match needs_upload:
+                            case NeedsUpload.YES:
+                                updated_tournaments.append(tournament)
+                            case NeedsUpload.RECENT_CHANGE:
+                                recently_updated_tournaments += 1
+                            case NeedsUpload.NO_CHANGE:
+                                pass
                     if not updated_tournaments:
-                        logger.info('Tous les tournois sont à jour')
+                        if recently_updated_tournaments == 0:
+                            logger.info('Tous les tournois sont à jour')
+                        else:
+                            logger.info(
+                                f'{recently_updated_tournaments} tournoi(s) a(ont) été modifié(s) il y a moins de '
+                                f'{self.__config.ffe_upload_delay} secondes, temporisation en cours')
                     for tournament in updated_tournaments:
                         FFESession(tournament).upload(set_visible=False)
                     time.sleep(10)
