@@ -24,6 +24,7 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 - [Affichage des appariements par échiquier](docs/22-pairings-by-board.md)
 - [Affichage des appariements par ordre alphabétique](docs/23-pairings-by-player.md)
 - [Affichage des derniers résultats saisis](docs/24-last-results.md)
+- [Pointage des joueur·euses](docs/25-check-in.md)
 
 ## Fonctionnalités avancées
 
