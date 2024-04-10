@@ -249,5 +249,5 @@ Le pointage peut être réalisé depuis les écrans de saisie.
 ![Affichage du pointage](images/check-in.jpg)
 
 > [!NOTE]
-> Le pointage effectué sur la plateforme ChessEvent remplace celui fait dans les fichiers Papi ; il est donc déconseillé d'utiliser à la fois ChessEvent et Papi-web pour le pointage.
+> Le pointage effectué sur la plateforme ChessEvent remplace celui fait dans les fichiers Papi, directement avec Papi ou avec Papi-web ; il est donc déconseillé d'utiliser à la fois ChessEvent et Papi-web pour le pointage.
 
