@@ -2,6 +2,9 @@
 
 # Papi-web - ChangeLog
 
+## Version 2.3.2 - 15 avril 2024
+- Correction d'un problème d'affichage des appariements par ordre alphabétique
+
 ## Version 2.3.1 - 14 avril 2024
 - Correction d'un problème d'encodage des fichiers de configuration
 

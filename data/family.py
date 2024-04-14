@@ -1,7 +1,9 @@
 import re
+from contextlib import suppress
 from math import ceil
 
 from common.config_reader import ConfigReader
+from data.screen import DEFAULT_SHOW_UNPAIRED
 from data.template import Template
 from data.tournament import Tournament
 from data.util import ScreenType
@@ -128,9 +130,23 @@ class FamilyBuilder:
                 else:
                     total_items_number = ceil(len(tournament.players_by_id) / 2)
             else:  # Players
-                # PA: there may be fewer players to show when unpaired players are no listed
-                # but there is no simple way to know whether they should be listed or not at this stage
-                total_items_number = len(tournament.players_by_id)
+                # note: template_type is boards or players (control done by TemplateBuilder)
+                if tournament.current_round:
+                    template_show_unpaired: bool = DEFAULT_SHOW_UNPAIRED
+                    if 'show_unpaired' in template.data[None]:
+                        template_section_key: str = f'template.{template_id}'
+                        template_show_unpaired = self._config_reader.getboolean_safe(template_section_key, 'show_unpaired')
+                        if template_show_unpaired is None:
+                            self._config_reader.add_warning(
+                                f'un booléen est attendu pour l\'option show_unpaired '
+                                f'du modèle {template_id}, famille ignorée', section_key)
+                            return
+                    if template_show_unpaired:
+                        total_items_number = len(tournament.players_by_id)
+                    else:
+                        total_items_number = len(tournament.players_by_id) - len(tournament.unpaired_players)
+                else:
+                    total_items_number = len(tournament.players_by_id)
             if not total_items_number:
                 self._config_reader.add_warning(f'Il n\'y a aucun élément à afficher pour le tournoi '
                                                 f'[{tournament.id}], famille ignorée', section_key, key)

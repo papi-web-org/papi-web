@@ -16,6 +16,8 @@ from data.util import ScreenType
 
 logger: Logger = get_logger()
 
+DEFAULT_SHOW_UNPAIRED: bool = False
+
 
 @dataclass
 class AScreen:
@@ -381,7 +383,7 @@ class ScreenBuilder:
                 f"l'option doit désormais être utilisée dans les rubriques des tournois, ignorée",
                 screen_section_key, key)
         key = 'show_unpaired'
-        default_show_unpaired: bool = False
+        default_show_unpaired: bool = DEFAULT_SHOW_UNPAIRED
         show_unpaired: bool | None = default_show_unpaired
         if screen_type == ScreenType.Players:
             if key in screen_section:

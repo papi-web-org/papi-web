@@ -48,6 +48,7 @@ class Tournament:
         self._rating_limit1: int = 0
         self._rating_limit2: int = 0
         self._boards: list[Board] | None = None
+        self._unpaired_players: list[Player] | None = None
         self._database_read = False
         self._players_by_name: list[Player] | None = None
 
@@ -125,6 +126,11 @@ class Tournament:
     def boards(self) -> list[Board] | None:
         self.read_database()
         return self._boards
+
+    @property
+    def unpaired_players(self) -> list[Player] | None:
+        self.read_database()
+        return self._unpaired_players
 
     @property
     def print_real_points(self) -> bool:
@@ -303,6 +309,7 @@ class Tournament:
         if not self._current_round:
             return
         self._boards = []
+        self._unpaired_players = []
         for player in self._players_by_id.values():
             opponent_id = player.pairings[self._current_round].opponent_id
             if opponent_id in self._players_by_id:
@@ -321,6 +328,8 @@ class Tournament:
                         self._boards.append(Board(white_player=player))
                     else:
                         self._boards.append(Board(black_player=player))
+            else:
+                self._unpaired_players.append(player)
         self._boards = sorted(self._boards, reverse=True)
         for index, board in enumerate(self._boards, start=1):
             board.id = index
