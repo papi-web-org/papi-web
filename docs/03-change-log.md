@@ -2,6 +2,9 @@
 
 # Papi-web - ChangeLog
 
+## Version 2.3.1 - 14 avril 2024
+- Correction d'un problème d'encodage des fichiers de configuration
+
 ## Version 2.3.0 - 8 avril 2024
 - Affichage des joueur·euses par ordre alphabétique avant appariement
 - Ajout du pointage sur les écrans de saisie
