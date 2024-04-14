@@ -9,6 +9,9 @@
         <link rel="stylesheet" href="{{ url_for('static', file_path='/css/base.css') }}" type="text/css" />
         {# https://jquery.com/download/ #}
         <script src="{{ url_for('static', file_path='/lib/jquery/jquery-3.7.1.min.js') }}"></script>
+        {# https://unpkg.com/browse/htmx.org@1.9.11/dist/ #}
+        <script src="{{ url_for('static', file_path='/lib/htmx/htmx.min.js') }}"></script>
+
         <script>
 $(document).ready(function(){
     setTimeout(function(){
