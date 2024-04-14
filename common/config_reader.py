@@ -57,7 +57,7 @@ class ConfigReader(ConfigParser):
                 logger.info('nouveau fichier de configuration [%s], chargement...', self.ini_file)
         try:
             files_read: list[str] = []
-            encoding: str = 'utf-8'
+            encoding: str = 'utf-8-sig'
             try:
                 if not self.__silent:
                     logger.debug('lecture de %s en %s...', self.ini_file, encoding)
@@ -87,7 +87,7 @@ class ConfigReader(ConfigParser):
             return
         except MissingSectionHeaderError as mshe:
             self.__silent = False
-            self.add_error(f'la première rubrique manque à la ligne {mshe.lineno}')
+            self.add_error(f'la première rubrique manque à la ligne {mshe.lineno} : [{bytes(mshe.line, "utf-8")}]')
             return
         except ParsingError as pe:
             self.__silent = False
