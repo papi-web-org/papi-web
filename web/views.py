@@ -9,12 +9,14 @@ import time
 from logging import Logger
 from typing import Annotated
 
-from litestar import Request, get, post, Response
+from litestar import get, post, Response
 from litestar.enums import RequestEncodingType
 from litestar.exceptions import HTTPException
 from litestar.params import Body
 from litestar.response import Template, Redirect, File
 from litestar.status_codes import HTTP_303_SEE_OTHER, HTTP_307_TEMPORARY_REDIRECT
+from litestar.contrib.htmx.request import HTMXRequest
+from litestar.contrib.htmx.response import HTMXTemplate
 
 from common.logger import get_logger
 from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION, PapiWebConfig
@@ -39,11 +41,11 @@ papi_web_info: dict[str, str] = {
 
 
 @get(path='/', name='index')
-async def index(request: Request) -> Template:
+async def index(request: HTMXRequest) -> Template:
     events: list[Event] = get_events_by_name(True)
     if len(events) == 0:
         Message.error(request, 'Aucun évènement trouvé')
-    return Template(
+    return HTMXTemplate(
         template_name="index.html",
         context={
             'papi_web_info': papi_web_info,
@@ -55,7 +57,7 @@ async def index(request: Request) -> Template:
         })
 
 
-def load_event(request: Request, event_id: str) -> Event | None:
+def load_event(request: HTMXRequest, event_id: str) -> Event | None:
     event: Event = Event(event_id, True)
     if event.errors:
         for error in event.errors:
@@ -65,13 +67,13 @@ def load_event(request: Request, event_id: str) -> Event | None:
 
 
 @get(path='/event/{event_id:str}', name='show-event')
-async def show_event(request: Request, event_id: str) -> Template | Redirect:
+async def show_event(request: HTMXRequest, event_id: str) -> Template | Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
             path=index_url(request),
             status_code=HTTP_307_TEMPORARY_REDIRECT)
-    return Template(
+    return HTMXTemplate(
         template_name="event.html",
         context={
             'papi_web_info': papi_web_info,
@@ -84,16 +86,16 @@ def session_password_key(event: Event) -> str:
     return 'auth-' + event.id
 
 
-def store_password(request: Request, event: Event, password: str | None):
+def store_password(request: HTMXRequest, event: Event, password: str | None):
     request.session[session_password_key(event)] = password
 
 
-def get_stored_password(request: Request, event: Event) -> str | None:
+def get_stored_password(request: HTMXRequest, event: Event) -> str | None:
     return request.session.get(session_password_key(event), None)
 
 
 def render_screen(
-        request: Request, event: Event, screen: AScreen, login_needed: bool, rotator_next_url: str = None,
+        request: HTMXRequest, event: Event, screen: AScreen, login_needed: bool, rotator_next_url: str = None,
         rotator_delay: int = None
 ) -> Template:
     last_result_updated: dict[str, int | str | float] | None = None
@@ -111,7 +113,7 @@ def render_screen(
         last_check_in_updated = request.session['last_check_in_updated']
     except KeyError:
         pass
-    return Template(
+    return HTMXTemplate(
         template_name="screen.html",
         context={
             'papi_web_info': papi_web_info,
@@ -129,10 +131,10 @@ def render_screen(
 
 
 def render_board(
-        request: Request, event: Event, tournament: Tournament, board: Board,
+        request: HTMXRequest, event: Event, tournament: Tournament, board: Board,
         update: bool,
 ) -> Template:
-    return Template(
+    return HTMXTemplate(
         template_name="board.html",
         context={
             'event': event,
@@ -144,10 +146,10 @@ def render_board(
 
 
 def render_result_modal(
-        request: Request, event: Event, tournament: Tournament, board: Board,
+        request: HTMXRequest, event: Event, tournament: Tournament, board: Board,
         arbiter: bool,
 ) -> Template:
-    return Template(
+    return HTMXTemplate(
         template_name="result_modal.html",
         context={
             'event': event,
@@ -163,7 +165,7 @@ def render_result_modal(
         name='result-login'
 )
 async def show_modal_result(
-    request: Request, event_id: str, tournament_id: str
+    request: HTMXRequest, event_id: str, tournament_id: str
 ) -> Redirect | Template:
     event: Event = load_event(request, event_id)
     if event is None:
@@ -186,7 +188,7 @@ async def show_modal_result(
     name='login',
 )
 async def login(
-        request: Request,
+        request: HTMXRequest,
         data: Annotated[
             dict[str, str],
             Body(media_type=RequestEncodingType.URL_ENCODED),
@@ -219,7 +221,7 @@ async def login(
         status_code=HTTP_303_SEE_OTHER)
 
 
-def event_login_needed(request: Request, event: Event, screen: AScreen | None = None) -> bool:
+def event_login_needed(request: HTMXRequest, event: Event, screen: AScreen | None = None) -> bool:
     if screen is not None:
         if not screen.update:
             return False
@@ -242,7 +244,7 @@ def event_login_needed(request: Request, event: Event, screen: AScreen | None = 
     path='/screen/{event_id:str}/{screen_id:str}',
     name='show-screen',
 )
-async def show_screen(request: Request, event_id: str, screen_id: str) -> Template | Redirect:
+async def show_screen(request: HTMXRequest, event_id: str, screen_id: str) -> Template | Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
@@ -263,7 +265,7 @@ async def show_screen(request: Request, event_id: str, screen_id: str) -> Templa
         name='show-board'
 )
 async def show_board(
-        request: Request, event_id: str, tournament_id: str, board_id: int) -> Template | Redirect:
+        request: HTMXRequest, event_id: str, tournament_id: str, board_id: int) -> Template | Redirect:
     
     event: Event = load_event(request, event_id)
     if event is None:
@@ -287,7 +289,7 @@ async def show_board(
 
 @get(path='/rotator/{event_id:str}/{rotator_id:str}', name='show-rotator')
 async def show_rotator(
-        request: Request, event_id: str, rotator_id: str) -> Redirect:
+        request: HTMXRequest, event_id: str, rotator_id: str) -> Redirect:
     return Redirect(
         path=rotator_screen_url(request, event_id, rotator_id, 0),
         status_code=HTTP_307_TEMPORARY_REDIRECT)
@@ -295,7 +297,7 @@ async def show_rotator(
 
 @get(path='/rotator/{event_id:str}/{rotator_id:str}/{screen_index:int}', name='show-rotator-screen')
 async def show_rotator_screen(
-        request: Request, event_id: str, rotator_id: str, screen_index: int) -> Template | Redirect:
+        request: HTMXRequest, event_id: str, rotator_id: str, screen_index: int) -> Template | Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
@@ -321,7 +323,7 @@ async def show_rotator_screen(
     name='update-result'
 )
 async def update_result(
-        request: Request, event_id: str, screen_id: str, tournament_id: str, board_id: int, result: int
+        request: HTMXRequest, event_id: str, screen_id: str, tournament_id: str, board_id: int, result: int
 ) -> Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
@@ -360,7 +362,7 @@ async def update_result(
     name='add-illegal-move'
 )
 async def add_illegal_move(
-        request: Request, event_id: str, screen_id: str, tournament_id: str, player_id: int,
+        request: HTMXRequest, event_id: str, screen_id: str, tournament_id: str, player_id: int,
 ) -> Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
@@ -394,7 +396,7 @@ async def add_illegal_move(
     status_code=HTTP_307_TEMPORARY_REDIRECT,
 )
 async def delete_illegal_move(
-        request: Request, event_id: str, screen_id: str, tournament_id: str, player_id: int,
+        request: HTMXRequest, event_id: str, screen_id: str, tournament_id: str, player_id: int,
 ) -> Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
@@ -432,7 +434,7 @@ async def delete_illegal_move(
     name='check-in-player',
 )
 async def check_in_player(
-        request: Request, event_id: str, screen_id: str, tournament_id: str, player_id: int
+        request: HTMXRequest, event_id: str, screen_id: str, tournament_id: str, player_id: int
 ) -> Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
@@ -465,7 +467,7 @@ async def check_in_player(
     name='check-out-player',
 )
 async def check_out_player(
-        request: Request, event_id: str, screen_id: str, tournament_id: str, player_id: int
+        request: HTMXRequest, event_id: str, screen_id: str, tournament_id: str, player_id: int
 ) -> Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
@@ -494,7 +496,7 @@ async def check_out_player(
 
 
 @get(path='/screen-last-update/{event_id:str}/{screen_id:str}', name='get-screen-last-update')
-async def get_screen_last_update(request: Request, event_id: str, screen_id: str) -> str:
+async def get_screen_last_update(request: HTMXRequest, event_id: str, screen_id: str) -> str:
     screen_files: list[Path] = AScreen.get_screen_file_dependencies(event_id, screen_id)
     if not screen_files:
         return f'no file dependencies found, probably the event [{event_id}] does not exist'
@@ -513,7 +515,7 @@ async def get_screen_last_update(request: Request, event_id: str, screen_id: str
 
 
 @get(path='/download-event/{event_id:str}', name='download-event')
-async def download_event(request: Request, event_id: str) -> Response[bytes] | Redirect:
+async def download_event(request: HTMXRequest, event_id: str) -> Response[bytes] | Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
@@ -538,7 +540,7 @@ async def download_event(request: Request, event_id: str) -> Response[bytes] | R
 
 
 @get(path='/download-tournament/{event_id:str}/{tournament_id:str}', name='download-tournament')
-async def download_tournament(request: Request, event_id: str, tournament_id: str) -> File | Redirect:
+async def download_tournament(request: HTMXRequest, event_id: str, tournament_id: str) -> File | Redirect:
     event: Event = load_event(request, event_id)
     if event is None:
         return Redirect(
