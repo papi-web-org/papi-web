@@ -24,3 +24,28 @@ body {
     background-position: center center;
     background-size: 100% auto;
 }
+#messages {
+    position:fixed;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 33%;
+}
+
+#messages .alert-danger {
+    background-color: rgba(248, 215, 218, 0.85);
+}
+#messages .alert-warning {
+    background-color: rgba(255, 243, 205, 0.85);
+}
+#messages .alert-info {
+    background-color: rgba(207, 244, 252, 0.85);
+}
+#messages .alert-success {
+    background-color: rgba(209, 231, 221, 0.85);
+}
+#messages .alert {
+    padding: 0.2rem 1.8rem 0.2rem 0.3rem;
+}
+#messages .alert button {
+    padding: 0.4rem;
+}
