@@ -1,0 +1,79 @@
+{#
+Context:
+- event
+- screen
+- screen_set
+- now
+- last_check_in_updated
+- last_illegal_move_updated
+- last_result_updated
+#}
+{% with tournament=screen_set.tournament %}
+    <div
+        class="boards-screen-set"
+        hx-get="{{ url_for('render-boards-screen-set-if-updated', event_id=event.id, screen_id=screen.id, screen_set_id=screen_set.id, date=now) }}"
+        hx-swap="outerHTML"
+        hx-trigger="every 5s"
+    >
+        {% if tournament.current_round %}
+            <div class="boards-set">
+                <h2 class="set-title">{{ screen_set.name_for_boards }} (ronde {{ tournament.current_round }})</h2>
+                <div class="row screen-set-row">
+                    {% for boards in screen_set.boards_lists %}
+                        <div class="col screen-set-col">
+                            <table class="table table-striped table-sm {% if screen.update %}table-hover{% endif %}">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col" class="board-number">Ech</th>
+                                        <th scope="col" class="points">Pts</th>
+                                        {% if tournament.print_real_points %}<th scope="col" class="points">&nbsp;</th>{% endif %}
+                                        <th scope="col" class="player" {% if screen.update and tournament.record_illegal_moves %}colspan="2">{% endif %}Blancs{% if tournament.handicap %} (temps){% endif %}</th>
+                                        <th scope="col" class="score">Score</th>
+                                        <th scope="col" class="player" {% if screen.update and tournament.record_illegal_moves %}colspan="2">{% endif %}Noirs{% if tournament.handicap %} (temps){% endif %}</th>
+                                        {% if tournament.print_real_points %}<th scope="col" class="points">&nbsp;</th>{% endif %}
+                                        <th scope="col" class="points">Pts</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for board in boards %}
+                                    {% include 'boards_screen_board_row.html' %}
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="players-set">
+                <h2 class="set-title">{{ screen_set.name_for_boards }} (pointage)</h2>
+                <div class="row screen-set-row">
+                    {% for players_by_name_tuple in screen_set.players_by_name_tuple_lists %}
+                        <div class="col screen-set-col">
+                            <div class="row screen-set-tuple-row">
+                                {% for players_by_name in players_by_name_tuple %}
+                                    <div class="col screen-set-tuple-col">
+                                        <table class="table table-striped table-sm">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th scope="col" class="player">Joueur.euse / Elo</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for player in players_by_name %}
+                                                <tr class="player-row">
+                                                    {% include 'boards_screen_player_row_player_cell.html' %}
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endwith %}

@@ -1,9 +1,11 @@
+import json
 import math
+from pathlib import Path
 from typing import Any
 from logging import Logger
 from dataclasses import dataclass, field
 
-from common.config_reader import ConfigReader
+from common.config_reader import ConfigReader, TMP_DIR
 from common.logger import get_logger
 from data.board import Board
 from data.player import Player
@@ -15,7 +17,10 @@ logger: Logger = get_logger()
 
 @dataclass
 class ScreenSet:
+    event_id: str
     tournament: Tournament
+    screen_id: str
+    id: int
     columns: int
     show_unpaired: bool
     first: int | None = field(default=None, kw_only=True)
@@ -191,6 +196,28 @@ class ScreenSet:
         self._extract_players_by_name()
         return self.last_item
 
+    @classmethod
+    def __get_screen_set_file_dependencies_file(cls, event_id: str, screen_id: str, screen_set_id: int) -> Path:
+        return TMP_DIR / 'events' / event_id / 'screen_set_file_dependencies' / f'{screen_id}_{screen_set_id}.json'
+
+    @classmethod
+    def get_screen_set_file_dependencies(cls, event_id: str, screen_id: str, screen_set_id: int) -> list[Path]:
+        file_dependencies_file = cls.__get_screen_set_file_dependencies_file(event_id, screen_id, screen_set_id)
+        try:
+            with open(file_dependencies_file, 'r', encoding='utf-8') as f:
+                return [Path(file) for file in json.load(f)]
+        except FileNotFoundError:
+            return []
+
+    def set_file_dependencies(self, files: list[Path]):
+        file_dependencies_file = self.__get_screen_set_file_dependencies_file(self.event_id, self.screen_id, self.id)
+        try:
+            file_dependencies_file.parents[0].mkdir(parents=True, exist_ok=True)
+            with open(file_dependencies_file, 'w', encoding='utf-8') as f:
+                return f.write(json.dumps([str(file) for file in files]))
+        except FileNotFoundError:
+            return []
+
     def __str__(self):
         if self.first is not None:
             if self.last is not None:
@@ -220,14 +247,17 @@ class ScreenSet:
 
 
 class ScreenSetBuilder:
-    def __init__(self, config_reader: ConfigReader, tournaments: dict[str, Tournament], screen_section_key: str,
-                 screen_type: ScreenType, columns: int, show_unpaired: bool):
+    def __init__(self, config_reader: ConfigReader, event_id: str, tournaments: dict[str, Tournament], screen_id: str,
+                 screen_set_id: int, screen_type: ScreenType, columns: int, show_unpaired: bool):
         self._config_reader = config_reader
+        self.event_id: str = event_id
         self._tournaments: dict[str, Tournament] = tournaments
-        self._screen_section_key: str = screen_section_key
-        self._screen_type: ScreenType = screen_type
-        self._columns: int = columns
-        self._show_unpaired = show_unpaired
+        self.screen_id: str = screen_id
+        self.screen_set_id: int = screen_set_id
+        self.screen_section_key: str = f'screen.{self.screen_id}'
+        self.screen_type: ScreenType = screen_type
+        self.columns: int = columns
+        self.show_unpaired = show_unpaired
         self.screen_sets = []
         for screen_set_section_key in self._read_screen_set_section_keys():
             if screen_set := self._build_screen_set(screen_set_section_key):
@@ -235,7 +265,7 @@ class ScreenSetBuilder:
 
     def _read_screen_set_section_keys(self) -> list[str]:
         screen_set_section_keys: list[str]
-        screen_set_single_section_key = f'{self._screen_section_key}.{self._screen_type.value}'
+        screen_set_single_section_key = f'{self.screen_section_key}.{self.screen_type.value}'
         if screen_set_single_section_key in self._config_reader:
             screen_set_section_keys = [screen_set_single_section_key, ]
             for screen_set_sub_section_key in self._config_reader.get_subsection_keys_with_prefix(
@@ -257,7 +287,7 @@ class ScreenSetBuilder:
                 screen_set_section_keys.append(screen_set_single_section_key)
                 self._config_reader.add_info(
                     f'un seul tournoi, la rubrique [{screen_set_single_section_key}] a été ajoutée',
-                    self._screen_section_key)
+                    self.screen_section_key)
             else:
                 self._config_reader.add_warning('rubrique absente, écran ignoré', screen_set_single_section_key)
         return screen_set_section_keys
@@ -429,9 +459,12 @@ class ScreenSetBuilder:
             if key not in self._config_reader.screen_set_keys:
                 self._config_reader.add_warning('option inconnue', screen_set_section_key, key)
         return ScreenSet(
+            self.event_id,
             self._tournaments[tournament_id],
-            self._columns,
-            self._show_unpaired,
+            self.screen_id,
+            self.screen_set_id,
+            self.columns,
+            self.show_unpaired,
             first=first,
             last=last,
             part=part,

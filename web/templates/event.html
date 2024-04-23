@@ -16,6 +16,12 @@
 
 {% block content %}
     <div id="content-wrapper" class="content-wrapper p-3">
+        <div
+            class="event-updater"
+            hx-get="{{ url_for('render-event-if-updated', event_id=event.id, date=now) }}"
+            hx-target="body"
+            hx-trigger="every 5s"
+        ></div>
         {% if event.timer %}
             {% include 'timer.html' %}
         {% endif %}
@@ -127,7 +133,7 @@
                     </table>
                     {% if event.download_allowed %}
                         <div>
-                            <a href="{{ url_for('download-event', event_id=event.id) }}"><strong><i class="bi-cloud-arrow-down-fill"></i></strong></a>
+                            <a href="{{ url_for('download-event-tournaments', event_id=event.id) }}"><strong><i class="bi-cloud-arrow-down-fill"></i></strong></a>
                         </div>
                     {% endif %}
                 </div>
@@ -150,7 +156,7 @@
                             {% for screen in event.screens.values() %}
                                 <tr>
                                     <th scope="row">{{ screen.id }}</th>
-                                    <td><a href="{{ url_for('show-screen', event_id=event.id, screen_id=screen.id) }}" target="_blank">{{ screen.name }}</a></td>
+                                    <td><a href="{{ url_for('render-screen', event_id=event.id, screen_id=screen.id) }}" target="_blank">{{ screen.name }}</a></td>
                                     <td><i class="{{ screen.icon_str }}"></i>&nbsp;{{ screen.type_str }}{% if screen.record_illegal_moves %}&nbsp;{% for _ in range(screen.record_illegal_moves) %}<i class="bi-flag-fill"></i>{% endfor %}{% endif %}</td>
                                     <td>{% if screen.type == 'results' %}{% if screen.limit %}{{ screen.limit }} max.{% else %}Tous{% endif %}{% else %}{{ screen.sets_str }}{% endif %}</td>
                                     <td>{{ screen.columns }}</td>
@@ -175,7 +181,7 @@
                         <tbody>
                             {% for rotator in event.rotators.values() %}
                                 <tr>
-                                    <th scope="row"><a href="{{ url_for('show-rotator', event_id=event.id, rotator_id=rotator.id) }}" target="_blank">{{ rotator.id }}</a></th>
+                                    <th scope="row"><a href="{{ url_for('render-rotator', event_id=event.id, rotator_id=rotator.id) }}" target="_blank">{{ rotator.id }}</a></th>
                                     <td>{{ rotator.delay }}</td>
                                     <td>
                                         {% for screen in rotator.screens %}

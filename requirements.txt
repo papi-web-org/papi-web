@@ -1,6 +1,6 @@
 AdvancedHTMLParser~=9.0.2
 requests~=2.31.0
-configparser~=6.0.0
+configparser~=7.0.0
 # PyYAML is required by Litestar
 PyYAML~=6.0.1
 colorama~=0.4.6
@@ -10,14 +10,13 @@ idna~=3.4
 # urllib3 is required by PyInstaller
 urllib3~=2.2.1
 # pefile is required by PyInstaller
-pefile~=2023.2.7
 # setuptools~=69.1.1
-pyinstaller~=6.5.0
+pyinstaller~=6.6.0
 # QueryableList~=3.1.0
 pyodbc~=5.1.0
 chardet~=5.2.0
-uvicorn~=0.28.0
-litestar~=2.7.0
+uvicorn~=0.29.0
+litestar~=2.8.2
 # Jinja2 is required by Litestar
 Jinja2~=3.1.3
 # cryptography is required by Litestar

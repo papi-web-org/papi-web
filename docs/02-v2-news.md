@@ -90,7 +90,7 @@ part = 7
 parts = 12
 ```
 
-![Affichage standard des appariements](images/screen-pairings-1.jpg)
+![Affichage standard des appariements](images/pairings-screen-1.jpg)
 
 
 ## Présentation des écrans en plusieurs colonnes
@@ -102,7 +102,7 @@ Pour un meilleur affichage, tous les écrans peuvent être présentés en multi-
 type = boards
 columns = 2
 ```
-![Affichage des appariements en deux colonnes](images/screen-pairings-2.jpg)
+![Affichage des appariements en deux colonnes](images/pairings-screen-2.jpg)
 
 ## Affichage des appariements par ordre alphabétique
 
@@ -113,7 +113,7 @@ Pour les tournois à forte participation (à partir d'une centaine de joueur·eu
 type = players
 ```
 
-![Appariements par ordre alphabétique](images/screen-players.jpg)
+![Appariements par ordre alphabétique](images/players-screen.jpg)
 
 À voir : [Affichage des appariements par ordre alphabétique](23-pairings-by-player.md)
 
@@ -251,3 +251,6 @@ Le pointage peut être réalisé depuis les écrans de saisie.
 > [!NOTE]
 > Le pointage effectué sur la plateforme ChessEvent remplace celui fait dans les fichiers Papi, directement avec Papi ou avec Papi-web ; il est donc déconseillé d'utiliser à la fois ChessEvent et Papi-web pour le pointage.
 
+## Fluidité de la navigation (à partir de la version 2.4)
+
+L'utilisation de la technologie HTMX permet uen navigation beaucoup plus fluide sans rafraichissement global des pages à chaque opération.

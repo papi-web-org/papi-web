@@ -4,7 +4,8 @@ from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 from logging import Logger
 from PyInstaller.__main__ import run
-from common.papi_web_config import PAPI_WEB_VERSION, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL
+from common.papi_web_config import PAPI_WEB_VERSION, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, BOOTSTRAP_VERSION, \
+    BOOTSTRAP_ICONS_VERSION, JQUERY_VERSION, HTMX_VERSION
 from common.logger import get_logger
 
 logger: Logger = get_logger()
@@ -57,22 +58,35 @@ def build_exe():
         'papi_web.py',
     ]
     files: list[Path] = []
+    web_dir = Path('.') / 'web'
     files += [file for file in Path('web/templates').glob('**/*') if file.is_file()]
+    static_dir = web_dir / 'static'
     files += [file for file in Path('web/static/images').glob('**/*') if file.is_file()]
     files += [file for file in Path('web/static/css').glob('**/*') if file.is_file()]
     files += [file for file in Path('web/static/js').glob('**/*') if file.is_file()]
+    lib_dir = static_dir / 'lib'
+    bootstrap_dir = lib_dir / 'bootstrap' / f'bootstrap-{BOOTSTRAP_VERSION}-dist'
     files += [
-        Path('web/static/lib/bootstrap/bootstrap-5.3.2-dist/css/bootstrap.min.css'),
-        Path('web/static/lib/bootstrap/bootstrap-5.3.2-dist/css/bootstrap.min.css.map'),
-        Path('web/static/lib/bootstrap/bootstrap-5.3.2-dist/js/bootstrap.bundle.min.js'),
-        Path('web/static/lib/bootstrap/bootstrap-5.3.2-dist/js/bootstrap.bundle.min.js.map'),
-        Path('web/static/lib/bootstrap-icons/bootstrap-icons-1.11.2/font/bootstrap-icons.min.css'),
+        bootstrap_dir / 'css' / 'bootstrap.min.css',
+        bootstrap_dir / 'css' / 'bootstrap.min.css.map',
+        bootstrap_dir / 'js' / 'bootstrap.bundle.min.js',
+        bootstrap_dir / 'js' / 'bootstrap.bundle.min.js.map',
+    ]
+    bootstrap_icons_dir = lib_dir / 'bootstrap-icons' / f'bootstrap-icons-{BOOTSTRAP_ICONS_VERSION}'
+    files += [
+        bootstrap_icons_dir / 'font' / 'bootstrap-icons.min.css',
     ]
     files += [
-        file for file in Path('web/static/lib/bootstrap-icons/bootstrap-icons-1.11.2/font/fonts').glob('**/*')
+        file for file in (bootstrap_icons_dir / 'font' / 'fonts').glob('**/*')
         if file.is_file()
     ]
-    files += [Path('web/static/lib/jquery/jquery-3.7.1.min.js')]
+    jquery_file = lib_dir / 'jquery' / f'jquery-{JQUERY_VERSION}.min.js'
+    files += [jquery_file, ]
+    htmx_dir = lib_dir / 'htmx' / f'htmx-{HTMX_VERSION}'
+    files += [
+        file for file in htmx_dir.glob('**/*')
+        if file.is_file()
+    ]
     for file in files:
         pyinstaller_params.append(f'--add-data={file};{file.parent}')
     files: list[Path] = []

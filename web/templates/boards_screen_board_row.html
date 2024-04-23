@@ -1,0 +1,81 @@
+{#
+Context:
+- event
+- tournament
+- board
+- screen
+- now
+- last_check_in_updated
+- last_illegal_move_updated
+- last_result_updated
+#}
+{% with wp=board.white_player, bp=board.black_player %}
+<tr
+    id="tournament-{{ tournament.id }}-board-{{ board.id }}-row"
+    class="
+        board-row
+        {% if board.result_str %}result-set{% else %}result-not-set{% endif %}
+        {% if last_result_updated and last_result_updated.expiration > now and last_result_updated.tournament_id == tournament.id and last_result_updated.board_id == board.id %}last_result_updated{% endif %}"
+    >
+    <th
+        scope="row"
+        class="board-number"
+        {% if screen.update and not board.result_str %}
+            hx-get="{{ url_for('render-boards-screen-board-result-modal', event_id=event.id, tournament_id=tournament.id, board_id=board.id, screen_id=screen.id) }}"
+            hx-target="#modals"
+            hx-swap="innerHTML"
+            data-bs-toggle="modal"
+            data-bs-target="#modals"
+        {% endif %}
+    >{{ board.number }}.</th>
+    <td
+        class="points"
+        {% if screen.update and not board.result_str %}
+            hx-get="{{ url_for('render-boards-screen-board-result-modal', event_id=event.id, tournament_id=tournament.id, board_id=board.id, screen_id=screen.id) }}"
+            hx-target="#modals"
+            hx-swap="innerHTML"
+            data-bs-toggle="modal"
+            data-bs-target="#modals"
+        {% endif %}
+    >
+        {{ wp.vpoints_str }}
+    </td>
+    {% if tournament.print_real_points %}
+        <td class="points">
+            [{{ wp.points_str }}]
+        </td>
+    {% endif %}
+    {% with player=wp %}{% with opponent=bp %}
+        {% include 'boards_screen_board_row_illegal_moves_cell.html' %}
+        {% include 'boards_screen_board_row_player_cell.html' %}
+    {% endwith %}{% endwith %}
+    <td
+        class="score"
+        {% if screen.update and not board.result_str %}
+            hx-get="{{ url_for('render-boards-screen-board-result-modal', event_id=event.id, tournament_id=tournament.id, board_id=board.id, screen_id=screen.id) }}"
+            hx-target="#modals"
+            hx-swap="innerHTML"
+            data-bs-toggle="modal"
+            data-bs-target="#modals"
+        {% endif %}
+    >
+        {% if board.result_str %}{{ board.result_str }}{% else %}n°{{ board.number }}{% endif %}
+    </td>
+    {% with player=bp %}{% with opponent=wp %}
+        {% include 'boards_screen_board_row_illegal_moves_cell.html' %}
+        {% include 'boards_screen_board_row_player_cell.html' %}
+    {% endwith %}{% endwith %}
+    {% if tournament.print_real_points %}
+        <td class="points">
+            {% if bp.id != 1 %}
+                [{{ bp.points_str }}]
+            {% endif %}
+        </td>
+    {% endif %}
+    <td class="points">
+        {% if bp.id != 1 %}
+            {{ bp.vpoints_str }}
+        {% endif %}
+    </td>
+</tr>
+{% endwith %}

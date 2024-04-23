@@ -21,12 +21,13 @@ DEFAULT_SHOW_UNPAIRED: bool = False
 
 @dataclass
 class AScreen:
+    event_id: str
     id: str
     family_id: str | None
     _name: str
     _type: ScreenType | None = field(init=False)
     columns: int
-    _menu_text: str | None
+    menu_text: str | None
     menu: str
     show_timer: bool
     menu_screens: list[Self] | None = field(default=None, init=False)
@@ -51,12 +52,8 @@ class AScreen:
         return 'bi-question-circle'
 
     @property
-    def menu_text(self) -> str | None:
-        return self._menu_text
-
-    @property
     def menu_label(self) -> str | None:
-        return self._menu_text
+        return self.menu_text
 
     def set_menu(self, menu: str):
         warnings.warn("Use direct assignment to menu instead")
@@ -80,19 +77,18 @@ class AScreen:
 
     @classmethod
     def get_screen_file_dependencies(cls, event_id: str, screen_id: str) -> list[Path]:
-        tournament_files_file = cls.__get_screen_file_dependencies_file(event_id, screen_id)
+        file_dependencies_file = cls.__get_screen_file_dependencies_file(event_id, screen_id)
         try:
-            with open(tournament_files_file, 'r', encoding='utf-8') as f:
+            with open(file_dependencies_file, 'r', encoding='utf-8') as f:
                 return [Path(file) for file in json.load(f)]
         except FileNotFoundError:
             return []
 
-    @classmethod
-    def set_screen_file_dependencies(cls, event_id: str, screen_id: str, files: list[Path]):
-        tournament_files_file = cls.__get_screen_file_dependencies_file(event_id, screen_id)
+    def set_file_dependencies(self, files: list[Path]):
+        file_dependencies_file = self.__get_screen_file_dependencies_file(self.event_id, self.id)
         try:
-            tournament_files_file.parents[0].mkdir(parents=True, exist_ok=True)
-            with open(tournament_files_file, 'w', encoding='utf-8') as f:
+            file_dependencies_file.parents[0].mkdir(parents=True, exist_ok=True)
+            with open(file_dependencies_file, 'w', encoding='utf-8') as f:
                 return f.write(json.dumps([str(file) for file in files]))
         except FileNotFoundError:
             return []
@@ -115,7 +111,7 @@ class AScreenWithSets(AScreen):
 
 
 @dataclass
-class ScreenBoards(AScreenWithSets):
+class BoardsScreen(AScreenWithSets):
     update: bool = False
 
     def __post_init__(self):
@@ -129,9 +125,9 @@ class ScreenBoards(AScreenWithSets):
 
     @property
     def menu_label(self) -> str | None:
-        if self._menu_text is None:
+        if self.menu_text is None:
             return None
-        text: str = self._menu_text
+        text: str = self.menu_text
         if self.sets:
             screen_set: ScreenSet = self.sets[0]
             text = text.replace('%t', screen_set.tournament.name)
@@ -155,7 +151,7 @@ class ScreenBoards(AScreenWithSets):
 
 
 @dataclass
-class ScreenPlayers(AScreenWithSets):
+class PlayersScreen(AScreenWithSets):
     _show_unpaired: bool
 
     def __post_init__(self):
@@ -169,9 +165,9 @@ class ScreenPlayers(AScreenWithSets):
 
     @property
     def menu_label(self) -> str | None:
-        if self._menu_text is None:
+        if self.menu_text is None:
             return None
-        text: str = self._menu_text
+        text: str = self.menu_text
         if self.sets:
             screen_set: ScreenSet = self.sets[0]
             text = text.replace('%t', screen_set.tournament.name)
@@ -194,14 +190,12 @@ class ScreenPlayers(AScreenWithSets):
         return self._show_unpaired
 
 
-class ScreenResults(AScreen):
+class ResultsScreen(AScreen):
     def __init__(
             self, event_id: str, screen_id: str, family_id: str | None, name: str, columns: int,
             menu_text: str | None, menu: str, show_timer: bool, limit: int):
-        super().__init__(
-            screen_id, family_id, name, columns, menu_text, menu, show_timer)
+        super().__init__(event_id, screen_id, family_id, name, columns, menu_text, menu, show_timer)
         self._type = ScreenType.Results
-        self.event_id = event_id
         self.limit: int = limit
 
     @property
@@ -227,7 +221,7 @@ class ScreenBuilder:
             self, config_reader: ConfigReader, event_id: str, tournaments: dict[str, Tournament],
             templates: dict[str, Template], screens_by_family_id: dict[str, list[AScreen]]):
         self._config_reader: ConfigReader = config_reader
-        self._event_id: str = event_id
+        self.event_id: str = event_id
         self._tournaments: dict[str, Tournament] = tournaments
         self._templates: dict[str, Template] = templates
         self._screens_by_family_id: dict[str, list[AScreen]] = screens_by_family_id
@@ -417,27 +411,36 @@ class ScreenBuilder:
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
         screen_sets: list[ScreenSet] | None = None
+        screen_set_id: int = 0
         if screen_type in [ScreenType.Boards, ScreenType.Players, ]:
             screen_sets = ScreenSetBuilder(
-                self._config_reader, self._tournaments, screen_section_key, screen_type, columns, show_unpaired
+                self._config_reader, self.event_id, self._tournaments, screen_id, screen_set_id, screen_type, columns,
+                show_unpaired
             ).screen_sets
             if not screen_sets:
                 if screen_type == ScreenType.Boards:
                     self._config_reader.add_warning(
                         "pas d'ensemble d'échiquiers déclaré, écran ignoré", screen_section_key)
-                    # NOTE(Amaras) should this return?
                 else:
                     self._config_reader.add_warning(
                         "pas d'ensemble de joueur·euses déclaré, écran ignoré", screen_section_key)
                 return None
+            for screen_set in screen_sets:
+                screen_set_file_dependencies: list[Path] = [screen_set.tournament.file, ]
+                if screen_type == ScreenType.Boards:
+                    if screen_set.tournament.record_illegal_moves:
+                        screen_set_file_dependencies += [screen_set.tournament.illegal_moves_dir, ]
+                screen_set.set_file_dependencies(screen_set_file_dependencies)
+            screen_set_id += 1
         key = '__family__'
         family_id: str | None = None
         if key in screen_section:
             family_id: str = self._config_reader.get(screen_section_key, key)
         screen: AScreen | None = None
-        file_dependencies: list[Path] = [EVENTS_PATH / f'{self._event_id}.ini', ]
+        screen_file_dependencies: list[Path] = [EVENTS_PATH / f'{self.event_id}.ini', ]
         if screen_type == ScreenType.Boards:
-            screen = ScreenBoards(
+            screen = BoardsScreen(
+                self.event_id,
                 screen_id,
                 family_id,
                 screen_name,
@@ -448,14 +451,9 @@ class ScreenBuilder:
                 screen_sets,
                 update,
             )
-            file_dependencies += [screen_set.tournament.file for screen_set in screen_sets]
-            file_dependencies += [
-                screen_set.tournament.illegal_moves_dir
-                for screen_set in screen_sets
-                if screen_set.tournament.record_illegal_moves
-            ]
         elif screen_type == ScreenType.Players:
-            screen = ScreenPlayers(
+            screen = PlayersScreen(
+                self.event_id,
                 screen_id,
                 family_id,
                 screen_name,
@@ -466,10 +464,9 @@ class ScreenBuilder:
                 screen_sets,
                 show_unpaired
             )
-            file_dependencies += [screen_set.tournament.file for screen_set in screen_sets]
         elif screen_type == ScreenType.Results:
-            screen = ScreenResults(
-                self._event_id,
+            screen = ResultsScreen(
+                self.event_id,
                 screen_id,
                 family_id,
                 screen_name,
@@ -479,8 +476,8 @@ class ScreenBuilder:
                 show_timer,
                 limit
             )
-            file_dependencies += [tournament.file for tournament in self._tournaments.values()]
-        AScreen.set_screen_file_dependencies(self._event_id, screen_id, file_dependencies, )
+            screen_file_dependencies += [tournament.file for tournament in self._tournaments.values()]
+        screen.set_file_dependencies(screen_file_dependencies, )
         for key, value in self._config_reader.items(screen_section_key):
             if key not in ConfigReader.screen_keys + ['template', '__family__', ]:
                 self._config_reader.add_warning('option inconnue', screen_section_key, key)

@@ -97,7 +97,7 @@ tournament = C
 tournament = D
 ```
 
-![Appariements multi-tournois multi-colonnes](images/screen-players-multi.jpg)
+![Appariements multi-tournois multi-colonnes](images/players-screen-multi.jpg)
 
 > [!NOTE]
 > Il est tout à fait possible dans chaque ensemble de limiter les joueur·euses présenté·es, comme vu précédemment avec les options `first`/`last` ou `part`/`parts`.

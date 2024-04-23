@@ -8,6 +8,7 @@ import socket
 from logging import Logger
 from litestar import Litestar
 import uvicorn
+from litestar.contrib.htmx.request import HTMXRequest
 
 from common.logger import get_logger
 from common.engine import Engine
@@ -53,6 +54,7 @@ class ServerEngine(Engine):
             Thread(target=launch_browser, args=(self._config.local_url, )).start()
         app: Litestar = Litestar(
             debug=True,
+            request_class=HTMXRequest,
             route_handlers=route_handlers,
             template_config=template_config,
             middleware=middlewares,

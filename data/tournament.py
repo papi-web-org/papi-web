@@ -397,16 +397,10 @@ class Tournament:
             papi_database.commit()
         return player_id - 1
 
-    def check_in_player(self, player: Player):
+    def check_in_player(self, player: Player, check_in: bool):
         with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
             papi_database: PapiDatabase
-            papi_database.check_in_player(player.id)
-            papi_database.commit()
-
-    def check_out_player(self, player: Player):
-        with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
-            papi_database: PapiDatabase
-            papi_database.check_out_player(player.id)
+            papi_database.check_in_player(player.id, check_in)
             papi_database.commit()
 
 

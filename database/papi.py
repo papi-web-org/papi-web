@@ -258,7 +258,7 @@ class PapiDatabase(AccessDatabase):
         self._execute(query)
         return self._fetchval()
 
-    def check_in_player(self, player_id: int):
+    def _check_in_player(self, player_id: int):
         logger.debug('Checking in player %d', player_id)
         checked_in_players_number: int = self.get_checked_in_players_number()
         player_skipped_rounds: dict[int, float]
@@ -327,7 +327,7 @@ class PapiDatabase(AccessDatabase):
         params = tuple(list(data.values()) + [player_id, ])
         self._execute(query, params)
 
-    def check_out_player(self, player_id: int):
+    def _check_out_player(self, player_id: int):
         logger.debug('Checking out player %s', player_id)
         checked_in_players_number: int = self.get_checked_in_players_number()
         if checked_in_players_number == 1:
@@ -387,3 +387,9 @@ class PapiDatabase(AccessDatabase):
             query: str = f'UPDATE `joueur` SET {actions} WHERE Ref = ?'
             params = tuple(list(data.values()) + [player_id, ])
             self._execute(query, params)
+
+    def check_in_player(self, player_id: int, check_in: bool):
+        if check_in:
+            self._check_in_player(player_id)
+        else:
+            self._check_out_player(player_id)

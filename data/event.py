@@ -1,3 +1,4 @@
+import json
 import os
 import time
 from functools import total_ordering
@@ -85,7 +86,36 @@ class Event:
                         'le chronomètre ([timer.hour.*]) n\'est pas défini',
                         section_key=f'screen.{",".join(screen_ids)}',
                         key='show_timer')
+            event_file_dependencies = [self.ini_file, ]
+            for screen in self.screens.values():
+                event_file_dependencies += [
+                    screen_set.tournament.file
+                    for screen_set in screen.sets
+                ]
+            self.set_file_dependencies(event_file_dependencies)
         silent_event_ids.append(self.id)
+
+    @classmethod
+    def __get_event_file_dependencies_file(cls, event_id: str) -> Path:
+        return TMP_DIR / 'events' / event_id / 'event_file_dependencies.json'
+
+    @classmethod
+    def get_event_file_dependencies(cls, event_id: str) -> list[Path]:
+        file_dependencies_file = cls.__get_event_file_dependencies_file(event_id)
+        try:
+            with open(file_dependencies_file, 'r', encoding='utf-8') as f:
+                return [Path(file) for file in json.load(f)]
+        except FileNotFoundError:
+            return []
+
+    def set_file_dependencies(self, files: list[Path]):
+        file_dependencies_file = self.__get_event_file_dependencies_file(self.id)
+        try:
+            file_dependencies_file.parents[0].mkdir(parents=True, exist_ok=True)
+            with open(file_dependencies_file, 'w', encoding='utf-8') as f:
+                return f.write(json.dumps([str(file) for file in files]))
+        except FileNotFoundError:
+            return []
 
     @property
     def ini_file(self) -> Path:

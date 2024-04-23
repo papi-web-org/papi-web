@@ -1,0 +1,22 @@
+{#
+Context:
+- messages
+#}
+{% for message in messages %}
+    <div
+        class="alert {{ message.tag }} alert-dismissible fade show"
+        role="alert"
+        hx-ext="remove-me"
+        {% if message.tag == 'alert-info' or message.tag == 'alert-success' %}
+            remove-me="2s"
+        {% endif %}
+    >
+        <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+        ></button>
+        {{ message.text }}
+    </div>
+{% endfor %}

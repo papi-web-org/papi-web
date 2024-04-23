@@ -11,143 +11,73 @@
 <link rel="stylesheet" href="{{ url_for('static', file_path='css/screen.css') }}" type="text/css" />
 {% if event.css %}<link rel="stylesheet" href="{{ url_for('static', file_path=event.css) }}" type="text/css" />{% endif %}
 <script>
-    {% include 'refresh.js' %}
     {% if event.timer %}
         {% if screen.show_timer %}
             {% include 'timer.js' %}
         {% endif %}
     {% endif %}
-    $(document).ready(function(){
-        $('.menu').click(function () {
-            refresh();
-        });
-        $('.screen .set-title').click(function () {
-            refresh();
-        });
-        $('.screen-boards thead').click(function () {
-            refresh();
-        });
-        $('.screen-boards .board-row-result').click(function () {
-            refresh();
-        });
-        $('.board-row-no-result').click(function(e){
-            {% if screen.update %}
-                // open the board modal
-                stop_refresh_interval();
-                $('#tournament-' + $(this).attr('data-tournament-id') + '-board-' + $(this).attr('data-board-id') + '-modal').show()
-            {% else %}
-                // just refresh
-                refresh();
-            {% endif %}
-        });
-        $('.board-modal-cancel-button').click(function(e){
-            // close the board modal
-            $('#tournament-' + $(this).attr('data-tournament-id') + '-board-' + $(this).attr('data-board-id') + '-modal').hide()
-            start_refresh_interval();
-        });
-        $('.screen-results table').click(function () {
-            refresh();
-        });
-        $('.screen-players table').click(function () {
-            refresh();
-        });
-        {% if screen.update %}
-            // update a board result by sending to the update URL
-            $('.board-modal-result-input').click(function(e){
-                stop_refresh_interval();
-                redirect('/update-result/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-board-id') + '/' + $(this).attr('data-result'));
-                return false;
-            });
-            // restore the tournament update checks when hiding board modals
-            $('.board-modal').on('hidden.bs.modal', function () {
-                start_refresh_interval();
-            });
-            // add or delete an illegal move by sending to the appropriate URL
-            $('.illegal-move-flag.add').click(function (event) {
-                stop_refresh_interval();
-                redirect('/add-illegal-move/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
-                return false;
-            });
-            $('.illegal-move-flag.delete').click(function (event) {
-                stop_refresh_interval();
-                redirect('/delete-illegal-move/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
-                return false;
-            });
-            // check-in player by sending to the appropriate URL
-            $('.player-check-in').click(function (event) {
-                stop_refresh_interval();
-                redirect('/check-in-player/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
-                return false;
-            });
-            // check-out player by sending to the appropriate URL
-            $('.player-check-out').click(function (event) {
-                stop_refresh_interval();
-                redirect('/check-out-player/{{ event.id }}/{{ screen.id }}/' + $(this).attr('data-tournament-id') + '/' + $(this).attr('data-player-id'));
-                return false;
-            });
-        {% endif %}
-        {% if rotator_next_url %}
-            setTimeout(function(){
-                redirect('{{ rotator_next_url }}');
-            }, {{ rotator_delay }} * 1000)
-        {% endif %}
-    });
 </script>
 <style>
-    {% if screen.update %}
-        {% if last_result_updated %}
-            {% if last_result_updated.expiration > now %}
-                .board-{{ last_result_updated.tournament_id }}-{{ last_result_updated.board_id }}-row > * {
-                    color: red !important;
-                }
-            {% endif %}
-        {% endif %}
-        {% if last_illegal_move_updated %}
-            {% if last_illegal_move_updated.expiration > now %}
-                .player-{{ last_illegal_move_updated.tournament_id }}-{{ last_illegal_move_updated.player_id }}-cell {
-                    color: red !important;
-                }
-            {% endif %}
-        {% endif %}
-        {% if last_check_in_updated %}
-            {% if last_check_in_updated.expiration > now %}
-                .player-{{ last_check_in_updated.tournament_id }}-{{ last_check_in_updated.player_id }}-cell {
-                    color: red !important;
-                }
-            {% endif %}
-        {% endif %}
-    {% endif %}
+    .player-cell.last_check_in_updated, .player-cell.last_illegal_move_updated {
+    .illegal-moves-cell.last_check_in_updated, .illegal-moves-cell.last_illegal_move_updated {
+        color: red !important;
+    }
+    .board-row.last_result_updated > * {
+        color: red !important;
+    }
 </style>
 {% endblock head %}
 
 {% block content %}
-    {% if screen.menu_screens %}
-        <div id="#menu" class="menu">
-            {% for entry in screen.menu_screens %}
-                <a href="{{ url_for('show-screen', event_id=event.id, screen_id=entry.id) }}" class="menu-item {% if screen.id == entry.id %}selected{% endif %}">{{ entry.menu_label }}</a>
-            {% endfor %}
-        </div>
-    {% endif %}
-    {% if event.timer %}
-        {% if screen.show_timer %}
-            {% include 'timer.html' %}
+    <div id="content-wrapper" class="content-wrapper">
+        {% if rotator %}
+            <div
+                class="rotator-updater"
+                hx-get="{{ url_for('render-rotator-screen', event_id=event.id, rotator_id=rotator.id, rotator_screen_index=rotator_screen_index + 1) }}"
+                hx-target="body"
+                hx-trigger="load delay:10s"
+            ></div>
+        {% else %}
+            <div
+                class="screen-updater"
+                hx-get="{{ url_for('render-screen-if-updated', event_id=event.id, screen_id=screen.id, date=now) }}"
+                hx-target="body"
+                hx-trigger="every 5s"
+            ></div>
         {% endif %}
-    {% endif %}
-    {% if screen.type == 'boards' %}
-        <div class="screen screen-boards {% if screen.update %}screen-boards-update{% else %}view-only{% endif %}">
-            {% include 'screen_boards.html' %}
-        </div>
-    {% endif %}
-    {% if screen.type == 'players' %}
-        <div class="screen screen-players">
-            {% include 'screen_players.html' %}
-        </div>
-    {% endif %}
-    {% if screen.type == 'results' %}
-        <div class="screen screen-results">
-            {% include 'screen_results.html' %}
-        </div>
-    {% endif %}
+        {% if screen.menu_screens %}
+            <div id="#menu" class="menu">
+                {% for entry in screen.menu_screens %}
+                    <a href="{{ url_for('render-screen', event_id=event.id, screen_id=entry.id) }}" class="menu-item {% if screen.id == entry.id %}selected{% endif %}">{{ entry.menu_label }}</a>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if event.timer %}
+            {% if screen.show_timer %}
+                {% include 'timer.html' %}
+            {% endif %}
+        {% endif %}
+        {% if screen.type == 'boards' %}
+            <div class="screen boards-screen {% if screen.update %}update{% else %}view{% endif %}">
+                {% include 'login-modal.html' %}
+                {% for screen_set in screen.sets %}
+                    {% include 'boards_screen_set.html' %}
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if screen.type == 'players' %}
+            <div class="screen players-screen">
+                {% for screen_set in screen.sets %}
+                    {% include 'players_screen_set.html' %}
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if screen.type == 'results' %}
+            <div class="screen results-screen">
+                {% include 'results_screen.html' %}
+            </div>
+        {% endif %}
+    </div>
 {% endblock content %}
 
 {% block footer %}

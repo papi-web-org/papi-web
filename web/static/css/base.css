@@ -10,20 +10,17 @@ body {
     text-align: center;
     font-style: italic;
 }
-.please-wait-modal {
-	background-image: radial-gradient(white 30%, transparent);
-}
-.please-wait-modal .modal-header {
-    justify-content: center;
-}
-.please-wait-modal .modal-title {
-    font-size: x-large;
-    font-weight: bold;
-}
-.please-wait-modal .modal-content {
+.please-wait {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    height: 80px;
+    width: 80px;
     background-color: transparent;
-	background-image: url("/static/images/papi-web.gif");
-	background-repeat: no-repeat;
-	background-position: center center;
-	background-size: 300px auto;
+    background-image: url("/static/images/papi-web.gif");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 100% auto;
 }
