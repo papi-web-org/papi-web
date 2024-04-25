@@ -22,6 +22,7 @@ from web.views import (index,
                        htmx_toggle_player_check_in,
                        htmx_render_boards_screen_set_if_updated,
                        htmx_render_players_screen_set_if_updated,
+                       htmx_remove_board_result,
                        )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -55,6 +56,7 @@ route_handlers: Sequence[ControllerRouterHandler] = [
     htmx_render_players_screen_set_if_updated,
     htmx_download_event_tournaments,
     htmx_download_tournament,
+    htmx_remove_board_result,
     static_files_router,
 ]
 

@@ -16,6 +16,14 @@ Context:
         board-row
         {% if board.result_str %}result-set{% else %}result-not-set{% endif %}
         {% if last_result_updated and last_result_updated.expiration > now and last_result_updated.tournament_id == tournament.id and last_result_updated.board_id == board.id %}last_result_updated{% endif %}"
+        {% if screen.update and board.result_str %}
+            hx-confirm="Voulez-vous vraiment supprimer ce résultat ?"
+            hx-trigger="click[ctrlKey&&altKey]"
+            hx-delete="{{ url_for('delete-board-result', event_id = event.id, tournament_id = tournament.id, board_id=board.id, screen_id=screen.id)}}"
+            hx-swap="outerHTML"
+            hx-indicator="#please-wait"
+            hx-target="this"
+        {% endif %}
     >
     <th
         scope="row"

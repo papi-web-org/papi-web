@@ -1,0 +1,26 @@
+{% set wp = board.white_player %}
+{% set bp = board.black_player %}
+<div id="tournament-{{ tournament.id }}-board-{{ board.id }}-modal" class="modal fade board-modal"
+    data-bs-backdrop="static" data-bs-keyboard="false"
+    tabindex="-1" aria-labelledby="tournament-{{ tournament.id }}-board-{{ board.id }}-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title", id="tournament-{{ tournament.id }}-board-{{ board.id }}-modal-label">Entrez le résultat :</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row d-flex align-items-center justify-content-center" hx-target="#board-{{ tournament.id }}-{{ board.id }}-row" hx-swap="outerHTML">
+                    <button hx-post="/result/{{ event.id }}/{{ tournament.id }}/{{ board.id }}/3">
+                        <div class="result-text"><br>GAIN BLANCS<br>1-0<br>{{ wp.last_name }}<br>{% if wp.first_name %}{{ wp.first_name }}{% else %}<br>{% endif %}<br>{{ wp.rating }}{{ wp.rating_type }}<br>&nbsp;</div>
+                    </button>
+                    <button hx-post="/result/{{ event.id }}/{{ tournament.id }}/{{ board.id }}/2">
+                        <div class="result-text"><br>NULLE<br>½ - ½<br><br><br><br><br>&nbsp;</div>
+                    </button>
+                    <button hx-post="/result/{{ event.id }}/{{ tournament.id }}/{{ board.id }}/1">
+                        <div class="result-text"><br>GAIN NOIRS<br>0-1<br>{{ bp.last_name }}<br>{% if bp.first_name %}{{ bp.first_name }}{% else %}<br>{% endif %}<br>{{ bp.rating }}{{ bp.rating_type }}<br>&nsbp;</div>
+                    </button>
+                </div>
+            </div>
+    </div>
+</div>

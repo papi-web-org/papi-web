@@ -273,6 +273,19 @@ class Event:
         result_file.touch()
         logger.info('le fichier [%s] a été créé', result_file)
 
+    def remove_result(self, tournament: Tournament, board: Board):
+        results_dir = Result.results_dir(self.id)
+        glob_pattern = f'* {tournament.id} {tournament.current_round} {board.id} *'
+        results = list(results_dir.glob(glob_pattern))
+        match results:
+            case []:
+                pass
+            case [result_file]:
+                result_file.unlink()
+                logger.info('le fichier [%s] a été supprimé', result_file)
+            case _:
+                raise ValueError('Plusieurs fichiers ont été créés pour ce résultat')
+
     def __lt__(self, other: 'Event'):
         # p1 < p2 calls p1.__lt__(p2)
         return self.name > other.name

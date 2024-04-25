@@ -100,6 +100,10 @@ class PapiDatabase(AccessDatabase):
         """Writes the given result to the database."""
         query: str = f'UPDATE `joueur` SET `Rd{round_:0>2}Res` = ? WHERE `Ref` = ?'
         self._execute(query, (result.value, player_id, ))
+    
+    def remove_board_result(self, player_id: int, round_: int):
+        query: str = f'UPDATE `joueur` SET `Rd{round_:0>2}Res` = 0 WHERE `Ref` = ?'
+        self._execute(query, (player_id, ))
 
     @staticmethod
     def _timestamp_to_papi_date(ts: float) -> str:

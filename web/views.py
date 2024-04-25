@@ -418,6 +418,24 @@ async def htmx_update_board_result(
     set_session_last_result_updated(request, tournament_id, board_id)
     return _render_boards_screen_board_row(request, event_id, tournament_id, board_id, screen_id)
 
+@delete(
+    path='/board-result/{event_id:str}/{tournament_id:str}/{board_id:int}/{screen_id:str}',
+    name='delete-board-result',
+    status_code=HTTP_200_OK,
+)
+async def htmx_remove_board_result(
+    request: HTMXRequest, event_id: str, tournament_id: str, board_id: int, screen_id: str,
+) -> Template:
+    event, tournament, board, screen = _load_boards_screen_board_row_data(
+        request, event_id, tournament_id, board_id, screen_id)
+    if event is None:
+        return _render_messages(request)
+    tournament.remove_result(board)
+    event.remove_result(tournament, board)
+    set_session_last_result_updated(request, tournament_id, board_id)
+    return _render_boards_screen_board_row(request, event_id, tournament_id, board_id, screen_id)
+
+
 
 def _load_boards_screen_board_row_illegal_move_data(
         request: HTMXRequest, event_id: str, tournament_id: str, player_id: int, screen_id: str,

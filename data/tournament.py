@@ -382,6 +382,15 @@ class Tournament:
                     board.white_player.first_name, board.white_player.rating, white_result,
                     board.black_player.last_name, board.black_player.first_name,
                     board.black_player.rating)
+    
+    def remove_result(self, board: Board):
+        with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
+            papi_database: PapiDatabase
+            papi_database.remove_board_result(board.white_player.id, self._current_round)
+            papi_database.remove_board_result(board.black_player.id, self._current_round)
+            papi_database.commit()
+        logger.info('Removed result: %s %s %d.%d',
+                    self.event_id, self.id, self._current_round, board.id)
 
     def write_chessevent_info_to_database(self, chessevent_tournament: ChessEventTournament) -> int:
         with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
