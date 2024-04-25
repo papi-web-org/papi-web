@@ -38,6 +38,7 @@ class Event:
         self.update_password: str | None = None
         self.record_illegal_moves: int = 0
         self.check_in_players: bool = False
+        self.allow_result_deletion: bool = False
         self.chessevent_connections: dict[str, ChessEventConnection] = {}
         self.tournaments: dict[str, Tournament] = {}
         self.templates: dict[str, Template] = {}
@@ -251,9 +252,23 @@ class Event:
                 self.check_in_players = check_in_players_bool
         else:
             self.reader.add_debug(f'option absente, par défaut [{self.check_in_players}]')
+        
+        key = 'allow_result_deletion'
+        if key in section:
+            allow_result_deletion: bool | None = self.reader.getboolean_safe(section_key, key)
+            if allow_result_deletion is None:
+                self.reader.add_warning(
+                    f'un booléen est attendu, par défaut [{self.allow_result_deletion}]',
+                    section_key,
+                    key)
+            else:
+                self.allow_result_deletion = allow_result_deletion
+        else:
+            self.reader.add_debug(f'option absente, par défaut [{self.allow_result_deletion}]')
 
         section_keys: list[str] = [
             'name', 'path', 'update_password', 'css', 'record_illegal_moves', 'check_in_players',
+            'allow_result_deletion'
         ]
         for key, _ in section.items():
             if key not in section_keys:

@@ -118,7 +118,8 @@ async def htmx_render_event_if_updated(
         except FileNotFoundError as fnfe:
             Message.warning(request, f'Fichier [{fnfe.filename}] non trouvé')
     else:
-        Message.error(request, f'Aucune dépendance de fichier trouvée pour l\'évènement [{event_id}]')
+        Message.error(
+            request, f'Aucune dépendance de fichier trouvée pour l\'évènement [{event_id}]')
     return _render_messages(request)
 
 
@@ -212,7 +213,8 @@ async def render_screen(request: HTMXRequest, event_id: str, screen_id: str) -> 
     else:
         error = f'erreur au chargement de l\'évènement [{event_id}] : [{", ".join(event.errors)}]'
         redirect_to = index_url(request)
-    Message.error(request, f'L\'affichage de l\'écran [{event_id}/{screen_id}] a échoué ({error})')
+    Message.error(
+        request, f'L\'affichage de l\'écran [{event_id}/{screen_id}] a échoué ({error})')
     return Redirect(path=redirect_to)
 
 
@@ -223,7 +225,8 @@ async def render_screen(request: HTMXRequest, event_id: str, screen_id: str) -> 
 async def htmx_render_screen_if_updated(
         request: HTMXRequest, event_id: str, screen_id: str, date: float
 ) -> Template | ClientRefresh | Reswap:
-    file_dependencies: list[Path] = AScreen.get_screen_file_dependencies(event_id, screen_id)
+    file_dependencies: list[Path] = AScreen.get_screen_file_dependencies(
+        event_id, screen_id)
     if not file_dependencies:
         Message.error(
             request,
@@ -260,7 +263,8 @@ def _render_rotator_screen(
     else:
         error = f'erreur au chargement de l\'évènement [{event_id}] : [{", ".join(event.errors)}]'
         redirect_to = index_url(request)
-    Message.error(request, f'L\'affichage de l\'écran rotatif [{event_id}/{rotator_id}] a échoué ({error})')
+    Message.error(
+        request, f'L\'affichage de l\'écran rotatif [{event_id}/{rotator_id}] a échoué ({error})')
     return _redirect_response(request, redirect_to)
 
 
@@ -311,7 +315,8 @@ def _load_boards_screen_board_result_modal_data(
             error = f'gestion des résultats non autorisée pour \'évènement [{event_id}]'
     else:
         error = f'erreur au chargement de l\'évènement [{event_id}] : [{", ".join(event.errors)}]'
-    Message.error(request, f'L\'affichage de l\'écran de saisie du résultat a échoué ({error})')
+    Message.error(
+        request, f'L\'affichage de l\'écran de saisie du résultat a échoué ({error})')
     return None, None, None, None,
 
 
@@ -411,12 +416,14 @@ async def htmx_update_board_result(
     if event is None:
         return _render_messages(request)
     if result not in Result.imputable_results():
-        Message.error(request, f'L\'écriture du résultat a échoué (résultat invalide [{result}])')
+        Message.error(
+            request, f'L\'écriture du résultat a échoué (résultat invalide [{result}])')
         return _render_messages(request)
     tournament.add_result(board, Result.from_papi_value(result))
     event.store_result(tournament, board, result)
     set_session_last_result_updated(request, tournament_id, board_id)
     return _render_boards_screen_board_row(request, event_id, tournament_id, board_id, screen_id)
+
 
 @delete(
     path='/board-result/{event_id:str}/{tournament_id:str}/{board_id:int}/{screen_id:str}',
@@ -430,11 +437,12 @@ async def htmx_remove_board_result(
         request, event_id, tournament_id, board_id, screen_id)
     if event is None:
         return _render_messages(request)
-    tournament.remove_result(board)
-    event.remove_result(tournament, board)
-    set_session_last_result_updated(request, tournament_id, board_id)
+    # FIXME(Amaras): don't just blindly ignore the multiple files
+    with suppress(ValueError):
+        event.remove_result(tournament, board)
+        tournament.remove_result(board)
+        set_session_last_result_updated(request, tournament_id, board_id)
     return _render_boards_screen_board_row(request, event_id, tournament_id, board_id, screen_id)
-
 
 
 def _load_boards_screen_board_row_illegal_move_data(
@@ -468,7 +476,8 @@ def _load_boards_screen_board_row_illegal_move_data(
             error = f'gestion des coups illégaux non autorisée pour \'évènement [{event_id}]'
     else:
         error = f'erreur au chargement de l\'évènement [{event_id}] : [{", ".join(event.errors)}]'
-    Message.error(request, f'L\'opération sur les coups illégaux a échoué ({error})')
+    Message.error(
+        request, f'L\'opération sur les coups illégaux a échoué ({error})')
     return None, None, None, None, None,
 
 
@@ -594,7 +603,8 @@ def _load_boards_or_players_screen_set_data(
             error = f'écran [{screen_id}] introuvable'
     else:
         error = f'erreur au chargement de l\'évènement [{event_id}] : [{", ".join(event.errors)}]'
-    Message.error(request, f'La mise à jour de l\'écran [{event_id}/{screen_id}/{screen_set_id}] a échoué ({error})')
+    Message.error(
+        request, f'La mise à jour de l\'écran [{event_id}/{screen_id}/{screen_set_id}] a échoué ({error})')
     return None, None, None,
 
 
@@ -609,7 +619,8 @@ def _load_boards_or_players_screen_set_data(
 async def htmx_render_boards_screen_set_if_updated(
         request: HTMXRequest, event_id: str, screen_id: str, screen_set_id: int, date: float
 ) -> Template | Reswap:
-    file_dependencies: list[Path] = ScreenSet.get_screen_set_file_dependencies(event_id, screen_id, screen_set_id)
+    file_dependencies: list[Path] = ScreenSet.get_screen_set_file_dependencies(
+        event_id, screen_id, screen_set_id)
     if not file_dependencies:
         Message.error(
             request,
@@ -656,7 +667,8 @@ async def htmx_render_boards_screen_set_if_updated(
 async def htmx_render_players_screen_set_if_updated(
         request: HTMXRequest, event_id: str, screen_id: str, screen_set_id: int, date: float
 ) -> Template | Reswap:
-    file_dependencies: list[Path] = ScreenSet.get_screen_set_file_dependencies(event_id, screen_id, screen_set_id)
+    file_dependencies: list[Path] = ScreenSet.get_screen_set_file_dependencies(
+        event_id, screen_id, screen_set_id)
     if not file_dependencies:
         Message.error(
             request,
@@ -708,7 +720,8 @@ async def htmx_download_event_tournaments(request: HTMXRequest, event_id: str) -
                 for tournament_file in tournament_files:
                     zip_entry: ZipInfo = ZipInfo(tournament_file.name)
                     with open(tournament_file, 'rb') as tournament_handler:
-                        zip_archive.writestr(zip_entry, tournament_handler.read())
+                        zip_archive.writestr(
+                            zip_entry, tournament_handler.read())
             return Response(content=bytes(archive.getbuffer()), media_type='application/zip')
         else:
             error = f'Aucun fichier de tournoi pour l\'évènement [{event_id}]'
@@ -723,7 +736,7 @@ async def htmx_download_event_tournaments(request: HTMXRequest, event_id: str) -
 @get(
     path='/download-tournament/{event_id:str}/{tournament_id:str}',
     name='download-tournament'
-    )
+)
 async def htmx_download_tournament(request: HTMXRequest, event_id: str, tournament_id: str) -> File | Template:
     error: str
     event: Event = Event(event_id, True)
