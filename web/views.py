@@ -437,7 +437,6 @@ async def htmx_remove_board_result(
         request, event_id, tournament_id, board_id, screen_id)
     if event is None:
         return _render_messages(request)
-    # FIXME(Amaras): don't just blindly ignore the multiple files
     with suppress(ValueError):
         event.remove_result(tournament, board)
         tournament.remove_result(board)

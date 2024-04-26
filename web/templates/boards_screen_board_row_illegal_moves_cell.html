@@ -16,7 +16,6 @@
                     hx-swap="outerHTML transition:true"
                     hx-delete="{{ url_for('delete-player-illegal-move', event_id=event.id, tournament_id=tournament.id, player_id=player.id, screen_id=screen.id) }}"
                     hx-indicator="#please-wait"
-
                 ></i>
             </span>
         {% endfor %}

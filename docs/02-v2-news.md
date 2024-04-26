@@ -254,3 +254,7 @@ Le pointage peut être réalisé depuis les écrans de saisie.
 ## Fluidité de la navigation (à partir de la version 2.4)
 
 L'utilisation de la technologie HTMX permet uen navigation beaucoup plus fluide sans rafraichissement global des pages à chaque opération.
+
+## Suppression des résultats déjà entrés sur les écrans de saisie (à partir de la version 2.4)
+
+Avec l'option `allow_deletion = on` sur un évènement, le clic sur un résultat déjà entré avec l'appui simultané sur les touches `Ctrl` et `Alt` supprime le résultat (une confirmation est demandée).

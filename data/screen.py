@@ -411,10 +411,9 @@ class ScreenBuilder:
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
         screen_sets: list[ScreenSet] | None = None
-        screen_set_id: int = 0
         if screen_type in [ScreenType.Boards, ScreenType.Players, ]:
             screen_sets = ScreenSetBuilder(
-                self._config_reader, self.event_id, self._tournaments, screen_id, screen_set_id, screen_type, columns,
+                self._config_reader, self.event_id, self._tournaments, screen_id, screen_type, columns,
                 show_unpaired
             ).screen_sets
             if not screen_sets:
@@ -431,7 +430,6 @@ class ScreenBuilder:
                     if screen_set.tournament.record_illegal_moves:
                         screen_set_file_dependencies += [screen_set.tournament.illegal_moves_dir, ]
                 screen_set.set_file_dependencies(screen_set_file_dependencies)
-            screen_set_id += 1
         key = '__family__'
         family_id: str | None = None
         if key in screen_section:

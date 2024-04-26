@@ -248,12 +248,12 @@ class ScreenSet:
 
 class ScreenSetBuilder:
     def __init__(self, config_reader: ConfigReader, event_id: str, tournaments: dict[str, Tournament], screen_id: str,
-                 screen_set_id: int, screen_type: ScreenType, columns: int, show_unpaired: bool):
+                 screen_type: ScreenType, columns: int, show_unpaired: bool):
         self._config_reader = config_reader
         self.event_id: str = event_id
         self._tournaments: dict[str, Tournament] = tournaments
         self.screen_id: str = screen_id
-        self.screen_set_id: int = screen_set_id
+        self.screen_set_id: int = 0
         self.screen_section_key: str = f'screen.{self.screen_id}'
         self.screen_type: ScreenType = screen_type
         self.columns: int = columns
@@ -458,7 +458,7 @@ class ScreenSetBuilder:
         for key, _ in self._config_reader.items(screen_set_section_key):
             if key not in self._config_reader.screen_set_keys:
                 self._config_reader.add_warning('option inconnue', screen_set_section_key, key)
-        return ScreenSet(
+        screen_set: ScreenSet = ScreenSet(
             self.event_id,
             self._tournaments[tournament_id],
             self.screen_id,
@@ -471,3 +471,5 @@ class ScreenSetBuilder:
             parts=parts,
             name=name,
             number=number)
+        self.screen_set_id += 1
+        return screen_set
