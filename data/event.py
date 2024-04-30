@@ -297,27 +297,31 @@ class Event:
 
     def __lt__(self, other: 'Event'):
         # p1 < p2 calls p1.__lt__(p2)
-        return self.name > other.name
+        return self.id > other.id
 
     def __eq__(self, other):
         # p1 == p2 calls p1.__eq__(p2)
         if not isinstance(self, Event):
             return NotImplemented
-        return self.name == other.name
+        return self.id == other.id
 
 
-def __get_events(load_screens: bool, with_tournaments_only: bool = False) -> list[Event]:
+def __get_events(load_screens: bool, with_tournaments_only: bool = False) -> dict[str, Event]:
     event_files: Iterator[Path] = EVENTS_PATH.glob('*.ini')
-    events: list[Event] = []
+    events: dict[str, Event] = {}
     for event_file in event_files:
         event_id: str = event_file.stem
         event: Event = Event(event_id, load_screens)
         if not with_tournaments_only or event.tournaments:
-            events.append(event)
+            events[event.id] = event
     return events
 
 
-def get_events_by_name(load_screens: bool, with_tournaments_only: bool = False) -> list[Event]:
+def get_events_sorted_by_name(load_screens: bool, with_tournaments_only: bool = False) -> list[Event]:
     return sorted(
-        __get_events(load_screens, with_tournaments_only=with_tournaments_only),
+        __get_events(load_screens, with_tournaments_only=with_tournaments_only).values(),
         key=lambda event: event.name)
+
+
+def get_events_by_id(load_screens: bool, with_tournaments_only: bool = False) -> dict[str, Event]:
+    return __get_events(load_screens, with_tournaments_only=with_tournaments_only)

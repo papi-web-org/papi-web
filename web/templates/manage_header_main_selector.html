@@ -1,0 +1,20 @@
+{#
+Context:
+- manage_main_selector_options
+- manage_main_selector
+- manage_event
+#}
+<span id="manage-main-selector" class="manage-main-selector">
+    <select
+        name="manage_main_selector"
+        hx-post="{{ url_for('update-manage-main-selector') }}"
+        hx-swap="multi:#manage-event-selector,#manage-content"
+    >
+        {% for option_value, option_text in manage_main_selector_options.items() %}
+            <option value="{{ option_value }}" {% if manage_main_selector == option_value %}selected{% endif %}>{{ option_text }}</option>
+        {% endfor %}
+        {% for event in events %}
+            <option value="{{ event.id }}" {% if manage_event and manage_event.id == event.id %}selected{% endif %}>{{ event.name }}</option>
+        {% endfor %}
+    </select>
+</span>

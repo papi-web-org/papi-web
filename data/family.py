@@ -1,5 +1,4 @@
 import re
-from contextlib import suppress
 from math import ceil
 
 from common.config_reader import ConfigReader
@@ -135,7 +134,8 @@ class FamilyBuilder:
                     template_show_unpaired: bool = DEFAULT_SHOW_UNPAIRED
                     if 'show_unpaired' in template.data[None]:
                         template_section_key: str = f'template.{template_id}'
-                        template_show_unpaired = self._config_reader.getboolean_safe(template_section_key, 'show_unpaired')
+                        template_show_unpaired = self._config_reader.getboolean_safe(
+                            template_section_key, 'show_unpaired')
                         if template_show_unpaired is None:
                             self._config_reader.add_warning(
                                 f'un booléen est attendu pour l\'option show_unpaired '

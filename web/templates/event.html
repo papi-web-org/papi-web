@@ -197,26 +197,26 @@
             {% with id='timer' %}
                 {% if event.timer %}
                     <div class="tab-pane fade" id="{{ id }}-tab-pane" role="tabpanel" aria-labelledby="{{ id }}-tab" tabindex="0">
-                                        <table class="table border-black">
-                                            <thead class="table-dark">
-                                                <tr>
-                                                    <th scope="col">#</th>
-                                                    <th scope="col">Date</th>
-                                                    <th scope="col">Message avant</th>
-                                                    <th scope="col">Message après</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for hour in event.timer.hours %}
-                                                    <tr>
-                                                        <th scope="row">{{ hour.id }}</th>
-                                                        <td>{{ hour.datetime_str }}</td>
-                                                        <td>{{ hour.text_before }}</td>
-                                                        <td>{{ hour.text_after }}</td>
-                                                    </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
+                        <table class="table border-black">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Message avant</th>
+                                    <th scope="col">Message après</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for hour in event.timer.hours %}
+                                    <tr>
+                                        <th scope="row">{{ hour.id }}</th>
+                                        <td>{{ hour.datetime_str }}</td>
+                                        <td>{{ hour.text_before }}</td>
+                                        <td>{{ hour.text_after }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 {% endif %}
             {% endwith %}

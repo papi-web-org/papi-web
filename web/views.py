@@ -16,10 +16,11 @@ from litestar.status_codes import HTTP_200_OK, HTTP_304_NOT_MODIFIED
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate, Reswap, ClientRedirect, ClientRefresh
 
+from common import papi_web_config
 from common.logger import get_logger
 from common.papi_web_config import PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, PAPI_WEB_VERSION, PapiWebConfig
 from data.board import Board
-from data.event import Event, get_events_by_name
+from data.event import Event, get_events_sorted_by_name, get_events_by_id
 from data.player import Player
 from data.rotator import Rotator
 from data.screen import AScreen
@@ -62,7 +63,7 @@ def _render_messages(request: HTMXRequest) -> Template:
     name='index'
 )
 async def index(request: HTMXRequest) -> Template:
-    events: list[Event] = get_events_by_name(True)
+    events: list[Event] = get_events_sorted_by_name(True)
     if len(events) == 0:
         Message.error(request, 'Aucun évènement trouvé')
     return HTMXTemplate(
@@ -753,4 +754,126 @@ async def htmx_download_tournament(request: HTMXRequest, event_id: str, tourname
     Message.error(
         request,
         f'Le téléchargement du fichier Papi du tournoi [{event_id}/{tournament_id}] a échoué ({error})')
+    return _render_messages(request)
+
+
+def _get_manage_main_selector_options() -> dict[str, str]:
+    return {
+        '': '-- Configuration des évènements',
+    }
+
+
+def _get_manage_event_selector_options() -> dict[str, str]:
+    return {
+        '': 'Informations',
+        '@tournaments': 'Tournois',
+        '@screens': 'Écrans',
+        '@families': 'Familles d\'écrans',
+        '@rotators': 'Écrans rotatifs',
+        '@timers': 'Chronomètre',
+        '@messages': 'Messages',
+        '@check_in': 'Pointage',
+        '@pairings': 'Appariements',
+    }
+
+
+@get(
+    path='/manage',
+    name='render-manage'
+)
+async def render_manage(request: HTMXRequest) -> Template | Redirect:
+    events: list[Event] = get_events_sorted_by_name(True)
+    return HTMXTemplate(
+        template_name="manage.html",
+        context={
+            'papi_web_info': papi_web_info,
+            'papi_web_config': papi_web_config,
+            'odbc_drivers': odbc_drivers(),
+            'access_driver': access_driver(),
+            'events': events,
+            'messages': Message.messages(request),
+            'now': time.time(),
+            'manage_main_selector_options': _get_manage_main_selector_options(),
+            'manage_main_selector': '',
+            'manage_event': None,
+            'manage_event_selector_options': {},
+        })
+
+
+@post(
+    path='/update-manage-main-selector',
+    name='update-manage-main-selector'
+)
+async def htmx_update_manage_main_selector(
+        request: HTMXRequest,
+        data: Annotated[
+            dict[str, str],
+            Body(media_type=RequestEncodingType.URL_ENCODED),
+        ],
+) -> Template:
+    error: str
+    events_by_id = get_events_by_id(load_screens=False, with_tournaments_only=False)
+    events: list[Event] = sorted(events_by_id.values(), key=lambda event: event.name)
+    param: str = 'manage_main_selector'
+    try:
+        manage_main_selector: str = data[param]
+        manage_event: Event | None = None
+        try:
+            if manage_main_selector:
+                manage_event: Event = events_by_id[manage_main_selector]
+            return HTMXTemplate(
+                template_name="manage_update_main_selector.html",
+                context={
+                    'papi_web_info': papi_web_info,
+                    'papi_web_config': papi_web_config,
+                    'odbc_drivers': odbc_drivers(),
+                    'access_driver': access_driver(),
+                    'events': events,
+                    'manage_main_selector': manage_main_selector,
+                    'manage_event': manage_event,
+                    'manage_event_selector_options': _get_manage_event_selector_options(),
+                    'manage_event_selector': '',
+                })
+        except KeyError:
+            error = f'Évènement [{manage_main_selector}] introuvable'
+    except KeyError:
+        error = f'Paramètre [{param}] introuvable'
+    Message.error(request, error)
+    return _render_messages(request)
+
+
+@post(
+    path='/update-manage-event-selector/{event_id:str}',
+    name='update-manage-event-selector'
+)
+async def htmx_update_manage_event_selector(
+        request: HTMXRequest,
+        data: Annotated[
+            dict[str, str],
+            Body(media_type=RequestEncodingType.URL_ENCODED),
+        ],
+        event_id: str,
+) -> Template:
+    error: str
+    manage_event: Event = Event(event_id, True)
+    param: str = 'manage_main_selector'
+    if not manage_event.errors:
+        try:
+            manage_event_selector: str = data['manage_event_selector']
+            return HTMXTemplate(
+                template_name="manage_update_event_selector.html",
+                context={
+                    'papi_web_info': papi_web_info,
+                    'papi_web_config': papi_web_config,
+                    'odbc_drivers': odbc_drivers(),
+                    'access_driver': access_driver(),
+                    'manage_event': manage_event,
+                    'manage_event_selector_options': _get_manage_event_selector_options(),
+                    'manage_event_selector': manage_event_selector,
+                })
+        except KeyError:
+            error = f'Paramètre [{param}] introuvable'
+    else:
+        error = f'erreur au chargement de l\'évènement [{event_id}] : [{", ".join(manage_event.errors)}]'
+    Message.error(request, error)
     return _render_messages(request)

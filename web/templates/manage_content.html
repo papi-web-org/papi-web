@@ -1,0 +1,46 @@
+{#
+Context:
+- manage_main_selector
+- manage_event
+- manage_event_selector
+- papi_web_info
+- papi_web_config
+- odbc_drivers
+- access_driver
+#}
+<div id="manage-content" class="">
+    {% if manage_main_selector == '' %}
+        {% include 'manage_content_configuration.html' %}
+    {% else %}{# manage_event is not None #}
+        {% if manage_event_selector == '' %}
+            {% include 'manage_content_event_configuration.html' %}
+        {% endif %}
+        {% if manage_event_selector == '@tournaments' %}
+            {% include 'manage_content_event_tournaments.html' %}
+        {% endif %}
+        {% if manage_event_selector == '@screens' %}
+            {% include 'manage_content_event_screens.html' %}
+        {% endif %}
+        {% if manage_event_selector == '@families' %}
+            {% include 'manage_content_event_families.html' %}
+        {% endif %}
+        {% if manage_event_selector == '@rotators' %}
+            {% include 'manage_content_event_rotators.html' %}
+        {% endif %}
+        {% if manage_event_selector == '@timers' %}
+            {% include 'manage_content_event_timers.html' %}
+        {% endif %}
+        {% if manage_event_selector == '@messages' %}
+            {% include 'manage_content_event_messages.html' %}
+        {% endif %}
+        {% if manage_event_selector == '@players' %}
+            {% include 'manage_content_event_players.html' %}
+        {% endif %}
+        {% if manage_event_selector == '@check_in' %}
+            {% include 'manage_content_event_check_in.html' %}
+        {% endif %}
+        {% if manage_event_selector == '@pairings' %}
+            {% include 'manage_content_event_pairings.html' %}
+        {% endif %}
+    {% endif %}
+</div>

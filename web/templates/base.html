@@ -12,6 +12,7 @@
         {# https://unpkg.com/browse/htmx.org@1.9.12/dist/ #}
         <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/htmx.min.js') }}"></script>
         <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/ext/remove-me.js') }}"></script>
+        <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/ext/multi-swap.js') }}"></script>
 {# TODO this was really nicer than the HTMX code in messages.html
         <script>
             $(document).ready(function(){
@@ -34,10 +35,12 @@
         {% block head %}
         {% endblock %}
     </head>
-    <body>
+    <body hx-ext="multi-swap">
         <div id="messages">
             {% include 'messages.html' %}
         </div>
+        {% block header %}
+        {% endblock %}
         {% block content %}
             Body content
         {% endblock %}

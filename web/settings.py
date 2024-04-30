@@ -17,12 +17,14 @@ from web.views import (index,
                        htmx_render_rotator_screen,
                        htmx_render_boards_screen_board_result_modal,
                        htmx_update_board_result,
+                       htmx_remove_board_result,
                        htmx_download_event_tournaments, htmx_download_tournament,
                        htmx_add_illegal_move, htmx_delete_illegal_move,
                        htmx_toggle_player_check_in,
                        htmx_render_boards_screen_set_if_updated,
                        htmx_render_players_screen_set_if_updated,
-                       htmx_remove_board_result,
+                       render_manage,
+                       htmx_update_manage_main_selector, htmx_update_manage_event_selector,
                        )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -49,6 +51,7 @@ route_handlers: Sequence[ControllerRouterHandler] = [
     htmx_render_rotator_screen,
     htmx_render_boards_screen_board_result_modal,
     htmx_update_board_result,
+    htmx_remove_board_result,
     htmx_add_illegal_move,
     htmx_delete_illegal_move,
     htmx_toggle_player_check_in,
@@ -56,7 +59,9 @@ route_handlers: Sequence[ControllerRouterHandler] = [
     htmx_render_players_screen_set_if_updated,
     htmx_download_event_tournaments,
     htmx_download_tournament,
-    htmx_remove_board_result,
+    render_manage,
+    htmx_update_manage_main_selector,
+    htmx_update_manage_event_selector,
     static_files_router,
 ]
 
