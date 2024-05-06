@@ -13,6 +13,7 @@ from data.screen_set import ScreenSet, ScreenSetBuilder
 from data.template import Template
 from data.tournament import Tournament
 from data.util import ScreenType
+from database.sqlite import EventDatabase
 
 logger: Logger = get_logger()
 
@@ -208,7 +209,9 @@ class ResultsScreen(AScreen):
 
     @property
     def results_lists(self) -> list[list[Result]]:
-        results: list[Result] = Result.get_results(self.event_id, self.limit)
+        with EventDatabase(self.event_id, 'r') as event_database:
+            event_database: EventDatabase
+            results: list[Result] = event_database.get_results(self.limit)
         results_by_column: list[list[Result]] = []
         column_size: int = (self.limit if self.limit else len(results)) // self.columns
         for i in range(self.columns):
@@ -398,7 +401,7 @@ class ScreenBuilder:
                 limit = self._config_reader.getint_safe(screen_section_key, key)
                 if limit is None:
                     self._config_reader.add_warning(
-                        f'un entier positif ou nul ets attendu, par défaut [{default_limit}]',
+                        f'un entier positif ou nul est attendu, par défaut [{default_limit}]',
                         screen_section_key, key)
                     limit = default_limit
                 if limit > 0 and limit % columns > 0:

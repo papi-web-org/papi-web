@@ -405,11 +405,11 @@ def _render_boards_screen_board_row(
         })
 
 
-@patch(
+@put(
     path='/board-result/{event_id:str}/{tournament_id:str}/{board_id:int}/{result:int}/{screen_id:str}',
-    name='update-board-result'
+    name='add-board-result'
 )
-async def htmx_update_board_result(
+async def htmx_add_board_result(
         request: HTMXRequest, event_id: str, tournament_id: str, board_id: int, result: int | None, screen_id: str,
 ) -> Template:
     event, tournament, board, screen = _load_boards_screen_board_row_data(
@@ -421,7 +421,6 @@ async def htmx_update_board_result(
             request, f'L\'écriture du résultat a échoué (résultat invalide [{result}])')
         return _render_messages(request)
     tournament.add_result(board, Result.from_papi_value(result))
-    event.store_result(tournament, board, result)
     set_session_last_result_updated(request, tournament_id, board_id)
     return _render_boards_screen_board_row(request, event_id, tournament_id, board_id, screen_id)
 
@@ -431,7 +430,7 @@ async def htmx_update_board_result(
     name='delete-board-result',
     status_code=HTTP_200_OK,
 )
-async def htmx_remove_board_result(
+async def htmx_delete_board_result(
     request: HTMXRequest, event_id: str, tournament_id: str, board_id: int, screen_id: str,
 ) -> Template:
     event, tournament, board, screen = _load_boards_screen_board_row_data(
@@ -439,8 +438,7 @@ async def htmx_remove_board_result(
     if event is None:
         return _render_messages(request)
     with suppress(ValueError):
-        event.remove_result(tournament, board)
-        tournament.remove_result(board)
+        tournament.delete_result(board)
         set_session_last_result_updated(request, tournament_id, board_id)
     return _render_boards_screen_board_row(request, event_id, tournament_id, board_id, screen_id)
 

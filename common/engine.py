@@ -29,15 +29,16 @@ class Engine:
         self._check_version()
 
     def _check_version(self):
-        last_stable_version: str | None = self._get_last_stable_version()
+        last_stable_version: Version | None = self._get_last_stable_version()
         if not last_stable_version:
             logger.warning('La vérification de la version a échoué')
             return
         if last_stable_version == PAPI_WEB_VERSION:
             logger.info('Votre version de Papi-web est à jour')
             return
-        last_stable_matches = re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$', last_stable_version)
-        if re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$', PAPI_WEB_VERSION):
+        last_stable_matches = re.match(
+            r'^.*(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$', str(last_stable_version))
+        if re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$', str(PAPI_WEB_VERSION)):
             if last_stable_version > PAPI_WEB_VERSION:
                 logger.warning('Une version plus récente que la vôtre est disponible (%s)',
                                last_stable_version)
@@ -45,7 +46,7 @@ class Engine:
                 logger.warning('Vous utilisez une version plus récente que la dernière version stable disponible, '
                                'vous ne seriez pas développeur des fois ?')
             return
-        if not (matches := re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)-rc(?P<rc>\d+).*$', PAPI_WEB_VERSION)):
+        if not (matches := re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)-rc(?P<rc>\d+).*$', str(PAPI_WEB_VERSION))):
             raise ValueError('Version de Papi-web invalide')
         if last_stable_matches.group('major') > matches.group('major'):
             logger.warning('Une version majeure plus récente que la vôtre est disponible (%s)',
@@ -59,7 +60,7 @@ class Engine:
                     'disponible (%s)', last_stable_version)
 
     @staticmethod
-    def _get_last_stable_version() -> str | None:
+    def _get_last_stable_version() -> Version | None:
         url: str = 'https://api.github.com/repos/papi-web-org/papi-web/releases'
         try:
             logger.debug('Recherche d\'une version plus récente sur GitHub (%s)...', url)
@@ -92,7 +93,7 @@ class Engine:
                 return None
             versions.sort(key=Version)
             logger.debug('releases=%s', versions)
-            return versions[-1]
+            return Version(versions[-1])
         except ConnectionError as e:
             logger.warning('Veuillez vérifier votre connection à internet : %s', e)
             return None

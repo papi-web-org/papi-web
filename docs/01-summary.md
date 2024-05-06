@@ -60,6 +60,7 @@ Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonne
 
 | Arbitre             | Titre | Ligue | Dép | Club                                          |
 |---------------------|-------|-------|-----|-----------------------------------------------|
+| ARMES Timothy       | AFO1  | ARA   | 69  | Echiquier Romanais-Peageois                   |
 | AUBRY Pascal        | AFO2  | BRE   | 35  | Echiquier Domloupéen                          |
 | AVENIA Adrien       |       | BFC   | 25  | Tour Prends Garde! Besancon                   |
 | BENETEAU Hubert     | AFE1  | NOR   | 50  | Agneaux Saint-Lô                              |

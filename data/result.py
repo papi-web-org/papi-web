@@ -1,14 +1,10 @@
-import re
-import time
 from datetime import datetime
 from functools import total_ordering
 from logging import Logger
-from pathlib import Path
 from dataclasses import dataclass
 
-from common.config_reader import TMP_DIR
 from common.logger import get_logger
-from data.util import Result as DataResult
+from data.util import Result as UtilResult
 
 logger: Logger = get_logger()
 
@@ -22,7 +18,7 @@ class Result:
     board_id: int
     white_player: str
     black_player: str
-    result: DataResult
+    result: UtilResult
 
     @property
     def timestamp_str(self) -> str:
@@ -44,78 +40,3 @@ class Result:
         return (f'{self.__class__.__name__}('
                 f'{self.timestamp_str} {self.tournament_id}.{self.board_id} '
                 f'{self.white_player} {self.result_str} {self.black_player})')
-
-    @classmethod
-    def results_dir(cls, event_id: str) -> Path:
-        return TMP_DIR / 'events' / event_id / 'results'
-
-    @classmethod
-    def get_results(cls, event_id: str, limit: int) -> list['Result']:
-        results: list[Result] = []
-        results_dir: Path = cls.results_dir(event_id)
-        files: list[Path] = list(results_dir.glob("*"))
-        # delete too old files
-        limit_ts: float = time.time() - 3600
-        files_deleted: bool = False
-        for file in files:
-            if file.lstat().st_ctime < limit_ts:
-                file.unlink()
-                logger.debug('le fichier [%s] a été supprimé', file)
-                files_deleted = True
-        if files_deleted:
-            logger.debug('de vieux fichiers de résultat ont été supprimés, rechargement...')
-            files = list(results_dir.glob("*"))
-        if not files:
-            return results
-        prog = re.compile(
-                r'^(?P<timestamp>[\d.]+) (?P<tournament_id>[^ ]+) '
-                r'(?P<round>\d+) (?P<board_id>\d+) (?P<white_player>[^ ]+) '
-                r'(?P<black_player>[^ ]+) (?P<result>[0-6])$')
-        for file in reversed(files):
-            matches = prog.match(Path(file).name)
-            if not matches:
-                logger.warning('invalid result filename [%s]', file)
-                continue
-            group: str = 'timestamp'
-            timestamp: float
-            try:
-                timestamp = float(matches.group(group))
-            except ValueError:
-                logger.warning('invalid timestamp [%s] for result file [%s]',
-                               matches.match(group), file)
-                continue
-            group = 'tournament_id'
-            tournament_id: str = matches.group(group)
-            group = 'round'
-            round_: int
-            try:
-                round_ = int(matches.group(group))
-            except ValueError:
-                logger.warning('invalid round number [%s] for result file [%s]',
-                               matches.group(group), file)
-                continue
-            group = 'board_id'
-            board_id: int
-            try:
-                board_id = int(matches.group(group))
-            except ValueError:
-                logger.warning('invalid board id [%s] for result file [%s]',
-                               matches.group(group), file)
-                continue
-            group = 'white_player'
-            white_player: str = matches.group(group).replace('_', ' ')
-            group = 'black_player'
-            black_player: str = matches.group(group).replace('_', ' ')
-            group = 'result'
-            result: int | DataResult
-            try:
-                result = int(matches.group(group))
-                result = DataResult.from_papi_value(result)
-            except ValueError:
-                logger.warning('invalid result [%s] for result file [%s]',
-                               matches.group(group), file)
-                continue
-            results.append(Result(timestamp, tournament_id, round_, board_id, white_player, black_player, result))
-            if limit and len(results) > limit:
-                break
-        return results

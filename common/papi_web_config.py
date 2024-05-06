@@ -9,6 +9,7 @@ import jinja2
 import litestar
 import pyodbc
 import uvicorn
+from packaging.version import Version
 
 from common.singleton import singleton
 from common.config_reader import ConfigReader, TMP_DIR
@@ -16,7 +17,7 @@ from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
 
-PAPI_WEB_VERSION: str = '2.4.0-rc1'
+PAPI_WEB_VERSION: Version = Version('2.4.0-pre1')
 
 BOOTSTRAP_VERSION: str = '5.3.3'
 JQUERY_VERSION: str = '3.7.1'

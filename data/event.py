@@ -1,6 +1,5 @@
 import json
 import os
-import time
 from functools import total_ordering
 from logging import Logger
 from pathlib import Path
@@ -8,10 +7,8 @@ from typing import Iterator
 
 from common.config_reader import ConfigReader, TMP_DIR, EVENTS_PATH
 from common.logger import get_logger
-from data.board import Board
 from data.chessevent_connection import ChessEventConnection, ChessEventConnectionBuilder
 from data.family import FamilyBuilder
-from data.result import Result
 from data.rotator import Rotator, RotatorBuilder
 from data.screen import AScreen, ScreenBuilder
 from data.template import Template, TemplateBuilder
@@ -273,27 +270,6 @@ class Event:
         for key, _ in section.items():
             if key not in section_keys:
                 self.reader.add_warning('option inconnue', section_key, key)
-
-    def store_result(self, tournament: Tournament, board: Board, result: int):
-        results_dir: Path = Result.results_dir(self.id)
-        results_dir.mkdir(parents=True, exist_ok=True)
-        # add a new file
-        now: float = time.time()
-        white_str: str = (f'{board.white_player.last_name} {board.white_player.first_name} {board.white_player.rating}'
-                          .replace(' ', '_'))
-        black_str: str = (f'{board.black_player.last_name} {board.black_player.first_name} {board.black_player.rating}'
-                          .replace(' ', '_'))
-        filename: str = f'{now} {tournament.id} {tournament.current_round} {board.id} {white_str} {black_str} {result}'
-        result_file: Path = results_dir / filename
-        result_file.touch()
-        logger.info('le fichier [%s] a été créé', result_file)
-
-    def remove_result(self, tournament: Tournament, board: Board):
-        results_dir = Result.results_dir(self.id)
-        glob_pattern = f'* {tournament.id} {tournament.current_round} {board.id} *'
-        for result_file in results_dir.glob(glob_pattern):
-            result_file.unlink()
-            logger.info('le fichier [%s] a été supprimé', result_file)
 
     def __lt__(self, other: 'Event'):
         # p1 < p2 calls p1.__lt__(p2)

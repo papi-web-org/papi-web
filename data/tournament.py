@@ -16,6 +16,7 @@ from data.util import Color, NeedsUpload, TournamentRating
 from data.util import TournamentPairing, Result
 from database.papi import PapiDatabase
 from data.util import DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER
+from database.sqlite import EventDatabase
 
 logger: Logger = get_logger()
 
@@ -270,33 +271,27 @@ class Tournament:
         return TMP_DIR / 'events' / self.event_id / 'illegal_moves' / self.id
 
     def store_illegal_move(self, player: Player):
-        self.illegal_moves_dir.mkdir(parents=True, exist_ok=True)
-        # add a new file
-        filename: str = f'{time.time()} {self.current_round} {player.id}'
-        illegal_move_file: Path = self.illegal_moves_dir / filename
-        illegal_move_file.touch()
-        logger.info('le fichier [%s] a été créé', illegal_move_file)
+        with EventDatabase(self.event_id, 'w') as event_database:
+            event_database: EventDatabase
+            event_database.store_illegal_move(self.id, self.current_round, player.id)
+            event_database.commit()
+        logger.info('le coup illégal a été enregistré')
     
     def delete_illegal_move(self, player: Player) -> bool:
-        """Tries to find all illegal moves for the current round of the tournament, and delete one of them.
-        Returns True if a file was found and deleted, False if no such file was found"""
-        illegal_moves_dir: Path = self.illegal_moves_dir
-        glob_pattern: str = f'* {self.current_round} {player.id}'
-        for file in illegal_moves_dir.glob(glob_pattern):
-            file.unlink()
-            logger.info('le fichier [%s] a été supprimé', file)
-            return True
-        logger.debug('Aucun fichier de coup illégal trouvé pour le motif [%s]', glob_pattern)
-        return False
+        with EventDatabase(self.event_id, 'w') as event_database:
+            event_database: EventDatabase
+            deleted: bool = event_database.delete_illegal_move(self.id, self.current_round, player.id)
+            event_database.commit()
+            if deleted:
+                logger.info('un coup illégal a été supprimé pour le·la joueur·euse [%s]', player.id)
+            else:
+                logger.info('aucun coup illégal n\'a été trouvé pour le·la joueur·euse [%s]', player.id)
+            return deleted
 
     def get_illegal_moves(self) -> Counter[int]:
-        illegal_moves: Counter[int] = Counter[int]()
-        glob_pattern: str = f'* {self.current_round} *'
-        regex = re.compile(r'.* (\d+)$')
-        for file in self.illegal_moves_dir.glob(glob_pattern):
-            if matches := regex.match(file.name):
-                illegal_moves[int(matches.group(1))] += 1
-        return illegal_moves
+        with EventDatabase(self.event_id, 'r') as event_database:
+            event_database: EventDatabase
+            return event_database.get_illegal_moves(self.id, self.current_round)
 
     def _set_players_illegal_moves(self):
         illegal_moves: Counter[int] = self.get_illegal_moves()
@@ -377,18 +372,26 @@ class Tournament:
             papi_database.add_board_result(board.white_player.id, self._current_round, white_result)
             papi_database.add_board_result(board.black_player.id, self._current_round, black_result)
             papi_database.commit()
+        with EventDatabase(self.event_id, 'w') as event_database:
+            event_database: EventDatabase
+            event_database.add_result(self.id, self.current_round, board, white_result)
+            event_database.commit()
         logger.info('Added result: %s %s %d.%d %s %s %d %s %s %s %d',
                     self.event_id, self.id, self._current_round, board.id, board.white_player.last_name,
                     board.white_player.first_name, board.white_player.rating, white_result,
                     board.black_player.last_name, board.black_player.first_name,
                     board.black_player.rating)
     
-    def remove_result(self, board: Board):
+    def delete_result(self, board: Board):
         with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
             papi_database: PapiDatabase
             papi_database.remove_board_result(board.white_player.id, self._current_round)
             papi_database.remove_board_result(board.black_player.id, self._current_round)
             papi_database.commit()
+        with EventDatabase(self.event_id, 'w') as event_database:
+            event_database: EventDatabase
+            event_database.delete_result(self.id, self.current_round, board.id)
+            event_database.commit()
         logger.info('Removed result: %s %s %d.%d',
                     self.event_id, self.id, self._current_round, board.id)
 

@@ -51,5 +51,3 @@ def set_session_last_check_in_updated(request: HTMXRequest, tournament_id: str, 
 
 def get_session_last_check_in_updated(request: HTMXRequest):
     return request.session.get('last_check_in_updated', None)
-
-
