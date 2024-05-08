@@ -12,11 +12,22 @@ Il s'agit d'une incompatibilité entre Windows 7 et la version de Python utilis�
 
 ### Microsoft Defender Smartscreen a empêché le démarrage d'une application non reconnue
 
-![Message d'erreur de Microsoft Defender SmartScreen](images/faq-defender.jpg)
+![Message d'erreur de Microsoft Defender SmartScreen](images/faq-defender-smartscreen.jpg)
 
 Dans la version actuelle de Papi-web, Microsoft Defender SmartScreen affiche l'erreur ci-dessus.
 
 Le seul moyen de contourner cette erreur est de cliquer sur **Informations complémentaires** puis **Exécuter quand même**.  
+
+### Blocage du serveur web par le pare-feu du serveur
+
+Par défaut, il est possible que le serveur web ne soit pas autorisé par le pare-feu du serveur, comme par exemple ici avec Microsoft Defender :
+
+![Demande d'ouverture du pare-feu Microsoft Defender](images/faq-defender-firewall-1.jpg)
+
+Selon votre pare-feu, le message pourra être différent et la méthode d'ouverture des ports nécessaires pourra également différer ; 
+si nécessaire, contactez votre administrateur réseau pour ouvrir les flux entrants du serveur (par défaut le port 80 en tcp/udp, ci-dessous l'autorisation ).
+
+![Exemple d'autorisation du pare-feu Microsoft Defender pour Papi-web](images/faq-defender-firewall-2.jpg)
 
 ## Chronomètre
 
