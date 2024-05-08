@@ -130,13 +130,19 @@ class EventDatabase(SQLiteDatabase):
 
     def _set_tournament_updated(self, tournament_id: str):
         self._execute(
-            'DELETE FROM `tournament` WHERE `id` = ?',
+            'SELECT `last_update` FROM `tournament` WHERE `id` = ?',
             (tournament_id, ),
         )
-        self._execute(
-            'INSERT INTO `tournament`(`id`, `last_update`) VALUES(?, ?)',
-            (tournament_id, time.time(), ),
-        )
+        if row := self._fetchone():
+            self._execute(
+                'UPDATE `tournament` SET `last_update` = ? WHERE `id` = ?',
+                (time.time(), tournament_id, ),
+            )
+        else:
+            self._execute(
+                'INSERT INTO `tournament`(`id`, `last_update`) VALUES(?, ?)',
+                (tournament_id, time.time(), ),
+            )
 
     def get_illegal_moves(self, tournament_id: str, round: int) -> Counter[int]:
         self._execute(
