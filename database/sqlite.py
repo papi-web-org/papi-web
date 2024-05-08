@@ -20,7 +20,7 @@ from data.board import Board
 logger: Logger = get_logger()
 
 DB_PATH: Path = Path('.') / 'db'
-SQL_PATH: Path = Path('.') / 'database' / 'sql'
+SQL_PATH: Path = Path(__file__).resolve().parent / 'sql'
 
 
 @dataclass
