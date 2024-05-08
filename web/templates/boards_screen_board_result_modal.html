@@ -1,0 +1,49 @@
+{#
+Context:
+- event
+- tournament
+- board
+- screen
+#}
+{% with wp=board.white_player, bp=board.black_player %}
+<div class="modal-dialog modal-dialog-centered boards-screen-board-result-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Entrez le résultat</h5>
+        </div>
+        <div class="modal-body">
+            <div class="row d-flex align-items-center justify-content-center">
+                <button
+                    class="result-button white col-3 ms-auto me-auto btn"
+                    hx-put="{{ url_for('add-board-result', event_id=event.id, tournament_id=tournament.id, board_id=board.id, result=3, screen_id=screen.id) }}"
+                    hx-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-row"
+                    hx-swap="outerHTML"
+                    data-bs-dismiss="modal"
+                    hx-indicator="#please-wait"
+                >&nbsp;<br/>GAIN BLANCS<br/>1 - 0<br/><br/>{{ wp.last_name }}<br/>{{ wp.first_name }}<br/>{{ wp.rating }}{{ wp.rating_type }}<br/>&nbsp;</button>
+                <button
+                    class="result-button draw col-3 ms-auto me-auto btn"
+                    hx-put="{{ url_for('add-board-result', event_id=event.id, tournament_id=tournament.id, board_id=board.id, result=2, screen_id=screen.id) }}"
+                    hx-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-row"
+                    hx-swap="outerHTML"
+                    data-bs-dismiss="modal"
+                    hx-indicator="#please-wait"
+                >
+                    &nbsp;<br/>NULLE<br/>½ - ½<br/><br/><br/><br/><br/>&nbsp;
+                </button>
+                <button
+                    class="result-button black col-3 ms-auto me-auto btn"
+                    hx-put="{{ url_for('add-board-result', event_id=event.id, tournament_id=tournament.id, board_id=board.id, result=1, screen_id=screen.id) }}"
+                    hx-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-row"
+                    hx-swap="outerHTML"
+                    data-bs-dismiss="modal"
+                    hx-indicator="#please-wait"
+                >&nbsp;<br/>GAIN NOIRS<br/>0 - 1<br/><br/>{{ bp.last_name }}<br/>{{ bp.first_name }}<br/>{{ bp.rating }}{{ bp.rating_type }}<br/>&nbsp;</button>
+            </div>
+        </div>
+        <div class="modal-footer justify-content-center">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        </div>
+    </div>
+</div>
+{% endwith %}

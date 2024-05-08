@@ -100,6 +100,10 @@ class PapiDatabase(AccessDatabase):
         """Writes the given result to the database."""
         query: str = f'UPDATE `joueur` SET `Rd{round_:0>2}Res` = ? WHERE `Ref` = ?'
         self._execute(query, (result.value, player_id, ))
+    
+    def remove_board_result(self, player_id: int, round_: int):
+        query: str = f'UPDATE `joueur` SET `Rd{round_:0>2}Res` = 0 WHERE `Ref` = ?'
+        self._execute(query, (player_id, ))
 
     @staticmethod
     def _timestamp_to_papi_date(ts: float) -> str:
@@ -258,7 +262,7 @@ class PapiDatabase(AccessDatabase):
         self._execute(query)
         return self._fetchval()
 
-    def check_in_player(self, player_id: int):
+    def _check_in_player(self, player_id: int):
         logger.debug('Checking in player %d', player_id)
         checked_in_players_number: int = self.get_checked_in_players_number()
         player_skipped_rounds: dict[int, float]
@@ -327,7 +331,7 @@ class PapiDatabase(AccessDatabase):
         params = tuple(list(data.values()) + [player_id, ])
         self._execute(query, params)
 
-    def check_out_player(self, player_id: int):
+    def _check_out_player(self, player_id: int):
         logger.debug('Checking out player %s', player_id)
         checked_in_players_number: int = self.get_checked_in_players_number()
         if checked_in_players_number == 1:
@@ -387,3 +391,9 @@ class PapiDatabase(AccessDatabase):
             query: str = f'UPDATE `joueur` SET {actions} WHERE Ref = ?'
             params = tuple(list(data.values()) + [player_id, ])
             self._execute(query, params)
+
+    def check_in_player(self, player_id: int, check_in: bool):
+        if check_in:
+            self._check_in_player(player_id)
+        else:
+            self._check_out_player(player_id)

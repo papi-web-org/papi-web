@@ -1,3 +1,8 @@
+/*
+###########################################################
+# SCREENS
+###########################################################
+*/
 .screen .screen-set-row,
 .screen .screen-set-tuple-row {
     margin-right: 0;
@@ -12,78 +17,127 @@
 .screen .screen-set-tuple-col:first-child {
     padding-left: 0;
 }
-.screen-players .paired .player,
-.screen-players .paired .pairing {
-    font-weight: bold
-}
-.screen-players .not-paired {
-    font-style: italic
-}
-.screen-boards .board-row-no-result{
-    font-weight: bold
-}
-.screen-boards .board-number {
-    text-align: right
-}
-.screen .set-title,
-.screen-boards .score,
-.screen-boards .points,
-.screen-boards-update .result-button,
-.screen-results .timee,
-.screen-results .score,
-.screen-results .board-number {
+.screen .set-title {
     text-align: center;
 }
-.screen-players .player,
-.screen-players .pairing,
-.screen-players .opponent {
-    white-space: nowrap
-}
-.screen-boards-update .login-modal .modal-content,
-.screen-boards-update .board-modal .modal-content {
+/*
+###########################################################
+# BOARDS SCREENS - LOGIN MODAL
+###########################################################
+*/
+.boards-screen.update .login-modal .modal-content {
     background-color: lightgrey;
 }
-.screen-boards-update .board-modal .result-text,
-.screen-boards-update .board-modal .modal-title,
-.screen-boards-update .board-modal .btn {
+/*
+###########################################################
+# BOARDS SCREENS - BOARD RESULT MODAL
+###########################################################
+*/
+.boards-screen-board-result-modal {
+    max-width: 80%;
+}
+.boards-screen-board-result-modal .modal-content {
+    background-color: lightgrey;
+}
+.boards-screen-board-result-modal .modal-title,
+.boards-screen-board-result-modal .btn {
     font-weight: bold;
     font-size: x-large;
 }
-.screen-boards-update .result-button {
+.boards-screen-board-result-modal .result-button {
     border: 3px #000080 solid;
 }
-.screen-boards-update .result-button:hover {
-    background-color: yellow;
-    color: #000080;
-}
-.screen-boards-update .result-button-white {
+.boards-screen-board-result-modal .result-button.white {
     background-color: white;
     color: black;
 }
-.screen-boards-update .result-button-draw {
+.boards-screen-board-result-modal .result-button.draw {
     color: #000080;
 }
-.screen-boards-update .result-button-black {
+.boards-screen-board-result-modal .result-button.black {
     background-color: black;
     color: white;
 }
-.screen-boards .board-row th,
-.screen-boards .board-row td,
-.screen-boards .player-row th,
-.screen-boards .player-row td,
-.screen-players .player-row th,
-.screen-players .player-row td,
-.screen-results .result-row th,
-.screen-results .result-row td {
+.boards-screen-board-result-modal .result-button:hover {
+    background-color: yellow;
+    color: #000080;
+}
+/*
+###########################################################
+# BOARDS SCREENS - BOARD/PLAYER ROWS
+###########################################################
+*/
+.boards-screen .board-row th,
+.boards-screen .board-row td,
+.boards-screen .player-row th,
+.boards-screen .player-row td {
     background-color: transparent;
 }
-.screen-boards-update .board-row-no-result:hover {
+.boards-screen.update .board-row.result-not-set:hover {
     background-color: yellow;
     cursor: pointer;
 }
-.screen-boards-update .board-row-result:hover {
+.boards-screen.update .board-row.result-set:hover {
     background-color: #ffffcc;
 }
+.handicap-modified-time .minutes,
+.handicap-modified-time .seconds {
+    color: red;
+}
+.boards-screen .board-row.result-not-set {
+    font-weight: bold;
+}
+.boards-screen .board-number {
+    text-align: right;
+}
+.boards-screen .score,
+.boards-screen .points {
+    text-align: center;
+}
+.boards-screen .illegal-moves-cell {
+    width: 1%;
+    white-space: nowrap;
+}
+/*
+###########################################################
+# PLAYERS SCREENS - ROWS
+###########################################################
+*/
+.players-screen .player-row th,
+.players-screen .player-row td {
+    background-color: transparent;
+}
+.players-screen .player,
+.players-screen .pairing,
+.players-screen .opponent {
+    white-space: nowrap
+}
+.players-screen .paired .player,
+.players-screen .paired .pairing {
+    font-weight: bold
+}
+.players-screen .not-paired {
+    font-style: italic
+}
+/*
+###########################################################
+# RESULTS SCREENS - ROWS
+###########################################################
+*/
+.results-screen .result-row th,
+.results-screen .result-row td {
+    background-color: transparent;
+}
+.results-screen .time,
+.results-screen .score,
+.results-screen .board-number {
+    text-align: center;
+}
+/*
+###########################################################
+# MENUS
+###########################################################
+*/
 .menu {
     text-align: left;
     font-size: x-large;
@@ -106,8 +160,4 @@
 .menu-item:hover {
     background-color: #ffff00;
     color: #000080;
-}
-.modified-time .minutes,
- .modified-time .seconds {
-    color: red;
 }

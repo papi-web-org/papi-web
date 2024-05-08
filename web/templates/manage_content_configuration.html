@@ -1,0 +1,91 @@
+{#
+Context:
+- papi_web_info
+- papi_web_config
+- odbc_drivers
+- access_driver
+#}
+<h1>Configuration de Papi-web</h1>
+<table class="table table-striped table-sm table-hover border-black">
+    <thead class="table-dark">
+        <tr>
+            <th scope="col">Configuration</th>
+            <th scope="col">Valeur</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th scope="row">Port</th>
+            <td>{{ papi_web_config.web_port }}</td>
+        </tr>
+        <tr>
+            <th scope="row">Accès depuis le serveur Papi-web</th>
+            <td><a href="{{ papi_web_config.local_url }}" target="_blank">{{ papi_web_config.local_url }}</a></td>
+        </tr>
+        <tr>
+            <th scope="row">Accès depuis le réseau local (LAN/WAN)</th>
+            <td>{% if papi_web_config.lan_url %}<a href="{{ papi_web_config.lan_url }}" target="_blank">{{ papi_web_config.lan_url }}</a>{% else %}<em>-</em>{% endif %}</td>
+        </tr>
+        <tr>
+            <th scope="row">Lancement du navigateur au démarrage du serveur</th>
+            <td>{% if papi_web_config.web_launch_browser %}Oui{% else %}<em>Non</em>{% endif %}</td>
+        </tr>
+        <tr>
+            <th scope="row">Version de Papi-web</th>
+            <td>{{ papi_web_info['version'] }}</td>
+        </tr>
+        <tr>
+            <th scope="row">Version de Uvicorn</th>
+            <td>{{ papi_web_config.uvicorn_version }}</td>
+        </tr>
+        <tr>
+            <th scope="row">Version de LiteStar</th>
+            <td>{{ papi_web_config.litestar_version }}</td>
+        </tr>
+        <tr>
+            <th scope="row">Version de Jinja2</th>
+            <td>{{ papi_web_config.jinja2_version }}</td>
+        </tr>
+        <tr>
+            <th scope="row">Version de HTMX</th>
+            <td id="htmx-version"></td>
+        </tr>
+        <tr>
+            <th scope="row">Version de jQuery</th>
+            <td id="jquery-version"></td>
+        </tr>
+        <tr>
+            <th scope="row">Version de Bootstrap</th>
+            <td id="bootstrap-version"></td>
+        </tr>
+        <tr>
+            <th scope="row">Version de PyODBC</th>
+            <td>{{ papi_web_config.pyodbc_version }}</td>
+        </tr>
+        <tr>
+            <th scope="row">Pilote Access</th>
+            <td>{{ access_driver }} ({% if access_driver not in odbc_drivers %}présent{% else %}introuvable{% endif %})</td>
+        </tr>
+        <tr>
+            <th scope="row">
+                Autres pilotes ODBC trouvés sur le serveur
+            </th>
+            <td>
+                {% for odbc_driver in odbc_drivers %}
+                    {% if odbc_driver != access_driver %}
+                        <div class="{% if odbc_driver == access_driver %}access-driver{% endif %}">
+                            {{ odbc_driver }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </td>
+        </tr>
+    </tbody>
+</table>
+<script>
+    $(document).ready(function(){
+        $('#htmx-version').html(htmx.version);
+        $('#jquery-version').html(jQuery().jquery);
+        $('#bootstrap-version').html(bootstrap.Tooltip.VERSION);
+    });
+</script>

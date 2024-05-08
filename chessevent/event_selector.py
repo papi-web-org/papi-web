@@ -5,7 +5,7 @@ from chessevent.action_selector import ActionSelector
 from common.papi_web_config import PapiWebConfig
 from common.singleton import singleton
 from common.logger import get_logger, print_interactive, input_interactive
-from data.event import Event, get_events_by_name
+from data.event import Event, get_events_sorted_by_name
 
 logger: Logger = get_logger()
 
@@ -17,7 +17,7 @@ class EventSelector:
         self.__config: PapiWebConfig = config
 
     def run(self) -> bool:
-        events: List[Event] = get_events_by_name(False, with_tournaments_only=True)
+        events: List[Event] = get_events_sorted_by_name(False, with_tournaments_only=True)
         self.__silent = True  # verbose on the first call only
         if not events:
             logger.error('Aucun évènement trouvé')

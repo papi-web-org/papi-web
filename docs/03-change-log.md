@@ -2,6 +2,9 @@
 
 # Papi-web - ChangeLog
 
+## Version 2.4 - mai 2024
+- Fluidification de la navigation
+
 ## Version 2.3.2 - 15 avril 2024
 - Correction d'un problème d'affichage des appariements par ordre alphabétique
 

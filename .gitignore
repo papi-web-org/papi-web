@@ -6,6 +6,7 @@
 /docs/images/src/
 /papi-web.ini
 tmp/
+db/
 __pycache__/
 
 # Vim scratch files

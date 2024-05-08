@@ -10,20 +10,42 @@ body {
     text-align: center;
     font-style: italic;
 }
-.please-wait-modal {
-	background-image: radial-gradient(white 30%, transparent);
-}
-.please-wait-modal .modal-header {
-    justify-content: center;
-}
-.please-wait-modal .modal-title {
-    font-size: x-large;
-    font-weight: bold;
-}
-.please-wait-modal .modal-content {
+.please-wait {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    height: 80px;
+    width: 80px;
     background-color: transparent;
-	background-image: url("/static/images/papi-web.gif");
-	background-repeat: no-repeat;
-	background-position: center center;
-	background-size: 300px auto;
+    background-image: url("/static/images/papi-web.gif");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 100% auto;
+}
+#messages {
+    position:fixed;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 33%;
+}
+
+#messages .alert-danger {
+    background-color: rgba(248, 215, 218, 0.85);
+}
+#messages .alert-warning {
+    background-color: rgba(255, 243, 205, 0.85);
+}
+#messages .alert-info {
+    background-color: rgba(207, 244, 252, 0.85);
+}
+#messages .alert-success {
+    background-color: rgba(209, 231, 221, 0.85);
+}
+#messages .alert {
+    padding: 0.2rem 1.8rem 0.2rem 0.3rem;
+}
+#messages .alert button {
+    padding: 0.4rem;
 }

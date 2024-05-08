@@ -5,7 +5,7 @@ from logging import Logger
 from dataclasses import dataclass, field
 import pyodbc
 
-from common.exception import PapiException
+from common.exception import PapiWebException
 from common.logger import get_logger
 
 logger: Logger = get_logger()
@@ -48,7 +48,7 @@ class AccessDatabase:
             logger.error('Note : pour une compatibilité 32bits et 64bits, '
                          'utiliser la commande suivante à l\'installation :')
             logger.error('accessdatabaseengine_X64.exe /passive')
-            raise PapiException('Pilote Microsoft Access introuvable')
+            raise PapiWebException('Pilote Microsoft Access introuvable')
         db_url: str = f'DRIVER={{{needed_driver}}};DBQ={self.file.resolve()};'
         # Get rid of unresolved pyodbc.Error: ('HY000', 'The driver did not supply an error!')
         while self.database is None:

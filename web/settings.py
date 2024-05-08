@@ -9,9 +9,23 @@ from litestar.static_files import create_static_files_router
 from litestar.template import TemplateConfig
 from litestar.types import ControllerRouterHandler, Middleware
 
-from web.views import (delete_illegal_move, index, show_event, login, show_screen, show_rotator, show_rotator_screen,
-                       update_result, get_screen_last_update, download_event, download_tournament, add_illegal_move,
-                       check_in_player, check_out_player)
+from web.views import (index,
+                       render_event, htmx_render_event_if_updated,
+                       htmx_login,
+                       render_screen, htmx_render_screen_if_updated,
+                       render_rotator,
+                       htmx_render_rotator_screen,
+                       htmx_render_boards_screen_board_result_modal,
+                       htmx_add_board_result,
+                       htmx_delete_board_result,
+                       htmx_download_event_tournaments, htmx_download_tournament,
+                       htmx_add_illegal_move, htmx_delete_illegal_move,
+                       htmx_toggle_player_check_in,
+                       htmx_render_boards_screen_set_if_updated,
+                       htmx_render_players_screen_set_if_updated,
+                       render_manage,
+                       htmx_update_manage_main_selector, htmx_update_manage_event_selector,
+                       )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,19 +42,26 @@ static_files_router: Router = create_static_files_router(
 
 route_handlers: Sequence[ControllerRouterHandler] = [
     index,
-    show_event,
-    login,
-    show_screen,
-    show_rotator,
-    show_rotator_screen,
-    update_result,
-    add_illegal_move,
-    delete_illegal_move,
-    check_in_player,
-    check_out_player,
-    get_screen_last_update,
-    download_event,
-    download_tournament,
+    render_event,
+    htmx_render_event_if_updated,
+    htmx_login,
+    render_screen,
+    htmx_render_screen_if_updated,
+    render_rotator,
+    htmx_render_rotator_screen,
+    htmx_render_boards_screen_board_result_modal,
+    htmx_add_board_result,
+    htmx_delete_board_result,
+    htmx_add_illegal_move,
+    htmx_delete_illegal_move,
+    htmx_toggle_player_check_in,
+    htmx_render_boards_screen_set_if_updated,
+    htmx_render_players_screen_set_if_updated,
+    htmx_download_event_tournaments,
+    htmx_download_tournament,
+    render_manage,
+    htmx_update_manage_main_selector,
+    htmx_update_manage_event_selector,
     static_files_router,
 ]
 

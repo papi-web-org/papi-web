@@ -1,5 +1,5 @@
+import json
 import os
-import time
 from functools import total_ordering
 from logging import Logger
 from pathlib import Path
@@ -7,10 +7,8 @@ from typing import Iterator
 
 from common.config_reader import ConfigReader, TMP_DIR, EVENTS_PATH
 from common.logger import get_logger
-from data.board import Board
 from data.chessevent_connection import ChessEventConnection, ChessEventConnectionBuilder
 from data.family import FamilyBuilder
-from data.result import Result
 from data.rotator import Rotator, RotatorBuilder
 from data.screen import AScreen, ScreenBuilder
 from data.template import Template, TemplateBuilder
@@ -37,6 +35,7 @@ class Event:
         self.update_password: str | None = None
         self.record_illegal_moves: int = 0
         self.check_in_players: bool = False
+        self.allow_deletion: bool = False
         self.chessevent_connections: dict[str, ChessEventConnection] = {}
         self.tournaments: dict[str, Tournament] = {}
         self.templates: dict[str, Template] = {}
@@ -85,7 +84,36 @@ class Event:
                         'le chronomètre ([timer.hour.*]) n\'est pas défini',
                         section_key=f'screen.{",".join(screen_ids)}',
                         key='show_timer')
+            event_file_dependencies = [self.ini_file, ]
+            for screen in self.screens.values():
+                event_file_dependencies += [
+                    screen_set.tournament.file
+                    for screen_set in screen.sets
+                ]
+            self.set_file_dependencies(event_file_dependencies)
         silent_event_ids.append(self.id)
+
+    @classmethod
+    def __get_event_file_dependencies_file(cls, event_id: str) -> Path:
+        return TMP_DIR / 'events' / event_id / 'event_file_dependencies.json'
+
+    @classmethod
+    def get_event_file_dependencies(cls, event_id: str) -> list[Path]:
+        file_dependencies_file = cls.__get_event_file_dependencies_file(event_id)
+        try:
+            with open(file_dependencies_file, 'r', encoding='utf-8') as f:
+                return [Path(file) for file in json.load(f)]
+        except FileNotFoundError:
+            return []
+
+    def set_file_dependencies(self, files: list[Path]):
+        file_dependencies_file = self.__get_event_file_dependencies_file(self.id)
+        try:
+            file_dependencies_file.parents[0].mkdir(parents=True, exist_ok=True)
+            with open(file_dependencies_file, 'w', encoding='utf-8') as f:
+                return f.write(json.dumps([str(file) for file in files]))
+        except FileNotFoundError:
+            return []
 
     @property
     def ini_file(self) -> Path:
@@ -221,51 +249,55 @@ class Event:
                 self.check_in_players = check_in_players_bool
         else:
             self.reader.add_debug(f'option absente, par défaut [{self.check_in_players}]')
+        
+        key = 'allow_deletion'
+        if key in section:
+            allow_deletion: bool | None = self.reader.getboolean_safe(section_key, key)
+            if allow_deletion is None:
+                self.reader.add_warning(
+                    f'un booléen est attendu, par défaut [{self.allow_deletion}]',
+                    section_key,
+                    key)
+            else:
+                self.allow_deletion = allow_deletion
+        else:
+            self.reader.add_debug(f'option absente, par défaut [{self.allow_deletion}]')
 
         section_keys: list[str] = [
             'name', 'path', 'update_password', 'css', 'record_illegal_moves', 'check_in_players',
+            'allow_deletion'
         ]
         for key, _ in section.items():
             if key not in section_keys:
                 self.reader.add_warning('option inconnue', section_key, key)
 
-    def store_result(self, tournament: Tournament, board: Board, result: int):
-        results_dir: Path = Result.results_dir(self.id)
-        results_dir.mkdir(parents=True, exist_ok=True)
-        # add a new file
-        now: float = time.time()
-        white_str: str = (f'{board.white_player.last_name} {board.white_player.first_name} {board.white_player.rating}'
-                          .replace(' ', '_'))
-        black_str: str = (f'{board.black_player.last_name} {board.black_player.first_name} {board.black_player.rating}'
-                          .replace(' ', '_'))
-        filename: str = f'{now} {tournament.id} {tournament.current_round} {board.id} {white_str} {black_str} {result}'
-        result_file: Path = results_dir / filename
-        result_file.touch()
-        logger.info('le fichier [%s] a été créé', result_file)
-
     def __lt__(self, other: 'Event'):
         # p1 < p2 calls p1.__lt__(p2)
-        return self.name > other.name
+        return self.id > other.id
 
     def __eq__(self, other):
         # p1 == p2 calls p1.__eq__(p2)
         if not isinstance(self, Event):
             return NotImplemented
-        return self.name == other.name
+        return self.id == other.id
 
 
-def __get_events(load_screens: bool, with_tournaments_only: bool = False) -> list[Event]:
+def __get_events(load_screens: bool, with_tournaments_only: bool = False) -> dict[str, Event]:
     event_files: Iterator[Path] = EVENTS_PATH.glob('*.ini')
-    events: list[Event] = []
+    events: dict[str, Event] = {}
     for event_file in event_files:
         event_id: str = event_file.stem
         event: Event = Event(event_id, load_screens)
         if not with_tournaments_only or event.tournaments:
-            events.append(event)
+            events[event.id] = event
     return events
 
 
-def get_events_by_name(load_screens: bool, with_tournaments_only: bool = False) -> list[Event]:
+def get_events_sorted_by_name(load_screens: bool, with_tournaments_only: bool = False) -> list[Event]:
     return sorted(
-        __get_events(load_screens, with_tournaments_only=with_tournaments_only),
+        __get_events(load_screens, with_tournaments_only=with_tournaments_only).values(),
         key=lambda event: event.name)
+
+
+def get_events_by_id(load_screens: bool, with_tournaments_only: bool = False) -> dict[str, Event]:
+    return __get_events(load_screens, with_tournaments_only=with_tournaments_only)

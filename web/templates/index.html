@@ -41,8 +41,28 @@ Papi-web
                     <td>{{ papi_web_info['version'] }}</td>
                 </tr>
                 <tr>
+                    <th scope="row">Version de Uvicorn</th>
+                    <td>{{ papi_web_config.uvicorn_version }}</td>
+                </tr>
+                <tr>
                     <th scope="row">Version de LiteStar</th>
                     <td>{{ papi_web_config.litestar_version }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Version de Jinja2</th>
+                    <td>{{ papi_web_config.jinja2_version }}</td>
+                </tr>
+                <tr>
+                    <th scope="row">Version de HTMX</th>
+                    <td id="htmx-version"></td>
+                </tr>
+                <tr>
+                    <th scope="row">Version de jQuery</th>
+                    <td id="jquery-version"></td>
+                </tr>
+                <tr>
+                    <th scope="row">Version de Bootstrap</th>
+                    <td id="bootstrap-version"></td>
                 </tr>
                 <tr>
                     <th scope="row">Version de PyODBC</th>
@@ -50,20 +70,20 @@ Papi-web
                 </tr>
                 <tr>
                     <th scope="row">Pilote Access</th>
-                    <td>{{ access_driver }} ({% if access_driver in odbc_drivers %}présent{% else %}introuvable{% endif %})</td>
+                    <td>{{ access_driver }} ({% if access_driver not in odbc_drivers %}présent{% else %}introuvable{% endif %})</td>
                 </tr>
                 <tr>
                     <th scope="row">
-                        Pilotes ODBC
+                        Autres pilotes ODBC trouvés sur le serveur
                     </th>
                     <td>
-                        <ul>
                         {% for odbc_driver in odbc_drivers %}
-                            <li class="{% if odbc_driver == access_driver %}access-driver{% endif %}">
-                                {{ odbc_driver }}
-                            </li>
+                            {% if odbc_driver != access_driver %}
+                                <div class="{% if odbc_driver == access_driver %}access-driver{% endif %}">
+                                    {{ odbc_driver }}
+                                </div>
+                            {% endif %}
                         {% endfor %}
-                        </ul>
                     </td>
                 </tr>
             </tbody>
@@ -80,7 +100,7 @@ Papi-web
             <tbody>
                 {% for event in events %}
                     <tr>
-                        <th scope="row"><a href="{{ url_for('show-event', event_id=event.id) }}" target="_blank">{{ event.name }}</a></th>
+                        <th scope="row"><a href="{{ url_for('render-event', event_id=event.id) }}" target="_blank">{{ event.name }}</a></th>
                         <td>
                             <i class="bi-people-fill" ></i>&nbsp;{{ event.tournaments|length }} tournoi{% if event.tournaments|length > 1 %}s{% endif %}
                             <i class="bi-arrows-fullscreen" ></i>&nbsp;{{ event.screens|length }} écran{% if event.screens|length > 1 %}s{% endif %}
@@ -97,4 +117,11 @@ Papi-web
             </tbody>
         </table>
     </div>
+    <script>
+        $(document).ready(function(){
+            $('#htmx-version').html(htmx.version);
+            $('#jquery-version').html(jQuery().jquery);
+            $('#bootstrap-version').html(bootstrap.Tooltip.VERSION);
+        });
+    </script>
 {% endblock content %}
