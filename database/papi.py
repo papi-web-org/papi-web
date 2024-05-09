@@ -91,7 +91,7 @@ class PapiDatabase(AccessDatabase):
                 PlayerTitle.from_papi_value(row['FideTitre']),
                 row[tournament_rating.papi_value_field],
                 row[tournament_rating.papi_type_field],
-                row['Fixe'] == 1,
+                row['Fixe'],
                 row['Pointe'],
                 pairings)
         return players
