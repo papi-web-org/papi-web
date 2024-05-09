@@ -406,11 +406,11 @@ def _render_boards_screen_board_row(
 
 
 @put(
-    path='/board-result/{event_id:str}/{tournament_id:str}/{board_id:int}/{result:int}/{screen_id:str}',
+    path='/board-result/{event_id:str}/{tournament_id:str}/{round:int}/{board_id:int}/{result:int}/{screen_id:str}',
     name='add-board-result'
 )
 async def htmx_add_board_result(
-        request: HTMXRequest, event_id: str, tournament_id: str, board_id: int, result: int | None, screen_id: str,
+        request: HTMXRequest, event_id: str, tournament_id: str, round: int, board_id: int, result: int | None, screen_id: str,
 ) -> Template:
     event, tournament, board, screen = _load_boards_screen_board_row_data(
         request, event_id, tournament_id, board_id, screen_id)
@@ -421,17 +421,17 @@ async def htmx_add_board_result(
             request, f'L\'écriture du résultat a échoué (résultat invalide [{result}])')
         return _render_messages(request)
     tournament.add_result(board, Result.from_papi_value(result))
-    set_session_last_result_updated(request, tournament_id, board_id)
+    set_session_last_result_updated(request, tournament_id, round, board_id)
     return _render_boards_screen_board_row(request, event_id, tournament_id, board_id, screen_id)
 
 
 @delete(
-    path='/board-result/{event_id:str}/{tournament_id:str}/{board_id:int}/{screen_id:str}',
+    path='/board-result/{event_id:str}/{tournament_id:str}/{round:int}/{board_id:int}/{screen_id:str}',
     name='delete-board-result',
     status_code=HTTP_200_OK,
 )
 async def htmx_delete_board_result(
-    request: HTMXRequest, event_id: str, tournament_id: str, board_id: int, screen_id: str,
+    request: HTMXRequest, event_id: str, tournament_id: str, round: int, board_id: int, screen_id: str,
 ) -> Template:
     event, tournament, board, screen = _load_boards_screen_board_row_data(
         request, event_id, tournament_id, board_id, screen_id)
@@ -439,7 +439,7 @@ async def htmx_delete_board_result(
         return _render_messages(request)
     with suppress(ValueError):
         tournament.delete_result(board)
-        set_session_last_result_updated(request, tournament_id, board_id)
+        set_session_last_result_updated(request, tournament_id, round, board_id)
     return _render_boards_screen_board_row(request, event_id, tournament_id, board_id, screen_id)
 
 

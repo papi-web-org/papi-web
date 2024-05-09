@@ -17,9 +17,10 @@ def get_stored_password(request: HTMXRequest, event: Event) -> str | None:
     return request.session.get(session_password_key(event), None)
 
 
-def set_session_last_result_updated(request: HTMXRequest, tournament_id: str, board_id: int, ):
+def set_session_last_result_updated(request: HTMXRequest, tournament_id: str, round: int, board_id: int, ):
     request.session['last_result_updated']: dict[str, int | str | float] = {
         'tournament_id': tournament_id,
+        'round': round,
         'board_id': board_id,
         'expiration': time.time() + 20,
     }
