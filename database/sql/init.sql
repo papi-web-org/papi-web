@@ -11,7 +11,7 @@ INSERT INTO `info`(`version`) VALUES('{version}');
 
 CREATE TABLE `tournament` (
     `id` TEXT NOT NULL,
-    `last_update` REAL NOT NULL,
+    `last_update` FLOAT NOT NULL,
     PRIMARY KEY(`id`)
 );
 
@@ -20,7 +20,7 @@ CREATE TABLE `illegal_move` (
     `tournament_id` TEXT NOT NULL,
     `round` INTEGER NOT NULL,
     `player_id` INTEGER NOT NULL,
-    `date` REAL NOT NULL,
+    `date` FLOAT NOT NULL,
     PRIMARY KEY(`id` AUTOINCREMENT)
 );
 
@@ -42,7 +42,7 @@ CREATE TABLE `chessevent_connection` (
     `uniq_id` TEXT NOT NULL,
     `user_id` TEXT NOT NULL,
     `password` TEXT NOT NULL,
-    `event_id` REAL NOT NULL,
+    `event_id` TEXT NOT NULL,
     PRIMARY KEY(`id` AUTOINCREMENT),
     UNIQUE(`uniq_id`)
 );
@@ -77,7 +77,7 @@ CREATE TABLE `timer_hour` (
     id INTEGER NOT NULL,
     `uniq_id` TEXT NOT NULL,
     `timer_id` INTEGER NOT NULL,
-    `date` REAL NOT NULL,
+    `date` FLOAT NOT NULL,
     `text_before` TEXT DEFAULT NULL,
     `text_after` TEXT DEFAULT NULL,
     PRIMARY KEY("id" AUTOINCREMENT),
@@ -98,7 +98,7 @@ CREATE TABLE `tournament` (
     `chessevent_connection_id` TEXT DEFAULT NULL,
     `chessevent_tournament_name` TEXT DEFAULT NULL,
     `record_illegal_moves` INTEGER DEFAULT NULL,
-    `last_update` REAL NOT NULL DEFAULT (julianday('now') - 2440587.5) * 86400.0,
+    `last_update` FLOAT NOT NULL DEFAULT (julianday('now') - 2440587.5) * 86400.0,
     `pairing_engine_id` INTEGER DEFAULT NULL,
     `handicap_initial_time` INTEGER DEFAULT NULL,
     `handicap_increment` INTEGER DEFAULT NULL,
