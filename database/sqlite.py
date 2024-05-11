@@ -133,7 +133,7 @@ class EventDatabase(SQLiteDatabase):
             'SELECT `last_update` FROM `tournament` WHERE `id` = ?',
             (tournament_id, ),
         )
-        if row := self._fetchone():
+        if self._fetchone():
             self._execute(
                 'UPDATE `tournament` SET `last_update` = ? WHERE `id` = ?',
                 (time.time(), tournament_id, ),
