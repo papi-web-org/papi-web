@@ -31,6 +31,7 @@ class ConfigReader(ConfigParser):
         'update',
         'show_unpaired',
         'limit',
+        'tournaments',
     ]
 
     def __init__(self, ini_file: Path, ini_marker_file: Path, silent: bool):
