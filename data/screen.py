@@ -488,7 +488,8 @@ class ScreenBuilder:
                 menu_text,
                 menu,
                 show_timer,
-                limit
+                limit,
+                *tournaments
             )
             screen_file_dependencies += [tournament.file for tournament in self._tournaments.values()]
         screen.set_file_dependencies(screen_file_dependencies, )
