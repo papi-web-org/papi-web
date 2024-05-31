@@ -232,9 +232,9 @@ class EventDatabase(SQLiteDatabase):
                     query_part += ' LIMIT ?'
                     params += (limit, )
                 query_parts.append('\n'.join(('SELECT * FROM (', query_part, ')')))
-            query: str = '\nUNION\n'.join(query_parts)
+            query: str = '\nUNION\n'.join(query_parts) + ' ORDER BY `date` DESC'
             if limit:
-                query += 'LIMIT ?'
+                query += ' LIMIT ?'
                 params += (limit, )
         self._execute(query, params)
         results: list[DataResult] = []
