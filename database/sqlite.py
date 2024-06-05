@@ -222,6 +222,7 @@ class EventDatabase(SQLiteDatabase):
                 query += ' LIMIT ?'
                 params += (limit, )
         else:
+            # FIXME(Amaras) : Check if `WHERE value in (?, ?, ...)` is posible in SQLITE
             query_parts: list[str] = []
             params: tuple = ()
             for tournament in tournaments:
