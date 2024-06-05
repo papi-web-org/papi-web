@@ -1,5 +1,5 @@
 import json
-from typing import Self
+from typing import Self, Unpack
 import warnings
 from contextlib import suppress
 from dataclasses import dataclass, field
@@ -194,10 +194,11 @@ class PlayersScreen(AScreenWithSets):
 class ResultsScreen(AScreen):
     def __init__(
             self, event_id: str, screen_id: str, family_id: str | None, name: str, columns: int,
-            menu_text: str | None, menu: str, show_timer: bool, limit: int):
+            menu_text: str | None, menu: str, show_timer: bool, limit: int, *tournaments: Unpack[str]):
         super().__init__(event_id, screen_id, family_id, name, columns, menu_text, menu, show_timer)
         self._type = ScreenType.Results
         self.limit: int = limit
+        self.tournaments = tuple(tournaments)
 
     @property
     def type_str(self) -> str:
@@ -211,7 +212,7 @@ class ResultsScreen(AScreen):
     def results_lists(self) -> list[list[Result]]:
         with EventDatabase(self.event_id, 'r') as event_database:
             event_database: EventDatabase
-            results: list[Result] = event_database.get_results(self.limit)
+            results: list[Result] = event_database.get_results(self.limit, *self.tournaments)
         results_by_column: list[list[Result]] = []
         column_size: int = (self.limit if self.limit else len(results)) // self.columns
         for i in range(self.columns):
@@ -377,7 +378,7 @@ class ScreenBuilder:
         key = 'record_illegal_moves'
         if key in screen_section:
             self._config_reader.add_warning(
-                f"l'option doit désormais être utilisée dans les rubriques des tournois, ignorée",
+                "l'option doit désormais être utilisée dans les rubriques des tournois, ignorée",
                 screen_section_key, key)
         key = 'show_unpaired'
         default_show_unpaired: bool = DEFAULT_SHOW_UNPAIRED
@@ -413,6 +414,18 @@ class ScreenBuilder:
                 self._config_reader.add_warning(
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
+        key = 'tournaments'
+        tournaments: list[str] = []
+        if screen_type == ScreenType.Results:
+            tournaments_str: str | None = screen_section.get(key)
+            if tournaments_str is not None:
+                tournaments = [tournament_name.strip() for tournament_name in tournaments_str.split(',')]
+        else:
+            if key in screen_section:
+                self._config_reader.add_warning(
+                    f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
+                    screen_section_key, key)
+
         screen_sets: list[ScreenSet] | None = None
         if screen_type in [ScreenType.Boards, ScreenType.Players, ]:
             screen_sets = ScreenSetBuilder(
@@ -475,7 +488,8 @@ class ScreenBuilder:
                 menu_text,
                 menu,
                 show_timer,
-                limit
+                limit,
+                *tournaments
             )
             screen_file_dependencies += [tournament.file for tournament in self._tournaments.values()]
         screen.set_file_dependencies(screen_file_dependencies, )

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from logging import Logger
 from pathlib import Path
 from sqlite3 import Connection, Cursor, connect, OperationalError
-from typing import Self, Any
+from typing import Self, Any, Unpack
 
 from packaging.version import Version
 
@@ -206,13 +206,37 @@ class EventDatabase(SQLiteDatabase):
             (tournament_id, round, board_id),
         )
 
-    def get_results(self, limit: int) -> list[DataResult]:
-        query: str = ('SELECT `tournament_id`, `round`, `board_id`, `white_player`, `black_player`, `date`, `value` '
-                      'FROM `result` ORDER BY `date` DESC')
-        params: tuple = ()
-        if limit:
-            query += ' LIMIT ?'
-            params = (limit, )
+    def get_results(self, limit: int, *tournaments: Unpack[str]) -> list[DataResult]:
+        if not tournaments:
+            query: str = ('SELECT `tournament_id`, `round`, `board_id`, `white_player`, `black_player`, `date`, `value` '
+                          'FROM `result` ORDER BY `date` DESC')
+            params: tuple = ()
+            if limit:
+                query += ' LIMIT ?'
+                params = (limit, )
+        elif len(tournaments) == 1:
+            query: str = ('SELECT `tournament_id`, `round`, `board_id`, `white_player`, `black_player`, `date`, `value` '
+                          'FROM `result` WHERE `tournament_id` = ? ORDER BY `date` DESC')
+            params = (tournaments[0], )
+            if limit:
+                query += ' LIMIT ?'
+                params += (limit, )
+        else:
+            # FIXME(Amaras) : Check if `WHERE value in (?, ?, ...)` is posible in SQLITE
+            query_parts: list[str] = []
+            params: tuple = ()
+            for tournament in tournaments:
+                query_part: str = ('SELECT `tournament_id`, `round`, `board_id`, `white_player`, `black_player`, `date`, `value` '
+                                   'FROM `result` WHERE `tournament_id` = ? ORDER BY `date` DESC')
+                params += (tournament, )
+                if limit:
+                    query_part += ' LIMIT ?'
+                    params += (limit, )
+                query_parts.append('\n'.join(('SELECT * FROM (', query_part, ')')))
+            query: str = '\nUNION\n'.join(query_parts) + ' ORDER BY `date` DESC'
+            if limit:
+                query += ' LIMIT ?'
+                params += (limit, )
         self._execute(query, params)
         results: list[DataResult] = []
         for row in self._fetchall():
