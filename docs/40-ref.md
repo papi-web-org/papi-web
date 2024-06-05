@@ -81,6 +81,34 @@ Pour les tournois à handicap, toutes les options ci-dessous sont obligatoires.
 
 Voir également : [Configuration d'un tournoi à handicap](32-handicap.md)
 
+## Salles de jeu (`[room.<room_id>]` ou `[room]`)
+
+L'identifiant de la salle de jeu (`<room_id>`) est facultatif uniquement si une seule salle de jeu est définie pour l'événement (dans ce cas, la salle aura pour identifiant `default`). Dans le cas contraire, les identifiants de salles doivent être uniques.
+
+> [!NOTE]
+> Le caractère `/` n'est pas autorisé dans les identifiants de salle.
+
+| Option                       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `name`                       | Le nom de la salle de jeu (facultatif) est affiché dans la page de gestion de l'événement.<br>S'il n'est pas précisé, le nom de la salle de jeu est son identifiant.                                                                                                                                                                                                                                                                                                                                   |
+| `boards`                     | L'ensemble des échiquiers de la salle de jeu (obligatoire), défini par une liste d'intervalles de nombres séparés par des virgules représentant les numéros d'échiquier.<br>Format des intervalles : <ul><li>`a-b` : échiquiers numéro `a` à `b` (inclus), avec `0 < a < b`.</li><li>`-b` : échiquiers numéro `1` à `b` (inclus), avec `b > 1`.</li><li>`a-` : échiquiers numéro `a` à la dernière table qui n'est pas définie comme une table fixe.</li><li>`n` : échiquier numéro `n`, avec `n > 1`.</li></ul>.<br> |
+
+> [!NOTE]
+> Si deux salles de jeu (ou plus) contiennent simultanément un même échiquier, ces salles sont absorbées dans la première salle de jeu définie dans le fichier de configuration.
+
+> [!NOTE]
+> Si plusieurs tournois sont définis dans l'événement, l'option `boards` ne peut pas être utilisée directement, et des sections doivent être définies.
+
+### Sections de salles (`[room.<room_id>.<section_id>]`)
+
+Si plusieurs tournois sont définis pour l'événement, les salles doivent être séparées en sections, correspondant aux tournois joués dans la salle.
+
+| Option                       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `name`                       | Le nom de la section de la salle de jeu (facultatif) est affiché dans la page de gestion de l'événement.<br>S'il n'est pas précisé, le nom de la section est son identifiant.                                                                                                                                                                                                                                                                                                                      |
+| `tournament`                 | L'identifiant du tournoi considéré.<br>Si l'identifiant de la section correspond à l'identifiant d'un tournoi, cette option est facultative.                                                                                                                                                                                                                                                                                                                                                          |
+| `boards`                     | L'ensemble des échiquiers de la section (obligatoire), défini par une liste d'intervalles de nombres séparés par des virgules représentant les numéros d'échiquier.<br>Format des intervalles : <ul><li>`a-b` : échiquiers numéro `a` à `b` (inclus), avec `0 < a < b`.</li><li>`-b` : échiquiers numéro `1` à `b` (inclus), avec `b > 1`.</li><li>`a-` : échiquiers numéro `a` à la dernière table qui n'est pas définie comme une table fixe.</li><li>`n` : échiquier numéro `n`, avec `n > 1`.</li></ul>.<br> |
+
 ## Modèles d'écran (`[template.<template_id>]`)
 
 | Option | Description                                                                          |
