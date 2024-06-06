@@ -92,6 +92,7 @@ L'identifiant de la salle de jeu (`<room_id>`) est facultatif uniquement si une 
 |------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `name`                       | Le nom de la salle de jeu (facultatif) est affiché dans la page de gestion de l'événement.<br>S'il n'est pas précisé, le nom de la salle de jeu est son identifiant.                                                                                                                                                                                                                                                                                                                                   |
 | `boards`                     | L'ensemble des échiquiers de la salle de jeu (obligatoire), défini par une liste d'intervalles de nombres séparés par des virgules représentant les numéros d'échiquier.<br>Format des intervalles : <ul><li>`a-b` : échiquiers numéro `a` à `b` (inclus), avec `0 < a < b`.</li><li>`-b` : échiquiers numéro `1` à `b` (inclus), avec `b > 1`.</li><li>`a-` : échiquiers numéro `a` à la dernière table qui n'est pas définie comme une table fixe.</li><li>`n` : échiquier numéro `n`, avec `n > 1`.</li></ul>.<br> |
+|                              | Proposition de syntaxe n°2 (plusieurs tournois) : Ajouter la possibilité de rajouter un identifiant de tournoi : `id:interval` |
 
 > [!NOTE]
 > Si deux salles de jeu (ou plus) contiennent simultanément un même échiquier, ces salles sont absorbées dans la première salle de jeu définie dans le fichier de configuration.
@@ -99,7 +100,7 @@ L'identifiant de la salle de jeu (`<room_id>`) est facultatif uniquement si une 
 > [!NOTE]
 > Si plusieurs tournois sont définis dans l'événement, l'option `boards` ne peut pas être utilisée directement, et des sections doivent être définies.
 
-### Sections de salles (`[room.<room_id>.<section_id>]`)
+### Sections de salles (`[room.<room_id>.<section_id>]`) (Proposition de syntaxe 1)
 
 Si plusieurs tournois sont définis pour l'événement, les salles doivent être séparées en sections, correspondant aux tournois joués dans la salle.
 
