@@ -303,8 +303,8 @@ class Tournament:
     def _build_boards(self):
         if not self._current_round:
             return
-        self._boards = []
-        self._unpaired_players = []
+        self._boards.clear()
+        self._unpaired_players.clear()
         for player in self._players_by_id.values():
             opponent_id = player.pairings[self._current_round].opponent_id
             if opponent_id in self._players_by_id:
@@ -482,10 +482,15 @@ class TournamentBuilder:
         section_key: str = f'tournament.{tournament_id}'
         if tournament_id.find('/') != -1:
             self._config_reader.add_error(
-                f"le caractère « / » n\'est pas autorisé dans les identifiants des tournois, tournoi ignoré",
+                "le caractère « / » n\'est pas autorisé dans les identifiants des tournois, tournoi ignoré",
                 section_key
             )
             return None
+        elif ':' in tournament_id:
+            self._config_reader.add_error(
+                "le caractère « : » n'est pas autorisé dan les identifiants des tournois, tournois ignoré",
+                section_key
+            )
         try:
             section = self._config_reader[section_key]
         except KeyError:
