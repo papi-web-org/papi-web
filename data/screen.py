@@ -2,6 +2,8 @@ import json
 from typing import Self, Unpack
 import warnings
 from contextlib import suppress
+from collections import defaultdict
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from logging import Logger
 from pathlib import Path
@@ -31,6 +33,7 @@ class AScreen:
     menu_text: str | None
     menu: str
     show_timer: bool
+    room: str | None = None
     menu_screens: list[Self] | None = field(default=None, init=False)
 
     def __post_init__(self):
@@ -209,15 +212,13 @@ class ResultsScreen(AScreen):
         return 'bi-trophy-fill'
 
     @property
-    def results_lists(self) -> list[list[Result]]:
+    def results_lists(self) -> Iterator[tuple[Result]]:
         with EventDatabase(self.event_id, 'r') as event_database:
             event_database: EventDatabase
-            results: list[Result] = event_database.get_results(self.limit, *self.tournaments)
-        results_by_column: list[list[Result]] = []
+            results: tuple[Result] = tuple(event_database.get_results(self.limit, *self.tournaments))
         column_size: int = (self.limit if self.limit else len(results)) // self.columns
         for i in range(self.columns):
-            results_by_column.append(results[i * column_size:(i + 1) * column_size])
-        return results_by_column
+            yield results[i * column_size:(i + 1) * column_size]
 
 
 class ScreenBuilder:
@@ -426,6 +427,8 @@ class ScreenBuilder:
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
 
+        key = 'room'
+        room_id = 'default'
         screen_sets: list[ScreenSet] | None = None
         if screen_type in [ScreenType.Boards, ScreenType.Players, ]:
             screen_sets = ScreenSetBuilder(
@@ -505,12 +508,14 @@ class ScreenBuilder:
     def _update_screens(self):
         view_menu: list[AScreen] = []
         update_menu: list[AScreen] = []
+        room_menu: defaultdict[list[AScreen]] = defaultdict(list)
         for screen in self.screens.values():
             if screen.menu_text:
                 if screen.update:
                     update_menu.append(screen)
                 else:
                     view_menu.append(screen)
+                
         for screen in self.screens.values():
             if screen.menu is None:
                 screen.menu_screens = []
