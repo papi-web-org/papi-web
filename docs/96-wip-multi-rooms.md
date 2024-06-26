@@ -51,50 +51,7 @@ boards = 78-, 204, 205
 
 ## Gestion avancée (plusieurs tournois)
 
-> [!IMPORTANT]
-> La syntaxe exacte n'est pas définie à ce jour, les deux possibilités suivantes sont envisageables.
-
-### Première possibilité : sections de salle
-
-#### Exemple de syntaxe
-
-```
-[tournament.principal]
-name = Tournoi principal
-
-[tournament.b]
-name = Tournoi B
-
-[room.gauche]
-name = Salle de gauche
-
-[room.gauche.principal]
-# option `tournament` non nécessaire : l'identifiant de section de salle correspond
-# à un tournoi
-boards = -20, 101
-
-[room.gauche.b]
-# Idem que plus haut
-boards = 11-, 100
-
-[room.droite]
-name = Salle de droite
-
-[room.droite.a]
-# Option `tournament` obligatoire ici : pas de tournoi `a`
-tournament = principal
-boards = 21-, 102
-
-[room.droite.c]
-# Option `tournament` obligatoire ici : pas de tournoi `c`
-tournament = b
-boards = -10 
-```
-
-
-### Deuxième possibilité : syntaxe d'intervalle summplémentaire
-
-#### Exemple de syntaxe
+### Exemple de syntaxe
 ```
 [tournament.principal]
 name = Tournoi Principal
