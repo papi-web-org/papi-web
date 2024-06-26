@@ -3,6 +3,7 @@
 At this time, this database stores results and illegal moves. """
 import time
 from collections import Counter
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from logging import Logger
 from pathlib import Path
@@ -63,12 +64,10 @@ class SQLiteDatabase:
     def _execute(self, query: str, params: tuple = ()):
         self.cursor.execute(query, params)
 
-    def _fetchall(self) -> list[dict[str, Any]]:
+    def _fetchall(self) -> Iterator[dict[str, Any]]:
         columns = [column[0] for column in self.cursor.description]
-        results = []
         for row in self.cursor.fetchall():
-            results.append(dict(zip(columns, row)))
-        return results
+            yield dict(zip(columns, row))
 
     def _fetchone(self) -> dict[str, Any]:
         columns = [column[0] for column in self.cursor.description]
@@ -206,7 +205,7 @@ class EventDatabase(SQLiteDatabase):
             (tournament_id, round, board_id),
         )
 
-    def get_results(self, limit: int, *tournaments: Unpack[str]) -> list[DataResult]:
+    def get_results(self, limit: int, *tournaments: Unpack[str]) -> Iterator[DataResult]:
         if not tournaments:
             query: str = ('SELECT `tournament_id`, `round`, `board_id`, `white_player`, `black_player`, `date`, `value` '
                           'FROM `result` ORDER BY `date` DESC')
@@ -238,20 +237,17 @@ class EventDatabase(SQLiteDatabase):
                 query += ' LIMIT ?'
                 params += (limit, )
         self._execute(query, params)
-        results: list[DataResult] = []
         for row in self._fetchall():
             try:
                 value: UtilResult = UtilResult.from_papi_value(int(row['value']))
             except ValueError:
                 logger.warning('invalid result [%s] found in database', row['value'])
                 continue
-            results.append(
-                DataResult(
+            yield DataResult(
                     row['date'],
                     row['tournament_id'],
                     row['round'],
                     row['board_id'],
                     row['white_player'],
                     row['black_player'],
-                    value))
-        return results
+                    value)
