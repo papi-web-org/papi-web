@@ -19,9 +19,17 @@ EVENTS_PATH: Path = Path('events')
 # https://docs.python.org/3/library/configparser.html
 class ConfigReader(ConfigParser):
 
-    screen_set_keys = ['tournament', 'name', 'first', 'last', 'part', 'parts', 'number', ]
+    screen_set_keys: tuple[str] = (
+        'tournament',
+        'name',
+        'first',
+        'last',
+        'part',
+        'parts',
+        'number',
+    )
 
-    screen_keys: list[str] = [
+    screen_keys: tuple[str] = (
         'type',
         'name',
         'columns',
@@ -32,7 +40,12 @@ class ConfigReader(ConfigParser):
         'show_unpaired',
         'limit',
         'tournaments',
-    ]
+    )
+
+    room_keys: tuple[str] = (
+        'name',
+        'boards'
+    )
 
     def __init__(self, ini_file: Path, ini_marker_file: Path, silent: bool):
         super().__init__(interpolation=None, empty_lines_in_values=False)
