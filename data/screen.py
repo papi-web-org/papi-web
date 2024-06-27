@@ -7,6 +7,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from logging import Logger
 from pathlib import Path
+from warnings import warn
 
 from common.config_reader import ConfigReader, TMP_DIR, EVENTS_PATH
 from common.logger import get_logger
@@ -212,7 +213,7 @@ class ResultsScreen(AScreen):
         return 'bi-trophy-fill'
 
     @property
-    def results_lists(self) -> Iterator[tuple[Result]]:
+    def results_lists(self) -> Iterator[list[Result]]:
         with EventDatabase(self.event_id, 'r') as event_database:
             event_database: EventDatabase
             results: tuple[Result] = tuple(event_database.get_results(self.limit, *self.tournaments))
@@ -331,27 +332,42 @@ class ScreenBuilder:
         key = 'menu'
         menu = screen_section.get(key)
         if menu is None:
-            pass
-        elif menu == 'none':
             self._config_reader.add_info(
                 'option absente, aucun menu ne sera affiché (indiquer [none] pour supprimer ce message)',
                 screen_section_key, key)
+        elif menu == 'none':
             menu = None
-        elif menu == 'family':
+        elif menu.startswith('family'):
+            warn(
+                "[family] ne sera plus utilisable en version 2.6, utilisez "
+                "[@family] à la place", FutureWarning)
+            menu = "@" + menu
+        elif menu == 'view':
+            warn(
+                "[view] ne sera plus utilisable en version 2.6, utilisez "
+                "[@view] à la place", FutureWarning)
+            menu = "@view"
+        elif menu == 'update':
+            warn(
+                "[update] ne sera plus utilisable en version 2.6, utilisez "
+                "[@update] à la place", FutureWarning)
+            menu = "@update"
+        # NOTE(Amaras): two passes because we don't need duplicated code paths
+        if menu == "@family":
             if screen_type == ScreenType.Results:
                 self._config_reader.add_warning(
-                    "l'option [family] n'est pas autorisée pour les écrans de type [{screen_type}], "
+                    "l'option [@family] n'est pas autorisée pour les écrans de type [{screen_type}], "
                     "aucun menu ne sera affiché", screen_section_key, key)
                 menu = None
-        elif menu == 'view':
+        elif menu == "@view":
             pass
-        elif menu == 'update':
+        elif menu == "@update":
             pass
         elif ',' in menu:
             pass
         else:
             self._config_reader.add_warning(
-                '[none], [family], [view], [update] ou une liste d\'écrans séparés par des virgules sont attendus, '
+                '[none], [@family], [@view], [@update] ou une liste d\'écrans séparés par des virgules sont attendus, '
                 'aucun menu ne sera affiché', screen_section_key, key)
             menu = None
         key = 'show_timer'
@@ -427,8 +443,6 @@ class ScreenBuilder:
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
 
-        key = 'room'
-        room_id = 'default'
         screen_sets: list[ScreenSet] | None = None
         if screen_type in [ScreenType.Boards, ScreenType.Players, ]:
             screen_sets = ScreenSetBuilder(
@@ -505,46 +519,41 @@ class ScreenBuilder:
             self._screens_by_family_id[family_id].append(screen)
         return screen
 
+    def _get_menu_screens(self, screen: AScreen) -> Iterator[AScreen]:
+        if self.menu.startswith('@family'):
+            yield from self._screens_by_family_id[screen.family_id]
+        for screen_id in map(str.strip(), screen.menu.split(',')):
+            if screen_id:
+                if screen_id in self.screens:
+                    yield self.screens[screen_id]
+                else:
+                    self._config_reader.add_warning(
+                        f"l'écran [{screen_id}] n'existe pas, ignoré",
+                        f'screen.{screen_id}', 'menu')
+
+
     def _update_screens(self):
         view_menu: list[AScreen] = []
         update_menu: list[AScreen] = []
-        room_menu: defaultdict[list[AScreen]] = defaultdict(list)
         for screen in self.screens.values():
             if screen.menu_text:
                 if screen.update:
                     update_menu.append(screen)
                 else:
                     view_menu.append(screen)
-                
+
         for screen in self.screens.values():
             if screen.menu is None:
                 screen.menu_screens = []
                 continue
-            if screen.menu == 'view':
+            elif screen.menu == '@view':
                 screen.menu_screens = view_menu
                 continue
-            if screen.menu == 'update':
+            elif screen.menu == '@update':
                 screen.menu_screens = update_menu
                 continue
-            if screen.menu == 'family':
-                if screen.family_id is None:
-                    self._config_reader.add_warning(
-                        "l'écran n'appartient pas à une famille, aucun menu ne sera affiché",
-                        f'screen.{screen.id}', 'menu')
-                    screen.menu_screens = []
-                    continue
-                screen.menu_screens = self._screens_by_family_id[screen.family_id]
-                continue
-            menu_screens: list[AScreen] = []
-            for screen_id in screen.menu.replace(' ', '').split(','):
-                if screen_id:
-                    if screen_id in self.screens:
-                        menu_screens.append(self.screens[screen_id])
-                    else:
-                        self._config_reader.add_warning(
-                            f"l'écran [{screen_id}] n'existe pas, ignoré",
-                            f'screen.{screen.id}', 'menu')
-            screen.menu = ', '.join([screen.id for screen in menu_screens])
+            menu_screens = self._get_menu_screens(screen)
+            screen.menu = ', '.join((screen.id for screen in menu_screens))
             screen.menu_screens = menu_screens
 
     def _add_default_screens(self, screen_ids: list[str]):
