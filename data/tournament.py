@@ -303,8 +303,8 @@ class Tournament:
     def _build_boards(self):
         if not self._current_round:
             return
-        self._boards.clear()
-        self._unpaired_players.clear()
+        self._boards = []
+        self._unpaired_players = []
         for player in self._players_by_id.values():
             opponent_id = player.pairings[self._current_round].opponent_id
             if opponent_id in self._players_by_id:

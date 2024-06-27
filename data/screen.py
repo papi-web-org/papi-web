@@ -34,7 +34,6 @@ class AScreen:
     menu_text: str | None
     menu: str
     show_timer: bool
-    room: str | None = None
     menu_screens: list[Self] | None = field(default=None, init=False)
 
     def __post_init__(self):
@@ -363,7 +362,7 @@ class ScreenBuilder:
             pass
         elif menu == "@update":
             pass
-        elif ',' in menu:
+        elif menu is not None and ',' in menu:
             pass
         else:
             self._config_reader.add_warning(
@@ -511,7 +510,7 @@ class ScreenBuilder:
             screen_file_dependencies += [tournament.file for tournament in self._tournaments.values()]
         screen.set_file_dependencies(screen_file_dependencies, )
         for key, value in self._config_reader.items(screen_section_key):
-            if key not in ConfigReader.screen_keys + ['template', '__family__', ]:
+            if key not in ConfigReader.screen_keys + ('template', '__family__', ):
                 self._config_reader.add_warning('option inconnue', screen_section_key, key)
         if family_id is not None:
             if family_id not in self._screens_by_family_id:
@@ -520,9 +519,9 @@ class ScreenBuilder:
         return screen
 
     def _get_menu_screens(self, screen: AScreen) -> Iterator[AScreen]:
-        if self.menu.startswith('@family'):
+        if screen.menu.startswith('@family'):
             yield from self._screens_by_family_id[screen.family_id]
-        for screen_id in map(str.strip(), screen.menu.split(',')):
+        for screen_id in map(str.strip, screen.menu.split(',')):
             if screen_id:
                 if screen_id in self.screens:
                     yield self.screens[screen_id]
