@@ -22,6 +22,7 @@ class ConfigReader(ConfigParser):
     screen_set_keys: tuple[str] = (
         'tournament',
         'name',
+        'fixed_boards',
         'first',
         'last',
         'part',
@@ -40,11 +41,6 @@ class ConfigReader(ConfigParser):
         'show_unpaired',
         'limit',
         'tournaments',
-    )
-
-    room_keys: tuple[str] = (
-        'name',
-        'boards'
     )
 
     def __init__(self, ini_file: Path, ini_marker_file: Path, silent: bool):
@@ -125,6 +121,7 @@ class ConfigReader(ConfigParser):
             return f'{self.ini_file.name}[{section_key}].{key}: {text}'
 
     def add_debug(self, text: str, section_key: str | None = None, key: str | None = None):
+        """Adds a debug-level message and logs it"""
         message = self.__format_message(text, section_key, key)
         if not self.__silent:
             logger.debug(message)
@@ -134,6 +131,7 @@ class ConfigReader(ConfigParser):
         return self.__infos
 
     def add_info(self, text: str, section_key: str | None = None, key: str | None = None):
+        """Adds an info-level message and logs it"""
         message = self.__format_message(text, section_key, key)
         if not self.__silent:
             logger.info(message)
@@ -144,6 +142,7 @@ class ConfigReader(ConfigParser):
         return self.__warnings
 
     def add_warning(self, text: str, section_key: str | None = None, key: str | None = None):
+        """Adds a warning-level message and logs it"""
         message = self.__format_message(text, section_key, key)
         if not self.__silent:
             logger.warning(message)
@@ -154,12 +153,18 @@ class ConfigReader(ConfigParser):
         return self.__errors
 
     def add_error(self, text: str, section_key: str | None = None, key: str | None = None):
+        """Adds an error-level message and logs it"""
         message = self.__format_message(text, section_key, key)
         if not self.__silent:
             logger.error(message)
         self.__errors.append(message)
 
     def getint_safe(self, section_key: str, key: str, minimum: int = None, maximum: int = None) -> int | None:
+        """Tries to convert the value associated to the given key in the
+        given section to an integer, returns None if it can't be converted
+        properly.
+        Optionnally performs bounds checks and returns None if the value is out
+        of the given bounds."""
         try:
             val: int = self.getint(section_key, key)
             if minimum is not None and val < minimum:
@@ -171,6 +176,11 @@ class ConfigReader(ConfigParser):
             return None
 
     def getboolean_safe(self, section_key: str, key: str) -> bool | None:
+        """Tries to convert the value associated to the given key in the given
+        section to a boolean.
+        '1', 'true', 'on', 'yes' are converted to True;
+        '0', 'false', 'off', 'no' are converted to False.
+        All other values return None."""
         try:
             val: bool = self.getboolean(section_key, key)
             return val
@@ -178,6 +188,9 @@ class ConfigReader(ConfigParser):
             return None
 
     def get_subsection_keys_with_prefix(self, prefix: str, first_level_only: bool = True) -> list[str]:
+        """Returns the list of all subsections with the given prefix.
+        If *first_level_only* is True, only direct subsections are returned.
+        """
         subsection_keys: list[str] = []
         for section_key in self.sections():
             if first_level_only:
@@ -190,6 +203,8 @@ class ConfigReader(ConfigParser):
         return subsection_keys
 
     def rename_section(self, old_section_key: str, new_section_key: str):
+        """Renames the section *old_section_key* into *new_section_key*.
+        IMPORTANT: This assumes we do not rename the default section"""
         # NOTE(Amaras) this can add values that are in DEFAULTSEC if any.
         # This can also cause a crash if we're trying to delete DEFAULTSEC,
         # as deleting DEFAUTLSEC causes a ValueError.
@@ -206,6 +221,12 @@ class ConfigReader(ConfigParser):
         default_value,
         *messages,
     ):
+        """Given a *section* and a *key*, tries to convert the value associated
+        with them to the given *target_type*, assuming it passes the given
+        *predicate*.
+        If any problem arises, adds an error or a warning and returns the
+        default value.
+        """
         try:
             value = target_type(section[key])
             assert predicate(value)
