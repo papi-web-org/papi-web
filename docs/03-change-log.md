@@ -2,8 +2,11 @@
 
 # Papi-web - ChangeLog
 
-## Version 2.4 - mai 2024
+## Version 2.4 - juillet 2024
 - Fluidification de la navigation (HTMX)
+- Ajout de la possibilité (configurable) de supprimer un résultat mal rentré
+- Ajout de l'option de définir des tables fixes dans les ensembles d'échiquiers avec l'option `fixed_boards`
+- Changement des options de menu : `view` -> `@view`, `update` -> `@update`, `family` -> `@family`
 
 ## Version 2.3.2 - 15 avril 2024
 - Correction d'un problème d'affichage des appariements par ordre alphabétique
