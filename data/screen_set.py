@@ -461,11 +461,11 @@ class ScreenSetBuilder:
                                             f"partie d\'écran ignorée", screen_set_section_key)
             return None
         # eventually check that options are all compatible
-        if fixed_boards and (first, last, part, parts) != (None,) * 4:
+        if fixed_boards and (first, last, part, parts, number) != (None,) * 5:
                 self._config_reader.add_warning(
                     "l'option [fixed_boards] est incompatible avec les options"
-                    " [first], [last], [part] et [parts], partie d'écran"
-                    " ignorée",
+                    " [first], [last], [part], [parts] et [number], partie"
+                    " d'écran ignorée",
                     screen_set_section_key)
         elif first is not None:
             # first is set
