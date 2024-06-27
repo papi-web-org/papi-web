@@ -486,11 +486,6 @@ class TournamentBuilder:
                 section_key
             )
             return None
-        elif ':' in tournament_id:
-            self._config_reader.add_error(
-                "le caractère « : » n'est pas autorisé dan les identifiants des tournois, tournois ignoré",
-                section_key
-            )
         try:
             section = self._config_reader[section_key]
         except KeyError:
