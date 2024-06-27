@@ -79,6 +79,7 @@ Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonne
 | LEFEBVRE Philippe   | AFO1  | BRE   | 29  | Echiquier Gouesnousien                        |
 | LOUDIER Sarah       | AFC   | BRE   | 22  | Tregor Echecs                                 |
 | PERCHE Ludovic      | AFO2  | NAQ   | 16  | Echiquier Couronnais                          |
+| PERNOT Damien       | AFO1  | BRE   | 35  | Betton Echecs Club                            |
 | PLAT Sammy          | AFO2  | BRE   | 35  | Rennes Paul Bert                              |
 | PORTE Pierre        |       | ARA   | 73  | Academie d'Echecs d'Aix les bains             |
 | REGAUD Denis        | AFE2  | NAQ   | 33  | Salon Nostradamus                             |
