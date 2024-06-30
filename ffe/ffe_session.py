@@ -217,13 +217,16 @@ class FFESession(Session):
             EVENT_VALIDATION_INPUT_ID: self.__auth_vars[EVENT_VALIDATION_INPUT_ID],
         }
         date: str = datetime.fromtimestamp(time.time()).strftime("%Y%m%d%H%M%S")
-        tmp_file: Path = TMP_DIR / f'{self.__tournament.file.stem}-{date}{self.__tournament.file.suffix}'
+        tmp_file: Path = TMP_DIR / 'ffe' / f'{self.__tournament.file.stem}-{date}{self.__tournament.file.suffix}'
+        tmp_file.parents[0].mkdir(parents=True, exist_ok=True)
         logger.debug('Copie de %s vers %s...', self.__tournament.file, tmp_file)
         tmp_file.write_bytes(self.__tournament.file.read_bytes())
-        logger.debug('Suppression des données personnelles des joueur·euses...')
         with PapiDatabase(self.__tournament.event_id, self.__tournament.id, tmp_file, 'w') as tmp_database:
             tmp_database: PapiDatabase
+            logger.debug('Suppression des données personnelles des joueur·euses...')
             tmp_database.delete_players_personal_data()
+            logger.debug('Suppression des forfaits si aucun appariement...')
+            tmp_database.remove_forfeits_if_no_pairings()
             tmp_database.commit()
         html: str = self.__read_url(url, data=post, files={UPLOAD_FILE_ID: tmp_file, })
         tmp_file.unlink()
