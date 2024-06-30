@@ -59,6 +59,20 @@ class FamilyBuilder:
         template: Template = self._templates[template_id]
         template_type: ScreenType = ScreenType(template.data[None]['type'])
         # note: template_type is boards or players (control done by TemplateBuilder)
+        key = 'first'
+        first: int | None = None
+        if key in family_section:
+            first = self._config_reader.getint_safe(section_key, key, minimum=1)
+            if first is None:
+                self._config_reader.add_warning('un entier positif non nul est attendu, option ignorée',
+                                                section_key, key)
+        key = 'last'
+        last: int | None = None
+        if key in family_section:
+            last = self._config_reader.getint_safe(section_key, key, minimum=1)
+            if last is None:
+                self._config_reader.add_warning('un entier positif non nul est attendu, option ignorée',
+                                                section_key, key)
         key = 'number'
         number: int | None = None
         if key in family_section:
@@ -125,7 +139,7 @@ class FamilyBuilder:
             total_items_number: int
             if template_type == ScreenType.Boards:
                 if tournament.current_round:
-                    total_items_number = len(tournament.boards)
+                    total_items_number = len(tournament.boards[slice(first, last)])
                 else:
                     total_items_number = ceil(len(tournament.players_by_id) / 2)
             else:  # Players
@@ -251,6 +265,30 @@ class FamilyBuilder:
                     key = 'part'
                     if number is not None or parts is not None:
                         new_value: str = screen_index
+                        if key not in self._config_reader[new_section_key]:
+                            self._config_reader.add_debug(f"ajout de l'option {key} = {new_value}",
+                                                          new_section_key)
+                            self._config_reader[new_section_key][key] = new_value
+                        elif self._config_reader[new_section_key][key] != new_value:
+                            self._config_reader.add_debug(f"remplacement de l'option {key} = "
+                                                          f"{self._config_reader[new_section_key][key]} "
+                                                          f"> {new_value}", new_section_key)
+                            self._config_reader[new_section_key][key] = new_value
+                    key = 'first'
+                    if first is not None:
+                        new_value: str = str(first)
+                        if key not in self._config_reader[new_section_key]:
+                            self._config_reader.add_debug(f"ajout de l'option {key} = {new_value}",
+                                                          new_section_key)
+                            self._config_reader[new_section_key][key] = new_value
+                        elif self._config_reader[new_section_key][key] != new_value:
+                            self._config_reader.add_debug(f"remplacement de l'option {key} = "
+                                                          f"{self._config_reader[new_section_key][key]} "
+                                                          f"> {new_value}", new_section_key)
+                            self._config_reader[new_section_key][key] = new_value
+                    key = 'last'
+                    if first is not None:
+                        new_value: str = str(last)
                         if key not in self._config_reader[new_section_key]:
                             self._config_reader.add_debug(f"ajout de l'option {key} = {new_value}",
                                                           new_section_key)
