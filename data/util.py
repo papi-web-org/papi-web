@@ -2,6 +2,7 @@
 PlayerSex, TournamentPairing, TournamentRating"""
 
 from enum import Enum, StrEnum, IntEnum, auto
+from itertools import islice
 from logging import Logger
 from typing import Self
 
@@ -769,3 +770,13 @@ class NeedsUpload(Enum):
                 return False
             case _:
                 raise ValueError(f"Unknown value: {self}")
+
+
+def batched(iterable, n):
+    """Batch data from the *iterable* into tuples of length *n*.
+    The last batch may be shorter than *n*"""
+    if n < 1:
+        raise ValueError('n must be at least 1')
+    iterator = iter(iterable)
+    while batch := tuple(islice(iterator, n)):
+        yield batch
