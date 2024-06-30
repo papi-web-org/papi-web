@@ -60,6 +60,7 @@ Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonne
 
 | Arbitre             | Titre | Ligue | Dép | Club                                          |
 |---------------------|-------|-------|-----|-----------------------------------------------|
+| AGUERO Pablo Daniel |       | NAQ   | 40  | Dax Echiquier Dacquois                        |
 | ARMES Timothy       | AFO1  | ARA   | 69  | Echiquier Romanais-Peageois                   |
 | AUBRY Pascal        | AFO2  | BRE   | 35  | Echiquier Domloupéen                          |
 | AVENIA Adrien       |       | BFC   | 25  | Tour Prends Garde! Besancon                   |
@@ -79,6 +80,7 @@ Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonne
 | LEFEBVRE Philippe   | AFO1  | BRE   | 29  | Echiquier Gouesnousien                        |
 | LOUDIER Sarah       | AFC   | BRE   | 22  | Tregor Echecs                                 |
 | PERCHE Ludovic      | AFO2  | NAQ   | 16  | Echiquier Couronnais                          |
+| PERNOT Damien       | AFO1  | BRE   | 35  | Betton Echecs Club                            |
 | PLAT Sammy          | AFO2  | BRE   | 35  | Rennes Paul Bert                              |
 | PORTE Pierre        |       | ARA   | 73  | Academie d'Echecs d'Aix les bains             |
 | REGAUD Denis        | AFE2  | NAQ   | 33  | Salon Nostradamus                             |
