@@ -355,8 +355,6 @@ class ScreenBuilder:
             self._config_reader.add_info(
                 'option absente, aucun menu ne sera affiché (indiquer [none] pour supprimer ce message)',
                 screen_section_key, key)
-        elif menu == 'none':
-            menu = None
         elif menu.startswith('family'):
             warn(
                 "[family] ne sera plus utilisable en version 2.6, utilisez "
@@ -385,6 +383,8 @@ class ScreenBuilder:
             pass
         elif menu is not None and (',' in menu or '*' in menu):
             pass
+        elif menu == 'none':
+            menu = None
         else:
             self._config_reader.add_warning(
                 '[none], [@family], [@view], [@update] ou une liste d\'écrans séparés par des virgules sont attendus, '
