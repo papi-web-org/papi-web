@@ -83,7 +83,7 @@ class ScreenSet:
                 number = math.ceil((last - first) / self.parts)
                 # NOTE(Amaras): makes the number of items divisible by
                 # the number of columns.
-                if self.number % self.columns != 0:
+                if number % self.columns != 0:
                     number = (number // self.columns + 1) * self.columns
             else:
                 number = self.number
@@ -249,34 +249,38 @@ class ScreenSet:
             return []
 
     def __str__(self):
-        # FIXME(Amaras): redo this
         if self.fixed_boards:
             return f"{self.tournament.id} (tables fixes {', '.join(map(str, self.fixed_boards))})"
-        elif self.first is not None:
-            if self.last is not None:
-                # first and last
-                return f'{self.tournament.id} (de n°{self.first} à n°{self.last})'
-            elif self.number is not None:
-                # first and number
-                return f'{self.tournament.id} ({self.number} à partir de n°{self.first})'
-            else:
-                # first
-                return f'{self.tournament.id} (à partir de n°{self.first})'
-        elif self.last is not None:
-            # last
-            return f'{self.tournament.id} (jusqu\'à n°{self.last})'
-        elif self.parts is not None:
-            # part and parts
-            return f'{self.tournament.id} ({self.part}/{self.parts})'
-        elif self.part is not None:
-            # part and number
-            return f'{self.tournament.id} ({self.number}, partie n°{self.part})'
-        elif self.number is not None:
-            # number
-            return f'{self.tournament.id} ({self.number} à partir de n°1)'
-        else:
-            # _
-            return f'{self.tournament.id} (tout)'
+        start = self.tournament.id
+        match (self.first, self.last, self.number, self.part, self.parts):
+            case (None, None, None, None, None):
+                return f'{start} (tout)'
+            case (first, None, None, None, None) if first is not None:
+                return f'{start} (à partir de n°{first})'
+            case (first, last, None, None, None) if first is not None and last is not None:
+                return f'{start} (de n°{first} à {last})'
+            case (first, None, number, None, None) if first is not None and number is not None:
+                return f'{start} ({number} à partir de n°{first})'
+            case (first, last, number, None, None) if first is not None and last is not None and number is not None:
+                return f'{start} ({number} de n°{first} à {last})'
+            case (None, None, number, part, None) if number is not None and part is not None:
+                return f'{start} ({number}, partie n°{part})'
+            case (first, None, number, part, None) if first is not None and number is not None and part is not None:
+                return f'{start} ({number} à partir de n°{first}, partie n°{part})'
+            case (None, last, number, part, None) if last is not None and number is not None and part is not None:
+                return f"{start} ({number} jusqu'à n°{last}, partie n°{part})"
+            case (first, last, number, part, None) if first is not None and last is not None and number is not None and part is not None:
+                return f'{start} ({number} de n°{first} à n°{last}, partie n°{part})'
+            case (None, None, None, part, parts) if part is not None and parts is not None:
+                return f'{start} ({part}/{parts})'
+            case (first, None, None, part, parts) if first is not None and part is not None and parts is not None:
+                return f'{start} ({part}/{parts} à partir de n°{first})'
+            case (None, last, None, part, parts) if last is not None and part is not None and parts is not None:
+                return f"{start} ({part}/{parts} jusqu'à n°{last})"
+            case (first, last, None, part, parts) if first is not None and last is not None and part is not None and parts is not None:
+                return f'{start} ({part}/{parts} de n°{first} à n°{last})'
+            case _:
+                raise ValueError("unreachable")
 
 
 class ScreenSetBuilder:
