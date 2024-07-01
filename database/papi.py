@@ -256,6 +256,24 @@ class PapiDatabase(AccessDatabase):
         query: str = 'UPDATE `joueur` SET Tel = ?, EMail = ?'
         self._execute(query, ('', '', ))
 
+    def remove_forfeits_if_no_pairings(self):
+        """Delete all forfeits if no pairing is found (at round #1) to fix ranking on the FFE website."""
+        query: str = 'SELECT COUNT(`Ref`) FROM `joueur` WHERE `Rd01Adv` IS NOT NULL'
+        self._execute(query)
+        if self._fetchval() == 0:
+            logger.info('Suppression des forfaits...')
+            data: dict[str, str | int | None] = {}
+            for round_ in range(1, 25):
+                data[f'Rd{round_:0>2}Adv'] = None
+                data[f'Rd{round_:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
+                data[f'Rd{round_:0>2}Cl'] = 'R'
+            actions: str = ', '.join([f'`{key}` = ?' for key in data.keys()])
+            query: str = f'UPDATE `joueur` SET {actions}'
+            params = tuple(data.values())
+            self._execute(query, params)
+        else:
+            logger.info('Aucun forfait à supprimer.')
+
     def get_checked_in_players_number(self) -> int:
         """Return the number players already checked in."""
         query: str = 'SELECT COUNT(`Ref`) FROM `joueur` WHERE `Pointe` AND `Ref` > 1'
