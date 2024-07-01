@@ -62,10 +62,8 @@ first = 1
 last = 20
 ```
 
-
-> [!NOTE]
-> - les options `part`/`parts` doivent toujours être utilisées ensemble, et sont incompatibles avec les options `first`/`last` ;
-> - les options `first`/`last` sont incompatibles avec les options `part`/`parts`, par défaut `first` vaut 1 et `last` vaut le numéro du dernier échiquier.
+> [!IMPORTANT]
+> Changement dans la version 2.4: les options `part`/`parts` et `first`/`last` ne sont plus incompatibles : les parties seront calculées sur la base des échiquiers sélectionnés par l'utilisation des options `first` et `last`.
 
 ## Protection de l'accès aux écrans de saisie (`[event] update_password`)
 
