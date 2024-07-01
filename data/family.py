@@ -26,7 +26,7 @@ class FamilyBuilder:
     def _build_family(self, family_id: str):
         section_key = f'family.{family_id}'
         family_section = self._config_reader[section_key]
-        section_keys = ['template', 'range', 'parts', 'number', ]
+        section_keys = ['template', 'range', 'parts', 'number', 'first', 'last']
         for key in family_section:
             if key not in section_keys:
                 self._config_reader.add_warning(
@@ -66,6 +66,10 @@ class FamilyBuilder:
             if first is None:
                 self._config_reader.add_warning('un entier positif non nul est attendu, option ignorée',
                                                 section_key, key)
+            elif template_type != ScreenType.Boards:
+                self._config_reader.add_warning(f"l'option [first] ne peut être utilisée que pour les modèles de"
+                                                f" type [{ScreenType.Boards}]")
+                first = None
         key = 'last'
         last: int | None = None
         if key in family_section:
@@ -73,6 +77,10 @@ class FamilyBuilder:
             if last is None:
                 self._config_reader.add_warning('un entier positif non nul est attendu, option ignorée',
                                                 section_key, key)
+            elif template_type != ScreenType.Boards:
+                self._config_reader.add_warning(f"l'option [last] ne peut être utilisée que pour les modèles de"
+                                                f" type [{ScreenType.Boards}]")
+                last = None
         key = 'number'
         number: int | None = None
         if key in family_section:
@@ -226,6 +234,10 @@ class FamilyBuilder:
                 # this way parts, number and part will be set below even if [template.<template_id>.template_type]
                 # is not declared
                 template_extended_data[str(template_type.value)] = {}
+            if first is not None:
+                template_extended_data[str(template_type.value)]['first'] = str(first)
+            if last is not None:
+                template_extended_data[str(template_type.value)]['last'] = str(last)
             for sub_section_key, properties in template_extended_data.items():
                 if sub_section_key is None:
                     new_section_key = screen_section_key
@@ -265,30 +277,6 @@ class FamilyBuilder:
                     key = 'part'
                     if number is not None or parts is not None:
                         new_value: str = screen_index
-                        if key not in self._config_reader[new_section_key]:
-                            self._config_reader.add_debug(f"ajout de l'option {key} = {new_value}",
-                                                          new_section_key)
-                            self._config_reader[new_section_key][key] = new_value
-                        elif self._config_reader[new_section_key][key] != new_value:
-                            self._config_reader.add_debug(f"remplacement de l'option {key} = "
-                                                          f"{self._config_reader[new_section_key][key]} "
-                                                          f"> {new_value}", new_section_key)
-                            self._config_reader[new_section_key][key] = new_value
-                    key = 'first'
-                    if first is not None:
-                        new_value: str = str(first)
-                        if key not in self._config_reader[new_section_key]:
-                            self._config_reader.add_debug(f"ajout de l'option {key} = {new_value}",
-                                                          new_section_key)
-                            self._config_reader[new_section_key][key] = new_value
-                        elif self._config_reader[new_section_key][key] != new_value:
-                            self._config_reader.add_debug(f"remplacement de l'option {key} = "
-                                                          f"{self._config_reader[new_section_key][key]} "
-                                                          f"> {new_value}", new_section_key)
-                            self._config_reader[new_section_key][key] = new_value
-                    key = 'last'
-                    if first is not None:
-                        new_value: str = str(last)
                         if key not in self._config_reader[new_section_key]:
                             self._config_reader.add_debug(f"ajout de l'option {key} = {new_value}",
                                                           new_section_key)
