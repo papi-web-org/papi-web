@@ -37,7 +37,7 @@ tournament = principal
 
 Tous les échiquiers du tournoi seront alors présentés à l'écran.
 
-## Limitation des échiquiers présentés à l'écran (`part`/`parts` et `first`/`last`)
+## Limitation des échiquiers présentés à l'écran (`part`/`parts`, `part`/`number` et `first`/`last`)
 
 Vous pouvez préciser les échiquiers qui seront affichés sur l'écran en indiquant quelle partie des échiquiers sera présentée (ici le premier tiers des échiquiers - `1` sur `3` - sera présenté) :
 ```
@@ -48,6 +48,18 @@ update = on
 tournament = principal
 part = 1
 parts = 3
+```
+
+Vous pouvez préciser les échiquiers qui seront affichés sur l'écran en indiquant le nombre d'échiquiers 
+qui sera présenté sur chaque écran (ici le deuxième écran de 30 échiquiers, soit les échiquiers de `31` sur `60` inclus) :
+```
+[screen.saisie-1]
+type = boards
+update = on
+[screen.saisie-1.boards]
+tournament = principal
+part = 2
+number = 30
 ```
 
 Vous pouvez également spécifier directement les échiquiers qui seront présentés en donnant le numéro du premier `first = 1` et le numéro du dernier `last = 20` (ici les échiquiers n° 1 à 20 seront présentés) :
@@ -62,8 +74,10 @@ first = 1
 last = 20
 ```
 
-> [!IMPORTANT]
-> Changement dans la version 2.4: les options `part`/`parts` et `first`/`last` ne sont plus incompatibles : les parties seront calculées sur la base des échiquiers sélectionnés par l'utilisation des options `first` et `last`.
+Les options `part`/`parts` et `part`/`number` doivent toujours être utilisées ensemble (les options `parts` et `number` sont incompatibles).
+
+> [!NOTE]
+> Depuis la version 2.4, les options `first`/`last` peuvent être utilisées en même temps que `part`/`parts` ou `part`/`number` (par défaut `first` vaut 1 et `last` vaut le numéro du dernier échiquier).
 
 ## Protection de l'accès aux écrans de saisie (`[event] update_password`)
 

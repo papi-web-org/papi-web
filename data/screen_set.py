@@ -49,7 +49,7 @@ class ScreenSet:
         self._extract_players_by_name()
         return self.name
 
-    def _extract_data(self, items: list[Any], force_even: bool = False):
+    def _extract_data(self, items: list[Any]):
         if not items:
             self.items_lists = [[], ] * self.columns
             return
@@ -98,7 +98,7 @@ class ScreenSet:
                                 batched(items[selected_slice], number),
                                 self.part - 1,
                                 self.part
-                    )))
+                            )))
                 except StopIteration:
                     self.first_item = self.last_item = None
                     self.items_lists = None
@@ -122,7 +122,7 @@ class ScreenSet:
 
     def _extract_boards(self):
         if self.items_lists is None:
-            self._extract_data(self.tournament.boards, force_even=False)
+            self._extract_data(self.tournament.boards)
             if self.name is None:
                 if self.first or self.last or self.part or self.number:
                     self.name = 'Ech. %f à %l'
@@ -165,9 +165,9 @@ class ScreenSet:
     def _extract_players_by_name(self):
         if self.items_lists is None:
             if self.show_unpaired:
-                self._extract_data(self.tournament.players_by_name_with_unpaired, force_even=False)
+                self._extract_data(self.tournament.players_by_name_with_unpaired)
             else:
-                self._extract_data(self.tournament.players_by_name_without_unpaired, force_even=False)
+                self._extract_data(self.tournament.players_by_name_without_unpaired)
             if self.name is None:
                 if self.first or self.last or self.part or self.number:
                     self.name = '%f à %l'
@@ -430,7 +430,7 @@ class ScreenSetBuilder:
             all_fixed = self._config_reader.getboolean_safe(screen_set_section_key, key)
             if all_fixed:
                 fixed_boards = [
-                    player.fixed for player in tournament.players_by_id
+                    player.fixed for player in tournament.players_by_id.values()
                     if player.fixed != 0
                 ]
             boards_to_parse = list(map(str.strip, current_section[key].split(',')))

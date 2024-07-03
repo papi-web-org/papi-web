@@ -15,9 +15,9 @@ Dans la rubrique `[screen.<screen_id>]` d'un écran, deux options servent à gé
 
 L'option `menu` peut avoir les valeurs suivantes :
 
-### Aucun menu : `menu = none`
+### Aucun menu : `menu = @none`
 
-Aucun menu ne sera affiché sur cet écran (par exemple, il n'est en général pas nécessaire d'afficher des liens hypertextes puisque la navigation entre les écrans est automatique). `menu = none` est la valeur par défaut.
+Aucun menu ne sera affiché sur cet écran (par exemple, il n'est en général pas nécessaire d'afficher des liens hypertextes puisque la navigation entre les écrans est automatique). `menu = @none` est la valeur par défaut.
 
 ### Visualisation : `menu = @view`
 

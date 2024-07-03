@@ -2,7 +2,6 @@ import json
 from typing import Self, Unpack
 import warnings
 from contextlib import suppress
-from collections import defaultdict
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from logging import Logger
@@ -133,8 +132,6 @@ class BoardsScreen(AScreenWithSets):
 
     @property
     def menu_label(self) -> str | None:
-        # if self.id == "saisie_ec-fixes":
-        #     breakpoint()
         if self.menu_text is None:
             return None
         text: str = self.menu_text
@@ -353,7 +350,7 @@ class ScreenBuilder:
         menu = screen_section.get(key)
         if menu is None:
             self._config_reader.add_info(
-                'option absente, aucun menu ne sera affiché (indiquer [none] pour supprimer ce message)',
+                'option absente, aucun menu ne sera affiché (indiquer [@none] pour supprimer ce message)',
                 screen_section_key, key)
         elif menu.startswith('family'):
             warn(
@@ -370,6 +367,11 @@ class ScreenBuilder:
                 "[update] ne sera plus utilisable en version 2.6, utilisez "
                 "[@update] à la place", FutureWarning)
             menu = "@update"
+        elif menu == 'none':
+            warn(
+                "[none] ne sera plus utilisable en version 2.6, utilisez "
+                "[@none] à la place", FutureWarning)
+            menu = "@none"
         # NOTE(Amaras): two passes because we don't need duplicated code paths
         if menu is not None and menu.startswith("@family"):
             if screen_type == ScreenType.Results:
@@ -383,11 +385,11 @@ class ScreenBuilder:
             pass
         elif menu is not None and (',' in menu or '*' in menu):
             pass
-        elif menu == 'none':
+        elif menu == '@none':
             menu = None
         else:
             self._config_reader.add_warning(
-                '[none], [@family], [@view], [@update] ou une liste d\'écrans séparés par des virgules sont attendus, '
+                '[@none], [@family], [@view], [@update] ou une liste d\'écrans séparés par des virgules sont attendus, '
                 'aucun menu ne sera affiché', screen_section_key, key)
             menu = None
         key = 'show_timer'

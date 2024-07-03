@@ -268,7 +268,7 @@ class PapiDatabase(AccessDatabase):
                 data[f'Rd{round_:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
                 data[f'Rd{round_:0>2}Cl'] = 'R'
             actions: str = ', '.join([f'`{key}` = ?' for key in data.keys()])
-            query: str = f'UPDATE `joueur` SET {actions}'
+            query: str = f'UPDATE `joueur` SET {actions} WHERE Ref > 1'
             params = tuple(data.values())
             self._execute(query, params)
         else:
