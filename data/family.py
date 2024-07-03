@@ -26,7 +26,7 @@ class FamilyBuilder:
     def _build_family(self, family_id: str):
         section_key = f'family.{family_id}'
         family_section = self._config_reader[section_key]
-        section_keys = ['template', 'range', 'parts', 'number', ]
+        section_keys = ['template', 'range', 'parts', 'number', 'first', 'last']
         for key in family_section:
             if key not in section_keys:
                 self._config_reader.add_warning(
@@ -59,6 +59,28 @@ class FamilyBuilder:
         template: Template = self._templates[template_id]
         template_type: ScreenType = ScreenType(template.data[None]['type'])
         # note: template_type is boards or players (control done by TemplateBuilder)
+        key = 'first'
+        first: int | None = None
+        if key in family_section:
+            first = self._config_reader.getint_safe(section_key, key, minimum=1)
+            if first is None:
+                self._config_reader.add_warning('un entier positif non nul est attendu, option ignorée',
+                                                section_key, key)
+            elif template_type != ScreenType.Boards:
+                self._config_reader.add_warning(f"l'option [first] ne peut être utilisée que pour les modèles de"
+                                                f" type [{ScreenType.Boards}]")
+                first = None
+        key = 'last'
+        last: int | None = None
+        if key in family_section:
+            last = self._config_reader.getint_safe(section_key, key, minimum=1)
+            if last is None:
+                self._config_reader.add_warning('un entier positif non nul est attendu, option ignorée',
+                                                section_key, key)
+            elif template_type != ScreenType.Boards:
+                self._config_reader.add_warning(f"l'option [last] ne peut être utilisée que pour les modèles de"
+                                                f" type [{ScreenType.Boards}]")
+                last = None
         key = 'number'
         number: int | None = None
         if key in family_section:
@@ -125,7 +147,7 @@ class FamilyBuilder:
             total_items_number: int
             if template_type == ScreenType.Boards:
                 if tournament.current_round:
-                    total_items_number = len(tournament.boards)
+                    total_items_number = len(tournament.boards[slice(first, last)])
                 else:
                     total_items_number = ceil(len(tournament.players_by_id) / 2)
             else:  # Players
@@ -212,6 +234,10 @@ class FamilyBuilder:
                 # this way parts, number and part will be set below even if [template.<template_id>.template_type]
                 # is not declared
                 template_extended_data[str(template_type.value)] = {}
+            if first is not None:
+                template_extended_data[str(template_type.value)]['first'] = str(first)
+            if last is not None:
+                template_extended_data[str(template_type.value)]['last'] = str(last)
             for sub_section_key, properties in template_extended_data.items():
                 if sub_section_key is None:
                     new_section_key = screen_section_key

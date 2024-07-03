@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Self
 from logging import Logger
 from dataclasses import dataclass, field
+from collections.abc import Iterator
 import pyodbc
 
 from common.exception import PapiWebException
@@ -75,12 +76,10 @@ class AccessDatabase:
     def _execute(self, query: str, params: tuple = ()):
         self.cursor.execute(query, params)
 
-    def _fetchall(self) -> list[dict[str, Any]]:
+    def _fetchall(self) -> Iterator[dict[str, Any]]:
         columns = [column[0] for column in self.cursor.description]
-        results = []
         for row in self.cursor.fetchall():
-            results.append(dict(zip(columns, row)))
-        return results
+            yield dict(zip(columns, row))
 
     def _fetchone(self) -> dict[str, Any]:
         columns = [column[0] for column in self.cursor.description]

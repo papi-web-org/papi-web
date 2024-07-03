@@ -1,16 +1,18 @@
 import json
 import math
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from logging import Logger
 from dataclasses import dataclass, field
+from itertools import chain, islice
+from collections.abc import Iterable
 
 from common.config_reader import ConfigReader, TMP_DIR
 from common.logger import get_logger
 from data.board import Board
 from data.player import Player
 from data.tournament import Tournament
-from data.util import ScreenType
+from data.util import ScreenType, batched
 
 logger: Logger = get_logger()
 
@@ -23,6 +25,7 @@ class ScreenSet:
     id: int
     columns: int
     show_unpaired: bool
+    fixed_boards: list[int] = field(default_factory=list)
     first: int | None = field(default=None, kw_only=True)
     last: int | None = field(default=None, kw_only=True)
     part: int | None = field(default=None, kw_only=True)
@@ -51,8 +54,6 @@ class ScreenSet:
             self.items_lists = [[], ] * self.columns
             return
         # at first select the desired items
-        selected_first_index: int = 0
-        selected_last_index: int = 0
         first_index: int
         last_index: int
         # _
@@ -63,52 +64,49 @@ class ScreenSet:
         # part and parts
         # number
         # part and number
-        if self.first is not None:
-            selected_first_index = self.first - 1
-            if self.last is not None:
-                # first and last
-                selected_last_index = min(self.last, len(items))
-            elif self.number is not None:
-                # first and number
-                selected_last_index = selected_first_index + self.number
-            else:
-                # first
-                selected_last_index = len(items)
-        elif self.last is not None:
-            # last
-            selected_first_index = 0
-            selected_last_index = self.last
-        elif self.parts is not None:
-            # part and parts
-            items_number = len(items)
-            q, r = divmod(items_number, self.parts * self.columns)
-            if r > 0:
-                q += 1
-            if force_even and q % 2 == 1:
-                q += 1
-            first_index = 0
-            for part in range(1, self.parts + 1):
-                last_index = min(first_index + q * self.columns, items_number)
-                if part == self.part:
-                    selected_first_index = first_index
-                    selected_last_index = last_index
-                    break
-                first_index = last_index
-        elif self.part is not None:
-            # part and number
-            selected_first_index = min(self.number * (self.part - 1), len(items))
-            selected_last_index = min(selected_first_index + self.number, len(items))
-        elif self.number is not None:
-            # number
-            selected_first_index = 0
-            selected_last_index = min(self.number, len(items))
+        # fixed_boards
+        
+        # NOTE(Amaras): fixed_boards takes precedence, and is not compatible
+        # with other options.
+        if self.fixed_boards:
+            if TYPE_CHECKING:
+                assert all(isinstance(item, Board) for item in items)
+            selected_items = [
+                board for board in items
+                if board.number in self.fixed_boards
+            ]
         else:
-            # _
-            selected_first_index = 0
-            selected_last_index = len(items)
-        selected_items = items[selected_first_index:selected_last_index]
-        self.first_item = items[selected_first_index]
-        self.last_item = items[selected_last_index - 1]
+            first = self.first - 1 if self.first is not None else 0
+            last = self.last if self.last is not None else len(items)
+            selected_slice = slice(first, last)
+            if self.parts is not None:
+                number = math.ceil((last - first) / self.parts)
+                # NOTE(Amaras): makes the number of items divisible by
+                # the number of columns.
+                if number % self.columns != 0:
+                    number = (number // self.columns + 1) * self.columns
+            else:
+                number = self.number
+            if number is not None:
+                # NOTE(Amaras): this assumes that *self.part* is set,
+                # which must be the case if either *self.parts* or
+                # *self.number* is set.
+                try:
+                    selected_items = list(
+                        next(
+                            islice(
+                                batched(items[selected_slice], number),
+                                self.part - 1,
+                                self.part
+                    )))
+                except StopIteration:
+                    self.first_item = self.last_item = None
+                    self.items_lists = None
+                    return
+            else:
+                selected_items = items[selected_slice]
+            self.first_item = selected_items[0]
+            self.last_item = selected_items[-1]
         # now split in columns
         items_number = len(selected_items)
         q, r = divmod(items_number, self.columns)
@@ -131,24 +129,37 @@ class ScreenSet:
                 else:
                     self.name = '%t'
             self.name = self.name.replace('%t', str(self.tournament.name))
-            if self.first_board:
-                self.name = self.name.replace('%f', str(self.first_board.id))
-            if self.last_board:
-                self.name = self.name.replace('%l', str(self.last_board.id))
+            if r'%f' in self.name and self.first_item is not None:
+                self.name = self.name.replace(r'%f', str(self.first_board.id))
+            if r'%l' in self.name and self.last_item is not None:
+                self.name = self.name.replace(r'%l', str(self.last_board.id))
 
     @property
     def boards_lists(self) -> list[list[Board]]:
         self._extract_boards()
+        if TYPE_CHECKING:
+            assert (
+                isinstance(self.items_lists, list) and
+                all(isinstance(item, list) for item in self.items_lists) and
+                all(
+                    isinstance(item, Board) for item in chain.from_iterable(*self.items_lists)
+                )
+            )
         return self.items_lists
 
     @property
     def first_board(self) -> Board:
-        self._extract_boards()
+        if not self.first_item:
+            self._extract_boards()
+        if TYPE_CHECKING:
+            assert isinstance(self.first_item, Board)
         return self.first_item
 
     @property
     def last_board(self) -> Board:
         self._extract_boards()
+        if TYPE_CHECKING:
+            assert isinstance(self.last_item, Board)
         return self.last_item
 
     def _extract_players_by_name(self):
@@ -171,29 +182,48 @@ class ScreenSet:
     @property
     def players_by_name_lists(self) -> list[list[Player]]:
         self._extract_players_by_name()
+        if TYPE_CHECKING:
+            assert (
+                isinstance(self.items_lists, list) and
+                all(isinstance(item, list) for item in self.items_lists) and
+                all(
+                    isinstance(item, Player)
+                    for item in chain.from_iterable(*self.items_lists)
+                )
+            )
         return self.items_lists
 
     @property
-    def players_by_name_tuple_lists(self) -> list[tuple[list[Player], list[Player]]]:
+    def players_by_name_tuple_lists(self) -> Iterable[tuple[list[Player], list[Player]]]:
         self._extract_players_by_name()
+        if TYPE_CHECKING:
+            assert (
+                isinstance(self.items_lists, list) and
+                all(isinstance(item, list) for item in self.items_lists) and
+                all(
+                    isinstance(item, Player)
+                    for item in chain.from_iterable(*self.items_lists)
+                )
+            )
         players_by_name_lists: list[list[Player]] = self.items_lists
-        players_by_name_tuple_lists: list[tuple[list[Player], list[Player]]] = []
         for players_by_name in players_by_name_lists:
-            players_by_name_tuple_lists.append(
-                (
-                    players_by_name[:math.ceil(len(players_by_name) / 2)],
-                    players_by_name[math.ceil(len(players_by_name) / 2):],
-                ))
-        return players_by_name_tuple_lists
+            yield (
+                players_by_name[: (bound := math.ceil(len(players_by_name) / 2))],
+                players_by_name[bound:]
+            )
 
     @property
     def first_player_by_name(self) -> Player:
         self._extract_players_by_name()
+        if TYPE_CHECKING:
+            assert isinstance(self.first_item, Player)
         return self.first_item
 
     @property
     def last_player_by_name(self) -> Player:
         self._extract_players_by_name()
+        if TYPE_CHECKING:
+            assert isinstance(self.last_item, Player)
         return self.last_item
 
     @classmethod
@@ -219,31 +249,38 @@ class ScreenSet:
             return []
 
     def __str__(self):
-        if self.first is not None:
-            if self.last is not None:
-                # first and last
-                return f'{self.tournament.id} (de n°{self.first} à n°{self.last})'
-            elif self.number is not None:
-                # first and number
-                return f'{self.tournament.id} ({self.number} à partir de n°{self.first})'
-            else:
-                # first
-                return f'{self.tournament.id} (à partir de n°{self.first})'
-        elif self.last is not None:
-            # last
-            return f'{self.tournament.id} (jusqu\'à n°{self.last})'
-        elif self.parts is not None:
-            # part and parts
-            return f'{self.tournament.id} ({self.part}/{self.parts})'
-        elif self.part is not None:
-            # part and number
-            return f'{self.tournament.id} ({self.number}, partie n°{self.part})'
-        elif self.number is not None:
-            # number
-            return f'{self.tournament.id} ({self.number} à partir de n°1)'
-        else:
-            # _
-            return f'{self.tournament.id} (tout)'
+        if self.fixed_boards:
+            return f"{self.tournament.id} (tables fixes {', '.join(map(str, self.fixed_boards))})"
+        start = self.tournament.id
+        match (self.first, self.last, self.number, self.part, self.parts):
+            case (None, None, None, None, None):
+                return f'{start} (tout)'
+            case (first, None, None, None, None) if first is not None:
+                return f'{start} (à partir de n°{first})'
+            case (first, last, None, None, None) if first is not None and last is not None:
+                return f'{start} (de n°{first} à {last})'
+            case (first, None, number, None, None) if first is not None and number is not None:
+                return f'{start} ({number} à partir de n°{first})'
+            case (first, last, number, None, None) if first is not None and last is not None and number is not None:
+                return f'{start} ({number} de n°{first} à {last})'
+            case (None, None, number, part, None) if number is not None and part is not None:
+                return f'{start} ({number}, partie n°{part})'
+            case (first, None, number, part, None) if first is not None and number is not None and part is not None:
+                return f'{start} ({number} à partir de n°{first}, partie n°{part})'
+            case (None, last, number, part, None) if last is not None and number is not None and part is not None:
+                return f"{start} ({number} jusqu'à n°{last}, partie n°{part})"
+            case (first, last, number, part, None) if first is not None and last is not None and number is not None and part is not None:
+                return f'{start} ({number} de n°{first} à n°{last}, partie n°{part})'
+            case (None, None, None, part, parts) if part is not None and parts is not None:
+                return f'{start} ({part}/{parts})'
+            case (first, None, None, part, parts) if first is not None and part is not None and parts is not None:
+                return f'{start} ({part}/{parts} à partir de n°{first})'
+            case (None, last, None, part, parts) if last is not None and part is not None and parts is not None:
+                return f"{start} ({part}/{parts} jusqu'à n°{last})"
+            case (first, last, None, part, parts) if first is not None and last is not None and part is not None and parts is not None:
+                return f'{start} ({part}/{parts} de n°{first} à n°{last})'
+            case _:
+                raise ValueError("unreachable")
 
 
 class ScreenSetBuilder:
@@ -259,6 +296,7 @@ class ScreenSetBuilder:
         self.columns: int = columns
         self.show_unpaired = show_unpaired
         self.screen_sets = []
+        self.fixed_boards: list[int] = []
         for screen_set_section_key in self._read_screen_set_section_keys():
             if screen_set := self._build_screen_set(screen_set_section_key):
                 self.screen_sets.append(screen_set)
@@ -386,6 +424,23 @@ class ScreenSetBuilder:
                     screen_set_section_key,
                     key
                 )
+        key = 'fixed_boards'
+        fixed_boards: list[int] = []
+        if key in current_section:
+            all_fixed = self._config_reader.getboolean_safe(screen_set_section_key, key)
+            if all_fixed:
+                fixed_boards = [
+                    player.fixed for player in tournament.players_by_id
+                    if player.fixed != 0
+                ]
+            boards_to_parse = list(map(str.strip, current_section[key].split(',')))
+            for board in boards_to_parse:
+                try:
+                    fixed_boards.append(int(board))
+                except ValueError:
+                    self._config_reader.add_warning(
+                        f'un entier positif est attendu, échiquier [{board}] ignoré',
+                        screen_set_section_key, key)
         # then check that the values are coherent
         if first is not None and last is not None and first > last:
             self._config_reader.add_warning(f'intervalle [{first}-{last}] non valide, partie d\'écran ignorée',
@@ -396,61 +451,17 @@ class ScreenSetBuilder:
                                             f"partie d\'écran ignorée", screen_set_section_key)
             return None
         # eventually check that options are all compatible
-        if first is not None:
-            # first is set
-            if last is not None and number is not None:
-                self._config_reader.add_warning('les options [last] et [number] ne peuvent pas être utilisées '
-                                                'en même temps, partie d\'écran ignorée', screen_set_section_key)
-                return None
-            if part is not None or parts is not None:
-                self._config_reader.add_warning('les options [part] et [parts] ne peuvent pas être utilisées '
-                                                'en même temps que l\'option [first], partie d\'écran ignorée',
-                                                screen_set_section_key)
-                return None
-            # here we have: first | first + last | first + number
-        else:
-            # first is not set
-            if last is not None:
-                # first and last are not set
-                if part is not None or parts is not None or number is not None:
-                    self._config_reader.add_warning('l\'option [last] n\'est pas compatible avec les options '
-                                                    '[part], [parts] ou [number], partie d\'écran ignorée',
-                                                    screen_set_section_key)
-                    return None
-                # here we have: last
-            else:
-                # first and last are not set
-                if parts is not None and number is not None:
-                    self._config_reader.add_warning('les options [parts] et [number] ne peuvent pas être utilisées '
-                                                    'en même temps, partie d\'écran ignorée', screen_set_section_key)
-                    return None
-                if part is not None:
-                    if parts is None and number is None:
-                        self._config_reader.add_warning('l\'option [part] doit être utilisée avec une des options '
-                                                        '[parts] ou [number], partie d\'écran ignorée',
-                                                        screen_set_section_key)
-                        return None
-                else:
-                    if parts is not None:
-                        self._config_reader.add_warning('l\'option [parts] ne peut pas être utilisée sans '
-                                                        'l\'option [part], partie d\'écran ignorée',
-                                                        screen_set_section_key)
-                        return None
-                    if number is not None:
-                        self._config_reader.add_warning('l\'option [number] ne peut pas être utilisée sans '
-                                                        'une des options [first] ou [part], partie d\'écran ignorée',
-                                                        screen_set_section_key)
-                        return None
-                # here we have _ | number | part + parts | part + number
-        # at this stage, the following options are correctly set :
-        # _
-        # first
-        # first and last
-        # last
-        # first and number
-        # number
-        # part and parts
-        # part and number
+        if fixed_boards and (first, last, part, parts, number) != (None,) * 5:
+            self._config_reader.add_warning(
+                "l'option [fixed_boards] est incompatible avec les options"
+                " [first], [last], [part], [parts] et [number], partie"
+                " d'écran ignorée",
+                screen_set_section_key)
+            return None
+        elif parts is not None and number is not None:
+            self._config_reader.add_warning('les options [parts] et [number] ne peuvent pas être utilisées '
+                                            'en même temps, partie d\'écran ignorée', screen_set_section_key)
+            return None
         key = 'name'
         name: str | None = None
         if key in current_section:
@@ -465,6 +476,7 @@ class ScreenSetBuilder:
             self.screen_set_id,
             self.columns,
             self.show_unpaired,
+            fixed_boards=fixed_boards,
             first=first,
             last=last,
             part=part,

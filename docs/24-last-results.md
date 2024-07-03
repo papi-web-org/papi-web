@@ -21,7 +21,7 @@ Le paramètre `limit` permet de limiter le nombre de résultats affichés (ici 3
 
 ## Limitation des tournois dans les écrans de résultats
 
-Dans le cas où un écran de résultats est affiché aux spectateurs, il peut être appréciable de scinder cet écran pour ne montrer que les résultats d'un ou plusieurs tournois. Par exemple, pour un événement comprenant 3 tournois (`a`, `b` et `jeunes`), il est possible de définir deux écrans de résultats, un nommé `résultats-tc` (tournois `a` et `b`), et un autre nommé `résultats-j` (tournoi jeunes) de cette manière :
+Dans le cas où un écran de résultats est affiché aux spectateurs, il peut être appréciable de scinder cet écran pour ne montrer que les résultats d'un ou plusieurs tournois. Pour un événement comprenant 3 tournois (`a`, `b` et `jeunes`), il est possible de définir deux écrans de résultats, un nommé `résultats-tc` (tournois `a` et `b`), et un autre nommé `résultats-j` (tournoi jeunes) de cette manière :
 ```
 [screen.résultats-tc]
 type = results

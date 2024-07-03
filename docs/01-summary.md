@@ -64,6 +64,7 @@ Pour être prévenu·e des nouvelles versions de Papi-web, il suffit de s'abonne
 | ARMES Timothy       | AFO1  | ARA   | 69  | Echiquier Romanais-Peageois                   |
 | AUBRY Pascal        | AFO2  | BRE   | 35  | Echiquier Domloupéen                          |
 | AVENIA Adrien       |       | BFC   | 25  | Tour Prends Garde! Besancon                   |
+| BELEY Huong         | AFO1  | IDF   | 77  | Tours et Detours Club d'Echecs Centre Brie    |
 | BENETEAU Hubert     | AFE1  | NOR   | 50  | Agneaux Saint-Lô                              |
 | BENADDOU Khaled     | AFE2  | IDF   | 94  | Club d'Echecs de Saint-Maur                   |
 | BLEUZEN Christian   | AFE1  | BRE   | 35  | Rennes Paul Bert                              |

@@ -57,6 +57,7 @@
         {% if event.timer %}
             {% if screen.show_timer %}
                 {% include 'timer.html' %}
+                <script>{% include 'timer.js' %}</script>
             {% endif %}
         {% endif %}
         {% if screen.type == 'boards' %}

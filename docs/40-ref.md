@@ -40,7 +40,7 @@ Voir également :
 L'identifiant du tournoi (`<tournament_id>`) est facultatif si l'évènement ne comporte qu'un tournoi, obligatoire s'il y en a plusieurs (s'il n'est pas précisé, l'identifiant du tournoi sera `default`).
 
 > [!NOTE]
-> Le caractère `/` n'est pas autorisé dans les identifiants des tournois.
+> Les caractères `/` et `:` ne sont pas autorisés dans les identifiants des tournois.
 
 | Option                       | Description                                                                                                                                                                                                                                                                                                                                                                                     |
 |------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -81,6 +81,7 @@ Pour les tournois à handicap, toutes les options ci-dessous sont obligatoires.
 
 Voir également : [Configuration d'un tournoi à handicap](32-handicap.md)
 
+
 ## Modèles d'écran (`[template.<template_id>]`)
 
 | Option | Description                                                                          |
@@ -108,12 +109,19 @@ L'identifiant de l'écran (`<screen_id>`) est obligatoire.
 | `name`          | Le nom de l'écran (facultatif).<br/>Par défaut, le nom de l'écran sera `Derniers résultats` pour les écrans de résultats, ou le nom du premier ensemble d'échiquier et de joueur·euses pour les autres écrans (mieux, pour utiliser les _tokens_ `%t`, `%f` et `%l`).                                                                                                                                                                                                                                                                                                                     |
 | `update`        | `update = on` pour les écrans de saisie ou `update = off` pour les écrans d'affichage des appariements par échiquier (facultatif, par défaut `update = off`).<br/>Cette option n'est pas autorisée pour les écrans d'affichage des appariements par ordre alphabétique et les écrans de résultats.                                                                                                                                                                                                                                                                                        |
 | `show_unpaired` | Pour les écrans d'affichage des appariements par ordre alphabétique, `show_unpaired = off` pour n'afficher que les joueur·euses apparié·es, `show_unpaired = on` pour afficher tou·tes les joueur·euses (facultatif, par défaut `show_unpaired = off`).<br/>Cette option n'est pas autorisée pour les écrans d'affichage des appariements par échiquier et les écrans de résultats.                                                                                                                                                                                                       |
-| `menu`          | Le menu qui sera affiché sur l'écran (facultatif, par défaut `menu = none`) :<br/>- `menu = none` : aucun menu.<br/>- `menu = view` : visualisation (tous les écrans de visualisation de l'évènement)).<br/>- `menu = update` : saisie (tous les écrans de saisie de l'évènement).<br/>- `menu = family` : famille (tous les écrans de la famille de l'écran, option autorisée seulement pour les écrans d'une famille).<br/>- `menu = <screen_id_1>, ...` : liste d'écrans (identifiants d'écran séparés par des virgules).                                                              |
+| `menu`          | Le menu qui sera affiché sur l'écran (facultatif, par défaut `menu = none`) :<br/>- `menu = none` : aucun menu.<br/>- `menu = @view` : visualisation (tous les écrans de visualisation de l'évènement)).<br/>- `menu = @update` : saisie (tous les écrans de saisie de l'évènement).<br/>- `menu = @family,...` : famille (tous les écrans de la famille de l'écran, option autorisée seulement pour les écrans d'une famille), ainsi que les écrans (syntaxe définie au point suivant).<br/>- `menu = <screen_id_1>, ...` : liste d'écrans (identifiants d'écran séparés par des virgules).<br/>         |
 | `menu_text`     | Le texte du lien hypertexte utilisé vers cet écran.<br/>Les _tokens_ suivants peuvent être utilisés :<br/>- `%t` : remplacé par le nom du tournoi.<br/>- `%f` (_first_) et `%l` (_last_) : remplacés par les numéros des premier/dernier échiquiers (écrans de saisie ou d'affichage des appariements par échiquier) ou les trois premières lettres du nom de famille des premier·ère/dernier·ère joueur·euse (écran d'affichage des appariements par ordre alphabétique).<br/>Lorsque `menu_text` n'est pas défini, aucun lien n'est accessible vers cet écran depuis les autres écrans. |
 | `show_timer`    | `show_timer = on` pour afficher le chronomètre, `show_timer = off` sinon (facultatif, par défaut `show_timer = on`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `limit`         | Le nombre maximal de résultats affichés (cette option n'est autorisée que pour les écrans de résultats).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `columns`       | Le nombre de colonnes utilisé pour le rendu de l'écran (facultatif, par défaut `1`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `tournaments`   | La liste des tournois dont les résultats sont affichés, séparée par des virgules (cette option n'est autorisée que pour les écrans de résultats).                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+
+> [!IMPORTANT]
+> Les options de menu : `view`, `update` et `family` sont dépréciées à partir de la version 2.4, et elles seront retirées à partir de la version 2.6.
+> Les nouvelles options à utiliser sont `@view`, `@update` et `@family` respectivement
+
+> [!NOTE]
+> L'option de menu `@family` permet également d'ajouter des écrans supplémentaires.
 
 Voir également :
 - [Saisie des résultats](21-update.md)
@@ -123,7 +131,7 @@ Voir également :
 
 ### Ensembles d'échiquiers (`[screen.<screen_id>.boards]` ou `[screen.<screen_id>.boards.<screen_set_id>]`)
 
-Les écrans qui affichent plusieurs ensembles d'échiquiers doivent utiliser pour chacun une rubrique `[screen.<screen_id>.boards.<screen_set_id>]` (où `<screen_set_id>` est l'identifiant de l'ensemble), alors ceux qui n'affichent q'un ensemble d'échiquier peuvent utiliser la rubrique `[screen.<screen_id>.boards]`.
+Les écrans qui affichent plusieurs ensembles d'échiquiers doivent utiliser pour chacun une rubrique `[screen.<screen_id>.boards.<screen_set_id>]` (où `<screen_set_id>` est l'identifiant de l'ensemble), alors ceux qui n'affichent qu'un ensemble d'échiquier peuvent utiliser la rubrique `[screen.<screen_id>.boards]`.
 
 Une rubrique `[screen.<screen_id>.boards]` (ou au moins une rubrique `[screen.<screen_id>.boards.<screen_set_id>]`) est obligatoire pour les écrans de type `boards` (saisie et affichage des appariements par échiquier) dès lors que l'évènement comporte plusieurs tournois. 
 
@@ -170,10 +178,12 @@ L'identifiant de la famille (`<family_id>`) est obligatoire et peut-être utilis
 
 | Option     | Description                                                                                                                                                                                                                                                                    |
 |------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `template` | L'identifiant du modèle sur lequel la famille est basée (facultatif, utilisation par défaut du modèle du même nom `<family_id>` ou d'un unique modèle de l'évènement).                                                                                                         |
-| `range`    | La plage de valeurs utilisée pour construire la famille, de chiffres ou de lettres (par exemple `range = 1-6` ou `range = A-F`).<br/>On utilise en général l'option `range` avec des lettres, ou bien avec des chiffres pour réduire une plage donnée par `parts` ou `number`. |
-| `parts`    | Le nombre d'écrans à créer (Papi-web calcule automatiquement le nombre d'échiquiers ou de joueur·euses à afficher sur chaque écran).                                                                                                                                           |
-| `number`   | Le nombre fixe d'échiquiers ou de joueur·euses à afficher sur chaque écran (Papi-web calcule automatiquement le nombre d'écrans nécessaires).                                                                                                                                  |
+| `template` | L'identifiant du modèle sur lequel la famille est basée (facultatif, utilisation par défaut du modèle du même nom `<family_id>` ou d'un unique modèle de l'évènement).                                                                                                          |
+| `range`    | La plage de valeurs utilisée pour construire la famille, de chiffres ou de lettres (par exemple `range = 1-6` ou `range = A-F`).<br/>On utilise en général l'option `range` avec des lettres, ou bien avec des chiffres pour réduire une plage donnée par `parts` ou `number`.   |
+| `parts`    | Le nombre d'écrans à créer (Papi-web calcule automatiquement le nombre d'échiquiers ou de joueur·euses à afficher sur chaque écran).                                                                                                                                      |
+| `number`   | Le nombre fixe d'échiquiers ou de joueur·euses à afficher sur chaque écran (Papi-web calcule automatiquement le nombre d'écrans nécessaires).                                                                                                                                |
+| `first`    | Le numéro du premier échiquier à afficher dans le premier écran de la famille.<br/>N'est admissible que si le modèle définit un ensemble d'échiquiers.                                                                                                                       |
+| `last`     | Le numéro du dernier échiquier à afficher dans le dernier écran de la famille.<br/>N'est admissible que si le modèle définit un ensemble d'échiquiers                                                                                                                        |
 
 > [!NOTE]
 > Si l'option `template` n'est pas définie, on utilise par défaut :

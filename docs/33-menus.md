@@ -19,20 +19,24 @@ L'option `menu` peut avoir les valeurs suivantes :
 
 Aucun menu ne sera affiché sur cet écran (par exemple, il n'est en général pas nécessaire d'afficher des liens hypertextes puisque la navigation entre les écrans est automatique). `menu = none` est la valeur par défaut.
 
-### Visualisation : `menu = view`
+### Visualisation : `menu = @view`
 
 Le menu contiendra des liens vers tous les écrans de l'évènement :
 - affichage des appariements par échiquier
 - affichage des appariements par ordre alphabétique
 - affichage des résultats
 
-### Saisie : `menu = update`
+### Saisie : `menu = @update`
 
 Le menu contiendra des liens vers tous les écrans de saisie de l'évènement.
 
-### Famille (de l'écran) : `menu = family`
+### Famille (de l'écran) : `menu = @family`
 
 Le menu contiendra des liens vers tous les écrans de la famille de l'écran (cette valeur n'est autorisée que pour les écrans d'une famille).
+
+#### Ajout d'écrans supplémentaires : `menu = @family, <écran n°1, ...>`
+
+Le menu contiendra des liens vers tous les écrans de la famille d'écran comme au point précédent, et contiendra également des liens vers les écrans spécifiés (voir le point suivant).
 
 ### Liste d'écrans : `menu = <écran n°1, ...>`
 

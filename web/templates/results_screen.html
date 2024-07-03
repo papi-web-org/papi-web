@@ -8,7 +8,7 @@
                     <tr>
                         <th scope="col" class="time">Heure</th>
                         {% if tournaments_len > 1 %}<th scope="col" class="tournament">Tournoi</th>{% endif %}
-                        <th scope="col" class="board-number">{% if tournaments_len > 1 %}Rde.{% endif %}Ech</th>
+                        <th scope="col" class="board-number">Rde.Ech</th>
                         <th scope="col" class="player">Blancs</th>
                         <th scope="col" class="score">Score</th>
                         <th scope="col" class="player">Noirs</th>
@@ -19,7 +19,7 @@
                     <tr class="result-row">
                         <td scope="row" class="timestamp">{{ result.timestamp_str }}</td>
                         {% if tournaments_len > 1 %}<td scope="row" class="tournament">{{ result.tournament_id }}</td>{% endif %}
-                        <td scope="row" class="board-number">{% if tournaments_len > 1 %}{{ result.round }}.{% endif %}{{ result.board_id }}</td>
+                        <td scope="row" class="board-number">{{ result.round }}.{{ result.board_id }}</td>
                         <td scope="row" class="player">{{ result.white_player }}</td>
                         <td scope="row" class="score">{{ result.result_str }}</td>
                         <td scope="row" class="player">{{ result.black_player }}</td>

@@ -482,7 +482,7 @@ class TournamentBuilder:
         section_key: str = f'tournament.{tournament_id}'
         if tournament_id.find('/') != -1:
             self._config_reader.add_error(
-                f"le caractère « / » n\'est pas autorisé dans les identifiants des tournois, tournoi ignoré",
+                "le caractère « / » n\'est pas autorisé dans les identifiants des tournois, tournoi ignoré",
                 section_key
             )
             return None
