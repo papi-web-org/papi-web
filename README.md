@@ -45,6 +45,7 @@ Papi-web, programme de saisie des résultats dans Papi et de mise en ligne des r
 - Interface avec Chess Event
 - Installation d'un environnement de développement
 - Distribution du logiciel
+- Description de la base de données
 
 ## [Bac à sable](docs/90-sandbox.md)
 
