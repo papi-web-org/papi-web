@@ -13,7 +13,8 @@ INSERT INTO `info`(`version`) VALUES('{version}');
 CREATE TABLE `tournament` (
     `id` INTEGER NOT NULL,
     `uniq_id` TEXT NOT NULL,
-    `last_update` FLOAT NOT NULL,
+    `last_illegal_move_update` FLOAT DEFAULT 0.0,
+    `last_result_update` FLOAT DEFAULT 0.0,
     PRIMARY KEY(`id` AUTOINCREMENT),
     UNIQUE(`uniq_id`)
 );

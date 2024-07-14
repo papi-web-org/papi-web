@@ -604,29 +604,29 @@ class ScreenBuilder:
         results_screen_id: str = f'auto-{ScreenType.Results.value}'
         if len(self._tournaments) > 1:
             update_menu: str = ','.join([
-                f'{tournament_id}-auto-{ScreenType.Boards.value}-update' for tournament_id in self._tournaments
+                f'{tournament_uniq_id}-auto-{ScreenType.Boards.value}-update' for tournament_uniq_id in self._tournaments
             ])
             view_menu: str = ','.join([
-                f'{tournament_id}-auto-{ScreenType.Boards.value}-view' for tournament_id in self._tournaments
+                f'{tournament_uniq_id}-auto-{ScreenType.Boards.value}-view' for tournament_uniq_id in self._tournaments
             ])
             players_menu: str = ','.join([
-                f'{tournament_id}-auto-{ScreenType.Players.value}' for tournament_id in self._tournaments
+                f'{tournament_uniq_id}-auto-{ScreenType.Players.value}' for tournament_uniq_id in self._tournaments
             ])
             results_menu: str = 'none'
         else:
             tournament: Tournament = list(self._tournaments.values())[0]
             update_menu: str = 'none'
             view_menu: str = ','.join([
-                f'{tournament.id}-auto-{ScreenType.Boards.value}-view',
-                f'{tournament.id}-auto-{ScreenType.Players.value}',
+                f'{tournament.uniq_id}-auto-{ScreenType.Boards.value}-view',
+                f'{tournament.uniq_id}-auto-{ScreenType.Players.value}',
                 f'auto-{ScreenType.Results.value}',
             ])
             players_menu: str = view_menu
             results_menu: str = view_menu
-        for tournament_id in self._tournaments:
-            tournament_name = self._tournaments[tournament_id].name
+        for tournament_uniq_id in self._tournaments:
+            tournament_name = self._tournaments[tournament_uniq_id].name
             auto_screens: dict[str, dict[str, str]] = {
-                f'{tournament_id}-auto-{ScreenType.Boards.value}-update': {
+                f'{tournament_uniq_id}-auto-{ScreenType.Boards.value}-update': {
                     'type': ScreenType.Boards.value,
                     'update': 'on',
                     'name': f'{f"{tournament_name} - " if len(self._tournaments) > 1 else ""}'
@@ -634,7 +634,7 @@ class ScreenBuilder:
                     'menu_text': tournament_name if len(self._tournaments) > 1 else '',
                     'menu': update_menu,
                 },
-                f'{tournament_id}-auto-{ScreenType.Boards.value}-view': {
+                f'{tournament_uniq_id}-auto-{ScreenType.Boards.value}-view': {
                     'type': ScreenType.Boards.value,
                     'update': 'off',
                     'name': f'{f"{tournament_name} - " if len(self._tournaments) > 1 else ""}'
@@ -644,7 +644,7 @@ class ScreenBuilder:
                     else 'Appariements par échiquier',
                     'menu': view_menu,
                 },
-                f'{tournament_id}-auto-{ScreenType.Players.value}': {
+                f'{tournament_uniq_id}-auto-{ScreenType.Players.value}': {
                     'type': ScreenType.Players.value,
                     'name': f'{f"{tournament_name} - " if len(self._tournaments) > 1 else ""}'
                             f'Appariements par ordre alphabétique',
@@ -664,14 +664,14 @@ class ScreenBuilder:
                     'screen.*'
                 )
             auto_screen_sets: dict[str, dict[str, str]] = {
-                f'{tournament_id}-auto-{ScreenType.Boards.value}-update.{ScreenType.Boards.value}': {
-                    'tournament': tournament_id,
+                f'{tournament_uniq_id}-auto-{ScreenType.Boards.value}-update.{ScreenType.Boards.value}': {
+                    'tournament': tournament_uniq_id,
                 },
-                f'{tournament_id}-auto-{ScreenType.Boards.value}-view.{ScreenType.Boards.value}': {
-                    'tournament': tournament_id,
+                f'{tournament_uniq_id}-auto-{ScreenType.Boards.value}-view.{ScreenType.Boards.value}': {
+                    'tournament': tournament_uniq_id,
                 },
-                f'{tournament_id}-auto-{ScreenType.Players.value}.players': {
-                    'tournament': tournament_id,
+                f'{tournament_uniq_id}-auto-{ScreenType.Players.value}.players': {
+                    'tournament': tournament_uniq_id,
                 },
             }
             for screen_set_id, options in auto_screen_sets.items():

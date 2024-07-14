@@ -290,14 +290,14 @@ async def htmx_render_rotator_screen(
 
 
 def _load_boards_screen_board_result_modal_data(
-        request: HTMXRequest, event_id: str, tournament_id: str, board_id: int, screen_id: str,
+        request: HTMXRequest, event_id: str, tournament_uniq_id: str, board_id: int, screen_id: str,
 ) -> tuple[Event | None, Tournament | None, Board | None, AScreen | None, ]:
     error: str
     event: Event = Event(event_id, True)
     if not event.errors:
         if not _event_login_needed(request, event):
             try:
-                tournament: Tournament = event.tournaments[tournament_id]
+                tournament: Tournament = event.tournaments[tournament_uniq_id]
                 if tournament.current_round:
                     try:
                         board: Board = tournament.boards[board_id - 1]
@@ -305,13 +305,13 @@ def _load_boards_screen_board_result_modal_data(
                             screen: AScreen = event.screens[screen_id]
                             return event, tournament, board, screen
                         except KeyError:
-                            error = f'échiquier [{board_id}] introuvable pour le tournoi [{tournament.id}]'
+                            error = f'échiquier [{board_id}] introuvable pour le tournoi [{tournament.uniq_id}]'
                     except KeyError:
-                        error = f'échiquier [{board_id}] introuvable pour le tournoi [{tournament.id}]'
+                        error = f'échiquier [{board_id}] introuvable pour le tournoi [{tournament.uniq_id}]'
                 else:
-                    error = f'aucun appariement trouvé pour le tournoi [{tournament_id}]'
+                    error = f'aucun appariement trouvé pour le tournoi [{tournament_uniq_id}]'
             except KeyError:
-                error = f'tournoi [{tournament_id}] est introuvable'
+                error = f'tournoi [{tournament_uniq_id}] est introuvable'
         else:
             error = f'gestion des résultats non autorisée pour \'évènement [{event_id}]'
     else:
@@ -335,28 +335,28 @@ def _render_boards_screen_board_result_modal(
 
 
 @get(
-    path='/render-boards-screen-board-result-modal/{event_id:str}/{tournament_id:str}/{board_id:int}/{screen_id:str}',
+    path='/render-boards-screen-board-result-modal/{event_id:str}/{tournament_uniq_id:str}/{board_id:int}/{screen_id:str}',
     name='render-boards-screen-board-result-modal'
 )
 async def htmx_render_boards_screen_board_result_modal(
-        request: HTMXRequest, event_id: str, tournament_id: str, board_id: int, screen_id: str,
+        request: HTMXRequest, event_id: str, tournament_uniq_id: str, board_id: int, screen_id: str,
 ) -> Template:
     event, tournament, board, screen = _load_boards_screen_board_result_modal_data(
-        request, event_id, tournament_id, board_id, screen_id)
+        request, event_id, tournament_uniq_id, board_id, screen_id)
     if event is None:
         return _render_messages(request)
     return _render_boards_screen_board_result_modal(event, tournament, board, screen)
 
 
 def _load_boards_screen_board_row_data(
-        request: HTMXRequest, event_id: str, tournament_id: str, board_id: int, screen_id: str,
+        request: HTMXRequest, event_id: str, tournament_uniq_id: str, board_id: int, screen_id: str,
 ) -> tuple[Event | None, Tournament | None, Board | None, AScreen | None]:
     error: str
     event: Event = Event(event_id, True)
     if not event.errors:
         if not _event_login_needed(request, event):
             try:
-                tournament: Tournament = event.tournaments[tournament_id]
+                tournament: Tournament = event.tournaments[tournament_uniq_id]
                 if tournament.current_round:
                     try:
                         board: Board = tournament.boards[board_id - 1]
@@ -366,11 +366,11 @@ def _load_boards_screen_board_row_data(
                         except KeyError:
                             error = f'écran [{screen_id}] introuvable'
                     except KeyError:
-                        error = f'échiquier [{board_id}] introuvable pour le tournoi [{tournament.id}]'
+                        error = f'échiquier [{board_id}] introuvable pour le tournoi [{tournament.uniq_id}]'
                 else:
-                    error = f'aucun appariement trouvé pour le tournoi [{tournament_id}]'
+                    error = f'aucun appariement trouvé pour le tournoi [{tournament_uniq_id}]'
             except KeyError:
-                error = f'tournoi [{tournament_id}] est introuvable'
+                error = f'tournoi [{tournament_uniq_id}] est introuvable'
         else:
             error = f'gestion des résultats non autorisée pour \'évènement [{event_id}]'
     else:
@@ -382,13 +382,13 @@ def _load_boards_screen_board_row_data(
 def _render_boards_screen_board_row(
         request: HTMXRequest,
         event_id: str,
-        tournament_id: str,
+        tournament_uniq_id: str,
         board_id: int,
         screen_id: str,
 ) -> Template:
     template_name: str = 'boards_screen_board_row.html'
     event, tournament, board, screen = _load_boards_screen_board_row_data(
-        request, event_id, tournament_id, board_id, screen_id)
+        request, event_id, tournament_uniq_id, board_id, screen_id)
     if event is None:
         return _render_messages(request)
     return HTMXTemplate(
@@ -406,14 +406,15 @@ def _render_boards_screen_board_row(
 
 
 @put(
-    path='/board-result/{event_id:str}/{tournament_id:str}/{round:int}/{board_id:int}/{result:int}/{screen_id:str}',
+    path='/board-result/{event_id:str}/{tournament_uniq_id:str}/{round:int}/{board_id:int}/{result:int}/{screen_id:str}',
     name='add-board-result'
 )
 async def htmx_add_board_result(
-        request: HTMXRequest, event_id: str, tournament_id: str, round: int, board_id: int, result: int | None, screen_id: str,
+        request: HTMXRequest, event_id: str, tournament_uniq_id: str, round: int, board_id: int, result: int | None,
+        screen_id: str,
 ) -> Template:
     event, tournament, board, screen = _load_boards_screen_board_row_data(
-        request, event_id, tournament_id, board_id, screen_id)
+        request, event_id, tournament_uniq_id, board_id, screen_id)
     if event is None:
         return _render_messages(request)
     if result not in Result.imputable_results():
@@ -421,37 +422,37 @@ async def htmx_add_board_result(
             request, f'L\'écriture du résultat a échoué (résultat invalide [{result}])')
         return _render_messages(request)
     tournament.add_result(board, Result.from_papi_value(result))
-    set_session_last_result_updated(request, tournament_id, round, board_id)
-    return _render_boards_screen_board_row(request, event_id, tournament_id, board_id, screen_id)
+    set_session_last_result_updated(request, tournament_uniq_id, round, board_id)
+    return _render_boards_screen_board_row(request, event_id, tournament_uniq_id, board_id, screen_id)
 
 
 @delete(
-    path='/board-result/{event_id:str}/{tournament_id:str}/{round:int}/{board_id:int}/{screen_id:str}',
+    path='/board-result/{event_id:str}/{tournament_uniq_id:str}/{round:int}/{board_id:int}/{screen_id:str}',
     name='delete-board-result',
     status_code=HTTP_200_OK,
 )
 async def htmx_delete_board_result(
-    request: HTMXRequest, event_id: str, tournament_id: str, round: int, board_id: int, screen_id: str,
+    request: HTMXRequest, event_id: str, tournament_uniq_id: str, round: int, board_id: int, screen_id: str,
 ) -> Template:
     event, tournament, board, screen = _load_boards_screen_board_row_data(
-        request, event_id, tournament_id, board_id, screen_id)
+        request, event_id, tournament_uniq_id, board_id, screen_id)
     if event is None:
         return _render_messages(request)
     with suppress(ValueError):
         tournament.delete_result(board)
-        set_session_last_result_updated(request, tournament_id, round, board_id)
-    return _render_boards_screen_board_row(request, event_id, tournament_id, board_id, screen_id)
+        set_session_last_result_updated(request, tournament_uniq_id, round, board_id)
+    return _render_boards_screen_board_row(request, event_id, tournament_uniq_id, board_id, screen_id)
 
 
 def _load_boards_screen_board_row_illegal_move_data(
-        request: HTMXRequest, event_id: str, tournament_id: str, player_id: int, screen_id: str,
+        request: HTMXRequest, event_id: str, tournament_uniq_id: str, player_id: int, screen_id: str,
 ) -> tuple[Event | None, Tournament | None, Player | None, Board | None, AScreen | None]:
     error: str
     event: Event = Event(event_id, True)
     if not event.errors:
         if not _event_login_needed(request, event):
             try:
-                tournament: Tournament = event.tournaments[tournament_id]
+                tournament: Tournament = event.tournaments[tournament_uniq_id]
                 if tournament.current_round:
                     try:
                         player: Player = tournament.players_by_id[player_id]
@@ -463,13 +464,13 @@ def _load_boards_screen_board_row_illegal_move_data(
                             except KeyError:
                                 error = f'écran [{screen_id}] introuvable'
                         except KeyError:
-                            error = f'échiquier [{player.board_id}] introuvable pour le tournoi [{tournament.id}])'
+                            error = f'échiquier [{player.board_id}] introuvable pour le tournoi [{tournament.uniq_id}])'
                     except KeyError:
-                        error = f'joueur·euse [{player_id}] introuvable pour le tournoi [{tournament.id}])'
+                        error = f'joueur·euse [{player_id}] introuvable pour le tournoi [{tournament.uniq_id}])'
                 else:
-                    error = f'Aucun appariement trouvé pour le tournoi [{tournament_id}]'
+                    error = f'Aucun appariement trouvé pour le tournoi [{tournament_uniq_id}]'
             except KeyError:
-                error = f'tournoi [{tournament_id}] introuvable'
+                error = f'tournoi [{tournament_uniq_id}] introuvable'
         else:
             error = f'gestion des coups illégaux non autorisée pour \'évènement [{event_id}]'
     else:
@@ -480,52 +481,52 @@ def _load_boards_screen_board_row_illegal_move_data(
 
 
 @put(
-    path='/player-illegal-move/{event_id:str}/{tournament_id:str}/{player_id:int}/{screen_id:str}',
+    path='/player-illegal-move/{event_id:str}/{tournament_uniq_id:str}/{player_id:int}/{screen_id:str}',
     name='put-player-illegal-move',
     status_code=HTTP_200_OK,
 )
 async def htmx_add_illegal_move(
-        request: HTMXRequest, event_id: str, tournament_id: str, player_id: int, screen_id: str,
+        request: HTMXRequest, event_id: str, tournament_uniq_id: str, player_id: int, screen_id: str,
 ) -> Template:
     event, tournament, player, board, screen = _load_boards_screen_board_row_illegal_move_data(
-        request, event_id, tournament_id, player_id, screen_id)
+        request, event_id, tournament_uniq_id, player_id, screen_id)
     if event is None:
         return _render_messages(request)
     tournament.store_illegal_move(player)
-    set_session_last_illegal_move_updated(request, tournament_id, player_id)
-    return _render_boards_screen_board_row(request, event_id, tournament_id, board.id, screen_id)
+    set_session_last_illegal_move_updated(request, tournament_uniq_id, player_id)
+    return _render_boards_screen_board_row(request, event_id, tournament_uniq_id, board.id, screen_id)
 
 
 @delete(
-    path='/player-illegal-move/{event_id:str}/{tournament_id:str}/{player_id:int}/{screen_id:str}',
+    path='/player-illegal-move/{event_id:str}/{tournament_uniq_id:str}/{player_id:int}/{screen_id:str}',
     name='delete-player-illegal-move',
     status_code=HTTP_200_OK,
 )
 async def htmx_delete_illegal_move(
-        request: HTMXRequest, event_id: str, tournament_id: str, player_id: int, screen_id: str,
+        request: HTMXRequest, event_id: str, tournament_uniq_id: str, player_id: int, screen_id: str,
 ) -> Template:
     event, tournament, player, board, screen = _load_boards_screen_board_row_illegal_move_data(
-        request, event_id, tournament_id, player_id, screen_id)
+        request, event_id, tournament_uniq_id, player_id, screen_id)
     if event is None:
         return _render_messages(request)
     if not tournament.delete_illegal_move(player):
         Message.error(
             request,
-            f'Pas de coup illégal trouvé pour le·la joueur·euse {player_id} dans le tournoi [{tournament.id}]')
+            f'Pas de coup illégal trouvé pour le·la joueur·euse {player_id} dans le tournoi [{tournament.uniq_id}]')
         return _render_messages(request)
-    set_session_last_illegal_move_updated(request, tournament_id, player_id)
-    return _render_boards_screen_board_row(request, event_id, tournament_id, board.id, screen_id)
+    set_session_last_illegal_move_updated(request, tournament_uniq_id, player_id)
+    return _render_boards_screen_board_row(request, event_id, tournament_uniq_id, board.id, screen_id)
 
 
 def _load_boards_screen_player_row_player_cell_data(
-        request: HTMXRequest, event_id: str, tournament_id: str, player_id: int, screen_id: str,
+        request: HTMXRequest, event_id: str, tournament_uniq_id: str, player_id: int, screen_id: str,
 ) -> tuple[Event | None, Tournament | None, Player | None, AScreen | None]:
     error: str
     event: Event = Event(event_id, True)
     if not event.errors:
         if not _event_login_needed(request, event):
             try:
-                tournament: Tournament = event.tournaments[tournament_id]
+                tournament: Tournament = event.tournaments[tournament_uniq_id]
                 if not tournament.current_round:
                     try:
                         player: Player = tournament.players_by_id[player_id]
@@ -535,11 +536,11 @@ def _load_boards_screen_player_row_player_cell_data(
                         except KeyError:
                             error = f'L\'écran [{screen_id}] introuvable'
                     except KeyError:
-                        error = f'joueur·euse [{player_id}] introuvable pour le tournoi [{tournament.id}])'
+                        error = f'joueur·euse [{player_id}] introuvable pour le tournoi [{tournament.uniq_id}])'
                 else:
-                    error = f'pointage clos pour le tournoi [{tournament_id}]'
+                    error = f'pointage clos pour le tournoi [{tournament_uniq_id}]'
             except KeyError:
-                error = f'tournoi [{tournament_id}] introuvable'
+                error = f'tournoi [{tournament_uniq_id}] introuvable'
         else:
             error = f'gestion du pointage non autorisée pour l\'évènement [{event_id}]'
     else:
@@ -549,11 +550,11 @@ def _load_boards_screen_player_row_player_cell_data(
 
 
 def _render_boards_screen_player_row_player_cell(
-        request: HTMXRequest, event_id: str, tournament_id: str, player_id: int, screen_id: str,
+        request: HTMXRequest, event_id: str, tournament_uniq_id: str, player_id: int, screen_id: str,
 ) -> Template:
     template_name: str = 'boards_screen_player_row_player_cell.html'
     event, tournament, player, screen = _load_boards_screen_player_row_player_cell_data(
-        request, event_id, tournament_id, player_id, screen_id)
+        request, event_id, tournament_uniq_id, player_id, screen_id)
     if event is None:
         return _render_messages(request)
     return HTMXTemplate(
@@ -569,19 +570,19 @@ def _render_boards_screen_player_row_player_cell(
 
 
 @patch(
-    path='/toggle-player-check-in/{event_id:str}/{tournament_id:str}/{player_id:int}/{screen_id:str}',
+    path='/toggle-player-check-in/{event_id:str}/{tournament_uniq_id:str}/{player_id:int}/{screen_id:str}',
     name='toggle-player-check-in',
 )
 async def htmx_toggle_player_check_in(
-        request: HTMXRequest, event_id: str, screen_id: str, tournament_id: str, player_id: int
+        request: HTMXRequest, event_id: str, screen_id: str, tournament_uniq_id: str, player_id: int
 ) -> Template:
     event, tournament, player, screen = _load_boards_screen_player_row_player_cell_data(
-        request, event_id, tournament_id, player_id, screen_id)
+        request, event_id, tournament_uniq_id, player_id, screen_id)
     if not event:
         return _render_messages(request)
     tournament.check_in_player(player, not player.check_in)
-    set_session_last_check_in_updated(request, tournament_id, player_id)
-    return _render_boards_screen_player_row_player_cell(request, event_id, tournament_id, player_id, screen_id)
+    set_session_last_check_in_updated(request, tournament_uniq_id, player_id)
+    return _render_boards_screen_player_row_player_cell(request, event_id, tournament_uniq_id, player_id, screen_id)
 
 
 def _load_boards_or_players_screen_set_data(
@@ -732,26 +733,26 @@ async def htmx_download_event_tournaments(request: HTMXRequest, event_id: str) -
 
 
 @get(
-    path='/download-tournament/{event_id:str}/{tournament_id:str}',
+    path='/download-tournament/{event_id:str}/{tournament_uniq_id:str}',
     name='download-tournament'
 )
-async def htmx_download_tournament(request: HTMXRequest, event_id: str, tournament_id: str) -> File | Template:
+async def htmx_download_tournament(request: HTMXRequest, event_id: str, tournament_uniq_id: str) -> File | Template:
     error: str
     event: Event = Event(event_id, True)
     if not event.errors:
         try:
-            tournament: Tournament = event.tournaments[tournament_id]
+            tournament: Tournament = event.tournaments[tournament_uniq_id]
             if tournament.file.exists():
                 return File(path=tournament.file, filename=tournament.file.name)
             else:
-                error = f'aucun fichier pour le tournoi [{tournament_id}]'
+                error = f'aucun fichier pour le tournoi [{tournament_uniq_id}]'
         except KeyError:
-            error = f'tournoi [{tournament_id}] introuvable'
+            error = f'tournoi [{tournament_uniq_id}] introuvable'
     else:
         error = f'erreur au chargement de l\'évènement [{event_id}] : [{", ".join(event.errors)}]'
     Message.error(
         request,
-        f'Le téléchargement du fichier Papi du tournoi [{event_id}/{tournament_id}] a échoué ({error})')
+        f'Le téléchargement du fichier Papi du tournoi [{event_id}/{tournament_uniq_id}] a échoué ({error})')
     return _render_messages(request)
 
 

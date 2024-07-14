@@ -1,7 +1,7 @@
 from logging import Logger
 from random import randrange, shuffle
 from threading import Thread
-from webbrowser import open # pylint: disable=redefined-builtin
+from webbrowser import open  # pylint: disable=redefined-builtin
 
 from common.logger import get_logger
 from common.engine import Engine
@@ -34,29 +34,30 @@ class StressEngine(Engine):
             if not tournament.file.exists():
                 logger.error(
                     'Le fichier [%s] du tournoi [%s] est introuvable, tournoi ignoré.',
-                    tournament.file, tournament.id)
+                    tournament.file, tournament.uniq_id)
                 continue
             if not tournament.current_round:
-                logger.error('Aucune ronde trouvée pour le tournoi [%s], tournoi ignoré.', tournament.id)
+                logger.error('Aucune ronde trouvée pour le tournoi [%s], tournoi ignoré.', tournament.uniq_id)
                 continue
             tournament_boards: list[Board] = [board for board in tournament.boards if not board.result]
             if not tournament_boards:
                 logger.error(
                     'Aucun échiquier sans résultat à la ronde %s '
                     'pour le tournoi [%s], tournoi ignoré.',
-                    tournament.current_round, tournament.id)
+                    tournament.current_round, tournament.uniq_id)
                 continue
-            urls.extend([self.result_url(event_id, screen_id, tournament.id, board.id) for board in tournament_boards])
+            urls.extend(
+                [self.result_url(event_id, screen_id, tournament.uniq_id, board.id) for board in tournament_boards])
             logger.info(
                 '%s résultats préparés pour le tournoi [%s].',
-                len(tournament_boards), tournament.id)
+                len(tournament_boards), tournament.uniq_id)
         shuffle(urls)
         for url in urls:
             Thread(target=self.enter_result, args=(url, )).start()
 
-    def result_url(self, event_id: str, screen_id: str, tournament_id: str, board_id: int) -> str:
+    def result_url(self, event_id: str, screen_id: str, tournament_uniq_id: str, board_id: int) -> str:
         return (f'http://localhost:{self._config.web_port}'
-                f'/result/{event_id}/{screen_id}/{tournament_id}/{board_id}/{randrange(3) + 1}')
+                f'/result/{event_id}/{screen_id}/{tournament_uniq_id}/{board_id}/{randrange(3) + 1}')
 
     @staticmethod
     def enter_result(url: str):

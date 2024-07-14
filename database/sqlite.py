@@ -157,31 +157,44 @@ class EventDatabase(SQLiteDatabase):
     def commit(self):
         self._commit()
 
-    def _add_tournament(self, tournament_uniq_id: str) -> int:
+    def _add_tournament(self, tournament_uniq_id: str) -> tuple[int, float, float]:
         self._execute(
-            'INSERT INTO `tournament`(`uniq_id`, `last_update`) VALUES(?, ?)',
-            (tournament_uniq_id, time.time(), ),
+            'INSERT INTO `tournament`(`uniq_id`) VALUES(?)',
+            (tournament_uniq_id, ),
         )
-        return self._last_inserted_id()
+        return self._last_inserted_id(), 0.0, 0.0
 
-    def _get_tournament_id_from_uniq_id(self, tournament_uniq_id: str, create_if_absent: bool = False) -> int | None:
+    def _get_tournament_info_from_uniq_id(
+            self, tournament_uniq_id: str, create_if_absent: bool = False
+    ) -> tuple[int | None, float, float]:
         self._execute(
-            'SELECT `id` FROM `tournament` WHERE `uniq_id` = ?',
+            'SELECT '
+            '    `id`, '
+            '    `last_result_update`, '
+            '    `last_illegal_move_update` '
+            'FROM `tournament` WHERE `uniq_id` = ?',
             (tournament_uniq_id, ),
         )
         row: dict[str, Any] = self._fetchone()
         if row:
-            return row['id']
+            return row['id'], row['last_result_update'], row['last_illegal_move_update']
         if create_if_absent:
             return self._add_tournament(tournament_uniq_id)
-        return None
+        return None, 0.0, 0.0
 
-    def _set_tournament_updated(self, tournament_uniq_id: str, now: float | None = None) -> int:
+    def _get_tournament_id_from_uniq_id(self, tournament_uniq_id: str, create_if_absent: bool = False) -> int | None:
+        return self._get_tournament_info_from_uniq_id(tournament_uniq_id, create_if_absent)[0]
+
+    def get_tournament_last_updates_from_uniq_id(self, tournament_uniq_id: str) -> tuple[int, int]:
+        info: tuple = self._get_tournament_info_from_uniq_id(tournament_uniq_id)
+        return info[1], info[2]
+
+    def _set_tournament_last_illegal_move_update(self, tournament_uniq_id: str, now: float | None = None) -> int:
         tournament_id: int = self._get_tournament_id_from_uniq_id(tournament_uniq_id, create_if_absent=True)
         if now is None:
             now = time.time()
         self._execute(
-            'UPDATE `tournament` SET `last_update` = ? WHERE `id` = ?',
+            'UPDATE `tournament` SET `last_illegal_move_update` = ? WHERE `id` = ?',
             (now, tournament_id, ),
         )
         return tournament_id
@@ -201,14 +214,14 @@ class EventDatabase(SQLiteDatabase):
 
     def store_illegal_move(self, tournament_uniq_id: str, round: int, player_id: int):
         now: float = time.time()
-        tournament_id: int = self._set_tournament_updated(tournament_uniq_id, now)
+        tournament_id: int = self._set_tournament_last_illegal_move_update(tournament_uniq_id, now)
         self._execute(
             'INSERT INTO `illegal_move`(`tournament_id`, `round`, `player_id`, `date`) VALUES(?, ?, ?, ?)',
             (tournament_id, round, player_id, now),
         )
 
     def delete_illegal_move(self, tournament_uniq_id: str, round: int, player_id: int) -> bool:
-        tournament_id: int = self._set_tournament_updated(tournament_uniq_id)
+        tournament_id: int = self._set_tournament_last_illegal_move_update(tournament_uniq_id)
         self._execute(
             'SELECT `id` FROM `illegal_move` WHERE `tournament_id` = ? AND `round` = ? AND `player_id` = ? LIMIT 1',
             (tournament_id, round, player_id, ),
@@ -223,15 +236,25 @@ class EventDatabase(SQLiteDatabase):
         return True
 
     def delete_illegal_moves(self, tournament_uniq_id: str, round: int):
-        tournament_id: int = self._set_tournament_updated(tournament_uniq_id)
+        tournament_id: int = self._set_tournament_last_illegal_move_update(tournament_uniq_id)
         self._execute(
             'DELETE FROM `illegal_move` WHERE `tournament_id` = ? AND `round` = ?',
             (tournament_id, round,),
         )
 
+    def _set_tournament_last_result_update(self, tournament_uniq_id: str, now: float | None = None) -> int:
+        tournament_id: int = self._get_tournament_id_from_uniq_id(tournament_uniq_id, create_if_absent=True)
+        if now is None:
+            now = time.time()
+        self._execute(
+            'UPDATE `tournament` SET `last_result_update` = ? WHERE `id` = ?',
+            (now, tournament_id, ),
+        )
+        return tournament_id
+
     def add_result(self, tournament_uniq_id: str, round: int, board: Board, result: UtilResult):
         now: float = time.time()
-        tournament_id: int = self._set_tournament_updated(tournament_uniq_id, now)
+        tournament_id: int = self._set_tournament_last_result_update(tournament_uniq_id, now)
         self._execute(
             'INSERT INTO `result`('
             '    `tournament_id`, `round`, `board_id`, '
@@ -250,7 +273,7 @@ class EventDatabase(SQLiteDatabase):
         )
 
     def delete_result(self, tournament_uniq_id: str, round: int, board_id: int):
-        tournament_id: int = self._set_tournament_updated(tournament_uniq_id)
+        tournament_id: int = self._set_tournament_last_result_update(tournament_uniq_id)
         self._execute(
             'DELETE FROM `result` WHERE `tournament_id` = ? AND `round` = ? AND `board_id` = ?',
             (tournament_id, round, board_id),
@@ -262,7 +285,6 @@ class EventDatabase(SQLiteDatabase):
                           '    `tournament`.`uniq_id` as `tournament_uniq_id`, '
                           '    `result`.`round`, `result`.`board_id`, '
                           '    `result`.`white_player_id`, `result`.`black_player_id`, '
-                          '    `result`.`white_player_str`, `result`.`black_player_str`, '
                           '    `result`.`date`, `result`.`value` '
                           'FROM `result` '
                           'JOIN `tournament` ON `result`.`tournament_id` = `tournament`.`id` '
@@ -272,16 +294,15 @@ class EventDatabase(SQLiteDatabase):
                 query += ' LIMIT ?'
                 params = (limit, )
         else:
-            query: str = (f'SELECT '
-                          f'    `tournament`.`uniq_id` as `tournament_uniq_id`, '
-                          f'    `result`.`round`, `result`.`board_id`, '
-                          f'    `result`.`white_player_id`, `result`.`black_player_id`, '
-                          '    `result`.`white_player_str`, `result`.`black_player_str`, '
-                          f'    `result`.`date`, `result`.`value` '
-                          f'FROM `result` '
-                          f'JOIN `tournament` ON `result`.`tournament_id` = `tournament`.`id` '
+            query: str = ('SELECT '
+                          '    `tournament`.`uniq_id` as `tournament_uniq_id`, '
+                          '    `result`.`round`, `result`.`board_id`, '
+                          '    `result`.`white_player_id`, `result`.`black_player_id`, '
+                          '    `result`.`date`, `result`.`value` '
+                          'FROM `result` '
+                          'JOIN `tournament` ON `result`.`tournament_id` = `tournament`.`id` '
                           f'WHERE {" OR ".join([f"`tournament`.`uniq_id` = ?", ] * len(tournament_uniq_ids))} '
-                          f'ORDER BY `date` DESC')
+                          'ORDER BY `date` DESC')
             params: list[str] = [tournament_uniq_id for tournament_uniq_id in tournament_uniq_ids]
             if limit:
                 query += ' LIMIT ?'

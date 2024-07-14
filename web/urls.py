@@ -32,6 +32,6 @@ def download_event_url(request: HTMXRequest, event_id: str) -> str:
         'download-event', event_id=event_id)
 
 
-def download_tournament_url(request: HTMXRequest, event_id: str, tournament_id: str) -> str:
+def download_tournament_url(request: HTMXRequest, event_id: str, tournament_uniq_id: str) -> str:
     return request.app.route_reverse(
-        'download-tournament', event_id=event_id, tournament_id=tournament_id)
+        'download-tournament', event_id=event_id, tournament_uniq_id=tournament_uniq_id)

@@ -250,8 +250,8 @@ class ScreenSet:
 
     def __str__(self):
         if self.fixed_boards:
-            return f"{self.tournament.id} (tables fixes {', '.join(map(str, self.fixed_boards))})"
-        start = self.tournament.id
+            return f"{self.tournament.uniq_id} (tables fixes {', '.join(map(str, self.fixed_boards))})"
+        start = self.tournament.uniq_id
         match (self.first, self.last, self.number, self.part, self.parts):
             case (None, None, None, None, None):
                 return f'{start} (tout)'
@@ -347,19 +347,19 @@ class ScreenSetBuilder:
                     key
                 )
                 return None
-        tournament_id: str = self._config_reader.get(screen_set_section_key, key)
+        tournament_uniq_id: str = self._config_reader.get(screen_set_section_key, key)
         try:
-            tournament: Tournament = self._tournaments[tournament_id]
+            tournament: Tournament = self._tournaments[tournament_uniq_id]
         except KeyError:
             self._config_reader.add_warning(
-                f"le tournoi [{tournament_id}] n'existe pas, partie d\'écran ignorée",
+                f"le tournoi [{tournament_uniq_id}] n'existe pas, partie d\'écran ignorée",
                 screen_set_section_key,
                 key
             )
             return None
         if not tournament.file:
             self._config_reader.add_warning(
-                f"le fichier du tournoi [{tournament.id}] n'est pas "
+                f"le fichier du tournoi [{tournament.uniq_id}] n'est pas "
                 f"défini, partie d\'écran ignorée",
                 screen_set_section_key,
                 key
@@ -367,7 +367,7 @@ class ScreenSetBuilder:
             return None
         if not tournament.file.exists():
             self._config_reader.add_warning(
-                f"le fichier du tournoi [{tournament.id}] ({tournament.file}) n'existe pas, "
+                f"le fichier du tournoi [{tournament.uniq_id}] ({tournament.file}) n'existe pas, "
                 f"partie d\'écran ignorée",
                 screen_set_section_key,
                 key
@@ -471,7 +471,7 @@ class ScreenSetBuilder:
                 self._config_reader.add_warning('option inconnue', screen_set_section_key, key)
         screen_set: ScreenSet = ScreenSet(
             self.event_id,
-            self._tournaments[tournament_id],
+            self._tournaments[tournament_uniq_id],
             self.screen_id,
             self.screen_set_id,
             self.columns,

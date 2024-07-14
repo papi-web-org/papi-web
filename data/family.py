@@ -130,11 +130,11 @@ class FamilyBuilder:
             tournament: Tournament | None = None
             for sub_section_key, properties in template.data.items():
                 if sub_section_key is not None and 'tournament' in properties:
-                    tournament_id: str = properties['tournament']
+                    tournament_uniq_id: str = properties['tournament']
                     try:
-                        tournament = self._tournaments[tournament_id]
+                        tournament = self._tournaments[tournament_uniq_id]
                     except KeyError:
-                        self._config_reader.add_warning(f'le tournoi [{tournament_id}] du modèle [{template.id}] '
+                        self._config_reader.add_warning(f'le tournoi [{tournament_uniq_id}] du modèle [{template.id}] '
                                                         f'n\'existe pas, famille ignorée', section_key, key)
                         return
             if tournament is None:
@@ -171,7 +171,7 @@ class FamilyBuilder:
                     total_items_number = len(tournament.players_by_id)
             if not total_items_number:
                 self._config_reader.add_warning(f'Il n\'y a aucun élément à afficher pour le tournoi '
-                                                f'[{tournament.id}], famille ignorée', section_key, key)
+                                                f'[{tournament.uniq_id}], famille ignorée', section_key, key)
                 return
             number_parts: int = ceil(total_items_number / number)
             first_number: int

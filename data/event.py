@@ -15,6 +15,7 @@ from data.template import Template, TemplateBuilder
 from data.timer import Timer, TimerBuilder
 from data.tournament import Tournament, TournamentBuilder
 from data.util import DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER, DEFAULT_RECORD_ILLEGAL_MOVES_ENABLE
+from database.sqlite import EventDatabase
 
 logger: Logger = get_logger()
 
@@ -29,69 +30,70 @@ class Event:
             EVENTS_PATH / f'{self.id}.ini',
             TMP_DIR / 'events' / event_id / 'config' / f'{event_id}.ini.{os.getpid()}.read',
             silent=self.id in silent_event_ids)
-        self.name: str = self.id
-        self.path: Path = Path('papi')
-        self.css: str | None = None
-        self.update_password: str | None = None
-        self.record_illegal_moves: int = 0
-        self.check_in_players: bool = False
-        self.allow_deletion: bool = False
-        self.chessevent_connections: dict[str, ChessEventConnection] = {}
-        self.tournaments: dict[str, Tournament] = {}
-        self.templates: dict[str, Template] = {}
-        self.screens_by_family_id: dict[str, list[AScreen]] = {}
-        self.screens: dict[str, AScreen] = {}
-        self.rotators: dict[str, Rotator] = {}
-        self.timer: Timer | None = None
-        if self.reader.errors:
-            return
-        self._build_root()
-        if self.reader.errors:
-            return
-        self.chessevent_connections = ChessEventConnectionBuilder(
-            self.reader
-        ).chessevent_connections
-        if self.reader.errors:
-            return
-        self.tournaments = TournamentBuilder(
-            self.reader, self.id, self.path, self.chessevent_connections, self.record_illegal_moves
-        ).tournaments
-        if self.reader.errors:
-            return
-        if load_screens:
-            self.templates = TemplateBuilder(self.reader).templates
+        with EventDatabase(self.id, 'r') as self.database:
+            self.name: str = self.id
+            self.path: Path = Path('papi')
+            self.css: str | None = None
+            self.update_password: str | None = None
+            self.record_illegal_moves: int = 0
+            self.check_in_players: bool = False
+            self.allow_deletion: bool = False
+            self.chessevent_connections: dict[str, ChessEventConnection] = {}
+            self.tournaments: dict[str, Tournament] = {}
+            self.templates: dict[str, Template] = {}
+            self.screens_by_family_id: dict[str, list[AScreen]] = {}
+            self.screens: dict[str, AScreen] = {}
+            self.rotators: dict[str, Rotator] = {}
+            self.timer: Timer | None = None
             if self.reader.errors:
                 return
-            FamilyBuilder(self.reader, self.tournaments, self.templates)
+            self._build_root()
             if self.reader.errors:
                 return
-            self.screens = ScreenBuilder(
-                self.reader, self.id, self.tournaments, self.templates, self.screens_by_family_id
-            ).screens
+            self.chessevent_connections = ChessEventConnectionBuilder(
+                self.reader
+            ).chessevent_connections
             if self.reader.errors:
                 return
-            self.rotators = RotatorBuilder(self.reader, self.screens, self.screens_by_family_id).rotators
+            self.tournaments = TournamentBuilder(
+                self.reader, self.database, self.id, self.path, self.chessevent_connections, self.record_illegal_moves
+            ).tournaments
             if self.reader.errors:
                 return
-            self.timer = TimerBuilder(self.reader).timer
-            if not self.timer:
-                screen_ids: list[str] = []
-                for screen_id in self.screens:
-                    if self.screens[screen_id].show_timer:
-                        screen_ids.append(screen_id)
-                if screen_ids:
-                    self.reader.add_warning(
-                        'le chronomètre ([timer.hour.*]) n\'est pas défini',
-                        section_key=f'screen.{",".join(screen_ids)}',
-                        key='show_timer')
-            event_file_dependencies = [self.ini_file, ]
-            for screen in self.screens.values():
-                event_file_dependencies += [
-                    screen_set.tournament.file
-                    for screen_set in screen.sets
-                ]
-            self.set_file_dependencies(event_file_dependencies)
-        silent_event_ids.append(self.id)
+            if load_screens:
+                self.templates = TemplateBuilder(self.reader).templates
+                if self.reader.errors:
+                    return
+                FamilyBuilder(self.reader, self.tournaments, self.templates)
+                if self.reader.errors:
+                    return
+                self.screens = ScreenBuilder(
+                    self.reader, self.id, self.tournaments, self.templates, self.screens_by_family_id
+                ).screens
+                if self.reader.errors:
+                    return
+                self.rotators = RotatorBuilder(self.reader, self.screens, self.screens_by_family_id).rotators
+                if self.reader.errors:
+                    return
+                self.timer = TimerBuilder(self.reader).timer
+                if not self.timer:
+                    screen_ids: list[str] = []
+                    for screen_id in self.screens:
+                        if self.screens[screen_id].show_timer:
+                            screen_ids.append(screen_id)
+                    if screen_ids:
+                        self.reader.add_warning(
+                            'le chronomètre ([timer.hour.*]) n\'est pas défini',
+                            section_key=f'screen.{",".join(screen_ids)}',
+                            key='show_timer')
+                event_file_dependencies = [self.ini_file, ]
+                for screen in self.screens.values():
+                    event_file_dependencies += [
+                        screen_set.tournament.file
+                        for screen_set in screen.sets
+                    ]
+                self.set_file_dependencies(event_file_dependencies)
+            silent_event_ids.append(self.id)
 
     @classmethod
     def __get_event_file_dependencies_file(cls, event_id: str) -> Path:

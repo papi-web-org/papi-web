@@ -25,7 +25,7 @@ class ActionSelector:
         tournaments: list[Tournament] = []
         for tournament in event.tournaments.values():
             if not tournament.ffe_id or not tournament.ffe_password:
-                logger.warning('Identifiants de connexion FFE non définis pour le tournoi [%s]', tournament.id)
+                logger.warning('Identifiants de connexion FFE non définis pour le tournoi [%s]', tournament.uniq_id)
             else:
                 tournaments.append(tournament)
         return tournaments
@@ -37,11 +37,11 @@ class ActionSelector:
         tournaments: list[Tournament] = []
         for tournament in event.tournaments.values():
             if not tournament.ffe_id or not tournament.ffe_password:
-                logger.warning('Identifiants de connexion non définis pour le tournoi [%s]', tournament.id)
+                logger.warning('Identifiants de connexion non définis pour le tournoi [%s]', tournament.uniq_id)
             elif not tournament.file:
-                logger.warning('Fichier non défini pour le tournoi [%s]', tournament.id)
+                logger.warning('Fichier non défini pour le tournoi [%s]', tournament.uniq_id)
             elif not tournament.file.exists():
-                logger.warning('Fichier non trouvé pour le tournoi [%s]', tournament.id)
+                logger.warning('Fichier non trouvé pour le tournoi [%s]', tournament.uniq_id)
             else:
                 tournaments.append(tournament)
         return tournaments

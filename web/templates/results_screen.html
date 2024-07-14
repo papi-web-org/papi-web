@@ -18,7 +18,7 @@
                 {% for result in results %}
                     <tr class="result-row">
                         <td scope="row" class="timestamp">{{ result.timestamp_str }}</td>
-                        {% if tournaments_len > 1 %}<td scope="row" class="tournament">{{ result.tournament_id }}</td>{% endif %}
+                        {% if tournaments_len > 1 %}<td scope="row" class="tournament">{{ result.tournament_uniq_id }}</td>{% endif %}
                         {% with tournament=event.tournaments[result.tournament_uniq_id] %}
                         {% with players_by_id=tournament.players_by_id %}
                         {% with white_player=players_by_id[result.white_player_id] %}

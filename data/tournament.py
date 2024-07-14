@@ -22,13 +22,13 @@ logger: Logger = get_logger()
 
 
 class Tournament:
-    def __init__(self, event_id: str, tournament_id: str, name: str, file: Path, ffe_id: int | None,
+    def __init__(self, event_id: str, tournament_uniq_id: str, name: str, file: Path, ffe_id: int | None,
                  ffe_password: str | None, handicap_initial_time: int | None, handicap_increment: int | None,
                  handicap_penalty_step: int | None, handicap_penalty_value: int | None, handicap_min_time: int | None,
                  chessevent_connection: ChessEventConnection | None, chessevent_tournament_name: str | None,
                  record_illegal_moves: int):
         self.event_id: str = event_id
-        self.id: str = tournament_id
+        self.uniq_id: str = tournament_uniq_id
         self.name: str = name
         self.file: Path = file
         self.ffe_id: int | None = ffe_id
@@ -52,6 +52,8 @@ class Tournament:
         self._unpaired_players: list[Player] | None = None
         self._database_read = False
         self._players_by_name: list[Player] | None = None
+        self.last_illegal_move_update: float = 0.0
+        self.last_result_update: float = 0.0
 
     @property
     def download_allowed(self) -> bool:
@@ -63,7 +65,7 @@ class Tournament:
 
     @property
     def chessevent_download_marker(self) -> Path:
-        return TMP_DIR / 'events' / f'{self.event_id}' / 'chessevent' / f'{self.id}.download'
+        return TMP_DIR / 'events' / f'{self.event_id}' / 'chessevent' / f'{self.uniq_id}.download'
 
     @property
     def handicap(self) -> bool:
@@ -149,7 +151,7 @@ class Tournament:
         if self._database_read:
             return
         if self.file and self.file.exists():
-            with PapiDatabase(self.event_id, self.id, self.file, 'r') as papi_database:
+            with PapiDatabase(self.event_id, self.uniq_id, self.file, 'r') as papi_database:
                 papi_database: PapiDatabase
                 (
                     self._rounds,
@@ -268,19 +270,19 @@ class Tournament:
 
     @property
     def illegal_moves_dir(self) -> Path:
-        return TMP_DIR / 'events' / self.event_id / 'illegal_moves' / self.id
+        return TMP_DIR / 'events' / self.event_id / 'illegal_moves' / self.uniq_id
 
     def store_illegal_move(self, player: Player):
         with EventDatabase(self.event_id, 'w') as event_database:
             event_database: EventDatabase
-            event_database.store_illegal_move(self.id, self.current_round, player.id)
+            event_database.store_illegal_move(self.uniq_id, self.current_round, player.id)
             event_database.commit()
         logger.info('le coup illégal a été enregistré')
     
     def delete_illegal_move(self, player: Player) -> bool:
         with EventDatabase(self.event_id, 'w') as event_database:
             event_database: EventDatabase
-            deleted: bool = event_database.delete_illegal_move(self.id, self.current_round, player.id)
+            deleted: bool = event_database.delete_illegal_move(self.uniq_id, self.current_round, player.id)
             event_database.commit()
             if deleted:
                 logger.info('un coup illégal a été supprimé pour le·la joueur·euse [%s]', player.id)
@@ -291,7 +293,7 @@ class Tournament:
     def get_illegal_moves(self) -> Counter[int]:
         with EventDatabase(self.event_id, 'r') as event_database:
             event_database: EventDatabase
-            return event_database.get_illegal_moves(self.id, self.current_round)
+            return event_database.get_illegal_moves(self.uniq_id, self.current_round)
 
     def _set_players_illegal_moves(self):
         illegal_moves: Counter[int] = self.get_illegal_moves()
@@ -303,8 +305,8 @@ class Tournament:
     def _build_boards(self):
         if not self._current_round:
             return
-        self._boards = []
-        self._unpaired_players = []
+        self._boards: list[Board] = []
+        self._unpaired_players: list[Player] = []
         for player in self._players_by_id.values():
             opponent_id = player.pairings[self._current_round].opponent_id
             if opponent_id in self._players_by_id:
@@ -367,36 +369,36 @@ class Tournament:
 
     def add_result(self, board: Board, white_result: Result):
         black_result = white_result.opposite_result
-        with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
+        with PapiDatabase(self.event_id, self.uniq_id, self.file, 'w') as papi_database:
             papi_database: PapiDatabase
             papi_database.add_board_result(board.white_player.id, self._current_round, white_result)
             papi_database.add_board_result(board.black_player.id, self._current_round, black_result)
             papi_database.commit()
         with EventDatabase(self.event_id, 'w') as event_database:
             event_database: EventDatabase
-            event_database.add_result(self.id, self.current_round, board, white_result)
+            event_database.add_result(self.uniq_id, self.current_round, board, white_result)
             event_database.commit()
         logger.info('Added result: %s %s %d.%d %s %s %d %s %s %s %d',
-                    self.event_id, self.id, self._current_round, board.id, board.white_player.last_name,
+                    self.event_id, self.uniq_id, self._current_round, board.id, board.white_player.last_name,
                     board.white_player.first_name, board.white_player.rating, white_result,
                     board.black_player.last_name, board.black_player.first_name,
                     board.black_player.rating)
     
     def delete_result(self, board: Board):
-        with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
+        with PapiDatabase(self.event_id, self.uniq_id, self.file, 'w') as papi_database:
             papi_database: PapiDatabase
             papi_database.remove_board_result(board.white_player.id, self._current_round)
             papi_database.remove_board_result(board.black_player.id, self._current_round)
             papi_database.commit()
         with EventDatabase(self.event_id, 'w') as event_database:
             event_database: EventDatabase
-            event_database.delete_result(self.id, self.current_round, board.id)
+            event_database.delete_result(self.uniq_id, self.current_round, board.id)
             event_database.commit()
         logger.info('Removed result: %s %s %d.%d',
-                    self.event_id, self.id, self._current_round, board.id)
+                    self.event_id, self.uniq_id, self._current_round, board.id)
 
     def write_chessevent_info_to_database(self, chessevent_tournament: ChessEventTournament) -> int:
-        with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
+        with PapiDatabase(self.event_id, self.uniq_id, self.file, 'w') as papi_database:
             papi_database: PapiDatabase
             papi_database.delete_skipped_rounds()
             papi_database.write_chessevent_info(chessevent_tournament)
@@ -410,7 +412,7 @@ class Tournament:
         return player_id - 1
 
     def check_in_player(self, player: Player, check_in: bool):
-        with PapiDatabase(self.event_id, self.id, self.file, 'w') as papi_database:
+        with PapiDatabase(self.event_id, self.uniq_id, self.file, 'w') as papi_database:
             papi_database: PapiDatabase
             papi_database.check_in_player(player.id, check_in)
             papi_database.commit()
@@ -428,37 +430,39 @@ class HandicapTournament(NamedTuple):
 
 class TournamentBuilder:
     def __init__(
-            self, config_reader: ConfigReader, event_id: str, default_tournament_path: Path,
-            chessevent_connections: dict[str, ChessEventConnection], default_record_illegal_moves: int):
+            self, config_reader: ConfigReader, event_database: EventDatabase, event_id: str,
+            default_tournament_path: Path, chessevent_connections: dict[str, ChessEventConnection],
+            default_record_illegal_moves: int):
         self._config_reader: ConfigReader = config_reader
+        self.event_database: EventDatabase = event_database
         self._event_id: str = event_id
         self._default_tournament_path: Path = default_tournament_path
         self._chessevent_connections: dict[str, ChessEventConnection] = chessevent_connections
         self.default_record_illegal_moves: int = default_record_illegal_moves
         self.tournaments: dict[str, Tournament] = {}
-        for tournament_id in self._read_tournament_ids():
-            self._build_tournament(tournament_id)
+        for tournament_uniq_id in self._read_tournament_uniq_ids():
+            self._build_tournament(tournament_uniq_id)
         if not self.tournaments:
             self._config_reader.add_error('aucun tournoi initialisé')
 
-    def _read_tournament_ids(self) -> list[str]:
-        tournament_ids: list[str] = self._config_reader.get_subsection_keys_with_prefix('tournament')
+    def _read_tournament_uniq_ids(self) -> list[str]:
+        tournament_uniq_ids: list[str] = self._config_reader.get_subsection_keys_with_prefix('tournament')
         # NOTE(Amaras) Special case of tournament: handicap depends on
         # the [tournament] section being there.
-        if 'handicap' in tournament_ids:
-            tournament_ids.remove('handicap')
+        if 'handicap' in tournament_uniq_ids:
+            tournament_uniq_ids.remove('handicap')
         if 'tournament' in self._config_reader:
-            if tournament_ids:
-                section_keys: str = ', '.join('[tournament.' + id + ']' for id in tournament_ids)
+            if tournament_uniq_ids:
+                section_keys: str = ', '.join('[tournament.' + id + ']' for id in tournament_uniq_ids)
                 self._config_reader.add_error(
                     f"la rubrique [tournament] ne doit être utilisée que lorsque l'évènement ne compte "
                     f"qu'un tournoi, d'autres rubriques sont présentes ({section_keys})",
                     'tournament.*'
                 )
                 return []
-            default_tournament_id: str = 'default'
+            default_tournament_uniq_id: str = 'default'
             old_tournament_section_key: str = 'tournament'
-            new_tournament_section_key: str = 'tournament.' + default_tournament_id
+            new_tournament_section_key: str = 'tournament.' + default_tournament_uniq_id
             self._config_reader.rename_section(old_tournament_section_key, new_tournament_section_key)
             self._config_reader.add_debug(
                 f'un seul tournoi, la rubrique [{old_tournament_section_key}] a '
@@ -467,20 +471,20 @@ class TournamentBuilder:
             )
             old_handicap_section_key: str = 'tournament.handicap'
             if old_handicap_section_key in self._config_reader:
-                new_handicap_section_key = f'tournament.{default_tournament_id}.handicap'
+                new_handicap_section_key = f'tournament.{default_tournament_uniq_id}.handicap'
                 self._config_reader.rename_section(old_handicap_section_key, new_handicap_section_key)
                 self._config_reader.add_debug(
                     f'un seul tournoi, la rubrique [{old_handicap_section_key}] a '
                     f'été renommée [{new_tournament_section_key}]'
                 )
-            tournament_ids.append(default_tournament_id)
-        elif not tournament_ids:
+            tournament_uniq_ids.append(default_tournament_uniq_id)
+        elif not tournament_uniq_ids:
             self._config_reader.add_error('aucun tournoi trouvé', 'tournament.*')
-        return tournament_ids
+        return tournament_uniq_ids
 
-    def _build_tournament(self, tournament_id: str):
-        section_key: str = f'tournament.{tournament_id}'
-        if tournament_id.find('/') != -1:
+    def _build_tournament(self, tournament_uniq_id: str):
+        section_key: str = f'tournament.{tournament_uniq_id}'
+        if tournament_uniq_id.find('/') != -1:
             self._config_reader.add_error(
                 "le caractère « / » n\'est pas autorisé dans les identifiants des tournois, tournoi ignoré",
                 section_key
@@ -550,7 +554,7 @@ class TournamentBuilder:
                 self._config_reader.add_error(f'[{file}] n\'est pas un fichier, tournoi ignoré', section_key)
                 return
         key = 'name'
-        default_name: str = tournament_id
+        default_name: str = tournament_uniq_id
         try:
             name = section[key]
         except KeyError:
@@ -605,10 +609,10 @@ class TournamentBuilder:
                     chessevent_tournament_name = None
             else:
                 try:
-                    chessevent_connection = self._chessevent_connections[tournament_id]
+                    chessevent_connection = self._chessevent_connections[tournament_uniq_id]
                     self._config_reader.add_info(
                         f'l\'option chess_connection_id n\'est pas définie, utilisation par défaut de la connexion '
-                        f'à Chess Event [{tournament_id}]',
+                        f'à Chess Event [{tournament_uniq_id}]',
                         section_key, 'chessevent_tournament_name')
                 except KeyError:
                     if len(self._chessevent_connections) == 0:
@@ -662,7 +666,7 @@ class TournamentBuilder:
         for key, _ in section.items():
             if key not in tournament_section_keys:
                 self._config_reader.add_warning('option inconnue', section_key, key)
-        handicap_section_key = 'tournament.' + tournament_id + '.handicap'
+        handicap_section_key = 'tournament.' + tournament_uniq_id + '.handicap'
         handicap_values = self._build_tournament_handicap(handicap_section_key)
         if handicap_values[0] is not None and ffe_id is not None:
             self._config_reader.add_warning(
@@ -670,9 +674,13 @@ class TournamentBuilder:
                 handicap_section_key
             )
 
-        self.tournaments[tournament_id] = Tournament(
-            self._event_id, tournament_id, name, file, ffe_id, ffe_password, *handicap_values, chessevent_connection,
-            chessevent_tournament_name, record_illegal_moves)
+        tournament: Tournament = Tournament(
+            self._event_id, tournament_uniq_id, name, file, ffe_id, ffe_password, *handicap_values,
+            chessevent_connection, chessevent_tournament_name, record_illegal_moves)
+        tournament.last_illegal_move_update, tournament.last_illegal_move_update = (
+            self.event_database.get_tournament_last_updates_from_uniq_id(tournament_uniq_id))
+
+        self.tournaments[tournament_uniq_id] = tournament
 
     def _build_tournament_handicap(self, section_key: str) -> HandicapTournament:
         try:

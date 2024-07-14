@@ -55,7 +55,7 @@ Context:
                                             {% else %}
                                                 bi-square player-check-in
                                             {% endif %}
-                                            player-{{ tournament.id }}-{{ player.id }}"></i>
+                                            player-{{ tournament.uniq_id }}-{{ player.id }}"></i>
                                         {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}
                                     </td>
                                     <td colspan="2"><em>{{ player.not_paired_str }}</em></td>

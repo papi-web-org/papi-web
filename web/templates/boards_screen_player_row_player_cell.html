@@ -10,7 +10,7 @@ Context:
 <td
     class="
         player-cell
-        {% if screen.update and last_check_in_updated and last_check_in_updated.expiration > now and last_check_in_updated.tournament_id == tournament.id and last_check_in_updated.player_id == player.id %}
+        {% if screen.update and last_check_in_updated and last_check_in_updated.expiration > now and last_check_in_updated.tournament_uniq_id == tournament.uniq_id and last_check_in_updated.player_id == player.id %}
             last_check_in_updated
         {% endif %}"
 >
@@ -19,7 +19,7 @@ Context:
         {% if screen.update %}
             hx-target="closest td"
             hx-swap="outerHTML transition:true"
-            hx-patch="{{ url_for('toggle-player-check-in', event_id=event.id, tournament_id=tournament.id, player_id=player.id, screen_id=screen.id) }}"
+            hx-patch="{{ url_for('toggle-player-check-in', event_id=event.id, tournament_uniq_id=tournament.uniq_id, player_id=player.id, screen_id=screen.id) }}"
             hx-indicator="#please-wait"
         {% endif %}
     ></i> {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}

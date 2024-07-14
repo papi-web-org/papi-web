@@ -34,11 +34,11 @@ class ActionSelector:
         tournaments: list[Tournament] = []
         for tournament in event.tournaments.values():
             if not tournament.chessevent_tournament_name:
-                logger.warning('Connexion à Chess Event non définie pour le tournoi [%s]', tournament.id)
+                logger.warning('Connexion à Chess Event non définie pour le tournoi [%s]', tournament.uniq_id)
             elif not tournament.file:
-                logger.warning('Fichier non défini pour le tournoi [%s]', tournament.id)
+                logger.warning('Fichier non défini pour le tournoi [%s]', tournament.uniq_id)
             elif tournament.current_round:
-                logger.warning('Le tournoi [%s] est déjà commencé', tournament.id)
+                logger.warning('Le tournoi [%s] est déjà commencé', tournament.uniq_id)
             else:
                 tournaments.append(tournament)
         return tournaments
@@ -115,7 +115,7 @@ class ActionSelector:
                             except JSONDecodeError as jde:
                                 error_output: Path = (
                                         TMP_DIR / event.id /
-                                        f'{tournament.id}_error_l{jde.lineno}_c{jde.colno}_p{jde.pos}.json'
+                                        f'{tournament.uniq_id}_error_l{jde.lineno}_c{jde.colno}_p{jde.pos}.json'
                                 )
                                 error_output.parents[0].mkdir(parents=True, exist_ok=True)
                                 with open(error_output, 'w', encoding="utf-8") as f:

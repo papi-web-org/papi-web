@@ -18,28 +18,29 @@
 
 ### table `tournament`
 
-| Champ         | Type      | Contrainte                                 | Description                                                                                                                                 |
-|---------------|-----------|--------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `id`          | `INTEGER` | NOT NULL<br/>PRIMARY KEY<br/>AUTOINCREMENT | L'identifiant unique.                                                                                                                       |
-| `label`       | `TEXT`    | NOT NULL                                   | L'identifiant textuel du tournoi (tel que déclaré dans le fichier de configuration de l'évènement).                                         |
-| `last_update` | `FLOAT`   | NOT NULL                                   | La date de dernière modification du tournoi (dans cette version, correspond à l'ajout ou la suppression d'un coup illégal ou d'un résultat. |
+| Champ                      | Type      | Contrainte                                 | Description                                                                                         |
+|----------------------------|-----------|--------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| `id`                       | `INTEGER` | NOT NULL<br/>PRIMARY KEY<br/>AUTOINCREMENT | L'identifiant unique.                                                                               |
+| `uniq_id`                  | `TEXT`    | NOT NULL                                   | L'identifiant textuel du tournoi (tel que déclaré dans le fichier de configuration de l'évènement). |
+| `last_illegal_move_update` | `FLOAT`   | DEFAULT 0.0                                | La date de dernière modification (ajout/suppression) des coups illégaux du tournoi.                 |
+| `last_result_update`       | `FLOAT`   | DEFAULT 0.0                                | La date de dernière modification (ajout/suppression) des résultats du tournoi.                      |
 
 ### table `illegal_move`
 
-| Champ           | Type      | Contrainte                                 | Description                                                                                        |
-|-----------------|-----------|--------------------------------------------|----------------------------------------------------------------------------------------------------|
-| `id`            | `INTEGER` | NOT NULL<br/>PRIMARY KEY<br/>AUTOINCREMENT | L'identifiant unique.                                                                              |
-| `tournament_id` | `INTEGER` | NOT NULL                                   | L'identifiant unique du tournoi (tel que déclaré dans le fichier de configuration de l'évènement). |
-| `round`         | `INTEGER` | NOT NULL                                   | Le numéro de la ronde.                                                                             |
-| `player_id`     | `INTEGER` | NOT NULL                                   | Le numéro du joueur (dans le fichier Papi du tournoi).                                             |
-| `date`          | `FLOAT`   | NOT NULL                                   | La date d'enregistrement.                                                                          |
+| Champ           | Type      | Contrainte                                 | Description                                            |
+|-----------------|-----------|--------------------------------------------|--------------------------------------------------------|
+| `id`            | `INTEGER` | NOT NULL<br/>PRIMARY KEY<br/>AUTOINCREMENT | L'identifiant unique.                                  |
+| `tournament_id` | `INTEGER` | NOT NULL                                   | L'identifiant unique du tournoi.                       |
+| `round`         | `INTEGER` | NOT NULL                                   | Le numéro de la ronde.                                 |
+| `player_id`     | `INTEGER` | NOT NULL                                   | Le numéro du joueur (dans le fichier Papi du tournoi). |
+| `date`          | `FLOAT`   | NOT NULL                                   | La date d'enregistrement.                              |
 
 ### table `result`
 
 | Champ             | Type      | Contrainte                                 | Description                                                                                                                                                                      |
 |-------------------|-----------|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `id`              | `INTEGER` | NOT NULL<br/>PRIMARY KEY<br/>AUTOINCREMENT | L'identifiant unique.                                                                                                                                                            |
-| `tournament_id`   | `TEXT`    | NOT NULL                                   | L'identifiant unique du tournoi (tel que déclaré dans le fichier de configuration de l'évènement).                                                                               |
+| `tournament_id`   | `INTEGER` | NOT NULL                                   | L'identifiant unique du tournoi.                                                                                                                                                 |
 | `round`           | `INTEGER` | NOT NULL                                   | Le numéro de la ronde.                                                                                                                                                           |
 | `board_id`        | `INTEGER` | NOT NULL                                   | Le numéro de l'échiquier.                                                                                                                                                        |
 | `white_player_id` | `INTEGER` | NOT NULL                                   | Le numéro du joueur avec les Blancs (dans le fichier Papi du tournoi).                                                                                                           |
