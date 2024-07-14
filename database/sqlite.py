@@ -12,6 +12,7 @@ from typing import Self, Any, Unpack
 
 from packaging.version import Version
 
+from common.exception import PapiWebException
 from data.util import Result as UtilResult
 from data.result import Result as DataResult
 from common.logger import get_logger
@@ -77,10 +78,15 @@ class SQLiteDatabase:
     def _commit(self):
         self.database.commit()
 
+    def _last_inserted_id(self) -> int:
+        return self.cursor.lastrowid
+
 
 class EventDatabase(SQLiteDatabase):
     def __init__(self, event_id: str, method: str):
-        super().__init__(DB_PATH / f'{event_id}.db', method)
+        self.event_id = event_id
+        self._version: Version | None = None
+        super().__init__(DB_PATH / f'{self.event_id}.db', method)
 
     def __post_init__(self):
         super().__post_init__()
@@ -91,8 +97,9 @@ class EventDatabase(SQLiteDatabase):
             try:
                 database = connect(database=self.file, detect_types=1, uri=True)
                 cursor = database.cursor()
-                with open(SQL_PATH / 'init.sql', encoding='utf-8') as f:
-                    cursor.executescript(f.read().format(version=PAPI_WEB_VERSION))
+                with open(SQL_PATH / 'create-event.sql', encoding='utf-8') as f:
+                    cursor.executescript(f.read().format(
+                        version=f'{PAPI_WEB_VERSION.major}.{PAPI_WEB_VERSION.minor}.{PAPI_WEB_VERSION.micro}'))
                 database.commit()
                 logger.info('La base de données [%s] a été créée', self.file)
             except OperationalError as e:
@@ -106,133 +113,176 @@ class EventDatabase(SQLiteDatabase):
 
     def __enter__(self) -> Self:
         super().__enter__()
-        self._execute('SELECT `version` FROM `info`', )
-        database_version: Version = Version(self._fetchone()["version"])
-        if database_version != PAPI_WEB_VERSION:
-            self._upgrade(database_version)
+        if self.version != Version(f'{PAPI_WEB_VERSION.major}.{PAPI_WEB_VERSION.minor}.{PAPI_WEB_VERSION.micro}'):
+            if self.read_only:
+                with EventDatabase(self.event_id, 'w') as event_database:
+                    event_database: EventDatabase
+                    event_database.upgrade()
+            else:
+                self.upgrade()
         return self
 
-    def _upgrade_2_5_0(self):
-        pass
+    @property
+    def version(self) -> Version:
+        if self._version is None:
+            self._execute('SELECT `version` FROM `info`', )
+            self._version = Version(self._fetchone()['version'])
+        return self._version
 
-    def _upgrade(self, from_version: Version):
-        if from_version > PAPI_WEB_VERSION:
-            raise ValueError(
+    def set_version(self, version: Version):
+        self._execute('UPDATE `info` SET `version` = ?', (f'{version}', ))
+        self._version = version
+
+    def _upgrade(self, version: Version):
+        match version:
+            case Version('2.4.1'):
+                self._execute('')
+                self.set_version(version)
+                self.commit()
+            case _:
+                raise PapiWebException(
+                    f'La base de données {self.file.name} ne peut être mise à jour en version {version}.')
+        logger.info(f'La base de données {self.file.name} a été mise à jour en version {version}.')
+
+    def upgrade(self):
+        if self.version > PAPI_WEB_VERSION:
+            raise PapiWebException(
                 f'Votre version de Papi-web ({PAPI_WEB_VERSION}) '
-                f'ne peut pas ouvrir les bases de données en version {from_version}, '
+                f'ne peut pas ouvrir les bases de données en version {self.version}, '
                 f'veuillez mettre à jour votre version de Papi-web')
-        if from_version < Version('2.5.0'):
-            self._upgrade_2_5_0()
+        logger.info(f'Mise à jour de la base de données...')
+        if self.version < (version := Version('2.4.1')):
+            self._upgrade(version)
 
     def commit(self):
         self._commit()
 
-    def _set_tournament_updated(self, tournament_id: str):
+    def _add_tournament(self, tournament_uniq_id: str) -> int:
         self._execute(
-            'SELECT `last_update` FROM `tournament` WHERE `id` = ?',
-            (tournament_id, ),
+            'INSERT INTO `tournament`(`uniq_id`, `last_update`) VALUES(?, ?)',
+            (tournament_uniq_id, time.time(), ),
         )
-        if self._fetchone():
-            self._execute(
-                'UPDATE `tournament` SET `last_update` = ? WHERE `id` = ?',
-                (time.time(), tournament_id, ),
-            )
-        else:
-            self._execute(
-                'INSERT INTO `tournament`(`id`, `last_update`) VALUES(?, ?)',
-                (tournament_id, time.time(), ),
-            )
+        return self._last_inserted_id()
 
-    def get_illegal_moves(self, tournament_id: str, round: int) -> Counter[int]:
+    def _get_tournament_id_from_uniq_id(self, tournament_uniq_id: str, create_if_absent: bool = False) -> int | None:
         self._execute(
-            'SELECT `id`, `player_id` FROM `illegal_move` WHERE `tournament_id` = ? AND `round` = ?',
-            (tournament_id, round, ),
+            'SELECT `id` FROM `tournament` WHERE `uniq_id` = ?',
+            (tournament_uniq_id, ),
+        )
+        row: dict[str, Any] = self._fetchone()
+        if row:
+            return row['id']
+        if create_if_absent:
+            return self._add_tournament(tournament_uniq_id)
+        return None
+
+    def _set_tournament_updated(self, tournament_uniq_id: str, now: float | None = None) -> int:
+        tournament_id: int = self._get_tournament_id_from_uniq_id(tournament_uniq_id, create_if_absent=True)
+        if now is None:
+            now = time.time()
+        self._execute(
+            'UPDATE `tournament` SET `last_update` = ? WHERE `id` = ?',
+            (now, tournament_id, ),
+        )
+        return tournament_id
+
+    def get_illegal_moves(self, tournament_uniq_id: str, round: int) -> Counter[int]:
+        self._execute(
+            'SELECT `illegal_move`.`id`, `illegal_move`.`player_id` '
+            'FROM `illegal_move` '
+            'JOIN `tournament` ON `illegal_move`.`tournament_id` = `tournament`.`id`' 
+            'WHERE `tournament`.`uniq_id` = ? AND `round` = ?',
+            (tournament_uniq_id, round, ),
         )
         illegal_moves: Counter[int] = Counter[int]()
         for row in self._fetchall():
             illegal_moves[int(row['player_id'])] += 1
         return illegal_moves
 
-    def store_illegal_move(self, tournament_id: str, round: int, player_id: int):
+    def store_illegal_move(self, tournament_uniq_id: str, round: int, player_id: int):
         now: float = time.time()
+        tournament_id: int = self._set_tournament_updated(tournament_uniq_id, now)
         self._execute(
             'INSERT INTO `illegal_move`(`tournament_id`, `round`, `player_id`, `date`) VALUES(?, ?, ?, ?)',
             (tournament_id, round, player_id, now),
         )
-        self._set_tournament_updated(tournament_id)
 
-    def delete_illegal_move(self, tournament_id: str, round: int, player_id: int) -> bool:
+    def delete_illegal_move(self, tournament_uniq_id: str, round: int, player_id: int) -> bool:
+        tournament_id: int = self._set_tournament_updated(tournament_uniq_id)
         self._execute(
             'SELECT `id` FROM `illegal_move` WHERE `tournament_id` = ? AND `round` = ? AND `player_id` = ? LIMIT 1',
             (tournament_id, round, player_id, ),
         )
         row: dict[str, Any] = self._fetchone()
-        if row is None:
+        if not row:
             return False
         self._execute(
             'DELETE FROM `illegal_move` WHERE `id` = ?',
             (row['id'], ),
         )
-        self._set_tournament_updated(tournament_id)
         return True
 
-    def delete_illegal_moves(self, tournament_id: str, round: int):
+    def delete_illegal_moves(self, tournament_uniq_id: str, round: int):
+        tournament_id: int = self._set_tournament_updated(tournament_uniq_id)
         self._execute(
             'DELETE FROM `illegal_move` WHERE `tournament_id` = ? AND `round` = ?',
-            (tournament_id, round, ),
+            (tournament_id, round,),
         )
-        self._set_tournament_updated(tournament_id)
 
-    def add_result(self, tournament_id: str, round: int, board: Board, result: UtilResult):
+    def add_result(self, tournament_uniq_id: str, round: int, board: Board, result: UtilResult):
+        now: float = time.time()
+        tournament_id: int = self._set_tournament_updated(tournament_uniq_id, now)
         self._execute(
             'INSERT INTO `result`('
-            '`tournament_id`, `round`, `board_id`, `white_player`, `black_player`, `value`, `date`'
+            '    `tournament_id`, `round`, `board_id`, '
+            '    `white_player_id`, `black_player_id`, '
+            '    `value`, `date`'
             ') VALUES(?, ?, ?, ?, ?, ?, ?)',
             (
                 tournament_id,
                 round,
                 board.id,
-                f'{board.white_player.last_name} {board.white_player.first_name} {board.white_player.rating}',
-                f'{board.black_player.last_name} {board.black_player.first_name} {board.black_player.rating}',
+                board.white_player.id,
+                board.black_player.id,
                 result,
-                time.time(),
+                now,
             ),
         )
 
-    def delete_result(self, tournament_id: str, round: int, board_id: int):
+    def delete_result(self, tournament_uniq_id: str, round: int, board_id: int):
+        tournament_id: int = self._set_tournament_updated(tournament_uniq_id)
         self._execute(
             'DELETE FROM `result` WHERE `tournament_id` = ? AND `round` = ? AND `board_id` = ?',
             (tournament_id, round, board_id),
         )
 
-    def get_results(self, limit: int, *tournaments: Unpack[str]) -> Iterator[DataResult]:
-        if not tournaments:
-            query: str = ('SELECT `tournament_id`, `round`, `board_id`, `white_player`, `black_player`, `date`, `value` '
-                          'FROM `result` ORDER BY `date` DESC')
+    def get_results(self, limit: int, *tournament_uniq_ids: Unpack[str]) -> Iterator[DataResult]:
+        if not tournament_uniq_ids:
+            query: str = ('SELECT '
+                          '    `tournament`.`uniq_id` as `tournament_uniq_id`, '
+                          '    `result`.`round`, `result`.`board_id`, '
+                          '    `result`.`white_player_id`, `result`.`black_player_id`, '
+                          '    `result`.`white_player_str`, `result`.`black_player_str`, '
+                          '    `result`.`date`, `result`.`value` '
+                          'FROM `result` '
+                          'JOIN `tournament` ON `result`.`tournament_id` = `tournament`.`id` '
+                          'ORDER BY `date` DESC')
             params: tuple = ()
             if limit:
                 query += ' LIMIT ?'
                 params = (limit, )
-        elif len(tournaments) == 1:
-            query: str = ('SELECT `tournament_id`, `round`, `board_id`, `white_player`, `black_player`, `date`, `value` '
-                          'FROM `result` WHERE `tournament_id` = ? ORDER BY `date` DESC')
-            params = (tournaments[0], )
-            if limit:
-                query += ' LIMIT ?'
-                params += (limit, )
         else:
-            # FIXME(Amaras) : Check if `WHERE value in (?, ?, ...)` is posible in SQLITE
-            query_parts: list[str] = []
-            params: tuple = ()
-            for tournament in tournaments:
-                query_part: str = ('SELECT `tournament_id`, `round`, `board_id`, `white_player`, `black_player`, `date`, `value` '
-                                   'FROM `result` WHERE `tournament_id` = ? ORDER BY `date` DESC')
-                params += (tournament, )
-                if limit:
-                    query_part += ' LIMIT ?'
-                    params += (limit, )
-                query_parts.append('\n'.join(('SELECT * FROM (', query_part, ')')))
-            query: str = '\nUNION\n'.join(query_parts) + ' ORDER BY `date` DESC'
+            query: str = (f'SELECT '
+                          f'    `tournament`.`uniq_id` as `tournament_uniq_id`, '
+                          f'    `result`.`round`, `result`.`board_id`, '
+                          f'    `result`.`white_player_id`, `result`.`black_player_id`, '
+                          '    `result`.`white_player_str`, `result`.`black_player_str`, '
+                          f'    `result`.`date`, `result`.`value` '
+                          f'FROM `result` '
+                          f'JOIN `tournament` ON `result`.`tournament_id` = `tournament`.`id` '
+                          f'WHERE {" OR ".join([f"`tournament`.`uniq_id` = ?", ] * len(tournament_uniq_ids))} '
+                          f'ORDER BY `date` DESC')
+            params: list[str] = [tournament_uniq_id for tournament_uniq_id in tournament_uniq_ids]
             if limit:
                 query += ' LIMIT ?'
                 params += (limit, )
@@ -245,9 +295,9 @@ class EventDatabase(SQLiteDatabase):
                 continue
             yield DataResult(
                     row['date'],
-                    row['tournament_id'],
+                    row['tournament_uniq_id'],
                     row['round'],
                     row['board_id'],
-                    row['white_player'],
-                    row['black_player'],
+                    row['white_player_id'],
+                    row['black_player_id'],
                     value)

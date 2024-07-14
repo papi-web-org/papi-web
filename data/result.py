@@ -13,11 +13,11 @@ logger: Logger = get_logger()
 @total_ordering
 class Result:
     timestamp: float
-    tournament_id: str
+    tournament_uniq_id: str
     round: int
     board_id: int
-    white_player: str
-    black_player: str
+    white_player_id: int
+    black_player_id: int
     result: UtilResult
 
     @property
@@ -38,5 +38,7 @@ class Result:
 
     def __repr__(self):
         return (f'{self.__class__.__name__}('
-                f'{self.timestamp_str} {self.tournament_id}.{self.board_id} '
-                f'{self.white_player} {self.result_str} {self.black_player})')
+                f'{self.timestamp_str} {self.tournament_uniq_id}.{self.board_id} '
+                f'{self.white_player_id} '
+                f'{self.result_str} '
+                f'{self.black_player_id})')

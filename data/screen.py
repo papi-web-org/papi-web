@@ -206,12 +206,12 @@ class PlayersScreen(AScreenWithSets):
 class ResultsScreen(AScreen):
     def __init__(
             self, event_id: str, screen_id: str, family_id: str | None, name: str, columns: int,
-            menu_text: str | None, menu: str, show_timer: bool, limit: int, *tournaments: Unpack[str]):
+            menu_text: str | None, menu: str, show_timer: bool, limit: int, *tournament_uniq_ids: Unpack[str]):
         super().__init__(event_id, screen_id, family_id,
                          name, columns, menu_text, menu, show_timer)
         self._type = ScreenType.Results
         self.limit: int = limit
-        self.tournaments = tuple(tournaments)
+        self.tournament_uniq_ids = tuple(tournament_uniq_ids)
 
     @property
     def type_str(self) -> str:
@@ -226,7 +226,7 @@ class ResultsScreen(AScreen):
         with EventDatabase(self.event_id, 'r') as event_database:
             event_database: EventDatabase
             results: tuple[Result] = tuple(
-                event_database.get_results(self.limit, *self.tournaments))
+                event_database.get_results(self.limit, *self.tournament_uniq_ids))
         column_size: int = (
             self.limit if self.limit else len(results)) // self.columns
         for i in range(self.columns):
@@ -460,12 +460,11 @@ class ScreenBuilder:
                     f"l'option n'est pas autorisée pour les écrans de type [{screen_type}], ignorée",
                     screen_section_key, key)
         key = 'tournaments'
-        tournaments: list[str] = []
+        tournament_uniq_ids: list[str] = []
         if screen_type == ScreenType.Results:
             tournaments_str: str | None = screen_section.get(key)
             if tournaments_str is not None:
-                tournaments = [tournament_name.strip()
-                               for tournament_name in tournaments_str.split(',')]
+                tournament_uniq_ids = [tournament_uniq_id.strip() for tournament_uniq_id in tournaments_str.split(',')]
         else:
             if key in screen_section:
                 self._config_reader.add_warning(
@@ -538,7 +537,7 @@ class ScreenBuilder:
                 menu,
                 show_timer,
                 limit,
-                *tournaments
+                *tournament_uniq_ids
             )
             screen_file_dependencies += [
                 tournament.file for tournament in self._tournaments.values()]
