@@ -55,7 +55,6 @@ class Board:
         self.result = result
 
     def __lt__(self, other):
-        # TODO(Amaras) for ordering, should this depend only on board id?
         # p1 < p2 calls p1.__lt__(p2)
         if not isinstance(other, Board):
             return NotImplemented
@@ -101,7 +100,7 @@ class Board:
             return NotImplemented
         if self.board_id is not None and other.board_id is not None:
             return self.board_id == other.board_id
-        if self.black_player == 1 or self.white_player.id == 1:
+        if self.black_player.id == 1 or self.white_player.id == 1:
             return False
         self_player_1: Player
         self_player_2: Player
