@@ -464,7 +464,13 @@ class ScreenBuilder:
         if screen_type == ScreenType.Results:
             tournaments_str: str | None = screen_section.get(key)
             if tournaments_str is not None:
-                tournament_uniq_ids = [tournament_uniq_id.strip() for tournament_uniq_id in tournaments_str.split(',')]
+                for tournament_uniq_id in tournaments_str.split(','):
+                    try:
+                        tournament_uniq_ids.append(self._tournaments[tournament_uniq_id.strip()].uniq_id)
+                    except KeyError:
+                        self._config_reader.add_warning(
+                            f"le tournoi [{tournament_uniq_id}] n'existe pas, ignoré",
+                            screen_section_key, key)
         else:
             if key in screen_section:
                 self._config_reader.add_warning(
@@ -486,12 +492,10 @@ class ScreenBuilder:
                         "pas d'ensemble de joueur·euses déclaré, écran ignoré", screen_section_key)
                 return None
             for screen_set in screen_sets:
-                screen_set_file_dependencies: list[Path] = [
-                    screen_set.tournament.file, ]
+                screen_set_file_dependencies: list[Path] = [screen_set.tournament.file, ]
                 if screen_type == ScreenType.Boards:
                     if screen_set.tournament.record_illegal_moves:
-                        screen_set_file_dependencies += [
-                            screen_set.tournament.illegal_moves_dir, ]
+                        screen_set_file_dependencies += [screen_set.tournament.illegal_moves_marker, ]
                 screen_set.set_file_dependencies(screen_set_file_dependencies)
         key = '__family__'
         family_id: str | None = None
@@ -539,8 +543,11 @@ class ScreenBuilder:
                 limit,
                 *tournament_uniq_ids
             )
-            screen_file_dependencies += [
-                tournament.file for tournament in self._tournaments.values()]
+            if tournament_uniq_ids:
+                for tournament_uniq_id in tournament_uniq_ids:
+                    screen_file_dependencies += [self._tournaments[tournament_uniq_id].file, ]
+                else:
+                    screen_file_dependencies += [tournament.file for tournament in self._tournaments.values()]
         screen.set_file_dependencies(screen_file_dependencies, )
         for key, value in self._config_reader.items(screen_section_key):
             if key not in ConfigReader.screen_keys + ('template', '__family__', ):
@@ -604,13 +611,16 @@ class ScreenBuilder:
         results_screen_id: str = f'auto-{ScreenType.Results.value}'
         if len(self._tournaments) > 1:
             update_menu: str = ','.join([
-                f'{tournament_uniq_id}-auto-{ScreenType.Boards.value}-update' for tournament_uniq_id in self._tournaments
+                f'{tournament_uniq_id}-auto-{ScreenType.Boards.value}-update'
+                for tournament_uniq_id in self._tournaments
             ])
             view_menu: str = ','.join([
-                f'{tournament_uniq_id}-auto-{ScreenType.Boards.value}-view' for tournament_uniq_id in self._tournaments
+                f'{tournament_uniq_id}-auto-{ScreenType.Boards.value}-view'
+                for tournament_uniq_id in self._tournaments
             ])
             players_menu: str = ','.join([
-                f'{tournament_uniq_id}-auto-{ScreenType.Players.value}' for tournament_uniq_id in self._tournaments
+                f'{tournament_uniq_id}-auto-{ScreenType.Players.value}'
+                for tournament_uniq_id in self._tournaments
             ])
             results_menu: str = 'none'
         else:

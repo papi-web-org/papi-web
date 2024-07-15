@@ -269,14 +269,23 @@ class Tournament:
             player.add_vpoints(player.points)
 
     @property
-    def illegal_moves_dir(self) -> Path:
-        return TMP_DIR / 'events' / self.event_id / 'illegal_moves' / self.uniq_id
+    def _illegal_moves_marker_dir(self) -> Path:
+        return TMP_DIR / 'events' / self.event_id / 'illegal_moves'
+
+    @property
+    def illegal_moves_marker(self) -> Path:
+        return self._illegal_moves_marker_dir / f'{self.uniq_id}.marker'
+
+    def _touch_illegal_moves_marker(self):
+        self._illegal_moves_marker_dir.mkdir(exist_ok=True)
+        self.illegal_moves_marker.touch(exist_ok=True)
 
     def store_illegal_move(self, player: Player):
         with EventDatabase(self.event_id, 'w') as event_database:
             event_database: EventDatabase
             event_database.store_illegal_move(self.uniq_id, self.current_round, player.id)
             event_database.commit()
+        self._touch_illegal_moves_marker()
         logger.info('le coup illégal a été enregistré')
     
     def delete_illegal_move(self, player: Player) -> bool:
@@ -284,11 +293,12 @@ class Tournament:
             event_database: EventDatabase
             deleted: bool = event_database.delete_illegal_move(self.uniq_id, self.current_round, player.id)
             event_database.commit()
-            if deleted:
-                logger.info('un coup illégal a été supprimé pour le·la joueur·euse [%s]', player.id)
-            else:
-                logger.info('aucun coup illégal n\'a été trouvé pour le·la joueur·euse [%s]', player.id)
-            return deleted
+        self._touch_illegal_moves_marker()
+        if deleted:
+            logger.info('un coup illégal a été supprimé pour le·la joueur·euse [%s]', player.id)
+        else:
+            logger.info('aucun coup illégal n\'a été trouvé pour le·la joueur·euse [%s]', player.id)
+        return deleted
 
     def get_illegal_moves(self) -> Counter[int]:
         with EventDatabase(self.event_id, 'r') as event_database:
