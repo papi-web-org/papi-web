@@ -130,7 +130,7 @@ class EventDatabase(SQLiteDatabase):
         return self._version
 
     def set_version(self, version: Version):
-        self._execute('UPDATE `info` SET `version` = ?', (f'{version}', ))
+        self._execute('UPDATE `info` SET `version` = ?', (f'{version.major}.{version.minor}.{version.micro}', ))
         self._version = version
 
     def _upgrade(self, version: Version):

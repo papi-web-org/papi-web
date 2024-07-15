@@ -37,7 +37,7 @@ class Engine:
             logger.info('Votre version de Papi-web est à jour')
             return
         last_stable_matches = re.match(
-            r'^.*(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$', str(last_stable_version))
+            r'^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$', str(last_stable_version))
         if re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$', str(PAPI_WEB_VERSION)):
             if last_stable_version > PAPI_WEB_VERSION:
                 logger.warning('Une version plus récente que la vôtre est disponible (%s)',
@@ -46,8 +46,8 @@ class Engine:
                 logger.warning('Vous utilisez une version plus récente que la dernière version stable disponible, '
                                'vous ne seriez pas développeur des fois ?')
             return
-        if not (matches := re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)-rc(?P<rc>\d+).*$', str(PAPI_WEB_VERSION))):
-            raise ValueError('Version de Papi-web invalide')
+        if not (matches := re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)rc(?P<rc>\d+)$', str(PAPI_WEB_VERSION))):
+            raise ValueError(f'Version de Papi-web invalide [{str(PAPI_WEB_VERSION)}]')
         if last_stable_matches.group('major') > matches.group('major'):
             logger.warning('Une version majeure plus récente que la vôtre est disponible (%s)',
                            last_stable_version)
@@ -81,13 +81,13 @@ class Engine:
                 return None
             versions: list[str] = []
             for entry in entries:
-                name: str = entry['name']
-                if matches := re.match(r'.*(\d+\.\d+\.\d+).*', name):
+                tag_name: str = entry['tag_name']
+                if matches := re.match(r'^(\d+\.\d+\.\d+)$', tag_name):
                     version: str = matches.group(1)
-                    logger.debug('name=[%s] > version=[%s]', name, version)
+                    logger.debug('tag_name=[%s] > version=[%s]', tag_name, version)
                     versions.append(version)
                 else:
-                    logger.debug('name=[%s]: no stable version number', name)
+                    logger.debug('tag_name=[%s]: no stable version number', tag_name)
             if not versions:
                 logger.debug('Aucune version stable trouvée')
                 return None
