@@ -174,9 +174,9 @@ class ScreenSet:
                 else:
                     self.name = '%t'
             self.name = self.name.replace('%t', str(self.tournament.name))
-            if self.first_player_by_name:
+            if self.first_item is not None:
                 self.name = self.name.replace('%f', self.first_player_by_name.last_name)
-            if self.last_player_by_name:
+            if self.last_item is not None:
                 self.name = self.name.replace('%l', self.last_player_by_name.last_name)
 
     @property
@@ -214,14 +214,16 @@ class ScreenSet:
 
     @property
     def first_player_by_name(self) -> Player:
-        self._extract_players_by_name()
+        if not self.first_item:
+            self._extract_players_by_name()
         if TYPE_CHECKING:
             assert isinstance(self.first_item, Player)
         return self.first_item
 
     @property
     def last_player_by_name(self) -> Player:
-        self._extract_players_by_name()
+        if not self.last_item:
+            self._extract_players_by_name()
         if TYPE_CHECKING:
             assert isinstance(self.last_item, Player)
         return self.last_item
