@@ -149,7 +149,7 @@ class FamilyBuilder:
                 if tournament.current_round:
                     total_items_number = len(tournament.boards[slice(first, last)])
                 else:
-                    total_items_number = ceil(len(tournament.players_by_id) / 2)
+                    total_items_number = len(list(tournament.players_by_id.keys())[slice(first, last)])
             else:  # Players
                 # note: template_type is boards or players (control done by TemplateBuilder)
                 if tournament.current_round:
