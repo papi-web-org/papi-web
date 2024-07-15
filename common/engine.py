@@ -38,7 +38,7 @@ class Engine:
             return
         last_stable_matches = re.match(
             r'^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$', str(last_stable_version))
-        if re.match(r'^.*(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*$', str(PAPI_WEB_VERSION)):
+        if re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$', str(PAPI_WEB_VERSION)):
             if last_stable_version > PAPI_WEB_VERSION:
                 logger.warning('Une version plus récente que la vôtre est disponible (%s)',
                                last_stable_version)
