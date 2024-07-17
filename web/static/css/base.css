@@ -29,6 +29,7 @@ body {
     top: 0.5rem;
     right: 0.5rem;
     width: 33%;
+    z-index: 1;
 }
 
 #messages .alert-danger {
@@ -48,4 +49,17 @@ body {
 }
 #messages .alert button {
     padding: 0.4rem;
+}
+
+.width-100 {
+    width: 100%;
+}
+
+.modal-footer {
+    display: block;
+}
+
+.modal-dialog {
+    max-width: 50%;
+    display: block;
 }

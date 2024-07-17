@@ -1,8 +1,4 @@
-{#
-Context:
-- manage_event
-#}
-<h1>{{ manage_event.name }} - Écrans rotatifs</h1>
+<h1>{{ admin_event.name }} - Écrans rotatifs</h1>
 <table class="table border-black">
     <thead class="table-dark">
         <tr>
@@ -12,9 +8,9 @@ Context:
         </tr>
     </thead>
     <tbody>
-        {% for rotator in manage_event.rotators.values() %}
+        {% for rotator in admin_event.rotators.values() %}
             <tr>
-                <th scope="row"><a href="{{ url_for('render-rotator', event_id=manage_event.id, rotator_id=rotator.id) }}" target="_blank">{{ rotator.id }}</a></th>
+                <th scope="row"><a href="{{ url_for('render-rotator', event_id=admin_event.id, rotator_id=rotator.id) }}" target="_blank">{{ rotator.id }}</a></th>
                 <td>{{ rotator.delay }}</td>
                 <td>
                     {% for screen in rotator.screens %}

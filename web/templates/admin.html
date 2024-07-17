@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Papi-web
+{% endblock title %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', file_path='/css/admin.css') }}" type="text/css" />
+{% endblock head %}
+
+{% block header %}
+    <div id="admin-header-wrapper" class="admin-header-wrapper p-1 position-sticky top-0">
+        <form id="admin-header" class="admin row">
+            <div class="col col-md-auto">
+                <span id="admin-main-selector" class="admin">
+                    <select
+                        name="admin_main_selector"
+                        hx-post="{{ url_for('admin-update-header') }}"
+                        hx-swap="multi:#admin-header,#admin-content"
+                        class="form-select form-select-sm"
+                    >
+                        {% for option_value, option_text in admin_main_selector_options.items() %}
+                            <option value="{{ option_value }}" {% if admin_main_selector == option_value %}selected{% endif %}>{{ option_text }}</option>
+                        {% endfor %}
+                        {% for event in events %}
+                            <option value="{{ event.id }}" {% if admin_event and admin_event.id == event.id %}selected{% endif %}>{{ event.name }}</option>
+                        {% endfor %}
+                    </select>
+                </span>
+            </div>
+            <div class="col col-md-auto">
+                <span id="admin-event-selector" class="">
+                    {% if admin_event %}
+                        <select
+                            name="admin_event_selector"
+                            hx-post="{{ url_for('admin-update-header') }}"
+                            hx-swap="multi:#admin-header,#admin-content"
+                            class="form-select form-select-sm"
+                        >
+                            {% for option_value, option_text in admin_event_selector_options.items() %}
+                                <option value="{{ option_value }}" {% if admin_event_selector == option_value %}selected{% endif %}>{{ option_text }}</option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="col">
+            </div>
+        </form>
+    </div>
+{% endblock header %}
+
+{% block content %}
+    <div id="admin-content-wrapper" class="admin-content-wrapper p-1">
+        <div id="admin-content" class="">
+            {% if admin_main_selector == '' %}
+                {% include 'admin_configuration.html' %}
+            {% elif admin_main_selector == '@list-events' %}
+                {% include 'admin_events.html' %}
+            {% else %}{# admin_event is not None #}
+                {% if admin_event_selector == '' %}
+                    {% include 'admin_event_configuration.html' %}
+                {% elif admin_event_selector == '@tournaments' %}
+                    {% include 'admin_event_tournaments.html' %}
+                {% elif admin_event_selector == '@screens' %}
+                    {% include 'admin_event_screens.html' %}
+                {% elif admin_event_selector == '@families' %}
+                    {% include 'admin_event_families.html' %}
+                {% elif admin_event_selector == '@rotators' %}
+                    {% include 'admin_event_rotators.html' %}
+                {% elif admin_event_selector == '@timers' %}
+                    {% include 'admin_event_timers.html' %}
+                {% elif admin_event_selector == '@messages' %}
+                    {% include 'admin_event_messages.html' %}
+                {% elif admin_event_selector == '@players' %}
+                    {% include 'admin_event_players.html' %}
+                {% elif admin_event_selector == '@check_in' %}
+                    {% include 'admin_event_check_in.html' %}
+                {% elif admin_event_selector == '@pairings' %}
+                    {% include 'admin_event_pairings.html' %}
+                {% endif %}
+            {% endif %}
+            <div id="admin-modal-container"
+                class="modal modal-blur fade"
+                style="display: none"
+                aria-hidden="false"
+                data-bs-backdrop="static"
+                data-bs-keyboard="false"
+                tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                    <div class="modal-content"></div>
+                </div>
+            </div>
+            <script>
+                {# manually remove the modal backdrop when reloading #admin-content #}
+                $(document).ready(function(){
+                    $('body .modal-backdrop').remove();
+                });
+            </script>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block footer %}
+    <div id="admin-footer-wrapper" class="">
+        <div id="admin-footer" class="">
+        </div>
+    </div>
+{% endblock footer %}

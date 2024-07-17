@@ -1,0 +1,25 @@
+<h1>{{ admin_event.name }} - Messages</h1>
+{% if admine_event.errors %}
+    <div class="alert alert-danger" role="alert">
+        <div><strong><i class="bi-bug-fill"></i> Erreurs : {{ admin_event.errors|length }}</strong></div>
+        {% for error in admin_event.errors %}
+            <div><i class="bi-bug"></i> {{ error }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% if admin_event.warnings %}
+    <div class="alert alert-warning" role="alert">
+        <div><strong><i class="bi-exclamation-triangle-fill"></i> Avertissements : {{ admin_event.warnings|length }}</strong></div>
+        {% for warning in admin_event.warnings %}
+            <div><i class="bi-exclamation-triangle"></i> {{ warning }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% if admin_event.infos %}
+    <div class="alert alert-info" role="alert">
+        <div><strong><i class="bi-info-circle-fill"></i> Informations : {{ admin_event.infos|length }}</strong></div>
+        {% for info in admin_event.infos %}
+            <div><i class="bi-info-circle"></i> {{ info }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
