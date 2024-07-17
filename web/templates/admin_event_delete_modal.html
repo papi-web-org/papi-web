@@ -1,0 +1,52 @@
+<div class="modal-dialog modal-dialog-centered admin-event-edit-modal">
+    <form
+            hx-post="{{ url_for('admin-event-delete') }}"
+            hx-vals='{% if admin_event %}{"admin_event_id": "{{ admin_event.id }}"}{% endif %}'
+            hx-swap="multi:#messages,#admin-header,#admin-content"
+            hx-indicator="#please-wait">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    Suppression de l'évènement [{{ admin_event.id }}]
+                </h2>
+            </div>
+            <div class="modal-body">
+                <h2 class="text-danger">
+                    Attention : la suppression d'un tournoi est définitive !
+                </h2>
+                {% with id='event-uniq-id', name='event_uniq_id' %}
+                    <div>
+                        <label for="{{ id }}" class="form-label">Entrez l'identifiant de l'évènement pour confirmer sa suppression :</label>
+                        <input
+                                name="{{ name }}"
+                                type="text" id="{{ id }}"
+                                class="form-control {% if name in errors %}is-invalid{% endif %}"
+                                aria-describedby="{{ id }}-help {{ id }}-error"
+                                placeholder="Entrez ici l'identifiant de l'évènement"
+                                value="" />
+                        <div id="{{ id }}-help" class="form-text">
+                            La récupération des données supprimées n'est pas possible sur l'interface web (les données sont néanmoins archivées et peuvent être récupérées sur le système de fichiers).
+                        </div>
+                        {% if name in errors %}
+                            <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                {{ errors[name] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endwith %}
+            </div>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col col-6 text-start">
+                        <button type="submit" class="white btn btn-danger">
+                            <i class="bi-trash-fill"></i> Supprimer l'évènement
+                        </button>
+                    </div>
+                    <div class="col col-6 text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi-x-circle-fill"></i> Annuler</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

@@ -68,5 +68,13 @@
             <th scope="row" class="text-nowrap">Mot de passe de saisie des scores</th>
             <td>{% if admin_event.update_password %}********{% else %}<em>Aucun</em>{% endif %}</td>
         </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Nombre maximum de coups illégaux enregistrés</th>
+            <td>{% if admin_event.record_illegal_moves %}{{ admin_event.record_illegal_moves }}{% else %}<em>Aucun</em>{% endif %}</td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Suppression des résultats entrés sur les écrans de saisie</th>
+            <td>{% if admin_event.record_illegal_moves %}Oui{% else %}Non{% endif %}</td>
+        </tr>
     </tbody>
 </table>

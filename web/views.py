@@ -852,7 +852,7 @@ class AdminController(AController):
         if not event_name:
             errors['event_name'] = 'Veuillez entrer le nom de l\'évènement.'
         try:
-            event_record_illegal_moves: int = int(data.get('event_record_illegal_moves'))
+            event_record_illegal_moves: int = int(data.get('event_record_illegal_moves', 0))
             assert 0 <= event_record_illegal_moves <= 3
         except (ValueError, AssertionError):
             errors['event_record_illegal_moves'] = 'La valeur entrée n\'est pas valide.'
@@ -928,7 +928,6 @@ class AdminController(AController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        logger.warning(f'data=[{data}]')
         events_by_id: dict[str, Event] = get_events_by_id(load_screens=False, with_tournaments_only=False)
         admin_event_id: str = data.get('admin_event_id')
         admin_event: Event | None = None
@@ -1026,14 +1025,13 @@ class AdminController(AController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        logger.warning(f'data=[{data}]')
         events_by_id: dict[str, Event] = get_events_by_id(load_screens=False, with_tournaments_only=False)
         admin_event_id: str = data.get('admin_event_id')
         try:
             admin_event: Event = events_by_id[admin_event_id]
             errors: dict[str, str] = self._admin_validate_event_delete_data(admin_event, data)
             if errors:
-                return self._admin_event_render_edit_configuration_modal(admin_event, data, errors)
+                return self._admin_event_render_delete_modal(admin_event, data, errors)
             # TODO Delete the event
             # DELETE_EVENT(data)
             # Message.success(request, f'L\'évènement [{admin_event.id}] a été supprimé.')
