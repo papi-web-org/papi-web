@@ -851,6 +851,15 @@ class AdminController(AController):
         event_name: str = data.get('event_name')
         if not event_name:
             errors['event_name'] = 'Veuillez entrer le nom de l\'évènement.'
+        try:
+            event_record_illegal_moves: int = int(data.get('event_record_illegal_moves'))
+            assert 0 <= event_record_illegal_moves <= 3
+        except (ValueError, AssertionError):
+            errors['event_record_illegal_moves'] = 'La valeur entrée n\'est pas valide.'
+        try:
+            event_allow_deletion: bool = bool(data.get('event_allow_deletion'))
+        except ValueError:
+            errors['event_allow_deletion'] = 'La valeur entrée n\'est pas valide.'
         return errors
 
     @staticmethod
@@ -867,6 +876,12 @@ class AdminController(AController):
                 'admin_event': admin_event,
                 'data': data,
                 'errors': errors,
+                'record_illegal_moves_options': {
+                    '0': 'Aucun enregistrement des coups illégaux',
+                    '1': 'Maximum 1 coup illégal',
+                    '2': 'Maximum 2 coups illégaux',
+                    '3': 'Maximum 3 coups illégaux',
+                },
             })
 
     @post(
@@ -889,8 +904,10 @@ class AdminController(AController):
                 data: dict[str, str] = {
                     'event_uniq_id': admin_event.id,
                     'event_name': admin_event.name,
-                    'css': admin_event.css,
-                    'update_password': admin_event.update_password,
+                    'event_css': admin_event.css,
+                    'event_update_password': admin_event.update_password,
+                    'event_record_illegal_moves': admin_event.record_illegal_moves,
+                    'event_allow_deletion': admin_event.allow_deletion,
                 }
             except KeyError:
                 Message.error(request, f'L\'évènement [{admin_event_id}] est introuvable.')

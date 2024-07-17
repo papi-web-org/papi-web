@@ -96,6 +96,54 @@
                             {% endif %}
                         </div>
                     {% endwith %}
+                    {% with id='event-record-illegal-moves', name='event_record_illegal_moves' %}
+                        <div>
+                            <label for="{{ id }}" class="form-label">Enregistrement des coups illégaux :</label>
+                            <select
+                                    name="{{ name }}"
+                                    id="{{ id }}"
+                                    class="form-control {% if name in errors %}is-invalid{% endif %}"
+                                    aria-describedby="{{ id }}-help {{ id }}-error" >
+                                {% for value, text in record_illegal_moves_options.items() %}
+                                    <option value="{{ value }}" {% if value == data[name] %}selected{%endif %}>{{ text }} ({{ value }})</option>
+                                {% endfor %}
+                            </select>
+                            <div id="{{ id }}-help" class="form-text">
+                              Le nombre maximum de coups illégaux que l'on peut enregistrer par ronde pour un·e joueur·euse (de 0 à 3, par défaut 0). Cette valeur peut être modifiée pour chaque tournoi.
+                            </div>
+                            {% if name in errors %}
+                                <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                    {{ errors[name] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endwith %}
+                    {% with id='event-allow-deletion', name='event_allow_deletion' %}
+                        <div>
+                            <div class="row">
+                                <div class="col-auto">
+                                    <input
+                                            name="{{ name }}"
+                                            type="checkbox" id="{{ id }}"
+                                            class="{% if name in errors %}is-invalid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            value="1"
+                                            {% if data[name] %}checked{% endif %} />
+                                </div>
+                                <div class="col-auto">
+                                    <label for="{{ id }}" class="form-label">Suppression des résultats entrés</label>
+                                </div>
+                            </div>
+                            <div id="{{ id }}-help" class="form-text">
+                              Cochez cette case pour autoriser la suppression des résultats entrés sur les écrans de saisie.
+                            </div>
+                            {% if name in errors %}
+                                <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                    {{ errors[name] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endwith %}
                 {% endif %}
             </div>
             <div class="modal-footer">
