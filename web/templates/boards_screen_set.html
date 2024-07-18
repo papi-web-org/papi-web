@@ -11,7 +11,7 @@ Context:
 {% with tournament=screen_set.tournament %}
     <div
         class="boards-screen-set"
-        hx-get="{{ url_for('render-boards-screen-set-if-updated', event_id=event.id, screen_id=screen.id, screen_set_id=screen_set.id, date=now) }}"
+        hx-get="{{ url_for('render-boards-screen-set-if-updated', event_uniq_id=event.uniq_id, screen_id=screen.id, screen_set_id=screen_set.id, date=now) }}"
         hx-swap="outerHTML"
         hx-trigger="every 5s"
     >

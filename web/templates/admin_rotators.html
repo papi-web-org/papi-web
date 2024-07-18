@@ -10,7 +10,7 @@
     <tbody>
         {% for rotator in admin_event.rotators.values() %}
             <tr>
-                <th scope="row"><a href="{{ url_for('render-rotator', event_id=admin_event.id, rotator_id=rotator.id) }}" target="_blank">{{ rotator.id }}</a></th>
+                <th scope="row"><a href="{{ url_for('render-rotator', event_uniq_id=admin_event.uniq_id, rotator_id=rotator.id) }}" target="_blank">{{ rotator.id }}</a></th>
                 <td>{{ rotator.delay }}</td>
                 <td>
                     {% for screen in rotator.screens %}

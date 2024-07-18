@@ -19,7 +19,7 @@ Context:
         {% if screen.update %}
             hx-target="closest td"
             hx-swap="outerHTML transition:true"
-            hx-patch="{{ url_for('toggle-player-check-in', event_id=event.id, tournament_uniq_id=tournament.uniq_id, player_id=player.id, screen_id=screen.id) }}"
+            hx-patch="{{ url_for('toggle-player-check-in', event_uniq_id=event.uniq_id, tournament_uniq_id=tournament.uniq_id, player_id=player.id, screen_id=screen.id) }}"
             hx-indicator="#please-wait"
         {% endif %}
     ></i> {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}

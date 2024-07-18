@@ -31,10 +31,10 @@ class PapiDatabase(AccessDatabase):
     """The database class, using the Papi format of the French Chess Federation
     Tournament manager."""
 
-    def __init__(self, event_id: str, tournament_uniq_id: str, file: Path, method: str):
-        # event_id and tournament_uniq_id are needed to store/read skipped rounds
+    def __init__(self, event_uniq_id: str, tournament_uniq_id: str, file: Path, method: str):
+        # event_uniq_id and tournament_uniq_id are needed to store/read skipped rounds
         # as long as skipped rounds are not stored in the database but files
-        self.event_id = event_id
+        self.event_uniq_id = event_uniq_id
         self.tournament_uniq_id = tournament_uniq_id
         super().__init__(file, method)
 
@@ -120,7 +120,7 @@ class PapiDatabase(AccessDatabase):
 
     @property
     def skipped_rounds_dir(self) -> Path:
-        return TMP_DIR / 'events' / self.event_id / 'skipped_rounds' / self.tournament_uniq_id
+        return TMP_DIR / 'events' / self.event_uniq_id / 'skipped_rounds' / self.tournament_uniq_id
 
     def delete_skipped_rounds(self):
         for file in self.skipped_rounds_dir.glob('*'):

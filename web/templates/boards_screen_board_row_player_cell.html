@@ -4,7 +4,7 @@
         last_illegal_move_updated
     {% endif %}"
         {% if screen.update and not board.result_str %}
-            hx-get="{{ url_for('render-boards-screen-board-result-modal', event_id=event.id, tournament_uniq_id=tournament.uniq_id, board_id=board.id, screen_id=screen.id) }}"
+            hx-get="{{ url_for('render-boards-screen-board-result-modal', event_uniq_id=event.uniq_id, tournament_uniq_id=tournament.uniq_id, board_id=board.id, screen_id=screen.id) }}"
             hx-target="#modals"
             hx-swap="innerHTML"
             data-bs-toggle="modal"

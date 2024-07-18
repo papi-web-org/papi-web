@@ -43,8 +43,8 @@ class ActionSelector:
                 tournaments.append(tournament)
         return tournaments
 
-    def run(self, event_id: str) -> bool:
-        event: Event = Event(event_id, False)
+    def run(self, event_uniq_id: str) -> bool:
+        event: Event = Event(event_uniq_id, False)
         logger.info('Évènement : %s', event.name)
         tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
         if not tournaments:
@@ -114,7 +114,7 @@ class ActionSelector:
                                 chessevent_tournament_info = json.loads(data)
                             except JSONDecodeError as jde:
                                 error_output: Path = (
-                                        TMP_DIR / event.id /
+                                        TMP_DIR / event.uniq_id /
                                         f'{tournament.uniq_id}_error_l{jde.lineno}_c{jde.colno}_p{jde.pos}.json'
                                 )
                                 error_output.parents[0].mkdir(parents=True, exist_ok=True)

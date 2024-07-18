@@ -1,14 +1,14 @@
 <div class="modal-dialog modal-dialog-centered admin-event-edit-modal">
     <form
-            hx-post="{{ url_for('admin-event-update-configuration') }}"
-            hx-vals='{% if admin_event %}{"admin_event_id": "{{ admin_event.id }}"}{% endif %}'
+            hx-post="{{ url_for('admin-event-update') }}"
+            hx-vals='{% if admin_event %}{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}{% endif %}'
             hx-swap="multi:#messages,#admin-header,#admin-content"
             hx-indicator="#please-wait">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">
                     {% if admin_event %}
-                        Modification de l'évènement [{{ admin_event.id }}]
+                        Modification de l'évènement [{{ admin_event.uniq_id }}]
                     {% else %}
                         Ajout d'un évènement
                     {% endif %}
@@ -37,7 +37,7 @@
                 {% endwith %}
                 {% with id='event-name', name='event_name' %}
                     <div>
-                        <label for="{{ id }}" class="form-label">Identifiant (unique) de l'évènement :</label>
+                        <label for="{{ id }}" class="form-label">Nom de l'évènement :</label>
                         <input
                                 name="{{ name }}"
                                 type="text" id="{{ id }}"
@@ -150,7 +150,7 @@
                 <div class="row">
                     <div class="col col-6 text-start">
                         <button type="submit" class="white btn btn-primary">
-                            {% if admin_event %}Modifier{% else %}<i class="bi-floppy-fill"></i> Ajouter{% endif %}
+                            <i class="bi-floppy-fill"></i> {% if admin_event %}Modifier{% else %}Ajouter{% endif %}
                         </button>
                     </div>
                     <div class="col col-6 text-end">

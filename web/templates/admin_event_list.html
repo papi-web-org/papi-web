@@ -8,12 +8,13 @@
         <h1>
             <button
                     class="btn btn-primary"
-                    hx-post="{{ url_for('admin-event-render-edit-configuration-modal') }}"
+                    hx-post="{{ url_for('admin-event-render-edit-modal') }}"
                     hx-target="#admin-modal-container"
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"
-                    data-bs-target="#admin-modal-container" >
-                <i class="bi-plus-square-fill"></i> Ajouter un évènement
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait">
+                <i class="bi-plus-square-fill"></i> Créer un évènement
             </button>
         </h1>
     </div>
@@ -35,7 +36,7 @@
                         class="text-nowrap"
                         role="button"
                         hx-post="{{ url_for('admin-update-header') }}"
-                        hx-vals='{"admin_main_selector": "{{ event.id }}"}'
+                        hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
                         hx-swap="multi:#admin-header,#admin-content"
                         hx-indicator="#please-wait"
                 >
@@ -45,7 +46,7 @@
                         class="text-nowrap"
                         role="button"
                         hx-post="{{ url_for('admin-update-header') }}"
-                        hx-vals='{"admin_main_selector": "{{ event.id }}"}'
+                        hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
                         hx-swap="multi:#admin-header,#admin-content"
                         hx-indicator="#please-wait"
                 >
@@ -59,7 +60,7 @@
                             class="text-nowrap"
                             role="button"
                             hx-post="{{ url_for('admin-update-header') }}"
-                            hx-vals='{"admin_main_selector": "{{ event.id }}"}'
+                            hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
                             hx-swap="multi:#admin-header,#admin-content"
                             hx-indicator="#please-wait"
                     >
@@ -69,15 +70,14 @@
                 <td class="text-end">
                     <button
                             class="btn btn-sm btn-primary p-1"
-                            role="button"
                             hx-post="{{ url_for('admin-update-header') }}"
-                            hx-vals='{"admin_main_selector": "{{ event.id }}"}'
+                            hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
                             hx-swap="multi:#admin-header,#admin-content"
                             hx-indicator="#please-wait"
                     >
                         <i class="bi-caret-right-square-fill"></i> Ouvrir
                     </button>
-                    <a href="{{ url_for('render-event', event_id=event.id) }}" target="_blank">
+                    <a href="{{ url_for('render-event', event_uniq_id=event.uniq_id) }}" target="_blank">
                         <button class="btn btn-sm btn-info p-1"><i class="bi-share-fill"></i> Partager</button>
                     </a>
                 </td>

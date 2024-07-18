@@ -7,7 +7,7 @@ from typing import Iterator
 
 from common.config_reader import ConfigReader, TMP_DIR, EVENTS_PATH
 from common.logger import get_logger
-from data.chessevent_connection import ChessEventConnection, ChessEventConnectionBuilder
+from data.chessevent import ChessEvent, ChessEventBuilder
 from data.family import FamilyBuilder
 from data.rotator import Rotator, RotatorBuilder
 from data.screen import AScreen, ScreenBuilder
@@ -19,26 +19,26 @@ from database.sqlite import EventDatabase
 
 logger: Logger = get_logger()
 
-silent_event_ids: list[str] = []
+silent_event_uniq_ids: list[str] = []
 
 
 @total_ordering
 class Event:
-    def __init__(self, event_id: str, load_screens: bool):
-        self.id: str = event_id
+    def __init__(self, event_uniq_id: str, load_screens: bool):
+        self.uniq_id: str = event_uniq_id
         self.reader = ConfigReader(
-            EVENTS_PATH / f'{self.id}.ini',
-            TMP_DIR / 'events' / event_id / 'config' / f'{event_id}.ini.{os.getpid()}.read',
-            silent=self.id in silent_event_ids)
-        with EventDatabase(self.id, 'r') as self.database:
-            self.name: str = self.id
+            EVENTS_PATH / f'{self.uniq_id}.ini',
+            TMP_DIR / 'events' / event_uniq_id / 'config' / f'{event_uniq_id}.ini.{os.getpid()}.read',
+            silent=self.uniq_id in silent_event_uniq_ids)
+        with EventDatabase(self.uniq_id, 'r') as self.database:
+            self.name: str = self.uniq_id
             self.path: Path = Path('papi')
             self.css: str | None = None
             self.update_password: str | None = None
             self.record_illegal_moves: int = 0
             self.check_in_players: bool = False
             self.allow_deletion: bool = False
-            self.chessevent_connections: dict[str, ChessEventConnection] = {}
+            self.chessevents: dict[str, ChessEvent] = {}
             self.tournaments: dict[str, Tournament] = {}
             self.templates: dict[str, Template] = {}
             self.screens_by_family_id: dict[str, list[AScreen]] = {}
@@ -50,13 +50,13 @@ class Event:
             self._build_root()
             if self.reader.errors:
                 return
-            self.chessevent_connections = ChessEventConnectionBuilder(
+            self.chessevents = ChessEventBuilder(
                 self.reader
-            ).chessevent_connections
+            ).chessevents
             if self.reader.errors:
                 return
             self.tournaments = TournamentBuilder(
-                self.reader, self.database, self.id, self.path, self.chessevent_connections, self.record_illegal_moves
+                self.reader, self.database, self.uniq_id, self.path, self.chessevents, self.record_illegal_moves
             ).tournaments
             if self.reader.errors:
                 return
@@ -68,7 +68,7 @@ class Event:
                 if self.reader.errors:
                     return
                 self.screens = ScreenBuilder(
-                    self.reader, self.id, self.tournaments, self.templates, self.screens_by_family_id
+                    self.reader, self.uniq_id, self.tournaments, self.templates, self.screens_by_family_id
                 ).screens
                 if self.reader.errors:
                     return
@@ -93,15 +93,15 @@ class Event:
                         for screen_set in screen.sets
                     ]
                 self.set_file_dependencies(event_file_dependencies)
-            silent_event_ids.append(self.id)
+            silent_event_uniq_ids.append(self.uniq_id)
 
     @classmethod
-    def __get_event_file_dependencies_file(cls, event_id: str) -> Path:
-        return TMP_DIR / 'events' / event_id / 'event_file_dependencies.json'
+    def __get_event_file_dependencies_file(cls, event_uniq_id: str) -> Path:
+        return TMP_DIR / 'events' / event_uniq_id / 'event_file_dependencies.json'
 
     @classmethod
-    def get_event_file_dependencies(cls, event_id: str) -> list[Path]:
-        file_dependencies_file = cls.__get_event_file_dependencies_file(event_id)
+    def get_event_file_dependencies(cls, event_uniq_id: str) -> list[Path]:
+        file_dependencies_file = cls.__get_event_file_dependencies_file(event_uniq_id)
         try:
             with open(file_dependencies_file, 'r', encoding='utf-8') as f:
                 return [Path(file) for file in json.load(f)]
@@ -109,7 +109,7 @@ class Event:
             return []
 
     def set_file_dependencies(self, files: list[Path]):
-        file_dependencies_file = self.__get_event_file_dependencies_file(self.id)
+        file_dependencies_file = self.__get_event_file_dependencies_file(self.uniq_id)
         try:
             file_dependencies_file.parents[0].mkdir(parents=True, exist_ok=True)
             with open(file_dependencies_file, 'w', encoding='utf-8') as f:
@@ -155,7 +155,7 @@ class Event:
             self.reader.add_debug('option absente', section_key, key)
 
         key = 'name'
-        default_name = self.id
+        default_name = self.uniq_id
         try:
             self.name = section[key]
             if not self.name:
@@ -275,23 +275,23 @@ class Event:
 
     def __lt__(self, other: 'Event'):
         # p1 < p2 calls p1.__lt__(p2)
-        return self.id > other.id
+        return self.uniq_id > other.uniq_id
 
     def __eq__(self, other):
         # p1 == p2 calls p1.__eq__(p2)
         if not isinstance(self, Event):
             return NotImplemented
-        return self.id == other.id
+        return self.uniq_id == other.uniq_id
 
 
 def __get_events(load_screens: bool, with_tournaments_only: bool = False) -> dict[str, Event]:
     event_files: Iterator[Path] = EVENTS_PATH.glob('*.ini')
     events: dict[str, Event] = {}
     for event_file in event_files:
-        event_id: str = event_file.stem
-        event: Event = Event(event_id, load_screens)
+        event_uniq_id: str = event_file.stem
+        event: Event = Event(event_uniq_id, load_screens)
         if not with_tournaments_only or event.tournaments:
-            events[event.id] = event
+            events[event.uniq_id] = event
     return events
 
 
@@ -301,5 +301,5 @@ def get_events_sorted_by_name(load_screens: bool, with_tournaments_only: bool = 
         key=lambda event: event.name)
 
 
-def get_events_by_id(load_screens: bool, with_tournaments_only: bool = False) -> dict[str, Event]:
+def get_events_by_uniq_id(load_screens: bool, with_tournaments_only: bool = False) -> dict[str, Event]:
     return __get_events(load_screens, with_tournaments_only=with_tournaments_only)

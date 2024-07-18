@@ -1,5 +1,6 @@
 /* These lines ease debug on https://sqliteonline.com/ */
 DROP TABLE IF EXISTS `info`;
+DROP TABLE IF EXISTS `chessevent`;
 DROP TABLE IF EXISTS `tournament`;
 DROP TABLE IF EXISTS `illegal_move`;
 DROP TABLE IF EXISTS `result`;
@@ -9,6 +10,16 @@ CREATE TABLE `info` (
 );
 
 INSERT INTO `info`(`version`) VALUES('{version}');
+
+CREATE TABLE `chessevent` (
+    `id` INTEGER NOT NULL,
+    `uniq_id` TEXT NOT NULL,
+    `user_id` TEXT NOT NULL,
+    `password` TEXT NOT NULL,
+    `event_id` TEXT NOT NULL,
+    PRIMARY KEY(`id` AUTOINCREMENT),
+    UNIQUE(`uniq_id`)
+);
 
 CREATE TABLE `tournament` (
     `id` INTEGER NOT NULL,

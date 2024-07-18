@@ -1,0 +1,196 @@
+<div class="row">
+    <div class="col-10">
+        <h1>
+            <button
+                    class="btn btn-sm btn-primary"
+                    role="button"
+                    hx-post="{{ url_for('admin-update-header') }}"
+                    hx-vals='{"admin_main_selector": "@list-events"}'
+                    hx-swap="multi:#admin-header,#admin-content"
+                    hx-indicator="#please-wait"
+            >
+                <i class="bi-caret-left-square-fill"></i>
+            </button>
+            {{ admin_event.name }} - Configuration
+            <button
+                    class="btn btn-primary"
+                    hx-post="{{ url_for('admin-event-render-edit-modal') }}"
+                    hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container" >
+                <i class="bi-pencil-fill"></i> Modifier l'évènement
+            </button>
+        </h1>
+    </div>
+    <div class="col-2 d-flex justify-content-end">
+        <h1>
+            <button
+                    class="btn btn-danger"
+                    hx-post="{{ url_for('admin-event-render-delete-modal') }}"
+                    hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container" >
+                <i class="bi-trash-fill"></i> Supprimer l'évènement
+            </button>
+        </h1>
+    </div>
+</div>
+
+<table class="table border-black">
+    <thead class="table-dark">
+        <tr>
+            <th scope="col" class="text-nowrap">Information</th>
+            <th scope="col" class="text-nowrap">Valeur</th>
+            <th scope="col" class="width-100">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th scope="row" class="text-nowrap">Identifiant unique</th>
+            <td class="text-nowrap">{{ admin_event.uniq_id }}</td>
+            <td>
+                <button
+                        class="btn btn-sm btn-primary p-1"
+                        hx-post="{{ url_for('admin-event-render-edit-modal') }}"
+                        hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                        hx-target="#admin-modal-container"
+                        hx-swap="innerHTML"
+                        data-bs-toggle="modal"
+                        data-bs-target="#admin-modal-container" >
+                    <i class="bi-pencil-fill"></i> Éditer
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Fichier de configuration</th>
+            <td class="text-nowrap">{{ admin_event.ini_file }}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Nom</th>
+            <td class="text-nowrap">{{ admin_event.name }}</td>
+            <td>
+                <button
+                        class="btn btn-sm btn-primary p-1"
+                        hx-post="{{ url_for('admin-event-render-edit-modal') }}"
+                        hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                        hx-target="#admin-modal-container"
+                        hx-swap="innerHTML"
+                        data-bs-toggle="modal"
+                        data-bs-target="#admin-modal-container" >
+                    <i class="bi-pencil-fill"></i> Éditer
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Personnalisation CSS</th>
+            <td class="text-nowrap">{% if admin_event.css %}{{ admin_event.css }}{% else %}<em>Aucune</em>{% endif %}</td>
+            <td>
+                <button
+                        class="btn btn-sm btn-primary p-1"
+                        hx-post="{{ url_for('admin-event-render-edit-modal') }}"
+                        hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                        hx-target="#admin-modal-container"
+                        hx-swap="innerHTML"
+                        data-bs-toggle="modal"
+                        data-bs-target="#admin-modal-container" >
+                    <i class="bi-pencil-fill"></i> Éditer
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Mot de passe de saisie des scores</th>
+            <td class="text-nowrap">{% if admin_event.update_password %}********{% else %}<em>Aucun</em>{% endif %}</td>
+            <td>
+                <button
+                        class="btn btn-sm btn-primary p-1"
+                        hx-post="{{ url_for('admin-event-render-edit-modal') }}"
+                        hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                        hx-target="#admin-modal-container"
+                        hx-swap="innerHTML"
+                        data-bs-toggle="modal"
+                        data-bs-target="#admin-modal-container" >
+                    <i class="bi-pencil-fill"></i> Éditer
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Nombre maximum de coups illégaux enregistrés</th>
+            <td class="text-nowrap">{% if admin_event.record_illegal_moves %}{{ admin_event.record_illegal_moves }}{% else %}<em>Aucun</em>{% endif %}</td>
+            <td>
+                <button
+                        class="btn btn-sm btn-primary p-1"
+                        hx-post="{{ url_for('admin-event-render-edit-modal') }}"
+                        hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                        hx-target="#admin-modal-container"
+                        hx-swap="innerHTML"
+                        data-bs-toggle="modal"
+                        data-bs-target="#admin-modal-container" >
+                    <i class="bi-pencil-fill"></i> Éditer
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Suppression des résultats entrés sur les écrans de saisie</th>
+            <td class="text-nowrap">{% if admin_event.record_illegal_moves %}Oui{% else %}Non{% endif %}</td>
+            <td>
+                <button
+                        class="btn btn-sm btn-primary p-1"
+                        hx-post="{{ url_for('admin-event-render-edit-modal') }}"
+                        hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                        hx-target="#admin-modal-container"
+                        hx-swap="innerHTML"
+                        data-bs-toggle="modal"
+                        data-bs-target="#admin-modal-container" >
+                    <i class="bi-pencil-fill"></i> Éditer
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Connexions à ChessEvent</th>
+            <td class="text-nowrap">
+                {% if admin_event.chessevents|length %}{{ admin_event.chessevents|length }}{% else %}<em>Aucune</em>{% endif %}
+            </td>
+            <td>
+                <button
+                        class="btn btn-sm btn-primary p-1"
+                        hx-post="{{ url_for('admin-update-header') }}"
+                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@chessevents"}'
+                        hx-swap="multi:#admin-header,#admin-content"
+                        hx-indicator="#please-wait"
+                >
+                    {% if admin_event.tournaments|length %}
+                        <i class="bi-caret-right-square-fill"></i> Gérer les connexions
+                    {% else %}
+                        <i class="bi-plus-square-fill"></i> Créer une connexion
+                    {% endif %}
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Tournois</th>
+            <td class="text-nowrap">
+                {% if admin_event.tournaments|length %}{{ admin_event.tournaments|length }}{% else %}<em>Aucun</em>{% endif %}
+            </td>
+            <td>
+                <button
+                        class="btn btn-sm btn-primary p-1"
+                        hx-post="{{ url_for('admin-update-header') }}"
+                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@tournaments"}'
+                        hx-swap="multi:#admin-header,#admin-content"
+                        hx-indicator="#please-wait"
+                >
+                    {% if admin_event.tournaments|length %}
+                        <i class="bi-caret-right-square-fill"></i> Gérer les tournois
+                    {% else %}
+                        <i class="bi-plus-square-fill"></i> Créer un tournoi
+                    {% endif %}
+                </button>
+            </td>
+        </tr>
+    </tbody>
+</table>

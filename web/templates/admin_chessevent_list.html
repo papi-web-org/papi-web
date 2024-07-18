@@ -1,0 +1,68 @@
+<div class="row">
+    <div class="col-10">
+        <h1>
+            {{ admin_event.name }} - Connexions à ChessEvent
+        </h1>
+    </div>
+    <div class="col-2 d-flex justify-content-end">
+        <h1>
+            <button
+                    class="btn btn-primary"
+                    hx-post="{{ url_for('admin-chessevent-render-edit-modal') }}"
+                    hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait">
+                <i class="bi-plus-square-fill"></i> Créer une connexion ChessEvent
+            </button>
+        </h1>
+    </div>
+</div>
+
+<table class="table border-black">
+    <thead class="table-dark">
+        <tr>
+            <th scope="col" class="text-nowrap">Id</th>
+            <th scope="col" class="text-nowrap">Utilisateur</th>
+            <th scope="col" class="text-nowrap">Mot de passe</th>
+            <th scope="col" class="text-nowrap">Évènement</th>
+            <th scope="col" class="width-100"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for chessevent in admin_event.chessevents.values() %}
+            <tr>
+                <th scope="row" class="text-nowrap">{{ chessevent.uniq_id }}</th>
+                <td class="text-nowrap">{{ chessevent.user_id }}</td>
+                <td class="text-nowrap">{{ chessevent.password }}</td>
+                <td>{{ chessevent.event_uniq_id }}</td>
+                <td>
+                    <button
+                            class="btn btn-sm btn-primary p-1"
+                            hx-post="{{ url_for('admin-chessevent-render-edit-modal') }}"
+                            hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_chessevent_uniq_id": "{{ chessevent.uniq_id }}"}'
+                            hx-target="#admin-modal-container"
+                            hx-swap="innerHTML"
+                            data-bs-toggle="modal"
+                            data-bs-target="#admin-modal-container"
+                            hx-indicator="#please-wait" >
+                        <i class="bi-pencil-fill"></i> Éditer
+                    </button>
+                    <button
+                            class="btn btn-sm btn-danger p-1"
+                            hx-post="{{ url_for('admin-chessevent-render-delete-modal') }}"
+                            hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_chessevent_uniq_id": "{{ chessevent.uniq_id }}"}'
+                            hx-target="#admin-modal-container"
+                            hx-swap="innerHTML"
+                            data-bs-toggle="modal"
+                            data-bs-target="#admin-modal-container"
+                            hx-indicator="#please-wait" >
+                        <i class="bi-trash-fill"></i> Supprimer
+                    </button>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

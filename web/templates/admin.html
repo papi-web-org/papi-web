@@ -23,7 +23,7 @@ Papi-web
                             <option value="{{ option_value }}" {% if admin_main_selector == option_value %}selected{% endif %}>{{ option_text }}</option>
                         {% endfor %}
                         {% for event in events %}
-                            <option value="{{ event.id }}" {% if admin_event and admin_event.id == event.id %}selected{% endif %}>{{ event.name }}</option>
+                            <option value="{{ event.uniq_id }}" {% if admin_event and admin_event.uniq_id == event.uniq_id %}selected{% endif %}>{{ event.name }}</option>
                         {% endfor %}
                     </select>
                 </span>
@@ -54,30 +54,32 @@ Papi-web
     <div id="admin-content-wrapper" class="admin-content-wrapper p-1">
         <div id="admin-content" class="">
             {% if admin_main_selector == '' %}
-                {% include 'admin_configuration.html' %}
+                {% include 'admin_config.html' %}
             {% elif admin_main_selector == '@list-events' %}
-                {% include 'admin_events.html' %}
+                {% include 'admin_event_list.html' %}
             {% else %}{# admin_event is not None #}
                 {% if admin_event_selector == '' %}
-                    {% include 'admin_event_configuration.html' %}
+                    {% include 'admin_event_config.html' %}
+                {% elif admin_event_selector == '@chessevents' %}
+                    {% include 'admin_chessevent_list.html' %}
                 {% elif admin_event_selector == '@tournaments' %}
-                    {% include 'admin_event_tournaments.html' %}
+                    {% include 'admin_tournaments.html' %}
                 {% elif admin_event_selector == '@screens' %}
-                    {% include 'admin_event_screens.html' %}
+                    {% include 'admin_screens.html' %}
                 {% elif admin_event_selector == '@families' %}
-                    {% include 'admin_event_families.html' %}
+                    {% include 'admin_families.html' %}
                 {% elif admin_event_selector == '@rotators' %}
-                    {% include 'admin_event_rotators.html' %}
+                    {% include 'admin_rotators.html' %}
                 {% elif admin_event_selector == '@timers' %}
-                    {% include 'admin_event_timers.html' %}
+                    {% include 'admin_timers.html' %}
                 {% elif admin_event_selector == '@messages' %}
-                    {% include 'admin_event_messages.html' %}
+                    {% include 'admin_messages.html' %}
                 {% elif admin_event_selector == '@players' %}
-                    {% include 'admin_event_players.html' %}
+                    {% include 'admin_players.html' %}
                 {% elif admin_event_selector == '@check_in' %}
-                    {% include 'admin_event_check_in.html' %}
+                    {% include 'admin_check_in.html' %}
                 {% elif admin_event_selector == '@pairings' %}
-                    {% include 'admin_event_pairings.html' %}
+                    {% include 'admin_pairings.html' %}
                 {% endif %}
             {% endif %}
             <div id="admin-modal-container"

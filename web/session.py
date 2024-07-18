@@ -9,7 +9,7 @@ from data.event import Event
 class SessionHandler:
     @staticmethod
     def session_password_key(event: Event) -> str:
-        return 'auth-' + event.id
+        return 'auth-' + event.uniq_id
 
     @staticmethod
     def store_password(request: HTMXRequest, event: Event, password: str | None):
