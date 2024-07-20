@@ -42,7 +42,7 @@ class AdminChessEventController(AAdminController):
                     errors['chessevent_uniq_id'] = f'La connexion à ChessEvent [{chessevent_uniq_id}] existe déjà.'
         chessevent_user_id: str = data.get('chessevent_user_id', '')
         if not chessevent_user_id:
-            errors['chessevent_user_id'] = 'Veuillez entrer de l\'identifiant de connexion à ChessEvent.'
+            errors['chessevent_user_id'] = 'Veuillez entrer l\'identifiant de connexion à ChessEvent.'
         chessevent_password: str = data.get('chessevent_password', '')
         if not chessevent_password:
             errors['chessevent_password'] = 'Veuillez entrer le mot de passe de connexion à ChessEvent.'
