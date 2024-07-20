@@ -17,7 +17,7 @@ from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
 
-PAPI_WEB_VERSION: Version = Version('2.4rc1')
+PAPI_WEB_VERSION: Version = Version('2.4rc2')
 
 BOOTSTRAP_VERSION: Version = Version('5.3.3')
 JQUERY_VERSION: Version = Version('3.7.1')
