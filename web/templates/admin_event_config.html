@@ -5,10 +5,9 @@
                     class="btn btn-sm btn-primary"
                     role="button"
                     hx-post="{{ url_for('admin-update-header') }}"
-                    hx-vals='{"admin_main_selector": "@list-events"}'
+                    hx-vals='{"admin_main_selector": "@events"}'
                     hx-swap="multi:#admin-header,#admin-content"
-                    hx-indicator="#please-wait"
-            >
+                    hx-indicator="#please-wait">
                 <i class="bi-caret-left-square-fill"></i>
             </button>
             {{ admin_event.name }} - Configuration
@@ -19,7 +18,8 @@
                     hx-target="#admin-modal-container"
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"
-                    data-bs-target="#admin-modal-container" >
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait">
                 <i class="bi-pencil-fill"></i> Modifier l'évènement
             </button>
         </h1>
@@ -33,7 +33,8 @@
                     hx-target="#admin-modal-container"
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"
-                    data-bs-target="#admin-modal-container" >
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait">
                 <i class="bi-trash-fill"></i> Supprimer l'évènement
             </button>
         </h1>
@@ -60,7 +61,8 @@
                         hx-target="#admin-modal-container"
                         hx-swap="innerHTML"
                         data-bs-toggle="modal"
-                        data-bs-target="#admin-modal-container" >
+                        data-bs-target="#admin-modal-container"
+                        hx-indicator="#please-wait">
                     <i class="bi-pencil-fill"></i> Éditer
                 </button>
             </td>
@@ -81,7 +83,8 @@
                         hx-target="#admin-modal-container"
                         hx-swap="innerHTML"
                         data-bs-toggle="modal"
-                        data-bs-target="#admin-modal-container" >
+                        data-bs-target="#admin-modal-container"
+                        hx-indicator="#please-wait">
                     <i class="bi-pencil-fill"></i> Éditer
                 </button>
             </td>
@@ -97,7 +100,8 @@
                         hx-target="#admin-modal-container"
                         hx-swap="innerHTML"
                         data-bs-toggle="modal"
-                        data-bs-target="#admin-modal-container" >
+                        data-bs-target="#admin-modal-container"
+                        hx-indicator="#please-wait">
                     <i class="bi-pencil-fill"></i> Éditer
                 </button>
             </td>
@@ -113,7 +117,8 @@
                         hx-target="#admin-modal-container"
                         hx-swap="innerHTML"
                         data-bs-toggle="modal"
-                        data-bs-target="#admin-modal-container" >
+                        data-bs-target="#admin-modal-container"
+                        hx-indicator="#please-wait">
                     <i class="bi-pencil-fill"></i> Éditer
                 </button>
             </td>
@@ -129,7 +134,8 @@
                         hx-target="#admin-modal-container"
                         hx-swap="innerHTML"
                         data-bs-toggle="modal"
-                        data-bs-target="#admin-modal-container" >
+                        data-bs-target="#admin-modal-container"
+                        hx-indicator="#please-wait">
                     <i class="bi-pencil-fill"></i> Éditer
                 </button>
             </td>
@@ -145,7 +151,8 @@
                         hx-target="#admin-modal-container"
                         hx-swap="innerHTML"
                         data-bs-toggle="modal"
-                        data-bs-target="#admin-modal-container" >
+                        data-bs-target="#admin-modal-container"
+                        hx-indicator="#please-wait">
                     <i class="bi-pencil-fill"></i> Éditer
                 </button>
             </td>
@@ -161,8 +168,7 @@
                         hx-post="{{ url_for('admin-update-header') }}"
                         hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@chessevents"}'
                         hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait"
-                >
+                        hx-indicator="#please-wait">
                     {% if admin_event.tournaments|length %}
                         <i class="bi-caret-right-square-fill"></i> Gérer les connexions
                     {% else %}
@@ -182,8 +188,7 @@
                         hx-post="{{ url_for('admin-update-header') }}"
                         hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@tournaments"}'
                         hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait"
-                >
+                        hx-indicator="#please-wait">
                     {% if admin_event.tournaments|length %}
                         <i class="bi-caret-right-square-fill"></i> Gérer les tournois
                     {% else %}

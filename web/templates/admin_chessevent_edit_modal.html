@@ -8,7 +8,7 @@
             <div class="modal-header">
                 <h2 class="modal-title">
                     {% if admin_event %}
-                        Modification de la connexion ChessEvent [{{ admin_chessevent.uniq_id }}]
+                        Modification de la connexion à ChessEvent [{{ admin_chessevent.uniq_id }}]
                     {% else %}
                         Ajout d'une connexion ChessEvent
                     {% endif %}
@@ -46,7 +46,7 @@
                                 placeholder="Exemple : Z00000"
                                 value="{{ data[name] }}" />
                         <div id="{{ id }}-help" class="form-text">
-                          L'identification utilisée pour se connecter sur la plateforme ChessEvent.
+                          L'identifiant utilisée pour se connecter sur la plateforme ChessEvent.
                         </div>
                         {% if name in errors %}
                             <div id="{{ id }}-error" class="form-text invalid-feedback">

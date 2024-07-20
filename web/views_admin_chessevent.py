@@ -29,17 +29,17 @@ class AdminChessEventController(AAdminController):
             data = {}
         chessevent_uniq_id: str = data.get('chessevent_uniq_id', '')
         if not chessevent_uniq_id:
-            errors['chessevent_uniq_id'] = 'Veuillez entrer l\'identifiant de la connexion ChessEvent.'
+            errors['chessevent_uniq_id'] = 'Veuillez entrer l\'identifiant de la connexion à ChessEvent.'
         else:
             if admin_chessevent:
                 if (chessevent_uniq_id != admin_chessevent.uniq_id
                         and chessevent_uniq_id in admin_event.chessevents):
                     errors['chessevent_uniq_id'] = \
-                        (f'Une autre connexion ChessEvent avec l\'identifiant [{chessevent_uniq_id}] '
+                        (f'Une autre connexion à ChessEvent avec l\'identifiant [{chessevent_uniq_id}] '
                          f'existe déjà.')
             else:
                 if chessevent_uniq_id in admin_event.chessevents:
-                    errors['chessevent_uniq_id'] = f'La connexion ChessEvent [{chessevent_uniq_id}] existe déjà.'
+                    errors['chessevent_uniq_id'] = f'La connexion à ChessEvent [{chessevent_uniq_id}] existe déjà.'
         chessevent_user_id: str = data.get('chessevent_user_id', '')
         if not chessevent_user_id:
             errors['chessevent_user_id'] = 'Veuillez entrer de l\'identifiant de connexion à ChessEvent.'
@@ -100,7 +100,7 @@ class AdminChessEventController(AAdminController):
                     'chessevent_event_id': admin_chessevent.event_id,
                 }
             except KeyError:
-                Message.error(request, f'La connexion ChessEvent [{admin_chessevent_uniq_id}] est introuvable.')
+                Message.error(request, f'La connexion à ChessEvent [{admin_chessevent_uniq_id}] est introuvable.')
                 return self._render_messages(request)
         else:
             data: dict[str, str] = {}
@@ -132,7 +132,7 @@ class AdminChessEventController(AAdminController):
                 admin_chessevent = admin_event.chessevents[
                     admin_chessevent_uniq_id]
             except KeyError:
-                Message.error(request, f'La connexion ChessEvent [{admin_chessevent_uniq_id}] est introuvable.')
+                Message.error(request, f'La connexion à ChessEvent [{admin_chessevent_uniq_id}] est introuvable.')
                 return self._render_messages(request)
         errors: dict[str, str] = self._admin_validate_chessevent_update_data(
             admin_event, admin_chessevent, data)
@@ -152,7 +152,7 @@ class AdminChessEventController(AAdminController):
             #     request, events, admin_event=admin_event, admin_chessevent=admin_chessevent)
             Message.error(
                 request,
-                f'La modification des connexions ChessEvent par l\'interface web n\'est pas encore implémentée.')
+                f'La modification des connexions à ChessEvent par l\'interface web n\'est pas encore implémentée.')
         else:
             # TODO Create the ChessEvent
             # admin_chessevent: ChessEvent = CREATE_CHESSEVENT(data)
@@ -162,7 +162,7 @@ class AdminChessEventController(AAdminController):
             # return _admin_render_index(
             #     request, events, admin_event=admin_event, admin_chessevent=admin_chessevent)
             Message.error(request,
-                          f'La création des évènements par l\'interface web n\'est pas encore implémentée.')
+                          f'La création des connexions à ChessEvent par l\'interface web n\'est pas encore implémentée.')
         return self._admin_render_index(
             request, events, admin_event=admin_event, admin_event_selector='@chessevents')
 
@@ -176,7 +176,7 @@ class AdminChessEventController(AAdminController):
             data = {}
         chessevent_uniq_id: str = data.get('chessevent_uniq_id', '')
         if not chessevent_uniq_id:
-            errors['chessevent_uniq_id'] = 'Veuillez entrer l\'identifiant de la connexion ChessEvent.'
+            errors['chessevent_uniq_id'] = 'Veuillez entrer l\'identifiant de la connexion à ChessEvent.'
         elif chessevent_uniq_id != admin_chessevent.uniq_id:
             errors['chessevent_uniq_id'] = f'L\'identifiant entré n\'est pas valide.'
         return errors
@@ -224,7 +224,7 @@ class AdminChessEventController(AAdminController):
             errors: dict[str, str] = self._admin_validate_chessevent_delete_data(admin_chessevent, data)
             return self._admin_chessevent_render_delete_modal(admin_event, admin_chessevent, data, errors)
         except KeyError:
-            Message.error(request, f'La connexion ChessEvent [{admin_chessevent_uniq_id}] est introuvable.')
+            Message.error(request, f'La connexion à ChessEvent [{admin_chessevent_uniq_id}] est introuvable.')
             return self._render_messages(request)
 
     @post(
@@ -249,7 +249,7 @@ class AdminChessEventController(AAdminController):
         try:
             admin_chessevent: ChessEvent = admin_event.chessevents[admin_chessevent_uniq_id]
         except KeyError:
-            Message.error(request, f'La connexion ChessEvent [{admin_chessevent_uniq_id}] est introuvable.')
+            Message.error(request, f'La connexion à ChessEvent [{admin_chessevent_uniq_id}] est introuvable.')
             return self._render_messages(request)
         errors: dict[str, str] = self._admin_validate_chessevent_delete_data(admin_chessevent, data)
         if errors:
@@ -260,6 +260,6 @@ class AdminChessEventController(AAdminController):
         #     request, f'La connexion ChessEvent [{admin_chessevent.uniq_id}] a été supprimée.')
         # del admin_event.chessevents[admin_chessevent.uniq_id]
         Message.error(request,
-                      f'La suppression des connexions ChessEvent par l\'interface web n\'est pas encore implémentée.')
+                      f'La suppression des connexions à ChessEvent par l\'interface web n\'est pas encore implémentée.')
         events: list[Event] = sorted(events_by_id.values(), key=lambda event: event.name)
         return self._admin_render_index(request, events, admin_event=admin_event, admin_event_selector='@chessevents')

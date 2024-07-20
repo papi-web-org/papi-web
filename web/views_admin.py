@@ -36,7 +36,7 @@ class AAdminController(AController):
             'messages': Message.messages(request),
             'admin_main_selector_options': {
                 '': '-- Configuration de Papi-web',
-                '@list-events': '-- Liste des évènements',
+                '@events': '-- Liste des évènements',
             },
             'admin_main_selector': admin_event.uniq_id if admin_event else admin_main_selector,
             'admin_event': admin_event,
@@ -76,20 +76,20 @@ class AdminController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        error: str
-        events_by_id = get_events_by_uniq_id(load_screens=False, with_tournaments_only=False)
-        events: list[Event] = sorted(events_by_id.values(), key=lambda event: event.name)
         admin_main_selector: str = data.get('admin_main_selector', '')
         admin_event_selector: str = data.get('admin_event_selector', '')
         admin_event: Event | None = None
-        try:
-            if admin_main_selector == '':
-                pass
-            elif admin_main_selector == '@list-events':
-                pass
-            elif admin_main_selector:
-                admin_event: Event = events_by_id[admin_main_selector]
-            return self._admin_render_index(request, events, admin_main_selector, admin_event, admin_event_selector)
-        except KeyError:
-            Message.error(request, f'Évènement [{admin_main_selector}] introuvable')
-        return self._render_messages(request)
+        load_screens: bool = admin_main_selector == '@events'
+        events_by_id = get_events_by_uniq_id(load_screens=load_screens, with_tournaments_only=False)
+        if not admin_main_selector:
+            pass
+        elif admin_main_selector == '@events':
+            pass
+        else:
+            try:
+                admin_event = events_by_id[admin_main_selector]
+            except KeyError:
+                Message.error(request, f'Évènement [{admin_main_selector}] introuvable')
+                return self._render_messages(request)
+        events: list[Event] = sorted(events_by_id.values(), key=lambda event: event.name)
+        return self._admin_render_index(request, events, admin_main_selector, admin_event, admin_event_selector)

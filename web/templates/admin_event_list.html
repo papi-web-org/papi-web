@@ -38,8 +38,7 @@
                         hx-post="{{ url_for('admin-update-header') }}"
                         hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
                         hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait"
-                >
+                        hx-indicator="#please-wait">
                     {{ event.name }}
                 </th>
                 <td
@@ -48,8 +47,7 @@
                         hx-post="{{ url_for('admin-update-header') }}"
                         hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
                         hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait"
-                >
+                        hx-indicator="#please-wait">
                     <i class="bi-people-fill" ></i>&nbsp;{{ event.tournaments|length }} tournoi{% if event.tournaments|length > 1 %}s{% endif %}
                     <i class="bi-arrows-fullscreen" ></i>&nbsp;{{ event.screens|length }} écran{% if event.screens|length > 1 %}s{% endif %}
                     <i class="bi-repeat" ></i>&nbsp;{{ event.rotators|length }} écran{% if event.rotators|length > 1 %}s{% endif %} rotatif{% if event.rotators|length > 1 %}s{% endif %}
@@ -62,8 +60,7 @@
                             hx-post="{{ url_for('admin-update-header') }}"
                             hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
                             hx-swap="multi:#admin-header,#admin-content"
-                            hx-indicator="#please-wait"
-                    >
+                            hx-indicator="#please-wait">
                         <i class="bi-chat-fill" ></i>&nbsp;{{ messages_len }} message{% if messages_len > 1 %}s{% endif %}&nbsp;:&nbsp;&nbsp;<i class="bi-bug" ></i>&nbsp;{{ event.errors|length }}&nbsp;&nbsp;<i class="bi-exclamation-triangle" ></i>&nbsp;{{ event.warnings|length }}&nbsp;&nbsp;<i class="bi-info-circle" ></i>&nbsp;{{ event.infos|length }}
                     </td>
                 {% endwith %}
@@ -73,8 +70,7 @@
                             hx-post="{{ url_for('admin-update-header') }}"
                             hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
                             hx-swap="multi:#admin-header,#admin-content"
-                            hx-indicator="#please-wait"
-                    >
+                            hx-indicator="#please-wait">
                         <i class="bi-caret-right-square-fill"></i> Ouvrir
                     </button>
                     <a href="{{ url_for('render-event', event_uniq_id=event.uniq_id) }}" target="_blank">

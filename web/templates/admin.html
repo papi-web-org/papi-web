@@ -18,7 +18,7 @@ Papi-web
                         hx-post="{{ url_for('admin-update-header') }}"
                         hx-swap="multi:#admin-header,#admin-content"
                         class="form-select form-select-sm"
-                    >
+                        hx-indicator="#please-wait">
                         {% for option_value, option_text in admin_main_selector_options.items() %}
                             <option value="{{ option_value }}" {% if admin_main_selector == option_value %}selected{% endif %}>{{ option_text }}</option>
                         {% endfor %}
@@ -36,7 +36,7 @@ Papi-web
                             hx-post="{{ url_for('admin-update-header') }}"
                             hx-swap="multi:#admin-header,#admin-content"
                             class="form-select form-select-sm"
-                        >
+                            hx-indicator="#please-wait">
                             {% for option_value, option_text in admin_event_selector_options.items() %}
                                 <option value="{{ option_value }}" {% if admin_event_selector == option_value %}selected{% endif %}>{{ option_text }}</option>
                             {% endfor %}
@@ -55,7 +55,7 @@ Papi-web
         <div id="admin-content" class="">
             {% if admin_main_selector == '' %}
                 {% include 'admin_config.html' %}
-            {% elif admin_main_selector == '@list-events' %}
+            {% elif admin_main_selector == '@events' %}
                 {% include 'admin_event_list.html' %}
             {% else %}{# admin_event is not None #}
                 {% if admin_event_selector == '' %}

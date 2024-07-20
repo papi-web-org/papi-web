@@ -142,7 +142,7 @@ class AdminEventController(AAdminController):
             events: list[Event] = sorted(events_by_id.values(), key=lambda event: event.name)
             # return _admin_render_index(request, events, admin_event=admin_event)
             Message.error(request, f'La création des évènements par l\'interface web n\'est pas encore implémentée.')
-            return self._admin_render_index(request, events, admin_main_selector='@list-events')
+            return self._admin_render_index(request, events, admin_main_selector='@events')
 
     @staticmethod
     def _admin_validate_event_delete_data(
@@ -218,4 +218,4 @@ class AdminEventController(AAdminController):
         # del events_by_id[admin_event.uniq_uniq_id]
         Message.error(request, f'La suppression des évènements par l\'interface web n\'est pas encore implémentée.')
         events: list[Event] = sorted(events_by_id.values(), key=lambda event: event.name)
-        return self._admin_render_index(request, events, admin_main_selector='@list-events')
+        return self._admin_render_index(request, events, admin_main_selector='@events')

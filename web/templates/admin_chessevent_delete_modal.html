@@ -7,16 +7,16 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">
-                    Suppression de la connexion ChessEvent [{{ admin_chessevent.uniq_id }}]
+                    Suppression de la connexion à ChessEvent [{{ admin_chessevent.uniq_id }}]
                 </h2>
             </div>
             <div class="modal-body">
                 <h2 class="text-danger">
-                    Attention : la suppression d'une connexion ChessEvent est définitive !
+                    Attention : la suppression d'une connexion à ChessEvent est définitive !
                 </h2>
                 {% with id='chessevent-uniq-id', name='chessevent_uniq_id' %}
                     <div>
-                        <label for="{{ id }}" class="form-label">Entrez l'identifiant de la connexion ChessEvent pour confirmer sa suppression :</label>
+                        <label for="{{ id }}" class="form-label">Entrez l'identifiant de la connexion à ChessEvent pour confirmer sa suppression :</label>
                         <input
                                 name="{{ name }}"
                                 type="text" id="{{ id }}"
