@@ -14,7 +14,7 @@
                         {% if not board.result_str %}delete{% endif %}"
                     hx-target="closest tr"
                     hx-swap="outerHTML transition:true"
-                    hx-delete="{{ url_for('delete-player-illegal-move', event_id=event.id, tournament_uniq_id=tournament.uniq_id, player_id=player.id, screen_id=screen.id) }}"
+                    hx-delete="{{ url_for('delete-player-illegal-move', event_uniq_id=event.uniq_id, tournament_uniq_id=tournament.uniq_id, player_id=player.id, screen_id=screen.id) }}"
                     hx-indicator="#please-wait"
                 ></i>
             </span>
@@ -25,7 +25,7 @@
                     class="bi-flag illegal-move-flag add player-{{ tournament.uniq_id }}-{{ player.id }}"
                     hx-target="closest tr"
                     hx-swap="outerHTML transition:true"
-                    hx-put="{{ url_for('put-player-illegal-move', event_id=event.id, tournament_uniq_id=tournament.uniq_id, player_id=player.id, screen_id=screen.id) }}"
+                    hx-put="{{ url_for('put-player-illegal-move', event_uniq_id=event.uniq_id, tournament_uniq_id=tournament.uniq_id, player_id=player.id, screen_id=screen.id) }}"
                     hx-indicator="#please-wait"
                 ></i>
             </span>

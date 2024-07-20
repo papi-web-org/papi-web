@@ -1,8 +1,3 @@
-{#
-Context:
-- event
-- login_needed
-#}
 {% if login_needed %}
 <div
         id="login-modal"
@@ -15,23 +10,23 @@ Context:
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="login-modal-label">Veuillez entrer le code d'accès à l'interface de saisie des résultats :</h5>
+                <h2 class="modal-title" id="login-modal-label">Veuillez entrer le code d'accès à l'interface de saisie des résultats :</h2>
             </div>
             <div class="modal-body">
                 <form
-                        hx-post="{{ url_for('login', event_id=event.id) }}"
+                        hx-post="{{ url_for('login', event_uniq_id=event.uniq_id) }}"
                         hx-target="#login-modal"
                         hx-swap="outerHTML"
                 >
                     <div class="mb-3">
-                        <label for="event-id" class="form-label">Évènement</label>
-                        <input type="text" class="form-control" id="event-id" aria-describedby="event-id-help" value="{{ event.id }}" disabled>
-                        <div id="event-id-help" class="form-text">Veuillez vous rapprocher de l'organisateur pour obtenir le code d'accès.</div>
+                        <label for="event-uniq-id" class="form-label">Évènement</label>
+                        <input type="text" class="form-control" id="event-uniq-id" aria-describedby="event-uniq-id-help" value="{{ event.uniq_id }}" disabled>
+                        <div id="event-uniq-id-help" class="form-text">Veuillez vous rapprocher de l'organisateur pour obtenir le code d'accès.</div>
                     </div>
                     <div class="mb-3">
                         <label for="event-password" class="form-label">Password</label>
                         <input type="password" class="form-control" id="event-password" aria-describedby="event-password-help" name="password">
-                        <div id="event-password-help" class="form-text">Entrez ici le code d'accès défini dans le fichier events/{{ event.id }}.ini.</div>
+                        <div id="event-password-help" class="form-text">Entrez ici le code d'accès défini dans le fichier events/{{ event.uniq_id }}.ini.</div>
                     </div>
                     <button type="submit" class="btn btn-primary">Connexion</button>
                 </form>

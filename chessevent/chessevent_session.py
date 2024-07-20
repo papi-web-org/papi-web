@@ -21,9 +21,9 @@ class ChessEventSession(Session):
         url: str = CHESSEVENT_URL
         try:
             post: dict[str, str] = {
-                'user_id': self._tournament.chessevent_connection.user_id,
-                'password': self._tournament.chessevent_connection.password,
-                'event_id': self._tournament.chessevent_connection.event_id,
+                'user_id': self._tournament.chessevent.user_id,
+                'password': self._tournament.chessevent.password,
+                'event_id': self._tournament.chessevent.event_id,
                 'tournament_name': self._tournament.chessevent_tournament_name,
             }
             chessevent_string: str = (f'{post["user_id"]}:{"*" * 8}'

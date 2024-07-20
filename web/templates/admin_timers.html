@@ -1,8 +1,4 @@
-{#
-Context:
-- manage_event
-#}
-<h1>{{ manage_event.name }} - Chronomètre</h1>
+<h1>{{ admin_event.name }} - Chronomètre</h1>
 <table class="table border-black">
     <thead class="table-dark">
         <tr>
@@ -13,7 +9,7 @@ Context:
         </tr>
     </thead>
     <tbody>
-        {% for hour in manage_event.timer.hours %}
+        {% for hour in admin_event.timer.hours %}
             <tr>
                 <th scope="row">{{ hour.id }}</th>
                 <td>{{ hour.datetime_str }}</td>

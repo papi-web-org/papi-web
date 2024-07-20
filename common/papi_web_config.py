@@ -19,10 +19,10 @@ logger: Logger = get_logger()
 
 PAPI_WEB_VERSION: Version = Version('2.4rc1')
 
-BOOTSTRAP_VERSION: str = '5.3.3'
-JQUERY_VERSION: str = '3.7.1'
-HTMX_VERSION: str = '1.9.12'
-BOOTSTRAP_ICONS_VERSION: str = '1.11.3'
+BOOTSTRAP_VERSION: Version = Version('5.3.3')
+JQUERY_VERSION: Version = Version('3.7.1')
+HTMX_VERSION: Version = Version('1.9.12')
+BOOTSTRAP_ICONS_VERSION: Version = Version('1.11.3')
 
 
 PAPI_WEB_URL = 'https://github.com/papi-web-org/papi-web'
@@ -164,20 +164,48 @@ class PapiWebConfig:
         return self.__ffe_upload_delay
 
     @property
-    def litestar_version(self) -> str:
+    def version(self) -> Version:
+        return PAPI_WEB_VERSION
+
+    @property
+    def url(self) -> str:
+        return PAPI_WEB_URL
+
+    @property
+    def copyright(self) -> str:
+        return PAPI_WEB_COPYRIGHT
+
+    @property
+    def litestar_version(self) -> Version:
         return litestar.__version__.formatted(short=True)
 
     @property
-    def jinja2_version(self) -> str:
+    def jinja2_version(self) -> Version:
         return jinja2.__version__
 
     @property
-    def uvicorn_version(self) -> str:
+    def uvicorn_version(self) -> Version:
         return uvicorn.__version__
 
     @property
-    def pyodbc_version(self) -> str:
-        return pyodbc.version
+    def pyodbc_version(self) -> Version:
+        return Version(pyodbc.version)
+
+    @property
+    def bootstrap_version(self) -> Version:
+        return BOOTSTRAP_VERSION
+
+    @property
+    def bootstrap_icons_version(self) -> Version:
+        return BOOTSTRAP_ICONS_VERSION
+
+    @property
+    def htmx_version(self) -> Version:
+        return HTMX_VERSION
+
+    @property
+    def jquery_version(self) -> Version:
+        return JQUERY_VERSION
 
     def __url(self, ip: str | None) -> str | None:
         if ip is None:

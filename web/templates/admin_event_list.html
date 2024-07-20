@@ -1,0 +1,83 @@
+<div class="row">
+    <div class="col-10">
+        <h1>
+            Évènements
+        </h1>
+    </div>
+    <div class="col-2 d-flex justify-content-end">
+        <h1>
+            <button
+                    class="btn btn-primary"
+                    hx-post="{{ url_for('admin-event-render-edit-modal') }}"
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait">
+                <i class="bi-plus-square-fill"></i> Créer un évènement
+            </button>
+        </h1>
+    </div>
+</div>
+<table class="table table-striped table-sm table-hover border-black">
+    <thead class="table-dark position-sticky top-0">
+        <tr>
+            <th scope="col" class="text-nowrap">Nom</th>
+            <th scope="col">Évènement</th>
+            <th scope="col">Messages</th>
+            <th scope="col">&nbsp;</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for event in events %}
+            <tr>
+                <th
+                        scope="row"
+                        class="text-nowrap"
+                        role="button"
+                        hx-post="{{ url_for('admin-update-header') }}"
+                        hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
+                        hx-swap="multi:#admin-header,#admin-content"
+                        hx-indicator="#please-wait">
+                    {{ event.name }}
+                </th>
+                <td
+                        class="text-nowrap"
+                        role="button"
+                        hx-post="{{ url_for('admin-update-header') }}"
+                        hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
+                        hx-swap="multi:#admin-header,#admin-content"
+                        hx-indicator="#please-wait">
+                    <i class="bi-people-fill" ></i>&nbsp;{{ event.tournaments|length }} tournoi{% if event.tournaments|length > 1 %}s{% endif %}
+                    <i class="bi-arrows-fullscreen" ></i>&nbsp;{{ event.screens|length }} écran{% if event.screens|length > 1 %}s{% endif %}
+                    <i class="bi-repeat" ></i>&nbsp;{{ event.rotators|length }} écran{% if event.rotators|length > 1 %}s{% endif %} rotatif{% if event.rotators|length > 1 %}s{% endif %}
+                    <i class="bi-calendar2-event-fill" ></i>&nbsp;{% if event.timer %}{{ event.timer.hours|length }}{% else %}0{% endif %} horaire{% if event.timer %}{% if event.timer.hours|length > 1 %}s{% endif %}{% endif %}
+                </td>
+                {% with messages_len=event.errors|length + event.warnings|length + event.infos|length %}
+                    <td
+                            class="text-nowrap"
+                            role="button"
+                            hx-post="{{ url_for('admin-update-header') }}"
+                            hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
+                            hx-swap="multi:#admin-header,#admin-content"
+                            hx-indicator="#please-wait">
+                        <i class="bi-chat-fill" ></i>&nbsp;{{ messages_len }} message{% if messages_len > 1 %}s{% endif %}&nbsp;:&nbsp;&nbsp;<i class="bi-bug" ></i>&nbsp;{{ event.errors|length }}&nbsp;&nbsp;<i class="bi-exclamation-triangle" ></i>&nbsp;{{ event.warnings|length }}&nbsp;&nbsp;<i class="bi-info-circle" ></i>&nbsp;{{ event.infos|length }}
+                    </td>
+                {% endwith %}
+                <td class="text-end">
+                    <button
+                            class="btn btn-sm btn-primary p-1"
+                            hx-post="{{ url_for('admin-update-header') }}"
+                            hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
+                            hx-swap="multi:#admin-header,#admin-content"
+                            hx-indicator="#please-wait">
+                        <i class="bi-caret-right-square-fill"></i> Ouvrir
+                    </button>
+                    <a href="{{ url_for('render-event', event_uniq_id=event.uniq_id) }}" target="_blank">
+                        <button class="btn btn-sm btn-info p-1"><i class="bi-share-fill"></i> Partager</button>
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

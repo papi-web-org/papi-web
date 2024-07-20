@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-{% if screen.menu_label %}{{ screen.menu_label }}{% else %}{{ screen.id }}{% endif %} ({{ event.id }})
+{% if screen.menu_label %}{{ screen.menu_label }}{% else %}{{ screen.id }}{% endif %} ({{ event.uniq_id }})
 {% endblock title %}
 
 {% block page_title %}{% endblock page_title %}
@@ -33,7 +33,7 @@
         {% if rotator %}
             <div
                 class="rotator-updater"
-                hx-get="{{ url_for('render-rotator-screen', event_id=event.id, rotator_id=rotator.id, rotator_screen_index=rotator_screen_index + 1) }}"
+                hx-get="{{ url_for('render-rotator-screen', event_uniq_id=event.uniq_id, rotator_id=rotator.id, rotator_screen_index=rotator_screen_index + 1) }}"
                 hx-target="body"
                 hx-trigger="every {{ rotator.delay }}s"
                 hx-indicator="#please-wait"
@@ -41,7 +41,7 @@
         {% else %}
             <div
                 class="screen-updater"
-                hx-get="{{ url_for('render-screen-if-updated', event_id=event.id, screen_id=screen.id, date=now) }}"
+                hx-get="{{ url_for('render-screen-if-updated', event_uniq_id=event.uniq_id, screen_id=screen.id, date=now) }}"
                 hx-target="body"
                 hx-trigger="every 5s"
                 hx-indicator="#please-wait"
@@ -50,7 +50,7 @@
         {% if screen.menu_screens %}
             <div id="#menu" class="menu">
                 {% for entry in screen.menu_screens %}
-                    <a href="{{ url_for('render-screen', event_id=event.id, screen_id=entry.id) }}" class="menu-item {% if screen.id == entry.id %}selected{% endif %}">{{ entry.menu_label }}</a>
+                    <a href="{{ url_for('render-screen', event_uniq_id=event.uniq_id, screen_id=entry.id) }}" class="menu-item {% if screen.id == entry.id %}selected{% endif %}">{{ entry.menu_label }}</a>
                 {% endfor %}
             </div>
         {% endif %}

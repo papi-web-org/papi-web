@@ -1,8 +1,4 @@
-{#
-Context:
-- manage_event
-#}
-<h1>{{ manage_event.name }} - Écrans</h1>
+<h1>{{ admin_event.name }} - Écrans</h1>
 <table class="table border-black">
     <thead class="table-dark">
         <tr>
@@ -16,10 +12,10 @@ Context:
         </tr>
     </thead>
     <tbody>
-        {% for screen in manage_event.screens.values() %}
+        {% for screen in admin_event.screens.values() %}
             <tr>
                 <th scope="row">{{ screen.id }}</th>
-                <td><a href="{{ url_for('render-screen', event_id=manage_event.id, screen_id=screen.id) }}" target="_blank">{{ screen.name }}</a></td>
+                <td><a href="{{ url_for('render-screen', event_uniq_id=admin_event.uniq_id, screen_id=screen.id) }}" target="_blank">{{ screen.name }}</a></td>
                 <td><i class="{{ screen.icon_str }}"></i>&nbsp;{{ screen.type_str }}{% if screen.record_illegal_moves %}&nbsp;{% for _ in range(screen.record_illegal_moves) %}<i class="bi-flag-fill"></i>{% endfor %}{% endif %}</td>
                 <td>{% if screen.type == 'results' %}{% if screen.limit %}{{ screen.limit }} max.{% else %}Tous{% endif %}{% else %}{{ screen.sets_str }}{% endif %}</td>
                 <td>{{ screen.columns }}</td>

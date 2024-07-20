@@ -1,73 +1,66 @@
-{#
-Context:
-- papi_web_info
-- papi_web_config
-- odbc_drivers
-- access_driver
-#}
 <h1>Configuration de Papi-web</h1>
 <table class="table table-striped table-sm table-hover border-black">
-    <thead class="table-dark">
+    <thead class="table-dark position-sticky top-0">
         <tr>
-            <th scope="col">Configuration</th>
-            <th scope="col">Valeur</th>
+            <th scope="col" class="text-nowrap">Configuration</th>
+            <th scope="col" class="width-100">Valeur</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <th scope="row">Port</th>
+            <th scope="row" class="text-nowrap">Port</th>
             <td>{{ papi_web_config.web_port }}</td>
         </tr>
         <tr>
-            <th scope="row">Accès depuis le serveur Papi-web</th>
+            <th scope="row" class="text-nowrap">Accès depuis le serveur Papi-web</th>
             <td><a href="{{ papi_web_config.local_url }}" target="_blank">{{ papi_web_config.local_url }}</a></td>
         </tr>
         <tr>
-            <th scope="row">Accès depuis le réseau local (LAN/WAN)</th>
+            <th scope="row" class="text-nowrap">Accès depuis le réseau local (LAN/WAN)</th>
             <td>{% if papi_web_config.lan_url %}<a href="{{ papi_web_config.lan_url }}" target="_blank">{{ papi_web_config.lan_url }}</a>{% else %}<em>-</em>{% endif %}</td>
         </tr>
         <tr>
-            <th scope="row">Lancement du navigateur au démarrage du serveur</th>
+            <th scope="row" class="text-nowrap">Lancement du navigateur au démarrage du serveur</th>
             <td>{% if papi_web_config.web_launch_browser %}Oui{% else %}<em>Non</em>{% endif %}</td>
         </tr>
         <tr>
-            <th scope="row">Version de Papi-web</th>
-            <td>{{ papi_web_info['version'] }}</td>
+            <th scope="row" class="text-nowrap">Version de Papi-web</th>
+            <td>{{ papi_web_config['version'] }}</td>
         </tr>
         <tr>
-            <th scope="row">Version de Uvicorn</th>
+            <th scope="row" class="text-nowrap">Version de Uvicorn</th>
             <td>{{ papi_web_config.uvicorn_version }}</td>
         </tr>
         <tr>
-            <th scope="row">Version de LiteStar</th>
+            <th scope="row" class="text-nowrap">Version de LiteStar</th>
             <td>{{ papi_web_config.litestar_version }}</td>
         </tr>
         <tr>
-            <th scope="row">Version de Jinja2</th>
+            <th scope="row" class="text-nowrap">Version de Jinja2</th>
             <td>{{ papi_web_config.jinja2_version }}</td>
         </tr>
         <tr>
-            <th scope="row">Version de HTMX</th>
+            <th scope="row" class="text-nowrap">Version de HTMX</th>
             <td id="htmx-version"></td>
         </tr>
         <tr>
-            <th scope="row">Version de jQuery</th>
+            <th scope="row" class="text-nowrap">Version de jQuery</th>
             <td id="jquery-version"></td>
         </tr>
         <tr>
-            <th scope="row">Version de Bootstrap</th>
+            <th scope="row" class="text-nowrap">Version de Bootstrap</th>
             <td id="bootstrap-version"></td>
         </tr>
         <tr>
-            <th scope="row">Version de PyODBC</th>
+            <th scope="row" class="text-nowrap">Version de PyODBC</th>
             <td>{{ papi_web_config.pyodbc_version }}</td>
         </tr>
         <tr>
-            <th scope="row">Pilote Access</th>
-            <td>{{ access_driver }} ({% if access_driver not in odbc_drivers %}présent{% else %}introuvable{% endif %})</td>
+            <th scope="row" class="text-nowrap">Pilote Access ({% if access_driver in odbc_drivers %}présent{% else %}introuvable{% endif %})</th>
+            <td>{{ access_driver }}</td>
         </tr>
         <tr>
-            <th scope="row">
+            <th scope="row" class="text-nowrap">
                 Autres pilotes ODBC trouvés sur le serveur
             </th>
             <td>

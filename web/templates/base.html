@@ -47,7 +47,7 @@
         {% endblock %}
         <div id="copyright-wrapper" class="copyright-wrapper">
             <div id="copyright" class="copyright">
-                Papi-web {{ papi_web_info.version }} - {{ papi_web_info.copyright }} - <a href="{{ papi_web_info.url }}" rel = "noopener noreferrer" target="_blank">{{ papi_web_info.url }}</a>
+                Papi-web {{ papi_web_config.version }} - {{ papi_web_config.copyright }} - <a href="{{ papi_web_config.url }}" rel = "noopener noreferrer" target="_blank">{{ papi_web_config.url }}</a>
             </div>
         </div>
 	    <div id="please-wait-wrapper">
@@ -57,6 +57,8 @@
             class="modal modal-blur fade"
             style="display: none"
             aria-hidden="false"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false"
             tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
                 <div class="modal-content"></div>

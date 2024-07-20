@@ -25,7 +25,7 @@ DEFAULT_SHOW_UNPAIRED: bool = False
 
 @dataclass
 class AScreen:
-    event_id: str
+    event_uniq_id: str
     id: str
     family_id: str | None
     _name: str
@@ -76,13 +76,12 @@ class AScreen:
         return []
 
     @classmethod
-    def __get_screen_file_dependencies_file(cls, event_id: str, screen_id: str) -> Path:
-        return TMP_DIR / 'events' / event_id / 'screen_file_dependencies' / f'{screen_id}.json'
+    def __get_screen_file_dependencies_file(cls, event_uniq_id: str, screen_id: str) -> Path:
+        return TMP_DIR / 'events' / event_uniq_id / 'screen_file_dependencies' / f'{screen_id}.json'
 
     @classmethod
-    def get_screen_file_dependencies(cls, event_id: str, screen_id: str) -> list[Path]:
-        file_dependencies_file = cls.__get_screen_file_dependencies_file(
-            event_id, screen_id)
+    def get_screen_file_dependencies(cls, event_uniq_id: str, screen_id: str) -> list[Path]:
+        file_dependencies_file = cls.__get_screen_file_dependencies_file(event_uniq_id, screen_id)
         try:
             with open(file_dependencies_file, 'r', encoding='utf-8') as f:
                 return [Path(file) for file in json.load(f)]
@@ -91,7 +90,7 @@ class AScreen:
 
     def set_file_dependencies(self, files: list[Path]):
         file_dependencies_file = self.__get_screen_file_dependencies_file(
-            self.event_id, self.id)
+            self.event_uniq_id, self.id)
         try:
             file_dependencies_file.parents[0].mkdir(
                 parents=True, exist_ok=True)
@@ -205,9 +204,9 @@ class PlayersScreen(AScreenWithSets):
 
 class ResultsScreen(AScreen):
     def __init__(
-            self, event_id: str, screen_id: str, family_id: str | None, name: str, columns: int,
+            self, event_uniq_id: str, screen_id: str, family_id: str | None, name: str, columns: int,
             menu_text: str | None, menu: str, show_timer: bool, limit: int, *tournament_uniq_ids: Unpack[str]):
-        super().__init__(event_id, screen_id, family_id,
+        super().__init__(event_uniq_id, screen_id, family_id,
                          name, columns, menu_text, menu, show_timer)
         self._type = ScreenType.Results
         self.limit: int = limit
@@ -223,7 +222,7 @@ class ResultsScreen(AScreen):
 
     @property
     def results_lists(self) -> Iterator[list[Result]]:
-        with EventDatabase(self.event_id, 'r') as event_database:
+        with EventDatabase(self.event_uniq_id, 'r') as event_database:
             event_database: EventDatabase
             results: tuple[Result] = tuple(
                 event_database.get_results(self.limit, *self.tournament_uniq_ids))
@@ -235,10 +234,10 @@ class ResultsScreen(AScreen):
 
 class ScreenBuilder:
     def __init__(
-            self, config_reader: ConfigReader, event_id: str, tournaments: dict[str, Tournament],
+            self, config_reader: ConfigReader, event_uniq_id: str, tournaments: dict[str, Tournament],
             templates: dict[str, Template], screens_by_family_id: dict[str, list[AScreen]]):
         self._config_reader: ConfigReader = config_reader
-        self.event_id: str = event_id
+        self.event_uniq_id: str = event_uniq_id
         self._tournaments: dict[str, Tournament] = tournaments
         self._templates: dict[str, Template] = templates
         self._screens_by_family_id: dict[str,
@@ -480,7 +479,7 @@ class ScreenBuilder:
         screen_sets: list[ScreenSet] | None = None
         if screen_type in [ScreenType.Boards, ScreenType.Players, ]:
             screen_sets = ScreenSetBuilder(
-                self._config_reader, self.event_id, self._tournaments, screen_id, screen_type, columns,
+                self._config_reader, self.event_uniq_id, self._tournaments, screen_id, screen_type, columns,
                 show_unpaired
             ).screen_sets
             if not screen_sets:
@@ -503,10 +502,10 @@ class ScreenBuilder:
             family_id: str = self._config_reader.get(screen_section_key, key)
         screen: AScreen | None = None
         screen_file_dependencies: list[Path] = [
-            EVENTS_PATH / f'{self.event_id}.ini', ]
+            EVENTS_PATH / f'{self.event_uniq_id}.ini', ]
         if screen_type == ScreenType.Boards:
             screen = BoardsScreen(
-                self.event_id,
+                self.event_uniq_id,
                 screen_id,
                 family_id,
                 screen_name,
@@ -519,7 +518,7 @@ class ScreenBuilder:
             )
         elif screen_type == ScreenType.Players:
             screen = PlayersScreen(
-                self.event_id,
+                self.event_uniq_id,
                 screen_id,
                 family_id,
                 screen_name,
@@ -532,7 +531,7 @@ class ScreenBuilder:
             )
         elif screen_type == ScreenType.Results:
             screen = ResultsScreen(
-                self.event_id,
+                self.event_uniq_id,
                 screen_id,
                 family_id,
                 screen_name,

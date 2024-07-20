@@ -19,7 +19,7 @@ Context:
         {% if screen.update and board.result_str and event.allow_deletion %}
             hx-confirm="Voulez-vous vraiment supprimer le résultat [{{tournament.uniq_id}}] {{tournament.current_round}}.{{board.id}}?"
             hx-trigger="click[ctrlKey&&altKey]"
-            hx-delete="{{ url_for('delete-board-result', event_id=event.id, tournament_uniq_id=tournament.uniq_id, round=tournament.current_round, board_id=board.id, screen_id=screen.id)}}"
+            hx-delete="{{ url_for('delete-board-result', event_uniq_id=event.uniq_id, tournament_uniq_id=tournament.uniq_id, round=tournament.current_round, board_id=board.id, screen_id=screen.id)}}"
             hx-swap="outerHTML"
             hx-indicator="#please-wait"
             hx-target="this"
@@ -29,7 +29,7 @@ Context:
         scope="row"
         class="board-number"
         {% if screen.update and not board.result_str %}
-            hx-get="{{ url_for('render-boards-screen-board-result-modal', event_id=event.id, tournament_uniq_id=tournament.uniq_id, board_id=board.id, screen_id=screen.id) }}"
+            hx-get="{{ url_for('render-boards-screen-board-result-modal', event_uniq_id=event.uniq_id, tournament_uniq_id=tournament.uniq_id, board_id=board.id, screen_id=screen.id) }}"
             hx-target="#modals"
             hx-swap="innerHTML"
             data-bs-toggle="modal"
@@ -39,7 +39,7 @@ Context:
     <td
         class="points"
         {% if screen.update and not board.result_str %}
-            hx-get="{{ url_for('render-boards-screen-board-result-modal', event_id=event.id, tournament_uniq_id=tournament.uniq_id, board_id=board.id, screen_id=screen.id) }}"
+            hx-get="{{ url_for('render-boards-screen-board-result-modal', event_uniq_id=event.uniq_id, tournament_uniq_id=tournament.uniq_id, board_id=board.id, screen_id=screen.id) }}"
             hx-target="#modals"
             hx-swap="innerHTML"
             data-bs-toggle="modal"
@@ -60,7 +60,7 @@ Context:
     <td
         class="score"
         {% if screen.update and not board.result_str %}
-            hx-get="{{ url_for('render-boards-screen-board-result-modal', event_id=event.id, tournament_uniq_id=tournament.uniq_id, board_id=board.id, screen_id=screen.id) }}"
+            hx-get="{{ url_for('render-boards-screen-board-result-modal', event_uniq_id=event.uniq_id, tournament_uniq_id=tournament.uniq_id, board_id=board.id, screen_id=screen.id) }}"
             hx-target="#modals"
             hx-swap="innerHTML"
             data-bs-toggle="modal"

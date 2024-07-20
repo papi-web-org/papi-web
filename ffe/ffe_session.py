@@ -129,7 +129,6 @@ class FFESession(Session):
             auth_vars[id_] = tag.innerText if tag else None
         tag: AdvancedTag = parser.getElementById(VIEW_LINK_ID)
         if not tag:
-            # logger.error(f'[{url}] a[id=[{VIEW_LINK_ID}] not found')
             logger.error('L\'authentification a échoué (vérifier les codes)')
             return False
         self.__auth_vars = auth_vars
@@ -221,7 +220,7 @@ class FFESession(Session):
         tmp_file.parents[0].mkdir(parents=True, exist_ok=True)
         logger.debug('Copie de %s vers %s...', self.__tournament.file, tmp_file)
         tmp_file.write_bytes(self.__tournament.file.read_bytes())
-        with PapiDatabase(self.__tournament.event_id, self.__tournament.uniq_id, tmp_file, 'w') as tmp_database:
+        with PapiDatabase(self.__tournament.event_uniq_id, self.__tournament.uniq_id, tmp_file, 'w') as tmp_database:
             tmp_database: PapiDatabase
             logger.debug('Suppression des données personnelles des joueur·euses...')
             tmp_database.delete_players_personal_data()

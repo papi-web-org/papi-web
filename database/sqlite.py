@@ -83,10 +83,10 @@ class SQLiteDatabase:
 
 
 class EventDatabase(SQLiteDatabase):
-    def __init__(self, event_id: str, method: str):
-        self.event_id = event_id
+    def __init__(self, event_uniq_id: str, method: str):
+        self.event_uniq_id = event_uniq_id
         self._version: Version | None = None
-        super().__init__(DB_PATH / f'{self.event_id}.db', method)
+        super().__init__(DB_PATH / f'{self.event_uniq_id}.db', method)
 
     def __post_init__(self):
         super().__post_init__()
@@ -97,7 +97,7 @@ class EventDatabase(SQLiteDatabase):
             try:
                 database = connect(database=self.file, detect_types=1, uri=True)
                 cursor = database.cursor()
-                with open(SQL_PATH / 'create-event.sql', encoding='utf-8') as f:
+                with open(SQL_PATH / 'create_event.sql', encoding='utf-8') as f:
                     cursor.executescript(f.read().format(
                         version=f'{PAPI_WEB_VERSION.major}.{PAPI_WEB_VERSION.minor}.{PAPI_WEB_VERSION.micro}'))
                 database.commit()
@@ -115,7 +115,7 @@ class EventDatabase(SQLiteDatabase):
         super().__enter__()
         if self.version != Version(f'{PAPI_WEB_VERSION.major}.{PAPI_WEB_VERSION.minor}.{PAPI_WEB_VERSION.micro}'):
             if self.read_only:
-                with EventDatabase(self.event_id, 'w') as event_database:
+                with EventDatabase(self.event_uniq_id, 'w') as event_database:
                     event_database: EventDatabase
                     event_database.upgrade()
             else:
@@ -136,7 +136,16 @@ class EventDatabase(SQLiteDatabase):
     def _upgrade(self, version: Version):
         match version:
             case Version('2.4.1'):
-                self._execute('')
+                self._execute('CREATE TABLE `chessevent` ('
+                              '    `id` INTEGER NOT NULL,'
+                              '    `uniq_id` TEXT NOT NULL,'
+                              '    `user_id` TEXT NOT NULL,'
+                              '    `password` TEXT NOT NULL,'
+                              '    `event_id` TEXT NOT NULL,'
+                              '    PRIMARY KEY(`id` AUTOINCREMENT),'
+                              '    UNIQUE(`uniq_id`)'
+                              ');'
+                              )
                 self.set_version(version)
                 self.commit()
             case _:

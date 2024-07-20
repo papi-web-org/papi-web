@@ -1,0 +1,113 @@
+<div class="modal-dialog modal-dialog-centered admin-chessevent-edit-modal">
+    <form
+            hx-post="{{ url_for('admin-chessevent-update') }}"
+            hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"{% if admin_chessevent %}, "admin_chessevent_uniq_id": "{{ admin_chessevent.uniq_id }}"{% endif %} }'
+            hx-swap="multi:#messages,#admin-header,#admin-content"
+            hx-indicator="#please-wait">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    {% if admin_event %}
+                        Modification de la connexion à ChessEvent [{{ admin_chessevent.uniq_id }}]
+                    {% else %}
+                        Ajout d'une connexion ChessEvent
+                    {% endif %}
+                </h2>
+            </div>
+            <div class="modal-body">
+                {% with id='chessevent-uniq-id', name='chessevent_uniq_id' %}
+                    <div>
+                        <label for="{{ id }}" class="form-label">Identifiant (unique) :</label>
+                        <input
+                                name="{{ name }}"
+                                type="text" id="{{ id }}"
+                                class="form-control {% if name in errors %}is-invalid{% endif %}"
+                                aria-describedby="{{ id }}-help {{ id }}-error"
+                                placeholder="Exemple : domloup-fide"
+                                value="{{ data[name] }}" />
+                        <div id="{{ id }}-help" class="form-text">
+                          L'identifiant unique, utilisé pour référencer la connexion.
+                        </div>
+                        {% if name in errors %}
+                            <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                {{ errors[name] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endwith %}
+                {% with id='chessevent-user-id', name='chessevent_user_id' %}
+                    <div>
+                        <label for="{{ id }}" class="form-label">Identifiant :</label>
+                        <input
+                                name="{{ name }}"
+                                type="text" id="{{ id }}"
+                                class="form-control {% if name in errors %}is-invalid{% endif %}"
+                                aria-describedby="{{ id }}-help {{ id }}-error"
+                                placeholder="Exemple : Z00000"
+                                value="{{ data[name] }}" />
+                        <div id="{{ id }}-help" class="form-text">
+                          L'identifiant utilisée pour se connecter sur la plateforme ChessEvent.
+                        </div>
+                        {% if name in errors %}
+                            <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                {{ errors[name] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endwith %}
+                {% with id='chessevent-password', name='chessevent_password' %}
+                    <div>
+                        <label for="{{ id }}" class="form-label">Mot de passe :</label>
+                        <input
+                                name="{{ name }}"
+                                type="text" id="{{ id }}"
+                                class="form-control {% if name in errors %}is-invalid{% endif %}"
+                                aria-describedby="{{ id }}-help {{ id }}-error"
+                                placeholder="Exemple : mot_de_passe"
+                                value="{{ data[name] }}" />
+                        <div id="{{ id }}-help" class="form-text">
+                          Le mot de passe utilisé pour se connecter sur la plateforme ChessEvent.
+                        </div>
+                        {% if name in errors %}
+                            <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                {{ errors[name] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endwith %}
+                {% with id='chessevent-event-id', name='chessevent_event_id' %}
+                    <div>
+                        <label for="{{ id }}" class="form-label">Évènement :</label>
+                        <input
+                                name="{{ name }}"
+                                type="text" id="{{ id }}"
+                                class="form-control {% if name in errors %}is-invalid{% endif %}"
+                                aria-describedby="{{ id }}-help {{ id }}-error"
+                                placeholder="Exemple : BRE_35_domloupfide36"
+                                value="{{ data[name] }}" />
+                        <div id="{{ id }}-help" class="form-text">
+                          Le nom de l'évènement sur la plateforme ChessEvent.
+                        </div>
+                        {% if name in errors %}
+                            <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                {{ errors[name] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endwith %}
+            </div>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col col-6 text-start">
+                        <button type="submit" class="white btn btn-primary">
+                            <i class="bi-floppy-fill"></i> {% if admin_event %}Modifier{% else %}Ajouter{% endif %}
+                        </button>
+                    </div>
+                    <div class="col col-6 text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi-x-circle-fill"></i> Annuler</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

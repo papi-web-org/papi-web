@@ -38,7 +38,7 @@ Papi-web
                 </tr>
                 <tr>
                     <th scope="row">Version de Papi-web</th>
-                    <td>{{ papi_web_info['version'] }}</td>
+                    <td>{{ papi_web_config['version'] }}</td>
                 </tr>
                 <tr>
                     <th scope="row">Version de Uvicorn</th>
@@ -100,7 +100,7 @@ Papi-web
             <tbody>
                 {% for event in events %}
                     <tr>
-                        <th scope="row"><a href="{{ url_for('render-event', event_id=event.id) }}" target="_blank">{{ event.name }}</a></th>
+                        <th scope="row"><a href="{{ url_for('render-event', event_uniq_id=event.uniq_id) }}" target="_blank">{{ event.name }}</a></th>
                         <td>
                             <i class="bi-people-fill" ></i>&nbsp;{{ event.tournaments|length }} tournoi{% if event.tournaments|length > 1 %}s{% endif %}
                             <i class="bi-arrows-fullscreen" ></i>&nbsp;{{ event.screens|length }} écran{% if event.screens|length > 1 %}s{% endif %}

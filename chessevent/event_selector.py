@@ -32,7 +32,7 @@ class EventSelector:
             event_range = range(1, len(events) + 1)
             for num in event_range:
                 event: Event = events[num - 1]
-                print_interactive(f'  - [{num}] {event.name} ({event.id}.ini)')
+                print_interactive(f'  - [{num}] {event.name} ({event.uniq_id}.ini)')
             print_interactive('  - [Q] Quitter')
             while event_num is None:
                 choice: str = input_interactive('Votre choix : ')
@@ -45,6 +45,6 @@ class EventSelector:
                 except ValueError:
                     pass
         event: Event = events[event_num - 1]
-        while ActionSelector(self.__config).run(event.id):
+        while ActionSelector(self.__config).run(event.uniq_id):
             pass
         return True

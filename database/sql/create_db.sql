@@ -19,7 +19,7 @@ CREATE TABLE "event" (
     PRIMARY KEY("id" AUTOINCREMENT)
 );
 
-CREATE TABLE "chessevent_connection" (
+CREATE TABLE "chessevent" (
     id INTEGER NOT NULL,
     event_id INTEGER NOT NULL,
     ce_user_id TEXT,
@@ -90,7 +90,7 @@ CREATE TABLE "tournament" (
     ffe_password TEXT,
     ffe_upload_enabled INTEGER NOT NULL DEFAULT 0 COLLATE BINARY IN (0, 1),
     current_round INTEGER NOT NULL,
-    chessevent_connection_id INTEGER,
+    chessevent_id INTEGER,
     chessevent_tournament_name TEXT,
     chessevent_update_enabled INTEGER COLLATE BINARY IN (0, 1),
     last_then_first_name INTEGER NOT NULL DEFAULT 1 COLLATE BINARY IN (0, 1),
@@ -104,7 +104,7 @@ CREATE TABLE "tournament" (
     FOREIGN KEY (tie_break_2_id) REFERENCES tie_break(id),
     FOREIGN KEY (tie_break_3_id) REFERENCES tie_break(id),
     FOREIGN KEY (tie_break_4_id) REFERENCES tie_break(id),
-    FOREIGN KEY (chessevent_connection_id) REFERENCES chessevent_connection(id),
+    FOREIGN KEY (chessevent_id) REFERENCES chessevent(id),
 );
 
 CREATE TABLE player_ffe_status (

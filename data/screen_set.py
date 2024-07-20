@@ -19,7 +19,7 @@ logger: Logger = get_logger()
 
 @dataclass
 class ScreenSet:
-    event_id: str
+    event_uniq_id: str
     tournament: Tournament
     screen_id: str
     id: int
@@ -229,12 +229,12 @@ class ScreenSet:
         return self.last_item
 
     @classmethod
-    def __get_screen_set_file_dependencies_file(cls, event_id: str, screen_id: str, screen_set_id: int) -> Path:
-        return TMP_DIR / 'events' / event_id / 'screen_set_file_dependencies' / f'{screen_id}_{screen_set_id}.json'
+    def __get_screen_set_file_dependencies_file(cls, event_uniq_id: str, screen_id: str, screen_set_id: int) -> Path:
+        return TMP_DIR / 'events' / event_uniq_id / 'screen_set_file_dependencies' / f'{screen_id}_{screen_set_id}.json'
 
     @classmethod
-    def get_screen_set_file_dependencies(cls, event_id: str, screen_id: str, screen_set_id: int) -> list[Path]:
-        file_dependencies_file = cls.__get_screen_set_file_dependencies_file(event_id, screen_id, screen_set_id)
+    def get_screen_set_file_dependencies(cls, event_uniq_id: str, screen_id: str, screen_set_id: int) -> list[Path]:
+        file_dependencies_file = cls.__get_screen_set_file_dependencies_file(event_uniq_id, screen_id, screen_set_id)
         try:
             with open(file_dependencies_file, 'r', encoding='utf-8') as f:
                 return [Path(file) for file in json.load(f)]
@@ -242,7 +242,7 @@ class ScreenSet:
             return []
 
     def set_file_dependencies(self, files: list[Path]):
-        file_dependencies_file = self.__get_screen_set_file_dependencies_file(self.event_id, self.screen_id, self.id)
+        file_dependencies_file = self.__get_screen_set_file_dependencies_file(self.event_uniq_id, self.screen_id, self.id)
         try:
             file_dependencies_file.parents[0].mkdir(parents=True, exist_ok=True)
             with open(file_dependencies_file, 'w', encoding='utf-8') as f:
@@ -288,10 +288,10 @@ class ScreenSet:
 
 
 class ScreenSetBuilder:
-    def __init__(self, config_reader: ConfigReader, event_id: str, tournaments: dict[str, Tournament], screen_id: str,
+    def __init__(self, config_reader: ConfigReader, event_uniq_id: str, tournaments: dict[str, Tournament], screen_id: str,
                  screen_type: ScreenType, columns: int, show_unpaired: bool):
         self._config_reader = config_reader
-        self.event_id: str = event_id
+        self.event_uniq_id: str = event_uniq_id
         self._tournaments: dict[str, Tournament] = tournaments
         self.screen_id: str = screen_id
         self.screen_set_id: int = 0
@@ -474,7 +474,7 @@ class ScreenSetBuilder:
             if key not in self._config_reader.screen_set_keys:
                 self._config_reader.add_warning('option inconnue', screen_set_section_key, key)
         screen_set: ScreenSet = ScreenSet(
-            self.event_id,
+            self.event_uniq_id,
             self._tournaments[tournament_uniq_id],
             self.screen_id,
             self.screen_set_id,
