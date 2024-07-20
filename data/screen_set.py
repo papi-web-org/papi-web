@@ -263,6 +263,8 @@ class ScreenSet:
                 return f'{start} (de n°{first} à {last})'
             case (first, None, number, None, None) if first is not None and number is not None:
                 return f'{start} ({number} à partir de n°{first})'
+            case (None, last, None, None, None) if last is not None:
+                return f"{start} (jusqu'à n°{last})"
             case (first, last, number, None, None) if first is not None and last is not None and number is not None:
                 return f'{start} ({number} de n°{first} à {last})'
             case (None, None, number, part, None) if number is not None and part is not None:
