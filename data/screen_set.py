@@ -437,14 +437,15 @@ class ScreenSetBuilder:
                     player.fixed for player in tournament.players_by_id.values()
                     if player.fixed != 0
                 ]
-            boards_to_parse = list(map(str.strip, current_section[key].split(',')))
-            for board in boards_to_parse:
-                try:
-                    fixed_boards.append(int(board))
-                except ValueError:
-                    self._config_reader.add_warning(
-                        f'un entier positif est attendu, échiquier [{board}] ignoré',
-                        screen_set_section_key, key)
+            else:
+                boards_to_parse = list(map(str.strip, current_section[key].split(',')))
+                for board in boards_to_parse:
+                    try:
+                        fixed_boards.append(int(board))
+                    except ValueError:
+                        self._config_reader.add_warning(
+                            f'un entier positif est attendu, échiquier [{board}] ignoré',
+                            screen_set_section_key, key)
         # then check that the values are coherent
         if first is not None and last is not None and first > last:
             self._config_reader.add_warning(f'intervalle [{first}-{last}] non valide, partie d\'écran ignorée',
