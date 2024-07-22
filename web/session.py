@@ -2,7 +2,6 @@ import time
 
 from litestar.contrib.htmx.request import HTMXRequest
 
-from common.singleton import singleton
 from data.event import Event
 
 

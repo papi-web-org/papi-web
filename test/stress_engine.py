@@ -47,7 +47,8 @@ class StressEngine(Engine):
                     tournament.current_round, tournament.uniq_id)
                 continue
             urls.extend(
-                [self.result_url(event_uniq_id, screen_id, tournament.uniq_id, board.id) for board in tournament_boards])
+                [self.result_url(event_uniq_id, screen_id, tournament.uniq_id, board.id) for board in tournament_boards]
+            )
             logger.info(
                 '%s résultats préparés pour le tournoi [%s].',
                 len(tournament_boards), tournament.uniq_id)

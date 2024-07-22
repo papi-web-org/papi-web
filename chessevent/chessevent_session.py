@@ -2,7 +2,7 @@ import json
 
 from logging import Logger
 from requests import Session, Response
-from requests.exceptions import ConnectionError, Timeout, RequestException # pylint: disable=redefined-builtin
+from requests.exceptions import ConnectionError, Timeout, RequestException  # pylint: disable=redefined-builtin
 
 from data.tournament import Tournament
 from common.logger import get_logger

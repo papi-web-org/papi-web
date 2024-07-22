@@ -17,6 +17,7 @@ from data.util import TournamentPairing, Result
 from database.papi import PapiDatabase
 from data.util import DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER
 from database.sqlite import EventDatabase
+from database.store import StoredTournament
 
 logger: Logger = get_logger()
 
@@ -213,7 +214,7 @@ class Tournament:
                 # Round 2: All players above rating_limit1 get 1 vpoint
                 # Round 2: All other players get .5 vpoints
                 # bottom of page #138 on
-                # https://dna.ffechecs.fr/wp-content/uploads/sites/2/2023/10/Livre-arbitre-octobre-2023.pdf),
+                # https://dna.ffechecs.fr/wp-content/uploads/sites/2/2023/10/Livre-arbitre-octobre-2023.pdf,
                 # please remove if OK
                 if self._current_round <= 2:
                     if player.rating >= self.rating_limit1:
@@ -283,7 +284,7 @@ class Tournament:
     def store_illegal_move(self, player: Player):
         with EventDatabase(self.event_uniq_id, 'w') as event_database:
             event_database: EventDatabase
-            event_database.store_illegal_move(self.uniq_id, self.current_round, player.id)
+            event_database.add_illegal_move(self.uniq_id, self.current_round, player.id)
             event_database.commit()
         self._touch_illegal_moves_marker()
         logger.info('le coup illégal a été enregistré')
@@ -377,6 +378,18 @@ class Tournament:
         except FileNotFoundError:
             return NeedsUpload.YES
 
+    @property
+    def _results_marker_dir(self) -> Path:
+        return TMP_DIR / 'events' / self.event_uniq_id / 'results'
+
+    @property
+    def results_marker(self) -> Path:
+        return self._results_marker_dir / f'{self.uniq_id}.marker'
+
+    def _touch_results_marker(self):
+        self._results_marker_dir.mkdir(exist_ok=True)
+        self.results_marker.touch(exist_ok=True)
+
     def add_result(self, board: Board, white_result: Result):
         black_result = white_result.opposite_result
         with PapiDatabase(self.event_uniq_id, self.uniq_id, self.file, 'w') as papi_database:
@@ -388,6 +401,7 @@ class Tournament:
             event_database: EventDatabase
             event_database.add_result(self.uniq_id, self.current_round, board, white_result)
             event_database.commit()
+        self._touch_results_marker()
         logger.info('Added result: %s %s %d.%d %s %s %d %s %s %s %d',
                     self.event_uniq_id, self.uniq_id, self._current_round, board.id, board.white_player.last_name,
                     board.white_player.first_name, board.white_player.rating, white_result,
@@ -404,6 +418,7 @@ class Tournament:
             event_database: EventDatabase
             event_database.delete_result(self.uniq_id, self.current_round, board.id)
             event_database.commit()
+        self._touch_results_marker()
         logger.info('Removed result: %s %s %d.%d',
                     self.event_uniq_id, self.uniq_id, self._current_round, board.id)
 
@@ -621,8 +636,8 @@ class TournamentBuilder:
                 try:
                     chessevent = self._chessevents[tournament_uniq_id]
                     self._config_reader.add_info(
-                        f'l\'option chessevent_connection_id n\'est pas définie, utilisation par défaut de la connexion '
-                        f'à Chess Event [{tournament_uniq_id}]',
+                        f'l\'option chessevent_connection_id n\'est pas définie, utilisation par défaut de la '
+                        f'connexion à Chess Event [{tournament_uniq_id}]',
                         section_key, 'chessevent_tournament_name')
                 except KeyError:
                     if len(self._chessevents) == 0:
@@ -687,8 +702,10 @@ class TournamentBuilder:
         tournament: Tournament = Tournament(
             self._event_uniq_id, tournament_uniq_id, name, file, ffe_id, ffe_password, *handicap_values,
             chessevent, chessevent_tournament_name, record_illegal_moves)
-        tournament.last_illegal_move_update, tournament.last_illegal_move_update = (
-            self.event_database.get_tournament_last_updates_from_uniq_id(tournament_uniq_id))
+        stored_tournament: StoredTournament = self.event_database.get_stored_tournament(
+            uniq_id=tournament_uniq_id, create_if_absent=True)
+        tournament.last_illegal_move_update = stored_tournament.last_illegal_move_update
+        tournament.last_result_update = stored_tournament.last_result_update
 
         self.tournaments[tournament_uniq_id] = tournament
 

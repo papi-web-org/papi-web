@@ -35,7 +35,8 @@ class AdminEventController(AAdminController):
             else:
                 if admin_event:
                     if event_uniq_id != admin_event.uniq_id and event_uniq_id in events_by_id:
-                        errors['event_uniq_id'] = f'Un autre évènement avec l\'identifiant [{event_uniq_id}] existe déjà.'
+                        errors['event_uniq_id'] = (f'Un autre évènement avec l\'identifiant [{event_uniq_id}] '
+                                                   f'existe déjà.')
                 else:
                     if event_uniq_id in events_by_id:
                         errors['event_uniq_id'] = f'L\'évènement [{event_uniq_id}] existe déjà.'

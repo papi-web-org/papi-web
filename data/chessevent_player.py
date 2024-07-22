@@ -84,7 +84,7 @@ class ChessEventPlayer:
                     raise ValueError
         except KeyError:
             logger.error('Champ %s non trouvé pour le·la joueur·euse [%s %s]',
-                         key ,self.last_name, self.first_name)
+                         key, self.last_name, self.first_name)
             return
         except (TypeError, ValueError):
             logger.error(

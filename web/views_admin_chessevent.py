@@ -162,7 +162,8 @@ class AdminChessEventController(AAdminController):
             # return _admin_render_index(
             #     request, events, admin_event=admin_event, admin_chessevent=admin_chessevent)
             Message.error(request,
-                          f'La création des connexions à ChessEvent par l\'interface web n\'est pas encore implémentée.')
+                          f'La création des connexions à ChessEvent par l\'interface web n\'est pas encore '
+                          f'implémentée.')
         return self._admin_render_index(
             request, events, admin_event=admin_event, admin_event_selector='@chessevents')
 

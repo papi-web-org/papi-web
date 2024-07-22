@@ -27,6 +27,7 @@ except AttributeError:
         while batch := tuple(islice(iterator, n)):
             yield batch
 
+
 class Result(IntEnum):
     """An enum representing the results in the database.
     Should be subclassed if the point value is not the default"""

@@ -544,9 +544,17 @@ class ScreenBuilder:
             )
             if tournament_uniq_ids:
                 for tournament_uniq_id in tournament_uniq_ids:
-                    screen_file_dependencies += [self._tournaments[tournament_uniq_id].file, ]
-                else:
-                    screen_file_dependencies += [tournament.file for tournament in self._tournaments.values()]
+                    screen_file_dependencies += [
+                        self._tournaments[tournament_uniq_id].file,
+                        self._tournaments[tournament_uniq_id].results_marker,
+                    ]
+            else:
+                for tournament in self._tournaments.values():
+                    screen_file_dependencies += [
+                        tournament.file,
+                        tournament.results_marker,
+                    ]
+        logger.warning(f'dependencies={screen_file_dependencies}')
         screen.set_file_dependencies(screen_file_dependencies, )
         for key, value in self._config_reader.items(screen_section_key):
             if key not in ConfigReader.screen_keys + ('template', '__family__', ):

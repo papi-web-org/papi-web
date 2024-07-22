@@ -1,36 +1,22 @@
-from zipfile import ZipFile, ZipInfo
-from io import BytesIO
-from contextlib import suppress
-from pathlib import Path
-
-import time
 
 from logging import Logger
 from typing import Annotated
 
-from litestar import get, post, Response, put, delete, patch, Controller
+from litestar import get, post, Controller
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template, Redirect, File
-from litestar.status_codes import HTTP_200_OK, HTTP_304_NOT_MODIFIED
+from litestar.response import Template, Redirect
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate, Reswap, ClientRedirect, ClientRefresh
+from litestar.contrib.htmx.response import HTMXTemplate, ClientRedirect, ClientRefresh
 
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.board import Board
-from data.chessevent import ChessEvent
-from data.event import Event, get_events_sorted_by_name, get_events_by_uniq_id
-from data.player import Player
-from data.rotator import Rotator
+from data.event import Event, get_events_sorted_by_name
 from data.screen import AScreen
-from data.screen_set import ScreenSet
-from data.tournament import Tournament
-from data.util import Result
 from database.access import access_driver, odbc_drivers
 from web.messages import Message
 from web.session import SessionHandler
-from web.urls import index_url, event_url
+from web.urls import index_url
 
 logger: Logger = get_logger()
 

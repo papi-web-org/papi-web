@@ -23,6 +23,7 @@ from data.screen import AScreen
 from data.screen_set import ScreenSet
 from data.tournament import Tournament
 from data.util import Result
+from database.sqlite import EventDatabase
 from web.messages import Message
 from web.session import SessionHandler
 from web.urls import index_url, event_url
@@ -65,10 +66,9 @@ class UserController(AController):
                 for dependency in file_dependencies[1:]:
                     with suppress(FileNotFoundError):
                         last_update = max(last_update, dependency.lstat().st_mtime)
-                if last_update < date:
-                    return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
-                else:
-                    return ClientRefresh()
+                        if last_update > date:
+                            return ClientRefresh()
+                return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
             except FileNotFoundError as fnfe:
                 Message.warning(request, f'Fichier [{fnfe.filename}] non trouvé')
         else:
@@ -137,14 +137,11 @@ class UserController(AController):
                 f'Aucune dépendance de fichier trouvée pour l\'écran [{screen_id}] de l\'évènement [{event_uniq_id}]')
         else:
             try:
-                last_update: float = file_dependencies[0].lstat().st_mtime
-                for dependency in file_dependencies[1:]:
+                for dependency in file_dependencies:
                     with suppress(FileNotFoundError):
-                        last_update = max(last_update, dependency.lstat().st_mtime)
-                if last_update < date:
-                    return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
-                else:
-                    return ClientRefresh()
+                        if dependency.lstat().st_mtime > date:
+                            return ClientRefresh()
+                return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
             except FileNotFoundError as fnfe:
                 Message.warning(request, f'Fichier [{fnfe.filename}] non trouvé')
         return self._render_messages(request)

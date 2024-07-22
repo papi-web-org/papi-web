@@ -242,7 +242,8 @@ class ScreenSet:
             return []
 
     def set_file_dependencies(self, files: list[Path]):
-        file_dependencies_file = self.__get_screen_set_file_dependencies_file(self.event_uniq_id, self.screen_id, self.id)
+        file_dependencies_file = self.__get_screen_set_file_dependencies_file(
+            self.event_uniq_id, self.screen_id, self.id)
         try:
             file_dependencies_file.parents[0].mkdir(parents=True, exist_ok=True)
             with open(file_dependencies_file, 'w', encoding='utf-8') as f:
@@ -288,8 +289,9 @@ class ScreenSet:
 
 
 class ScreenSetBuilder:
-    def __init__(self, config_reader: ConfigReader, event_uniq_id: str, tournaments: dict[str, Tournament], screen_id: str,
-                 screen_type: ScreenType, columns: int, show_unpaired: bool):
+    def __init__(
+            self, config_reader: ConfigReader, event_uniq_id: str, tournaments: dict[str, Tournament], screen_id: str,
+            screen_type: ScreenType, columns: int, show_unpaired: bool):
         self._config_reader = config_reader
         self.event_uniq_id: str = event_uniq_id
         self._tournaments: dict[str, Tournament] = tournaments

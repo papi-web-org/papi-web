@@ -8,7 +8,8 @@ from typing import Any
 from packaging.version import Version
 
 from requests import Response, get
-from requests.exceptions import ConnectionError, Timeout, RequestException, HTTPError  # pylint: disable=redefined-builtin
+from requests.exceptions import ConnectionError, Timeout, RequestException, \
+    HTTPError  # pylint: disable=redefined-builtin
 from common.config_reader import TMP_DIR
 from common.papi_web_config import PapiWebConfig, PAPI_WEB_VERSION
 from common.logger import get_logger, configure_logger
