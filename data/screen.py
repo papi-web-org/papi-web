@@ -554,7 +554,6 @@ class ScreenBuilder:
                         tournament.file,
                         tournament.results_marker,
                     ]
-        logger.warning(f'dependencies={screen_file_dependencies}')
         screen.set_file_dependencies(screen_file_dependencies, )
         for key, value in self._config_reader.items(screen_section_key):
             if key not in ConfigReader.screen_keys + ('template', '__family__', ):
