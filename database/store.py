@@ -6,13 +6,12 @@ from data.util import TournamentPairing, TournamentRating, ScreenType
 @dataclass
 class StoredTimerHour:
     id: int | None
+    uniq__id: str
     timer_id: int
     order: int
-    date: str
-    round: int | None
-    event: str | None
-    text_before: str
-    text_after: str
+    date_str: str | None
+    text_before: str | None
+    text_after: str | None
 
 
 @dataclass
@@ -35,32 +34,34 @@ class StoredChessEvent:
     user_id: str
     password: str
     event_id: str
+    errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass
 class StoredTournament:
     id: int | None
     uniq_id: str
-    name: str | None = field(default=None)
-    path: str | None = field(default=None)
-    filename: str | None = field(default=None)
-    ffe_id: int | None = field(default=None)
-    ffe_password: str | None = field(default=None)
-    handicap_initial_time: int | None = field(default=None)
-    handicap_increment: int | None = field(default=None)
-    handicap_penalty_step: int | None = field(default=None)
-    handicap_penalty_value: int | None = field(default=None)
-    handicap_min_time: int | None = field(default=None)
-    chessevent_id: int | None = field(default=None)
-    chessevent_tournament_name: str | None = field(default=None)
-    record_illegal_moves: int | None = field(default=None)
-    rounds: int | None = field(default=None)
-    pairing: TournamentPairing | None = field(default=None)
-    rating: TournamentRating | None = field(default=None)
-    rating_limit_1: int | None = field(default=None)
-    rating_limit_2: int | None = field(default=None)
-    last_result_update: float | None = field(default=None)
-    last_illegal_move_update: float | None = field(default=None)
+    name: str
+    path: str | None
+    filename: str | None
+    ffe_id: int | None
+    ffe_password: str | None
+    handicap_initial_time: int | None
+    handicap_increment: int | None
+    handicap_penalty_step: int | None
+    handicap_penalty_value: int | None
+    handicap_min_time: int | None
+    chessevent_id: int | None
+    chessevent_tournament_name: str | None
+    record_illegal_moves: int | None
+    rounds: int
+    pairing: str
+    rating: str
+    rating_limit_1: int | None
+    rating_limit_2: int | None
+    last_result_update: float
+    last_illegal_move_update: float
+    errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass
@@ -91,6 +92,7 @@ class StoredScreen:
     results_limit: int | None
     results_tournaments_str: str | None
     stored_screen_sets: list[StoredScreenSet] = field(default_factory=list[StoredScreenSet])
+    errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass
@@ -100,8 +102,8 @@ class StoredFamily:
     name: str
     type: ScreenType
     boards_update: bool
-    players_show_unpaired: bool | None
-    columns: int | None
+    players_show_unpaired: bool
+    columns: int
     menu_text: str | None
     menu: str | None
     timer_id: int | None
@@ -113,6 +115,7 @@ class StoredFamily:
     part: int | None
     parts: int | None
     number: int | None
+    errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass
@@ -122,21 +125,24 @@ class StoredRotator:
     families_str: str | None
     screens_str: str | None
     delay: int | None
+    errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass
 class StoredEvent:
-    version: str
+    uniq_id: str
     name: str
-    path: str | None = field(default=None)
-    css: str | None = field(default=None)
-    update_password: str | None = field(default=None)
-    record_illegal_moves: int | None = field(default=None)
-    allow_deletion: bool | None = field(default=None)
+    path: str | None
+    css: str | None
+    update_password: str | None
+    record_illegal_moves: int | None
+    allow_results_deletion: bool | None
     stored_chessevents: list[StoredChessEvent] = field(default_factory=list[StoredChessEvent])
     stored_screens: list[StoredScreen] = field(default_factory=list[StoredScreen])
     stored_families: list[StoredFamily] = field(default_factory=list[StoredFamily])
     stored_rotators: list[StoredRotator] = field(default_factory=list[StoredRotator])
+    version: str | None = field(default=None)
+    errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass

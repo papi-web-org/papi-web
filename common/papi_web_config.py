@@ -17,18 +17,6 @@ from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
 
-PAPI_WEB_VERSION: Version = Version('2.4rc3')
-
-BOOTSTRAP_VERSION: Version = Version('5.3.3')
-JQUERY_VERSION: Version = Version('3.7.1')
-HTMX_VERSION: Version = Version('1.9.12')
-BOOTSTRAP_ICONS_VERSION: Version = Version('1.11.3')
-
-
-PAPI_WEB_URL = 'https://github.com/papi-web-org/papi-web'
-
-PAPI_WEB_COPYRIGHT: str = '© Pascal AUBRY 2013-2024'
-
 CONFIG_FILE: Path = Path('papi-web.ini')
 
 DEFAULT_LOG_LEVEL: int = logging.INFO
@@ -165,15 +153,31 @@ class PapiWebConfig:
 
     @property
     def version(self) -> Version:
-        return PAPI_WEB_VERSION
+        return Version('2.4rc3')
 
     @property
     def url(self) -> str:
-        return PAPI_WEB_URL
+        return 'https://github.com/papi-web-org/papi-web'
 
     @property
     def copyright(self) -> str:
-        return PAPI_WEB_COPYRIGHT
+        return '© Pascal AUBRY 2013-2024'
+
+    @property
+    def db_path(self) -> Path:
+        return Path('.') / 'db'
+
+    @property
+    def db_ext(self) -> str:
+        return 'db'
+
+    @property
+    def default_papi_path(self) -> Path:
+        return Path('.') / 'papi'
+
+    @property
+    def papi_ext(self) -> str:
+        return 'papi'
 
     @property
     def litestar_version(self) -> Version:
@@ -193,19 +197,19 @@ class PapiWebConfig:
 
     @property
     def bootstrap_version(self) -> Version:
-        return BOOTSTRAP_VERSION
+        return Version('5.3.3')
 
     @property
     def bootstrap_icons_version(self) -> Version:
-        return BOOTSTRAP_ICONS_VERSION
+        return Version('1.11.3')
 
     @property
     def htmx_version(self) -> Version:
-        return HTMX_VERSION
+        return Version('1.9.12')
 
     @property
     def jquery_version(self) -> Version:
-        return JQUERY_VERSION
+        return Version('3.7.1')
 
     def __url(self, ip: str | None) -> str | None:
         if ip is None:
@@ -239,3 +243,11 @@ class PapiWebConfig:
     @property
     def local_url(self) -> str:
         return self.__url(self.local_ip)
+
+    @property
+    def default_record_illegal_moves_number(self) -> int:
+        return 0
+
+    @property
+    def default_allow_results_deletion(self) -> bool:
+        return False

@@ -15,7 +15,6 @@ from data.player import Player
 from data.util import Color, NeedsUpload, TournamentRating
 from data.util import TournamentPairing, Result
 from database.papi import PapiDatabase
-from data.util import DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER
 from database.sqlite import EventDatabase
 from database.store import StoredTournament
 
@@ -282,16 +281,14 @@ class Tournament:
         self.illegal_moves_marker.touch(exist_ok=True)
 
     def store_illegal_move(self, player: Player):
-        with EventDatabase(self.event_uniq_id, 'w') as event_database:
-            event_database: EventDatabase
+        with EventDatabase(self.event_uniq_id, write=True) as event_database:
             event_database.add_illegal_move(self.uniq_id, self.current_round, player.id)
             event_database.commit()
         self._touch_illegal_moves_marker()
         logger.info('le coup illégal a été enregistré')
     
     def delete_illegal_move(self, player: Player) -> bool:
-        with EventDatabase(self.event_uniq_id, 'w') as event_database:
-            event_database: EventDatabase
+        with EventDatabase(self.event_uniq_id, write=True) as event_database:
             deleted: bool = event_database.delete_illegal_move(self.uniq_id, self.current_round, player.id)
             event_database.commit()
         self._touch_illegal_moves_marker()
@@ -302,8 +299,7 @@ class Tournament:
         return deleted
 
     def get_illegal_moves(self) -> Counter[int]:
-        with EventDatabase(self.event_uniq_id, 'r') as event_database:
-            event_database: EventDatabase
+        with EventDatabase(self.event_uniq_id, write=True) as event_database:
             return event_database.get_illegal_moves(self.uniq_id, self.current_round)
 
     def _set_players_illegal_moves(self):
@@ -397,8 +393,7 @@ class Tournament:
             papi_database.add_board_result(board.white_player.id, self._current_round, white_result)
             papi_database.add_board_result(board.black_player.id, self._current_round, black_result)
             papi_database.commit()
-        with EventDatabase(self.event_uniq_id, 'w') as event_database:
-            event_database: EventDatabase
+        with EventDatabase(self.event_uniq_id, write=True) as event_database:
             event_database.add_result(self.uniq_id, self.current_round, board, white_result)
             event_database.commit()
         self._touch_results_marker()
@@ -414,8 +409,7 @@ class Tournament:
             papi_database.remove_board_result(board.white_player.id, self._current_round)
             papi_database.remove_board_result(board.black_player.id, self._current_round)
             papi_database.commit()
-        with EventDatabase(self.event_uniq_id, 'w') as event_database:
-            event_database: EventDatabase
+        with EventDatabase(self.event_uniq_id, write=True) as event_database:
             event_database.delete_result(self.uniq_id, self.current_round, board.id)
             event_database.commit()
         self._touch_results_marker()

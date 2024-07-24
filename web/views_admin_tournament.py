@@ -10,6 +10,7 @@ from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 
 from common.logger import get_logger
+from common.papi_web_config import PapiWebConfig
 from data.tournament import Tournament
 from data.event import Event, get_events_by_uniq_id
 from web.messages import Message
@@ -70,6 +71,7 @@ class AdminTournamentController(AAdminController):
             re_swap='innerHTML',
             re_target='#admin-modal-container',
             context={
+                'papi_web_config': PapiWebConfig(),
                 'admin_event': admin_event,
                 'admin_tournament': admin_tournament,
                 'data': data,
@@ -169,7 +171,7 @@ class AdminTournamentController(AAdminController):
             Message.error(request,
                           f'La création des tournois par l\'interface web n\'est pas encore implémentée.')
         return self._admin_render_index(
-            request, events, admin_event=admin_event, admin_event_selector='@tournaments')
+            request, events, admin_stored_event=admin_event, admin_event_selector='@tournaments')
 
     @staticmethod
     def _admin_validate_tournament_delete_data(
@@ -198,6 +200,7 @@ class AdminTournamentController(AAdminController):
             re_swap='innerHTML',
             re_target='#admin-modal-container',
             context={
+                'papi_web_config': PapiWebConfig(),
                 'admin_event': admin_event,
                 'admin_tournament': admin_tournament,
                 'data': data,
@@ -267,4 +270,4 @@ class AdminTournamentController(AAdminController):
         Message.error(request,
                       f'La suppression des tournois par l\'interface web n\'est pas encore implémentée.')
         events: list[Event] = sorted(events_by_id.values(), key=lambda event: event.name)
-        return self._admin_render_index(request, events, admin_event=admin_event, admin_event_selector='@tournaments')
+        return self._admin_render_index(request, events, admin_stored_event=admin_event, admin_event_selector='@tournaments')

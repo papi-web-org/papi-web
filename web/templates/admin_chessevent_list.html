@@ -1,21 +1,21 @@
 <div class="row">
-    <div class="col-10">
-        <h1>
+    <div class="col">
+        <h1 class="text-nowrap">
             {{ admin_event.name }} - Connexions à ChessEvent
         </h1>
     </div>
-    <div class="col-2 d-flex justify-content-end">
+    <div class="col-1 d-flex justify-content-end">
         <h1>
             <button
-                    class="btn btn-primary"
+                    class="btn btn-primary text-nowrap"
                     hx-post="{{ url_for('admin-chessevent-render-edit-modal') }}"
-                    hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                    hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
                     hx-target="#admin-modal-container"
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"
                     data-bs-target="#admin-modal-container"
                     hx-indicator="#please-wait">
-                <i class="bi-plus-square-fill"></i> Créer une connexion ChessEvent
+                <i class="bi-plus-square-fill"></i> Créer une connexion
             </button>
         </h1>
     </div>
@@ -32,37 +32,55 @@
         </tr>
     </thead>
     <tbody>
-        {% for chessevent in admin_event.chessevents.values() %}
+        {% if admin_event.chessevents_by_id| length > 0 %}
+            {% for chessevent in admin_event.chessevents_by_id.values() %}
+                <tr>
+                    <th scope="row" class="text-nowrap">{{ chessevent.uniq_id }}</th>
+                    <td class="text-nowrap">{{ chessevent.user_id }}</td>
+                    <td class="text-nowrap">{{ chessevent.password }}</td>
+                    <td>{{ chessevent.event_id }}</td>
+                    <td class="text-nowrap">
+                        <button
+                                class="btn btn-sm btn-primary p-1"
+                                hx-post="{{ url_for('admin-chessevent-render-edit-modal') }}"
+                                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_chessevent_id": "{{ chessevent.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-pencil-fill"></i> Éditer
+                        </button>
+                        <button
+                                hx-post="{{ url_for('admin-chessevent-update') }}"
+                                hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_chessevent_id": "{{ chessevent.id }}"}'
+                                hx-swap="multi:#messages,#admin-header,#admin-content"
+                                class="btn btn-sm btn-primary p-1"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-copy"></i> Dupliquer
+                        </button>
+                        <button
+                                class="btn btn-sm btn-danger p-1"
+                                hx-post="{{ url_for('admin-chessevent-render-edit-modal') }}"
+                                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_chessevent_id": "{{ chessevent.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-trash-fill"></i> Supprimer
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+        {% else %}
             <tr>
-                <th scope="row" class="text-nowrap">{{ chessevent.uniq_id }}</th>
-                <td class="text-nowrap">{{ chessevent.user_id }}</td>
-                <td class="text-nowrap">{{ chessevent.password }}</td>
-                <td>{{ chessevent.event_uniq_id }}</td>
-                <td>
-                    <button
-                            class="btn btn-sm btn-primary p-1"
-                            hx-post="{{ url_for('admin-chessevent-render-edit-modal') }}"
-                            hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_chessevent_uniq_id": "{{ chessevent.uniq_id }}"}'
-                            hx-target="#admin-modal-container"
-                            hx-swap="innerHTML"
-                            data-bs-toggle="modal"
-                            data-bs-target="#admin-modal-container"
-                            hx-indicator="#please-wait" >
-                        <i class="bi-pencil-fill"></i> Éditer
-                    </button>
-                    <button
-                            class="btn btn-sm btn-danger p-1"
-                            hx-post="{{ url_for('admin-chessevent-render-delete-modal') }}"
-                            hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_chessevent_uniq_id": "{{ chessevent.uniq_id }}"}'
-                            hx-target="#admin-modal-container"
-                            hx-swap="innerHTML"
-                            data-bs-toggle="modal"
-                            data-bs-target="#admin-modal-container"
-                            hx-indicator="#please-wait" >
-                        <i class="bi-trash-fill"></i> Supprimer
-                    </button>
+                <td
+                        colspan="5"
+                        class="text-nowrap" >
+                    <em>Aucune connexion à ChessEvent trouvée.</em>
                 </td>
             </tr>
-        {% endfor %}
+        {% endif %}
     </tbody>
 </table>

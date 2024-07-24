@@ -4,8 +4,7 @@ from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 from logging import Logger
 from PyInstaller.__main__ import run
-from common.papi_web_config import PAPI_WEB_VERSION, PAPI_WEB_COPYRIGHT, PAPI_WEB_URL, BOOTSTRAP_VERSION, \
-    BOOTSTRAP_ICONS_VERSION, JQUERY_VERSION, HTMX_VERSION
+from common.papi_web_config import PapiWebConfig
 from common.logger import get_logger
 
 logger: Logger = get_logger()
@@ -14,7 +13,7 @@ BUILD_DIR: Path = Path('build')
 DIST_DIR: Path = Path('dist')
 DATA_DIR: Path = Path('export-data')
 CUSTOM_DIR: Path = Path('custom')
-basename: str = f'papi-web-{PAPI_WEB_VERSION}'
+basename: str = f'papi-web-{PapiWebConfig().version}'
 EXPORT_DIR: Path = Path('..') / 'export'
 PROJECT_DIR: Path = EXPORT_DIR / basename
 ZIP_FILE: Path = EXPORT_DIR / f'{basename}.zip'
@@ -65,14 +64,14 @@ def build_exe():
     files += [file for file in Path('web/static/css').glob('**/*') if file.is_file()]
     files += [file for file in Path('web/static/js').glob('**/*') if file.is_file()]
     lib_dir = static_dir / 'lib'
-    bootstrap_dir = lib_dir / 'bootstrap' / f'bootstrap-{BOOTSTRAP_VERSION}-dist'
+    bootstrap_dir = lib_dir / 'bootstrap' / f'bootstrap-{PapiWebConfig().bootstrap_version}-dist'
     files += [
         bootstrap_dir / 'css' / 'bootstrap.min.css',
         bootstrap_dir / 'css' / 'bootstrap.min.css.map',
         bootstrap_dir / 'js' / 'bootstrap.bundle.min.js',
         bootstrap_dir / 'js' / 'bootstrap.bundle.min.js.map',
     ]
-    bootstrap_icons_dir = lib_dir / 'bootstrap-icons' / f'bootstrap-icons-{BOOTSTRAP_ICONS_VERSION}'
+    bootstrap_icons_dir = lib_dir / 'bootstrap-icons' / f'bootstrap-icons-{PapiWebConfig().bootstrap_icons_version}'
     files += [
         bootstrap_icons_dir / 'font' / 'bootstrap-icons.min.css',
     ]
@@ -80,9 +79,9 @@ def build_exe():
         file for file in (bootstrap_icons_dir / 'font' / 'fonts').glob('**/*')
         if file.is_file()
     ]
-    jquery_file = lib_dir / 'jquery' / f'jquery-{JQUERY_VERSION}.min.js'
+    jquery_file = lib_dir / 'jquery' / f'jquery-{PapiWebConfig().jquery_version}.min.js'
     files += [jquery_file, ]
-    htmx_dir = lib_dir / 'htmx' / f'htmx-{HTMX_VERSION}'
+    htmx_dir = lib_dir / 'htmx' / f'htmx-{PapiWebConfig().htmx_version}'
     files += [
         file for file in htmx_dir.glob('**/*')
         if file.is_file()
@@ -117,7 +116,7 @@ def create_project():
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
                 f'echo Démarrage du serveur Papi-web, veuillez patienter...\n'
-                f'@rem Papi-web {PAPI_WEB_VERSION} - {PAPI_WEB_COPYRIGHT} - {PAPI_WEB_URL}\n'
+                f'@rem Papi-web {PapiWebConfig().version} - {PapiWebConfig().copyright} - {PapiWebConfig().url}\n'
                 f'bin\\{EXE_FILENAME} --server\n'
                 f'pause\n')
     target_file = PROJECT_DIR / 'ffe.bat'
@@ -125,7 +124,7 @@ def create_project():
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
                 f'echo Connexion de Papi-web au serveur fédéral, veuillez patienter...\n'
-                f'@rem Papi-web {PAPI_WEB_VERSION} - {PAPI_WEB_COPYRIGHT} - {PAPI_WEB_URL}\n'
+                f'@rem Papi-web {PapiWebConfig().version} - {PapiWebConfig().copyright} - {PapiWebConfig().url}\n'
                 f'bin\\{EXE_FILENAME} --ffe\n'
                 f'pause\n')
     target_file = PROJECT_DIR / 'chessevent.bat'
@@ -133,7 +132,7 @@ def create_project():
     with open(target_file, 'wt') as f:
         f.write(f'@echo off\n'
                 f'echo Connexion de Papi-web à Chess Event, veuillez patienter...\n'
-                f'@rem Papi-web {PAPI_WEB_VERSION} - {PAPI_WEB_COPYRIGHT} - {PAPI_WEB_URL}\n'
+                f'@rem Papi-web {PapiWebConfig().version} - {PapiWebConfig().copyright} - {PapiWebConfig().url}\n'
                 f'bin\\{EXE_FILENAME} --chessevent\n'
                 f'pause\n')
 

@@ -2,6 +2,10 @@ from logging import Logger
 
 from common.config_reader import ConfigReader
 from common.logger import get_logger
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from data.event import NewEvent
+from database.store import StoredChessEvent
 
 logger: Logger = get_logger()
 
@@ -82,3 +86,23 @@ class ChessEventBuilder:
 
         self.chessevents[chessevent_uniq_id] = ChessEvent(
             chessevent_uniq_id, user_id, password, event_id)
+
+
+class NewChessEvent:
+    def __init__(self, event: 'NewEvent', stored_chessevent: StoredChessEvent, ):
+        self.id: int = stored_chessevent.id
+        self.event: 'NewEvent' = event
+        self.uniq_id: str = stored_chessevent.uniq_id
+        if not self.uniq_id:
+            event.add_error(
+                f'L\'identifiant unique de la connexion à ChessEvent [{stored_chessevent.id}] n\'est pas défini')
+        self.user_id: str = stored_chessevent.user_id
+        if not self.user_id:
+            event.add_error(f'L\'identifiant de connexion n\'est pas défini', chessevent_uniq_id=self.uniq_id)
+        self.password: str = stored_chessevent.password
+        if not self.password:
+            event.add_error(f'Le mot de passe de connexion n\'est pas défini', chessevent_uniq_id=self.uniq_id)
+        self.event_id: str = stored_chessevent.event_id
+        if not self.event_id:
+            event.add_error(f'L\'identifiant du tournoi n\'est pas défini', chessevent_uniq_id=self.uniq_id)
+

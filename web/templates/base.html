@@ -20,19 +20,10 @@
                 setTimeout(function(){
                     $('#messages .alert-info').hide()
                     $('#messages .alert-success').hide()
-                }, 2000)
+                }, 10000)
             });
         </script>
 #}
-        <script>
-            $(document).ready(function(){
-                $('.xillegal-move-flag-wrapper').on('click dblclick mouseup mousedown', function(e) {
-                    alert('STOP ' + e.target.classList.contains('illegal-move-flag'));
-                    /* e.stopPropagation(); */
-                    e.preventDefault();
-                });
-            });
-        </script>
         {% block head %}
         {% endblock %}
     </head>

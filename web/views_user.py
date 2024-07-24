@@ -23,7 +23,6 @@ from data.screen import AScreen
 from data.screen_set import ScreenSet
 from data.tournament import Tournament
 from data.util import Result
-from database.sqlite import EventDatabase
 from web.messages import Message
 from web.session import SessionHandler
 from web.urls import index_url, event_url

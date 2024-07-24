@@ -11,7 +11,7 @@ from requests import Response, get
 from requests.exceptions import ConnectionError, Timeout, RequestException, \
     HTTPError  # pylint: disable=redefined-builtin
 from common.config_reader import TMP_DIR
-from common.papi_web_config import PapiWebConfig, PAPI_WEB_VERSION
+from common.papi_web_config import PapiWebConfig
 from common.logger import get_logger, configure_logger
 
 logger: Logger = get_logger()
@@ -34,21 +34,21 @@ class Engine:
         if not last_stable_version:
             logger.warning('La vérification de la version a échoué')
             return
-        if last_stable_version == PAPI_WEB_VERSION:
+        if last_stable_version == PapiWebConfig().version:
             logger.info('Votre version de Papi-web est à jour')
             return
         last_stable_matches = re.match(
             r'^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$', str(last_stable_version))
-        if re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$', str(PAPI_WEB_VERSION)):
-            if last_stable_version > PAPI_WEB_VERSION:
+        if re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$', str(PapiWebConfig().version)):
+            if last_stable_version > PapiWebConfig().version:
                 logger.warning('Une version plus récente que la vôtre est disponible (%s)',
                                last_stable_version)
             else:
                 logger.warning('Vous utilisez une version plus récente que la dernière version stable disponible, '
                                'vous ne seriez pas développeur des fois ?')
             return
-        if not (matches := re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)rc(?P<rc>\d+)$', str(PAPI_WEB_VERSION))):
-            raise ValueError(f'Version de Papi-web invalide [{str(PAPI_WEB_VERSION)}]')
+        if not (matches := re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)rc(?P<rc>\d+)$', str(PapiWebConfig().version))):
+            raise ValueError(f'Version de Papi-web invalide [{str(PapiWebConfig().version)}]')
         if last_stable_matches.group('major') > matches.group('major'):
             logger.warning('Une version majeure plus récente que la vôtre est disponible (%s)',
                            last_stable_version)

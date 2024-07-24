@@ -222,8 +222,7 @@ class ResultsScreen(AScreen):
 
     @property
     def results_lists(self) -> Iterator[list[Result]]:
-        with EventDatabase(self.event_uniq_id, 'r') as event_database:
-            event_database: EventDatabase
+        with EventDatabase(self.event_uniq_id) as event_database:
             results: tuple[Result] = tuple(
                 event_database.get_results(self.limit, *self.tournament_uniq_ids))
         column_size: int = (

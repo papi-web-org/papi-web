@@ -10,9 +10,6 @@ from common.logger import get_logger
 
 logger: Logger = get_logger()
 
-DEFAULT_RECORD_ILLEGAL_MOVES_ENABLE: bool = False
-DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER: int = 2
-
 
 try:
     import itertools

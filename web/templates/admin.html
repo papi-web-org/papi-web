@@ -22,7 +22,7 @@ Papi-web
                         {% for option_value, option_text in admin_main_selector_options.items() %}
                             <option value="{{ option_value }}" {% if admin_main_selector == option_value %}selected{% endif %}>{{ option_text }}</option>
                         {% endfor %}
-                        {% for event in events %}
+                        {% for event in event_loader.events_sorted_by_name %}
                             <option value="{{ event.uniq_id }}" {% if admin_event and admin_event.uniq_id == event.uniq_id %}selected{% endif %}>{{ event.name }}</option>
                         {% endfor %}
                     </select>

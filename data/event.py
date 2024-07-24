@@ -7,15 +7,16 @@ from typing import Iterator
 
 from common.config_reader import ConfigReader, TMP_DIR, EVENTS_PATH
 from common.logger import get_logger
-from data.chessevent import ChessEvent, ChessEventBuilder
+from common.papi_web_config import PapiWebConfig
+from data.chessevent import ChessEvent, ChessEventBuilder, NewChessEvent
 from data.family import FamilyBuilder
 from data.rotator import Rotator, RotatorBuilder
 from data.screen import AScreen, ScreenBuilder
 from data.template import Template, TemplateBuilder
 from data.timer import Timer, TimerBuilder
 from data.tournament import Tournament, TournamentBuilder
-from data.util import DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER, DEFAULT_RECORD_ILLEGAL_MOVES_ENABLE
 from database.sqlite import EventDatabase
+from database.store import StoredEvent
 
 logger: Logger = get_logger()
 
@@ -30,7 +31,7 @@ class Event:
             EVENTS_PATH / f'{self.uniq_id}.ini',
             TMP_DIR / 'events' / event_uniq_id / 'config' / f'{event_uniq_id}.ini.{os.getpid()}.read',
             silent=self.uniq_id in silent_event_uniq_ids)
-        with EventDatabase(self.uniq_id, 'r') as self.database:
+        with EventDatabase(self.uniq_id) as self.database:
             self.name: str = self.uniq_id
             self.path: Path = Path('papi')
             self.css: str | None = None
@@ -141,6 +142,7 @@ class Event:
         return self.reader.infos
 
     def _build_root(self):
+        papi_web_config = PapiWebConfig()
         section_key: str = 'event'
         try:
             section = self.reader[section_key]
@@ -217,14 +219,12 @@ class Event:
             )
 
         key = 'record_illegal_moves'
-        self.record_illegal_moves: int = (
-            DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER if DEFAULT_RECORD_ILLEGAL_MOVES_ENABLE else 0
-        )
+        self.record_illegal_moves: int = papi_web_config.default_record_illegal_moves_number
         if key in section:
             record_illegal_moves_bool: bool | None = self.reader.getboolean_safe(section_key, key)
             if record_illegal_moves_bool is not None:
                 if record_illegal_moves_bool:
-                    self.record_illegal_moves = DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER
+                    self.record_illegal_moves = papi_web_config.default_record_illegal_moves_number
                 else:
                     self.record_illegal_moves = 0
             else:
@@ -303,3 +303,292 @@ def get_events_sorted_by_name(load_screens: bool, with_tournaments_only: bool = 
 
 def get_events_by_uniq_id(load_screens: bool, with_tournaments_only: bool = False) -> dict[str, Event]:
     return __get_events(load_screens, with_tournaments_only=with_tournaments_only)
+
+
+@total_ordering
+class NewEvent:
+    def __init__(self, stored_event: StoredEvent):
+        self.stored_event: StoredEvent = stored_event
+        self.chessevents_by_id: dict[int, NewChessEvent] = {}
+        self.chessevents_by_uniq_id: dict[str, NewChessEvent] = {}
+        self.tournaments: dict[str, Tournament] = {}
+        self.templates: dict[str, Template] = {}
+        self.screens_by_family_id: dict[str, list[AScreen]] = {}
+        self.screens: dict[str, AScreen] = {}
+        self.rotators: dict[str, Rotator] = {}
+        self.timers: dict[str, Timer] = {}
+        self.__infos: list[str] = []
+        self.__warnings: list[str] = []
+        self.__errors: list[str] = []
+        self.build_root(stored_event)
+        if self.errors:
+            self.add_warning(
+                'Des erreurs ont été trouvées sur l\'évènement, les connexions à ChessEvent, chronomètres, tournois, '
+                'écrans, familles et écrans rotatifs ne seront pas chargés')
+            return
+        self._build_chessevents(stored_event)
+        if self.errors:
+            self.add_warning(
+                'Des erreurs ont été trouvées sur les connexions à ChessEvent, les chronomètres, tournois, écrans, '
+                'familles et écrans rotatifs ne seront pas chargés')
+            return
+        self._build_timers(stored_event)
+        if self.errors:
+            self.add_warning(
+                'Des erreurs ont été trouvées sur les chronomètres, les tournois, écrans, familles et écrans rotatifs '
+                'ne seront pas chargés')
+            return
+        self._build_tournaments(stored_event)
+        if self.errors:
+            self.add_warning(
+                'Des erreurs ont été trouvées sur les tournois, les écrans, familles et écrans rotatifs ne seront pas '
+                'chargés')
+            return
+        self._build_screens(stored_event)
+        if self.errors:
+            self.add_warning(
+                'Des erreurs ont été trouvées sur les écrans, les familles et écrans rotatifs ne seront pas chargés')
+            return
+        self._build_families(stored_event)
+        if self.errors:
+            self.add_warning(
+                'Des erreurs ont été trouvées sur les familles, les écrans rotatifs ne seront pas chargés')
+            return
+        self._build_rotators(stored_event)
+        if self.errors:
+            return
+        """"self.tournaments = TournamentBuilder(
+            self.reader, self.database, self.uniq_id, self.path, self.chessevents, self.record_illegal_moves
+        ).tournaments
+        if self.reader.errors:
+            return
+        if load_screens:
+            self.templates = TemplateBuilder(self.reader).templates
+            if self.reader.errors:
+                return
+            FamilyBuilder(self.reader, self.tournaments, self.templates)
+            if self.reader.errors:
+                return
+            self.screens = ScreenBuilder(
+                self.reader, self.uniq_id, self.tournaments, self.templates, self.screens_by_family_id
+            ).screens
+            if self.reader.errors:
+                return
+            self.rotators = RotatorBuilder(self.reader, self.screens, self.screens_by_family_id).rotators
+            if self.reader.errors:
+                return
+            self.timer = TimerBuilder(self.reader).timer
+            if not self.timer:
+                screen_ids: list[str] = []
+                for screen_id in self.screens:
+                    if self.screens[screen_id].show_timer:
+                        screen_ids.append(screen_id)
+                if screen_ids:
+                    self.reader.add_warning(
+                        'le chronomètre ([timer.hour.*]) n\'est pas défini',
+                        section_key=f'screen.{",".join(screen_ids)}',
+                        key='show_timer')
+            event_file_dependencies = [self.ini_file, ]
+            for screen in self.screens.values():
+                event_file_dependencies += [
+                    screen_set.tournament.file
+                    for screen_set in screen.sets
+                ]
+            self.set_file_dependencies(event_file_dependencies)
+        silent_event_uniq_ids.append(self.uniq_id)"""
+
+    @property
+    def uniq_id(self) -> str:
+        return self.stored_event.uniq_id
+
+    @property
+    def name(self) -> str:
+        return self.stored_event.name if self.stored_event.name else self.uniq_id
+
+    @property
+    def path(self) -> Path:
+        return Path(self.stored_event.path) if self.stored_event.path else PapiWebConfig().default_papi_path
+
+    @property
+    def css(self) -> str:
+        return self.stored_event.css
+
+    @property
+    def update_password(self) -> str:
+        return self.stored_event.update_password
+
+    @property
+    def record_illegal_moves(self) -> int:
+        if self.stored_event.record_illegal_moves is None:
+            return PapiWebConfig().default_record_illegal_moves_number
+        return self.stored_event.record_illegal_moves
+
+    @property
+    def allow_results_deletion(self) -> int:
+        if self.stored_event.allow_results_deletion is None:
+            return PapiWebConfig().default_allow_results_deletion
+        else:
+            return self.stored_event.allow_results_deletion
+
+    def build_root(self, stored_event: StoredEvent):
+        if not self.stored_event.name:
+            self.add_error(f'pas de nom défini, par défaut [{self.name}]')
+        if not stored_event.path:
+            self.add_debug(f'pas de chemin défini par défaut pour les fichiers Papi, par défaut [{self.path}]')
+        if not self.path.exists():
+            self.add_warning(f'le répertoire [{self.path}] n\'existe pas')
+        elif not self.path.is_dir():
+            self.add_warning(f'[{self.path}] n\'est pas un répertoire')
+        if not self.stored_event.css:
+            self.add_debug('pas de feuille de style CCS définie')
+        if not self.stored_event.update_password:
+            self.add_debug('pas de mot de passe défini pour les écrans de saisie')
+        if self.stored_event.record_illegal_moves is None:
+            self.add_debug(f'nombre de coups illégaux non défini, par défaut [{self.record_illegal_moves}]')
+        if self.stored_event.allow_results_deletion is None:
+            self.add_debug(
+                f'Autorisation de suppression des résultats entrés non définie, par défaut '
+                f'[{"autorisée" if self.allow_results_deletion else "non autorisée"}]')
+
+    def _build_chessevents(self, stored_event: StoredEvent):
+        for stored_chessevent in stored_event.stored_chessevents:
+            chessevent: NewChessEvent = NewChessEvent(self, stored_chessevent)
+            self.chessevents_by_id[chessevent.id] = chessevent
+            self.chessevents_by_uniq_id[chessevent.uniq_id] = chessevent
+
+    def _build_timers(self, stored_event: StoredEvent):
+        pass
+
+    def _build_tournaments(self, stored_event: StoredEvent):
+        pass
+
+    def _build_screens(self, stored_event: StoredEvent):
+        pass
+
+    def _build_families(self, stored_event: StoredEvent):
+        pass
+
+    def _build_rotators(self, stored_event: StoredEvent):
+        pass
+
+    def __format_message(
+            self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
+            family_uniq_id: str = None, timer_uniq_id: str = None, screen_uniq_id: str = None,
+            rotator_uniq_id: str = None,
+    ):
+        if tournament_uniq_id:
+            return f'Évènement {self.uniq_id}, tournoi [{tournament_uniq_id}] : {text}'
+        elif chessevent_uniq_id:
+            return f'Évènement {self.uniq_id}, connexion à ChessEvent [{chessevent_uniq_id}] : {text}'
+        elif family_uniq_id:
+            return f'Évènement {self.uniq_id}, famille [{family_uniq_id}] : {text}'
+        elif timer_uniq_id:
+            return f'Évènement {self.uniq_id}, chronomètre [{timer_uniq_id}] : {text}'
+        elif screen_uniq_id:
+            return f'Évènement {self.uniq_id}, écran [{screen_uniq_id}] : {text}'
+        elif rotator_uniq_id:
+            return f'Évènement {self.uniq_id}, écran rotatif [{rotator_uniq_id}] : {text}'
+        else:
+            return f'Évènement {self.uniq_id} : {text}'
+
+    def add_debug(
+            self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
+            family_uniq_id: str = None, timer_uniq_id: str = None, screen_uniq_id: str = None,
+            rotator_uniq_id: str = None,
+    ):
+        """Adds a debug-level message and logs it"""
+        message = self.__format_message(
+            text, tournament_uniq_id=tournament_uniq_id, chessevent_uniq_id=chessevent_uniq_id,
+            family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
+            rotator_uniq_id=rotator_uniq_id)
+        logger.debug(message)
+
+    @property
+    def infos(self) -> list[str]:
+        return self.__infos
+
+    def add_info(
+            self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
+            family_uniq_id: str = None, timer_uniq_id: str = None, screen_uniq_id: str = None,
+            rotator_uniq_id: str = None,
+    ):
+        """Adds an info-level message and logs it"""
+        message = self.__format_message(
+            text, tournament_uniq_id=tournament_uniq_id, chessevent_uniq_id=chessevent_uniq_id,
+            family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
+            rotator_uniq_id=rotator_uniq_id)
+        logger.info(message)
+        self.__infos.append(message)
+
+    @property
+    def warnings(self) -> list[str]:
+        return self.__warnings
+
+    def add_warning(
+            self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
+            family_uniq_id: str = None, timer_uniq_id: str = None, screen_uniq_id: str = None,
+            rotator_uniq_id: str = None,
+    ):
+        """Adds a warning-level message and logs it"""
+        message = self.__format_message(
+            text, tournament_uniq_id=tournament_uniq_id, chessevent_uniq_id=chessevent_uniq_id,
+            family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
+            rotator_uniq_id=rotator_uniq_id)
+        logger.warning(message)
+        self.__warnings.append(message)
+
+    @property
+    def errors(self) -> list[str]:
+        return self.__errors
+
+    def add_error(
+            self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
+            family_uniq_id: str = None, timer_uniq_id: str = None, screen_uniq_id: str = None,
+            rotator_uniq_id: str = None,
+    ):
+        """Adds an error-level message and logs it"""
+        message = self.__format_message(
+            text, tournament_uniq_id=tournament_uniq_id, chessevent_uniq_id=chessevent_uniq_id,
+            family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
+            rotator_uniq_id=rotator_uniq_id)
+        logger.error(message)
+        self.__errors.append(message)
+
+    @classmethod
+    def __get_event_file_dependencies_file(cls, event_uniq_id: str) -> Path:
+        return TMP_DIR / 'events' / event_uniq_id / 'event_file_dependencies.json'
+
+    @classmethod
+    def get_event_file_dependencies(cls, event_uniq_id: str) -> list[Path]:
+        file_dependencies_file = cls.__get_event_file_dependencies_file(event_uniq_id)
+        try:
+            with open(file_dependencies_file, 'r', encoding='utf-8') as f:
+                return [Path(file) for file in json.load(f)]
+        except FileNotFoundError:
+            return []
+
+    def set_file_dependencies(self, files: list[Path]):
+        file_dependencies_file = self.__get_event_file_dependencies_file(self.uniq_id)
+        try:
+            file_dependencies_file.parents[0].mkdir(parents=True, exist_ok=True)
+            with open(file_dependencies_file, 'w', encoding='utf-8') as f:
+                return f.write(json.dumps([str(file) for file in files]))
+        except FileNotFoundError:
+            return []
+
+    @property
+    def download_allowed(self) -> bool:
+        for tournament in self.tournaments.values():
+            if tournament.download_allowed:
+                return True
+        return False
+
+    def __lt__(self, other: 'NewEvent'):
+        # p1 < p2 calls p1.__lt__(p2)
+        return self.uniq_id > other.uniq_id
+
+    def __eq__(self, other: 'NewEvent'):
+        # p1 == p2 calls p1.__eq__(p2)
+        if not isinstance(self, NewEvent):
+            return NotImplemented
+        return self.uniq_id == other.uniq_id
