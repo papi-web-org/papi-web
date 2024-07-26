@@ -65,6 +65,18 @@ class AAdminController(AController):
         raise ValueError
 
     @staticmethod
+    def _get_record_illegal_moves_options(default: int | None, ) -> dict[str, str]:
+        options: dict[str, str] = {
+            '': '',
+            '0': 'Aucun enregistrement des coups illégaux',
+            '1': 'Maximum 1 coup illégal',
+            '2': 'Maximum 2 coups illégaux',
+            '3': 'Maximum 3 coups illégaux',
+        }
+        options[''] = f'Par défaut ({options[str(default)]})'
+        return options
+
+    @staticmethod
     def _admin_render_index(
         request: HTMXRequest,
         event_loader: EventLoader,
@@ -87,14 +99,14 @@ class AAdminController(AController):
             'admin_event_selector_options': {
                 '': 'Configuration générale',
                 '@chessevents': 'Connexions à ChessEvent',
-                #'@tournaments': 'Tournois',
-                #'@screens': 'Écrans',
-                #'@families': 'Familles d\'écrans',
-                #'@rotators': 'Écrans rotatifs',
-                #'@timers': 'Chronomètres',
-                #'@messages': 'Messages',
-                #'@check_in': 'Pointage',
-                #'@pairings': 'Appariements',
+                '@tournaments': 'Tournois',
+                # '@screens': 'Écrans',
+                # '@families': 'Familles d\'écrans',
+                # '@rotators': 'Écrans rotatifs',
+                # '@timers': 'Chronomètres',
+                # '@messages': 'Messages',
+                # '@check_in': 'Pointage',
+                # '@pairings': 'Appariements',
             },
             'admin_event_selector': admin_event_selector,
         }

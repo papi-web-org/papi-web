@@ -90,19 +90,31 @@ class ChessEventBuilder:
 
 class NewChessEvent:
     def __init__(self, event: 'NewEvent', stored_chessevent: StoredChessEvent, ):
-        self.id: int = stored_chessevent.id
+        self.stored_chessevent: StoredChessEvent = stored_chessevent
         self.event: 'NewEvent' = event
-        self.uniq_id: str = stored_chessevent.uniq_id
-        if not self.uniq_id:
-            event.add_error(
-                f'L\'identifiant unique de la connexion à ChessEvent [{stored_chessevent.id}] n\'est pas défini')
-        self.user_id: str = stored_chessevent.user_id
-        if not self.user_id:
-            event.add_error(f'L\'identifiant de connexion n\'est pas défini', chessevent_uniq_id=self.uniq_id)
-        self.password: str = stored_chessevent.password
-        if not self.password:
-            event.add_error(f'Le mot de passe de connexion n\'est pas défini', chessevent_uniq_id=self.uniq_id)
-        self.event_id: str = stored_chessevent.event_id
-        if not self.event_id:
-            event.add_error(f'L\'identifiant du tournoi n\'est pas défini', chessevent_uniq_id=self.uniq_id)
+
+    @property
+    def id(self) -> int:
+        return self.stored_chessevent.id
+
+    @property
+    def uniq_id(self) -> str:
+        return self.stored_chessevent.uniq_id
+
+    @property
+    def user_id(self) -> str:
+        return self.stored_chessevent.user_id
+
+    @property
+    def password(self) -> str:
+        return self.stored_chessevent.password
+
+    @property
+    def shadowed_password(self) -> str:
+        return f'{self.password[:4] + "*" * (len(self.password) - 4)}' if self.password else None
+
+    @property
+    def event_id(self) -> str:
+        return self.stored_chessevent.event_id
+
 

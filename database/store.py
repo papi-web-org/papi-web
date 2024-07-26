@@ -1,7 +1,5 @@
 from dataclasses import dataclass, field
 
-from data.util import TournamentPairing, TournamentRating, ScreenType
-
 
 @dataclass
 class StoredTimerHour:
@@ -37,6 +35,10 @@ class StoredChessEvent:
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
+class StoredSkippedRound:
+    pass
+
+
 @dataclass
 class StoredTournament:
     id: int | None
@@ -46,21 +48,19 @@ class StoredTournament:
     filename: str | None
     ffe_id: int | None
     ffe_password: str | None
-    handicap_initial_time: int | None
-    handicap_increment: int | None
-    handicap_penalty_step: int | None
-    handicap_penalty_value: int | None
-    handicap_min_time: int | None
+    time_control_initial_time: int | None
+    time_control_increment: int | None
+    time_control_handicap_penalty_step: int | None
+    time_control_handicap_penalty_value: int | None
+    time_control_handicap_min_time: int | None
     chessevent_id: int | None
     chessevent_tournament_name: str | None
     record_illegal_moves: int | None
-    rounds: int
-    pairing: str
-    rating: str
-    rating_limit_1: int | None
-    rating_limit_2: int | None
-    last_result_update: float
-    last_illegal_move_update: float
+    last_result_update: float = field(default=0.0)
+    last_illegal_move_update: float = field(default=0.0)
+    last_ffe_upload: float = field(default=0.0)
+    last_chessevent_download: float = field(default=0.0)
+    stored_skipped_rounds: list[StoredSkippedRound] = field(default_factory=list[StoredSkippedRound])
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
@@ -82,7 +82,7 @@ class StoredScreen:
     id: int | None
     uniq_id: str
     name: str
-    type: ScreenType
+    type: str
     boards_update: bool
     players_show_unpaired: bool
     columns: int
@@ -100,7 +100,7 @@ class StoredFamily:
     id: int | None
     uniq_id: str
     name: str
-    type: ScreenType
+    type: str
     boards_update: bool
     players_show_unpaired: bool
     columns: int
@@ -129,6 +129,15 @@ class StoredRotator:
 
 
 @dataclass
+class StoredSkippedRound:
+    id: int | None
+    tournament_id: int
+    round: int
+    papi_player_id: int
+    score: float
+
+
+@dataclass
 class StoredEvent:
     uniq_id: str
     name: str
@@ -138,6 +147,7 @@ class StoredEvent:
     record_illegal_moves: int | None
     allow_results_deletion: bool | None
     stored_chessevents: list[StoredChessEvent] = field(default_factory=list[StoredChessEvent])
+    stored_tournaments: list[StoredTournament] = field(default_factory=list[StoredTournament])
     stored_screens: list[StoredScreen] = field(default_factory=list[StoredScreen])
     stored_families: list[StoredFamily] = field(default_factory=list[StoredFamily])
     stored_rotators: list[StoredRotator] = field(default_factory=list[StoredRotator])
@@ -157,7 +167,7 @@ class StoredIllegalMove:
 @dataclass
 class StoredResult:
     id: int | None
-    tournament_id: str
+    tournament_id: int
     board_id: int
     result: int
     date: float

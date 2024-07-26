@@ -108,11 +108,7 @@
                         hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@chessevents"}'
                         hx-swap="multi:#admin-header,#admin-content"
                         hx-indicator="#please-wait">
-                    {% if admin_event.chessevents_by_id|length %}
-                        <i class="bi-caret-right-square-fill"></i> Gérer les connexions
-                    {% else %}
-                        <i class="bi-plus-square-fill"></i> Créer une connexion
-                    {% endif %}
+                    <i class="bi-caret-right-square-fill"></i> Gérer les connexions à ChessEvent
                 </button>
             </td>
         </tr>
@@ -128,11 +124,7 @@
                         hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@tournaments"}'
                         hx-swap="multi:#admin-header,#admin-content"
                         hx-indicator="#please-wait">
-                    {% if admin_event.tournaments|length %}
-                        <i class="bi-caret-right-square-fill"></i> Gérer les tournois
-                    {% else %}
-                        <i class="bi-plus-square-fill"></i> Créer un tournoi
-                    {% endif %}
+                    <i class="bi-caret-right-square-fill"></i> Gérer les tournois
                 </button>
             </td>
         </tr>

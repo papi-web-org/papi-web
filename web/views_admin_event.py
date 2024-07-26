@@ -91,22 +91,13 @@ class AdminEventController(AAdminController):
             errors=errors,
         )
 
-    @staticmethod
     def _admin_event_render_edit_modal(
+            self,
             action: str,
             admin_event: NewEvent | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
-        record_illegal_moves_options: dict[str, str] = {
-            '': '',
-            '0': 'Aucun enregistrement des coups illégaux',
-            '1': 'Maximum 1 coup illégal',
-            '2': 'Maximum 2 coups illégaux',
-            '3': 'Maximum 3 coups illégaux',
-        }
-        record_illegal_moves_options[''] = \
-            f'Par défaut ({record_illegal_moves_options[str(PapiWebConfig().default_record_illegal_moves_number)]})'
         allow_results_deletion_options: dict[str, str] = {
             '': '',
             '0': 'Non autorisée',
@@ -124,7 +115,8 @@ class AdminEventController(AAdminController):
                 'admin_event': admin_event,
                 'data': data,
                 'errors': errors,
-                'record_illegal_moves_options': record_illegal_moves_options,
+                'record_illegal_moves_options': self._get_record_illegal_moves_options(
+                    PapiWebConfig().default_record_illegal_moves_number),
                 'allow_results_deletion_options': allow_results_deletion_options,
             })
 

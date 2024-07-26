@@ -38,7 +38,7 @@ CREATE TABLE `timer_hour` (
     `text_after` TEXT,
     PRIMARY KEY(`id` AUTOINCREMENT),
     UNIQUE(`uniq_id`),
-    FOREIGN KEY (`timer_id`) REFERENCES `timer`(`id`)
+    FOREIGN KEY (`timer_id`) REFERENCES `timer`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `timer` (
@@ -62,21 +62,18 @@ CREATE TABLE `tournament` (
     `filename` TEXT,
     `ffe_id` INTEGER,
     `ffe_password` TEXT,
-    `handicap_initial_time` INTEGER,
-    `handicap_increment` INTEGER,
-    `handicap_penalty_step`,
-    `handicap_penalty_value`,
-    `handicap_min_time`,
+    `time_control_initial_time` INTEGER,
+    `time_control_increment` INTEGER,
+    `time_control_handicap_penalty_step` INTEGER,
+    `time_control_handicap_penalty_value` INTEGER,
+    `time_control_handicap_min_time` INTEGER,
     `chessevent_id` INTEGER,
     `chessevent_tournament_name` TEXT,
     `record_illegal_moves` INTEGER,
-    `rounds` INTEGER NOT NULL DEFAULT 1,
-    `pairing` TEXT NOT NULL DEFAULT 'Standard',
-    `rating` TEXT NOT NULL DEFAULT 'Elo',
-    `rating_limit_1` INTEGER,
-    `rating_limit_2` INTEGER,
-    `last_illegal_move_update` FLOAT DEFAULT 0.0,
-    `last_result_update` FLOAT DEFAULT 0.0,
+    `last_illegal_move_update` FLOAT NOT NULL DEFAULT 0.0,
+    `last_result_update` FLOAT NOT NULL DEFAULT 0.0,
+    `last_ffe_upload` FLOAT NOT NULL DEFAULT 0.0,
+    `last_chessevent_download` FLOAT NOT NULL DEFAULT 0.0,
     PRIMARY KEY(`id` AUTOINCREMENT),
     UNIQUE(`uniq_id`),
     FOREIGN KEY (`chessevent_id`) REFERENCES `chessevent`(`id`)
@@ -89,7 +86,7 @@ CREATE TABLE `illegal_move` (
     `player_id` INTEGER NOT NULL,
     `date` FLOAT NOT NULL,
     PRIMARY KEY(`id` AUTOINCREMENT),
-    FOREIGN KEY (`tournament_id`) REFERENCES `tournament`(`id`)
+    FOREIGN KEY (`tournament_id`) REFERENCES `tournament`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `result` (
@@ -99,10 +96,10 @@ CREATE TABLE `result` (
     `board_id` INTEGER NOT NULL,
     `white_player_id` INTEGER NOT NULL,
     `black_player_id` INTEGER NOT NULL,
-    `date` REAL NOT NULL,
+    `date` FLOAT NOT NULL,
     `value` INTEGER NOT NULL,
     PRIMARY KEY(`id` AUTOINCREMENT),
-    FOREIGN KEY (`tournament_id`) REFERENCES `tournament`(`id`)
+    FOREIGN KEY (`tournament_id`) REFERENCES `tournament`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `screen` (
@@ -133,7 +130,7 @@ CREATE TABLE `screen_set` (
     `parts` INTEGER,
     `number` INTEGER,
     PRIMARY KEY(`id` AUTOINCREMENT),
-    FOREIGN KEY (`screen_id`) REFERENCES `screen`(`id`),
+    FOREIGN KEY (`screen_id`) REFERENCES `screen`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`tournament_id`) REFERENCES `tournament`(`id`)
 );
 
@@ -171,3 +168,12 @@ CREATE TABLE `rotator` (
     PRIMARY KEY(`id` AUTOINCREMENT)
 );
 
+CREATE TABLE `skipped_round` (
+    `id` INTEGER NOT NULL,
+    `tournament_id` INTEGER NOT NULL,
+    `round` INTEGER NOT NULL,
+    `papi_player_id` INTEGER NOT NULL,
+    `score` FLOAT NOT NULL,
+    PRIMARY KEY(`id` AUTOINCREMENT),
+    FOREIGN KEY (`tournament_id`) REFERENCES `tournament`(`id`) ON DELETE CASCADE
+);

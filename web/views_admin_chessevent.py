@@ -36,12 +36,12 @@ class AdminChessEventController(AAdminController):
             case 'create':
                 if not uniq_id:
                     errors['uniq_id'] = 'Veuillez entrer l\'identifiant de la connexion à ChessEvent.'
-                elif uniq_id in admin_event.chessevents_by_uniq_id:
+                elif uniq_id in admin_event.chessevent_uniq_ids:
                     errors['uniq_id'] = f'La connexion à ChessEvent [{uniq_id}] existe déjà.'
             case 'update':
                 if not uniq_id:
                     errors['uniq_id'] = 'Veuillez entrer l\'identifiant de la connexion à ChessEvent.'
-                elif uniq_id != admin_chessevent.uniq_id and uniq_id in admin_event.chessevents_by_uniq_id:
+                elif uniq_id != admin_chessevent.uniq_id and uniq_id in admin_event.chessevent_uniq_ids:
                     errors['uniq_id'] = \
                         f'Une autre connexion à ChessEvent avec l\'identifiant [{uniq_id}] existe déjà.'
             case 'delete' | 'clone':
@@ -129,10 +129,10 @@ class AdminChessEventController(AAdminController):
         match action:
             case 'update':
                 data = {
-                    'uniq_id': admin_chessevent.uniq_id,
-                    'user_id': admin_chessevent.user_id,
-                    'password': admin_chessevent.password,
-                    'event_id': admin_chessevent.event_id,
+                    'uniq_id': self.value_to_form_data(admin_chessevent.stored_chessevent.uniq_id),
+                    'user_id': self.value_to_form_data(admin_chessevent.stored_chessevent.user_id),
+                    'password': self.value_to_form_data(admin_chessevent.stored_chessevent.password),
+                    'event_id': self.value_to_form_data(admin_chessevent.stored_chessevent.event_id),
                 }
             case 'delete' | 'create':
                 data = {}
@@ -195,7 +195,7 @@ class AdminChessEventController(AAdminController):
                     stored_chessevent = event_database.clone_stored_chessevent(admin_chessevent.id)
                     Message.success(
                         request,
-                        f'La connexion à ChessEvent [{admin_chessevent.uniq_id}] a été dupliquée '
+                        f'La connexion à ChessEvent [{admin_chessevent.uniq_id}] a été dupliquée.'
                         f'([{stored_chessevent.uniq_id}]).')
                 case _:
                     raise ValueError(f'action=[{action}]')

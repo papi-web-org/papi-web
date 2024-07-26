@@ -14,7 +14,7 @@ from data.rotator import Rotator, RotatorBuilder
 from data.screen import AScreen, ScreenBuilder
 from data.template import Template, TemplateBuilder
 from data.timer import Timer, TimerBuilder
-from data.tournament import Tournament, TournamentBuilder
+from data.tournament import Tournament, TournamentBuilder, NewTournament
 from database.sqlite import EventDatabase
 from database.store import StoredEvent
 
@@ -310,13 +310,15 @@ class NewEvent:
     def __init__(self, stored_event: StoredEvent):
         self.stored_event: StoredEvent = stored_event
         self.chessevents_by_id: dict[int, NewChessEvent] = {}
-        self.chessevents_by_uniq_id: dict[str, NewChessEvent] = {}
-        self.tournaments: dict[str, Tournament] = {}
+        self._chessevent_uniq_ids: list[str] | None = None
+        self.tournaments_by_id: dict[int, NewTournament] = {}
+        self._tournament_uniq_ids: list[str] | None = None
         self.templates: dict[str, Template] = {}
         self.screens_by_family_id: dict[str, list[AScreen]] = {}
         self.screens: dict[str, AScreen] = {}
         self.rotators: dict[str, Rotator] = {}
-        self.timers: dict[str, Timer] = {}
+        self.timers_by_id: dict[int, Timer] = {}
+        self._timer_uniq_ids: list[str] | None = None
         self.__infos: list[str] = []
         self.__warnings: list[str] = []
         self.__errors: list[str] = []
@@ -326,19 +328,19 @@ class NewEvent:
                 'Des erreurs ont été trouvées sur l\'évènement, les connexions à ChessEvent, chronomètres, tournois, '
                 'écrans, familles et écrans rotatifs ne seront pas chargés')
             return
-        self._build_chessevents(stored_event)
+        self._build_chessevents(self.stored_event)
         if self.errors:
             self.add_warning(
                 'Des erreurs ont été trouvées sur les connexions à ChessEvent, les chronomètres, tournois, écrans, '
                 'familles et écrans rotatifs ne seront pas chargés')
             return
-        self._build_timers(stored_event)
+        self._build_timers(self.stored_event)
         if self.errors:
             self.add_warning(
                 'Des erreurs ont été trouvées sur les chronomètres, les tournois, écrans, familles et écrans rotatifs '
                 'ne seront pas chargés')
             return
-        self._build_tournaments(stored_event)
+        self._build_tournaments(self.stored_event)
         if self.errors:
             self.add_warning(
                 'Des erreurs ont été trouvées sur les tournois, les écrans, familles et écrans rotatifs ne seront pas '
@@ -357,7 +359,8 @@ class NewEvent:
         self._build_rotators(stored_event)
         if self.errors:
             return
-        """"self.tournaments = TournamentBuilder(
+        """"
+        self.tournaments = TournamentBuilder(
             self.reader, self.database, self.uniq_id, self.path, self.chessevents, self.record_illegal_moves
         ).tournaments
         if self.reader.errors:
@@ -430,11 +433,29 @@ class NewEvent:
         else:
             return self.stored_event.allow_results_deletion
 
+    @property
+    def chessevent_uniq_ids(self) -> list[str]:
+        if self._chessevent_uniq_ids is None:
+            self._chessevent_uniq_ids = [chessevent.uniq_id for chessevent in self.chessevents_by_id.values()]
+        return self._chessevent_uniq_ids
+
+    @property
+    def timer_uniq_ids(self) -> list[str]:
+        if self._timer_uniq_ids is None:
+            self._timer_uniq_ids = [timer.uniq_id for timer in self.timers_by_id.values()]
+        return self._timer_uniq_ids
+
+    @property
+    def tournament_uniq_ids(self) -> list[str]:
+        if self._tournament_uniq_ids is None:
+            self._tournament_uniq_ids = [tournament.uniq_id for tournament in self.tournaments_by_id.values()]
+        return self._tournament_uniq_ids
+
     def build_root(self, stored_event: StoredEvent):
         if not self.stored_event.name:
             self.add_error(f'pas de nom défini, par défaut [{self.name}]')
         if not stored_event.path:
-            self.add_debug(f'pas de chemin défini par défaut pour les fichiers Papi, par défaut [{self.path}]')
+            self.add_debug(f'pas de répertoire défini par défaut pour les fichiers Papi, par défaut [{self.path}]')
         if not self.path.exists():
             self.add_warning(f'le répertoire [{self.path}] n\'existe pas')
         elif not self.path.is_dir():
@@ -454,13 +475,14 @@ class NewEvent:
         for stored_chessevent in stored_event.stored_chessevents:
             chessevent: NewChessEvent = NewChessEvent(self, stored_chessevent)
             self.chessevents_by_id[chessevent.id] = chessevent
-            self.chessevents_by_uniq_id[chessevent.uniq_id] = chessevent
 
     def _build_timers(self, stored_event: StoredEvent):
         pass
 
     def _build_tournaments(self, stored_event: StoredEvent):
-        pass
+        for stored_tournament in stored_event.stored_tournaments:
+            tournament: NewTournament = NewTournament(self, stored_tournament)
+            self.tournaments_by_id[tournament.id] = tournament
 
     def _build_screens(self, stored_event: StoredEvent):
         pass
@@ -477,19 +499,19 @@ class NewEvent:
             rotator_uniq_id: str = None,
     ):
         if tournament_uniq_id:
-            return f'Évènement {self.uniq_id}, tournoi [{tournament_uniq_id}] : {text}'
+            return f'Évènement [{self.uniq_id}], tournoi [{tournament_uniq_id}] : {text}'
         elif chessevent_uniq_id:
-            return f'Évènement {self.uniq_id}, connexion à ChessEvent [{chessevent_uniq_id}] : {text}'
+            return f'Évènement [{self.uniq_id}], connexion à ChessEvent [{chessevent_uniq_id}] : {text}'
         elif family_uniq_id:
-            return f'Évènement {self.uniq_id}, famille [{family_uniq_id}] : {text}'
+            return f'Évènement [{self.uniq_id}], famille [{family_uniq_id}] : {text}'
         elif timer_uniq_id:
-            return f'Évènement {self.uniq_id}, chronomètre [{timer_uniq_id}] : {text}'
+            return f'Évènement [{self.uniq_id}], chronomètre [{timer_uniq_id}] : {text}'
         elif screen_uniq_id:
-            return f'Évènement {self.uniq_id}, écran [{screen_uniq_id}] : {text}'
+            return f'Évènement [{self.uniq_id}], écran [{screen_uniq_id}] : {text}'
         elif rotator_uniq_id:
-            return f'Évènement {self.uniq_id}, écran rotatif [{rotator_uniq_id}] : {text}'
+            return f'Évènement [{self.uniq_id}], écran rotatif [{rotator_uniq_id}] : {text}'
         else:
-            return f'Évènement {self.uniq_id} : {text}'
+            return f'Évènement [{self.uniq_id}] : {text}'
 
     def add_debug(
             self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
@@ -578,7 +600,7 @@ class NewEvent:
 
     @property
     def download_allowed(self) -> bool:
-        for tournament in self.tournaments.values():
+        for tournament in self.tournaments_by_id.values():
             if tournament.download_allowed:
                 return True
         return False

@@ -13,6 +13,7 @@ from web.views import LoginController, IndexController
 from web.views_admin import AdminController
 from web.views_admin_chessevent import AdminChessEventController
 from web.views_admin_event import AdminEventController
+from web.views_admin_tournament import AdminTournamentController
 from web.views_user import UserController
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -35,6 +36,7 @@ route_handlers: Sequence[ControllerRouterHandler] = [
     AdminController,
     AdminEventController,
     AdminChessEventController,
+    AdminTournamentController,
     static_files_router,
 ]
 

@@ -21,7 +21,7 @@ from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.board import Board
 from database.store import StoredTournament, StoredEvent, StoredChessEvent, StoredTimer, StoredTimerHour, \
-    StoredFamily, StoredIllegalMove, StoredResult, StoredRotator, StoredScreenSet, StoredScreen
+    StoredFamily, StoredIllegalMove, StoredResult, StoredRotator, StoredScreenSet, StoredScreen, StoredSkippedRound
 
 logger: Logger = get_logger()
 
@@ -161,6 +161,7 @@ class EventDatabase(SQLiteDatabase):
     def load_stored_event(self) -> StoredEvent:
         stored_event: StoredEvent = self._get_stored_event()
         stored_event.stored_chessevents = self.load_stored_chessevents()
+        stored_event.stored_tournaments = self.load_stored_tournaments()
         stored_event.stored_timers = self.load_stored_timers()
         stored_event.stored_families = self.load_stored_families()
         stored_event.stored_screens = self.load_stored_screens()
@@ -286,9 +287,9 @@ class EventDatabase(SQLiteDatabase):
         self._execute('DELETE FROM `chessevent` WHERE `id` = ?;', (id, ))
 
     def clone_stored_chessevent(
-            self, chessevent_id: int,
+            self, id: int,
     ) -> StoredChessEvent:
-        stored_chessevent = self.get_stored_chessevent(chessevent_id)
+        stored_chessevent = self.get_stored_chessevent(id)
         stored_chessevent.id = None
         self._execute(
             'SELECT uniq_id FROM `chessevent`',
@@ -313,11 +314,10 @@ class EventDatabase(SQLiteDatabase):
     def _row_to_stored_timer_hour(row: dict[str, Any]) -> StoredTimerHour:
         return StoredTimerHour(
             id=row['id'],
+            uniq__id=row['uniq_id'],
             timer_id=row['timer_id'],
             order=row['order'],
-            date=row['date'],
-            round=row['round'],
-            event=row['event'],
+            date_str=row['date_str'],
             text_before=row['text_before'],
             text_after=row['text_after'],
         )
@@ -373,6 +373,9 @@ class EventDatabase(SQLiteDatabase):
 
     def delete_stored_timer_hour(self, id: int):
         self._execute('DELETE FROM `timer_hour` WHERE `id` = ?;', (id, ))
+
+    def delete_timer_stored_timer_hours(self, timer_id: int):
+        self._execute('DELETE FROM `timer_hour` WHERE `timer_id` = ?;', (timer_id, ))
 
     """ 
     ---------------------------------------------------------------------------------
@@ -449,8 +452,53 @@ class EventDatabase(SQLiteDatabase):
         return self._write_stored_timer(id, uniq_id, delay_1, delay_2, delay_3, color_1, color_2, color_3)
 
     def delete_stored_timer(self, id: int):
-        self._execute('DELETE FROM `timer_hour` WHERE timer_id = ?;', (id, ))
-        self._execute('DELETE FROM `timer` WHERE `id` = ?;', (id, ))
+        self._execute('UPDATE `family` SET `timer_id` = NULL WHERE `timer_id` = ?;', (id, ))
+        self._execute('UPDATE `screen` SET `timer_id` = NULL WHERE `timer_id` = ?;', (id, ))
+        self._execute('DELETE FROM `timer` WHERE id = ?;', (id, ))
+
+    """ 
+    ---------------------------------------------------------------------------------
+    Skipped rounds 
+    ---------------------------------------------------------------------------------
+    """
+
+    @staticmethod
+    def _row_to_stored_skipped_round(row: dict[str, Any]) -> StoredSkippedRound:
+        return StoredSkippedRound(
+            id=row['id'],
+            tournament_id=row['tournament_id'],
+            round=row['round'],
+            papi_player_id=row['papi_player_id'],
+            score=row['score'],
+        )
+
+    def load_stored_skipped_rounds(self, tournament_id: int) -> list[StoredSkippedRound]:
+        self._execute(
+            'SELECT * FROM `skipped_round` WHERE `tournament_id` = ? ORDER BY `id`',
+            (tournament_id, ),
+        )
+        return [self._row_to_stored_skipped_round(row) for row in self._fetchall()]
+
+    def delete_tournament_stored_skipped_rounds(self, tournament_id: int):
+        self._execute(
+            'DELETE FROM `skipped_round` WHERE `tournament_id` = ?',
+            (tournament_id, ),
+        )
+
+    def add_player_stored_skipped_rounds(
+            self, tournament_id: int, papi_player_id: int, skipped_rounds: dict[int, float]
+    ):
+        if skipped_rounds:
+            for round, score in skipped_rounds.items():
+                self._execute(
+                    'INSERT INTO `skipped_round`('
+                    '    `tournament_id`, '
+                    '    `papi_player_id`, '
+                    '    `round`, '
+                    '    `score`'
+                    ') VALUES(?, ?, ?, ?)',
+                    (tournament_id, papi_player_id, round, score),
+                )
 
     """ 
     ---------------------------------------------------------------------------------
@@ -461,29 +509,26 @@ class EventDatabase(SQLiteDatabase):
     @staticmethod
     def _row_to_stored_tournament(row: dict[str, Any]) -> StoredTournament:
         return StoredTournament(
-                id=row['id'],
-                uniq_id=row['uniq_id'],
-                name=row['name'],
-                path=row['path'],
-                filename=row['filename'],
-                ffe_id=row['ffe_id'],
-                ffe_password=row['ffe_password'],
-                handicap_initial_time=row['handicap_initial_time'],
-                handicap_increment=row['handicap_increment'],
-                handicap_penalty_step=row['handicap_penalty_step'],
-                handicap_penalty_value=row['handicap_penalty_value'],
-                handicap_min_time=row['handicap_min_time'],
-                chessevent_id=row['chessevent_id'],
-                chessevent_tournament_name=row['chessevent_tournament_name'],
-                record_illegal_moves=row['record_illegal_moves'],
-                rounds=row['rounds'],
-                pairing=row['pairing'],
-                rating=row['rating'],
-                rating_limit_1=row['rating_limit_1'],
-                rating_limit_2=row['rating_limit_2'],
-                last_result_update=row['last_result_update'],
-                last_illegal_move_update=row['last_illegal_move_update'],
-            )
+            id=row['id'],
+            uniq_id=row['uniq_id'],
+            name=row['name'],
+            path=row['path'],
+            filename=row['filename'],
+            ffe_id=row['ffe_id'],
+            ffe_password=row['ffe_password'],
+            time_control_initial_time=row['time_control_initial_time'],
+            time_control_increment=row['time_control_increment'],
+            time_control_handicap_penalty_step=row['time_control_handicap_penalty_step'],
+            time_control_handicap_penalty_value=row['time_control_handicap_penalty_value'],
+            time_control_handicap_min_time=row['time_control_handicap_min_time'],
+            chessevent_id=row['chessevent_id'],
+            chessevent_tournament_name=row['chessevent_tournament_name'],
+            record_illegal_moves=row['record_illegal_moves'],
+            last_result_update=row['last_result_update'],
+            last_illegal_move_update=row['last_illegal_move_update'],
+            last_ffe_upload=row['last_ffe_upload'],
+            last_chessevent_download=row['last_chessevent_download'],
+        )
 
     def get_stored_tournament(self, id: int) -> StoredTournament | None:
         self._execute(
@@ -495,29 +540,48 @@ class EventDatabase(SQLiteDatabase):
             return self._row_to_stored_tournament(row)
         return None
 
+    def get_stored_tournament_with_uniq_id(self, uniq_id: str) -> StoredTournament | None:
+        # TODO Remove this method
+        self._execute(
+            'SELECT * FROM `tournament` WHERE `uniq_id` = ?',
+            (uniq_id,),
+        )
+        row: dict[str, Any]
+        if row := self._fetchone():
+            return self._row_to_stored_tournament(row)
+        return None
+
+    def load_stored_tournaments(self) -> list[StoredTournament]:
+        self._execute(
+            'SELECT * FROM `tournament` ORDER BY `uniq_id`',
+            (),
+        )
+        stored_tournaments: list[StoredTournament] = [self._row_to_stored_tournament(row) for row in self._fetchall()]
+        for stored_tournament in stored_tournaments:
+            stored_tournament.stored_skipped_rounds = self.load_stored_skipped_rounds(stored_tournament.id)
+        return stored_tournaments
+
     def _write_stored_tournament(
-            self, id: int | None, uniq_id: str,
-            name: str, path: str, filename: str, ffe_id: int, ffe_password: str,
-            handicap_initial_time: int, handicap_increment: int, handicap_penalty_step: int,
-            handicap_penalty_value: int, handicap_min_time: int,
-            chessevent_id: str, chessevent_tournament_name: str,
-            record_illegal_moves: bool, rounds: int, pairing: str, rating: str,
-            rating_limit_1: int, rating_limit_2: int, last_result_update: float, last_illegal_move_update: float,
+            self, stored_tournament: StoredTournament,
     ) -> StoredTournament:
         fields: list[str] = [
             'uniq_id', 'name', 'path', 'filename', 'ffe_id', 'ffe_password',
-            'handicap_initial_time', 'handicap_increment', 'handicap_penalty_step',
-            'handicap_penalty_value', 'handicap_min_time',
-            'chessevent_id', 'chessevent_tournament_name', 'record_illegal_moves', 'rounds', 'pairing', 'rating',
-            'rating_limit_1', 'rating_limit_2', 'last_result_update', 'last_illegal_move_update'
+            'time_control_initial_time', 'time_control_increment', 'time_control_handicap_penalty_step',
+            'time_control_handicap_penalty_value', 'time_control_handicap_min_time', 'chessevent_id',
+            'chessevent_tournament_name', 'record_illegal_moves', 'last_result_update', 'last_illegal_move_update',
+            'last_ffe_upload', 'last_chessevent_download',
         ]
         params: list = [
-            uniq_id, name, path, filename, ffe_id, ffe_password,
-            handicap_initial_time, handicap_increment, handicap_penalty_step, handicap_penalty_value, handicap_min_time,
-            chessevent_id, chessevent_tournament_name, record_illegal_moves, rounds, pairing, rating,
-            rating_limit_1, rating_limit_2, last_result_update, last_illegal_move_update
+            stored_tournament.uniq_id, stored_tournament.name, stored_tournament.path, stored_tournament.filename,
+            stored_tournament.ffe_id, stored_tournament.ffe_password, stored_tournament.time_control_initial_time,
+            stored_tournament.time_control_increment, stored_tournament.time_control_handicap_penalty_step,
+            stored_tournament.time_control_handicap_penalty_value, stored_tournament.time_control_handicap_min_time,
+            stored_tournament.chessevent_id, stored_tournament.chessevent_tournament_name,
+            stored_tournament.record_illegal_moves, stored_tournament.last_result_update,
+            stored_tournament.last_illegal_move_update, stored_tournament.last_ffe_upload,
+            stored_tournament.last_chessevent_download,
         ]
-        if id is None:
+        if stored_tournament.id is None:
             protected_fields = [f"`{f}`" for f in fields]
             self._execute(
                 f'INSERT INTO `tournament`({", ".join(protected_fields)}) VALUES ({", ".join(["?"] * len(fields))})',
@@ -525,45 +589,61 @@ class EventDatabase(SQLiteDatabase):
             return self.get_stored_tournament(self._last_inserted_id())
         else:
             field_sets = [f"`{f}` = ?" for f in fields]
-            params += [id]
+            params += [stored_tournament.id]
             self._execute(
                 f'UPDATE `tournament` SET {", ".join(field_sets)} WHERE `id` = ?',
                 tuple(params))
-            return self.get_stored_tournament(id)
+            return self.get_stored_tournament(stored_tournament.id)
 
     def add_stored_tournament(
-            self, uniq_id: str,
-            name: str, path: str, filename: str, ffe_id: int, ffe_password: str,
-            handicap_initial_time: int, handicap_increment: int, handicap_penalty_step: int,
-            handicap_penalty_value: int, handicap_min_time: int,
-            chessevent_id: str, chessevent_tournament_name: str,
-            record_illegal_moves: bool, rounds: int, pairing: str, rating: str,
-            rating_limit_1: int, rating_limit_2: int, last_result_update: float, last_illegal_move_update: float,
+            self, stored_tournament: StoredTournament,
     ) -> StoredTournament:
-        return self._write_stored_tournament(
-            None, uniq_id, name, path, filename, ffe_id, ffe_password,
-            handicap_initial_time, handicap_increment, handicap_penalty_step, handicap_penalty_value,
-            handicap_min_time, chessevent_id, chessevent_tournament_name, record_illegal_moves, rounds, pairing,
-            rating, rating_limit_1, rating_limit_2, last_result_update, last_illegal_move_update)
+        assert stored_tournament.id is None, ValueError
+        return self._write_stored_tournament(stored_tournament)
 
     def update_stored_tournament(
-            self, id: int, uniq_id: str,
-            name: str, path: str, filename: str, ffe_id: int, ffe_password: str,
-            handicap_initial_time: int, handicap_increment: int, handicap_penalty_step: int,
-            handicap_penalty_value: int, handicap_min_time: int,
-            chessevent_id: str, chessevent_tournament_name: str,
-            record_illegal_moves: bool, rounds: int, pairing: str, rating: str,
-            rating_limit_1: int, rating_limit_2: int, last_result_update: float, last_illegal_move_update: float,
+            self, stored_tournament: StoredTournament,
     ) -> StoredTournament:
-        return self._write_stored_tournament(
-            id, uniq_id, name, path, filename, ffe_id, ffe_password,
-            handicap_initial_time, handicap_increment, handicap_penalty_step, handicap_penalty_value,
-            handicap_min_time, chessevent_id, chessevent_tournament_name, record_illegal_moves, rounds, pairing,
-            rating, rating_limit_1, rating_limit_2, last_result_update, last_illegal_move_update)
+        assert stored_tournament.id is not None, ValueError
+        return self._write_stored_tournament(stored_tournament)
 
     def delete_stored_tournament(self, id: int):
-        self._execute('DELETE FROM `timer_hour` WHERE timer_id = ?;', (id, ))
-        self._execute('DELETE FROM `timer` WHERE `id` = ?;', (id, ))
+        self._execute('UPDATE `family` SET `tournament_id` = NULL WHERE `tournament_id` = ?;', (id, ))
+        self._execute('UPDATE `screen_set` SET `tournament_id` = NULL WHERE `tournament_id` = ?;', (id, ))
+        self._execute('DELETE FROM `tournament` WHERE `id` = ?;', (id, ))
+        # other references are deleted on cascade
+
+    def clone_stored_tournament(
+            self, id: int, new_uniq_id: str, new_name: str, new_path: str | None, new_filename: str | None,
+            new_ffe_id: int | None, new_ffe_password: str | None,
+    ) -> StoredTournament:
+        stored_tournament = self.get_stored_tournament(id)
+        stored_tournament.id = None
+        stored_tournament.uniq_id = new_uniq_id
+        stored_tournament.name = new_name
+        stored_tournament.path = new_path
+        stored_tournament.filename = new_filename
+        stored_tournament.ffe_id = new_ffe_id
+        stored_tournament.ffe_password = new_ffe_password
+        stored_tournament.last_result_update = 0.0
+        stored_tournament.last_illegal_move_update = 0.0
+        stored_tournament.last_ffe_upload = 0.0
+        stored_tournament.last_chessevent_download = 0.0
+        self._execute(
+            'SELECT uniq_id FROM `chessevent`',
+            (),
+        )
+        return self._write_stored_tournament(stored_tournament)
+
+    def set_tournament_last_ffe_upload(self, tournament_id: int, timestamp: float):
+        self._execute(
+            f'UPDATE `tournament` SET `last_ffe_upload` = ? WHERE `id` = ?',
+            (tournament_id, timestamp if timestamp else time.time()))
+
+    def set_tournament_last_chessevent_download(self, tournament_id: int, timestamp: float = None):
+        self._execute(
+            f'UPDATE `tournament` SET `last_chessevent_download` = ? WHERE `id` = ?',
+            (tournament_id, timestamp if timestamp else time.time()))
 
     """ 
     ---------------------------------------------------------------------------------
@@ -613,6 +693,11 @@ class EventDatabase(SQLiteDatabase):
             illegal_moves[int(row['player_id'])] += 1
         return illegal_moves
 
+    def get_illegal_moves_with_tournament_uniq_id(self, tournament_uniq_id: str, round: int) -> Counter[int]:
+        # TODO Remove this method
+        stored_tournament: StoredTournament = self.get_stored_tournament_with_uniq_id(tournament_uniq_id)
+        return self.get_illegal_moves(stored_tournament.id, round) if stored_tournament else Counter[int]()
+
     def add_illegal_move(self, tournament_id: int, round: int, player_id: int) -> StoredIllegalMove:
         stored_tournament: StoredTournament = self._set_tournament_last_illegal_move_update(tournament_id)
         assert stored_tournament, PapiWebException(f'Le tournoi [{tournament_id}] est introuvable.')
@@ -623,6 +708,14 @@ class EventDatabase(SQLiteDatabase):
             f'INSERT INTO `illegal_move`({", ".join(protected_fields)}) VALUES ({", ".join(["?"] * len(fields))})',
             tuple(params))
         return self._get_stored_illegal_move(self._last_inserted_id())
+
+    def add_illegal_move_with_tournament_uniq_id(
+            self, tournament_uniq_id: str, round: int, player_id: int
+    ) -> StoredIllegalMove:
+        # TODO Remove this method
+        stored_tournament: StoredTournament = self.get_stored_tournament_with_uniq_id(tournament_uniq_id)
+        assert stored_tournament, PapiWebException(f'Le tournoi [{tournament_uniq_id}] est introuvable.')
+        return self.add_illegal_move(stored_tournament.id, round, player_id)
 
     def delete_illegal_move(self, tournament_id: int, round: int, player_id: int) -> bool:
         stored_tournament: StoredTournament = self._set_tournament_last_illegal_move_update(tournament_id)
@@ -640,6 +733,12 @@ class EventDatabase(SQLiteDatabase):
         )
         return True
 
+    def delete_illegal_move_with_tournament_uniq_id(self, tournament_uniq_id: str, round: int, player_id: int) -> bool:
+        # TODO Remove this method
+        stored_tournament: StoredTournament = self.get_stored_tournament_with_uniq_id(tournament_uniq_id)
+        assert stored_tournament, PapiWebException(f'Le tournoi [{tournament_uniq_id}] est introuvable.')
+        return self.delete_illegal_move(stored_tournament.id, round, player_id)
+
     def delete_illegal_moves(self, tournament_id: int, round: int):
         stored_tournament: StoredTournament = self._set_tournament_last_illegal_move_update(tournament_id)
         assert stored_tournament, PapiWebException(f'Le tournoi [{tournament_id}] est introuvable.')
@@ -647,6 +746,12 @@ class EventDatabase(SQLiteDatabase):
             'DELETE FROM `illegal_move` WHERE `tournament_id` = ? AND `round` = ?',
             (stored_tournament.id, round,),
         )
+
+    def delete_illegal_moves_with_tournament_uniq_id(self, tournament_uniq_id: str, round: int):
+        # TODO Remove this method
+        stored_tournament: StoredTournament = self.get_stored_tournament_with_uniq_id(tournament_uniq_id)
+        assert stored_tournament, PapiWebException(f'Le tournoi [{tournament_uniq_id}] est introuvable.')
+        return self.delete_illegal_moves(stored_tournament.id, round)
 
     """ 
     ---------------------------------------------------------------------------------
@@ -705,6 +810,12 @@ class EventDatabase(SQLiteDatabase):
             ),
         )
 
+    def add_result_with_tournament_uniq_id(self, tournament_uniq_id: str, round: int, board: Board, result: UtilResult):
+        # TODO Remove this method
+        stored_tournament: StoredTournament = self.get_stored_tournament_with_uniq_id(tournament_uniq_id)
+        assert stored_tournament, PapiWebException(f'Le tournoi [{tournament_uniq_id}] est introuvable.')
+        return self.add_result(stored_tournament.id, round, board, result)
+
     def delete_result(self, tournament_id: int, round: int, board_id: int):
         stored_tournament: StoredTournament = self._set_tournament_last_result_update(tournament_id)
         assert stored_tournament, PapiWebException(f'Le tournoi [{tournament_id}] est introuvable.')
@@ -712,6 +823,12 @@ class EventDatabase(SQLiteDatabase):
             'DELETE FROM `result` WHERE `tournament_id` = ? AND `round` = ? AND `board_id` = ?',
             (stored_tournament.id, round, board_id),
         )
+
+    def delete_result_with_tournament_uniq_id(self, tournament_uniq_id: str, round: int, board_id: int):
+        # TODO Remove this method
+        stored_tournament: StoredTournament = self.get_stored_tournament_with_uniq_id(tournament_uniq_id)
+        assert stored_tournament, PapiWebException(f'Le tournoi [{tournament_uniq_id}] est introuvable.')
+        return self.delete_result(stored_tournament.id, round, board_id)
 
     def get_results(self, limit: int, *tournament_ids: Unpack[int]) -> Iterator[DataResult]:
         if not tournament_ids:

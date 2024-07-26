@@ -1,0 +1,99 @@
+<div class="row">
+    <div class="col">
+        <h1 class="text-nowrap">
+            {{ admin_event.name }} - Tournois
+        </h1>
+    </div>
+    <div class="col-1 d-flex justify-content-end">
+        <h1>
+            <button
+                    class="btn btn-primary text-nowrap"
+                    hx-post="{{ url_for('admin-tournament-render-edit-modal') }}"
+                    hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait">
+                <i class="bi-plus-square-fill"></i> Créer un tournoi
+            </button>
+        </h1>
+    </div>
+</div>
+
+<table class="table border-black">
+    <thead class="table-dark">
+        <tr>
+            <th scope="col" class="text-nowrap">Id</th>
+            <th scope="col" class="text-nowrap">Nom</th>
+            <th scope="col" class="text-nowrap">Fichier</th>
+            <th scope="col" class="text-nowrap">Homologation<br>FFE</th>
+            <th scope="col" class="text-nowrap">ChessEvent</th>
+            <th scope="col" class="text-nowrap">Coups<br/>illégaux</th>
+            <th scope="col" class="text-nowrap">Rondes</th>
+            <th scope="col" class="text-nowrap">Appar.</th>
+            <th scope="col" class="text-nowrap">Class.</th>
+            <th scope="col" class=""></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if admin_event.tournaments_by_id|length > 0 %}
+            {% for tournament in admin_event.tournaments_by_id.values() %}
+                <tr>
+                    <th scope="row" class="text-nowrap">{{ tournament.uniq_id }}</th>
+                    <td class="text-nowrap">{{ tournament.name }}</td>
+                    <td class="">{% if not tournament.file_exists %}<i class="bi-exclamation-triangle-fill text-danger"></i>{% else %}<i class="bi-check-circle-fill text-success"></i>{% endif %} {{ tournament.file }}</td>
+                    <td class="text-nowrap">{% if tournament.ffe_id %}{{ tournament.ffe_id }} {{ tournament.shadowed_ffe_password }}{% else %}<em>-</em>{% endif %}</td>
+                    <td class="text-nowrap">{% if tournament.chessevent %}{{ tournament.chessevent.uniq_id }}{% else %}<em>-</em>{% endif %}</td>
+                    <td class="text-nowrap">{{ tournament.record_illegal_moves }}</td>
+                    <td class="text-nowrap">{% if tournament.rounds %}{{ tournament.current_round }} / {{ tournament.rounds }}{% else %}<em>-</em>{% endif %}</td>
+                    <td class="text-nowrap">{% if tournament.pairing %}{{ tournament.pairing }}{% else %}<em>-</em>{% endif %}</td>
+                    <td class="text-nowrap">{% if tournament.rating %}{{ tournament.rating }}{% else %}<em>-</em>{% endif %}</td>
+                    <td class="text-nowrap">
+                        <button
+                                class="btn btn-sm btn-primary p-1"
+                                hx-post="{{ url_for('admin-tournament-render-edit-modal') }}"
+                                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_tournament_id": "{{ tournament.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-pencil-fill"></i> Éditer
+                        </button>
+                        <button
+                                class="btn btn-sm btn-primary p-1"
+                                hx-post="{{ url_for('admin-tournament-render-edit-modal') }}"
+                                hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_tournament_id": "{{ tournament.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-pencil-fill"></i> Dupliquer
+                        </button>
+                        <button
+                                class="btn btn-sm btn-danger p-1"
+                                hx-post="{{ url_for('admin-tournament-render-edit-modal') }}"
+                                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_tournament_id": "{{ tournament.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-trash-fill"></i> Supprimer
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td
+                        colspan="10"
+                        class="text-nowrap" >
+                    <em>Aucun tournoi trouvé.</em>
+                </td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>

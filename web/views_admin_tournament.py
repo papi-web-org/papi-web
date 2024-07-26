@@ -9,10 +9,14 @@ from litestar.response import Template
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 
+from common.exception import PapiWebException
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.tournament import Tournament
-from data.event import Event, get_events_by_uniq_id
+from data.tournament import NewTournament
+from data.event import NewEvent
+from data.loader import EventLoader
+from database.sqlite import EventDatabase
+from database.store import StoredTournament
 from web.messages import Message
 from web.views_admin import AAdminController
 
@@ -20,49 +24,87 @@ logger: Logger = get_logger()
 
 
 class AdminTournamentController(AAdminController):
-    @staticmethod
+
     def _admin_validate_tournament_update_data(
-            admin_event: Event,
-            admin_tournament: Tournament,
+            self, action: str, admin_event: NewEvent,
+            admin_tournament: NewTournament,
             data: dict[str, str] | None = None,
-    ) -> dict[str, str]:
+    ) -> StoredTournament:
         errors: dict[str, str] = {}
         if data is None:
             data = {}
-        tournament_uniq_id: str = data.get('tournament_uniq_id', '')
-        if not tournament_uniq_id:
-            errors['tournament_uniq_id'] = 'Veuillez entrer l\'identifiant du tournoi.'
+        uniq_id: str = self.form_data_to_str_or_none(data, 'uniq_id')
+        if action == 'delete':
+            if not uniq_id:
+                errors['uniq_id'] = 'Veuillez entrer l\'identifiant du tournoi.'
+            elif uniq_id != admin_tournament.uniq_id:
+                errors['uniq_id'] = f'L\'identifiant entré n\'est pas valide.'
         else:
-            if tournament_uniq_id.find('/') != -1:
-                errors['tournament_uniq_id'] = "le caractère « / » n\'est pas autorisé"
+            if not uniq_id:
+                errors['uniq_id'] = 'Veuillez entrer l\'identifiant du tournoi.'
+            elif uniq_id.find('/') != -1:
+                errors['uniq_id'] = "le caractère « / » n\'est pas autorisé"
             else:
-                if admin_tournament:
-                    if (tournament_uniq_id != admin_tournament.uniq_id
-                            and tournament_uniq_id in admin_event.tournaments):
-                        errors['tournament_uniq_id'] = \
-                            f'Un autre tournoi avec l\'identifiant [{tournament_uniq_id}] existe déjà.'
-                else:
-                    if tournament_uniq_id in admin_event.tournaments:
-                        errors['tournament_uniq_id'] = f'Le tournoi [{tournament_uniq_id}] existe déjà.'
-        tournament_path: str = data.get('tournament_path', '')
-        if not tournament_path:
-            errors['tournament_path'] = 'Veuillez entrer le répertoire du fichier Papi.'
-        tournament_filename: str = data.get('tournament_filename', '')
-        tournament_ffe_id: str = data.get('tournament_ffe_id', '')
-        if not tournament_filename and not tournament_ffe_id:
-            error: str = 'Veuillez entrer le nom du fichier Papi ou le numéro d\'homologation FFE.'
-            errors['tournament_filename'] = error
-            errors['tournament_ffe_id'] = error
-        tournament_ffe_password: str = data.get('tournament_ffe_password', '')
-        if tournament_ffe_password and not re.match('^[A-Z]{10}$', tournament_ffe_password):
-            errors['tournament_ffe_id'] = \
-                'Le mot de passe du tournoi sur le site FFE doit être composé de 10 lettres majuscules.'
-        return errors
+                match action:
+                    case 'create' | 'clone':
+                        if uniq_id in admin_event.tournament_uniq_ids:
+                            errors['uniq_id'] = f'Le tournoi [{uniq_id}] existe déjà.'
+                    case 'update':
+                        if uniq_id != admin_tournament.uniq_id and uniq_id in admin_event.tournament_uniq_ids:
+                            errors['uniq_id'] = f'Le tournoi [{uniq_id}] existe déjà.'
+                    case _:
+                        raise ValueError(f'action=[{action}]')
+        name: str = self.form_data_to_str_or_none(data, 'name')
+        path: str | None = self.form_data_to_str_or_none(data, 'path')
+        filename: str | None = self.form_data_to_str_or_none(data, 'filename')
+        ffe_id: int | None = self.form_data_to_int_or_none(data, 'ffe_id')
+        ffe_password: str | None = self.form_data_to_str_or_none(data, 'ffe_password')
+        time_control_initial_time: int | None = self.form_data_to_int_or_none(data, 'time_control_initial_time')
+        time_control_increment: int | None = self.form_data_to_int_or_none(data, 'time_control_increment')
+        time_control_handicap_penalty_value: int | None = self.form_data_to_int_or_none(
+            data, 'time_control_handicap_penalty_value')
+        time_control_handicap_penalty_step: int | None = self.form_data_to_int_or_none(
+            data, 'time_control_handicap_penalty_step')
+        time_control_handicap_min_time: int | None = self.form_data_to_int_or_none(
+            data, 'time_control_handicap_min_time')
+        chessevent_id: int | None = self.form_data_to_int_or_none(data, 'chessevent_id')
+        chessevent_tournament_name: str = self.form_data_to_str_or_none(data, 'chessevent_tournament_name')
+        record_illegal_moves: int | None = self.form_data_to_str_or_none(data, 'record_illegal_moves')
+        match action:
+            case 'create' | 'update' | 'clone':
+                if not name:
+                    errors['name'] = 'Veuillez entrer le nom du tournoi.'
+                if ffe_password and not re.match('^[A-Z]{10}$', ffe_password):
+                    errors['ffe_password'] = \
+                        'Le mot de passe du tournoi sur le site FFE doit être composé de 10 lettres majuscules.'
+            case 'delete':
+                pass
+            case _:
+                raise ValueError(f'action=[{action}]')
+        return StoredTournament(
+            id=admin_tournament.id if action != 'create' else None,
+            uniq_id=uniq_id,
+            name=name,
+            path=path,
+            filename=filename,
+            ffe_id=ffe_id,
+            ffe_password=ffe_password,
+            time_control_initial_time=time_control_initial_time,
+            time_control_increment=time_control_increment,
+            time_control_handicap_penalty_value=time_control_handicap_penalty_value,
+            time_control_handicap_penalty_step=time_control_handicap_penalty_step,
+            time_control_handicap_min_time=time_control_handicap_min_time,
+            chessevent_id=chessevent_id,
+            chessevent_tournament_name=chessevent_tournament_name,
+            record_illegal_moves=record_illegal_moves,
+            errors=errors,
+        )
 
-    @staticmethod
     def _admin_tournament_render_edit_modal(
-            admin_event: Event,
-            admin_tournament: Tournament | None,
+            self,
+            action: str,
+            admin_event: NewEvent,
+            admin_tournament: NewTournament | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
@@ -72,9 +114,12 @@ class AdminTournamentController(AAdminController):
             re_target='#admin-modal-container',
             context={
                 'papi_web_config': PapiWebConfig(),
+                'action': action,
                 'admin_event': admin_event,
                 'admin_tournament': admin_tournament,
                 'data': data,
+                'record_illegal_moves_options': self._get_record_illegal_moves_options(
+                    admin_event.record_illegal_moves),
                 'errors': errors,
             })
 
@@ -89,30 +134,80 @@ class AdminTournamentController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        events_by_id: dict[str, Event] = get_events_by_uniq_id(load_screens=False, with_tournaments_only=False)
-        admin_event_uniq_id: str = data.get('admin_event_uniq_id', '')
+        event_loader: EventLoader = EventLoader()
+        action: str = self.form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
-            admin_event: Event = events_by_id[admin_event_uniq_id]
-        except KeyError:
-            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable.')
+            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
+        except PapiWebException as pwe:
+            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
-        admin_tournament_uniq_id: str = data.get('admin_tournament_uniq_id', '')
-        admin_tournament: Tournament | None = None
-        if admin_tournament_uniq_id:
-            try:
-                admin_tournament = admin_event.tournaments[
-                    admin_tournament_uniq_id]
-                data: dict[str, str] = {
-                    'tournament_uniq_id': admin_tournament.uniq_id,
-                    'tournament_name': admin_tournament.name,
-                }
-            except KeyError:
-                Message.error(request, f'Le tournoi [{admin_tournament_uniq_id}] est introuvable.')
-                return self._render_messages(request)
-        else:
-            data: dict[str, str] = {}
-        errors: dict[str, str] = self._admin_validate_tournament_update_data(admin_event, admin_tournament, data)
-        return self._admin_tournament_render_edit_modal(admin_event, admin_tournament, data, errors)
+        admin_tournament: NewTournament | None = None
+        match action:
+            case 'update' | 'delete' | 'clone':
+                admin_tournament_id: int = self.form_data_to_int_or_none(data, 'admin_tournament_id')
+                try:
+                    admin_tournament = admin_event.tournaments_by_id[admin_tournament_id]
+                except KeyError:
+                    Message.error(request, f'Le tournoi [{admin_tournament_id}] est introuvable.')
+                    return self._render_messages(request)
+            case 'create':
+                pass
+            case _:
+                raise ValueError(f'action=[{action}]')
+        data: dict[str, str] = {}
+        match action:
+            case 'update':
+                data['uniq_id'] = self.value_to_form_data(admin_tournament.stored_tournament.uniq_id)
+            case 'create' | 'clone':
+                data['uniq_id'] = ''
+            case 'delete':
+                pass
+            case _:
+                raise ValueError(f'action=[{action}]')
+        match action:
+            case 'update' | 'clone':
+                data['name'] = self.value_to_form_data(admin_tournament.stored_tournament.name)
+                data['path'] = self.value_to_form_data(admin_tournament.stored_tournament.path)
+                data['filename'] = self.value_to_form_data(admin_tournament.stored_tournament.filename)
+                data['ffe_id'] = self.value_to_form_data(admin_tournament.stored_tournament.ffe_id)
+                data['ffe_password'] = self.value_to_form_data(admin_tournament.stored_tournament.ffe_password)
+            case 'create':
+                data['name'] = ''
+                data['path'] = ''
+                data['filename'] = ''
+                data['ffe_id'] = ''
+                data['ffe_password'] = ''
+            case 'delete':
+                pass
+            case _:
+                raise ValueError(f'action=[{action}]')
+        match action:
+            case 'update':
+                data['time_control_initial_time'] = self.value_to_form_data(
+                    admin_tournament.stored_tournament.time_control_initial_time)
+                data['time_control_increment'] = self.value_to_form_data(
+                    admin_tournament.stored_tournament.time_control_increment)
+                data['time_control_handicap_penalty_value'] = self.value_to_form_data(
+                    admin_tournament.stored_tournament.time_control_handicap_penalty_value)
+                data['time_control_handicap_penalty_step'] = self.value_to_form_data(
+                    admin_tournament.stored_tournament.time_control_handicap_penalty_step)
+                data['time_control_handicap_min_time'] = self.value_to_form_data(
+                    admin_tournament.stored_tournament.time_control_handicap_min_time)
+                data['chessevent_id'] = self.value_to_form_data(
+                    admin_tournament.stored_tournament.chessevent_id)
+                data['chessevent_tournament_name'] = self.value_to_form_data(
+                    admin_tournament.stored_tournament.chessevent_tournament_name)
+                data['record_illegal_moves'] = self.value_to_form_data(
+                    admin_tournament.stored_tournament.record_illegal_moves)
+            case 'delete' | 'clone' | 'create':
+                pass
+            case _:
+                raise ValueError(f'action=[{action}]')
+        stored_tournament: StoredTournament = self._admin_validate_tournament_update_data(
+            action, admin_event, admin_tournament, data)
+        return self._admin_tournament_render_edit_modal(
+            action, admin_event, admin_tournament, data, stored_tournament.errors)
 
     @post(
         path='/admin-tournament-update',
@@ -125,149 +220,55 @@ class AdminTournamentController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        events_by_id: dict[str, Event] = get_events_by_uniq_id(load_screens=False, with_tournaments_only=False)
-        admin_event_uniq_id: str = data.get('admin_event_uniq_id', '')
+        event_loader: EventLoader = EventLoader()
+        action: str = self.form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
-            admin_event: Event = events_by_id[admin_event_uniq_id]
-        except KeyError:
-            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable.')
+            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
+        except PapiWebException as pwe:
+            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
-        admin_tournament_uniq_id: str = data.get('admin_tournament_uniq_id', '')
-        admin_tournament: Tournament | None = None
-        if admin_tournament_uniq_id:
-            try:
-                admin_tournament = admin_event.tournaments[
-                    admin_tournament_uniq_id]
-            except KeyError:
-                Message.error(request, f'Le tournoi [{admin_tournament_uniq_id}] est introuvable.')
-                return self._render_messages(request)
-        errors: dict[str, str] = self._admin_validate_tournament_update_data(
-            admin_event, admin_tournament, data)
-        if errors:
+        admin_tournament: NewTournament | None = None
+        match action:
+            case 'update' | 'delete' | 'clone':
+                admin_tournament_id: int = self.form_data_to_int_or_none(data, 'admin_tournament_id')
+                try:
+                    admin_tournament = admin_event.tournaments_by_id[admin_tournament_id]
+                except KeyError:
+                    Message.error(request, f'Le tournoi [{admin_tournament_id}] est introuvable.')
+                    return self._render_messages(request)
+            case 'create':
+                pass
+            case _:
+                raise ValueError(f'action=[{action}]')
+        stored_tournament: StoredTournament = self._admin_validate_tournament_update_data(
+            action, admin_event, admin_tournament, data)
+        if stored_tournament.errors:
             return self._admin_tournament_render_edit_modal(
-                admin_event, admin_tournament, data, errors)
-        if admin_tournament:
-            # TODO Update the tournament
-            # admin_event: Event = UPDATE_TOURNAMENT(data)
-            # Message.success(
-            #     request, f'Lr tournoi [{admin_tournament.uniq_id}] a été modifié.')
-            # admin_event.tournaments[admin_tournament.uniq_id] = admin_tournament
-            # if data['tournament_uniq_id'] != admin_tournament.uniq_id:
-            #     delete admin_event.tournaments['tournament_uniq_id'])
-            events: list[Event] = sorted(events_by_id.values(), key=lambda event: event.name)
-            # return _admin_render_index(
-            #     request, events, admin_event=admin_event, admin_tournament=admin_tournament)
-            Message.error(
-                request,
-                f'La modification des tournois par l\'interface web n\'est pas encore implémentée.')
-        else:
-            # TODO Create the tournament
-            # admin_tournament: Tournament = CREATE_TOURNAMENT(data)
-            # Message.success(request, f'Le tournoi [{admin_tournaments.uniq_id}] a été créé.')
-            # admin_event.tournaments[admin_tournament.uniq_id] = admin_tournament
-            events: list[Event] = sorted(events_by_id.values(), key=lambda event: event.name)
-            # return _admin_render_index(
-            #     request, events, admin_event=admin_event, admin_tournament=admin_tournament)
-            Message.error(request,
-                          f'La création des tournois par l\'interface web n\'est pas encore implémentée.')
+                action, admin_event, admin_tournament, data, stored_tournament.errors)
+        with (EventDatabase(admin_event.uniq_id, write=True) as event_database):
+            match action:
+                case 'update':
+                    stored_tournament = event_database.update_stored_tournament(stored_tournament)
+                    Message.success(request, f'Le tournoi [{stored_tournament.uniq_id}] a été modifié.')
+                case 'create':
+                    stored_tournament = event_database.add_stored_tournament(stored_tournament)
+                    Message.success(request, f'Le tournoi [{stored_tournament.uniq_id}] a été créé.')
+                case 'delete':
+                    event_database.delete_stored_tournament(admin_tournament.id)
+                    Message.success(request, f'Le tournoi [{admin_tournament.uniq_id}] a été supprimé.')
+                case 'clone':
+                    stored_tournament = event_database.clone_stored_tournament(
+                        admin_tournament.id, stored_tournament.uniq_id, stored_tournament.name, stored_tournament.path,
+                        stored_tournament.filename, stored_tournament.ffe_id, stored_tournament.ffe_password, )
+                    Message.success(
+                        request,
+                        f'Le tournoi [{admin_tournament.uniq_id}] a été dupliqué.'
+                        f'([{stored_tournament.uniq_id}]).')
+                case _:
+                    raise ValueError(f'action=[{action}]')
+            event_database.commit()
+        event_loader.clear_cache(admin_event.uniq_id)
+        admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
         return self._admin_render_index(
-            request, events, admin_stored_event=admin_event, admin_event_selector='@tournaments')
-
-    @staticmethod
-    def _admin_validate_tournament_delete_data(
-            admin_tournament: Tournament,
-            data: dict[str, str] | None = None,
-    ) -> dict[str, str]:
-        errors: dict[str, str] = {}
-        if data is None:
-            data = {}
-        tournament_uniq_id: str = data.get('tournament_uniq_id', '')
-        if not tournament_uniq_id:
-            errors['tournament_uniq_id'] = 'Veuillez entrer l\'identifiant du tournoi.'
-        elif tournament_uniq_id != admin_tournament.uniq_id:
-            errors['tournament_uniq_id'] = f'L\'identifiant entré n\'est pas valide.'
-        return errors
-
-    @staticmethod
-    def _admin_tournament_render_delete_modal(
-            admin_event: Event,
-            admin_tournament: Tournament,
-            data: dict[str, str] | None = None,
-            errors: dict[str, str] | None = None,
-    ) -> Template:
-        return HTMXTemplate(
-            template_name='admin_tournament_delete_modal.html',
-            re_swap='innerHTML',
-            re_target='#admin-modal-container',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_event': admin_event,
-                'admin_tournament': admin_tournament,
-                'data': data,
-                'errors': errors,
-            })
-
-    @post(
-        path='/admin-tournament-render-delete-modal',
-        name='admin-tournament-render-delete-modal'
-    )
-    async def htmx_admin_event_render_delete_modal(
-            self, request: HTMXRequest,
-            data: Annotated[
-                dict[str, str],
-                Body(media_type=RequestEncodingType.URL_ENCODED),
-            ],
-    ) -> Template:
-        events_by_id: dict[str, Event] = get_events_by_uniq_id(load_screens=False, with_tournaments_only=False)
-        admin_event_uniq_id: str = data.get('admin_event_uniq_id', '')
-        try:
-            admin_event: Event = events_by_id[admin_event_uniq_id]
-        except KeyError:
-            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable.')
-            return self._render_messages(request)
-        admin_tournament_uniq_id: str = data.get('admin_tournament_uniq_id', '')
-        try:
-            admin_tournament: Tournament = admin_event.tournaments[admin_tournament_uniq_id]
-            data: dict[str, str] = {}
-            errors: dict[str, str] = self._admin_validate_tournament_delete_data(admin_tournament, data)
-            return self._admin_tournament_render_delete_modal(admin_event, admin_tournament, data, errors)
-        except KeyError:
-            Message.error(request, f'La connexion à ChessEvent [{admin_tournament_uniq_id}] est introuvable.')
-            return self._render_messages(request)
-
-    @post(
-        path='/admin-tournament-delete',
-        name='admin-tournament-delete'
-    )
-    async def htmx_admin_event_delete(
-            self, request: HTMXRequest,
-            data: Annotated[
-                dict[str, str],
-                Body(media_type=RequestEncodingType.URL_ENCODED),
-            ],
-    ) -> Template:
-        events_by_id: dict[str, Event] = get_events_by_uniq_id(load_screens=False, with_tournaments_only=False)
-        admin_event_uniq_id: str = data.get('admin_event_uniq_id', '')
-        try:
-            admin_event: Event = events_by_id[admin_event_uniq_id]
-        except KeyError:
-            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable.')
-            return self._render_messages(request)
-        admin_tournament_uniq_id: str = data.get('admin_tournament_uniq_id', '')
-        try:
-            admin_tournament: Tournament = admin_event.tournaments[admin_tournament_uniq_id]
-        except KeyError:
-            Message.error(request, f'La connexion à ChessEvent [{admin_tournament_uniq_id}] est introuvable.')
-            return self._render_messages(request)
-        errors: dict[str, str] = self._admin_validate_tournament_delete_data(admin_tournament, data)
-        if errors:
-            return self._admin_tournament_render_delete_modal(admin_event, admin_tournament, data, errors)
-        # TODO Delete the tournament
-        # DELETE_TOURNAMENT(data)
-        # Message.success(
-        #     request, f'Le tournoi [{admin_tournament.uniq_id}] a été supprimé.')
-        # del admin_event.tournaments[admin_tournament.uniq_id]
-        Message.error(request,
-                      f'La suppression des tournois par l\'interface web n\'est pas encore implémentée.')
-        events: list[Event] = sorted(events_by_id.values(), key=lambda event: event.name)
-        return self._admin_render_index(request, events, admin_stored_event=admin_event, admin_event_selector='@tournaments')
+            request, event_loader, admin_event=admin_event, admin_event_selector='@tournaments')

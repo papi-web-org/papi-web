@@ -19,19 +19,9 @@ logger.info('Pooling ODBC : %s', f"{'des' if not pyodbc.pooling else ''}activé"
 class AccessDatabase:
     """Base class for Access-based databases."""
     file: Path
-    method: str
-    read_only: bool = field(init=False, default=True)
+    write: bool = field(default=False)
     database: pyodbc.Connection | None = field(init=False, default=None)
     cursor: pyodbc.Cursor | None = field(init=False, default=None)
-
-    def __post_init__(self):
-        match self.method:
-            case 'r':
-                self.read_only = True
-            case 'w':
-                self.read_only = False
-            case _:
-                raise ValueError
 
     # NOTE(Amaras) This is the start of the infrastructure to build a DB as a
     # context manager (making it possible to use it using the with statement).
@@ -54,7 +44,7 @@ class AccessDatabase:
         # Get rid of unresolved pyodbc.Error: ('HY000', 'The driver did not supply an error!')
         while self.database is None:
             try:
-                self.database = pyodbc.connect(db_url, readonly=self.read_only)
+                self.database = pyodbc.connect(db_url, readonly=not self.write)
             except pyodbc.Error as e:
                 logger.error('La connection au fichier %s a échoué: %s', self.file, e.args)
                 time.sleep(1)
