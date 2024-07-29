@@ -10,7 +10,9 @@
 - [ ] Prise en charge de la méthode HEAD pour les afficheurs dynamiques (PA)
 - [ ] Limiter le temps d'affichage des résultats sur les écrans de type `results` (SP)
 - [ ] Ajouter une barre de recherche sur les écrans de type `results` pour les arbitres (SP)
-- [X] ~~Ajouter la possibilité de supprimer des résultats depuis les écrans de type `results` (SP)~~
+- [ ] Ajouter la possibilité de supprimer des résultats depuis les écrans de type `results` (SP)
+- [ ] Ajouter le nombre de parties sans résultat d'un tournoi, d'un ensemble d'échiquiers, etc. (NDP)
+- [ ] Ajouter la possibilité de changer le nom d'un⋅e participant⋅e pour l'affichage des appariements (SP)
 - [X] ~~Ajouter la possibilité d'afficher des tables fixes sur des écrans particuliers sur les écrans de type `boards` (SP)~~
 - [x] ~~Affichage du statut pointé·e/non pointé·e des joueur·euses avant l'affichage de la première ronde (ajouté en version 2.2)~~
 - [x] ~~Enregistrement des coups illégaux des joueur·euses (ajouté en version 2.2)~~
@@ -22,3 +24,4 @@
 
 - [ ] Poser une ou plusieurs licences sur le code de Papi-web ([détails](94-license.md))
 - [ ] Remplacement des fichiers de configuration INI par une interface web (en cours)
+- [ ] Mettre en place un système multilingue pour les tournois internationaux
