@@ -9,6 +9,7 @@ from litestar.response import Template, Redirect
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 
+from common import RGB, check_rgb_str
 from common.exception import PapiWebException
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
@@ -24,7 +25,9 @@ logger: Logger = get_logger()
 class AAdminController(AController):
 
     @staticmethod
-    def form_data_to_str_or_none(data: dict[str, str], field: str, empty_value: int | None = None) -> str | None:
+    def form_data_to_str_or_none(
+            data: dict[str, str], field: str, empty_value: int | None = None
+    ) -> str | None:
         data[field] = data.get(field, '')
         if data[field] is not None:
             data[field] = data[field].strip()
@@ -33,13 +36,18 @@ class AAdminController(AController):
         return data[field]
 
     @staticmethod
-    def form_data_to_int_or_none(data: dict[str, str], field: str, empty_value: int | None = None) -> int | None:
+    def form_data_to_int_or_none(
+            data: dict[str, str], field: str, empty_value: int | None = None, minimum: int = None
+    ) -> int | None:
         data[field] = data.get(field, '')
         if data[field] is not None:
             data[field] = data[field].strip()
         if not data[field]:
             return empty_value
-        return int(data[field])
+        int_val = int(data[field])
+        if minimum is not None:
+            assert int_val > minimum
+        return int_val
 
     @staticmethod
     def form_data_to_bool_or_none(data: dict[str, str], field: str, empty_value: bool | None = None) -> bool | None:
@@ -51,15 +59,24 @@ class AAdminController(AController):
         return bool(data[field])
 
     @staticmethod
+    def form_data_to_rgb_or_none(data: dict[str, str], field: str, empty_value: RGB | None = None) -> str | None:
+        data[field] = data.get(field, '')
+        if data[field] is not None:
+            data[field] = data[field].strip().lower()
+        if not data[field]:
+            return empty_value
+        return check_rgb_str(data[field])
+
+    @staticmethod
     def value_to_form_data(value: str | int | bool | Path | None) -> str | None:
         if value is None:
             return ''
         if isinstance(value, str):
             return value.strip()
+        if isinstance(value, bool):
+            return 'true' if value else ''
         if isinstance(value, int):
             return str(value)
-        if isinstance(value, bool):
-            return str(1 if value else 0)
         if isinstance(value, Path):
             return str(value)
         raise ValueError
@@ -75,6 +92,17 @@ class AAdminController(AController):
         }
         options[''] = f'Par défaut ({options[str(default)]})'
         return options
+
+    @staticmethod
+    def _get_timer_color_texts(delays: dict[int, int]) -> dict[int, str]:
+        return {
+            1: f'La couleur n°1 est utilisée jusqu\'à {delays[1]} minutes avant le début des rondes (délai n°1), '
+               f'la couleur change ensuite progressivement jusqu\'à la couleur n°2 ({delays[2]} minutes avant le '
+               f'début des rondes).',
+            2: f'La couleur n°2 est utilisée {delays[2]} minutes avant le début des rondes (délai n°2), la couleur '
+               f'change ensuite progressivement jusqu\'à la couleur n°3 (au début des rondes).',
+            3: f'La couleur n°3 est utilisée à partir du début des rondes et pendant {delays[3]} minutes (délai n°3).',
+        }
 
     @staticmethod
     def _admin_render_index(
@@ -99,11 +127,11 @@ class AAdminController(AController):
             'admin_event_selector_options': {
                 '': 'Configuration générale',
                 '@chessevents': 'Connexions à ChessEvent',
+                '@timers': 'Chronomètres',
                 '@tournaments': 'Tournois',
                 # '@screens': 'Écrans',
                 # '@families': 'Familles d\'écrans',
                 # '@rotators': 'Écrans rotatifs',
-                # '@timers': 'Chronomètres',
                 # '@messages': 'Messages',
                 # '@check_in': 'Pointage',
                 # '@pairings': 'Appariements',

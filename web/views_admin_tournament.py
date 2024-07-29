@@ -54,30 +54,52 @@ class AdminTournamentController(AAdminController):
                             errors['uniq_id'] = f'Le tournoi [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')
-        name: str = self.form_data_to_str_or_none(data, 'name')
-        path: str | None = self.form_data_to_str_or_none(data, 'path')
-        filename: str | None = self.form_data_to_str_or_none(data, 'filename')
-        ffe_id: int | None = self.form_data_to_int_or_none(data, 'ffe_id')
-        ffe_password: str | None = self.form_data_to_str_or_none(data, 'ffe_password')
-        time_control_initial_time: int | None = self.form_data_to_int_or_none(data, 'time_control_initial_time')
-        time_control_increment: int | None = self.form_data_to_int_or_none(data, 'time_control_increment')
-        time_control_handicap_penalty_value: int | None = self.form_data_to_int_or_none(
-            data, 'time_control_handicap_penalty_value')
-        time_control_handicap_penalty_step: int | None = self.form_data_to_int_or_none(
-            data, 'time_control_handicap_penalty_step')
-        time_control_handicap_min_time: int | None = self.form_data_to_int_or_none(
-            data, 'time_control_handicap_min_time')
-        chessevent_id: int | None = self.form_data_to_int_or_none(data, 'chessevent_id')
-        chessevent_tournament_name: str = self.form_data_to_str_or_none(data, 'chessevent_tournament_name')
-        record_illegal_moves: int | None = self.form_data_to_str_or_none(data, 'record_illegal_moves')
+        name: str | None = None
+        path: str | None = None
+        filename: str | None = None
+        ffe_id: int | None = None
+        ffe_password: str | None = None
         match action:
             case 'create' | 'update' | 'clone':
+                name = self.form_data_to_str_or_none(data, 'name')
                 if not name:
                     errors['name'] = 'Veuillez entrer le nom du tournoi.'
+                path = self.form_data_to_str_or_none(data, 'path')
+                filename = self.form_data_to_str_or_none(data, 'filename')
+                try:
+                    ffe_id = self.form_data_to_int_or_none(data, 'ffe_id')
+                except ValueError:
+                    errors['ffe_id'] = 'L\'identifiant FFE est un entier positif.'
+                ffe_password = self.form_data_to_str_or_none(data, 'ffe_password')
                 if ffe_password and not re.match('^[A-Z]{10}$', ffe_password):
                     errors['ffe_password'] = \
                         'Le mot de passe du tournoi sur le site FFE doit être composé de 10 lettres majuscules.'
             case 'delete':
+                pass
+            case _:
+                raise ValueError(f'action=[{action}]')
+        time_control_initial_time: int | None = None
+        time_control_increment: int | None = None
+        time_control_handicap_penalty_value: int | None = None
+        time_control_handicap_penalty_step: int | None = None
+        time_control_handicap_min_time: int | None = None
+        chessevent_id: int | None = None
+        chessevent_tournament_name: str | None = None
+        record_illegal_moves: int | None = None
+        match action:
+            case 'update':
+                time_control_initial_time = self.form_data_to_int_or_none(data, 'time_control_initial_time')
+                time_control_increment = self.form_data_to_int_or_none(data, 'time_control_increment')
+                time_control_handicap_penalty_value = self.form_data_to_int_or_none(
+                    data, 'time_control_handicap_penalty_value')
+                time_control_handicap_penalty_step = self.form_data_to_int_or_none(
+                    data, 'time_control_handicap_penalty_step')
+                time_control_handicap_min_time = self.form_data_to_int_or_none(
+                    data, 'time_control_handicap_min_time')
+                chessevent_id = self.form_data_to_int_or_none(data, 'chessevent_id')
+                chessevent_tournament_name = self.form_data_to_str_or_none(data, 'chessevent_tournament_name')
+                record_illegal_moves = self.form_data_to_str_or_none(data, 'record_illegal_moves')
+            case 'delete' | 'create' | 'clone':
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
@@ -100,8 +122,9 @@ class AdminTournamentController(AAdminController):
             errors=errors,
         )
 
+    @classmethod
     def _admin_tournament_render_edit_modal(
-            self,
+            cls,
             action: str,
             admin_event: NewEvent,
             admin_tournament: NewTournament | None,
@@ -118,7 +141,7 @@ class AdminTournamentController(AAdminController):
                 'admin_event': admin_event,
                 'admin_tournament': admin_tournament,
                 'data': data,
-                'record_illegal_moves_options': self._get_record_illegal_moves_options(
+                'record_illegal_moves_options': cls._get_record_illegal_moves_options(
                     admin_event.record_illegal_moves),
                 'errors': errors,
             })

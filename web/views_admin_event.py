@@ -65,6 +65,9 @@ class AdminEventController(AAdminController):
         update_password: str | None = self.form_data_to_str_or_none(data, 'update_password')
         record_illegal_moves: int | None = None
         allow_results_deletion: bool | None = None
+        timer_colors: dict[int, str | None] = {i: None for i in range(1, 4)}
+        timer_color_checkboxes: dict[int, bool | None] = {i: None for i in range(1, 4)}
+        timer_delays: dict[int, int | None] = {i: None for i in range(1, 4)}
         match action:
             case 'update':
                 try:
@@ -76,6 +79,19 @@ class AdminEventController(AAdminController):
                     allow_results_deletion = self.form_data_to_bool_or_none(data, 'allow_results_deletion')
                 except ValueError:
                     errors['allow_results_deletion'] = 'La valeur entrée n\'est pas valide.'
+                for i in range(1, 4):
+                    field: str = f'color_{i}'
+                    timer_color_checkboxes[i] = self.form_data_to_bool_or_none(data, field+'_checkbox')
+                    if not timer_color_checkboxes[i]:
+                        try:
+                            timer_colors[i] = self.form_data_to_rgb_or_none(data, field)
+                        except ValueError:
+                            errors[field] = f'La couleur n\'est pas valide [{data[field]}] (attendu [#HHHHHH]).'
+                    field: str = f'delay_{i}'
+                    try:
+                        timer_delays[i] = self.form_data_to_int_or_none(data, field, minimum=1)
+                    except ValueError:
+                        errors[field] = f'Le délai [{data[field]}] n\'est pas valide (attendu un entier positif).'
             case 'create' | 'clone' | 'delete':
                 pass
             case _:
@@ -88,6 +104,8 @@ class AdminEventController(AAdminController):
             update_password=update_password,
             record_illegal_moves=record_illegal_moves,
             allow_results_deletion=allow_results_deletion,
+            timer_colors=timer_colors,
+            timer_delays=timer_delays,
             errors=errors,
         )
 
@@ -118,6 +136,7 @@ class AdminEventController(AAdminController):
                 'record_illegal_moves_options': self._get_record_illegal_moves_options(
                     PapiWebConfig().default_record_illegal_moves_number),
                 'allow_results_deletion_options': allow_results_deletion_options,
+                'timer_color_texts': self._get_timer_color_texts(PapiWebConfig().default_timer_delays),
             })
 
     @post(
@@ -159,6 +178,11 @@ class AdminEventController(AAdminController):
                     'allow_results_deletion':
                         self.value_to_form_data(admin_event.stored_event.allow_results_deletion),
                 }
+                for i in range(1, 4):
+                    data[f'color_{i}'] = self.value_to_form_data(admin_event.timer_colors[i])
+                    data[f'color_{i}_checkbox'] = self.value_to_form_data(
+                        admin_event.stored_event.timer_colors[i] is None)
+                    data[f'delay_{i}'] = self.value_to_form_data(admin_event.stored_event.timer_delays[i])
             case _:
                 raise ValueError(f'action=[{action}]')
         stored_event: StoredEvent = self._admin_validate_event_update_data(event_loader, action, admin_event, data)

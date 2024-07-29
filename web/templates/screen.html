@@ -11,8 +11,8 @@
 <link rel="stylesheet" href="{{ url_for('static', file_path='css/screen.css') }}" type="text/css" />
 {% if event.css %}<link rel="stylesheet" href="{{ url_for('static', file_path=event.css) }}" type="text/css" />{% endif %}
 <script>
-    {% if event.timer %}
-        {% if screen.show_timer %}
+    {% if screen.timer %}
+        {% if not screen.timer.error %}
             {% include 'timer.js' %}
         {% endif %}
     {% endif %}

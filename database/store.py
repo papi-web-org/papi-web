@@ -4,10 +4,10 @@ from dataclasses import dataclass, field
 @dataclass
 class StoredTimerHour:
     id: int | None
-    uniq__id: str
+    uniq_id: str
     timer_id: int
     order: int
-    date_str: str | None
+    datetime_str: str | None
     text_before: str | None
     text_after: str | None
 
@@ -16,13 +16,10 @@ class StoredTimerHour:
 class StoredTimer:
     id: int | None
     uniq_id: str
-    delay_1: int | None
-    delay_2: int | None
-    delay_3: int | None
-    color_1: str | None
-    color_2: str | None
-    color_3: str | None
+    colors: dict[int, str | None]
+    delays: dict[int, int | None]
     stored_timer_hours: list[StoredTimerHour] = field(default_factory=list[StoredTimerHour])
+    errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass
@@ -35,8 +32,13 @@ class StoredChessEvent:
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
+@dataclass
 class StoredSkippedRound:
-    pass
+    id: int | None
+    tournament_id: int
+    round: int
+    papi_player_id: int
+    score: float
 
 
 @dataclass
@@ -129,15 +131,6 @@ class StoredRotator:
 
 
 @dataclass
-class StoredSkippedRound:
-    id: int | None
-    tournament_id: int
-    round: int
-    papi_player_id: int
-    score: float
-
-
-@dataclass
 class StoredEvent:
     uniq_id: str
     name: str
@@ -147,13 +140,18 @@ class StoredEvent:
     record_illegal_moves: int | None
     allow_results_deletion: bool | None
     stored_chessevents: list[StoredChessEvent] = field(default_factory=list[StoredChessEvent])
+    stored_timers: list[StoredTimer] = field(default_factory=list[StoredTimer])
     stored_tournaments: list[StoredTournament] = field(default_factory=list[StoredTournament])
     stored_screens: list[StoredScreen] = field(default_factory=list[StoredScreen])
     stored_families: list[StoredFamily] = field(default_factory=list[StoredFamily])
     stored_rotators: list[StoredRotator] = field(default_factory=list[StoredRotator])
     version: str | None = field(default=None)
+    timer_colors: dict[int, str | None] = field(default_factory=dict[int, str | None])
+    timer_delays: dict[int, int | None] = field(default_factory=dict[int, int | None])
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
+    def __post_init__(self):
+        pass
 
 @dataclass
 class StoredIllegalMove:

@@ -13,6 +13,7 @@ from web.views import LoginController, IndexController
 from web.views_admin import AdminController
 from web.views_admin_chessevent import AdminChessEventController
 from web.views_admin_event import AdminEventController
+from web.views_admin_timer import AdminTimerController
 from web.views_admin_tournament import AdminTournamentController
 from web.views_user import UserController
 
@@ -37,6 +38,7 @@ route_handlers: Sequence[ControllerRouterHandler] = [
     AdminEventController,
     AdminChessEventController,
     AdminTournamentController,
+    AdminTimerController,
     static_files_router,
 ]
 

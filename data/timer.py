@@ -4,8 +4,16 @@ import time
 from contextlib import suppress
 from logging import Logger
 from dataclasses import dataclass, field
-from collections import namedtuple
 import warnings
+
+from typing import TYPE_CHECKING
+
+from common import RGB, rgb_to_hexa, hexa_to_rgb
+from common.papi_web_config import PapiWebConfig
+from database.store import StoredTimerHour, StoredTimer
+
+if TYPE_CHECKING:
+    from data.event import NewEvent
 
 from common.config_reader import ConfigReader
 from common.logger import get_logger
@@ -107,19 +115,11 @@ class TimerHour:
         return f'{self.__class__.__name__}({self.timestamp} {self.datetime_str} [{self.text_before}/{self.text_after}])'
 
 
-RGB = namedtuple('RGB', ['red', 'green', 'blue'])
-DEFAULT_COLORS: dict[int, RGB] = {
-        1: RGB(0, 255, 0),
-        2: RGB(255, 127, 0),
-        3: RGB(255, 0, 0),
-}
-DEFAULT_DELAYS: dict[int, int] = {1: 15, 2: 5, 3: 10, }
-
-
 class Timer:
     def __init__(self):
-        self.colors: dict[int, RGB] = DEFAULT_COLORS
-        self.delays: dict[int, int] = DEFAULT_DELAYS
+        papi_web_config: PapiWebConfig = PapiWebConfig()
+        self.colors: dict[int, str] = papi_web_config.default_timer_colors
+        self.delays: dict[int, int] = papi_web_config.default_timer_delays
         self.hours: list[TimerHour] = []
 
     def set_hours_timestamps(self):
@@ -250,7 +250,7 @@ class TimerBuilder:
                 )
                 continue
             color_id = int(key)
-            color_rbg: tuple[int, int, int] | None = None
+            color_rbg: RGB | None = None
             color_value: str = color_section.get(key).replace(' ', '').upper()
             if matches := simplified_hex_pattern.match(color_value):
                 color_rbg = (
@@ -286,7 +286,7 @@ class TimerBuilder:
                     section_key,
                     key
                 )
-                self.timer.colors[color_id] = color_rbg
+                self.timer.colors[color_id] = rgb_to_hexa(color_rbg)
 
     def _set_delays(self):
         section_key = 'timer.delays'
@@ -314,3 +314,223 @@ class TimerBuilder:
                 )
             else:
                 self.timer.delays[delay_id] = delay
+
+
+@dataclass
+class NewTimerHour:
+    timer: 'NewTimer'
+    stored_timer_hour: StoredTimerHour
+    timestamp: int
+    _datetime: datetime = field(init=False)
+    _round: int | None = field(default=None)
+    _text_before: str | None = field(default=None)
+    _text_after: str | None = field(default=None)
+    last_valid: bool = field(default=False, init=False)
+    error: str | None = field(default=None)
+
+    def __post_init__(self):
+        self._datetime = timestamp_to_datetime(self.timestamp)
+
+    @classmethod
+    def _timestamp_to_datetime(cls, ts: int) -> _datetime:
+        return datetime.fromtimestamp(ts)
+
+    @classmethod
+    def _datetime_to_date_str(cls, dt: _datetime) -> str:
+        return dt.strftime('%Y-%m-%d %H:%M')
+
+    @classmethod
+    def _datetime_to_datetime_str(cls, dt: _datetime) -> str:
+        return dt.strftime('%Y-%m-%d %H:%M')
+
+    @classmethod
+    def _timestamp_to_date_str(cls, ts: int) -> str:
+        return cls._datetime_to_date_str(cls._timestamp_to_datetime(ts))
+
+    @classmethod
+    def _timestamp_to_datetime_str(cls, ts: int) -> str:
+        return cls._datetime_to_datetime_str(cls._timestamp_to_datetime(ts))
+
+    @property
+    def id(self) -> int:
+        return self.stored_timer_hour.id if self.stored_timer_hour else None
+
+    @property
+    def uniq_id(self) -> str:
+        return self.stored_timer_hour.uniq_id if self.stored_timer_hour else None
+
+    @property
+    def round(self) -> int:
+        if self.round is None:
+            try:
+                self._round = max(int(self.uniq_id), 0)
+            except TypeError:
+                self._round = 0
+        return self._round
+
+    def _format_stored_text(self, text) -> str:
+        if self.round:
+            return text.format(self.round) if text else ROUND_DEFAULT_TEXT_BEFORE.format(self.round)
+        else:
+            return text if text else ''
+
+    @property
+    def text_before(self) -> str:
+        if self._text_before is None:
+            self._text_before = self._format_stored_text(self.stored_timer_hour.text_before)
+        return self._text_before
+
+    @property
+    def text_after(self) -> str:
+        if self._text_after is None:
+            self._text_after = self._format_stored_text(self.stored_timer_hour.text_after)
+        return self._text_after
+
+    @property
+    def timestamp_1(self) -> int:
+        return self.timestamp - self.timer.delays[1] * 60 - self.timer.delays[2] * 60
+
+    @property
+    def timestamp_2(self) -> int:
+        return self.timestamp - self.timer.delays[2] * 60
+
+    @property
+    def timestamp_3(self) -> int:
+        return self.timestamp
+
+    @property
+    def timestamp_next(self) -> int:
+        return self.timestamp + self.timer.delays[3] * 60
+
+    @property
+    def date_str(self) -> str:
+        return self._datetime_to_date_str(self._datetime)
+
+    @property
+    def datetime_str(self) -> str:
+        return self._datetime_to_datetime_str(self._datetime)
+
+    @property
+    def datetime_str_1(self) -> str:
+        return self._timestamp_to_datetime_str(self.timestamp_1)
+
+    @property
+    def datetime_str_2(self) -> str:
+        return self._timestamp_to_datetime_str(self.timestamp_2)
+
+    @property
+    def datetime_str_3(self) -> str:
+        return self._timestamp_to_datetime_str(self.timestamp_3)
+
+    @property
+    def datetime_str_next(self) -> str:
+        return self._timestamp_to_datetime_str(self.timestamp_next)
+
+    def __repr__(self):
+        return (f'{self.__class__.__name__}({self.timestamp} {self._datetime.strftime("%Y-%m-%d %H:%M")} '
+                f'[{self.text_before}/{self.text_after}])')
+
+
+class NewTimer:
+    def __init__(self, event: 'NewEvent', stored_timer: StoredTimer):
+        self.event: 'NewEvent' = event
+        self.stored_timer: StoredTimer = stored_timer
+        self.timer_hours_by_id: dict[int, NewTimerHour] = {}
+        self._timer_hour_uniq_ids: list[str] | None = None
+        self._timer_hours_sorted_by_order: list[NewTimerHour] | None = None
+        self._colors: dict[int, str] | None = None
+        self._delays: dict[int, int] | None = None
+        self.valid: bool = True
+        self.error: str | None = None
+        self._build_timer_hours()
+
+    @property
+    def id(self) -> int:
+        return self.stored_timer.id if self.stored_timer else None
+
+    @property
+    def timer_hours_uniq_ids(self) -> list[str]:
+        if self._timer_hour_uniq_ids is None:
+            self._timer_hour_uniq_ids = [timer_hour.uniq_id for timer_hour in self.timer_hours_by_id.values()]
+        return self._timer_hour_uniq_ids
+
+    @property
+    def timer_hours_sorted_by_order(self) -> list[NewTimerHour]:
+        if self._timer_hours_sorted_by_order is None:
+            self._timer_hours_sorted_by_order = sorted(
+                self.timer_hours_by_id.values(), key=lambda timer: timer.order)
+        return self._timer_hours_sorted_by_order
+
+    @property
+    def uniq_id(self) -> str:
+        return self.stored_timer.uniq_id if self.stored_timer else None
+
+    def _build_timer_hours(self):
+        previous_valid_hour: NewTimerHour | None = None
+        for stored_timer_hour in self.stored_timer.stored_timer_hours:
+            timestamp: int | None = None
+            if re.match(
+                    '^#?(?P<year>[0-9]{4})-(?P<month>[0-9]{1,2})-(?P<day>[0-9]{1,2}) '
+                    '(?P<hour>[0-9]{1,2}):(?P<minute>[0-9]{1,2})$', stored_timer_hour.datetime_str):
+                timestamp = int(time.mktime(datetime.strptime(
+                    stored_timer_hour.datetime_str, '%Y-%m-%d %H:%M').timetuple()))
+            elif re.match(
+                    '^(?P<hour>[0-9]{1,2}):(?P<minute>[0-9]{1,2})$', stored_timer_hour.datetime_str):
+                if previous_valid_hour is None:
+                    self.event.add_warning(
+                        f'le jour du premier horaire doit être spécifié, horaire ignoré '
+                        f'[{stored_timer_hour.datetime_str}]', timer_uniq_id=self.uniq_id)
+                else:
+                    timestamp = int(time.mktime(datetime.strptime(
+                        f'{previous_valid_hour.date_str} {stored_timer_hour.datetime_str}',
+                        '%Y-%m-%d %H:%M').timetuple()))
+            timer_hour: NewTimerHour = NewTimerHour(self, stored_timer_hour, timestamp)
+            if previous_valid_hour and timestamp <= previous_valid_hour.timestamp:
+                timer_hour.error = (f'l\'horaire [{timer_hour.datetime_str}] arrive avant l\'horaire précédent '
+                                    f'[{previous_valid_hour.datetime_str}], horaire ignoré')
+                self.event.add_warning(timer_hour.error)
+            if not timer_hour.error:
+                previous_valid_hour = timer_hour
+            self.timer_hours_by_id[timer_hour.id] = timer_hour
+        if previous_valid_hour:
+            for timer_hour in reversed(self._timer_hours_sorted_by_order):
+                if not timer_hour.error:
+                    timer_hour.last_valid = True
+        else:
+            self.error = 'aucun horaire valide défini'
+            self.event.add_warning(self.error, timer_uniq_id=self.uniq_id)
+
+    @property
+    def colors(self) -> dict[int, str]:
+        if self._colors is None:
+            self._colors = {
+                1: self.stored_timer.colors[1] if self.stored_timer.colors[1] else self.event.timer_colors[1],
+                2: self.stored_timer.colors[2] if self.stored_timer.colors[2] else self.event.timer_colors[2],
+                3: self.stored_timer.colors[3] if self.stored_timer.colors[3] else self.event.timer_colors[3],
+             }
+        return self._colors
+
+    @property
+    def color_1_rgb(self) -> RGB:
+        return hexa_to_rgb(self.colors[1])
+
+    @property
+    def color_2_rgb(self) -> RGB:
+        return hexa_to_rgb(self.colors[2])
+
+    @property
+    def color_3_rgb(self) -> RGB:
+        return hexa_to_rgb(self.colors[3])
+
+    @property
+    def delays(self) -> dict[int, int]:
+        if self._delays is None:
+            self._delays = {
+                1: self.stored_timer.delays[1] if self.stored_timer.delays[1] else self.event.timer_delays[1],
+                2: self.stored_timer.delays[2] if self.stored_timer.delays[2] else self.event.timer_delays[2],
+                3: self.stored_timer.delays[3] if self.stored_timer.delays[3] else self.event.timer_delays[3],
+             }
+        return self._delays
+
+    def __repr__(self):
+        return f'{type(self).__name__}({self.colors} {self.delays} {self.timer_hours_by_id})'
