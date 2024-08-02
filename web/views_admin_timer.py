@@ -440,5 +440,3 @@ class AdminTimerController(AAdminController):
         admin_timer_hour = admin_timer.timer_hours_by_id[stored_timer_hour.id] if stored_timer_hour else None
         return self._admin_timer_render_hours_modal(
             '', admin_event=admin_event, admin_timer=admin_timer, admin_timer_hour=admin_timer_hour)
-
-une fois les horaires mis à jour il faut rafraichir la page des timers
