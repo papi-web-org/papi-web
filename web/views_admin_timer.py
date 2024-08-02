@@ -390,14 +390,21 @@ class AdminTimerController(AAdminController):
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
-        admin_timer_id: int = self.form_data_to_int_or_none(data, 'admin_timer_id')
-        try:
-            admin_timer: NewTimer = admin_event.timers_by_id[admin_timer_id]
-        except KeyError:
-            Message.error(request, f'Le chronomètre [{admin_timer_id}] est introuvable.')
-            return self._render_messages(request)
-        admin_timer_hour: NewTimerHour | None = None
         action: str = self.form_data_to_str_or_none(data, 'action')
+        admin_timer: NewTimer | None = None
+        match action:
+            case 'delete' | 'clone' | 'update' | 'add' | 'reorder' | 'cancel':
+                admin_timer_id: int = self.form_data_to_int_or_none(data, 'admin_timer_id')
+                try:
+                    admin_timer = admin_event.timers_by_id[admin_timer_id]
+                except KeyError:
+                    Message.error(request, f'Le chronomètre [{admin_timer_id}] est introuvable.')
+                    return self._render_messages(request)
+            case 'close':
+                pass
+            case _:
+                raise ValueError(f'action=[{action}]')
+        admin_timer_hour: NewTimerHour | None = None
         match action:
             case 'delete' | 'clone' | 'update':
                 admin_timer_hour_id: int = self.form_data_to_int_or_none(data, 'admin_timer_hour_id')
@@ -406,13 +413,16 @@ class AdminTimerController(AAdminController):
                 except KeyError:
                     Message.error(request, f'L\'horaire [{admin_timer_hour_id}] est introuvable.')
                     return self._render_messages(request)
-            case 'add' | 'reorder' | 'cancel':
+            case 'add' | 'reorder' | 'cancel' | 'close':
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
         stored_timer_hour: StoredTimerHour | None = None
         with (EventDatabase(admin_event.uniq_id, write=True) as event_database):
             match action:
+                case 'close':
+                    return self._admin_render_index(
+                        request, event_loader, admin_event=admin_event, admin_event_selector='@timers')
                 case 'update':
                     stored_timer_hour: StoredTimerHour = self._admin_validate_timer_hour_update_data(
                         admin_timer, admin_timer_hour, admin_timer.get_previous_timer_hour(admin_timer_hour), data)

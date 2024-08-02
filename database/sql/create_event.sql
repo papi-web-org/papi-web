@@ -39,7 +39,7 @@ CREATE TABLE `timer_hour` (
     `text_before` TEXT,
     `text_after` TEXT,
     PRIMARY KEY(`id` AUTOINCREMENT),
-    UNIQUE(`uniq_id`),
+    UNIQUE(`timer_id`, `uniq_id`),
     FOREIGN KEY (`timer_id`) REFERENCES `timer`(`id`) ON DELETE CASCADE
 );
 

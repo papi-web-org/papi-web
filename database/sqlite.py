@@ -433,29 +433,32 @@ class EventDatabase(SQLiteDatabase):
         )
         return self._write_stored_timer_hour(stored_timer_hour)
 
-    def clone_stored_timer_hour(self, id: int):
+    def clone_stored_timer_hour(self, id: int, timer_id: int | None = None):
         stored_timer_hour = self.get_stored_timer_hour(id)
         stored_timer_hour.id = None
-        round: int = 0
-        try:
-            round = int(stored_timer_hour.uniq_id)
-        except ValueError:
-            pass
-        if round:
-            stored_timer_hour.uniq_id = str(self.get_stored_timer_next_round(stored_timer_hour.timer_id))
-            stored_timer_hour.order = self.get_stored_timer_next_hour_order(stored_timer_hour.timer_id)
+        if timer_id is None:
+            round: int = 0
+            try:
+                round = int(stored_timer_hour.uniq_id)
+            except ValueError:
+                pass
+            if round:
+                stored_timer_hour.uniq_id = str(self.get_stored_timer_next_round(stored_timer_hour.timer_id))
+                stored_timer_hour.order = self.get_stored_timer_next_hour_order(stored_timer_hour.timer_id)
+            else:
+                self._execute(
+                    'SELECT uniq_id FROM `timer_hour` WHERE `timer_id` = ?',
+                    (stored_timer_hour.timer_id, ),
+                )
+                uniq_ids: list[str] = [row['uniq_id'] for row in self._fetchall()]
+                uniq_id: str = f'{stored_timer_hour.uniq_id}-clone'
+                clone_index: int = 1
+                stored_timer_hour.uniq_id = uniq_id
+                while stored_timer_hour.uniq_id in uniq_ids:
+                    clone_index += 1
+                    stored_timer_hour.uniq_id = f'{uniq_id}{clone_index}'
         else:
-            self._execute(
-                'SELECT uniq_id FROM `timer_hour` WHERE `timer_id` = ?',
-                (stored_timer_hour.timer_id, ),
-            )
-            uniq_ids: list[str] = [row['uniq_id'] for row in self._fetchall()]
-            uniq_id: str = f'{stored_timer_hour.uniq_id}-clone'
-            clone_index: int = 1
-            stored_timer_hour.uniq_id = uniq_id
-            while stored_timer_hour.uniq_id in uniq_ids:
-                clone_index += 1
-                stored_timer_hour.uniq_id = f'{uniq_id}{clone_index}'
+            stored_timer_hour.timer_id = timer_id
         return self._write_stored_timer_hour(stored_timer_hour)
 
     def delete_stored_timer_hour(self, id: int):
@@ -549,8 +552,11 @@ class EventDatabase(SQLiteDatabase):
         stored_timer.uniq_id = new_uniq_id
         stored_timer.colors = stored_timer.colors
         stored_timer.delays = stored_timer.delays
-        stored_timer.stored_timer_hours = []
-        return self._write_stored_timer(stored_timer)
+        new_stored_timer: StoredTimer = self._write_stored_timer(stored_timer)
+        for stored_timer_hour in stored_timer.stored_timer_hours:
+            new_stored_timer.stored_timer_hours.append(
+                self.clone_stored_timer_hour(stored_timer_hour.id, new_stored_timer.id))
+        return new_stored_timer
 
     def delete_stored_timer(self, id: int):
         self._execute('UPDATE `family` SET `timer_id` = NULL WHERE `timer_id` = ?;', (id, ))
