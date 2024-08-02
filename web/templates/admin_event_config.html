@@ -115,7 +115,7 @@
         <tr>
             <th scope="row" class="text-nowrap">Tournois</th>
             <td class="text-nowrap">
-                {% if admin_event.tournaments_by_id|length %}{{ admin_event.tournaments_by_id|length }}{% else %}<em>Aucun</em>{% endif %}
+                {% if admin_event.tournaments|length %}{{ admin_event.tournaments|length }}{% else %}<em>Aucun</em>{% endif %}
             </td>
             <td>
                 <button
