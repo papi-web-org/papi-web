@@ -1,5 +1,5 @@
 <h1>{{ admin_event.name }} - Messages</h1>
-{% if admine_event.errors %}
+{% if admin_event.errors %}
     <div class="alert alert-danger" role="alert">
         <div><strong><i class="bi-bug-fill"></i> Erreurs : {{ admin_event.errors|length }}</strong></div>
         {% for error in admin_event.errors %}

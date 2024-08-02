@@ -1,0 +1,11 @@
+.admin-timer-hour-div {
+    border: solid 1px black;
+    margin-left: 0;
+    margin-right: 0;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    margin-top: 3px;
+}
+.admin-timer-hour-div.edit {
+    padding: 3px;
+}

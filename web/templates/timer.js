@@ -1,8 +1,7 @@
-{% with timer=event.timer %}
-{% with color_1=timer.colors.1, color_2=timer.colors.2, color_3=timer.colors.3 %}
-{% with color_1_r=color_1.0, color_1_g=color_1.1, color_1_b=color_1.2 %}
-{% with color_2_r=color_2.0, color_2_g=color_2.1, color_2_b=color_2.2 %}
-{% with color_3_r=color_3.0, color_3_g=color_3.1, color_3_b=color_3.2 %}
+{% with timer=screen.timer %}
+{% with color_1_r=timer.color_1_rgb.0, color_1_g=timer.color_1_rgb.1, color_1_b=timer.color_1_rgb.2 %}
+{% with color_2_r=timer.color_2_rgb.0, color_2_g=timer.color_2_rgb.1, color_2_b=timer.color_2_rgb.2 %}
+{% with color_3_r=timer.color_3_rgb.0, color_3_g=timer.color_3_rgb.1, color_3_b=timer.color_3_rgb.2 %}
 {% with delay_1=timer.delays.1, delay_2=timer.delays.2, delay_3=timer.delays.3 %}
 var timer;
 var timer_clock;
@@ -53,6 +52,7 @@ function update_timer() {
 	time = Math.floor(now.getTime() / 1000);
 	clock_html = two_digits(now.getHours())+':'+two_digits(now.getMinutes())+':'+two_digits(now.getSeconds());
 {% for hour in timer.hours %}
+  {% if not hour.error %}
 	if (time < {{ hour.timestamp_1 }}) { // {{ hour.datetime_str_1 }} color_1 {{ hour.text_before }}
 		color = 'rgb({{ color_1_r }},{{ color_1_g }},{{ color_1_b }})';
 		dur = duration({{ hour.timestamp }} - time);
@@ -80,7 +80,7 @@ function update_timer() {
 		update_timer_values(clock_html, text_html, color);
 		return;
 	}
-	{% if not hour.last %}
+	{% if not hour.last_valid %}
 	if (time < {{ hour.timestamp_next }}) { // {{ hour.datetime_str_next }} color_3 {{ hour.text_after }}
 	{% endif %}
 		color = 'rgb({{ color_3_r }},{{ color_3_g }},{{ color_3_b }})';
@@ -91,12 +91,12 @@ function update_timer() {
 	{% if not hour.last %}
 	}
 	{% endif %}
+  {% endif %}
 {% endfor %}
 }
 $(document).ready(function(){
     start_update_timer_interval();
 });
-{% endwith %}
 {% endwith %}
 {% endwith %}
 {% endwith %}

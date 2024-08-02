@@ -12,8 +12,9 @@ CREATE TABLE `info` (
     `css` TEXT,
     `update_password` TEXT,
     `record_illegal_moves` INTEGER,
-    `allow_results_deletion` INTEGER
-
+    `allow_results_deletion` INTEGER,
+    `timer_colors` TEXT,
+    `timer_delays` TEXT
 );
 
 INSERT INTO `info`(`version`) VALUES('{version}');
@@ -34,6 +35,7 @@ CREATE TABLE `timer_hour` (
     `timer_id` INTEGER NOT NULL,
     `order` INTEGER NOT NULL,
     `date_str` TEXT,
+    `time_str` TEXT,
     `text_before` TEXT,
     `text_after` TEXT,
     PRIMARY KEY(`id` AUTOINCREMENT),
@@ -44,12 +46,8 @@ CREATE TABLE `timer_hour` (
 CREATE TABLE `timer` (
     `id` INTEGER NOT NULL,
     `uniq_id` TEXT NOT NULL,
-    `delay_1` INTEGER,
-    `delay_2` INTEGER,
-    `delay_3` INTEGER,
-    `color_1` TEXT,
-    `color_2` TEXT,
-    `color_3` TEXT,
+    `colors` TEXT,
+    `delays` TEXT,
     PRIMARY KEY(`id` AUTOINCREMENT),
     UNIQUE(`uniq_id`)
 );

@@ -1,0 +1,88 @@
+<div class="modal-dialog modal-dialog-centered admin-timer-edit-modal">
+    <form
+            hx-post="{{ url_for('admin-timer-update') }}"
+            hx-vals='{"action": "{{ action }}", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"{% if admin_timer %}, "admin_timer_id": "{{ admin_timer.id }}"{% endif %} }'
+            hx-swap="multi:#messages,#admin-header,#admin-content"
+            hx-indicator="#please-wait">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    {% if action == 'create' %}
+                        Création d'un chronomètre
+                    {% elif action == 'update' %}
+                        Modification du chronomètre [{{ admin_timer.uniq_id }}]
+                    {% elif action == 'clone' %}
+                        Duplication du chronomètre [{{ admin_timer.uniq_id }}]
+                    {% else %}
+                        Suppression du chronomètre [{{ admin_timer.uniq_id }}]
+                    {% endif %}
+                </h2>
+            </div>
+            <div class="modal-body">
+                {% if action == 'delete' %}
+                    <h3 class="text-danger">
+                        Attention : la suppression d'un chronomètre est définitive !
+                    </h3>
+                {% else %}
+                    <h3>
+                        Propriétés
+                    </h3>
+                    <div class="row">
+                        <div class="col">
+                            {% with id='uniq-id', name='uniq_id' %}
+                                <label for="{{ id }}" class="form-label">Identifiant (unique) :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : timer"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  L'identifiant unique, utilisé pour référencer le chronomètre.
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                    {% if action == 'update' %}
+                        <h3>
+                            Couleurs et délais
+                        </h3>
+                        {% with default_colors=admin_event.timer_colors %}
+                            {% include 'admin_edit_timer_colors.html' %}
+                        {% endwith %}
+                        {% with default_delays=admin_event.timer_delays %}
+                            {% include 'admin_edit_timer_delays.html' %}
+                        {% endwith %}
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col col-6 text-start">
+                        <button type="submit" class="white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %}">
+                            <i class="bi-floppy-fill"></i>
+                            {% if action == 'create' %}
+                                Créer
+                            {% elif action == 'update' %}
+                                Modifier
+                            {% elif action == 'clone' %}
+                                Dupliquer
+                            {% else %}
+                                Supprimer
+                            {% endif %}
+                        </button>
+                    </div>
+                    <div class="col col-6 text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi-x-circle-fill"></i> Annuler</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

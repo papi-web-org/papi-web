@@ -1,0 +1,23 @@
+<div class="row">
+    {% for num in [1, 2, 3] %}
+        {% with id='delay-'~num, name='delay_'~num %}
+            <div class="col-4">
+                <label for="{{ id }}" class="form-label">Délai n°{{ num }} :</label>
+                <input
+                        name="{{ name }}"
+                        type="text" id="{{ id }}"
+                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                        aria-describedby="{{ id }}-help {{ id }}-error"
+                        placeholder="Par défaut : {{ default_delays[num] }} minutes"
+                        value="{{ data[name] }}"
+                        {% if data[checkbox_name] %}disabled{% endif %}/>
+                <div id="{{ id }}-help" class="form-text"></div>
+                {% if name in errors %}
+                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                        {{ errors[name] }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endwith %}
+    {% endfor %}
+</div>

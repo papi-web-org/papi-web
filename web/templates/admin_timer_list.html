@@ -1,0 +1,102 @@
+<div class="row">
+    <div class="col">
+        <h1 class="text-nowrap">
+            {{ admin_event.name }} - Chronomètres
+        </h1>
+    </div>
+    <div class="col-1 d-flex justify-content-end">
+        <h1>
+            <button
+                    class="btn btn-primary text-nowrap"
+                    hx-post="{{ url_for('admin-timer-render-edit-modal') }}"
+                    hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait">
+                <i class="bi-plus-square-fill"></i> Créer un chronomètre
+            </button>
+        </h1>
+    </div>
+</div>
+
+<table class="table border-black">
+    <thead class="table-dark">
+        <tr>
+            <th scope="col" class="text-nowrap">Id</th>
+            <th scope="col" class="text-nowrap">Horaires</th>
+            <th scope="col" class="text-nowrap">Couleurs et délais</th>
+            <th scope="col" class=""></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if admin_event.timers_by_id|length > 0 %}
+            {% for timer in admin_event.timers_by_id.values() %}
+                <tr>
+                    <th scope="row" class="text-nowrap">{{ timer.uniq_id }}</th>
+                    <td class="text-nowrap">{% if timer.timer_hours_by_id|length > 0 %}{{ timer.timer_hours_by_id|length }}{% else %}<em>Aucun</em>{% endif %}</td>
+                    <td class="text-nowrap">
+                        <span style="background-color: {{ timer.colors[1] }}">&nbsp;{{ timer.delays[1] }} minutes avant&nbsp;</span>
+                        <span style="background-color: {{ timer.colors[2] }}">&nbsp;{{ timer.delays[2] }} minutes avant&nbsp;</span>
+                        <span style="background-color: {{ timer.colors[3] }}">&nbsp;{{ timer.delays[3] }} minutes après&nbsp;</span>
+                    </td>
+                    <td class="text-nowrap">
+                        <button
+                                class="btn btn-sm btn-primary p-1"
+                                hx-post="{{ url_for('admin-timer-render-edit-modal') }}"
+                                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ timer.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-pencil-fill"></i> Éditer
+                        </button>
+                        <button
+                                class="btn btn-sm btn-primary p-1"
+                                hx-post="{{ url_for('admin-timer-render-hours-modal') }}"
+                                hx-vals='{"action": "reorder", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ timer.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-clock-fill"></i> Horaires
+                        </button>
+                        <button
+                                class="btn btn-sm btn-primary p-1"
+                                hx-post="{{ url_for('admin-timer-render-edit-modal') }}"
+                                hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ timer.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-copy-fill"></i> Dupliquer
+                        </button>
+                        <button
+                                class="btn btn-sm btn-danger p-1"
+                                hx-post="{{ url_for('admin-timer-render-edit-modal') }}"
+                                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ timer.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-trash-fill"></i> Supprimer
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td
+                        colspan="3"
+                        class="text-nowrap" >
+                    <em>Aucun chronomètre trouvé.</em>
+                </td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>

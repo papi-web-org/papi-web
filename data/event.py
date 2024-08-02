@@ -13,7 +13,7 @@ from data.family import FamilyBuilder
 from data.rotator import Rotator, RotatorBuilder
 from data.screen import AScreen, ScreenBuilder
 from data.template import Template, TemplateBuilder
-from data.timer import Timer, TimerBuilder
+from data.timer import Timer, TimerBuilder, NewTimer
 from data.tournament import Tournament, TournamentBuilder, NewTournament
 from database.sqlite import EventDatabase
 from database.store import StoredEvent
@@ -317,11 +317,13 @@ class NewEvent:
         self.screens_by_family_id: dict[str, list[AScreen]] = {}
         self.screens: dict[str, AScreen] = {}
         self.rotators: dict[str, Rotator] = {}
-        self.timers_by_id: dict[int, Timer] = {}
+        self.timers_by_id: dict[int, NewTimer] = {}
         self._timer_uniq_ids: list[str] | None = None
-        self.__infos: list[str] = []
-        self.__warnings: list[str] = []
-        self.__errors: list[str] = []
+        self._timer_colors: dict[int, str] | None = None
+        self._timer_delays: dict[int, int] | None = None
+        self._infos: list[str] = []
+        self._warnings: list[str] = []
+        self._errors: list[str] = []
         self.build_root(stored_event)
         if self.errors:
             self.add_warning(
@@ -451,6 +453,26 @@ class NewEvent:
             self._tournament_uniq_ids = [tournament.uniq_id for tournament in self.tournaments_by_id.values()]
         return self._tournament_uniq_ids
 
+    @property
+    def timer_colors(self) -> dict[int, str]:
+        if self._timer_colors is None:
+            self._timer_colors = {
+                i: self.stored_event.timer_colors[i]
+                if self.stored_event.timer_colors[i]
+                else PapiWebConfig().default_timer_colors[i]
+                for i in range(1, 4)}
+        return self._timer_colors
+
+    @property
+    def timer_delays(self) -> dict[int, int]:
+        if self._timer_delays is None:
+            self._timer_delays = {
+                i: self.stored_event.timer_delays[i]
+                if self.stored_event.timer_delays[i]
+                else PapiWebConfig().default_timer_delays[i]
+                for i in range(1, 4)}
+        return self._timer_delays
+
     def build_root(self, stored_event: StoredEvent):
         if not self.stored_event.name:
             self.add_error(f'pas de nom défini, par défaut [{self.name}]')
@@ -477,6 +499,9 @@ class NewEvent:
             self.chessevents_by_id[chessevent.id] = chessevent
 
     def _build_timers(self, stored_event: StoredEvent):
+        for stored_timer in stored_event.stored_timers:
+            timer: NewTimer = NewTimer(self, stored_timer)
+            self.timers_by_id[timer.id] = timer
         pass
 
     def _build_tournaments(self, stored_event: StoredEvent):
@@ -527,7 +552,7 @@ class NewEvent:
 
     @property
     def infos(self) -> list[str]:
-        return self.__infos
+        return self._infos
 
     def add_info(
             self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
@@ -540,11 +565,11 @@ class NewEvent:
             family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
             rotator_uniq_id=rotator_uniq_id)
         logger.info(message)
-        self.__infos.append(message)
+        self._infos.append(message)
 
     @property
     def warnings(self) -> list[str]:
-        return self.__warnings
+        return self._warnings
 
     def add_warning(
             self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
@@ -557,11 +582,11 @@ class NewEvent:
             family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
             rotator_uniq_id=rotator_uniq_id)
         logger.warning(message)
-        self.__warnings.append(message)
+        self._warnings.append(message)
 
     @property
     def errors(self) -> list[str]:
-        return self.__errors
+        return self._errors
 
     def add_error(
             self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
@@ -574,7 +599,7 @@ class NewEvent:
             family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
             rotator_uniq_id=rotator_uniq_id)
         logger.error(message)
-        self.__errors.append(message)
+        self._errors.append(message)
 
     @classmethod
     def __get_event_file_dependencies_file(cls, event_uniq_id: str) -> Path:

@@ -251,3 +251,19 @@ class PapiWebConfig:
     @property
     def default_allow_results_deletion(self) -> bool:
         return False
+
+    @property
+    def default_timer_colors(self) -> dict[int, str]:
+        return {
+            1: '#00FF00',
+            2: '#FF7700',
+            3: '#FF0000',
+        }
+
+    @property
+    def default_timer_delays(self) -> dict[int, int]:
+        return {
+            1: 15,
+            2: 5,
+            3: 10,
+        }

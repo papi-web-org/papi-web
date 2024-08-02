@@ -44,49 +44,57 @@
                         </div>
                     {% endwith %}
                 {% else %}
-                    {% with id='uniq-id', name='uniq_id' %}
-                        <div>
-                            <label for="{{ id }}" class="form-label">Identifiant (unique) de l'évènement :</label>
-                            <input
-                                    name="{{ name }}"
-                                    type="text" id="{{ id }}"
-                                class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                    aria-describedby="{{ id }}-help {{ id }}-error"
-                                    placeholder="Exemple : france-jeunes"
-                                    value="{{ data[name] }}" />
-                            <div id="{{ id }}-help" class="form-text">
-                              L'identifiant unique, utilisé pour le stockage des données et les fichiers d'export.
-                            </div>
-                            {% if name in errors %}
-                                <div id="{{ id }}-error" class="form-text invalid-feedback">
-                                    {{ errors[name] }}
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endwith %}
-                    {% with id='name', name='name' %}
-                        <div>
-                            <label for="{{ id }}" class="form-label">Nom de l'évènement :</label>
-                            <input
-                                    name="{{ name }}"
-                                    type="text" id="{{ id }}"
+                    <h3>
+                        Propriétés
+                    </h3>
+                    <div class="row">
+                        <div class="col-6">
+                            {% with id='uniq-id', name='uniq_id' %}
+                                <label for="{{ id }}" class="form-label">Identifiant (unique) de l'évènement :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
                                     class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                    aria-describedby="{{ id }}-help {{ id }}-error"
-                                    placeholder="Exemple : Championnat de France jeunes"
-                                    value="{{ data[name] }}" />
-                            <div id="{{ id }}-help" class="form-text">
-                              Le nom utilisé sur les pages web et dans les rapports.
-                            </div>
-                            {% if name in errors %}
-                                <div id="{{ id }}-error" class="form-text invalid-feedback">
-                                    {{ errors[name] }}
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : france-jeunes"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  L'identifiant unique, utilisé pour le stockage des données et les fichiers d'export.
                                 </div>
-                            {% endif %}
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
                         </div>
-                    {% endwith %}
+                        <div class="col-6">
+                            {% with id='name', name='name' %}
+                                <label for="{{ id }}" class="form-label">Nom de l'évènement :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : Championnat de France jeunes"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  Le nom utilisé sur les pages web et dans les rapports.
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
                     {% if action == 'update' %}
-                        {% with id='path', name='path' %}
-                            <div>
+                        <h3>
+                            Fichiers Papi
+                        </h3>
+                        <div>
+                            {% with id='path', name='path' %}
                                 <label for="{{ id }}" class="form-label">Localisation des fichiers Papi :</label>
                                 <input
                                         name="{{ name }}"
@@ -103,10 +111,13 @@
                                         {{ errors[name] }}
                                     </div>
                                 {% endif %}
-                            </div>
-                        {% endwith %}
-                        {% with id='css', name='css' %}
-                            <div>
+                            {% endwith %}
+                        </div>
+                        <h3>
+                            Affichage
+                        </h3>
+                        <div>
+                            {% with id='css', name='css' %}
                                 <label for="{{ id }}" class="form-label">Personnalisation CSS :</label>
                                 <input
                                         name="{{ name }}"
@@ -123,87 +134,105 @@
                                         {{ errors[name] }}
                                     </div>
                                 {% endif %}
+                            {% endwith %}
+                        </div>
+                        <h3>
+                            Saisie des résultats
+                        </h3>
+                        <div class="row">
+                            <div class="col-6">
+                                {% with id='update-password', name='update_password' %}
+                                    <label for="{{ id }}" class="form-label">Mot de passe de saisie des résultats :</label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="text" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : mot_de_passe"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                      Le mot de passe qui sera demandé sur les écrans de saisie pour entrer les résultats (facultatif).
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
                             </div>
+                            <div class="col-6">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                {% with id='record-illegal-moves', name='record_illegal_moves' %}
+                                    <label for="{{ id }}" class="form-label">Enregistrement des coups illégaux :</label>
+                                    <select
+                                            name="{{ name }}"
+                                            id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error" >
+                                        {% for value, text in record_illegal_moves_options.items() %}
+                                            <option value="{{ value }}" {% if value == data[name] %}selected{%endif %}>{{ text }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div id="{{ id }}-help" class="form-text">
+                                      Le nombre maximum de coups illégaux que l'on peut enregistrer par ronde pour un·e joueur·euse
+                                        (de 0 à 3, par défaut {% if papi_web_config.default_record_illegal_moves_enabled %}{{ papi_web_config.default_record_illegal_moves_number }}{% else %}0{% endif %}).
+                                        Cette valeur peut être modifiée pour chaque tournoi.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div class="col-6">
+                                {% with id='allow-results-deletion', name='allow_results_deletion' %}
+                                    <!--div class="row">
+                                        <div class="col-auto">
+                                            <input
+                                                    name="{{ name }}"
+                                                    type="checkbox" id="{{ id }}"
+                                                    class="{% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                                    aria-describedby="{{ id }}-help {{ id }}-error"
+                                                    value="1"
+                                                    {% if data[name] %}checked{% endif %} />
+                                        </div>
+                                        <div class="col-auto">
+                                            <label for="{{ id }}" class="form-label">Suppression des résultats entrés</label>
+                                        </div>
+                                    </div-->
+                                    <label for="{{ id }}" class="form-label">Suppression des résultats entrés :</label>
+                                    <select
+                                            name="{{ name }}"
+                                            id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error" >
+                                        {% for value, text in allow_results_deletion_options.items() %}
+                                            <option value="{{ value }}" {% if value == data[name] %}selected{%endif %}>{{ text }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div id="{{ id }}-help" class="form-text">
+                                      Si elle est autorisée, la suppression des résultats entrés sur les écrans de saisie est réalisée par la combinaison Ctrl+Alt+click.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                        <h3>
+                            Chronomètres
+                        </h3>
+                        {% with default_colors=papi_web_config.default_timer_colors %}
+                            {% include 'admin_edit_timer_colors.html' %}
                         {% endwith %}
-                        {% with id='update-password', name='update_password' %}
-                            <div>
-                                <label for="{{ id }}" class="form-label">Mot de passe de saisie des résultats :</label>
-                                <input
-                                        name="{{ name }}"
-                                        type="text" id="{{ id }}"
-                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                        aria-describedby="{{ id }}-help {{ id }}-error"
-                                        placeholder="Exemple : mot_de_passe"
-                                        value="{{ data[name] }}" />
-                                <div id="{{ id }}-help" class="form-text">
-                                  Le mot de passe qui sera demandé sur les écrans de saisie pour entrer les résultats (facultatif).
-                                </div>
-                                {% if name in errors %}
-                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
-                                        {{ errors[name] }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        {% endwith %}
-                        {% with id='record-illegal-moves', name='record_illegal_moves' %}
-                            <div>
-                                <label for="{{ id }}" class="form-label">Enregistrement des coups illégaux :</label>
-                                <select
-                                        name="{{ name }}"
-                                        id="{{ id }}"
-                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                        aria-describedby="{{ id }}-help {{ id }}-error" >
-                                    {% for value, text in record_illegal_moves_options.items() %}
-                                        <option value="{{ value }}" {% if value == data[name] %}selected{%endif %}>{{ text }}</option>
-                                    {% endfor %}
-                                </select>
-                                <div id="{{ id }}-help" class="form-text">
-                                  Le nombre maximum de coups illégaux que l'on peut enregistrer par ronde pour un·e joueur·euse
-                                    (de 0 à 3, par défaut {% if papi_web_config.default_record_illegal_moves_enabled %}{{ papi_web_config.default_record_illegal_moves_number }}{% else %}0{% endif %}).
-                                    Cette valeur peut être modifiée pour chaque tournoi.
-                                </div>
-                                {% if name in errors %}
-                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
-                                        {{ errors[name] }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        {% endwith %}
-                        {% with id='allow-results-deletion', name='allow_results_deletion' %}
-                            <div>
-                                <!--div class="row">
-                                    <div class="col-auto">
-                                        <input
-                                                name="{{ name }}"
-                                                type="checkbox" id="{{ id }}"
-                                                class="{% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                                aria-describedby="{{ id }}-help {{ id }}-error"
-                                                value="1"
-                                                {% if data[name] %}checked{% endif %} />
-                                    </div>
-                                    <div class="col-auto">
-                                        <label for="{{ id }}" class="form-label">Suppression des résultats entrés</label>
-                                    </div>
-                                </div-->
-                                <label for="{{ id }}" class="form-label">Suppression des résultats entrés :</label>
-                                <select
-                                        name="{{ name }}"
-                                        id="{{ id }}"
-                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                        aria-describedby="{{ id }}-help {{ id }}-error" >
-                                    {% for value, text in allow_results_deletion_options.items() %}
-                                        <option value="{{ value }}" {% if value == data[name] %}selected{%endif %}>{{ text }}</option>
-                                    {% endfor %}
-                                </select>
-                                <div id="{{ id }}-help" class="form-text">
-                                  Si elle est autorisée, la suppression des résultats entrés sur les écrans de saisie est réalisée par la combinaison Ctrl+Alt+click.
-                                </div>
-                                {% if name in errors %}
-                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
-                                        {{ errors[name] }}
-                                    </div>
-                                {% endif %}
-                            </div>
+                        {% with default_delays=papi_web_config.default_timer_delays %}
+                            {% include 'admin_edit_timer_delays.html' %}
                         {% endwith %}
                     {% endif %}
                 {% endif %}

@@ -1,10 +1,12 @@
 """A database schema based on sqlite3.
 
 At this time, this database stores results and illegal moves. """
+import json
 import shutil
 import time
 from collections import Counter
 from collections.abc import Iterator
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 from logging import Logger
@@ -74,6 +76,11 @@ class SQLiteDatabase:
     def _last_inserted_id(self) -> int:
         return self.cursor.lastrowid
 
+    @staticmethod
+    def json_to_dict_with_int_keys(json_string: str):
+        # This method is needed because JSON turns all keys to strings
+        return {int(k): v for k, v in json.loads(json_string).items()}
+
 
 class EventDatabase(SQLiteDatabase):
     def __init__(self, uniq_id: str, write: bool = False):
@@ -141,15 +148,19 @@ class EventDatabase(SQLiteDatabase):
 
     def _row_to_stored_event(self, row: dict[str, Any]) -> StoredEvent:
         return StoredEvent(
-                uniq_id=self.uniq_id,
-                version=row['version'],
-                name=row['name'],
-                path=row['path'],
-                css=row['css'],
-                update_password=row['update_password'],
-                record_illegal_moves=row['record_illegal_moves'],
-                allow_results_deletion=row['allow_results_deletion'],
-            )
+            uniq_id=self.uniq_id,
+            version=row['version'],
+            name=row['name'],
+            path=row['path'],
+            css=row['css'],
+            update_password=row['update_password'],
+            record_illegal_moves=row['record_illegal_moves'],
+            allow_results_deletion=row['allow_results_deletion'],
+            timer_colors=self.json_to_dict_with_int_keys(row['timer_colors'])
+            if row['timer_colors'] else {i: None for i in range(1, 4)},
+            timer_delays=self.json_to_dict_with_int_keys(row['timer_delays'])
+            if row['timer_delays'] else {i: None for i in range(1, 4)},
+        )
 
     def _get_stored_event(self) -> StoredEvent:
         self._execute(
@@ -205,10 +216,12 @@ class EventDatabase(SQLiteDatabase):
     ) -> StoredEvent:
         fields: list[str] = [
             'name', 'path', 'css', 'update_password', 'record_illegal_moves', 'allow_results_deletion',
+            'timer_colors', 'timer_delays',
         ]
         params: list = [
             stored_event.name, stored_event.path, stored_event.css, stored_event.update_password,
             stored_event.record_illegal_moves, stored_event.allow_results_deletion,
+            json.dumps(stored_event.timer_colors), json.dumps(stored_event.timer_delays),
         ]
         field_sets = [f"`{f}` = ?" for f in fields]
         self._execute(
@@ -314,10 +327,11 @@ class EventDatabase(SQLiteDatabase):
     def _row_to_stored_timer_hour(row: dict[str, Any]) -> StoredTimerHour:
         return StoredTimerHour(
             id=row['id'],
-            uniq__id=row['uniq_id'],
+            uniq_id=row['uniq_id'],
             timer_id=row['timer_id'],
             order=row['order'],
             date_str=row['date_str'],
+            time_str=row['time_str'],
             text_before=row['text_before'],
             text_after=row['text_after'],
         )
@@ -332,6 +346,25 @@ class EventDatabase(SQLiteDatabase):
             return self._row_to_stored_timer_hour(row)
         return None
 
+    def get_stored_timer_next_hour_order(self, timer_id: int) -> int:
+        self._execute(
+            'SELECT MAX(`order`) AS order_max FROM `timer_hour` WHERE `timer_id` = ?',
+            (timer_id, ),
+        )
+        row: dict[str, Any] = self._fetchone()
+        return (row['order_max'] if row['order_max'] else 0) + 1
+
+    def get_stored_timer_next_round(self, timer_id: int) -> int:
+        self._execute(
+            'SELECT `uniq_id` FROM `timer_hour` WHERE `timer_id` = ?',
+            (timer_id, ),
+        )
+        highest_round: int = 0
+        for row in self._fetchall():
+            with suppress(ValueError):
+                highest_round = max(highest_round, int(row['uniq_id']))
+        return highest_round + 1
+
     def load_stored_timer_hours(self, timer_id: int) -> list[StoredTimerHour]:
         self._execute(
             'SELECT * FROM `timer_hour` WHERE `timer_id` = ? ORDER BY `order`',
@@ -340,12 +373,14 @@ class EventDatabase(SQLiteDatabase):
         return [self._row_to_stored_timer_hour(row) for row in self._fetchall()]
 
     def _write_stored_timer_hour(
-            self, id: int | None, timer_id: int, order: int, date: str, round: int, event: str,
-            text_before: str, text_after: str
+            self, stored_timer_hour: StoredTimerHour,
     ) -> StoredTimerHour:
-        fields: list[str] = ['timer_id', 'order', 'date', 'round', 'event', 'text_before', 'text_after', ]
-        params: list = [timer_id, order, date, round, event, text_before, text_after, ]
-        if id is None:
+        fields: list[str] = ['timer_id', 'uniq_id', 'order', 'date_str', 'time_str', 'text_before', 'text_after', ]
+        params: list = [
+            stored_timer_hour.timer_id, stored_timer_hour.uniq_id, stored_timer_hour.order, stored_timer_hour.date_str,
+            stored_timer_hour.time_str, stored_timer_hour.text_before, stored_timer_hour.text_after,
+        ]
+        if stored_timer_hour.id is None:
             protected_fields = [f"`{f}`" for f in fields]
             self._execute(
                 f'INSERT INTO `timer_hour`({", ".join(protected_fields)}) VALUES ({", ".join(["?"] * len(fields))})',
@@ -353,29 +388,78 @@ class EventDatabase(SQLiteDatabase):
             return self.get_stored_timer_hour(self._last_inserted_id())
         else:
             field_sets = [f"`{f}` = ?" for f in fields]
-            params += [id]
+            params += [stored_timer_hour.id]
             self._execute(
                 f'UPDATE `timer_hour` SET {", ".join(field_sets)} WHERE `id` = ?',
                 tuple(params))
-            return self.get_stored_timer_hour(id)
+            return self.get_stored_timer_hour(stored_timer_hour.id)
 
-    def add_stored_timer_hour(
-            self, timer_id: int, order: int, date: str, round: int, event: str,
-            text_before: str, text_after: str
-    ) -> StoredTimerHour:
-        return self._write_stored_timer_hour(None, timer_id, order, date, round, event, text_before, text_after)
+    def reorder_stored_timer_hours(
+            self, timer_hour_ids: list[int],
+    ):
+        order: int = 1
+        for timer_hour_id in timer_hour_ids:
+            self._execute(
+                f'UPDATE `timer_hour` SET `order` = ? WHERE `id` = ?',
+                (order, timer_hour_id, ),
+            )
+            order += 1
+
+    def order_stored_timer_hours(
+            self, timer_id: int,
+    ):
+        order: int = 1
+        for stored_timer_hour in self.load_stored_timer_hours(timer_id):
+            self._execute(
+                f'UPDATE `timer_hour` SET `order` = ? WHERE `id` = ?',
+                (order, stored_timer_hour.id, ),
+            )
+            order += 1
 
     def update_stored_timer_hour(
-            self, id: int, timer_id: int, order: int, date: str, round: int, event: str,
-            text_before: str, text_after: str
+            self, stored_timer_hour: StoredTimerHour,
     ) -> StoredTimerHour:
-        return self._write_stored_timer_hour(id, timer_id, order, date, round, event, text_before, text_after)
+        assert stored_timer_hour.id is not None, ValueError
+        return self._write_stored_timer_hour(stored_timer_hour)
+
+    def add_stored_timer_hour(
+            self, timer_id: int,
+    ) -> StoredTimerHour:
+        stored_timer_hour: StoredTimerHour = StoredTimerHour(
+            id=None,
+            timer_id=timer_id,
+            uniq_id=str(self.get_stored_timer_next_round(timer_id)),
+            order=self.get_stored_timer_next_hour_order(timer_id),
+        )
+        return self._write_stored_timer_hour(stored_timer_hour)
+
+    def clone_stored_timer_hour(self, id: int):
+        stored_timer_hour = self.get_stored_timer_hour(id)
+        stored_timer_hour.id = None
+        round: int = 0
+        try:
+            round = int(stored_timer_hour.uniq_id)
+        except ValueError:
+            pass
+        if round:
+            stored_timer_hour.uniq_id = str(self.get_stored_timer_next_round(stored_timer_hour.timer_id))
+            stored_timer_hour.order = self.get_stored_timer_next_hour_order(stored_timer_hour.timer_id)
+        else:
+            self._execute(
+                'SELECT uniq_id FROM `timer_hour` WHERE `timer_id` = ?',
+                (stored_timer_hour.timer_id, ),
+            )
+            uniq_ids: list[str] = [row['uniq_id'] for row in self._fetchall()]
+            uniq_id: str = f'{stored_timer_hour.uniq_id}-clone'
+            clone_index: int = 1
+            stored_timer_hour.uniq_id = uniq_id
+            while stored_timer_hour.uniq_id in uniq_ids:
+                clone_index += 1
+                stored_timer_hour.uniq_id = f'{uniq_id}{clone_index}'
+        return self._write_stored_timer_hour(stored_timer_hour)
 
     def delete_stored_timer_hour(self, id: int):
         self._execute('DELETE FROM `timer_hour` WHERE `id` = ?;', (id, ))
-
-    def delete_timer_stored_timer_hours(self, timer_id: int):
-        self._execute('DELETE FROM `timer_hour` WHERE `timer_id` = ?;', (timer_id, ))
 
     """ 
     ---------------------------------------------------------------------------------
@@ -383,17 +467,13 @@ class EventDatabase(SQLiteDatabase):
     ---------------------------------------------------------------------------------
     """
 
-    @staticmethod
-    def _row_to_stored_timer(row: dict[str, Any]) -> StoredTimer:
+    @classmethod
+    def _row_to_stored_timer(cls, row: dict[str, Any]) -> StoredTimer:
         return StoredTimer(
             id=row['id'],
             uniq_id=row['uniq_id'],
-            delay_1=row['delay_1'],
-            delay_2=row['delay_2'],
-            delay_3=row['delay_3'],
-            color_1=row['color_1'],
-            color_2=row['color_2'],
-            color_3=row['color_3'],
+            colors=cls.json_to_dict_with_int_keys(row['colors']) if row['colors'] else {i: None for i in range(1, 4)},
+            delays=cls.json_to_dict_with_int_keys(row['delays']) if row['delays'] else {i: None for i in range(1, 4)},
         )
 
     def get_stored_timer(self, id: int) -> StoredTimer | None:
@@ -406,24 +486,36 @@ class EventDatabase(SQLiteDatabase):
             return self._row_to_stored_timer(row)
         return None
 
+    def load_stored_timer(self, id: int) -> StoredTimer:
+        stored_timer: StoredTimer
+        if stored_timer := self.get_stored_timer(id):
+            stored_timer.stored_timer_hours = self.load_stored_timer_hours(stored_timer.id)
+        return stored_timer
+
+    def get_stored_timer_ids(self) -> list[int]:
+        self._execute('SELECT `id` FROM `timer` ORDER BY `uniq_id`', (), )
+        return [row['id'] for row in self._fetchall()]
+
     def load_stored_timers(self) -> list[StoredTimer]:
-        self._execute(
-            'SELECT * FROM `timer` ORDER BY `uniq_id`',
-            (),
-        )
-        stored_timers: list[StoredTimer] = [self._row_to_stored_timer(row) for row in self._fetchall()]
+        stored_timers: list[StoredTimer] = [self.get_stored_timer(id) for id in self.get_stored_timer_ids()]
         for stored_timer in stored_timers:
             stored_timer.stored_timer_hours = self.load_stored_timer_hours(stored_timer.id)
         return stored_timers
 
     def _write_stored_timer(
-            self, id: int | None, uniq_id: str,
-            delay_1: int, delay_2: int, delay_3: int,
-            color_1: str, color_2: str, color_3: str
+            self, stored_timer: StoredTimer,
     ) -> StoredTimer:
-        fields: list[str] = ['uniq_id', 'delay_1', 'delay_2', 'delay_3', 'color_1', 'color_2', 'color_3', ]
-        params: list = [uniq_id, delay_1, delay_2, delay_3, color_1, color_2, color_3]
-        if id is None:
+        fields: list[str] = [
+            'uniq_id',
+            'colors',
+            'delays',
+        ]
+        params: list = [
+            stored_timer.uniq_id,
+            json.dumps(stored_timer.colors),
+            json.dumps(stored_timer.delays),
+        ]
+        if stored_timer.id is None:
             protected_fields = [f"`{f}`" for f in fields]
             self._execute(
                 f'INSERT INTO `timer`({", ".join(protected_fields)}) VALUES ({", ".join(["?"] * len(fields))})',
@@ -431,25 +523,34 @@ class EventDatabase(SQLiteDatabase):
             return self.get_stored_timer(self._last_inserted_id())
         else:
             field_sets = [f"`{f}` = ?" for f in fields]
-            params += [id]
+            params += [stored_timer.id]
             self._execute(
                 f'UPDATE `timer` SET {", ".join(field_sets)} WHERE `id` = ?',
                 tuple(params))
-            return self.get_stored_timer(id)
+            return self.get_stored_timer(stored_timer.id)
 
     def add_stored_timer(
-            self, uniq_id: str,
-            delay_1: int, delay_2: int, delay_3: int,
-            color_1: str, color_2: str, color_3: str
+            self, stored_timer: StoredTimer,
     ) -> StoredTimer:
-        return self._write_stored_timer(None, uniq_id, delay_1, delay_2, delay_3, color_1, color_2, color_3)
+        assert stored_timer.id is None
+        return self._write_stored_timer(stored_timer)
 
     def update_stored_timer(
-            self, id: int, uniq_id: str,
-            delay_1: int, delay_2: int, delay_3: int,
-            color_1: str, color_2: str, color_3: str
+            self, stored_timer: StoredTimer,
     ) -> StoredTimer:
-        return self._write_stored_timer(id, uniq_id, delay_1, delay_2, delay_3, color_1, color_2, color_3)
+        assert stored_timer.id is not None
+        return self._write_stored_timer(stored_timer)
+
+    def clone_stored_timer(
+            self, id: int, new_uniq_id: str,
+    ) -> StoredTimer:
+        stored_timer = self.load_stored_timer(id)
+        stored_timer.id = None
+        stored_timer.uniq_id = new_uniq_id
+        stored_timer.colors = stored_timer.colors
+        stored_timer.delays = stored_timer.delays
+        stored_timer.stored_timer_hours = []
+        return self._write_stored_timer(stored_timer)
 
     def delete_stored_timer(self, id: int):
         self._execute('UPDATE `family` SET `timer_id` = NULL WHERE `timer_id` = ?;', (id, ))
