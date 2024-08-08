@@ -1254,11 +1254,12 @@ class EventDatabase(SQLiteDatabase):
             return self.get_stored_screen(id=stored_screen.id)
 
     def clone_stored_screen(
-            self, id: int, new_uniq_id: str,
+            self, id: int, new_uniq_id: str, new_name: str,
     ) -> StoredScreen:
         stored_screen = self.load_stored_screen(id)
         stored_screen.id = None
         stored_screen.uniq_id = new_uniq_id
+        stored_screen.name = new_name
         new_stored_screen: StoredScreen = self._write_stored_screen(stored_screen)
         for stored_screen_set in stored_screen.stored_screen_sets:
             new_stored_screen.stored_screen_sets.append(

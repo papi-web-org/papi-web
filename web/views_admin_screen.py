@@ -290,7 +290,8 @@ class AdminScreenController(AAdminController):
                     event_database.delete_stored_screen(admin_screen.id)
                     Message.success(request, f'L\'écran [{admin_screen.uniq_id}] a été supprimé.')
                 case 'clone':
-                    stored_screen = event_database.clone_stored_screen(admin_screen.id, stored_screen.uniq_id)
+                    stored_screen = event_database.clone_stored_screen(
+                        admin_screen.id, stored_screen.uniq_id, self.form_data_to_str_or_none(data, 'name'))
                     Message.success(
                         request,
                         f'L\'écran [{admin_screen.uniq_id}] a été dupliqué ([{stored_screen.uniq_id}]).')
