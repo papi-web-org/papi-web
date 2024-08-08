@@ -304,12 +304,9 @@
                                             id="{{ id }}"
                                             class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
                                             aria-describedby="{{ id }}-help {{ id }}-error" >
-                                        <option value="" {% if '' == data[name] %}selected{%endif %}>
-                                            Pas de connexion à ChessEvent
-                                        </option>
-                                        {% for value, chessevent in admin_event.chessevents_by_id.items() %}
+                                        {% for value, text in chessevent_options.items() %}
                                             <option value="{{ value }}" {% if value == data[name] %}selected{%endif %}>
-                                                {{ chessevent.uniq_id }} ({{ chessevent.user_id }}/{{ chessevent.shadowed_password }}/{{ chessevent.event_id }})
+                                                {{ text }}
                                             </option>
                                         {% endfor %}
                                     </select>

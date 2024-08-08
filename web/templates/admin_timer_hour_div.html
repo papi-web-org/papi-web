@@ -1,6 +1,6 @@
 <div class="admin-timer-hours-modal-timer-hour-div">
     <input type='hidden' name='item' value='{{ timer_hour.id }}'/>
-    {% if action == 'edit' and admin_timer_hour.id == timer_hour.id %}
+    {% if admin_timer_hour.id == timer_hour.id %}
         <form
                 hx-post="{{ url_for('admin-timer-hours-update') }}"
                 hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
@@ -8,7 +8,7 @@
                 hx-swap="innerHTML"
                 hx-trigger="end"
                 hx-indicator="#please-wait">
-            <div class="admin-timer-hour-div edit">
+            <div class="admin-timer-hour-div edit {% if timer_hour.error %}border-danger{% else %}border-secondary{% endif %}">
                 <div class="row">
                     <div class="col-3">
                         {% with id='date-str', name='date_str' %}
@@ -18,7 +18,7 @@
                                     type="date" id="{{ id }}"
                                     class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
                                     aria-describedby="{{ id }}-help {{ id }}-error"
-                                    placeholder="Format : [AAA-MM-JJ] HH:MM"
+                                    placeholder="Format : AAAA-MM-JJ"
                                     value="{{ data[name] }}" />
                             <div id="{{ id }}-help" class="form-text">
                                 {% if timer_hour.order == 1 %}
@@ -42,7 +42,7 @@
                                     type="time" id="{{ id }}"
                                     class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
                                     aria-describedby="{{ id }}-help {{ id }}-error"
-                                    placeholder="Format : [AAA-MM-JJ] HH:MM"
+                                    placeholder="Format : HH:MM"
                                     value="{{ data[name] }}" />
                             <div id="{{ id }}-help" class="form-text">
                                 Obligatoire.
@@ -140,7 +140,7 @@
             </div>
         </form>
     {% else %}
-        <div class="row admin-timer-hour-div">
+        <div class="row admin-timer-hour-div {% if timer_hour.error %}border-danger{% else %}border-secondary{% endif %}">
             <div class="col-10">
                 <b>{% if timer_hour.timestamp %}{% if timer_hour.stored_timer_hour.date_str %}{{ timer_hour.stored_timer_hour.date_str }} {%endif %}{{ timer_hour.stored_timer_hour.time_str }}{% else %}??/??/???? ??:??{% endif %}</b> :
                 {{ timer_hour.uniq_id }}
@@ -150,12 +150,12 @@
                 {% if timer_hour.error %}<br/><span class="text-danger">{{ timer_hour.error }}</span>{%endif %}
             </div>
             <div class="col-2 text-nowrap text-end">
-                {% if action != 'edit' %}
+                {% if not admin_timer_hour %}
                     <i class="bi-arrows-move"></i>
                     <button
                             class="btn btn-sm btn-primary text-nowrap"
                             hx-post="{{ url_for('admin-timer-render-hours-modal') }}"
-                            hx-vals='{"action": "edit", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
+                            hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
                             hx-target="#admin-modal-container"
                             hx-swap="innerHTML"
                             hx-indicator="#please-wait">

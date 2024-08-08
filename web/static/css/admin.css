@@ -1,4 +1,4 @@
-.admin-timer-hour-div {
+.admin-timer-hour-div, .admin-screen-set-div {
     border: solid 1px black;
     margin-left: 0;
     margin-right: 0;
@@ -6,6 +6,10 @@
     padding-bottom: 3px;
     margin-top: 3px;
 }
-.admin-timer-hour-div.edit {
+.admin-timer-hour-div.edit, .admin-screen-set-div.edit {
     padding: 3px;
+}
+.sortable .admin-timer-hours-modal-timer-hour-div,
+.sortable .admin-screen-sets-modal-screen-set-div {
+    cursor: grab;
 }

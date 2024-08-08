@@ -11,7 +11,7 @@ class ChessEventEngine(Engine):
     def __init__(self):
         try:
             super().__init__()
-            while EventSelector(self._config).run():
+            while EventSelector().run():
                 pass
         except KeyboardInterrupt:
             pass

@@ -341,7 +341,7 @@ class NewTimerHour:
 
     @classmethod
     def _timestamp_to_time_str(cls, timestamp: int) -> str:
-        return cls._timestamp_to_datetime(timestamp).strftime('%H-%M') if timestamp else ''
+        return cls._timestamp_to_datetime(timestamp).strftime('%H:%M') if timestamp else ''
 
     @property
     def datetime(self) -> datetime | None:

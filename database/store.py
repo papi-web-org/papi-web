@@ -72,29 +72,32 @@ class StoredTournament:
 class StoredScreenSet:
     id: int | None
     screen_id: int
-    tournament_id: int
-    order: int
+    tournament_id: int | None
+    name: str | None
+    order: int | None
+    fixed_boards_str: str | None
     first: int | None
     last: int | None
     part: int | None
     parts: int | None
     number: int | None
+    errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass
 class StoredScreen:
     id: int | None
     uniq_id: str
-    name: str
+    name: str | None
     type: str
-    boards_update: bool
-    players_show_unpaired: bool
-    columns: int
+    columns: int | None
     menu_text: str | None
     menu: str | None
     timer_id: int | None
-    results_limit: int | None
-    results_tournaments_str: str | None
+    boards_update: bool | None
+    players_show_unpaired: bool | None
+    results_limit: int | None | None
+    results_tournaments_str: str | None | None
     stored_screen_sets: list[StoredScreenSet] = field(default_factory=list[StoredScreenSet])
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
@@ -105,14 +108,13 @@ class StoredFamily:
     uniq_id: str
     name: str
     type: str
+    tournament_id: int
     boards_update: bool
     players_show_unpaired: bool
     columns: int
     menu_text: str | None
     menu: str | None
     timer_id: int | None
-    results_limit: int | None
-    results_tournaments_str: str | None
     range: str | None
     first: int | None
     last: int | None

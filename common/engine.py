@@ -13,6 +13,8 @@ from requests.exceptions import ConnectionError, Timeout, RequestException, \
 from common.config_reader import TMP_DIR
 from common.papi_web_config import PapiWebConfig
 from common.logger import get_logger, configure_logger
+from data.loader import EventLoader
+from database.sqlite import EventDatabase
 
 logger: Logger = get_logger()
 configure_logger(logging.INFO)
@@ -26,8 +28,15 @@ class Engine:
             logger.critical(f'Impossible de créer le répertoire {TMP_DIR.absolute()} :-(')
             raise pe
         logger.info('Reading configuration file...')
-        self._config = PapiWebConfig()
         self._check_version()
+        papi_web_config: PapiWebConfig = PapiWebConfig()
+        if not EventLoader().event_ids:
+            logger.info('Aucune base de données trouvée, création des bases de données d\'exemple')
+            for event_id in [
+                file.stem for file in papi_web_config.database_yml_path.glob(f'*.{papi_web_config.yml_ext}')
+            ]:
+                EventDatabase(event_id).create(populate=True)
+
 
     def _check_version(self):
         last_stable_version: Version | None = self._get_last_stable_version()

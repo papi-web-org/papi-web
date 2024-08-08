@@ -1,0 +1,68 @@
+<div id="admin-screen-sets-modal" class="modal-dialog modal-dialog-centered admin-screen-sets-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">
+                {% if admin_screen.type == 'boards' %}
+                    Ensembles d'échiquiers de l'écran [{{ admin_screen.uniq_id }}]
+                {% else %}
+                    Ensembles de joueur·euses de l'écran [{{ admin_screen.uniq_id }}]
+                {% endif %}
+            </h2>
+        </div>
+        <div class="modal-body">
+            {% if admin_screen_set %}
+                <p>Enregistrez l'ensemble ou annulez.</p>
+            {% elif admin_screen.screen_sets_by_id|length > 1 %}
+                <p>Déplacez les ensembles pour les ordonner.</p>
+            {% endif %}
+            {% if not admin_screen_set %}
+                <form
+                        class="{% if not admin_screen_set %}sortable{% endif %}"
+                        hx-post="{{ url_for('admin-screen-sets-update') }}"
+                        hx-vals='{"action": "reorder", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}" }'
+                        hx-target="#admin-screen-sets-modal"
+                        hx-swap="innerHTML"
+                        hx-trigger="end"
+                        hx-indicator="#please-wait">
+            {% endif %}
+                {% if admin_screen.screen_sets_sorted_by_order %}
+                    {% for screen_set in admin_screen.screen_sets_sorted_by_order %}
+                        {% include 'admin_screen_set_div.html' %}
+                    {% endfor %}
+                {% else %}
+                        <div class="text-danger">Aucun ensemble défini.</div>
+                {% endif %}
+            {% if not admin_screen_set %}
+                </form>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            <div class="row">
+                <div class="col col-6 text-start">
+                    <button
+                            class="btn btn-primary text-nowrap"
+                            hx-post="{{ url_for('admin-screen-sets-update') }}"
+                            hx-vals='{"action": "add", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}" }'
+                            {% if admin_screen_set %}disabled{% endif %}
+                            hx-target="#admin-screen-sets-modal"
+                            hx-swap="innerHTML"
+                            hx-indicator="#please-wait">
+                        <i class="bi-plus-square-fill"></i> Ajouter un ensemble
+                    </button>
+                </div>
+                <div class="col col-6 text-end">
+                    <button
+                            class="btn btn-secondary text-nowrap"
+                            hx-post="{{ url_for('admin-screen-sets-update') }}"
+                            hx-vals='{"action": "close", "admin_event_uniq_id": "{{ admin_event.uniq_id }}" }'
+                            {% if admin_screen_set %}disabled{% endif %}
+                            hx-swap="multi:#messages,#admin-header,#admin-content"
+                            hx-indicator="#please-wait"
+                            data-bs-dismiss="modal">
+                        <i class="bi-x-circle-fill"></i> Fermer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

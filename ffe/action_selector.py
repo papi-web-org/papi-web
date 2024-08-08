@@ -15,9 +15,6 @@ logger: Logger = get_logger()
 @singleton
 class ActionSelector:
 
-    def __init__(self, config: PapiWebConfig):
-        self.__config = config
-
     @classmethod
     def __get_qualified_tournaments(cls, event: Event) -> list[Tournament]:
         if not event.tournaments:
@@ -94,6 +91,7 @@ class ActionSelector:
             return True
         if choice == 'U':
             (logger.info('Action : mise en ligne des résultats'))
+            ffe_upload_delay: int = PapiWebConfig().ffe_upload_delay
             try:
                 while True:
                     tournaments = self.__get_qualified_tournaments_with_existing_file(Event(event_uniq_id, False))
@@ -103,7 +101,7 @@ class ActionSelector:
                     updated_tournaments: list[Tournament] = []
                     recently_updated_tournaments: int = 0
                     for tournament in tournaments:
-                        needs_upload: NeedsUpload = tournament.ffe_upload_needed(self.__config.ffe_upload_delay)
+                        needs_upload: NeedsUpload = tournament.ffe_upload_needed(ffe_upload_delay)
                         match needs_upload:
                             case NeedsUpload.YES:
                                 updated_tournaments.append(tournament)
@@ -117,7 +115,7 @@ class ActionSelector:
                         else:
                             logger.info(
                                 f'{recently_updated_tournaments} tournoi(s) a(ont) été modifié(s) il y a moins de '
-                                f'{self.__config.ffe_upload_delay} secondes, temporisation en cours')
+                                f'{ffe_upload_delay} secondes, temporisation en cours')
                     for tournament in updated_tournaments:
                         FFESession(tournament).upload(set_visible=False)
                     time.sleep(10)

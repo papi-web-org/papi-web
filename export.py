@@ -86,7 +86,12 @@ def build_exe():
         file for file in htmx_dir.glob('**/*')
         if file.is_file()
     ]
-    files += [Path('.') / 'database' / 'sql' / 'create_event.sql', ]
+    sql_dir: Path = Path('.') / 'database' / 'sql'
+    files += [sql_dir / 'create_event.sql', ]
+    yml_dir: Path = Path('.') / 'database' / 'yml'
+    files += [
+        file for file in yml_dir.glob('*.yml')
+    ]
     for file in files:
         pyinstaller_params.append(f'--add-data={file};{file.parent}')
     files: list[Path] = []

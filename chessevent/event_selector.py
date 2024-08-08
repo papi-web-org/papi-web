@@ -12,9 +12,8 @@ logger: Logger = get_logger()
 
 @singleton
 class EventSelector:
-    def __init__(self, config: PapiWebConfig):
+    def __init__(self):
         self.__silent: bool = False
-        self.__config: PapiWebConfig = config
 
     def run(self) -> bool:
         events: List[Event] = get_events_sorted_by_name(False, with_tournaments_only=True)
@@ -45,6 +44,6 @@ class EventSelector:
                 except ValueError:
                     pass
         event: Event = events[event_num - 1]
-        while ActionSelector(self.__config).run(event.uniq_id):
+        while ActionSelector().run(event.uniq_id):
             pass
         return True

@@ -45,18 +45,18 @@ class AAdminController(AController):
         if not data[field]:
             return empty_value
         int_val = int(data[field])
-        if minimum is not None:
-            assert int_val > minimum
+        if minimum is not None and int_val < minimum:
+            raise ValueError(f'{int_val} < {minimum}')
         return int_val
 
     @staticmethod
     def form_data_to_bool_or_none(data: dict[str, str], field: str, empty_value: bool | None = None) -> bool | None:
         data[field] = data.get(field, '')
         if data[field] is not None:
-            data[field] = data[field].strip()
+            data[field] = data[field].strip().lower()
         if not data[field]:
             return empty_value
-        return bool(data[field])
+        return data[field] == '1'
 
     @staticmethod
     def form_data_to_rgb_or_none(data: dict[str, str], field: str, empty_value: RGB | None = None) -> str | None:
@@ -74,7 +74,7 @@ class AAdminController(AController):
         if isinstance(value, str):
             return value.strip()
         if isinstance(value, bool):
-            return 'true' if value else ''
+            return '1' if value else '0'
         if isinstance(value, int):
             return str(value)
         if isinstance(value, Path):
@@ -129,7 +129,7 @@ class AAdminController(AController):
                 '@chessevents': 'Connexions à ChessEvent',
                 '@timers': 'Chronomètres',
                 '@tournaments': 'Tournois',
-                # '@screens': 'Écrans',
+                '@screens': 'Écrans',
                 # '@families': 'Familles d\'écrans',
                 # '@rotators': 'Écrans rotatifs',
                 # '@messages': 'Messages',

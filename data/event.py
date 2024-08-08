@@ -1,3 +1,4 @@
+import fnmatch
 import json
 import os
 from functools import total_ordering
@@ -11,10 +12,11 @@ from common.papi_web_config import PapiWebConfig
 from data.chessevent import ChessEvent, ChessEventBuilder, NewChessEvent
 from data.family import FamilyBuilder
 from data.rotator import Rotator, RotatorBuilder
-from data.screen import AScreen, ScreenBuilder
+from data.screen import AScreen, ScreenBuilder, ANewScreen, NewBoardsScreen, NewPlayersScreen, NewResultsScreen
 from data.template import Template, TemplateBuilder
 from data.timer import Timer, TimerBuilder, NewTimer
 from data.tournament import Tournament, TournamentBuilder, NewTournament
+from data.util import ScreenType
 from database.sqlite import EventDatabase
 from database.store import StoredEvent
 
@@ -312,11 +314,13 @@ class NewEvent:
         self.chessevents_by_id: dict[int, NewChessEvent] = {}
         self._chessevent_uniq_ids: list[str] | None = None
         self.tournaments_by_id: dict[int, NewTournament] = {}
-        self._tournament_uniq_ids: list[str] | None = None
-        self.templates: dict[str, Template] = {}
+        self._tournaments_by_uniq_id: dict[str, NewTournament] | None = None
         self.screens_by_family_id: dict[str, list[AScreen]] = {}
-        self.screens: dict[str, AScreen] = {}
-        self.rotators: dict[str, Rotator] = {}
+        self.screens_by_id: dict[int, ANewScreen] = {}
+        self._screen_ids: list[int] | None = None
+        self.screens_by_uniq_id: dict[str, ANewScreen] = {}
+        self._screen_uniq_ids: list[str] | None = None
+        self.rotators_by_id: dict[str, Rotator] = {}
         self.timers_by_id: dict[int, NewTimer] = {}
         self._timer_uniq_ids: list[str] | None = None
         self._timer_colors: dict[int, str] | None = None
@@ -358,15 +362,24 @@ class NewEvent:
             self.add_warning(
                 'Des erreurs ont été trouvées sur les familles, les écrans rotatifs ne seront pas chargés')
             return
+        self._set_screen_menus()
         self._build_rotators(stored_event)
         if self.errors:
             return
+        tournament_ids: list[int] = []
+        for screen in self.screens_by_uniq_id.values():
+            if screen.type == ScreenType.Results:
+                results_tournament_ids = screen.results_tournament_ids if screen.results_tournament_ids \
+                    else list(self.tournaments_by_id.keys())
+                for tournament_id in results_tournament_ids:
+                    if tournament_id not in tournament_ids:
+                        tournament_ids.append(tournament_id)
+            else:
+                for screen_set in screen.screen_sets_sorted_by_order:
+                    if screen_set.tournament and screen_set.tournament.id not in tournament_ids:
+                        tournament_ids.append(screen_set.tournament.id)
+        self.set_file_dependencies([self.tournaments_by_id[tournament_id].file for tournament_id in tournament_ids])
         """"
-        self.tournaments = TournamentBuilder(
-            self.reader, self.database, self.uniq_id, self.path, self.chessevents, self.record_illegal_moves
-        ).tournaments
-        if self.reader.errors:
-            return
         if load_screens:
             self.templates = TemplateBuilder(self.reader).templates
             if self.reader.errors:
@@ -448,17 +461,31 @@ class NewEvent:
         return self._timer_uniq_ids
 
     @property
-    def tournament_uniq_ids(self) -> list[str]:
-        if self._tournament_uniq_ids is None:
-            self._tournament_uniq_ids = [tournament.uniq_id for tournament in self.tournaments_by_id.values()]
-        return self._tournament_uniq_ids
+    def screen_uniq_ids(self) -> list[str]:
+        if self._screen_uniq_ids is None:
+            self._screen_uniq_ids = [screen.uniq_id for screen in self.screens_by_uniq_id.values()]
+        return self._screen_uniq_ids
+
+    @property
+    def screen_ids(self) -> list[int]:
+        if self._screen_ids is None:
+            self._screen_ids = [screen.id for screen in self.screens_by_id.values()]
+        return self._screen_ids
+
+    @property
+    def tournaments_by_uniq_id(self) -> dict[str, NewTournament]:
+        if self._tournaments_by_uniq_id is None:
+            self._tournaments_by_uniq_id = {
+                tournament.uniq_id: tournament for tournament in self.tournaments_by_id.values()
+            }
+        return self._tournaments_by_uniq_id
 
     @property
     def timer_colors(self) -> dict[int, str]:
         if self._timer_colors is None:
             self._timer_colors = {
                 i: self.stored_event.timer_colors[i]
-                if self.stored_event.timer_colors[i]
+                if i in self.stored_event.timer_colors and self.stored_event.timer_colors[i]
                 else PapiWebConfig().default_timer_colors[i]
                 for i in range(1, 4)}
         return self._timer_colors
@@ -468,7 +495,7 @@ class NewEvent:
         if self._timer_delays is None:
             self._timer_delays = {
                 i: self.stored_event.timer_delays[i]
-                if self.stored_event.timer_delays[i]
+                if i in self.stored_event.timer_delays and self.stored_event.timer_delays[i]
                 else PapiWebConfig().default_timer_delays[i]
                 for i in range(1, 4)}
         return self._timer_delays
@@ -502,7 +529,6 @@ class NewEvent:
         for stored_timer in stored_event.stored_timers:
             timer: NewTimer = NewTimer(self, stored_timer)
             self.timers_by_id[timer.id] = timer
-        pass
 
     def _build_tournaments(self, stored_event: StoredEvent):
         for stored_tournament in stored_event.stored_tournaments:
@@ -510,13 +536,65 @@ class NewEvent:
             self.tournaments_by_id[tournament.id] = tournament
 
     def _build_screens(self, stored_event: StoredEvent):
-        pass
+        for stored_screen in stored_event.stored_screens:
+            match ScreenType.from_str(stored_screen.type):
+                case ScreenType.Boards:
+                    screen: NewBoardsScreen = NewBoardsScreen(self, stored_screen=stored_screen)
+                case ScreenType.Players:
+                    screen: NewPlayersScreen = NewPlayersScreen(self, stored_screen=stored_screen)
+                case ScreenType.Results:
+                    screen: NewResultsScreen = NewResultsScreen(self, stored_screen=stored_screen)
+                case _:
+                    raise ValueError(f'stored_screen.type={stored_screen.type}')
+            self.screens_by_id[screen.id] = screen
+            self.screens_by_uniq_id[screen.uniq_id] = screen
 
     def _build_families(self, stored_event: StoredEvent):
         pass
 
     def _build_rotators(self, stored_event: StoredEvent):
         pass
+
+    def _set_screen_menus(self):
+        view_menu_screens: list[ANewScreen] = []
+        update_menu_screens: list[ANewScreen] = []
+        for screen in self.screens_by_uniq_id.values():
+            if screen.menu_label:
+                if screen.type == ScreenType.Boards and screen.boards_update:
+                    update_menu_screens.append(screen)
+                else:
+                    view_menu_screens.append(screen)
+        for screen in self.screens_by_uniq_id.values():
+            if screen.menu is None:
+                screen.menu_screens = []
+                continue
+            for menu_part in map(str.strip, screen.menu.split(',')):
+                if not menu_part:
+                    continue
+                if menu_part == '@update':
+                    screen.menu_screens += update_menu_screens
+                    continue
+                if menu_part == '@view':
+                    screen.menu_screens += view_menu_screens
+                    continue
+                if menu_part == '@family':
+                    # TODO add the screens of the family
+                    # screen.menu_screens += self._screens_by_family_id[screen.family_id]
+                    continue
+                if '*' in menu_part:
+                    menu_part_screen_uniq_ids: list[str] = fnmatch.filter(self.screens_by_uniq_id.keys(), menu_part)
+                    if not menu_part_screen_uniq_ids:
+                        self.add_warning(
+                            f'Le motif [{menu_part}] ne correspond à aucun écran', screen_uniq_id=screen.uniq_id)
+                    else:
+                        screen.menu_screens += [
+                            self.screens_by_uniq_id[screen_uniq_id] for screen_uniq_id in menu_part_screen_uniq_ids
+                        ]
+                    continue
+                if menu_part in self.screens_by_uniq_id:
+                    screen.menu_screens.append(self.screens_by_uniq_id[menu_part])
+                else:
+                    self.add_warning(f'L\'écran [{menu_part}] n\'existe pas', screen_uniq_id=screen.uniq_id)
 
     def __format_message(
             self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,

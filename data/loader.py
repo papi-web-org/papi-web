@@ -68,7 +68,8 @@ class EventLoader:
 
     def _load_event(self, uniq_id: str) -> NewEvent:
         stored_event: StoredEvent = self.load_stored_event(uniq_id)
-        return NewEvent(stored_event)
+        event: NewEvent = NewEvent(stored_event)
+        return event
 
     def load_event(self, uniq_id: str, reload: bool = False) -> NewEvent:
         if reload:

@@ -131,9 +131,9 @@
         <tr>
             <th scope="row" class="text-nowrap">Paramètres par défaut des chronomètres</th>
             <td class="text-nowrap">
-                <span style="background-color: {{ admin_event.timer_colors[1] }}">&nbsp;{{ admin_event.timer_delays[1] }} minutes avant&nbsp;</span>
-                <span style="background-color: {{ admin_event.timer_colors[2] }}">&nbsp;{{ admin_event.timer_delays[2] }} minutes avant&nbsp;</span>
-                <span style="background-color: {{ admin_event.timer_colors[3] }}">&nbsp;{{ admin_event.timer_delays[3] }} minutes après&nbsp;</span>
+                <div style="background-color: {{ admin_event.timer_colors[1] }}">&nbsp;{{ admin_event.timer_delays[1] }} minutes avant&nbsp;</div>
+                <div style="background-color: {{ admin_event.timer_colors[2] }}">&nbsp;{{ admin_event.timer_delays[2] }} minutes avant&nbsp;</div>
+                <div style="background-color: {{ admin_event.timer_colors[3] }}">&nbsp;{{ admin_event.timer_delays[3] }} minutes après&nbsp;</div>
             </td>
             <td></td>
         </tr>
@@ -150,6 +150,22 @@
                         hx-swap="multi:#admin-header,#admin-content"
                         hx-indicator="#please-wait">
                     <i class="bi-caret-right-square-fill"></i> Gérer les chronomètres
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Écrans</th>
+            <td class="text-nowrap">
+                {% if admin_event.screens_by_id|length %}{{ admin_event.screens_by_id|length }}{% else %}<em>Aucun</em>{% endif %}
+            </td>
+            <td>
+                <button
+                        class="btn btn-sm btn-primary p-1"
+                        hx-post="{{ url_for('admin-update-header') }}"
+                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@screens"}'
+                        hx-swap="multi:#admin-header,#admin-content"
+                        hx-indicator="#please-wait">
+                    <i class="bi-caret-right-square-fill"></i> Gérer les écrans
                 </button>
             </td>
         </tr>

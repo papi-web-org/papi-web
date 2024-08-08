@@ -1,0 +1,131 @@
+name: "37e open Fide de Domloup"
+css: "club/F35043/F35043.css"
+update_password: "mot_de_passe"
+record_illegal_moves: 0
+allow_results_deletion: false
+chessevents:
+  domloup-fide:
+    user_id: C69548
+    password: "Find it!"
+    event_id: "BRE_35_domloupfide37"
+timers:
+  timer:
+    hours:
+      ouverture-pointage-sms:
+        date_str: "2024-08-24"
+        time_str: "08:00"
+        text_before: "Ouverture du pointage par SMS dans %s"
+        text_after: "Pointage par SMS ouvert depuis %s"
+      ouverture-pointage:
+        time_str: "08:45"
+        text_before: "Ouverture du pointage dans %s"
+        text_after: "Pointage ouvert depuis %s"
+      fermeture-pointage:
+        time_str: "09:15"
+        text_before: "Fermeture du pointage dans %s"
+        text_after: "Pointage fermé depuis %s"
+      1:
+        time_str: "09:30"
+      2:
+        time_str: "13:15"
+      3:
+        time_str: "16:30"
+      4:
+        date_str: "2024-08-25"
+        time_str: "09:30"
+      5:
+        time_str: "13:15"
+      remise-prix:
+        time_str: "16:30"
+        text_before: "Remise des prix dans %s"
+        text_after: "Remise des prix commencée depuis %s"
+tournaments:
+  A:
+    filename: "domloup-fide-37-A"
+    name: "Tournoi A"
+    ffe_id: 999990
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide"
+    chessevent_tournament_name: "Tournoi A"
+  B:
+    filename: "domloup-fide-37-B"
+    name: "Tournoi B"
+    ffe_id: 999991
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide"
+    chessevent_tournament_name: "Tournoi B"
+  C:
+    filename: "domloup-fide-37-C"
+    name: "Tournoi C"
+    ffe_id: 999992
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide"
+    chessevent_tournament_name: "Tournoi C"
+  D:
+    filename: "domloup-fide-37-D"
+    name: "Tournoi D"
+    ffe_id: 999993
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide"
+    chessevent_tournament_name: "Tournoi D"
+  E:
+    filename: "domloup-fide-37-E"
+    name: "Tournoi E"
+    ffe_id: 999994
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide"
+    chessevent_tournament_name: "Tournoi E"
+  F:
+    filename: "domloup-fide-37-F"
+    name: "Tournoi F"
+    ffe_id: 999995
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide"
+    chessevent_tournament_name: "Tournoi F"
+screens:
+  saisie-A:
+    name: "Tournoi A"
+    type: "boards"
+    menu: "saisie-*"
+    timer_uniq_id: "timer"
+    boards_update: true
+    sets:
+      -
+        tournament_uniq_id: "A"
+  saisie-B:
+    name: "Tournoi B"
+    type: "boards"
+    menu: "saisie-*"
+    timer_uniq_id: "timer"
+    boards_update: true
+    sets:
+      -
+        tournament_uniq_id: "B"
+  affichage-AB:
+    name: "Tournois A et B"
+    type: "boards"
+    menu:
+    timer_uniq_id: "timer"
+    boards_update: false
+    sets:
+      -
+        tournament_uniq_id: "A"
+      -
+        tournament_uniq_id: "B"
+  joueurs-A:
+    name: "Tournoi A"
+    type: "players"
+    menu:
+    timer_uniq_id: "timer"
+    boards_update: false
+    players_show_unpaired: true
+    sets:
+      -
+        tournament_uniq_id: "A"
+  resultats-AB:
+    name: "Tournoi A"
+    type: "results"
+    menu:
+    timer_uniq_id: "timer"
+    boards_update: false
+    results_tournaments_str: "A, B, C"

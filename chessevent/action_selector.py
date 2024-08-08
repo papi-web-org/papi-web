@@ -10,7 +10,6 @@ import chardet
 from chessevent.chessevent_session import ChessEventSession
 from common.config_reader import TMP_DIR
 from common.logger import get_logger, print_interactive, input_interactive
-from common.papi_web_config import PapiWebConfig
 from common.singleton import singleton
 from data.chessevent_tournament import ChessEventTournament
 from data.event import Event
@@ -23,9 +22,6 @@ logger: Logger = get_logger()
 
 @singleton
 class ActionSelector:
-
-    def __init__(self, config: PapiWebConfig):
-        self.__config = config
 
     @classmethod
     def __get_chessevent_tournaments(cls, event: Event) -> list[Tournament]:

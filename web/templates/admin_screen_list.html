@@ -1,0 +1,179 @@
+<div class="row">
+    <div class="col">
+        <h1 class="text-nowrap">
+            {{ admin_event.name }} - Écrans
+        </h1>
+    </div>
+    <div class="col-1 d-flex justify-content-end">
+        <h1>
+            <button
+                    class="btn btn-primary text-nowrap"
+                    hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
+                    hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait">
+                <i class="bi-plus-square-fill"></i> Créer un écran
+            </button>
+        </h1>
+    </div>
+</div>
+
+<table class="table border-black">
+    <thead class="table-dark">
+        <tr>
+            <th scope="col" class="text-nowrap">[Id] / Nom</th>
+            <th scope="col" class="text-nowrap">Type</th>
+            <th scope="col" class="text-nowrap">Menu</th>
+            <th scope="col" class="text-nowrap" colspan="2">Paramètres</th>
+            <th scope="col" class="text-nowrap" colspan="2">Ensembles</th>
+            <th scope="col" class=""></th>
+            <th scope="col" class=""></th>
+            <th scope="col" class=""></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if admin_event.screens_by_id|length > 0 %}
+            {% for screen in admin_event.screens_by_id.values() %}
+                <tr>
+                    <th scope="row" class="text-nowrap">
+                        <div>
+                            [{{ screen.uniq_id }}]
+                        </div>
+                        <div>
+                            {{ screen.name }}
+                        </div>
+                    </th>
+                    <td scope="row" class="text-nowrap">
+                        <i class="{{ screen.icon_str }}"></i>
+                        {{ screen.type_str }}
+                        {% if screen.type == 'boards' and screen.record_illegal_moves %}
+                            {% for _ in range(screen.record_illegal_moves) %}
+                                <i class="bi-flag-fill"></i>
+                            {% endfor %}
+                        {% endif %}
+                    </td>
+                    <td scope="row" class="text-nowrap">
+                        <div>
+                            Étiquette : {% if screen.menu_label %}{{ screen.menu_label }}{% else %}<em>-</em>{% endif %}
+                        </div>
+                        <div>
+                            Menu : {% if screen.menu %}{{ screen.menu }}{% else %}<em>-</em>{% endif %}
+                        </div>
+                    </td>
+                    <td scope="row" class="text-nowrap">
+                        <div>
+                            Colonnes : {{ screen.columns }}
+                        </div>
+                        <div>
+                            Chronomètre : {% if screen.timer %}<i class="bi-clock-fill"></i> {% if admin_event.timers_by_id|length > 1 %}{{ screen.timer.uniq_id }}{% else %}Oui{% endif %}{% else %}<em>Non</em>{% endif %}
+                        </div>
+                        {% if screen.type == 'players' %}
+                            <div>
+                                Non apparié·es : {% if screen.players_show_unpaired %}Oui{% else %}Non{% endif %} {% if screen.stored_screen.players_show_unpaired is none %}(par défaut){% endif %}
+                            </div>
+                        {% endif %}
+                        {% if screen.type == 'results' %}
+                            <div>
+                                Nombre max : {% if screen.results_limit %}{{ screen.results_limit }}{% else %}<em>-</em>{% endif %}
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap width-50">
+                        <button
+                                class="btn btn-sm btn-primary p-1"
+                                hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
+                                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-pencil-fill"></i> Éditer
+                        </button>
+                    </td>
+                    <td class="text-nowrap">
+                        {% if screen.type in ['boards', 'players'] %}
+                            {% if screen.screen_sets_sorted_by_order|length > 0 %}
+                                {% for screen_set in screen.screen_sets_sorted_by_order %}
+                                    <div class="{% if screen_set.error %}text-danger{% endif %}">
+                                        {% if screen_set.error %}<i class="bi-exclamation-triangle-fill"></i>{% endif %}
+                                        Tournoi :
+                                        {% if screen_set.tournament %}
+                                            {{ screen_set.tournament.name }}
+                                            ({{ screen_set.numbers_str }})
+                                        {% else %}
+                                            <span class="text-danger">non défini</span>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                            <div class="text-danger">
+                                <i class="bi-exclamation-triangle-fill"></i> Aucun ensemble défini
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <em>-</em>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap width-50">
+                        {% if screen.type in ['boards', 'players'] %}
+                            <button
+                                    class="btn btn-sm btn-primary p-1"
+                                    hx-post="{{ url_for('admin-screen-render-sets-modal') }}"
+                                    hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
+                                    hx-target="#admin-modal-container"
+                                    hx-swap="innerHTML"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#admin-modal-container"
+                                    hx-indicator="#please-wait" >
+                                <i class="bi-collection-fill"></i>
+                                {% if screen.type == 'boards' %}
+                                    Ensembles d'échiquiers
+                                {% else %}
+                                    Ensembles de joueur·euses
+                                {% endif %}
+                            </button>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap text-end">
+                        <button
+                                class="btn btn-sm btn-primary p-1"
+                                hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
+                                hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-copy"></i> Dupliquer
+                        </button>
+                    </td>
+                    <td class="text-nowrap text-end">
+                        <button
+                                class="btn btn-sm btn-danger p-1"
+                                hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
+                                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-trash-fill"></i> Supprimer
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td
+                        colspan="3"
+                        class="text-nowrap" >
+                    <em>Aucun écran trouvé.</em>
+                </td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>

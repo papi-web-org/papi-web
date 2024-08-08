@@ -1,18 +1,24 @@
 import json
 import math
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
 from logging import Logger
 from dataclasses import dataclass, field
 from itertools import chain, islice
 from collections.abc import Iterable
 
+from typing import Any, TYPE_CHECKING
+
 from common.config_reader import ConfigReader, TMP_DIR
 from common.logger import get_logger
 from data.board import Board
 from data.player import Player
-from data.tournament import Tournament
+from data.tournament import Tournament, NewTournament
 from data.util import ScreenType, batched
+from database.store import StoredScreenSet, StoredFamily
+
+if TYPE_CHECKING:
+    from data.event import NewEvent
+    from data.screen import ANewScreenWithSets
 
 logger: Logger = get_logger()
 
@@ -274,7 +280,8 @@ class ScreenSet:
                 return f'{start} ({number} à partir de n°{first}, partie n°{part})'
             case (None, last, number, part, None) if last is not None and number is not None and part is not None:
                 return f"{start} ({number} jusqu'à n°{last}, partie n°{part})"
-            case (first, last, number, part, None) if first is not None and last is not None and number is not None and part is not None:
+            case (first, last, number,
+                  part, None) if first is not None and last is not None and number is not None and part is not None:
                 return f'{start} ({number} de n°{first} à n°{last}, partie n°{part})'
             case (None, None, None, part, parts) if part is not None and parts is not None:
                 return f'{start} ({part}/{parts})'
@@ -282,7 +289,8 @@ class ScreenSet:
                 return f'{start} ({part}/{parts} à partir de n°{first})'
             case (None, last, None, part, parts) if last is not None and part is not None and parts is not None:
                 return f"{start} ({part}/{parts} jusqu'à n°{last})"
-            case (first, last, None, part, parts) if first is not None and last is not None and part is not None and parts is not None:
+            case (first, last, None,
+                  part, parts) if first is not None and last is not None and part is not None and parts is not None:
                 return f'{start} ({part}/{parts} de n°{first} à n°{last})'
             case _:
                 raise ValueError("unreachable")
@@ -492,3 +500,361 @@ class ScreenSetBuilder:
             number=number)
         self.screen_set_id += 1
         return screen_set
+
+
+class NewScreenSet:
+    def __init__(
+            self,
+            screen: 'ANewScreenWithSets',
+            stored_screen_set: StoredScreenSet | None = None,
+            stored_family: StoredFamily | None = None,
+            family_index: int | None = None,
+    ):
+        if stored_screen_set is None:
+            assert stored_family is not None and family_index is not None, \
+                f'stored_screen_set={stored_screen_set}, stored_family={stored_family}, family_index={family_index}'
+        else:
+            assert stored_family is None and family_index is None, \
+                f'stored_screen_set={stored_screen_set}, stored_family={stored_family}, family_index={family_index}'
+        self.screen: 'ANewScreenWithSets' = screen
+        self.stored_screen_set: StoredScreenSet | None = stored_screen_set
+        self.stored_family: StoredFamily | None = stored_family
+        self.family_index: int | None = family_index
+        self.error: str | None = None
+        self.uniq_id: str = f'{self.screen.uniq_id}_{self.stored_screen_set.order}' \
+            if self.stored_screen_set \
+            else f'{self.stored_family.name}_{self.family_index}'
+        if not self.tournament:
+            self.error = self.error or 'Le tournoi n\'est pas défini.'
+        self.name: int | None = self.stored_screen_set.name if self.stored_screen_set else self.stored_family.name
+        fixed_boards_str: str | None = self.stored_screen_set.fixed_boards_str \
+            if self.screen.type == ScreenType.Boards and self.stored_screen_set \
+            else None
+        self.fixed_board_numbers: list[int] | None = None
+        self.first: int | None = self.stored_screen_set.first \
+            if self.screen.type == ScreenType.Boards and self.stored_screen_set \
+            else None
+        self.last: int | None = self.stored_screen_set.last \
+            if self.screen.type == ScreenType.Boards and self.stored_screen_set \
+            else None
+        if self.first and self.last and self.first > self.last:
+            self.error = self.error or (f'Les nombres {self.first} et {self.last} ne sont pas compatibles '
+                                        f'({self.first} > {self.last}).')
+        self.part: int | None = self.stored_screen_set.part if self.stored_screen_set else None
+        self.parts: int | None = self.stored_screen_set.parts if self.stored_screen_set else self.stored_family.parts
+        self.number: int | None = self.stored_screen_set.number if self.stored_screen_set else self.stored_family.number
+        if self.parts and self.number:
+            self.error = self.error or ('Les découpages en un nombre de parties et un nombre d\'éléments ne sont pas '
+                                        'compatibles.')
+        if self.parts and not self.part:
+            self.error = self.error or (f'Veuillez indiquer la partie à sélectionner pour le découpage en {self.parts} '
+                                        f'parties.')
+        if self.number and not self.part:
+            self.error = self.error or (f'Veuillez indiquer la partie à sélectionner pour le découpage en parties de '
+                                        f'{self.number} éléments.')
+        if fixed_boards_str is not None:
+            if fixed_boards_str:
+                self.fixed_board_numbers = []
+                for fixed_board_str in list(map(str.strip, fixed_boards_str.split(','))):
+                    if fixed_board_str:
+                        try:
+                            self.fixed_board_numbers.append(int(fixed_board_str))
+                        except ValueError:
+                            self.error = self.error or f'le numéro d\'échiquier {fixed_board_str} n\'est pas valide.'
+                            break
+            else:
+                self.fixed_board_numbers = [
+                    player.fixed for player in self.tournament.players_by_id.values() if player.fixed
+                ]
+        else:
+            self.fixed_board_numbers = []
+        self.first_item: Any | None = None  # change this to Board | Player | None ?
+        self.last_item: Any | None = None  # change this to Board | Player | None ?
+        self.items_lists: list[list[Any]] | None = None  # change this to Board | Player | None ?
+
+    @property
+    def id(self) -> int:
+        return self.stored_screen_set.id if self.stored_screen_set else -1
+
+    @property
+    def order(self) -> int:
+        return self.stored_screen_set.order if self.stored_screen_set else -1
+
+    @property
+    def event(self) -> 'NewEvent':
+        return self.screen.event
+
+    @property
+    def tournament_id(self) -> int | None:
+        return self.stored_screen_set.tournament_id if self.stored_screen_set else self.stored_family.tournament_id
+
+    @property
+    def tournament(self) -> NewTournament | None:
+        return self.event.tournaments_by_id[self.tournament_id] if self.tournament_id else None
+
+    @property
+    def columns(self) -> int:
+        return self.screen.columns
+
+    @property
+    def boards_update(self) -> bool:
+        return self.screen.boards_update
+
+    @property
+    def players_show_unpaired(self) -> bool:
+        return self.screen.players_show_unpaired
+
+    @property
+    def name_for_boards(self) -> str | None:
+        if self.tournament.current_round:
+            self._extract_boards()
+        else:
+            self._extract_players_by_name()
+        return self.name
+
+    @property
+    def name_for_players(self) -> str | None:
+        self._extract_players_by_name()
+        return self.name
+
+    def _extract_data(self, items: list[Any]):
+        if not items:
+            self.items_lists = [[], ] * self.columns
+            return
+        # at first select the desired items
+        first_index: int
+        last_index: int
+        # _
+        # first
+        # first and last
+        # first and number
+        # last
+        # part and parts
+        # number
+        # part and number
+        # fixed_boards
+
+        # NOTE(Amaras): fixed_boards takes precedence, and is not compatible
+        # with other options.
+        if self.fixed_board_numbers:
+            if TYPE_CHECKING:
+                assert all(isinstance(item, Board) for item in items)
+            selected_items = [
+                board for board in items
+                if board.number in self.fixed_board_numbers
+            ]
+        else:
+            first = self.first - 1 if self.first is not None else 0
+            last = self.last if self.last is not None else len(items)
+            selected_slice = slice(first, last)
+            if self.parts is not None:
+                number = math.ceil((last - first) / self.parts)
+                # NOTE(Amaras): makes the number of items divisible by
+                # the number of columns.
+                if number % self.columns != 0:
+                    number = (number // self.columns + 1) * self.columns
+            else:
+                number = self.number
+            if number is not None:
+                # NOTE(Amaras): this assumes that *self.part* is set,
+                # which must be the case if either *self.parts* or
+                # *self.number* is set.
+                try:
+                    selected_items = list(
+                        next(
+                            islice(
+                                batched(items[selected_slice], number),
+                                self.part - 1,
+                                self.part
+                            )))
+                except StopIteration:
+                    self.first_item = self.last_item = None
+                    self.items_lists = None
+                    return
+            else:
+                selected_items = items[selected_slice]
+            self.first_item = selected_items[0]
+            self.last_item = selected_items[-1]
+        # now split in columns
+        items_number = len(selected_items)
+        q, r = divmod(items_number, self.columns)
+        first_index = 0
+        self.items_lists = []
+        for _ in range(1, self.columns + 1):
+            last_index = first_index + q
+            more: int = min(r, 1)
+            last_index += more
+            r -= more
+            self.items_lists.append(selected_items[first_index:last_index])
+            first_index = last_index
+
+    def _extract_boards(self):
+        if self.items_lists is None:
+            self._extract_data(self.tournament.boards)
+            if self.name is None:
+                if self.first or self.last or self.part or self.number:
+                    self.name = 'Ech. %f à %l'
+                else:
+                    self.name = '%t'
+            self.name = self.name.replace('%t', str(self.tournament.name))
+            if r'%f' in self.name and self.first_item is not None:
+                self.name = self.name.replace(r'%f', str(self.first_board.id))
+            if r'%l' in self.name and self.last_item is not None:
+                self.name = self.name.replace(r'%l', str(self.last_board.id))
+
+    @property
+    def boards_lists(self) -> list[list[Board]]:
+        self._extract_boards()
+        if TYPE_CHECKING:
+            assert (
+                    isinstance(self.items_lists, list) and
+                    all(isinstance(item, list) for item in self.items_lists) and
+                    all(isinstance(item, Board) for item in chain.from_iterable(*self.items_lists))
+            )
+        return self.items_lists
+
+    @property
+    def first_board(self) -> Board:
+        if not self.first_item:
+            self._extract_boards()
+        if TYPE_CHECKING:
+            assert isinstance(self.first_item, Board)
+        return self.first_item
+
+    @property
+    def last_board(self) -> Board:
+        self._extract_boards()
+        if TYPE_CHECKING:
+            assert isinstance(self.last_item, Board)
+        return self.last_item
+
+    def _extract_players_by_name(self):
+        if self.items_lists is None:
+            if self.players_show_unpaired:
+                self._extract_data(self.tournament.players_by_name_with_unpaired)
+            else:
+                self._extract_data(self.tournament.players_by_name_without_unpaired)
+            if self.name is None:
+                if self.first or self.last or self.part or self.number:
+                    self.name = '%f à %l'
+                else:
+                    self.name = '%t'
+            self.name = self.name.replace('%t', str(self.tournament.name))
+            if self.first_item is not None:
+                self.name = self.name.replace('%f', self.first_player_by_name.last_name)
+            if self.last_item is not None:
+                self.name = self.name.replace('%l', self.last_player_by_name.last_name)
+
+    @property
+    def players_by_name_lists(self) -> list[list[Player]]:
+        self._extract_players_by_name()
+        if TYPE_CHECKING:
+            assert (
+                    isinstance(self.items_lists, list) and
+                    all(isinstance(item, list) for item in self.items_lists) and
+                    all(
+                        isinstance(item, Player)
+                        for item in chain.from_iterable(*self.items_lists)
+                    )
+            )
+        return self.items_lists
+
+    @property
+    def players_by_name_tuple_lists(self) -> Iterable[tuple[list[Player], list[Player]]]:
+        self._extract_players_by_name()
+        if TYPE_CHECKING:
+            assert (
+                    isinstance(self.items_lists, list) and
+                    all(isinstance(item, list) for item in self.items_lists) and
+                    all(
+                        isinstance(item, Player)
+                        for item in chain.from_iterable(*self.items_lists)
+                    )
+            )
+        players_by_name_lists: list[list[Player]] = self.items_lists
+        for players_by_name in players_by_name_lists:
+            yield (
+                players_by_name[: (bound := math.ceil(len(players_by_name) / 2))],
+                players_by_name[bound:]
+            )
+
+    @property
+    def first_player_by_name(self) -> Player:
+        if not self.first_item:
+            self._extract_players_by_name()
+        if TYPE_CHECKING:
+            assert isinstance(self.first_item, Player)
+        return self.first_item
+
+    @property
+    def last_player_by_name(self) -> Player:
+        if not self.last_item:
+            self._extract_players_by_name()
+        if TYPE_CHECKING:
+            assert isinstance(self.last_item, Player)
+        return self.last_item
+
+    @property
+    def __get_screen_set_file_dependencies_file(self) -> Path:
+        return TMP_DIR / 'events' / self.event.uniq_id / 'screen_set_file_dependencies' / f'{self.uniq_id}.json'
+
+    def get_screen_set_file_dependencies(self) -> list[Path]:
+        try:
+            with open(self.__get_screen_set_file_dependencies_file, 'r', encoding='utf-8') as f:
+                return [Path(file) for file in json.load(f)]
+        except FileNotFoundError:
+            return []
+
+    def set_file_dependencies(self, files: list[Path]):
+        try:
+            self.__get_screen_set_file_dependencies_file.parents[0].mkdir(parents=True, exist_ok=True)
+            with open(self.__get_screen_set_file_dependencies_file, 'w', encoding='utf-8') as f:
+                return f.write(json.dumps([str(file) for file in files]))
+        except FileNotFoundError:
+            return []
+
+    @property
+    def numbers_str(self):
+        name: str = 'échiquiers' if self.screen.type == ScreenType.Boards else 'joueur·euses'
+        if self.fixed_board_numbers:
+            return f'{name} {", ".join(map(str, self.fixed_board_numbers))}'
+        match (self.first, self.last, self.number, self.part, self.parts):
+            case (None, None, None, None, None):
+                return 'tous les échiquiers' if self.screen.type == ScreenType.Boards else 'Tou·tes les joueur·euses'
+            case (first, None, None, None, None) if first is not None:
+                return f'{name} à partir du n°{first}'
+            case (first, last, None, None, None) if first is not None and last is not None:
+                return f'{name} du n°{first} à {last}'
+            case (first, None, number, None, None) if first is not None and number is not None:
+                return f'{name} {number} à partir de n°{first}'
+            case (None, last, None, None, None) if last is not None:
+                return f"{name} jusqu'à n°{last}"
+            case (first, last, number, None, None) if first is not None and last is not None and number is not None:
+                return f'{name} {number} de n°{first} à {last}'
+            case (None, None, number, part, None) if number is not None and part is not None:
+                return f'{name} {number}, partie n°{part}'
+            case (first, None, number, part, None) if first is not None and number is not None and part is not None:
+                return f'{name} {number} à partir de n°{first}, partie n°{part}'
+            case (None, last, number, part, None) if last is not None and number is not None and part is not None:
+                return f'{name} {number} jusqu\'à n°{last}, partie n°{part}'
+            case (first, last, number, part,
+                  None) if first is not None and last is not None and number is not None and part is not None:
+                return f'{name} {number} de n°{first} à n°{last}, partie n°{part}'
+            case (None, None, None, part, parts) if part is not None and parts is not None:
+                return f'{name} partie n°{part}/{parts}'
+            case (first, None, None, part, parts) if first is not None and part is not None and parts is not None:
+                return f'{name} à partir de n°{first}, partie n°{part}/{parts}'
+            case (None, last, None, part, parts) if last is not None and part is not None and parts is not None:
+                return f'{name} jusqu\'à n°{last}, partie n°{part}/{parts}'
+            case (first, last, None, part,
+                  parts) if first is not None and last is not None and part is not None and parts is not None:
+                return f'{name} de n°{first} à n°{last}, partie n°{part}/{parts})'
+            case _:
+                raise ValueError(
+                    f'first={self.first}, last={self.last}, part={self.part}, parts={self.parts}, number={self.number}')
+
+    def __str__(self):
+        if self.tournament:
+            return f'Tournoi {self.tournament.uniq_id} ({self.numbers_str})'
+        else:
+            return f'Tournoi non défini ({self.numbers_str})'

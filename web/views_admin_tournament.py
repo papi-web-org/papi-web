@@ -47,10 +47,10 @@ class AdminTournamentController(AAdminController):
             else:
                 match action:
                     case 'create' | 'clone':
-                        if uniq_id in admin_event.tournament_uniq_ids:
+                        if uniq_id in admin_event.tournaments_by_uniq_id:
                             errors['uniq_id'] = f'Le tournoi [{uniq_id}] existe déjà.'
                     case 'update':
-                        if uniq_id != admin_tournament.uniq_id and uniq_id in admin_event.tournament_uniq_ids:
+                        if uniq_id != admin_tournament.uniq_id and uniq_id in admin_event.tournaments_by_uniq_id:
                             errors['uniq_id'] = f'Le tournoi [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')
@@ -122,6 +122,16 @@ class AdminTournamentController(AAdminController):
             errors=errors,
         )
 
+    @staticmethod
+    def _get_chessevent_options(admin_event: NewEvent) -> dict[str, str]:
+        options: dict[str, str] = {
+            '': 'Pas de connexion à ChessEvent',
+        }
+        for chessevent in admin_event.chessevents_by_id.values():
+            options[str(chessevent.id)] = (f' {chessevent.uniq_id} ({chessevent.user_id}'
+                                           f'/{chessevent.shadowed_password}/{chessevent.event_id})')
+        return options
+
     @classmethod
     def _admin_tournament_render_edit_modal(
             cls,
@@ -140,6 +150,7 @@ class AdminTournamentController(AAdminController):
                 'action': action,
                 'admin_event': admin_event,
                 'admin_tournament': admin_tournament,
+                'chessevent_options': cls._get_chessevent_options(admin_event),
                 'data': data,
                 'record_illegal_moves_options': cls._get_record_illegal_moves_options(
                     admin_event.record_illegal_moves),

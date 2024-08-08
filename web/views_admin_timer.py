@@ -220,8 +220,7 @@ class AdminTimerController(AAdminController):
                         admin_timer.id, stored_timer.uniq_id, )
                     Message.success(
                         request,
-                        f'Le chronomètre [{admin_timer.uniq_id}] a été dupliqué.'
-                        f'([{stored_timer.uniq_id}]).')
+                        f'Le chronomètre [{admin_timer.uniq_id}] a été dupliqué ([{stored_timer.uniq_id}]).')
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
@@ -280,8 +279,9 @@ class AdminTimerController(AAdminController):
         text_after: str = self.form_data_to_str_or_none(data, 'text_after')
         try:
             round: int = int(uniq_id)
-            assert round > 0, ValueError
-        except (TypeError, ValueError):
+            if round <= 0:
+                errors['uniq_id'] = 'Les numéros de ronde doivent être positifs.'
+        except (TypeError, ValueError, AssertionError):
             if not text_before:
                 errors['text_before'] = \
                     'Veuillez entrer le texte avant l\'horaire (obligatoire sauf pour les débuts de ronde).'
@@ -300,23 +300,36 @@ class AdminTimerController(AAdminController):
             errors=errors,
         )
 
-    @classmethod
     def _admin_timer_render_hours_modal(
-            cls,
-            action: str,
+            self,
             admin_event: NewEvent,
             admin_timer: NewTimer | None,
             admin_timer_hour: NewTimerHour | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        if data is None:
+            if admin_timer_hour:
+                data = {
+                    'uniq_id': self.value_to_form_data(admin_timer_hour.stored_timer_hour.uniq_id),
+                    'date_str': self.value_to_form_data(admin_timer_hour.stored_timer_hour.date_str),
+                    'time_str': self.value_to_form_data(admin_timer_hour.stored_timer_hour.time_str),
+                    'text_before': self.value_to_form_data(admin_timer_hour.stored_timer_hour.text_before),
+                    'text_after': self.value_to_form_data(admin_timer_hour.stored_timer_hour.text_after),
+                }
+                stored_timer_hour = self._admin_validate_timer_hour_update_data(
+                    admin_timer, admin_timer_hour, admin_timer.get_previous_timer_hour(admin_timer_hour), data)
+                errors = stored_timer_hour.errors
+            else:
+                data = {}
+        if errors is None:
+            errors = {}
         return HTMXTemplate(
             template_name='admin_timer_hours_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
             context={
                 'papi_web_config': PapiWebConfig(),
-                'action': action,
                 'admin_event': admin_event,
                 'admin_timer': admin_timer,
                 'admin_timer_hour': admin_timer_hour,
@@ -336,7 +349,6 @@ class AdminTimerController(AAdminController):
             ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
@@ -350,27 +362,14 @@ class AdminTimerController(AAdminController):
         except KeyError:
             Message.error(request, f'Le chronomètre [{admin_timer_id}] est introuvable.')
         admin_timer_hour_id: int = self.form_data_to_int_or_none(data, 'admin_timer_hour_id')
-        data: dict[str, str] = {}
-        admin_timer_hour: NewTimerHour | None
-        errors: dict[str, str]
-        if action == 'edit':
+        if admin_timer_hour_id:
             try:
-                admin_timer_hour = admin_timer.timer_hours_by_id[admin_timer_hour_id]
+                admin_timer_hour: NewTimerHour = admin_timer.timer_hours_by_id[admin_timer_hour_id]
             except KeyError:
                 Message.error(request, f'L\'horaire [{admin_timer_hour_id}] est introuvable.')
                 return self._render_messages(request)
-            data['uniq_id'] = self.value_to_form_data(admin_timer_hour.stored_timer_hour.uniq_id)
-            data['date_str'] = self.value_to_form_data(admin_timer_hour.stored_timer_hour.date_str)
-            data['time_str'] = self.value_to_form_data(admin_timer_hour.stored_timer_hour.time_str)
-            data['text_before'] = self.value_to_form_data(admin_timer_hour.stored_timer_hour.text_before)
-            data['text_after'] = self.value_to_form_data(admin_timer_hour.stored_timer_hour.text_after)
-            stored_timer_hour = self._admin_validate_timer_hour_update_data(
-                admin_timer, admin_timer_hour, admin_timer.get_previous_timer_hour(admin_timer_hour), data)
-            errors = stored_timer_hour.errors
-        else:
-            admin_timer_hour = None
-            errors = {}
-        return self._admin_timer_render_hours_modal(action, admin_event, admin_timer, admin_timer_hour, data, errors)
+            return self._admin_timer_render_hours_modal(admin_event, admin_timer, admin_timer_hour)
+        return self._admin_timer_render_hours_modal(admin_event, admin_timer, None)
 
     @post(
         path='/admin-timer-hours-update',
@@ -428,8 +427,9 @@ class AdminTimerController(AAdminController):
                         admin_timer, admin_timer_hour, admin_timer.get_previous_timer_hour(admin_timer_hour), data)
                     if stored_timer_hour.errors:
                         return self._admin_timer_render_hours_modal(
-                            'edit', admin_event, admin_timer, admin_timer_hour, data, stored_timer_hour.errors)
-                    stored_timer_hour = event_database.update_stored_timer_hour(stored_timer_hour)
+                            admin_event, admin_timer, admin_timer_hour, data, stored_timer_hour.errors)
+                    event_database.update_stored_timer_hour(stored_timer_hour)
+                    stored_timer_hour = None
                 case 'delete':
                     event_database.delete_stored_timer_hour(admin_timer_hour.id)
                     event_database.order_stored_timer_hours(admin_timer.id)
@@ -447,6 +447,8 @@ class AdminTimerController(AAdminController):
         event_loader.clear_cache(admin_event.uniq_id)
         admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
         admin_timer = admin_event.timers_by_id[admin_timer.id]
-        admin_timer_hour = admin_timer.timer_hours_by_id[stored_timer_hour.id] if stored_timer_hour else None
-        return self._admin_timer_render_hours_modal(
-            '', admin_event=admin_event, admin_timer=admin_timer, admin_timer_hour=admin_timer_hour)
+        if stored_timer_hour:
+            admin_timer_hour = admin_timer.timer_hours_by_id[stored_timer_hour.id]
+        else:
+            admin_timer_hour = None
+        return self._admin_timer_render_hours_modal(admin_event, admin_timer, admin_timer_hour)

@@ -180,6 +180,22 @@ class PapiWebConfig:
         return 'papi'
 
     @property
+    def _database_path(self) -> Path:
+        return Path(__file__).resolve().parent / '..' / 'database'
+
+    @property
+    def database_sql_path(self) -> Path:
+        return self._database_path / 'sql'
+
+    @property
+    def database_yml_path(self) -> Path:
+        return self._database_path / 'yml'
+
+    @property
+    def yml_ext(self) -> str:
+        return 'yml'
+
+    @property
     def litestar_version(self) -> Version:
         return litestar.__version__.formatted(short=True)
 
@@ -267,3 +283,7 @@ class PapiWebConfig:
             2: 5,
             3: 10,
         }
+
+    @property
+    def default_players_show_unpaired(self) -> bool:
+        return True

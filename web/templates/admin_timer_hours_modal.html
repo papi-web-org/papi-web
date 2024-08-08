@@ -2,18 +2,18 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2 class="modal-title">
-                Horaires du chronomètre [{{ admin_timer.uniq_id }}]
+                Horaires du chronomètre{% if admin_event.timers_by_id|length > 1 %} [{{ admin_timer.uniq_id }}]{% endif %}
             </h2>
         </div>
         <div class="modal-body">
-            {% if action == 'edit' %}
+            {% if admin_timer_hour %}
                 <p>Enregistrez l'horaire ou annulez.</p>
             {% elif admin_timer.timer_hours_by_id|length > 1 %}
                 <p>Déplacez les horaires pour les ordonner.</p>
             {% endif %}
-            {% if action != 'edit' %}
+            {% if not admin_screen_set %}
                 <form
-                        class="{% if action != 'edit' %}sortable{% endif %}"
+                        class="{% if not admin_timer_hour %}sortable{% endif %}"
                         hx-post="{{ url_for('admin-timer-hours-update') }}"
                         hx-vals='{"action": "reorder", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}" }'
                         hx-target="#admin-timer-hours-modal"
@@ -26,32 +26,32 @@
                         {% include 'admin_timer_hour_div.html' %}
                     {% endfor %}
                 {% else %}
-                        <div>Aucun horaire défini.</div>
+                        <div class="text-danger">Aucun horaire défini.</div>
                 {% endif %}
-            {% if action != 'edit' %}
+            {% if not admin_screen_set %}
                 </form>
             {% endif %}
         </div>
         <div class="modal-footer">
             <div class="row">
                 <div class="col col-6 text-start">
-                    {% if action != 'edit' %}
-                        <button
-                                class="btn btn-primary text-nowrap"
-                                hx-post="{{ url_for('admin-timer-hours-update') }}"
-                                hx-vals='{"action": "add", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}" }'
-                                hx-target="#admin-timer-hours-modal"
-                                hx-swap="innerHTML"
-                                hx-indicator="#please-wait">
-                            <i class="bi-plus-square-fill"></i> Ajouter un horaire
-                        </button>
-                    {% endif %}
+                    <button
+                            class="btn btn-primary text-nowrap"
+                            hx-post="{{ url_for('admin-timer-hours-update') }}"
+                            hx-vals='{"action": "add", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}" }'
+                            {% if admin_timer_hour %}disabled{% endif %}
+                            hx-target="#admin-timer-hours-modal"
+                            hx-swap="innerHTML"
+                            hx-indicator="#please-wait">
+                        <i class="bi-plus-square-fill"></i> Ajouter un horaire
+                    </button>
                 </div>
                 <div class="col col-6 text-end">
                     <button
                             class="btn btn-secondary text-nowrap"
                             hx-post="{{ url_for('admin-timer-hours-update') }}"
                             hx-vals='{"action": "close", "admin_event_uniq_id": "{{ admin_event.uniq_id }}" }'
+                            {% if admin_timer_hour %}disabled{% endif %}
                             hx-swap="multi:#messages,#admin-header,#admin-content"
                             hx-indicator="#please-wait"
                             data-bs-dismiss="modal">

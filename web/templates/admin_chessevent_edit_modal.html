@@ -22,86 +22,104 @@
                         Attention : la suppression d'une connexion à ChessEvent est définitive !
                     </h3>
                 {% else %}
-                    {% with id='uniq-id', name='uniq_id' %}
-                        <div>
-                            <label for="{{ id }}" class="form-label">Identifiant (unique) :</label>
-                            <input
-                                    name="{{ name }}"
-                                    type="text" id="{{ id }}"
-                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                    aria-describedby="{{ id }}-help {{ id }}-error"
-                                    placeholder="Exemple : domloup-fide"
-                                    value="{{ data[name] }}" />
-                            <div id="{{ id }}-help" class="form-text">
-                              L'identifiant unique, utilisé pour référencer la connexion.
-                            </div>
-                            {% if name in errors %}
-                                <div id="{{ id }}-error" class="form-text invalid-feedback">
-                                    {{ errors[name] }}
+                    <h3>
+                        Propriétés
+                    </h3>
+                    <div class="row">
+                        <div class="col-4">
+                            {% with id='uniq-id', name='uniq_id' %}
+                                <div>
+                                    <label for="{{ id }}" class="form-label">Identifiant (unique) :</label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="text" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : domloup-fide"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                      L'identifiant unique, utilisé pour référencer la connexion.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                            {% endif %}
+                            {% endwith %}
                         </div>
-                    {% endwith %}
-                    {% with id='user-id', name='user_id' %}
-                        <div>
-                            <label for="{{ id }}" class="form-label">Identifiant :</label>
-                            <input
-                                    name="{{ name }}"
-                                    type="text" id="{{ id }}"
-                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                    aria-describedby="{{ id }}-help {{ id }}-error"
-                                    placeholder="Exemple : Z00000"
-                                    value="{{ data[name] }}" />
-                            <div id="{{ id }}-help" class="form-text">
-                              L'identifiant utilisé pour se connecter sur la plateforme ChessEvent.
-                            </div>
-                            {% if name in errors %}
-                                <div id="{{ id }}-error" class="form-text invalid-feedback">
-                                    {{ errors[name] }}
+                    </div>
+                    <h3>
+                        Connexion à la plateforme ChessEvent
+                    </h3>
+                    <div class="row">
+                        <div class="col-4">
+                            {% with id='user-id', name='user_id' %}
+                                <div>
+                                    <label for="{{ id }}" class="form-label">Identifiant :</label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="text" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : Z00000"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                      L'identifiant utilisé pour se connecter sur la plateforme ChessEvent.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                            {% endif %}
+                            {% endwith %}
                         </div>
-                    {% endwith %}
-                    {% with id='password', name='password' %}
-                        <div>
-                            <label for="{{ id }}" class="form-label">Mot de passe :</label>
-                            <input
-                                    name="{{ name }}"
-                                    type="text" id="{{ id }}"
-                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                    aria-describedby="{{ id }}-help {{ id }}-error"
-                                    placeholder="Exemple : mot_de_passe"
-                                    value="{{ data[name] }}" />
-                            <div id="{{ id }}-help" class="form-text">
-                              Le mot de passe utilisé pour se connecter sur la plateforme ChessEvent.
-                            </div>
-                            {% if name in errors %}
-                                <div id="{{ id }}-error" class="form-text invalid-feedback">
-                                    {{ errors[name] }}
+                        <div class="col-4">
+                            {% with id='password', name='password' %}
+                                <div>
+                                    <label for="{{ id }}" class="form-label">Mot de passe :</label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="text" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : mot_de_passe"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                      Le mot de passe utilisé pour se connecter sur la plateforme ChessEvent.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                            {% endif %}
+                            {% endwith %}
                         </div>
-                    {% endwith %}
-                    {% with id='event-id', name='event_id' %}
-                        <div>
-                            <label for="{{ id }}" class="form-label">Évènement :</label>
-                            <input
-                                    name="{{ name }}"
-                                    type="text" id="{{ id }}"
-                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                    aria-describedby="{{ id }}-help {{ id }}-error"
-                                    placeholder="Exemple : BRE_35_domloupfide36"
-                                    value="{{ data[name] }}" />
-                            <div id="{{ id }}-help" class="form-text">
-                              Le nom de l'évènement sur la plateforme ChessEvent.
-                            </div>
-                            {% if name in errors %}
-                                <div id="{{ id }}-error" class="form-text invalid-feedback">
-                                    {{ errors[name] }}
+                        <div class="col-4">
+                            {% with id='event-id', name='event_id' %}
+                                <div>
+                                    <label for="{{ id }}" class="form-label">Évènement :</label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="text" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : BRE_35_domloupfide36"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                      Le nom de l'évènement sur la plateforme ChessEvent.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                            {% endif %}
+                            {% endwith %}
                         </div>
-                    {% endwith %}
+                    </div>
                 {% endif %}
             </div>
             <div class="modal-footer">

@@ -25,8 +25,11 @@
     <thead class="table-dark">
         <tr>
             <th scope="col" class="text-nowrap">Id</th>
-            <th scope="col" class="text-nowrap">Horaires</th>
             <th scope="col" class="text-nowrap">Couleurs et délais</th>
+            <th scope="col" class=""></th>
+            <th scope="col" class="text-nowrap">Horaires</th>
+            <th scope="col" class=""></th>
+            <th scope="col" class=""></th>
             <th scope="col" class=""></th>
         </tr>
     </thead>
@@ -35,11 +38,10 @@
             {% for timer in admin_event.timers_by_id.values() %}
                 <tr>
                     <th scope="row" class="text-nowrap">{{ timer.uniq_id }}</th>
-                    <td class="text-nowrap">{% if timer.timer_hours_by_id|length > 0 %}{{ timer.timer_hours_by_id|length }}{% else %}<em>Aucun</em>{% endif %}</td>
                     <td class="text-nowrap">
-                        <span style="background-color: {{ timer.colors[1] }}">&nbsp;{{ timer.delays[1] }} minutes avant&nbsp;</span>
-                        <span style="background-color: {{ timer.colors[2] }}">&nbsp;{{ timer.delays[2] }} minutes avant&nbsp;</span>
-                        <span style="background-color: {{ timer.colors[3] }}">&nbsp;{{ timer.delays[3] }} minutes après&nbsp;</span>
+                        <div style="background-color: {{ timer.colors[1] }}">&nbsp;{{ timer.delays[1] }} minutes avant&nbsp;</div>
+                        <div style="background-color: {{ timer.colors[2] }}">&nbsp;{{ timer.delays[2] }} minutes avant&nbsp;</div>
+                        <div style="background-color: {{ timer.colors[3] }}">&nbsp;{{ timer.delays[3] }} minutes après&nbsp;</div>
                     </td>
                     <td class="text-nowrap">
                         <button
@@ -53,6 +55,24 @@
                                 hx-indicator="#please-wait" >
                             <i class="bi-pencil-fill"></i> Éditer
                         </button>
+                    </td>
+                    <td class="text-nowrap">
+                        {% if timer.timer_hours_by_id|length > 0 %}
+                            {% for timer_hour in timer.timer_hours_sorted_by_order %}
+                                <div class="{% if timer_hour.error %}text-danger{% endif %}">
+                                    {% if timer_hour.error %}<i class="bi-exclamation-triangle-fill"></i>{% endif %}
+                                    {% if timer_hour.date_str %}{{ timer_hour.date_str }} {% endif %}
+                                    {% if timer_hour.time_str %}{{ timer_hour.time_str }}{% else %}???{% endif %}
+                                    {% if timer_hour.round %}Ronde n°{{ timer_hour.round }}{% else %}{{ timer_hour.uniq_id }}{% endif %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-danger">
+                                <i class="bi-exclamation-triangle-fill"></i> Aucun horaire défini
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap">
                         <button
                                 class="btn btn-sm btn-primary p-1"
                                 hx-post="{{ url_for('admin-timer-render-hours-modal') }}"
@@ -64,6 +84,8 @@
                                 hx-indicator="#please-wait" >
                             <i class="bi-clock-fill"></i> Horaires
                         </button>
+                    </td>
+                    <td class="text-nowrap text-end width-100">
                         <button
                                 class="btn btn-sm btn-primary p-1"
                                 hx-post="{{ url_for('admin-timer-render-edit-modal') }}"
@@ -73,8 +95,10 @@
                                 data-bs-toggle="modal"
                                 data-bs-target="#admin-modal-container"
                                 hx-indicator="#please-wait" >
-                            <i class="bi-copy-fill"></i> Dupliquer
+                            <i class="bi-copy"></i> Dupliquer
                         </button>
+                    </td>
+                    <td class="text-nowrap text-end">
                         <button
                                 class="btn btn-sm btn-danger p-1"
                                 hx-post="{{ url_for('admin-timer-render-edit-modal') }}"
