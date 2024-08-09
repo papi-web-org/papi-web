@@ -253,6 +253,23 @@
                                         {% endif %}
                                     {% endwith %}
                                 </div>
+                                <div class="col-6">
+                                    <label class="form-label">Tournois affichés :</label>
+                                    <div>
+                                        {% for tournament in admin_event.tournaments_by_uniq_id.values() %}
+                                            {% with id='results-tournament-' ~ tournament.id, name='results_tournament_' ~ tournament.id %}
+                                                <input
+                                                        name="{{ name }}"
+                                                        type="checkbox" id="{{ id }}"
+                                                        class=""
+                                                        {% if data[name] %}checked{% endif %} />&nbsp;<label for="{{ id }}" class="form-label">{{ tournament.name }}</label>
+                                            {% endwith %}
+                                        {% endfor %}
+                                    </div>
+                                    <div id="" class="form-text">
+                                      Si aucun tournoi n'est sélectionné, les résultats de tous les tournois seront affichés.
+                                    </div>
+                                </div>
                             </div>
                         {% endif %}
                     {% endif %}
@@ -261,7 +278,9 @@
             <div class="modal-footer">
                 <div class="row">
                     <div class="col col-6 text-start">
-                        <button type="submit" class="white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %}">
+                        <button
+                                type="submit"
+                                class="white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %}">
                             <i class="bi-floppy-fill"></i>
                             {% if action == 'create' %}
                                 Créer
@@ -275,7 +294,13 @@
                         </button>
                     </div>
                     <div class="col col-6 text-end">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi-x-circle-fill"></i> Annuler</button>
+                        <button
+                                type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal">
+                            <i class="bi-x-circle-fill"></i>
+                            Annuler
+                        </button>
                     </div>
                 </div>
             </div>

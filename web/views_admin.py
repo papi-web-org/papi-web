@@ -56,7 +56,7 @@ class AAdminController(AController):
             data[field] = data[field].strip().lower()
         if not data[field]:
             return empty_value
-        return data[field] == '1'
+        return data[field] in ['true', 'on', ]
 
     @staticmethod
     def form_data_to_rgb_or_none(data: dict[str, str], field: str, empty_value: RGB | None = None) -> str | None:
@@ -74,7 +74,7 @@ class AAdminController(AController):
         if isinstance(value, str):
             return value.strip()
         if isinstance(value, bool):
-            return '1' if value else '0'
+            return 'true' if value else ''
         if isinstance(value, int):
             return str(value)
         if isinstance(value, Path):

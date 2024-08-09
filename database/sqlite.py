@@ -108,7 +108,7 @@ class EventDatabase(SQLiteDatabase):
             database.commit()
             logger.info('La base de données [%s] a été créée', self.file)
             if populate:
-                with (EventDatabase(self.uniq_id, write=True) as event_database):
+                with EventDatabase(self.uniq_id, write=True) as event_database:
                     event_dict = yaml.safe_load(
                         (papi_web_config.database_yml_path / f'{self.uniq_id}.yml').read_text(encoding='utf-8'))
                     event_database.update_stored_event(StoredEvent(
@@ -175,19 +175,39 @@ class EventDatabase(SQLiteDatabase):
                     for screen_uniq_id, screen_dict in event_dict['screens'].items():
                         timer_uniq_id: str | None = screen_dict.get('timer_uniq_id', None)
                         timer_id: int = timer_ids_by_uniq_id[timer_uniq_id] if timer_uniq_id else None
+                        type = screen_dict.get('type', None)
+                        boards_update: bool | None = None
+                        players_show_unpaired: bool | None = None
+                        results_limit: int | None = None
+                        results_tournament_ids: list[int] | None = None
+                        match type:
+                            case 'boards':
+                                boards_update = screen_dict.get('boards_update', False)
+                            case 'players':
+                                players_show_unpaired = screen_dict.get('players_show_unpaired', False)
+                            case 'results':
+                                results_limit: list[str] = screen_dict.get('results_limit', None)
+                                results_tournament_uniq_ids: list[str] = screen_dict.get(
+                                    'results_tournament_uniq_ids', None)
+                                results_tournament_ids = [
+                                    tournament_ids_by_uniq_id[tournament_uniq_id]
+                                    for tournament_uniq_id in results_tournament_uniq_ids
+                                ] if results_tournament_uniq_ids else []
+                            case _:
+                                raise ValueError
                         stored_screen: StoredScreen = event_database.add_stored_screen(StoredScreen(
                             id=None,
                             uniq_id=screen_uniq_id,
                             name=screen_dict.get('name', None),
-                            type=screen_dict.get('type', None),
+                            type=type,
                             columns=screen_dict.get('columns', None),
                             menu_text=screen_dict.get('menu_text', None),
                             menu=screen_dict.get('menu', None),
                             timer_id=timer_id,
-                            boards_update=screen_dict.get('boards_update', None),
-                            players_show_unpaired=tournament_dict.get("players_show_unpaired", None),
-                            results_limit=tournament_dict.get("results_limit", None),
-                            results_tournaments_str=tournament_dict.get("results_tournaments_str", None),
+                            boards_update=boards_update,
+                            players_show_unpaired=players_show_unpaired,
+                            results_limit=results_limit,
+                            results_tournament_ids=results_tournament_ids,
                         ))
                         screen_ids_by_uniq_id[screen_uniq_id] = stored_screen.id
                         if 'sets' in screen_dict:
@@ -1197,7 +1217,8 @@ class EventDatabase(SQLiteDatabase):
             boards_update=row['boards_update'],
             players_show_unpaired=row['players_show_unpaired'],
             results_limit=row['results_limit'],
-            results_tournaments_str=row['results_tournaments_str'],
+            results_tournament_ids=json.loads(row['results_tournament_ids'])
+            if row['results_tournament_ids'] is not None else None,
         )
 
     def get_stored_screen(self, id: int) -> StoredScreen | None:
@@ -1231,13 +1252,14 @@ class EventDatabase(SQLiteDatabase):
     ) -> StoredScreen:
         fields: list[str] = [
             'uniq_id', 'name', 'type', 'boards_update', 'players_show_unpaired', 'columns', 'menu_text', 'menu',
-            'timer_id', 'results_limit', 'results_tournaments_str',
+            'timer_id', 'results_limit', 'results_tournament_ids',
         ]
         params: list = [
             stored_screen.uniq_id, stored_screen.name, stored_screen.type, stored_screen.boards_update,
             stored_screen.players_show_unpaired, stored_screen.columns, stored_screen.menu_text,
             stored_screen.menu, stored_screen.timer_id, stored_screen.results_limit,
-            stored_screen.results_tournaments_str,
+            json.dumps(stored_screen.results_tournament_ids)
+            if stored_screen.results_tournament_ids is not None else None,
         ]
         if stored_screen.id is None:
             protected_fields = [f"`{f}`" for f in fields]

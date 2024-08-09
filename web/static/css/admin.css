@@ -13,3 +13,6 @@
 .sortable .admin-screen-sets-modal-screen-set-div {
     cursor: grab;
 }
+.modal {
+    overflow-y:auto;
+}

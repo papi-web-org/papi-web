@@ -5,6 +5,7 @@ body {
 	background-image: url('/static/images/papi-web-background.png');
 	background-repeat: no-repeat;
 	background-position: center center;
+	overflow: auto !important;
 }
 .copyright {
     text-align: center;

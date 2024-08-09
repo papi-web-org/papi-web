@@ -112,7 +112,7 @@ CREATE TABLE `screen` (
     `boards_update` INTEGER,
     `players_show_unpaired` INTEGER,
     `results_limit` INTEGER,
-    `results_tournaments_str` TEXT,
+    `results_tournament_ids` TEXT,
     PRIMARY KEY(`id` AUTOINCREMENT),
     FOREIGN KEY (`timer_id`) REFERENCES `timer`(`id`)
 );

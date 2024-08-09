@@ -37,9 +37,10 @@ class AdminScreenController(AAdminController):
             data = {}
         type: str
         boards_update: bool | None = None
+        field: str = 'type'
         match action:
             case 'create':
-                type = self.form_data_to_str_or_none(data, 'type')
+                type = self.form_data_to_str_or_none(data, field)
                 match type:
                     case 'boards':
                         boards_update = False
@@ -49,66 +50,72 @@ class AdminScreenController(AAdminController):
                     case 'players' | 'results':
                         pass
                     case None:
-                        errors['type'] = 'Veuillez choisir le type d\'écran'
+                        errors[field] = 'Veuillez choisir le type d\'écran'
             case 'update' | 'clone' | 'delete':
                 type = admin_screen.stored_screen.type
                 boards_update = admin_screen.stored_screen.boards_update
             case _:
                 raise ValueError(f'action=[{action}]')
-        uniq_id: str = self.form_data_to_str_or_none(data, 'uniq_id')
+        field = 'uniq_id'
+        uniq_id: str = self.form_data_to_str_or_none(data, field)
         name: str | None = None
         if action == 'delete':
             pass
         else:
             if not uniq_id:
-                errors['uniq_id'] = 'Veuillez entrer l\'identifiant de l\'écran.'
+                errors[field] = 'Veuillez entrer l\'identifiant de l\'écran.'
             else:
                 match action:
                     case 'create' | 'clone':
                         if uniq_id in admin_event.screen_uniq_ids:
-                            errors['uniq_id'] = f'L\'écran [{uniq_id}] existe déjà.'
+                            errors[field] = f'L\'écran [{uniq_id}] existe déjà.'
                     case 'update':
                         if uniq_id != admin_screen.uniq_id and uniq_id in admin_event.screen_uniq_ids:
-                            errors['uniq_id'] = f'L\'écran [{uniq_id}] existe déjà.'
+                            errors[field] = f'L\'écran [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')
             name = self.form_data_to_str_or_none(data, 'name')
-            if not name:
-                errors['name'] = 'Veuillez entrer le nom de l\'écran.'
         menu: str | None = None
         menu_text: str | None = None
         columns: int | None = None
         timer_id: int | None = None
         players_show_unpaired: bool | None = None
         results_limit: int | None = None
-        results_tournaments_str: str | None = None
+        results_tournament_ids: list[int] | None = None
         match action:
             case 'create' | 'delete' | 'clone':
                 pass
             case 'update':
+                field = 'columns'
                 try:
-                    columns = self.form_data_to_int_or_none(data, 'columns', minimum=1)
+                    columns = self.form_data_to_int_or_none(data, field, minimum=1)
                 except ValueError:
-                    errors['columns'] = 'Un entier positif est attendu.'
+                    errors[field] = 'Un entier positif est attendu.'
                 menu_text = self.form_data_to_str_or_none(data, 'menu_text')
                 menu = self.form_data_to_str_or_none(data, 'menu')
+                field = 'timer_id'
                 try:
-                    timer_id = self.form_data_to_int_or_none(data, 'timer_id')
+                    timer_id = self.form_data_to_int_or_none(data, field)
                     if timer_id and timer_id not in admin_event.timers_by_id:
-                        errors['timer_id'] = f'Le chronomètre [{timer_id}] n\'existe pas.'
+                        errors[field] = f'Le chronomètre [{timer_id}] n\'existe pas.'
                 except ValueError:
-                    errors['timer_id'] = 'Un entier positif est attendu.'
+                    errors[field] = 'Un entier positif est attendu.'
                 match type:
                     case 'boards':
                         pass
                     case 'players':
                         players_show_unpaired = self.form_data_to_bool_or_none(data, 'players_show_unpaired')
                     case 'results':
+                        field = 'results_limit'
                         try:
-                            results_limit = self.form_data_to_int_or_none(data, 'results_limit')
+                            results_limit = self.form_data_to_int_or_none(data, field)
                         except ValueError:
-                            errors['results_limit'] = 'Un entier positif est attendu.'
-                        results_tournaments_str = self.form_data_to_str_or_none(data, 'results_tournaments_str')
+                            errors[field] = 'Un entier positif est attendu.'
+                        results_tournament_ids = []
+                        for tournament_id in admin_event.tournaments_by_id:
+                            field = f'results_tournament_{tournament_id}'
+                            if self.form_data_to_bool_or_none(data, field):
+                                results_tournament_ids.append(tournament_id)
                     case _:
                         raise ValueError(f'type=[{type}]')
             case _:
@@ -125,7 +132,7 @@ class AdminScreenController(AAdminController):
             boards_update=boards_update,
             players_show_unpaired=players_show_unpaired,
             results_limit=results_limit,
-            results_tournaments_str=results_tournaments_str,
+            results_tournament_ids=results_tournament_ids,
             errors=errors,
         )
 
@@ -231,8 +238,9 @@ class AdminScreenController(AAdminController):
                 data['players_show_unpaired'] = self.value_to_form_data(
                     admin_screen.stored_screen.players_show_unpaired)
                 data['results_limit'] = self.value_to_form_data(admin_screen.stored_screen.results_limit)
-                data['results_tournaments_str'] = self.value_to_form_data(
-                    admin_screen.stored_screen.results_tournaments_str)
+                for tournament_id in admin_event.tournaments_by_id:
+                    data[f'results_tournament_{tournament_id}'] = self.value_to_form_data(
+                        tournament_id in admin_screen.stored_screen.results_tournament_ids)
             case 'create':
                 data['type'] = ''
             case 'delete':

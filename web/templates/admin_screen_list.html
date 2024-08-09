@@ -28,7 +28,7 @@
             <th scope="col" class="text-nowrap">Type</th>
             <th scope="col" class="text-nowrap">Menu</th>
             <th scope="col" class="text-nowrap" colspan="2">Paramètres</th>
-            <th scope="col" class="text-nowrap" colspan="2">Ensembles</th>
+            <th scope="col" class="text-nowrap" colspan="2">Ensembles / Tournois</th>
             <th scope="col" class=""></th>
             <th scope="col" class=""></th>
             <th scope="col" class=""></th>
@@ -100,12 +100,11 @@
                                 {% for screen_set in screen.screen_sets_sorted_by_order %}
                                     <div class="{% if screen_set.error %}text-danger{% endif %}">
                                         {% if screen_set.error %}<i class="bi-exclamation-triangle-fill"></i>{% endif %}
-                                        Tournoi :
                                         {% if screen_set.tournament %}
                                             {{ screen_set.tournament.name }}
                                             ({{ screen_set.numbers_str }})
                                         {% else %}
-                                            <span class="text-danger">non défini</span>
+                                            <span class="text-danger">Tournoi non défini</span>
                                         {% endif %}
                                     </div>
                                 {% endfor %}
@@ -115,7 +114,11 @@
                             </div>
                             {% endif %}
                         {% else %}
-                            <em>-</em>
+                            {% if screen.results_tournament_ids %}
+                                {{ screen.results_tournament_names }}
+                            {% else %}
+                                Tous les tournois
+                            {% endif %}
                         {% endif %}
                     </td>
                     <td class="text-nowrap width-50">

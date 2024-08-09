@@ -180,7 +180,73 @@ screens:
     sets:
       -
         tournament_uniq_id: "A"
+  joueurs-B:
+    name: "Tournoi B"
+    type: "players"
+    menu:
+    timer_uniq_id: "timer"
+    boards_update: false
+    players_show_unpaired: true
+    sets:
+      -
+        tournament_uniq_id: "B"
+  joueurs-C:
+    name: "Tournoi C"
+    type: "players"
+    menu:
+    timer_uniq_id: "timer"
+    boards_update: false
+    players_show_unpaired: true
+    sets:
+      -
+        tournament_uniq_id: "C"
+  joueurs-D:
+    name: "Tournoi D"
+    type: "players"
+    menu:
+    timer_uniq_id: "timer"
+    boards_update: false
+    players_show_unpaired: true
+    sets:
+      -
+        tournament_uniq_id: "D"
+  joueurs-E:
+    name: "Tournoi E"
+    type: "players"
+    menu:
+    timer_uniq_id: "timer"
+    boards_update: false
+    players_show_unpaired: true
+    sets:
+      -
+        tournament_uniq_id: "E"
+  joueurs-F:
+    name: "Tournoi F"
+    type: "players"
+    menu:
+    timer_uniq_id: "timer"
+    boards_update: false
+    players_show_unpaired: true
+    sets:
+      -
+        tournament_uniq_id: "F"
   resultats:
     type: "results"
     timer_uniq_id: "timer"
     results_limit: 20
+  resultats-ABC:
+    type: "results"
+    timer_uniq_id: "timer"
+    results_limit: 20
+    results_tournament_uniq_ids:
+      - A
+      - B
+      - C
+  resultats-DEF:
+    type: "results"
+    timer_uniq_id: "timer"
+    results_limit: 20
+    results_tournament_uniq_ids:
+      - D
+      - E
+      - F

@@ -1030,17 +1030,7 @@ class NewResultsScreen(ANewScreen):
                 screen_uniq_id=self.uniq_id)
         else:
             self._results_limit = self.stored_screen.results_limit
-        self._results_tournament_ids: list[int] = []
-        if self.results_tournaments_str:
-            for tournament_uniq_id in [part.strip() for part in self.results_tournaments_str.split(',')]:
-                if tournament_uniq_id:
-                    try:
-                        self._results_tournament_ids.append(self.event.tournaments_by_uniq_id[tournament_uniq_id].id)
-                    except KeyError:
-                        self.event.add_warning(
-                            f"Le tournoi [{tournament_uniq_id}] n'existe pas, ignoré", screen_uniq_id=self.uniq_id)
-        if not self._results_tournament_ids:
-            self._results_tournament_ids = list(self.event.tournaments_by_id.keys())
+        self._results_tournament_ids: list[int] | None = None
         self._results: list[Result] | None = None
 
     @property
@@ -1056,12 +1046,21 @@ class NewResultsScreen(ANewScreen):
         return self._results_limit
 
     @property
-    def results_tournaments_str(self) -> str | None:
-        return self.stored_screen.results_tournaments_str
+    def results_tournament_ids(self) -> list[int]:
+        if self._results_tournament_ids is None:
+            self._results_tournament_ids = []
+            for tournament_id in self.stored_screen.results_tournament_ids:
+                if tournament_id in self.event.tournaments_by_id:
+                    self._results_tournament_ids.append(tournament_id)
+        return self._results_tournament_ids
 
     @property
-    def results_tournament_ids(self) -> list[int]:
-        return self._results_tournament_ids
+    def results_tournament_names(self) -> str:
+        return ', '.join([
+            self.event.tournaments_by_id[results_tournament_id].name
+            for results_tournament_id
+            in self.results_tournament_ids
+        ])
 
     @property
     def type_str(self) -> str:

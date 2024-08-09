@@ -97,7 +97,7 @@ class StoredScreen:
     boards_update: bool | None
     players_show_unpaired: bool | None
     results_limit: int | None | None
-    results_tournaments_str: str | None | None
+    results_tournament_ids: list[int] = field(default_factory=list[int])
     stored_screen_sets: list[StoredScreenSet] = field(default_factory=list[StoredScreenSet])
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
@@ -106,7 +106,7 @@ class StoredScreen:
 class StoredFamily:
     id: int | None
     uniq_id: str
-    name: str
+    name: str | None
     type: str
     tournament_id: int
     boards_update: bool

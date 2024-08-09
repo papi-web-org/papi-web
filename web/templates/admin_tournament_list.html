@@ -30,6 +30,7 @@
             <th scope="col" class="text-nowrap">Homologation<br>FFE</th>
             <th scope="col" class="text-nowrap">ChessEvent</th>
             <th scope="col" class="text-nowrap">Coups<br/>illégaux</th>
+            <th scope="col" class="text-nowrap">Joueur·euses</th>
             <th scope="col" class="text-nowrap">Rondes</th>
             <th scope="col" class="text-nowrap">Appar.</th>
             <th scope="col" class="text-nowrap">Class.</th>
@@ -48,6 +49,7 @@
                     <td class="text-nowrap">{% if tournament.ffe_id %}{{ tournament.ffe_id }} {{ tournament.shadowed_ffe_password }}{% else %}<em>-</em>{% endif %}</td>
                     <td class="text-nowrap">{% if tournament.chessevent %}{{ tournament.chessevent.uniq_id }} / {{ tournament.chessevent_tournament_name }}{% else %}<em>-</em>{% endif %}</td>
                     <td class="text-nowrap">{{ tournament.record_illegal_moves }}</td>
+                    <td class="text-nowrap">{% if tournament.players_by_id %}{{ tournament.players_by_id|length - 1 }}{% else %}<em>-</em>{% endif %}</td>
                     <td class="text-nowrap">{% if tournament.rounds %}{{ tournament.current_round }} / {{ tournament.rounds }}{% else %}<em>-</em>{% endif %}</td>
                     <td class="text-nowrap">{% if tournament.pairing %}{{ tournament.pairing }}{% else %}<em>-</em>{% endif %}</td>
                     <td class="text-nowrap">{% if tournament.rating %}{{ tournament.rating }}{% else %}<em>-</em>{% endif %}</td>
