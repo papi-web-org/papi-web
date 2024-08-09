@@ -103,7 +103,7 @@ CREATE TABLE `result` (
 CREATE TABLE `screen` (
     `id` INTEGER NOT NULL,
     `uniq_id` TEXT NOT NULL,
-    `name` TEXT NOT NULL DEFAULT 'Écran',
+    `name` TEXT,
     `type` TEXT NOT NULL DEFAULT 'boards',
     `columns` INTEGER,
     `menu_text` TEXT,

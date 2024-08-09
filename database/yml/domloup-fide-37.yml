@@ -41,42 +41,42 @@ timers:
         text_after: "Remise des prix commencée depuis %s"
 tournaments:
   A:
-    filename: "domloup-fide-37-A"
+    filename: "domloup-fide-37-a"
     name: "Tournoi A"
     ffe_id: 999990
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "domloup-fide"
     chessevent_tournament_name: "Tournoi A"
   B:
-    filename: "domloup-fide-37-B"
+    filename: "domloup-fide-37-b"
     name: "Tournoi B"
     ffe_id: 999991
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "domloup-fide"
     chessevent_tournament_name: "Tournoi B"
   C:
-    filename: "domloup-fide-37-C"
+    filename: "domloup-fide-37-c"
     name: "Tournoi C"
     ffe_id: 999992
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "domloup-fide"
     chessevent_tournament_name: "Tournoi C"
   D:
-    filename: "domloup-fide-37-D"
+    filename: "domloup-fide-37-d"
     name: "Tournoi D"
     ffe_id: 999993
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "domloup-fide"
     chessevent_tournament_name: "Tournoi D"
   E:
-    filename: "domloup-fide-37-E"
+    filename: "domloup-fide-37-e"
     name: "Tournoi E"
     ffe_id: 999994
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "domloup-fide"
     chessevent_tournament_name: "Tournoi E"
   F:
-    filename: "domloup-fide-37-F"
+    filename: "domloup-fide-37-f"
     name: "Tournoi F"
     ffe_id: 999995
     ffe_password: "ABCDEFGHIJ"
@@ -86,7 +86,7 @@ screens:
   saisie-A:
     name: "Tournoi A"
     type: "boards"
-    menu: "saisie-*"
+    menu: "@update"
     timer_uniq_id: "timer"
     boards_update: true
     sets:
@@ -95,12 +95,48 @@ screens:
   saisie-B:
     name: "Tournoi B"
     type: "boards"
-    menu: "saisie-*"
+    menu: "@update"
     timer_uniq_id: "timer"
     boards_update: true
     sets:
       -
         tournament_uniq_id: "B"
+  saisie-C:
+    name: "Tournoi C"
+    type: "boards"
+    menu: "@update"
+    timer_uniq_id: "timer"
+    boards_update: true
+    sets:
+      -
+        tournament_uniq_id: "C"
+  saisie-D:
+    name: "Tournoi D"
+    type: "boards"
+    menu: "@update"
+    timer_uniq_id: "timer"
+    boards_update: true
+    sets:
+      -
+        tournament_uniq_id: "D"
+  saisie-E:
+    name: "Tournoi E"
+    type: "boards"
+    menu: "@update"
+    timer_uniq_id: "timer"
+    boards_update: true
+    sets:
+      -
+        tournament_uniq_id: "E"
+  saisie-F:
+    name: "Tournoi F"
+    type: "boards"
+    menu: "@update"
+    timer_uniq_id: "timer"
+    boards_update: true
+    sets:
+      -
+        tournament_uniq_id: "F"
   affichage-AB:
     name: "Tournois A et B"
     type: "boards"
@@ -112,6 +148,28 @@ screens:
         tournament_uniq_id: "A"
       -
         tournament_uniq_id: "B"
+  affichage-CD:
+    name: "Tournois C et D"
+    type: "boards"
+    menu:
+    timer_uniq_id: "timer"
+    boards_update: false
+    sets:
+      -
+        tournament_uniq_id: "C"
+      -
+        tournament_uniq_id: "D"
+  affichage-EF:
+    name: "Tournois E et F"
+    type: "boards"
+    menu:
+    timer_uniq_id: "timer"
+    boards_update: false
+    sets:
+      -
+        tournament_uniq_id: "E"
+      -
+        tournament_uniq_id: "F"
   joueurs-A:
     name: "Tournoi A"
     type: "players"
@@ -122,10 +180,7 @@ screens:
     sets:
       -
         tournament_uniq_id: "A"
-  resultats-AB:
-    name: "Tournoi A"
+  resultats:
     type: "results"
-    menu:
     timer_uniq_id: "timer"
-    boards_update: false
-    results_tournaments_str: "A, B, C"
+    results_limit: 20

@@ -820,7 +820,7 @@ class NewScreenSet:
             return f'{name} {", ".join(map(str, self.fixed_board_numbers))}'
         match (self.first, self.last, self.number, self.part, self.parts):
             case (None, None, None, None, None):
-                return 'tous les échiquiers' if self.screen.type == ScreenType.Boards else 'Tou·tes les joueur·euses'
+                return 'tous les échiquiers' if self.screen.type == ScreenType.Boards else 'tou·tes les joueur·euses'
             case (first, None, None, None, None) if first is not None:
                 return f'{name} à partir du n°{first}'
             case (first, last, None, None, None) if first is not None and last is not None:
