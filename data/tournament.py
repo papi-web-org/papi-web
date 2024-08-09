@@ -881,31 +881,31 @@ class NewTournament:
         return self.stored_tournament.ffe_id
 
     @property
-    def ffe_password(self) -> str:
+    def ffe_password(self) -> str | None:
         return self.stored_tournament.ffe_password if self.ffe_id else None
 
     @property
-    def shadowed_ffe_password(self) -> str:
+    def shadowed_ffe_password(self) -> str | None:
         return f'{self.ffe_password[:4] + "*" * (len(self.ffe_password) - 4)}' if self.ffe_password else None
 
     @property
-    def time_control_initial_time(self) -> int:
+    def time_control_initial_time(self) -> int | None:
         return self.stored_tournament.time_control_initial_time
 
     @property
-    def time_control_increment(self) -> int:
+    def time_control_increment(self) -> int | None:
         return self.stored_tournament.time_control_increment
 
     @property
-    def time_control_handicap_penalty_value(self) -> int:
+    def time_control_handicap_penalty_value(self) -> int | None:
         return self.stored_tournament.time_control_handicap_penalty_value
 
     @property
-    def time_control_handicap_penalty_step(self) -> int:
+    def time_control_handicap_penalty_step(self) -> int | None:
         return self.stored_tournament.time_control_handicap_penalty_step
 
     @property
-    def time_control_handicap_min_time(self) -> int:
+    def time_control_handicap_min_time(self) -> int | None:
         return self.stored_tournament.time_control_handicap_min_time
 
     @property

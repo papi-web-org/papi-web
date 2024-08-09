@@ -46,7 +46,7 @@
                     <th scope="row" class="text-nowrap">{{ tournament.uniq_id }}</th>
                     <td class="text-nowrap">{{ tournament.name }}</td>
                     <td class="">{% if not tournament.file_exists %}<i class="bi-exclamation-triangle-fill text-danger"></i>{% else %}<i class="bi-check-circle-fill text-success"></i>{% endif %} {{ tournament.file }}</td>
-                    <td class="text-nowrap">{% if tournament.ffe_id %}{{ tournament.ffe_id }} {{ tournament.shadowed_ffe_password }}{% else %}<em>-</em>{% endif %}</td>
+                    <td class="text-nowrap">{% if tournament.ffe_id %}{{ tournament.ffe_id }} {% if tournament.ffe_password %} {{ tournament.shadowed_ffe_password }}{% else %}<em>-</em>{% endif %}{% else %}<em>-</em>{% endif %}</td>
                     <td class="text-nowrap">{% if tournament.chessevent %}{{ tournament.chessevent.uniq_id }} / {{ tournament.chessevent_tournament_name }}{% else %}<em>-</em>{% endif %}</td>
                     <td class="text-nowrap">{{ tournament.record_illegal_moves }}</td>
                     <td class="text-nowrap">{% if tournament.players_by_id %}{{ tournament.players_by_id|length - 1 }}{% else %}<em>-</em>{% endif %}</td>
