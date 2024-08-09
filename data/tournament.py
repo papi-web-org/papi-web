@@ -865,7 +865,7 @@ class NewTournament:
         if self.stored_tournament.filename:
             return self.stored_tournament.filename
         if self.stored_tournament.ffe_id:
-            return str(self.stored_tournament.filename)
+            return str(self.stored_tournament.ffe_id)
         return self.uniq_id
 
     @property
