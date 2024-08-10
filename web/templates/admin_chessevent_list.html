@@ -22,13 +22,14 @@
 </div>
 
 <table class="table border-black">
-    <thead class="table-dark">
+    <thead class="table-dark position-sticky top-0">
         <tr>
             <th scope="col" class="text-nowrap">Id</th>
             <th scope="col" class="text-nowrap">Utilisateur</th>
             <th scope="col" class="text-nowrap">Mot de passe</th>
             <th scope="col" class="text-nowrap">Évènement</th>
             <th scope="col" class="width-100"></th>
+            <th scope="col" class="">&nbsp;</th>
         </tr>
     </thead>
     <tbody>
@@ -51,6 +52,8 @@
                                 hx-indicator="#please-wait" >
                             <i class="bi-pencil-fill"></i> Éditer
                         </button>
+                    </td>
+                    <td class="text-nowrap">
                         <button
                                 hx-post="{{ url_for('admin-chessevent-update') }}"
                                 hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_chessevent_id": "{{ chessevent.id }}"}'

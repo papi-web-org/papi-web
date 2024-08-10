@@ -36,12 +36,12 @@ class AdminChessEventController(AAdminController):
             case 'create':
                 if not uniq_id:
                     errors['uniq_id'] = 'Veuillez entrer l\'identifiant de la connexion à ChessEvent.'
-                elif uniq_id in admin_event.chessevent_uniq_ids:
+                elif uniq_id in admin_event.chessevents_by_uniq_id:
                     errors['uniq_id'] = f'La connexion à ChessEvent [{uniq_id}] existe déjà.'
             case 'update':
                 if not uniq_id:
                     errors['uniq_id'] = 'Veuillez entrer l\'identifiant de la connexion à ChessEvent.'
-                elif uniq_id != admin_chessevent.uniq_id and uniq_id in admin_event.chessevent_uniq_ids:
+                elif uniq_id != admin_chessevent.uniq_id and uniq_id in admin_event.chessevents_by_uniq_id:
                     errors['uniq_id'] = \
                         f'Une autre connexion à ChessEvent avec l\'identifiant [{uniq_id}] existe déjà.'
             case 'delete' | 'clone':

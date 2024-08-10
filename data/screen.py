@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from common.config_reader import ConfigReader, TMP_DIR, EVENTS_PATH
 from common.logger import get_logger
+from common.papi_web_config import PapiWebConfig
 from data.result import Result
 from data.screen_set import ScreenSet, ScreenSetBuilder, NewScreenSet
 from data.template import Template
@@ -20,7 +21,7 @@ from data.timer import NewTimer
 from data.tournament import Tournament
 from data.util import ScreenType
 from database.sqlite import EventDatabase
-from database.store import StoredScreen, StoredFamily
+from database.store import StoredScreen
 
 if TYPE_CHECKING:
     from data.event import NewEvent
@@ -739,8 +740,12 @@ class ANewScreen:
         return self.stored_screen.id
 
     @property
+    def family_id(self) -> int | None:
+        return None
+
+    @property
     def type(self) -> ScreenType:
-        return ScreenType(self.stored_screen.type)
+        return ScreenType.from_str(self.stored_screen.type)
 
     @property
     def uniq_id(self) -> str:
@@ -790,9 +795,37 @@ class ANewScreen:
     def results_tournament_ids(self) -> list[int]:
         raise ValueError(f'Class [{self.__class__}]: This method should be overridden')
 
+    @staticmethod
+    def screen_icon_str(type: ScreenType, boards_update: bool = None) -> str:
+        match type:
+            case ScreenType.Boards:
+                return 'bi-pencil-fill' if boards_update else 'bi-card-list'
+            case ScreenType.Players:
+                return 'bi-people-fill'
+            case ScreenType.Results:
+                return 'bi-trophy-fill'
+            case _:
+                raise ValueError(f'type=[{type}]')
+
     @property
     def icon_str(self) -> str:
-        raise ValueError(f'Class [{self.__class__}]: This method should be overridden')
+        return self.screen_icon_str(self.type, self.boards_update if self.type == ScreenType.Boards else None)
+
+    @staticmethod
+    def screen_type_str(type: ScreenType, boards_update: bool | None) -> str:
+        match type:
+            case ScreenType.Boards:
+                return 'Saisie' if boards_update else 'Appariements'
+            case ScreenType.Players:
+                return 'Alphabétique'
+            case ScreenType.Results:
+                return 'Résultats'
+            case _:
+                raise ValueError(f'type=[{type}]')
+
+    @property
+    def type_str(self) -> str:
+        return self.screen_type_str(self.type, self.boards_update if self.type == ScreenType.Boards else None)
 
     @property
     def _file_dependencies_file(self) -> Path:
@@ -819,25 +852,31 @@ class ANewScreenWithSets(ANewScreen):
             self,
             event: 'NewEvent',
             stored_screen: StoredScreen | None = None,
-            stored_family: StoredFamily | None = None,
-            family_index: int | None = None,
+            family: 'NewFamily | None' = None,
+            family_part: int | None = None,
     ):
         if stored_screen is None:
-            assert stored_family is not None and family_index is not None, \
-                f'stored_screen={stored_screen}, stored_family={stored_family}, family_index={family_index}'
+            assert family is not None and family_part is not None, \
+                   f'screen={stored_screen}, family={family}, family_part={family_part}'
         else:
-            assert stored_family is None and family_index is None, \
-                f'stored_screen={stored_screen}, stored_family={stored_family}, family_index={family_index}'
+            assert family is None and family_part is None, \
+                   f'screen={stored_screen}, family={family}, family_part={family_part}'
         super().__init__(event, stored_screen)
-        self.stored_family: StoredFamily | None = stored_family
-        self.family_index: int | None = None
+        self.family: 'NewFamily | None' = family
+        self.family_part: int | None = family_part
         self._screen_sets_by_id: dict[int, NewScreenSet] = {}
         self._screen_sets_sorted_by_order: list[NewScreenSet] | None = None
 
     def _build_screen_sets(self):
         valid_screen_set: bool = False
-        for stored_screen_set in self.stored_screen.stored_screen_sets:
-            screen_set: NewScreenSet = NewScreenSet(self, stored_screen_set=stored_screen_set)
+        if self.stored_screen:
+            for stored_screen_set in self.stored_screen.stored_screen_sets:
+                screen_set: NewScreenSet = NewScreenSet(self, stored_screen_set=stored_screen_set)
+                self._screen_sets_by_id[screen_set.id] = screen_set
+                if not screen_set.error:
+                    valid_screen_set = True
+        else:
+            screen_set: NewScreenSet = NewScreenSet(self, family=self.family, family_part=self.family_part)
             self._screen_sets_by_id[screen_set.id] = screen_set
             if not screen_set.error:
                 valid_screen_set = True
@@ -849,37 +888,41 @@ class ANewScreenWithSets(ANewScreen):
         return self.stored_screen.id if self.stored_screen else -1
 
     @property
+    def family_id(self) -> int | None:
+        return self.family.id
+
+    @property
     def type(self) -> ScreenType:
-        return ScreenType(self.stored_screen.type if self.stored_screen else self.stored_family.type)
+        return ScreenType(self.stored_screen.type) if self.stored_screen else self.family.type
 
     @property
     def uniq_id(self) -> str:
-        return self.stored_screen.uniq_id if self.stored_screen else f'{self.stored_family.type}-{self.family_index}'
+        return self.stored_screen.uniq_id if self.stored_screen else f'{self.family.uniq_id}:{self.family_part}'
 
     @property
     def name(self) -> str:
         if self.stored_screen:
             return self.stored_screen.name
         else:
-            return self.stored_family.name
+            return self.family.name
 
     @property
     def columns(self) -> int:
         if self.stored_screen:
             if self.stored_screen.columns:
                 return self.stored_screen.columns
+            else:
+                return 1
         else:
-            if self.stored_family.columns:
-                return self.stored_family.columns
-        return 1
+            return self.family.columns
 
     @property
     def menu(self) -> str:
-        return self.stored_screen.menu if self.stored_screen else self.stored_family.menu
+        return self.stored_screen.menu if self.stored_screen else self.family.menu
 
     @property
     def timer(self) -> NewTimer | None:
-        timer_id: int | None = self.stored_screen.timer_id if self.stored_screen else self.stored_family.timer_id
+        timer_id: int | None = self.stored_screen.timer_id if self.stored_screen else self.family.timer_id
         return self.event.timers_by_id[timer_id] if timer_id else None
 
     @property
@@ -903,16 +946,16 @@ class NewBoardsScreen(ANewScreenWithSets):
             self,
             event: 'NewEvent',
             stored_screen: StoredScreen | None = None,
-            stored_family: StoredFamily | None = None,
-            family_index: int | None = None,
+            family: 'NewFamily | None' = None,
+            family_part: int | None = None,
     ):
-        super().__init__(event, stored_screen, stored_family, family_index)
+        super().__init__(event, stored_screen, family, family_part)
         assert self.type == ScreenType.Boards, f'type={self.type}'
         self._build_screen_sets()
 
     @property
     def name(self) -> str | None:
-        name: str = self.stored_screen.name if self.stored_screen else self.stored_family.name
+        name: str = self.stored_screen.name if self.stored_screen else self.family.name
         if name:
             return name
         if self.screen_sets_sorted_by_order:
@@ -921,7 +964,7 @@ class NewBoardsScreen(ANewScreenWithSets):
 
     @property
     def boards_update(self) -> bool:
-        return self.stored_screen.boards_update if self.stored_screen else self.stored_family.boards_update
+        return self.stored_screen.boards_update if self.stored_screen else self.family.boards_update
 
     @property
     def players_show_unpaired(self) -> bool:
@@ -930,7 +973,7 @@ class NewBoardsScreen(ANewScreenWithSets):
 
     @property
     def menu_label(self) -> str | None:
-        menu_text: str = self.stored_screen.menu_text if self.stored_screen else self.stored_family.menu_text
+        menu_text: str = self.stored_screen.menu_text if self.stored_screen else self.family.menu_text
         if menu_text is None:
             return None
         text: str = menu_text
@@ -951,30 +994,22 @@ class NewBoardsScreen(ANewScreenWithSets):
                         '%l', str(screen_set.last_player_by_name.last_name[:3]).upper())
         return text
 
-    @property
-    def type_str(self) -> str:
-        return 'Saisie' if self.boards_update else 'Appariements'
-
-    @property
-    def icon_str(self) -> str:
-        return 'bi-pencil-fill' if self.boards_update else 'bi-card-list'
-
 
 class NewPlayersScreen(ANewScreenWithSets):
     def __init__(
             self,
             event: 'NewEvent',
             stored_screen: StoredScreen | None = None,
-            stored_family: StoredFamily | None = None,
-            family_index: int | None = None,
+            family: 'NewFamily | None' = None,
+            family_part: int | None = None,
     ):
-        super().__init__(event, stored_screen, stored_family, family_index)
+        super().__init__(event, stored_screen, family, family_part)
         assert self.type == ScreenType.Players, f'type={self.type}'
         self._build_screen_sets()
 
     @property
     def name(self) -> str | None:
-        name: str = self.stored_screen.name if self.stored_screen else self.stored_family.name
+        name: str = self.stored_screen.name if self.stored_screen else self.family.name
         if name:
             return name
         if self.screen_sets_sorted_by_order:
@@ -983,12 +1018,17 @@ class NewPlayersScreen(ANewScreenWithSets):
 
     @property
     def players_show_unpaired(self) -> bool:
-        return self.stored_screen.players_show_unpaired if self.stored_screen \
-            else self.stored_family.players_show_unpaired
+        if self.stored_screen:
+            if self.stored_screen.players_show_unpaired is not None:
+                return self.stored_screen.players_show_unpaired
+            else:
+                return PapiWebConfig().default_players_show_unpaired
+        else:
+            return self.family.players_show_unpaired
 
     @property
     def menu_label(self) -> str | None:
-        menu_text: str = self.stored_screen.menu_text if self.stored_screen else self.stored_family.menu_text
+        menu_text: str = self.stored_screen.menu_text if self.stored_screen else self.family.menu_text
         if menu_text is None:
             return None
         text: str = menu_text
@@ -1002,14 +1042,6 @@ class NewPlayersScreen(ANewScreenWithSets):
                 text = text.replace(
                     '%l', str(screen_set.last_player_by_name.last_name)[:3].upper())
         return text
-
-    @property
-    def type_str(self) -> str:
-        return f'Alphabétique'
-
-    @property
-    def icon_str(self) -> str:
-        return 'bi-people-fill'
 
 
 class NewResultsScreen(ANewScreen):
@@ -1063,16 +1095,8 @@ class NewResultsScreen(ANewScreen):
         ])
 
     @property
-    def type_str(self) -> str:
-        return 'Résultats'
-
-    @property
     def sets(self) -> list[NewScreenSet]:
         return []
-
-    @property
-    def icon_str(self) -> str:
-        return 'bi-trophy-fill'
 
     @property
     def results_lists(self) -> Iterator[list[Result]]:

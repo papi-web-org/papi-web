@@ -1,0 +1,150 @@
+<div class="row">
+    <div class="col">
+        <h1 class="text-nowrap">
+            {{ admin_event.name }} - Familles d'écran
+        </h1>
+    </div>
+    <div class="col-1 d-flex justify-content-end">
+        <h1>
+            <button
+                    class="btn btn-primary text-nowrap"
+                    hx-post="{{ url_for('admin-family-render-edit-modal') }}"
+                    hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait">
+                <i class="bi-plus-square-fill"></i> Créer une famille
+            </button>
+        </h1>
+    </div>
+</div>
+
+<table class="table border-black">
+    <thead class="table-dark position-sticky top-0">
+        <tr>
+            <th scope="col" class="text-nowrap">[Id] / Nom</th>
+            <th scope="col" class="text-nowrap">Type</th>
+            <th scope="col" class="text-nowrap">Menu</th>
+            <th scope="col" class="text-nowrap">Paramètres</th>
+            <th scope="col" class="text-nowrap" colspan="2">Tournois / répartition</th>
+            <th scope="col" class="">Écrans de la famille</th>
+            <th scope="col" class=""></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if admin_event.families_by_id|length > 0 %}
+            {% for family in admin_event.families_by_id.values() %}
+                <tr>
+                    <th scope="row" class="text-nowrap">
+                        <div>
+                            [{{ family.uniq_id }}]
+                        </div>
+                        <div>
+                            {{ family.name }}
+                        </div>
+                    </th>
+                    <td scope="row" class="text-nowrap">
+                        <i class="{{ family.icon_str }}"></i>
+                        {{ family.type_str }}
+                    </td>
+                    <td scope="row" class="text-nowrap">
+                        <div>
+                            Étiquette : {% if family.menu_text %}{{ family.menu_text }}{% else %}<em>-</em>{% endif %}
+                        </div>
+                        <div>
+                            Menu : {% if family.menu %}{{ family.menu }}{% else %}<em>-</em>{% endif %}
+                        </div>
+                    </td>
+                    <td scope="row" class="text-nowrap">
+                        <div>
+                            Colonnes : {{ family.columns }}
+                        </div>
+                        <div>
+                            Chronomètre : {% if family.timer %}<i class="bi-clock-fill"></i> {% if admin_event.timers_by_id|length > 1 %}{{ screen.timer.uniq_id }}{% else %}Oui{% endif %}{% else %}<em>Non</em>{% endif %}
+                        </div>
+                        {% if family.type == 'players' %}
+                            <div>
+                                Non apparié·es : {% if family.players_show_unpaired %}Oui{% else %}Non{% endif %} {% if family.stored_family.players_show_unpaired is none %}(par défaut){% endif %}
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap">
+                        <div class="{% if family.error %}text-danger{% endif %}">
+                            {% if family.error %}
+                                <div>
+                                    <i class="bi-exclamation-triangle-fill"></i> {{ family.error }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                {% if family.tournament %}
+                                    {{ family.tournament.name }}
+                                {% else %}
+                                    <span class="text-danger">Tournoi non défini</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ family.numbers_str }}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-nowrap width-50">
+                        <button
+                                class="btn btn-sm btn-primary p-1"
+                                hx-post="{{ url_for('admin-family-render-edit-modal') }}"
+                                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_family_id": "{{ family.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-pencil-fill"></i> Éditer
+                        </button>
+                    </td>
+                    <td class="text-nowrap width-50">
+                        {% if family.screens_by_uniq_id|length > 0 %}
+                            {% for screen in family.screens_by_uniq_id.values() %}
+                                <div>
+                                    {% with tournament=screen.screen_sets_sorted_by_order[0].tournament %}
+                                        {{ loop.index }}.
+                                        {% if tournament.current_round and screen.type == 'boards' %}
+                                            Échiquiers du n°{{ screen.screen_sets_sorted_by_order[0].first_board.id }} au n°{{ screen.screen_sets_sorted_by_order[0].last_board.id }}
+                                        {% else %}
+                                            Joueur·euses de {{ screen.screen_sets_sorted_by_order[0].first_player_by_name.last_name[:3] }} à {{ screen.screen_sets_sorted_by_order[0].last_player_by_name.last_name[:3] }}
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-danger">
+                                Aucun écran dans cette famille.
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap text-end">
+                        <button
+                                class="btn btn-sm btn-danger p-1"
+                                hx-post="{{ url_for('admin-family-render-edit-modal') }}"
+                                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_family_id": "{{ family.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-trash-fill"></i> Supprimer
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td
+                        colspan="9"
+                        class="text-nowrap" >
+                    <em>Aucune famille d'écran trouvée.</em>
+                </td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>

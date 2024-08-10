@@ -22,14 +22,13 @@
 </div>
 
 <table class="table border-black">
-    <thead class="table-dark">
+    <thead class="table-dark position-sticky top-0">
         <tr>
             <th scope="col" class="text-nowrap">Id</th>
             <th scope="col" class="text-nowrap">Couleurs et délais</th>
-            <th scope="col" class=""></th>
+            <th scope="col" class="width-50"></th>
             <th scope="col" class="text-nowrap">Horaires</th>
-            <th scope="col" class=""></th>
-            <th scope="col" class=""></th>
+            <th scope="col" class="width-50"></th>
             <th scope="col" class=""></th>
         </tr>
     </thead>
@@ -85,7 +84,7 @@
                             <i class="bi-clock-fill"></i> Horaires
                         </button>
                     </td>
-                    <td class="text-nowrap text-end width-100">
+                    <td class="text-nowrap text-end">
                         <button
                                 class="btn btn-sm btn-primary p-1"
                                 hx-post="{{ url_for('admin-timer-render-edit-modal') }}"
@@ -97,8 +96,6 @@
                                 hx-indicator="#please-wait" >
                             <i class="bi-copy"></i> Dupliquer
                         </button>
-                    </td>
-                    <td class="text-nowrap text-end">
                         <button
                                 class="btn btn-sm btn-danger p-1"
                                 hx-post="{{ url_for('admin-timer-render-edit-modal') }}"

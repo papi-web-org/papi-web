@@ -57,7 +57,8 @@ class StressEngine(Engine):
         for url in urls:
             Thread(target=self.enter_result, args=(url, )).start()
 
-    def result_url(self, event_uniq_id: str, screen_id: str, tournament_uniq_id: str, board_id: int) -> str:
+    @staticmethod
+    def result_url(event_uniq_id: str, screen_id: str, tournament_uniq_id: str, board_id: int) -> str:
         return (f'http://localhost:{PapiWebConfig().web_port}'
                 f'/result/{event_uniq_id}/{screen_id}/{tournament_uniq_id}/{board_id}/{randrange(3) + 1}')
 

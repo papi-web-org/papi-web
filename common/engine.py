@@ -37,7 +37,6 @@ class Engine:
             ]:
                 EventDatabase(event_id).create(populate=True)
 
-
     def _check_version(self):
         last_stable_version: Version | None = self._get_last_stable_version()
         if not last_stable_version:

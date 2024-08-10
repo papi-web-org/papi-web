@@ -14,7 +14,7 @@ from data.board import Board
 from data.player import Player
 from data.tournament import Tournament, NewTournament
 from data.util import ScreenType, batched
-from database.store import StoredScreenSet, StoredFamily
+from database.store import StoredScreenSet
 
 if TYPE_CHECKING:
     from data.event import NewEvent
@@ -507,78 +507,71 @@ class NewScreenSet:
             self,
             screen: 'ANewScreenWithSets',
             stored_screen_set: StoredScreenSet | None = None,
-            stored_family: StoredFamily | None = None,
-            family_index: int | None = None,
+            family: 'NewFamily | None' = None,
+            family_part: int | None = None,
     ):
         if stored_screen_set is None:
-            assert stored_family is not None and family_index is not None, \
-                f'stored_screen_set={stored_screen_set}, stored_family={stored_family}, family_index={family_index}'
+            assert family is not None and family_part is not None, \
+                   f'screen_set={stored_screen_set}, family={family}, family_part={family_part}'
         else:
-            assert stored_family is None and family_index is None, \
-                f'stored_screen_set={stored_screen_set}, stored_family={stored_family}, family_index={family_index}'
+            assert family is None and family_part is None, \
+                   f'screen_set={stored_screen_set}, family={family}, family_part={family_part}'
         self.screen: 'ANewScreenWithSets' = screen
         self.stored_screen_set: StoredScreenSet | None = stored_screen_set
-        self.stored_family: StoredFamily | None = stored_family
-        self.family_index: int | None = family_index
+        self.family: 'NewFamily | None' = family
+        self.family_part: int | None = family_part
         self.error: str | None = None
         self.uniq_id: str = f'{self.screen.uniq_id}_{self.stored_screen_set.order}' \
             if self.stored_screen_set \
-            else f'{self.stored_family.name}_{self.family_index}'
+            else f'{self.family.uniq_id}_{self.family_part}'
         if not self.tournament:
             self.error = self.error or 'Le tournoi n\'est pas défini.'
-        self.name: int | None = self.stored_screen_set.name if self.stored_screen_set else self.stored_family.name
+        self.name: int | None = self.stored_screen_set.name if self.stored_screen_set else self.family.name
         fixed_boards_str: str | None = self.stored_screen_set.fixed_boards_str \
             if self.screen.type == ScreenType.Boards and self.stored_screen_set \
             else None
         self.fixed_board_numbers: list[int] | None = None
-        self.first: int | None = self.stored_screen_set.first \
-            if self.screen.type == ScreenType.Boards and self.stored_screen_set \
-            else None
-        self.last: int | None = self.stored_screen_set.last \
-            if self.screen.type == ScreenType.Boards and self.stored_screen_set \
-            else None
+        self.first: int | None = None
+        self.last: int | None = None
+        if self.stored_screen_set:
+            if fixed_boards_str is not None:
+                if fixed_boards_str:
+                    self.fixed_board_numbers = []
+                    for fixed_board_str in list(map(str.strip, fixed_boards_str.split(','))):
+                        if fixed_board_str:
+                            try:
+                                self.fixed_board_numbers.append(int(fixed_board_str))
+                            except ValueError:
+                                self.error = self.error \
+                                             or f'le numéro d\'échiquier {fixed_board_str} n\'est pas valide.'
+                                break
+                else:
+                    self.fixed_board_numbers = [
+                        player.fixed for player in self.tournament.players_by_id.values() if player.fixed
+                    ]
+            else:
+                self.first = self.stored_screen_set.first
+                self.last = self.stored_screen_set.last
+        else:
+            self.fixed_board_numbers = []
+            self.first = self.family.calculated_first + (self.family_part - 1) * self.family.calculated_number
+            self.last = min(
+                self.family.calculated_last,
+                self.family.calculated_first + self.family_part * self.family.calculated_number - 1)
         if self.first and self.last and self.first > self.last:
             self.error = self.error or (f'Les nombres {self.first} et {self.last} ne sont pas compatibles '
                                         f'({self.first} > {self.last}).')
-        self.part: int | None = self.stored_screen_set.part if self.stored_screen_set else None
-        self.parts: int | None = self.stored_screen_set.parts if self.stored_screen_set else self.stored_family.parts
-        self.number: int | None = self.stored_screen_set.number if self.stored_screen_set else self.stored_family.number
-        if self.parts and self.number:
-            self.error = self.error or ('Les découpages en un nombre de parties et un nombre d\'éléments ne sont pas '
-                                        'compatibles.')
-        if self.parts and not self.part:
-            self.error = self.error or (f'Veuillez indiquer la partie à sélectionner pour le découpage en {self.parts} '
-                                        f'parties.')
-        if self.number and not self.part:
-            self.error = self.error or (f'Veuillez indiquer la partie à sélectionner pour le découpage en parties de '
-                                        f'{self.number} éléments.')
-        if fixed_boards_str is not None:
-            if fixed_boards_str:
-                self.fixed_board_numbers = []
-                for fixed_board_str in list(map(str.strip, fixed_boards_str.split(','))):
-                    if fixed_board_str:
-                        try:
-                            self.fixed_board_numbers.append(int(fixed_board_str))
-                        except ValueError:
-                            self.error = self.error or f'le numéro d\'échiquier {fixed_board_str} n\'est pas valide.'
-                            break
-            else:
-                self.fixed_board_numbers = [
-                    player.fixed for player in self.tournament.players_by_id.values() if player.fixed
-                ]
-        else:
-            self.fixed_board_numbers = []
         self.first_item: Any | None = None  # change this to Board | Player | None ?
         self.last_item: Any | None = None  # change this to Board | Player | None ?
         self.items_lists: list[list[Any]] | None = None  # change this to Board | Player | None ?
 
     @property
-    def id(self) -> int:
-        return self.stored_screen_set.id if self.stored_screen_set else -1
+    def id(self) -> int | None:
+        return self.stored_screen_set.id if self.stored_screen_set else None
 
     @property
-    def order(self) -> int:
-        return self.stored_screen_set.order if self.stored_screen_set else -1
+    def order(self) -> int | None:
+        return self.stored_screen_set.order if self.stored_screen_set else None
 
     @property
     def event(self) -> 'NewEvent':
@@ -586,7 +579,7 @@ class NewScreenSet:
 
     @property
     def tournament_id(self) -> int | None:
-        return self.stored_screen_set.tournament_id if self.stored_screen_set else self.stored_family.tournament_id
+        return self.stored_screen_set.tournament_id if self.stored_screen_set else self.family.tournament_id
 
     @property
     def tournament(self) -> NewTournament | None:
@@ -618,24 +611,13 @@ class NewScreenSet:
         return self.name
 
     def _extract_data(self, items: list[Any]):
+        logger.warning(f'EXTRACT_DATA(items={items})')
         if not items:
             self.items_lists = [[], ] * self.columns
             return
         # at first select the desired items
         first_index: int
         last_index: int
-        # _
-        # first
-        # first and last
-        # first and number
-        # last
-        # part and parts
-        # number
-        # part and number
-        # fixed_boards
-
-        # NOTE(Amaras): fixed_boards takes precedence, and is not compatible
-        # with other options.
         if self.fixed_board_numbers:
             if TYPE_CHECKING:
                 assert all(isinstance(item, Board) for item in items)
@@ -647,32 +629,7 @@ class NewScreenSet:
             first = self.first - 1 if self.first is not None else 0
             last = self.last if self.last is not None else len(items)
             selected_slice = slice(first, last)
-            if self.parts is not None:
-                number = math.ceil((last - first) / self.parts)
-                # NOTE(Amaras): makes the number of items divisible by
-                # the number of columns.
-                if number % self.columns != 0:
-                    number = (number // self.columns + 1) * self.columns
-            else:
-                number = self.number
-            if number is not None:
-                # NOTE(Amaras): this assumes that *self.part* is set,
-                # which must be the case if either *self.parts* or
-                # *self.number* is set.
-                try:
-                    selected_items = list(
-                        next(
-                            islice(
-                                batched(items[selected_slice], number),
-                                self.part - 1,
-                                self.part
-                            )))
-                except StopIteration:
-                    self.first_item = self.last_item = None
-                    self.items_lists = None
-                    return
-            else:
-                selected_items = items[selected_slice]
+            selected_items = items[selected_slice]
             self.first_item = selected_items[0]
             self.last_item = selected_items[-1]
         # now split in columns
@@ -692,7 +649,7 @@ class NewScreenSet:
         if self.items_lists is None:
             self._extract_data(self.tournament.boards)
             if self.name is None:
-                if self.first or self.last or self.part or self.number:
+                if self.first or self.last:
                     self.name = 'Ech. %f à %l'
                 else:
                     self.name = '%t'
@@ -735,7 +692,7 @@ class NewScreenSet:
             else:
                 self._extract_data(self.tournament.players_by_name_without_unpaired)
             if self.name is None:
-                if self.first or self.last or self.part or self.number:
+                if self.first or self.last:
                     self.name = '%f à %l'
                 else:
                     self.name = '%t'
@@ -818,43 +775,22 @@ class NewScreenSet:
         name: str = 'échiquiers' if self.screen.type == ScreenType.Boards else 'joueur·euses'
         if self.fixed_board_numbers:
             return f'{name} {", ".join(map(str, self.fixed_board_numbers))}'
-        match (self.first, self.last, self.number, self.part, self.parts):
-            case (None, None, None, None, None):
+        match (self.first, self.last):
+            case (None, None):
                 return 'tous les échiquiers' if self.screen.type == ScreenType.Boards else 'tou·tes les joueur·euses'
-            case (first, None, None, None, None) if first is not None:
+            case (first, None) if first is not None:
                 return f'{name} à partir du n°{first}'
-            case (first, last, None, None, None) if first is not None and last is not None:
+            case (first, last) if first is not None and last is not None:
                 return f'{name} du n°{first} à {last}'
-            case (first, None, number, None, None) if first is not None and number is not None:
-                return f'{name} {number} à partir de n°{first}'
-            case (None, last, None, None, None) if last is not None:
+            case (None, last) if last is not None:
                 return f"{name} jusqu'à n°{last}"
-            case (first, last, number, None, None) if first is not None and last is not None and number is not None:
-                return f'{name} {number} de n°{first} à {last}'
-            case (None, None, number, part, None) if number is not None and part is not None:
-                return f'{name} {number}, partie n°{part}'
-            case (first, None, number, part, None) if first is not None and number is not None and part is not None:
-                return f'{name} {number} à partir de n°{first}, partie n°{part}'
-            case (None, last, number, part, None) if last is not None and number is not None and part is not None:
-                return f'{name} {number} jusqu\'à n°{last}, partie n°{part}'
-            case (first, last, number, part,
-                  None) if first is not None and last is not None and number is not None and part is not None:
-                return f'{name} {number} de n°{first} à n°{last}, partie n°{part}'
-            case (None, None, None, part, parts) if part is not None and parts is not None:
-                return f'{name} partie n°{part}/{parts}'
-            case (first, None, None, part, parts) if first is not None and part is not None and parts is not None:
-                return f'{name} à partir de n°{first}, partie n°{part}/{parts}'
-            case (None, last, None, part, parts) if last is not None and part is not None and parts is not None:
-                return f'{name} jusqu\'à n°{last}, partie n°{part}/{parts}'
-            case (first, last, None, part,
-                  parts) if first is not None and last is not None and part is not None and parts is not None:
-                return f'{name} de n°{first} à n°{last}, partie n°{part}/{parts})'
             case _:
                 raise ValueError(
-                    f'first={self.first}, last={self.last}, part={self.part}, parts={self.parts}, number={self.number}')
+                    f'first={self.first}, last={self.last}')
 
     def __str__(self):
         if self.tournament:
-            return f'Tournoi {self.tournament.uniq_id} ({self.numbers_str})'
+            return f'first_player_by_name={self.first_player_by_name}, last_player_by_name={self.last_player_by_name}, '
+            #return f'Tournoi {self.tournament.uniq_id} ({self.numbers_str})'
         else:
             return f'Tournoi non défini ({self.numbers_str})'

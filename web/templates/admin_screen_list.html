@@ -22,21 +22,21 @@
 </div>
 
 <table class="table border-black">
-    <thead class="table-dark">
+    <thead class="table-dark position-sticky top-0">
         <tr>
             <th scope="col" class="text-nowrap">[Id] / Nom</th>
             <th scope="col" class="text-nowrap">Type</th>
             <th scope="col" class="text-nowrap">Menu</th>
-            <th scope="col" class="text-nowrap" colspan="2">Paramètres</th>
+            <th scope="col" class="text-nowrap">Paramètres</th>
+            <th scope="col" class="width-50"></th>
             <th scope="col" class="text-nowrap" colspan="2">Ensembles / Tournois</th>
-            <th scope="col" class=""></th>
-            <th scope="col" class=""></th>
+            <th scope="col" class="width-50"></th>
             <th scope="col" class=""></th>
         </tr>
     </thead>
     <tbody>
-        {% if admin_event.screens_by_id|length > 0 %}
-            {% for screen in admin_event.screens_by_id.values() %}
+        {% if admin_event.basic_screens_by_id|length > 0 %}
+            {% for screen in admin_event.basic_screens_by_id.values() %}
                 <tr>
                     <th scope="row" class="text-nowrap">
                         <div>
@@ -49,11 +49,6 @@
                     <td scope="row" class="text-nowrap">
                         <i class="{{ screen.icon_str }}"></i>
                         {{ screen.type_str }}
-                        {% if screen.type == 'boards' and screen.record_illegal_moves %}
-                            {% for _ in range(screen.record_illegal_moves) %}
-                                <i class="bi-flag-fill"></i>
-                            {% endfor %}
-                        {% endif %}
                     </td>
                     <td scope="row" class="text-nowrap">
                         <div>
@@ -81,7 +76,7 @@
                             </div>
                         {% endif %}
                     </td>
-                    <td class="text-nowrap width-50">
+                    <td class="text-nowrap">
                         <button
                                 class="btn btn-sm btn-primary p-1"
                                 hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
@@ -121,7 +116,7 @@
                             {% endif %}
                         {% endif %}
                     </td>
-                    <td class="text-nowrap width-50">
+                    <td class="text-nowrap">
                         {% if screen.type in ['boards', 'players'] %}
                             <button
                                     class="btn btn-sm btn-primary p-1"
@@ -153,8 +148,6 @@
                                 hx-indicator="#please-wait" >
                             <i class="bi-copy"></i> Dupliquer
                         </button>
-                    </td>
-                    <td class="text-nowrap text-end">
                         <button
                                 class="btn btn-sm btn-danger p-1"
                                 hx-post="{{ url_for('admin-screen-render-edit-modal') }}"

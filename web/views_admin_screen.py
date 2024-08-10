@@ -15,6 +15,7 @@ from data.screen import ANewScreen
 from data.screen_set import NewScreenSet
 from data.event import NewEvent
 from data.loader import EventLoader
+from data.util import ScreenType
 from database.sqlite import EventDatabase
 from database.store import StoredScreen, StoredScreenSet
 from web.messages import Message
@@ -51,6 +52,8 @@ class AdminScreenController(AAdminController):
                         pass
                     case None:
                         errors[field] = 'Veuillez choisir le type d\'écran'
+                    case _:
+                        raise ValueError(f'type=[{type}]')
             case 'update' | 'clone' | 'delete':
                 type = admin_screen.stored_screen.type
                 boards_update = admin_screen.stored_screen.boards_update
@@ -67,10 +70,10 @@ class AdminScreenController(AAdminController):
             else:
                 match action:
                     case 'create' | 'clone':
-                        if uniq_id in admin_event.screen_uniq_ids:
+                        if uniq_id in admin_event.screens_by_uniq_id:
                             errors[field] = f'L\'écran [{uniq_id}] existe déjà.'
                     case 'update':
-                        if uniq_id != admin_screen.uniq_id and uniq_id in admin_event.screen_uniq_ids:
+                        if uniq_id != admin_screen.uniq_id and uniq_id in admin_event.screens_by_uniq_id:
                             errors[field] = f'L\'écran [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')
@@ -100,12 +103,12 @@ class AdminScreenController(AAdminController):
                         errors[field] = f'Le chronomètre [{timer_id}] n\'existe pas.'
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
-                match type:
-                    case 'boards':
+                match admin_screen.type:
+                    case ScreenType.Boards:
                         pass
-                    case 'players':
+                    case ScreenType.Players:
                         players_show_unpaired = self.form_data_to_bool_or_none(data, 'players_show_unpaired')
-                    case 'results':
+                    case ScreenType.Results:
                         field = 'results_limit'
                         try:
                             results_limit = self.form_data_to_int_or_none(data, field)
@@ -117,7 +120,7 @@ class AdminScreenController(AAdminController):
                             if self.form_data_to_bool_or_none(data, field):
                                 results_tournament_ids.append(tournament_id)
                     case _:
-                        raise ValueError(f'type=[{type}]')
+                        raise ValueError(f'type=[{admin_screen.type}]')
             case _:
                 raise ValueError(f'action=[{action}]')
         return StoredScreen(
@@ -135,35 +138,6 @@ class AdminScreenController(AAdminController):
             results_tournament_ids=results_tournament_ids,
             errors=errors,
         )
-
-    @staticmethod
-    def _get_screen_type_options() -> dict[str, str]:
-        return {
-            '': '-',
-            'boards': 'Affichage des échiquiers',
-            'boards-update': 'Saisie des résultats',
-            'players': 'Appariements par ordre alphabétique',
-            'results': 'Derniers résultats',
-        }
-
-    @staticmethod
-    def _get_timer_options(admin_event: NewEvent) -> dict[str, str]:
-        options: dict[str, str] = {
-            '': 'Pas de chronomètre',
-        }
-        for timer in admin_event.timers_by_id.values():
-            options[str(timer.id)] = f'Chronomètre [{timer.uniq_id}]'
-        return options
-
-    @staticmethod
-    def _get_players_show_unpaired_options() -> dict[str, str]:
-        options: dict[str, str] = {
-            '': '-',
-            '0': 'Affichage seulement des joueur·euses apparié·es',
-            '1': 'Affichage de tou·tes les joueur·euses, apparié·es ou non',
-        }
-        options[''] = f'Par défaut ({options["1" if PapiWebConfig().default_players_show_unpaired else "0"]})'
-        return options
 
     @classmethod
     def _admin_screen_render_edit_modal(
@@ -183,7 +157,7 @@ class AdminScreenController(AAdminController):
                 'admin_event': admin_event,
                 'admin_screen': admin_screen,
                 'data': data,
-                'screen_type_options': cls._get_screen_type_options(),
+                'screen_type_options': cls._get_screen_type_options(results_screen_allowed=True),
                 'timer_options': cls._get_timer_options(admin_event),
                 'players_show_unpaired_options': cls._get_players_show_unpaired_options(),
                 'errors': errors,
@@ -210,7 +184,7 @@ class AdminScreenController(AAdminController):
             case 'update' | 'delete' | 'clone':
                 admin_screen_id: int = self.form_data_to_int_or_none(data, 'admin_screen_id')
                 try:
-                    admin_screen = admin_event.screens_by_id[admin_screen_id]
+                    admin_screen = admin_event.basic_screens_by_id[admin_screen_id]
                 except KeyError:
                     Message.error(request, f'L\'écran [{admin_screen_id}] est introuvable.')
                     return self._render_messages(request)
@@ -273,7 +247,7 @@ class AdminScreenController(AAdminController):
             case 'update' | 'delete' | 'clone':
                 admin_screen_id: int = self.form_data_to_int_or_none(data, 'admin_screen_id')
                 try:
-                    admin_screen = admin_event.screens_by_id[admin_screen_id]
+                    admin_screen = admin_event.basic_screens_by_id[admin_screen_id]
                 except KeyError:
                     Message.error(request, f'L\'écran [{admin_screen_id}] est introuvable.')
                     return self._render_messages(request)
@@ -324,9 +298,6 @@ class AdminScreenController(AAdminController):
         name: str | None
         first: int | None = None
         last: int | None = None
-        part: int | None = None
-        parts: int | None = None
-        number: int | None = None
         field: str = 'name'
         name = self.form_data_to_str_or_none(data, field)
         field: str = 'tournament_id'
@@ -352,39 +323,17 @@ class AdminScreenController(AAdminController):
             error: str = f'Les nombres {first} et {last} ne sont pas compatibles ({first} > {last}).'
             errors['first'] = error
             errors['last'] = error
-        field: str = 'part'
-        try:
-            part = self.form_data_to_int_or_none(data, field, minimum=1)
-        except ValueError:
-            errors[field] = 'Un entier positif est attendu.'
-        field: str = 'parts'
-        try:
-            parts = self.form_data_to_int_or_none(data, field, minimum=1)
-        except ValueError:
-            errors[field] = 'Un entier positif est attendu.'
-        field: str = 'number'
-        try:
-            number = self.form_data_to_int_or_none(data, field, minimum=1)
-        except ValueError:
-            errors[field] = 'Un entier positif est attendu.'
-        if parts and number:
-            error: str = 'Les découpages en un nombre de parties et un nombre d\'éléments ne sont pas compatibles.'
-            errors['parts'] = error
-            errors['number'] = error
-        elif parts and not part:
-            errors['part'] = f'Veuillez indiquer la partie à sélectionner pour le découpage en {parts} parties.'
-        elif number and not part:
-            errors['number'] = (f'Veuillez indiquer la partie à sélectionner pour le découpage en parties de '
-                                f'{number} éléments.')
-        fixed_boards_str: str = self.form_data_to_str_or_none(data, 'fixed_boards_str')
-        if fixed_boards_str:
-            for fixed_board_str in list(map(str.strip, fixed_boards_str.split(','))):
-                if fixed_board_str:
-                    try:
-                        int(fixed_board_str)
-                    except ValueError:
-                        errors['fixed_boards_str'] = f'Le numéro d\'échiquier {fixed_board_str} n\'est pas valide.'
-                        break
+        fixed_boards_str: str | None = None
+        if admin_screen.type == ScreenType.Boards:
+            fixed_boards_str = self.form_data_to_str_or_none(data, 'fixed_boards_str')
+            if fixed_boards_str:
+                for fixed_board_str in list(map(str.strip, fixed_boards_str.split(','))):
+                    if fixed_board_str:
+                        try:
+                            int(fixed_board_str)
+                        except ValueError:
+                            errors['fixed_boards_str'] = f'Le numéro d\'échiquier {fixed_board_str} n\'est pas valide.'
+                            break
         return StoredScreenSet(
             id=admin_screen_set.id,
             screen_id=admin_screen.id,
@@ -394,9 +343,6 @@ class AdminScreenController(AAdminController):
             fixed_boards_str=fixed_boards_str,
             first=first,
             last=last,
-            part=part,
-            parts=parts,
-            number=number,
             errors=errors,
         )
 
@@ -425,10 +371,10 @@ class AdminScreenController(AAdminController):
                     'name': self.value_to_form_data(admin_screen_set.stored_screen_set.name),
                     'first': self.value_to_form_data(admin_screen_set.stored_screen_set.first),
                     'last': self.value_to_form_data(admin_screen_set.stored_screen_set.last),
-                    'part': self.value_to_form_data(admin_screen_set.stored_screen_set.part),
-                    'parts': self.value_to_form_data(admin_screen_set.stored_screen_set.parts),
-                    'number': self.value_to_form_data(admin_screen_set.stored_screen_set.number),
                 }
+                if admin_screen.type == ScreenType.Boards:
+                    data['fixed_boards_str'] = self.value_to_form_data(
+                        admin_screen_set.stored_screen_set.fixed_boards_str)
                 stored_screen_set = self._admin_validate_screen_set_update_data(admin_screen, admin_screen_set, data)
                 errors = stored_screen_set.errors
             else:
@@ -467,7 +413,7 @@ class AdminScreenController(AAdminController):
         admin_screen: ANewScreen | None = None
         admin_screen_id: int = self.form_data_to_int_or_none(data, 'admin_screen_id')
         try:
-            admin_screen = admin_event.screens_by_id[admin_screen_id]
+            admin_screen = admin_event.basic_screens_by_id[admin_screen_id]
         except KeyError:
             Message.error(request, f'L\'écran [{admin_screen_id}] est introuvable.')
         admin_screen_set_id: int = self.form_data_to_int_or_none(data, 'admin_screen_set_id')
@@ -501,7 +447,7 @@ class AdminScreenController(AAdminController):
             case 'delete' | 'clone' | 'update' | 'add' | 'reorder' | 'cancel':
                 admin_screen_id: int = self.form_data_to_int_or_none(data, 'admin_screen_id')
                 try:
-                    admin_screen = admin_event.screens_by_id[admin_screen_id]
+                    admin_screen = admin_event.basic_screens_by_id[admin_screen_id]
                 except KeyError:
                     Message.error(request, f'L\'écran [{admin_screen_id}] est introuvable.')
                     return self._render_messages(request)
@@ -552,7 +498,7 @@ class AdminScreenController(AAdminController):
             event_database.commit()
         event_loader.clear_cache(admin_event.uniq_id)
         admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
-        admin_screen = admin_event.screens_by_id[admin_screen.id]
+        admin_screen = admin_event.basic_screens_by_id[admin_screen.id]
         if stored_screen_set:
             admin_screen_set = admin_screen.screen_sets_by_id[stored_screen_set.id]
         else:

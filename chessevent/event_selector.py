@@ -2,7 +2,6 @@ from typing import List, Optional
 from logging import Logger
 
 from chessevent.action_selector import ActionSelector
-from common.papi_web_config import PapiWebConfig
 from common.singleton import singleton
 from common.logger import get_logger, print_interactive, input_interactive
 from data.event import Event, get_events_sorted_by_name

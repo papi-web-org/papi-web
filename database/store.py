@@ -78,9 +78,6 @@ class StoredScreenSet:
     fixed_boards_str: str | None
     first: int | None
     last: int | None
-    part: int | None
-    parts: int | None
-    number: int | None
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
@@ -109,16 +106,14 @@ class StoredFamily:
     name: str | None
     type: str
     tournament_id: int
-    boards_update: bool
-    players_show_unpaired: bool
-    columns: int
+    columns: int | None
     menu_text: str | None
     menu: str | None
     timer_id: int | None
-    range: str | None
+    boards_update: bool | None
+    players_show_unpaired: bool | None
     first: int | None
     last: int | None
-    part: int | None
     parts: int | None
     number: int | None
     errors: dict[str, str] = field(default_factory=dict[str, str])

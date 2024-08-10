@@ -105,6 +105,37 @@ class AAdminController(AController):
         }
 
     @staticmethod
+    def _get_screen_type_options(results_screen_allowed: bool) -> dict[str, str]:
+        options: dict[str, str] = {
+            '': '-',
+            'boards': 'Affichage des échiquiers',
+            'boards-update': 'Saisie des résultats',
+            'players': 'Appariements par ordre alphabétique',
+        }
+        if results_screen_allowed:
+            options['results'] = 'Derniers résultats'
+        return options
+
+    @staticmethod
+    def _get_timer_options(event: NewEvent) -> dict[str, str]:
+        options: dict[str, str] = {
+            '': 'Pas de chronomètre',
+        }
+        for timer in event.timers_by_id.values():
+            options[str(timer.id)] = f'Chronomètre [{timer.uniq_id}]'
+        return options
+
+    @staticmethod
+    def _get_players_show_unpaired_options() -> dict[str, str]:
+        options: dict[str, str] = {
+            '': '-',
+            '0': 'Affichage seulement des joueur·euses apparié·es',
+            '1': 'Affichage de tou·tes les joueur·euses, apparié·es ou non',
+        }
+        options[''] = f'Par défaut ({options["1" if PapiWebConfig().default_players_show_unpaired else "0"]})'
+        return options
+
+    @staticmethod
     def _admin_render_index(
         request: HTMXRequest,
         event_loader: EventLoader,
@@ -130,7 +161,7 @@ class AAdminController(AController):
                 '@timers': 'Chronomètres',
                 '@tournaments': 'Tournois',
                 '@screens': 'Écrans',
-                # '@families': 'Familles d\'écrans',
+                '@families': 'Familles d\'écrans',
                 # '@rotators': 'Écrans rotatifs',
                 # '@messages': 'Messages',
                 # '@check_in': 'Pointage',

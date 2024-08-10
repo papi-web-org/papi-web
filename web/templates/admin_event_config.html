@@ -53,64 +53,26 @@
 </div>
 
 <table class="table border-black">
-    <thead class="table-dark">
+    <thead class="table-dark position-sticky top-0">
         <tr>
-            <th scope="col" class="text-nowrap">Information</th>
+            <th scope="col" class="text-nowrap">Personnalisation</th>
             <th scope="col" class="text-nowrap">Valeur</th>
-            <th scope="col" class="width-100">Actions</th>
-        </tr>
+            <th scope="col" class="text-nowrap width-50">&nbsp;</th>
+            <th scope="col" class="text-nowrap" colspan="2">Éléments de l'évènement</th>
+            <th scope="col" class="text-nowrap width-50">Gestion</th>
+             <th scope="col" class="text-nowrap">&nbsp;</th>
+       </tr>
     </thead>
     <tbody>
         <tr>
-            <th scope="row" class="text-nowrap">Identifiant unique</th>
+            <th scope="row" class="text-nowrap">Identifiant unique de l'évènement</th>
             <td class="text-nowrap">{{ admin_event.uniq_id }}</td>
-            <td>&nbsp;</td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Nom</th>
-            <td class="text-nowrap">{{ admin_event.name }}</td>
-            <td></td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Répertoire par défaut des fichiers Papi</th>
-            <td class="text-nowrap">{{ admin_event.path }}{% if not admin_event.stored_event.path %} (par défaut){% endif %}</td>
-            <td></td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Personnalisation CSS</th>
-            <td class="text-nowrap">{% if admin_event.css %}{{ admin_event.css }}{% else %}<em>Aucune</em>{% endif %}</td>
-            <td></td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Mot de passe de saisie des scores</th>
-            <td class="text-nowrap">{% if admin_event.update_password %}********{% else %}<em>Aucun</em>{% endif %}</td>
-            <td></td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Nombre maximum de coups illégaux enregistrés</th>
-            <td class="text-nowrap">{% if admin_event.record_illegal_moves %}{{ admin_event.record_illegal_moves }}{% else %}Aucun{% endif %}{% if admin_event.stored_event.record_illegal_moves is none %} (par défaut){% endif %}</td>
-            <td></td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Suppression des résultats entrés sur les écrans de saisie</th>
-            <td class="text-nowrap">{% if admin_event.allow_results_deletion %}Autorisée{% else %}Non autorisée{% endif %}{% if admin_event.stored_event.allow_results_deletion is none %} (par défaut){% endif %}</td>
-            <td></td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Paramètres par défaut des chronomètres</th>
-            <td class="text-nowrap">
-                <div style="background-color: {{ admin_event.timer_colors[1] }}">&nbsp;{{ admin_event.timer_delays[1] }} minutes avant&nbsp;</div>
-                <div style="background-color: {{ admin_event.timer_colors[2] }}">&nbsp;{{ admin_event.timer_delays[2] }} minutes avant&nbsp;</div>
-                <div style="background-color: {{ admin_event.timer_colors[3] }}">&nbsp;{{ admin_event.timer_delays[3] }} minutes après&nbsp;</div>
-            </td>
-            <td></td>
-        </tr>
-        <tr>
+            <td class="text-nowrap">&nbsp;</td>
             <th scope="row" class="text-nowrap">Chronomètres</th>
             <td class="text-nowrap">
                 {% if admin_event.timers_by_id|length %}{{ admin_event.timers_by_id|length }}{% else %}<em>Aucun</em>{% endif %}
             </td>
-            <td>
+            <td class="text-nowrap">
                 <button
                         class="btn btn-sm btn-primary p-1"
                         hx-post="{{ url_for('admin-update-header') }}"
@@ -122,11 +84,14 @@
             </td>
         </tr>
         <tr>
+            <th scope="row" class="text-nowrap">Nom de l'évènement</th>
+            <td class="text-nowrap">{{ admin_event.name }}</td>
+            <td class="text-nowrap">&nbsp;</td>
             <th scope="row" class="text-nowrap">Connexions à ChessEvent</th>
             <td class="text-nowrap">
                 {% if admin_event.chessevents_by_id|length %}{{ admin_event.chessevents_by_id|length }}{% else %}<em>Aucune</em>{% endif %}
             </td>
-            <td>
+            <td class="text-nowrap">
                 <button
                         class="btn btn-sm btn-primary p-1"
                         hx-post="{{ url_for('admin-update-header') }}"
@@ -138,11 +103,18 @@
             </td>
         </tr>
         <tr>
+            <th scope="row" class="text-nowrap">Répertoire par défaut des fichiers Papi</th>
+            <td class="text-nowrap">{{ admin_event.path }}{% if not admin_event.stored_event.path %} (par défaut){% endif %}</td>
+            <td class="text-nowrap">&nbsp;</td>
             <th scope="row" class="text-nowrap">Tournois</th>
             <td class="text-nowrap">
-                {% if admin_event.tournaments|length %}{{ admin_event.tournaments|length }}{% else %}<em>Aucun</em>{% endif %}
+                {% if admin_event.tournaments_by_uniq_id|length %}
+                    {{ admin_event.tournaments_by_uniq_id|length }}
+                {% else %}
+                    <em>Aucun</em>
+                {% endif %}
             </td>
-            <td>
+            <td class="text-nowrap">
                 <button
                         class="btn btn-sm btn-primary p-1"
                         hx-post="{{ url_for('admin-update-header') }}"
@@ -154,11 +126,14 @@
             </td>
         </tr>
         <tr>
+            <th scope="row" class="text-nowrap">Personnalisation CSS</th>
+            <td class="text-nowrap">{% if admin_event.css %}{{ admin_event.css }}{% else %}<em>Aucune</em>{% endif %}</td>
+            <td class="text-nowrap">&nbsp;</td>
             <th scope="row" class="text-nowrap">Écrans</th>
             <td class="text-nowrap">
-                {% if admin_event.screens_by_id|length %}{{ admin_event.screens_by_id|length }}{% else %}<em>Aucun</em>{% endif %}
+                {% if admin_event.basic_screens_by_id|length %}{{ admin_event.basic_screens_by_id|length }}{% else %}<em>Aucun</em>{% endif %}
             </td>
-            <td>
+            <td class="text-nowrap">
                 <button
                         class="btn btn-sm btn-primary p-1"
                         hx-post="{{ url_for('admin-update-header') }}"
@@ -168,6 +143,53 @@
                     <i class="bi-caret-right-square-fill"></i> Gérer les écrans
                 </button>
             </td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Mot de passe de saisie des scores</th>
+            <td class="text-nowrap">{% if admin_event.update_password %}********{% else %}<em>Aucun</em>{% endif %}</td>
+            <td class="text-nowrap">&nbsp;</td>
+            <th scope="row" class="text-nowrap">Familles d'écrans</th>
+            <td class="text-nowrap">
+                {% if admin_event.families_by_id|length %}{{ admin_event.families_by_id|length }}{% else %}<em>Aucune</em>{% endif %}
+            </td>
+            <td class="text-nowrap">
+                <button
+                        class="btn btn-sm btn-primary p-1"
+                        hx-post="{{ url_for('admin-update-header') }}"
+                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@families"}'
+                        hx-swap="multi:#admin-header,#admin-content"
+                        hx-indicator="#please-wait">
+                    <i class="bi-caret-right-square-fill"></i> Gérer les familles d'écrans
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Nombre maximum de coups illégaux enregistrés</th>
+            <td class="text-nowrap">{% if admin_event.record_illegal_moves %}{{ admin_event.record_illegal_moves }}{% else %}Aucun{% endif %}{% if admin_event.stored_event.record_illegal_moves is none %} (par défaut){% endif %}</td>
+            <td class="text-nowrap">&nbsp;</td>
+            <th scope="row" class="text-nowrap">&nbsp;</th>
+            <td class="text-nowrap">&nbsp;</td>
+            <td class="text-nowrap">&nbsp;</td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Suppression des résultats entrés sur les écrans de saisie</th>
+            <td class="text-nowrap">{% if admin_event.allow_results_deletion %}Autorisée{% else %}Non autorisée{% endif %}{% if admin_event.stored_event.allow_results_deletion is none %} (par défaut){% endif %}</td>
+            <td class="text-nowrap">&nbsp;</td>
+            <th scope="row" class="text-nowrap">&nbsp;</th>
+            <td class="text-nowrap">&nbsp;</td>
+            <td class="text-nowrap">&nbsp;</td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Paramètres par défaut des chronomètres</th>
+            <td class="text-nowrap">
+                <div style="background-color: {{ admin_event.timer_colors[1] }}">&nbsp;{{ admin_event.timer_delays[1] }} minutes avant&nbsp;</div>
+                <div style="background-color: {{ admin_event.timer_colors[2] }}">&nbsp;{{ admin_event.timer_delays[2] }} minutes avant&nbsp;</div>
+                <div style="background-color: {{ admin_event.timer_colors[3] }}">&nbsp;{{ admin_event.timer_delays[3] }} minutes après&nbsp;</div>
+            </td>
+             <td class="text-nowrap">&nbsp;</td>
+           <th scope="row" class="text-nowrap">&nbsp;</th>
+            <td class="text-nowrap">&nbsp;</td>
+            <td class="text-nowrap">&nbsp;</td>
         </tr>
     </tbody>
 </table>

@@ -46,10 +46,10 @@ class AdminTimerController(AAdminController):
             else:
                 match action:
                     case 'create' | 'clone':
-                        if uniq_id in admin_event.timer_uniq_ids:
+                        if uniq_id in admin_event.timers_by_uniq_id:
                             errors['uniq_id'] = f'Le chronomètre [{uniq_id}] existe déjà.'
                     case 'update':
-                        if uniq_id != admin_timer.uniq_id and uniq_id in admin_event.timer_uniq_ids:
+                        if uniq_id != admin_timer.uniq_id and uniq_id in admin_event.timers_by_uniq_id:
                             errors['uniq_id'] = f'Le chronomètre [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')

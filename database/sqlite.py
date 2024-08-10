@@ -18,7 +18,7 @@ import yaml
 from packaging.version import Version
 
 from common.exception import PapiWebException
-from data.util import Result as UtilResult, ScreenType
+from data.util import Result as UtilResult
 from data.result import Result as DataResult
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
@@ -152,7 +152,8 @@ class EventDatabase(SQLiteDatabase):
                     tournament_ids_by_uniq_id: dict[str, int] = {}
                     for tournament_uniq_id, tournament_dict in event_dict['tournaments'].items():
                         chessevent_uniq_id: str = tournament_dict.get('chessevent_uniq_id', None)
-                        chessevent_id: int = chessevent_ids_by_uniq_id[chessevent_uniq_id] if chessevent_uniq_id else None
+                        chessevent_id: int = chessevent_ids_by_uniq_id[
+                            chessevent_uniq_id] if chessevent_uniq_id else None
                         stored_tournament: StoredTournament = event_database.add_stored_tournament(StoredTournament(
                             id=None,
                             uniq_id=tournament_uniq_id,
@@ -416,7 +417,7 @@ class EventDatabase(SQLiteDatabase):
     def update_stored_chessevent(
             self, stored_chessevent: StoredChessEvent,
     ) -> StoredChessEvent:
-        assert stored_chessevent.id is not None, f'stored_chessevent.id={stored_chessevent.id}'
+        assert stored_chessevent.id is not None
         return self._write_stored_chessevent(stored_chessevent)
 
     def delete_stored_chessevent(self, id: int):
@@ -542,7 +543,7 @@ class EventDatabase(SQLiteDatabase):
     def update_stored_timer_hour(
             self, stored_timer_hour: StoredTimerHour,
     ) -> StoredTimerHour:
-        assert stored_timer_hour.id is not None, f'stored_timer_hour.id={stored_timer_hour.id}'
+        assert stored_timer_hour.id is not None
         return self._write_stored_timer_hour(stored_timer_hour)
 
     def add_stored_timer_hour(
@@ -664,7 +665,7 @@ class EventDatabase(SQLiteDatabase):
     def update_stored_timer(
             self, stored_timer: StoredTimer,
     ) -> StoredTimer:
-        assert stored_timer.id is not None, f'stored_timer.id={stored_timer.id}'
+        assert stored_timer.id is not None
         return self._write_stored_timer(stored_timer)
 
     def clone_stored_timer(
@@ -832,7 +833,7 @@ class EventDatabase(SQLiteDatabase):
     def update_stored_tournament(
             self, stored_tournament: StoredTournament,
     ) -> StoredTournament:
-        assert stored_tournament.id is not None, f'stored_tournament.id={stored_tournament.id}'
+        assert stored_tournament.id is not None
         return self._write_stored_tournament(stored_tournament)
 
     def delete_stored_tournament(self, id: int):
@@ -1119,10 +1120,8 @@ class EventDatabase(SQLiteDatabase):
             menu_text=row['menu_text'],
             menu=row['menu'],
             timer_id=row['timer_id'],
-            range=row['range'],
             first=row['first'],
             last=row['last'],
-            part=row['part'],
             parts=row['parts'],
             number=row['number'],
         )
@@ -1145,22 +1144,19 @@ class EventDatabase(SQLiteDatabase):
         return [self._row_to_stored_family(row) for row in self._fetchall()]
 
     def _write_stored_family(
-            self, id: int | None, uniq_id: str, name: str, type: ScreenType, boards_update: str,
-            players_show_unpaired: bool, columns: int, menu_text: str, menu: str,
-            timer_id: int, results_limit: int, results_tournaments_str: str, range: str,
-            first: int, last: int, part: int, parts: int, number: int,
+            self, stored_family: StoredFamily,
     ) -> StoredFamily:
         fields: list[str] = [
-            'uniq_id', 'name', 'type', 'boards_update', 'players_show_unpaired', 'columns', 'menu_text', 'menu',
-            'timer_id', 'results_limit', 'results_tournaments_str', 'range', 'first', 'last', 'part', 'parts',
-            'number',
+            'uniq_id', 'name', 'type', 'tournament_id', 'columns', 'menu_text', 'menu', 'timer_id', 'boards_update',
+            'players_show_unpaired', 'first', 'last', 'parts', 'number',
         ]
         params: list = [
-            uniq_id, name, type, boards_update, players_show_unpaired, columns, menu_text, menu,
-            timer_id, results_limit, results_tournaments_str, range, first, last, part, parts,
-            number,
+            stored_family.uniq_id, stored_family.name, stored_family.type, stored_family.tournament_id,
+            stored_family.columns, stored_family.menu_text, stored_family.menu, stored_family.timer_id,
+            stored_family.boards_update, stored_family.players_show_unpaired, stored_family.first, stored_family.last,
+            stored_family.parts, stored_family.number,
         ]
-        if id is None:
+        if stored_family.id is None:
             protected_fields = [f"`{f}`" for f in fields]
             self._execute(
                 f'INSERT INTO `family`({", ".join(protected_fields)}) VALUES ({", ".join(["?"] * len(fields))})',
@@ -1168,31 +1164,23 @@ class EventDatabase(SQLiteDatabase):
             return self.get_stored_family(self._last_inserted_id())
         else:
             field_sets = [f"`{f}` = ?" for f in fields]
-            params += [id]
+            params += [stored_family.id]
             self._execute(
                 f'UPDATE `family` SET {", ".join(field_sets)} WHERE `id` = ?',
                 tuple(params))
-            return self.get_stored_family(id)
+            return self.get_stored_family(stored_family.id)
 
     def add_stored_family(
-            self, uniq_id: str, name: str, type: ScreenType, boards_update: str,
-            players_show_unpaired: bool, columns: int, menu_text: str, menu: str,
-            timer_id: int, results_limit: int, results_tournaments_str: str, range: str,
-            first: int, last: int, part: int, parts: int, number: int,
+            self, stored_family: StoredFamily,
     ) -> StoredFamily:
-        return self._write_stored_family(
-            None, uniq_id, name, type, boards_update, players_show_unpaired, columns, menu_text, menu, timer_id,
-            results_limit, results_tournaments_str, range, first, last, part, parts, number)
+        assert stored_family.id is None, f'stored_family.id={stored_family.id}'
+        return self._write_stored_family(stored_family)
 
     def update_stored_family(
-            self, id: int, uniq_id: str, name: str, type: ScreenType, boards_update: str,
-            players_show_unpaired: bool, columns: int, menu_text: str, menu: str,
-            timer_id: int, results_limit: int, results_tournaments_str: str, range: str,
-            first: int, last: int, part: int, parts: int, number: int,
+            self, stored_family: StoredFamily,
     ) -> StoredFamily:
-        return self._write_stored_family(
-            id, uniq_id, name, type, boards_update, players_show_unpaired, columns, menu_text, menu, timer_id,
-            results_limit, results_tournaments_str, range, first, last, part, parts, number)
+        assert stored_family.id is not None
+        return self._write_stored_family(stored_family)
 
     def delete_stored_family(self, id: int):
         self._execute('DELETE FROM `family` WHERE `id` = ?;', (id, ))
@@ -1297,7 +1285,7 @@ class EventDatabase(SQLiteDatabase):
     def update_stored_screen(
             self, stored_screen: StoredScreen,
     ) -> StoredScreen:
-        assert stored_screen.id is not None, f'stored_screen.id={stored_screen.id}'
+        assert stored_screen.id is not None
         return self._write_stored_screen(stored_screen)
 
     def delete_stored_screen(self, id: int):
@@ -1320,9 +1308,6 @@ class EventDatabase(SQLiteDatabase):
             first=row['first'],
             fixed_boards_str=row['fixed_boards_str'],
             last=row['last'],
-            part=row['part'],
-            parts=row['parts'],
-            number=row['number'],
         )
 
     def get_stored_screen_set(self, id: int) -> StoredScreenSet | None:
@@ -1376,13 +1361,12 @@ class EventDatabase(SQLiteDatabase):
         self, stored_screen_set: StoredScreenSet,
     ) -> StoredScreenSet:
         fields: list[str] = [
-            'screen_id', 'tournament_id', 'name', 'order', 'fixed_boards_str', 'first', 'last', 'part', 'parts',
-            'number',
+            'screen_id', 'tournament_id', 'name', 'order', 'fixed_boards_str', 'first', 'last',
         ]
         params: list = [
             stored_screen_set.screen_id, stored_screen_set.tournament_id, stored_screen_set.name,
             stored_screen_set.order, stored_screen_set.fixed_boards_str, stored_screen_set.first,
-            stored_screen_set.last, stored_screen_set.part, stored_screen_set.parts, stored_screen_set.number,
+            stored_screen_set.last,
         ]
         if stored_screen_set.id is None:
             protected_fields = [f"`{f}`" for f in fields]
@@ -1420,16 +1404,13 @@ class EventDatabase(SQLiteDatabase):
             fixed_boards_str=None,
             first=None,
             last=None,
-            part=None,
-            parts=None,
-            number=None,
         )
         return self._write_stored_screen_set(stored_screen_set)
 
     def update_stored_screen_set(
         self, stored_screen_set: StoredScreenSet,
     ) -> StoredScreenSet:
-        assert stored_screen_set.id is not None, f'stored_screen_set.id={stored_screen_set.id}'
+        assert stored_screen_set.id is not None
         return self._write_stored_screen_set(stored_screen_set)
 
     def delete_stored_screen_set(self, id: int):
