@@ -162,7 +162,7 @@ class AAdminController(AController):
                 '@tournaments': 'Tournois',
                 '@screens': 'Écrans',
                 '@families': 'Familles d\'écrans',
-                # '@rotators': 'Écrans rotatifs',
+                '@rotators': 'Écrans rotatifs',
                 # '@messages': 'Messages',
                 # '@check_in': 'Pointage',
                 # '@pairings': 'Appariements',

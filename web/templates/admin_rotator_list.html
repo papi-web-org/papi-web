@@ -1,0 +1,116 @@
+<div class="row">
+    <div class="col">
+        <h1 class="text-nowrap">
+            {{ admin_event.name }} - Écrans rotatifs
+        </h1>
+    </div>
+    <div class="col-1 d-flex justify-content-end">
+        <h1>
+            <button
+                    class="btn btn-primary text-nowrap"
+                    hx-post="{{ url_for('admin-rotator-render-edit-modal') }}"
+                    hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait">
+                <i class="bi-plus-square-fill"></i> Créer un écran rotatif
+            </button>
+        </h1>
+    </div>
+</div>
+
+<table class="table border-black">
+    <thead class="table-dark position-sticky top-0">
+        <tr>
+            <th scope="col" class="text-nowrap">Id</th>
+            <th scope="col" class="text-nowrap">Familles<br/>d'écrans</th>
+            <th scope="col" class="text-nowrap">Écrans</th>
+            <th scope="col" class="text-nowrap">Paramètres</th>
+            <th scope="col" class="width-100"></th>
+            <th scope="col" class="text-nowrap"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if admin_event.rotators_by_id| length > 0 %}
+            {% for rotator in admin_event.rotators_by_id.values() %}
+                <tr>
+                    <th scope="row" class="text-nowrap">{{ rotator.uniq_id }}</th>
+                    <td class="text-nowrap">
+                        {% if rotator.families %}
+                            {% for family in rotator.families %}
+                                <div>
+                                    {{ loop.counter }}. {{ family.name }} : {{ family.screens_by_uniq_id|length }} écran{% if family.screens_by_uniq_id|length > 1 %}s{% endif %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div><em>-</em></div>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap">
+                        {% if rotator.screens %}
+                            {% for screen in rotator.screens %}
+                                <div>
+                                    {{ loop.counter }}. {{ screen.name }}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div><em>-</em></div>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap">
+                        <div>
+                            Délai : {{ rotator.delay }}{% if rotator.stored_rotator.delay is none %} (par défaut){% endif %}
+                        </div>
+                        <div>
+                            Affichage des menus : {% if rotator.show_menus %}Oui{% else %}Non{% endif %}{% if rotator.stored_rotator.show_menus is none %} (par défaut){% endif %}
+                        </div>
+                    </td>
+                    <td class="text-nowrap">
+                        <button
+                                class="btn btn-sm btn-primary p-1"
+                                hx-post="{{ url_for('admin-rotator-render-edit-modal') }}"
+                                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_rotator_id": "{{ rotator.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-pencil-fill"></i> Éditer
+                        </button>
+                    </td>
+                    <td class="text-nowrap text-end">
+                        <button
+                                hx-post="{{ url_for('admin-rotator-update') }}"
+                                hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_rotator_id": "{{ rotator.id }}"}'
+                                hx-swap="multi:#messages,#admin-header,#admin-content"
+                                class="btn btn-sm btn-primary p-1"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-copy"></i> Dupliquer
+                        </button>
+                        <button
+                                class="btn btn-sm btn-danger p-1"
+                                hx-post="{{ url_for('admin-rotator-render-edit-modal') }}"
+                                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_rotator_id": "{{ rotator.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-trash-fill"></i> Supprimer
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td
+                        colspan="5"
+                        class="text-nowrap" >
+                    <em>Aucun écran rotatif trouvé.</em>
+                </td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>

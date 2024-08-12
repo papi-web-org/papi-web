@@ -249,7 +249,6 @@ class AdminEventController(AAdminController):
                 with EventDatabase(uniq_id, write=True) as event_database:
                     event_database.update_stored_event(stored_event)
                     event_database.commit()
-                event_loader.clear_cache()
                 Message.success(request, f'L\'évènement [{admin_event.uniq_id}] a été dupliqué ([{uniq_id}]).')
                 admin_event = event_loader.load_event(uniq_id)
                 return self._admin_render_index(request, event_loader, admin_event=admin_event, admin_event_selector='')

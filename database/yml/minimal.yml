@@ -1,0 +1,25 @@
+name: "Tournoi minimal"
+tournaments:
+  T:
+    filename: "t"
+    name: "Tournoi"
+screens:
+  saisie:
+    type: "boards"
+    boards_update: true
+    sets:
+      -
+        tournament_uniq_id: "T"
+  affichage:
+    type: "boards"
+    boards_update: false
+    sets:
+      -
+        tournament_uniq_id: "T"
+  appariements:
+    type: "players"
+    sets:
+      -
+        tournament_uniq_id: "T"
+  resultats:
+    type: "results"

@@ -888,6 +888,19 @@ class ANewScreenWithSets(ANewScreen):
         return self.stored_screen.id if self.stored_screen else -1
 
     @property
+    def name(self) -> str | None:
+        name: str = self.stored_screen.name if self.stored_screen else self.family.name
+        if name:
+            return name
+        if self.screen_sets_sorted_by_order:
+            first_set: NewScreenSet = self.screen_sets_sorted_by_order[0]
+            if self.type == ScreenType.Boards:
+                return first_set.name_for_boards
+            else:
+                return first_set.name_for_players
+        return 'Non défini'
+
+    @property
     def family_id(self) -> int | None:
         return self.family.id
 
@@ -898,13 +911,6 @@ class ANewScreenWithSets(ANewScreen):
     @property
     def uniq_id(self) -> str:
         return self.stored_screen.uniq_id if self.stored_screen else f'{self.family.uniq_id}:{self.family_part}'
-
-    @property
-    def name(self) -> str:
-        if self.stored_screen:
-            return self.stored_screen.name
-        else:
-            return self.family.name
 
     @property
     def columns(self) -> int:
@@ -954,15 +960,6 @@ class NewBoardsScreen(ANewScreenWithSets):
         self._build_screen_sets()
 
     @property
-    def name(self) -> str | None:
-        name: str = self.stored_screen.name if self.stored_screen else self.family.name
-        if name:
-            return name
-        if self.screen_sets_sorted_by_order:
-            return self.screen_sets_sorted_by_order[0].name_for_boards
-        return None
-
-    @property
     def boards_update(self) -> bool:
         return self.stored_screen.boards_update if self.stored_screen else self.family.boards_update
 
@@ -1006,15 +1003,6 @@ class NewPlayersScreen(ANewScreenWithSets):
         super().__init__(event, stored_screen, family, family_part)
         assert self.type == ScreenType.Players, f'type={self.type}'
         self._build_screen_sets()
-
-    @property
-    def name(self) -> str | None:
-        name: str = self.stored_screen.name if self.stored_screen else self.family.name
-        if name:
-            return name
-        if self.screen_sets_sorted_by_order:
-            return self.screen_sets_sorted_by_order[0].name_for_players
-        return None
 
     @property
     def players_show_unpaired(self) -> bool:

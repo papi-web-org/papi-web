@@ -287,3 +287,11 @@ class PapiWebConfig:
     @property
     def default_players_show_unpaired(self) -> bool:
         return True
+
+    @property
+    def default_rotator_delay(self) -> int:
+        return 15
+
+    @property
+    def default_rotator_show_menus(self) -> bool:
+        return False

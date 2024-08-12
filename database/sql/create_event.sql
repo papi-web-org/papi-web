@@ -114,6 +114,7 @@ CREATE TABLE `screen` (
     `results_limit` INTEGER,
     `results_tournament_ids` TEXT,
     PRIMARY KEY(`id` AUTOINCREMENT),
+    UNIQUE(`uniq_id`),
     FOREIGN KEY (`timer_id`) REFERENCES `timer`(`id`)
 );
 
@@ -149,6 +150,7 @@ CREATE TABLE `family` (
     `parts` INTEGER,
     `number` INTEGER,
     PRIMARY KEY(`id` AUTOINCREMENT),
+    UNIQUE(`uniq_id`),
     FOREIGN KEY (`timer_id`) REFERENCES `timer`(`id`),
     FOREIGN KEY (`tournament_id`) REFERENCES `tournament`(`id`)
 );
@@ -156,10 +158,12 @@ CREATE TABLE `family` (
 CREATE TABLE `rotator` (
     `id` INTEGER NOT NULL,
     `uniq_id` TEXT NOT NULL,
-    `screens_str` TEXT,
-    `families_str` TEXT,
+    `screen_ids` TEXT,
+    `family_ids` TEXT,
     `delay` INTEGER,
-    PRIMARY KEY(`id` AUTOINCREMENT)
+    `show_menus` INTEGER,
+    PRIMARY KEY(`id` AUTOINCREMENT),
+    UNIQUE(`uniq_id`)
 );
 
 CREATE TABLE `skipped_round` (

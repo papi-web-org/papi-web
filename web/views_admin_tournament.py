@@ -26,7 +26,9 @@ logger: Logger = get_logger()
 class AdminTournamentController(AAdminController):
 
     def _admin_validate_tournament_update_data(
-            self, action: str, admin_event: NewEvent,
+            self,
+            action: str,
+            admin_event: NewEvent,
             admin_tournament: NewTournament,
             data: dict[str, str] | None = None,
     ) -> StoredTournament:
@@ -132,15 +134,70 @@ class AdminTournamentController(AAdminController):
                                            f'/{chessevent.shadowed_password}/{chessevent.event_id})')
         return options
 
-    @classmethod
     def _admin_tournament_render_edit_modal(
-            cls,
+            self,
             action: str,
             admin_event: NewEvent,
             admin_tournament: NewTournament | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        if data is None:
+            data = {}
+            if admin_tournament:
+                match action:
+                    case 'update':
+                        data['uniq_id'] = self.value_to_form_data(admin_tournament.stored_tournament.uniq_id)
+                    case 'create' | 'clone':
+                        data['uniq_id'] = ''
+                    case 'delete':
+                        pass
+                    case _:
+                        raise ValueError(f'action=[{action}]')
+                match action:
+                    case 'update' | 'clone':
+                        data['name'] = self.value_to_form_data(admin_tournament.stored_tournament.name)
+                        data['path'] = self.value_to_form_data(admin_tournament.stored_tournament.path)
+                        data['filename'] = self.value_to_form_data(admin_tournament.stored_tournament.filename)
+                        data['ffe_id'] = self.value_to_form_data(admin_tournament.stored_tournament.ffe_id)
+                        data['ffe_password'] = self.value_to_form_data(admin_tournament.stored_tournament.ffe_password)
+                    case 'create':
+                        data['name'] = ''
+                        data['path'] = ''
+                        data['filename'] = ''
+                        data['ffe_id'] = ''
+                        data['ffe_password'] = ''
+                    case 'delete':
+                        pass
+                    case _:
+                        raise ValueError(f'action=[{action}]')
+                match action:
+                    case 'update':
+                        data['time_control_initial_time'] = self.value_to_form_data(
+                            admin_tournament.stored_tournament.time_control_initial_time)
+                        data['time_control_increment'] = self.value_to_form_data(
+                            admin_tournament.stored_tournament.time_control_increment)
+                        data['time_control_handicap_penalty_value'] = self.value_to_form_data(
+                            admin_tournament.stored_tournament.time_control_handicap_penalty_value)
+                        data['time_control_handicap_penalty_step'] = self.value_to_form_data(
+                            admin_tournament.stored_tournament.time_control_handicap_penalty_step)
+                        data['time_control_handicap_min_time'] = self.value_to_form_data(
+                            admin_tournament.stored_tournament.time_control_handicap_min_time)
+                        data['chessevent_id'] = self.value_to_form_data(
+                            admin_tournament.stored_tournament.chessevent_id)
+                        data['chessevent_tournament_name'] = self.value_to_form_data(
+                            admin_tournament.stored_tournament.chessevent_tournament_name)
+                        data['record_illegal_moves'] = self.value_to_form_data(
+                            admin_tournament.stored_tournament.record_illegal_moves)
+                    case 'delete' | 'clone' | 'create':
+                        pass
+                    case _:
+                        raise ValueError(f'action=[{action}]')
+            stored_tournament: StoredTournament = self._admin_validate_tournament_update_data(
+                action, admin_event, admin_tournament, data)
+            errors = stored_tournament.errors
+        if errors is None:
+            errors = {}
         return HTMXTemplate(
             template_name='admin_tournament_edit_modal.html',
             re_swap='innerHTML',
@@ -150,9 +207,9 @@ class AdminTournamentController(AAdminController):
                 'action': action,
                 'admin_event': admin_event,
                 'admin_tournament': admin_tournament,
-                'chessevent_options': cls._get_chessevent_options(admin_event),
+                'chessevent_options': self._get_chessevent_options(admin_event),
                 'data': data,
-                'record_illegal_moves_options': cls._get_record_illegal_moves_options(
+                'record_illegal_moves_options': self._get_record_illegal_moves_options(
                     admin_event.record_illegal_moves),
                 'errors': errors,
             })
@@ -189,59 +246,7 @@ class AdminTournamentController(AAdminController):
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
-        data: dict[str, str] = {}
-        match action:
-            case 'update':
-                data['uniq_id'] = self.value_to_form_data(admin_tournament.stored_tournament.uniq_id)
-            case 'create' | 'clone':
-                data['uniq_id'] = ''
-            case 'delete':
-                pass
-            case _:
-                raise ValueError(f'action=[{action}]')
-        match action:
-            case 'update' | 'clone':
-                data['name'] = self.value_to_form_data(admin_tournament.stored_tournament.name)
-                data['path'] = self.value_to_form_data(admin_tournament.stored_tournament.path)
-                data['filename'] = self.value_to_form_data(admin_tournament.stored_tournament.filename)
-                data['ffe_id'] = self.value_to_form_data(admin_tournament.stored_tournament.ffe_id)
-                data['ffe_password'] = self.value_to_form_data(admin_tournament.stored_tournament.ffe_password)
-            case 'create':
-                data['name'] = ''
-                data['path'] = ''
-                data['filename'] = ''
-                data['ffe_id'] = ''
-                data['ffe_password'] = ''
-            case 'delete':
-                pass
-            case _:
-                raise ValueError(f'action=[{action}]')
-        match action:
-            case 'update':
-                data['time_control_initial_time'] = self.value_to_form_data(
-                    admin_tournament.stored_tournament.time_control_initial_time)
-                data['time_control_increment'] = self.value_to_form_data(
-                    admin_tournament.stored_tournament.time_control_increment)
-                data['time_control_handicap_penalty_value'] = self.value_to_form_data(
-                    admin_tournament.stored_tournament.time_control_handicap_penalty_value)
-                data['time_control_handicap_penalty_step'] = self.value_to_form_data(
-                    admin_tournament.stored_tournament.time_control_handicap_penalty_step)
-                data['time_control_handicap_min_time'] = self.value_to_form_data(
-                    admin_tournament.stored_tournament.time_control_handicap_min_time)
-                data['chessevent_id'] = self.value_to_form_data(
-                    admin_tournament.stored_tournament.chessevent_id)
-                data['chessevent_tournament_name'] = self.value_to_form_data(
-                    admin_tournament.stored_tournament.chessevent_tournament_name)
-                data['record_illegal_moves'] = self.value_to_form_data(
-                    admin_tournament.stored_tournament.record_illegal_moves)
-            case 'delete' | 'clone' | 'create':
-                pass
-            case _:
-                raise ValueError(f'action=[{action}]')
-        stored_tournament: StoredTournament = self._admin_validate_tournament_update_data(
-            action, admin_event, admin_tournament, data)
-        return self._admin_tournament_render_edit_modal(
-            action, admin_event, admin_tournament, data, stored_tournament.errors)
+        return self._admin_tournament_render_edit_modal(action, admin_event, admin_tournament)
 
     @post(
         path='/admin-tournament-update',
@@ -262,6 +267,9 @@ class AdminTournamentController(AAdminController):
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
+        if action == 'close':
+            return self._admin_render_index(
+                request, event_loader, admin_event=admin_event, admin_event_selector='@tournaments')
         admin_tournament: NewTournament | None = None
         match action:
             case 'update' | 'delete' | 'clone':
@@ -275,7 +283,7 @@ class AdminTournamentController(AAdminController):
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
-        stored_tournament: StoredTournament = self._admin_validate_tournament_update_data(
+        stored_tournament: StoredTournament | None = self._admin_validate_tournament_update_data(
             action, admin_event, admin_tournament, data)
         if stored_tournament.errors:
             return self._admin_tournament_render_edit_modal(
@@ -285,24 +293,28 @@ class AdminTournamentController(AAdminController):
                 case 'update':
                     stored_tournament = event_database.update_stored_tournament(stored_tournament)
                     Message.success(request, f'Le tournoi [{stored_tournament.uniq_id}] a été modifié.')
+                    stored_tournament = None
                 case 'create':
                     stored_tournament = event_database.add_stored_tournament(stored_tournament)
                     Message.success(request, f'Le tournoi [{stored_tournament.uniq_id}] a été créé.')
                 case 'delete':
                     event_database.delete_stored_tournament(admin_tournament.id)
                     Message.success(request, f'Le tournoi [{admin_tournament.uniq_id}] a été supprimé.')
+                    stored_tournament = None
                 case 'clone':
                     stored_tournament = event_database.clone_stored_tournament(
                         admin_tournament.id, stored_tournament.uniq_id, stored_tournament.name, stored_tournament.path,
                         stored_tournament.filename, stored_tournament.ffe_id, stored_tournament.ffe_password, )
                     Message.success(
                         request,
-                        f'Le tournoi [{admin_tournament.uniq_id}] a été dupliqué.'
-                        f'([{stored_tournament.uniq_id}]).')
+                        f'Le tournoi [{admin_tournament.uniq_id}] a été dupliqué ([{stored_tournament.uniq_id}]).')
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        event_loader.clear_cache(admin_event.uniq_id)
         admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
-        return self._admin_render_index(
-            request, event_loader, admin_event=admin_event, admin_event_selector='@tournaments')
+        if stored_tournament:
+            admin_tournament = admin_event.tournaments_by_id[stored_tournament.id]
+            return self._admin_tournament_render_edit_modal('update', admin_event, admin_tournament)
+        else:
+            return self._admin_render_index(
+                request, event_loader, admin_event=admin_event, admin_event_selector='@tournaments')

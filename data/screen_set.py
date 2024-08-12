@@ -611,7 +611,6 @@ class NewScreenSet:
         return self.name
 
     def _extract_data(self, items: list[Any]):
-        logger.warning(f'EXTRACT_DATA(items={items})')
         if not items:
             self.items_lists = [[], ] * self.columns
             return
@@ -790,7 +789,6 @@ class NewScreenSet:
 
     def __str__(self):
         if self.tournament:
-            return f'first_player_by_name={self.first_player_by_name}, last_player_by_name={self.last_player_by_name}, '
-            #return f'Tournoi {self.tournament.uniq_id} ({self.numbers_str})'
+            return f'Tournoi {self.tournament.uniq_id} ({self.numbers_str})'
         else:
             return f'Tournoi non défini ({self.numbers_str})'

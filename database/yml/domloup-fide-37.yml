@@ -4,12 +4,12 @@ update_password: "mot_de_passe"
 record_illegal_moves: 0
 allow_results_deletion: false
 chessevents:
-  domloup-fide:
+  domloup-fide-37:
     user_id: C69548
     password: "Find it!"
     event_id: "BRE_35_domloupfide37"
 timers:
-  timer:
+  chronometre:
     hours:
       ouverture-pointage-sms:
         date_str: "2024-08-24"
@@ -45,49 +45,48 @@ tournaments:
     name: "Tournoi A"
     ffe_id: 999990
     ffe_password: "ABCDEFGHIJ"
-    chessevent_uniq_id: "domloup-fide"
+    chessevent_uniq_id: "domloup-fide-37"
     chessevent_tournament_name: "Tournoi A"
   B:
     filename: "domloup-fide-37-b"
     name: "Tournoi B"
     ffe_id: 999991
     ffe_password: "ABCDEFGHIJ"
-    chessevent_uniq_id: "domloup-fide"
+    chessevent_uniq_id: "domloup-fide-37"
     chessevent_tournament_name: "Tournoi B"
   C:
     filename: "domloup-fide-37-c"
     name: "Tournoi C"
     ffe_id: 999992
     ffe_password: "ABCDEFGHIJ"
-    chessevent_uniq_id: "domloup-fide"
+    chessevent_uniq_id: "domloup-fide-37"
     chessevent_tournament_name: "Tournoi C"
   D:
     filename: "domloup-fide-37-d"
     name: "Tournoi D"
     ffe_id: 999993
     ffe_password: "ABCDEFGHIJ"
-    chessevent_uniq_id: "domloup-fide"
+    chessevent_uniq_id: "domloup-fide-37"
     chessevent_tournament_name: "Tournoi D"
   E:
     filename: "domloup-fide-37-e"
     name: "Tournoi E"
     ffe_id: 999994
     ffe_password: "ABCDEFGHIJ"
-    chessevent_uniq_id: "domloup-fide"
     chessevent_tournament_name: "Tournoi E"
   F:
     filename: "domloup-fide-37-f"
     name: "Tournoi F"
     ffe_id: 999995
     ffe_password: "ABCDEFGHIJ"
-    chessevent_uniq_id: "domloup-fide"
+    chessevent_uniq_id: "domloup-fide-37"
     chessevent_tournament_name: "Tournoi F"
 screens:
   saisie-A:
     name: "Tournoi A"
     type: "boards"
     menu: "@update"
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: true
     sets:
       -
@@ -96,7 +95,7 @@ screens:
     name: "Tournoi B"
     type: "boards"
     menu: "@update"
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: true
     sets:
       -
@@ -105,7 +104,7 @@ screens:
     name: "Tournoi C"
     type: "boards"
     menu: "@update"
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: true
     sets:
       -
@@ -114,7 +113,7 @@ screens:
     name: "Tournoi D"
     type: "boards"
     menu: "@update"
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: true
     sets:
       -
@@ -123,7 +122,7 @@ screens:
     name: "Tournoi E"
     type: "boards"
     menu: "@update"
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: true
     sets:
       -
@@ -132,7 +131,7 @@ screens:
     name: "Tournoi F"
     type: "boards"
     menu: "@update"
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: true
     sets:
       -
@@ -141,7 +140,7 @@ screens:
     name: "Tournois A et B"
     type: "boards"
     menu:
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: false
     sets:
       -
@@ -152,7 +151,7 @@ screens:
     name: "Tournois C et D"
     type: "boards"
     menu:
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: false
     sets:
       -
@@ -163,7 +162,7 @@ screens:
     name: "Tournois E et F"
     type: "boards"
     menu:
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: false
     sets:
       -
@@ -174,7 +173,7 @@ screens:
     name: "Tournoi A"
     type: "players"
     menu:
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: false
     players_show_unpaired: true
     sets:
@@ -184,7 +183,7 @@ screens:
     name: "Tournoi B"
     type: "players"
     menu:
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: false
     players_show_unpaired: true
     sets:
@@ -194,7 +193,7 @@ screens:
     name: "Tournoi C"
     type: "players"
     menu:
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: false
     players_show_unpaired: true
     sets:
@@ -204,7 +203,7 @@ screens:
     name: "Tournoi D"
     type: "players"
     menu:
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: false
     players_show_unpaired: true
     sets:
@@ -214,7 +213,7 @@ screens:
     name: "Tournoi E"
     type: "players"
     menu:
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: false
     players_show_unpaired: true
     sets:
@@ -224,7 +223,7 @@ screens:
     name: "Tournoi F"
     type: "players"
     menu:
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     boards_update: false
     players_show_unpaired: true
     sets:
@@ -232,11 +231,11 @@ screens:
         tournament_uniq_id: "F"
   resultats:
     type: "results"
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     results_limit: 20
   resultats-ABC:
     type: "results"
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     results_limit: 20
     results_tournament_uniq_ids:
       - A
@@ -244,9 +243,19 @@ screens:
       - C
   resultats-DEF:
     type: "results"
-    timer_uniq_id: "timer"
+    timer_uniq_id: "chronometre"
     results_limit: 20
     results_tournament_uniq_ids:
       - D
       - E
       - F
+rotators:
+  resultats:
+    screen_uniq_ids:
+      - "resultats-ABC"
+      - "resultats-DEF"
+  affichage:
+    screen_uniq_ids:
+      - "affichage-AB"
+      - "affichage-CD"
+      - "affichage-EF"

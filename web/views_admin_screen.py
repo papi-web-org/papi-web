@@ -139,14 +139,58 @@ class AdminScreenController(AAdminController):
             errors=errors,
         )
 
-    @classmethod
     def _admin_screen_render_edit_modal(
-            cls, action: str,
+            self, action: str,
             admin_event: NewEvent,
             admin_screen: ANewScreen | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        if data is None:
+            data = {}
+            if admin_screen:
+                data: dict[str, str] = {}
+                match action:
+                    case 'update':
+                        data['uniq_id'] = self.value_to_form_data(admin_screen.stored_screen.uniq_id)
+                    case 'create' | 'clone':
+                        data['uniq_id'] = ''
+                    case 'delete':
+                        pass
+                    case _:
+                        raise ValueError(f'action=[{action}]')
+                match action:
+                    case 'update' | 'clone':
+                        data['name'] = self.value_to_form_data(admin_screen.stored_screen.name)
+                        data['columns'] = self.value_to_form_data(admin_screen.stored_screen.columns)
+                        data['menu_text'] = self.value_to_form_data(admin_screen.stored_screen.menu_text)
+                        data['menu'] = self.value_to_form_data(admin_screen.stored_screen.menu)
+                        data['timer_id'] = self.value_to_form_data(admin_screen.stored_screen.timer_id)
+                        match admin_screen.type:
+                            case ScreenType.Boards:
+                                pass
+                            case ScreenType.Players:
+                                data['players_show_unpaired'] = self.value_to_form_data(
+                                    admin_screen.stored_screen.players_show_unpaired)
+                            case ScreenType.Results:
+                                data['results_limit'] = self.value_to_form_data(
+                                    admin_screen.stored_screen.results_limit)
+                                for tournament_id in admin_event.tournaments_by_id:
+                                    data[f'results_tournament_{tournament_id}'] = self.value_to_form_data(
+                                        tournament_id in admin_screen.stored_screen.results_tournament_ids)
+                            case _:
+                                raise ValueError(f'action={action}')
+                    case 'create':
+                        data['type'] = ''
+                    case 'delete':
+                        pass
+                    case _:
+                        raise ValueError(f'action=[{action}]')
+            stored_screen: StoredScreen = self._admin_validate_screen_update_data(
+                action, admin_event, admin_screen, data)
+            errors = stored_screen.errors
+        if errors is None:
+            errors = {}
         return HTMXTemplate(
             template_name='admin_screen_edit_modal.html',
             re_swap='innerHTML',
@@ -157,9 +201,9 @@ class AdminScreenController(AAdminController):
                 'admin_event': admin_event,
                 'admin_screen': admin_screen,
                 'data': data,
-                'screen_type_options': cls._get_screen_type_options(results_screen_allowed=True),
-                'timer_options': cls._get_timer_options(admin_event),
-                'players_show_unpaired_options': cls._get_players_show_unpaired_options(),
+                'screen_type_options': self._get_screen_type_options(results_screen_allowed=True),
+                'timer_options': self._get_timer_options(admin_event),
+                'players_show_unpaired_options': self._get_players_show_unpaired_options(),
                 'errors': errors,
             })
 
@@ -192,39 +236,7 @@ class AdminScreenController(AAdminController):
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
-        data: dict[str, str] = {}
-        match action:
-            case 'update':
-                data['uniq_id'] = self.value_to_form_data(admin_screen.stored_screen.uniq_id)
-            case 'create' | 'clone':
-                data['uniq_id'] = ''
-            case 'delete':
-                pass
-            case _:
-                raise ValueError(f'action=[{action}]')
-        match action:
-            case 'update' | 'clone':
-                data['name'] = self.value_to_form_data(admin_screen.stored_screen.name)
-                data['columns'] = self.value_to_form_data(admin_screen.stored_screen.columns)
-                data['menu_text'] = self.value_to_form_data(admin_screen.stored_screen.menu_text)
-                data['menu'] = self.value_to_form_data(admin_screen.stored_screen.menu)
-                data['timer_id'] = self.value_to_form_data(admin_screen.stored_screen.timer_id)
-                data['players_show_unpaired'] = self.value_to_form_data(
-                    admin_screen.stored_screen.players_show_unpaired)
-                data['results_limit'] = self.value_to_form_data(admin_screen.stored_screen.results_limit)
-                for tournament_id in admin_event.tournaments_by_id:
-                    data[f'results_tournament_{tournament_id}'] = self.value_to_form_data(
-                        tournament_id in admin_screen.stored_screen.results_tournament_ids)
-            case 'create':
-                data['type'] = ''
-            case 'delete':
-                pass
-            case _:
-                raise ValueError(f'action=[{action}]')
-        stored_screen: StoredScreen = self._admin_validate_screen_update_data(
-            action, admin_event, admin_screen, data)
-        return self._admin_screen_render_edit_modal(
-            action, admin_event, admin_screen, data, stored_screen.errors)
+        return self._admin_screen_render_edit_modal(action, admin_event, admin_screen)
 
     @post(
         path='/admin-screen-update',
@@ -242,6 +254,9 @@ class AdminScreenController(AAdminController):
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
+        if action == 'close':
+            return self._admin_render_index(
+                request, event_loader, admin_event=admin_event, admin_event_selector='@screens')
         admin_screen: ANewScreen | None = None
         match action:
             case 'update' | 'delete' | 'clone':
@@ -255,7 +270,7 @@ class AdminScreenController(AAdminController):
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
-        stored_screen: StoredScreen = self._admin_validate_screen_update_data(
+        stored_screen: StoredScreen | None = self._admin_validate_screen_update_data(
             action, admin_event, admin_screen, data)
         if stored_screen.errors:
             return self._admin_screen_render_edit_modal(
@@ -265,12 +280,14 @@ class AdminScreenController(AAdminController):
                 case 'update':
                     stored_screen = event_database.update_stored_screen(stored_screen)
                     Message.success(request, f'L\'écran [{stored_screen.uniq_id}] a été modifié.')
+                    stored_screen = None
                 case 'create':
                     stored_screen = event_database.add_stored_screen(stored_screen)
                     Message.success(request, f'L\'écran [{stored_screen.uniq_id}] a été créé.')
                 case 'delete':
                     event_database.delete_stored_screen(admin_screen.id)
                     Message.success(request, f'L\'écran [{admin_screen.uniq_id}] a été supprimé.')
+                    stored_screen = None
                 case 'clone':
                     stored_screen = event_database.clone_stored_screen(
                         admin_screen.id, stored_screen.uniq_id, self.form_data_to_str_or_none(data, 'name'))
@@ -280,10 +297,13 @@ class AdminScreenController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        event_loader.clear_cache(admin_event.uniq_id)
         admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
-        return self._admin_render_index(
-            request, event_loader, admin_event=admin_event, admin_event_selector='@screens')
+        if stored_screen:
+            admin_screen = admin_event.basic_screens_by_id[stored_screen.id]
+            return self._admin_screen_render_edit_modal('update', admin_event, admin_screen=admin_screen)
+        else:
+            return self._admin_render_index(
+                request, event_loader, admin_event=admin_event, admin_event_selector='@screens')
 
     def _admin_validate_screen_set_update_data(
             self,
@@ -496,7 +516,6 @@ class AdminScreenController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        event_loader.clear_cache(admin_event.uniq_id)
         admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
         admin_screen = admin_event.basic_screens_by_id[admin_screen.id]
         if stored_screen_set:

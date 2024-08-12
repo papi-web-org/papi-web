@@ -190,20 +190,6 @@
                             </div>
                             <div class="col-6">
                                 {% with id='allow-results-deletion', name='allow_results_deletion' %}
-                                    <!--div class="row">
-                                        <div class="col-auto">
-                                            <input
-                                                    name="{{ name }}"
-                                                    type="checkbox" id="{{ id }}"
-                                                    class="{% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                                    aria-describedby="{{ id }}-help {{ id }}-error"
-                                                    value="1"
-                                                    {% if data[name] %}checked{% endif %} />
-                                        </div>
-                                        <div class="col-auto">
-                                            <label for="{{ id }}" class="form-label">Suppression des résultats entrés</label>
-                                        </div>
-                                    </div-->
                                     <label for="{{ id }}" class="form-label">Suppression des résultats entrés :</label>
                                     <select
                                             name="{{ name }}"

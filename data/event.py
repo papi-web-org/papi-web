@@ -11,7 +11,7 @@ from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.chessevent import ChessEvent, ChessEventBuilder, NewChessEvent
 from data.family import FamilyBuilder, NewFamily
-from data.rotator import Rotator, RotatorBuilder
+from data.rotator import Rotator, RotatorBuilder, NewRotator
 from data.screen import AScreen, ScreenBuilder, ANewScreen, NewBoardsScreen, NewPlayersScreen, NewResultsScreen
 from data.template import Template, TemplateBuilder
 from data.timer import Timer, TimerBuilder, NewTimer
@@ -321,7 +321,8 @@ class NewEvent:
         self.families_by_id: dict[int, NewFamily] = {}
         self.families_by_uniq_id: dict[str, NewFamily] = {}
         self.family_screens_by_uniq_id: dict[str, ANewScreen] = {}
-        self.rotators_by_id: dict[str, Rotator] = {}
+        self.rotators_by_id: dict[int, NewRotator] = {}
+        self.rotators_by_uniq_id: dict[str, NewRotator] = {}
         self.timers_by_id: dict[int, NewTimer] = {}
         self.timers_by_uniq_id: dict[str, NewTimer] = {}
         self._timer_colors: dict[int, str] | None = None
@@ -497,7 +498,10 @@ class NewEvent:
                 self.family_screens_by_uniq_id[screen.uniq_id] = screen
 
     def _build_rotators(self):
-        pass
+        for stored_rotator in self.stored_event.stored_rotators:
+            rotator: NewRotator = NewRotator(self, stored_rotator)
+            self.rotators_by_uniq_id[stored_rotator.uniq_id] = rotator
+            self.rotators_by_id[stored_rotator.id] = rotator
 
     def _set_screen_menus(self):
         view_menu_screens: list[ANewScreen] = []

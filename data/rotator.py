@@ -1,9 +1,19 @@
+from contextlib import suppress
 from logging import Logger
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+from common.papi_web_config import PapiWebConfig
+from data.family import NewFamily
+
+if TYPE_CHECKING:
+    from data.event import NewEvent
+
 from common.config_reader import ConfigReader
 from common.logger import get_logger
-from data.screen import AScreen
+from data.screen import AScreen, ANewScreen
+from database.store import StoredRotator
 
 logger: Logger = get_logger()
 
@@ -123,3 +133,49 @@ class RotatorBuilder:
             self._config_reader.add_warning('aucun écran, écran rotatif ignoré', section_key, key)
             return None
         return Rotator(rotator_id, delay, rotator_screens)
+
+
+class NewRotator:
+    def __init__(self, event: 'NewEvent', stored_rotator: StoredRotator, ):
+        self.event: 'NewEvent' = event
+        self.stored_rotator: StoredRotator = stored_rotator
+        self._families: list[NewFamily] | None = None
+        self._screens: list[ANewScreen] | None = None
+
+    @property
+    def id(self) -> int:
+        return self.stored_rotator.id
+
+    @property
+    def uniq_id(self) -> str:
+        return self.stored_rotator.uniq_id
+
+    @property
+    def delay(self) -> int:
+        return self.stored_rotator.delay if self.stored_rotator.delay is not None \
+            else PapiWebConfig().default_rotator_delay
+
+    @property
+    def show_menus(self) -> bool:
+        return self.stored_rotator.show_menus if self.stored_rotator.show_menus is not None \
+            else PapiWebConfig().default_rotator_show_menus
+
+    @property
+    def screens(self) -> list[ANewScreen]:
+        if self._screens is None:
+            self._screens = []
+            if self.stored_rotator.screen_ids:
+                for screen_id in self.stored_rotator.screen_ids:
+                    with suppress(KeyError):
+                        self._screens.append(self.event.basic_screens_by_id[screen_id])
+        return self._screens
+
+    @property
+    def families(self) -> list[NewFamily]:
+        if self._families is None:
+            self._families = []
+            if self.stored_rotator.family_ids:
+                for family_id in self.stored_rotator.family_ids:
+                    with suppress(KeyError):
+                        self._families.append(self.event.families_by_id[family_id])
+        return self._families

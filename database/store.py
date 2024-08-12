@@ -18,8 +18,8 @@ class StoredTimerHour:
 class StoredTimer:
     id: int | None
     uniq_id: str
-    colors: dict[int, str | None]
-    delays: dict[int, int | None]
+    colors: dict[int, str | None] | None
+    delays: dict[int, int | None] | None
     stored_timer_hours: list[StoredTimerHour] = field(default_factory=list[StoredTimerHour])
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
@@ -123,9 +123,10 @@ class StoredFamily:
 class StoredRotator:
     id: int | None
     uniq_id: str
-    families_str: str | None
-    screens_str: str | None
+    family_ids: list[int] | None
+    screen_ids: list[int] | None
     delay: int | None
+    show_menus: bool | None
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
@@ -145,12 +146,9 @@ class StoredEvent:
     stored_families: list[StoredFamily] = field(default_factory=list[StoredFamily])
     stored_rotators: list[StoredRotator] = field(default_factory=list[StoredRotator])
     version: str | None = field(default=None)
-    timer_colors: dict[int, str | None] = field(default_factory=dict[int, str | None])
-    timer_delays: dict[int, int | None] = field(default_factory=dict[int, int | None])
+    timer_colors: dict[int, str | None] = field(default=None)
+    timer_delays: dict[int, int | None] = field(default=None)
     errors: dict[str, str] = field(default_factory=dict[str, str])
-
-    def __post_init__(self):
-        pass
 
 
 @dataclass

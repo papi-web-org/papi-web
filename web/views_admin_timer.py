@@ -33,26 +33,27 @@ class AdminTimerController(AAdminController):
             admin_event: NewEvent,
             admin_timer: NewTimer,
             data: dict[str, str] | None = None,
-    ) -> StoredTimer:
+    ) -> StoredTimer | None:
         errors: dict[str, str] = {}
         if data is None:
             data = {}
-        uniq_id: str = self.form_data_to_str_or_none(data, 'uniq_id')
-        if action == 'delete':
-            pass
+        match action:
+            case 'delete' | 'create' | 'clone' | 'update':
+                uniq_id: str = self.form_data_to_str_or_none(data, 'uniq_id')
+            case _:
+                raise ValueError(f'action=[{action}]')
+        if not uniq_id:
+            errors['uniq_id'] = 'Veuillez entrer l\'identifiant du chronomètre.'
         else:
-            if not uniq_id:
-                errors['uniq_id'] = 'Veuillez entrer l\'identifiant du chronomètre.'
-            else:
-                match action:
-                    case 'create' | 'clone':
-                        if uniq_id in admin_event.timers_by_uniq_id:
-                            errors['uniq_id'] = f'Le chronomètre [{uniq_id}] existe déjà.'
-                    case 'update':
-                        if uniq_id != admin_timer.uniq_id and uniq_id in admin_event.timers_by_uniq_id:
-                            errors['uniq_id'] = f'Le chronomètre [{uniq_id}] existe déjà.'
-                    case _:
-                        raise ValueError(f'action=[{action}]')
+            match action:
+                case 'create' | 'clone':
+                    if uniq_id in admin_event.timers_by_uniq_id:
+                        errors['uniq_id'] = f'Le chronomètre [{uniq_id}] existe déjà.'
+                case 'update':
+                    if uniq_id != admin_timer.uniq_id and uniq_id in admin_event.timers_by_uniq_id:
+                        errors['uniq_id'] = f'Le chronomètre [{uniq_id}] existe déjà.'
+                case _:
+                    raise ValueError(f'action=[{action}]')
         colors: dict[int, str | None] = {i: None for i in range(1, 4)}
         color_checkboxes: dict[int, bool | None] = {i: None for i in range(1, 4)}
         delays: dict[int, int | None] = {i: None for i in range(1, 4)}
@@ -71,7 +72,7 @@ class AdminTimerController(AAdminController):
                         delays[i] = self.form_data_to_int_or_none(data, field, minimum=1)
                     except ValueError:
                         errors[field] = f'Le délai [{data[field]}] n\'est pas valide (attendu un entier positif).'
-            case 'delete' | 'create' | 'clone':
+            case 'create' | 'clone':
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
@@ -83,14 +84,46 @@ class AdminTimerController(AAdminController):
             errors=errors,
         )
 
-    @classmethod
     def _admin_timer_render_edit_modal(
-            cls, action: str,
+            self, action: str,
             admin_event: NewEvent,
             admin_timer: NewTimer | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        if data is None:
+            data = {}
+            if admin_timer:
+                match action:
+                    case 'update':
+                        data['uniq_id'] = self.value_to_form_data(admin_timer.stored_timer.uniq_id)
+                    case 'create' | 'clone':
+                        data['uniq_id'] = ''
+                    case 'delete':
+                        pass
+                    case _:
+                        raise ValueError(f'action=[{action}]')
+                match action:
+                    case 'update' | 'clone':
+                        for i in range(1, 4):
+                            data[f'color_{i}'] = self.value_to_form_data(admin_timer.colors[i])
+                            data[f'color_{i}_checkbox'] = self.value_to_form_data(
+                                admin_timer.stored_timer.colors[i] is None)
+                            data[f'delay_{i}'] = self.value_to_form_data(admin_timer.stored_timer.delays[i])
+                    case 'create':
+                        for i in range(1, 4):
+                            data[f'color_{i}'] = ''
+                            data[f'color_{i}_checkbox'] = ''
+                            data[f'delay_{i}'] = ''
+                    case 'delete':
+                        pass
+                    case _:
+                        raise ValueError(f'action=[{action}]')
+            stored_timer: StoredTimer = self._admin_validate_timer_update_data(
+                action, admin_event, admin_timer, data)
+            errors = stored_timer.errors
+        if errors is None:
+            errors = {}
         return HTMXTemplate(
             template_name='admin_timer_edit_modal.html',
             re_swap='innerHTML',
@@ -101,7 +134,7 @@ class AdminTimerController(AAdminController):
                 'admin_event': admin_event,
                 'admin_timer': admin_timer,
                 'data': data,
-                'timer_color_texts': cls._get_timer_color_texts(admin_event.timer_delays),
+                'timer_color_texts': self._get_timer_color_texts(admin_event.timer_delays),
                 'errors': errors,
             })
 
@@ -137,35 +170,7 @@ class AdminTimerController(AAdminController):
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
-        data: dict[str, str] = {}
-        match action:
-            case 'update':
-                data['uniq_id'] = self.value_to_form_data(admin_timer.stored_timer.uniq_id)
-            case 'create' | 'clone':
-                data['uniq_id'] = ''
-            case 'delete':
-                pass
-            case _:
-                raise ValueError(f'action=[{action}]')
-        match action:
-            case 'update' | 'clone':
-                for i in range(1, 4):
-                    data[f'color_{i}'] = self.value_to_form_data(admin_timer.colors[i])
-                    data[f'color_{i}_checkbox'] = self.value_to_form_data(admin_timer.stored_timer.colors[i] is None)
-                    data[f'delay_{i}'] = self.value_to_form_data(admin_timer.stored_timer.delays[i])
-            case 'create':
-                for i in range(1, 4):
-                    data[f'color_{i}'] = ''
-                    data[f'color_{i}_checkbox'] = ''
-                    data[f'delay_{i}'] = ''
-            case 'delete':
-                pass
-            case _:
-                raise ValueError(f'action=[{action}]')
-        stored_timer: StoredTimer = self._admin_validate_timer_update_data(
-            action, admin_event, admin_timer, data)
-        return self._admin_timer_render_edit_modal(
-            action, admin_event, admin_timer, data, stored_timer.errors)
+        return self._admin_timer_render_edit_modal(action, admin_event, admin_timer)
 
     @post(
         path='/admin-timer-update',
@@ -186,6 +191,9 @@ class AdminTimerController(AAdminController):
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
+        if action == 'close':
+            return self._admin_render_index(
+                request, event_loader, admin_event=admin_event, admin_event_selector='@timers')
         admin_timer: NewTimer | None = None
         match action:
             case 'update' | 'delete' | 'clone':
@@ -195,11 +203,11 @@ class AdminTimerController(AAdminController):
                 except KeyError:
                     Message.error(request, f'Le chronomètre [{admin_timer_id}] est introuvable.')
                     return self._render_messages(request)
-            case 'create':
+            case 'create' | 'close':
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
-        stored_timer: StoredTimer = self._admin_validate_timer_update_data(
+        stored_timer: StoredTimer | None = self._admin_validate_timer_update_data(
             action, admin_event, admin_timer, data)
         if stored_timer.errors:
             return self._admin_timer_render_edit_modal(
@@ -209,12 +217,14 @@ class AdminTimerController(AAdminController):
                 case 'update':
                     stored_timer = event_database.update_stored_timer(stored_timer)
                     Message.success(request, f'Le chronomètre [{stored_timer.uniq_id}] a été modifié.')
+                    stored_timer = None
                 case 'create':
                     stored_timer = event_database.add_stored_timer(stored_timer)
                     Message.success(request, f'Le chronomètre [{stored_timer.uniq_id}] a été créé.')
                 case 'delete':
                     event_database.delete_stored_timer(admin_timer.id)
                     Message.success(request, f'Le chronomètre [{admin_timer.uniq_id}] a été supprimé.')
+                    stored_timer = None
                 case 'clone':
                     stored_timer = event_database.clone_stored_timer(
                         admin_timer.id, stored_timer.uniq_id, )
@@ -224,10 +234,13 @@ class AdminTimerController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        event_loader.clear_cache(admin_event.uniq_id)
         admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
-        return self._admin_render_index(
-            request, event_loader, admin_event=admin_event, admin_event_selector='@timers')
+        if stored_timer:
+            admin_timer = admin_event.timers_by_id[stored_timer.id]
+            return self._admin_timer_render_edit_modal('update', admin_event, admin_timer, )
+        else:
+            return self._admin_render_index(
+                request, event_loader, admin_event=admin_event, admin_event_selector='@timers')
 
     def _admin_validate_timer_hour_update_data(
             self,
@@ -383,14 +396,17 @@ class AdminTimerController(AAdminController):
             ],
     ) -> Template | Reswap:
         event_loader: EventLoader = EventLoader()
+        action: str = self.form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
-        action: str = self.form_data_to_str_or_none(data, 'action')
-        admin_timer: NewTimer | None = None
+        if action == 'close':
+            return self._admin_render_index(
+                event_loader=event_loader, admin_event=admin_event, admin_event_selector='@timers')
+        admin_timer: NewTimer
         match action:
             case 'delete' | 'clone' | 'update' | 'add' | 'reorder' | 'cancel':
                 admin_timer_id: int = self.form_data_to_int_or_none(data, 'admin_timer_id')
@@ -399,8 +415,6 @@ class AdminTimerController(AAdminController):
                 except KeyError:
                     Message.error(request, f'Le chronomètre [{admin_timer_id}] est introuvable.')
                     return self._render_messages(request)
-            case 'close':
-                pass
             case _:
                 raise ValueError(f'action=[{action}]')
         admin_timer_hour: NewTimerHour | None = None
@@ -419,9 +433,6 @@ class AdminTimerController(AAdminController):
         stored_timer_hour: StoredTimerHour | None = None
         with (EventDatabase(admin_event.uniq_id, write=True) as event_database):
             match action:
-                case 'close':
-                    return self._admin_render_index(
-                        request, event_loader, admin_event=admin_event, admin_event_selector='@timers')
                 case 'update':
                     stored_timer_hour: StoredTimerHour = self._admin_validate_timer_hour_update_data(
                         admin_timer, admin_timer_hour, admin_timer.get_previous_timer_hour(admin_timer_hour), data)
@@ -444,7 +455,6 @@ class AdminTimerController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        event_loader.clear_cache(admin_event.uniq_id)
         admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
         admin_timer = admin_event.timers_by_id[admin_timer.id]
         if stored_timer_hour:

@@ -334,7 +334,6 @@ class AdminFamilyController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        event_loader.clear_cache(admin_event.uniq_id)
         admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
         return self._admin_render_index(
             request, event_loader, admin_event=admin_event, admin_event_selector='@families')

@@ -195,12 +195,11 @@ class AdminChessEventController(AAdminController):
                     stored_chessevent = event_database.clone_stored_chessevent(admin_chessevent.id)
                     Message.success(
                         request,
-                        f'La connexion à ChessEvent [{admin_chessevent.uniq_id}] a été dupliquée.'
+                        f'La connexion à ChessEvent [{admin_chessevent.uniq_id}] a été dupliquée '
                         f'([{stored_chessevent.uniq_id}]).')
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        event_loader.clear_cache(admin_event.uniq_id)
         admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
         return self._admin_render_index(
             request, event_loader, admin_event=admin_event, admin_event_selector='@chessevents')

@@ -79,7 +79,15 @@
                         </button>
                     </div>
                     <div class="col col-6 text-end">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi-x-circle-fill"></i> Annuler</button>
+                        <button
+                                class="btn btn-secondary text-nowrap"
+                                hx-post="{{ url_for('admin-timer-update') }}"
+                                hx-vals='{"action": "close", "admin_event_uniq_id": "{{ admin_event.uniq_id }}" }'
+                                hx-swap="multi:#messages,#admin-header,#admin-content"
+                                hx-indicator="#please-wait"
+                                data-bs-dismiss="modal">
+                            <i class="bi-x-circle-fill"></i> Annuler
+                        </button>
                     </div>
                 </div>
             </div>

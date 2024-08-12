@@ -23,10 +23,10 @@
 <table class="table table-striped table-sm table-hover border-black">
     <thead class="table-dark position-sticky top-0">
         <tr>
-            <th scope="col" class="text-nowrap">[Id] / Nom</th>
-            <th scope="col">Évènement</th>
-            <th scope="col">Messages</th>
-            <th scope="col">&nbsp;</th>
+            <th scope="col" class="text-nowrap width-33">[Id] / Nom</th>
+            <th scope="col" class="text-nowrap width-33">Évènement</th>
+            <th scope="col" class="text-nowrap width-33">Messages</th>
+            <th scope="col" class="">&nbsp;</th>
         </tr>
     </thead>
     <tbody>
@@ -46,7 +46,7 @@
                                 [{{ event.uniq_id }}]
                             </div>
                             <div>
-                                [{{ event.name }}]
+                                {{ event.name }}
                             </div>
                         <td
                                 class="text-nowrap"
@@ -69,11 +69,11 @@
                             </div>
                             <div>
                                 <i class="bi-fullscreen" ></i>
-                                {{ event.screens_by_id|length }} écran{% if event.screens_by_id|length > 1 %}s{% endif %}
+                                {{ event.basic_screens_by_id|length }} écran{% if event.basic_screens_by_id|length > 1 %}s{% endif %}
                             </div>
                             <div>
                                 <i class="bi-arrows-fullscreen" ></i>
-                                {{ event.families_by_id|length }} familles{% if event.families_by_id|length > 1 %}s{% endif %}
+                                {{ event.families_by_id|length }} famille{% if event.families_by_id|length > 1 %}s{% endif %}
                             </div>
                             <div>
                                 <i class="bi-repeat" ></i>
@@ -103,7 +103,7 @@
                                 </div>
                             </td>
                         {% endwith %}
-                        <td class="text-end">
+                        <td class="text-nowrap text-end">
                             <button
                                     class="btn btn-sm btn-primary p-1"
                                     hx-post="{{ url_for('admin-update-header') }}"
