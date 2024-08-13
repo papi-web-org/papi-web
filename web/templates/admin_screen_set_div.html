@@ -8,7 +8,7 @@
                 hx-swap="innerHTML"
                 hx-trigger="end"
                 hx-indicator="#please-wait">
-            <div class="admin-screen-set-div edit {% if screen_set.error %}border-danger{% else %}border-secondary{% endif %}">
+            <div class="admin-screen-set-div edit border {% if screen_set.error %}border-danger{% else %}border-secondary{% endif %} px-1 mb-1">
                 <h3>
                     Propriétés
                 </h3>
@@ -178,66 +178,68 @@
             </div>
         </form>
     {% else %}
-        <div class="row admin-screen-set-div {% if screen_set.error %}border-danger{% else %}border-secondary{% endif %}">
-            <div class="col-10">
-                <div>
-                    <b>
-                        Tournoi :
-                        {% if screen_set.tournament %}
-                            {{ screen_set.tournament.name }}
+        <div class="admin-screen-set-div border {% if screen_set.error %}border-danger{% else %}border-secondary{% endif %} p-1 mb-1">
+            <div class="row">
+                <div class="col-10">
+                    <div>
+                        <b>
+                            Tournoi :
+                            {% if screen_set.tournament %}
+                                {{ screen_set.tournament.name }}
+                            {% else %}
+                                <span class="text-danger">non défini</span>
+                            {% endif %}
+                        </b>
+                    </div>
+                    <div>
+                        Sélection : {{ screen_set.numbers_str }}
+                    </div>
+                    <div>
+                        Nom :
+                        {% if screen_set.name %}
+                            {{ screen_set.name }}
                         {% else %}
-                            <span class="text-danger">non défini</span>
+                            <em>par défaut</em>
                         {% endif %}
-                    </b>
+                    </div>
+                    {% if screen_set.error %}
+                        <div class="text-danger">
+                            {{ screen_set.error }}
+                        </div>
+                    {%endif %}
                 </div>
-                <div>
-                    Sélection : {{ screen_set.numbers_str }}
-                </div>
-                <div>
-                    Nom :
-                    {% if screen_set.name %}
-                        {{ screen_set.name }}
-                    {% else %}
-                        <em>par défaut</em>
+                <div class="col-2 text-nowrap text-end">
+                    {% if not admin_screen_set %}
+                        <i class="bi-arrows-move"></i>
+                        <button
+                                class="btn btn-sm btn-primary text-nowrap"
+                                hx-post="{{ url_for('admin-screen-render-sets-modal') }}"
+                                hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait">
+                            <i class="bi-pencil-fill"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-primary text-nowrap"
+                                hx-post="{{ url_for('admin-screen-sets-update') }}"
+                                hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait">
+                            <i class="bi-copy"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-danger text-nowrap"
+                                hx-post="{{ url_for('admin-screen-sets-update') }}"
+                                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
+                                hx-target="#admin-screen-sets-modal"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait">
+                            <i class="bi-trash-fill"></i>
+                        </button>
                     {% endif %}
                 </div>
-                {% if screen_set.error %}
-                    <div class="text-danger">
-                        {{ screen_set.error }}
-                    </div>
-                {%endif %}
-            </div>
-            <div class="col-2 text-nowrap text-end">
-                {% if not admin_screen_set %}
-                    <i class="bi-arrows-move"></i>
-                    <button
-                            class="btn btn-sm btn-primary text-nowrap"
-                            hx-post="{{ url_for('admin-screen-render-sets-modal') }}"
-                            hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
-                            hx-target="#admin-modal-container"
-                            hx-swap="innerHTML"
-                            hx-indicator="#please-wait">
-                        <i class="bi-pencil-fill"></i>
-                    </button>
-                    <button
-                            class="btn btn-sm btn-primary text-nowrap"
-                            hx-post="{{ url_for('admin-screen-sets-update') }}"
-                            hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
-                            hx-target="#admin-modal-container"
-                            hx-swap="innerHTML"
-                            hx-indicator="#please-wait">
-                        <i class="bi-copy"></i>
-                    </button>
-                    <button
-                            class="btn btn-sm btn-danger text-nowrap"
-                            hx-post="{{ url_for('admin-screen-sets-update') }}"
-                            hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
-                            hx-target="#admin-screen-sets-modal"
-                            hx-swap="innerHTML"
-                            hx-indicator="#please-wait">
-                        <i class="bi-trash-fill"></i>
-                    </button>
-                {% endif %}
             </div>
         </div>
     {% endif %}

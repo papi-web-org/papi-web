@@ -8,7 +8,7 @@
                 hx-swap="innerHTML"
                 hx-trigger="end"
                 hx-indicator="#please-wait">
-            <div class="admin-timer-hour-div edit {% if timer_hour.error %}border-danger{% else %}border-secondary{% endif %}">
+            <div class="admin-timer-hour-div edit border {% if timer_hour.error %}border-danger{% else %}border-secondary{% endif %} px-1 mb-1">
                 <div class="row">
                     <div class="col-3">
                         {% with id='date-str', name='date_str' %}
@@ -140,46 +140,48 @@
             </div>
         </form>
     {% else %}
-        <div class="row admin-timer-hour-div {% if timer_hour.error %}border-danger{% else %}border-secondary{% endif %}">
-            <div class="col-10">
-                <b>{% if timer_hour.timestamp %}{% if timer_hour.stored_timer_hour.date_str %}{{ timer_hour.stored_timer_hour.date_str }} {%endif %}{{ timer_hour.stored_timer_hour.time_str }}{% else %}??/??/???? ??:??{% endif %}</b> :
-                {{ timer_hour.uniq_id }}
-                ({% if timer_hour.text_before %}{{ timer_hour.text_before }}{% else %}???{% endif %}
-                /
-                {% if timer_hour.text_after %}{{ timer_hour.text_after }}{% else %}???{% endif %})
-                {% if timer_hour.error %}<br/><span class="text-danger">{{ timer_hour.error }}</span>{%endif %}
-            </div>
-            <div class="col-2 text-nowrap text-end">
-                {% if not admin_timer_hour %}
-                    <i class="bi-arrows-move"></i>
-                    <button
-                            class="btn btn-sm btn-primary text-nowrap"
-                            hx-post="{{ url_for('admin-timer-render-hours-modal') }}"
-                            hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
-                            hx-target="#admin-modal-container"
-                            hx-swap="innerHTML"
-                            hx-indicator="#please-wait">
-                        <i class="bi-pencil-fill"></i>
-                    </button>
-                    <button
-                            class="btn btn-sm btn-primary text-nowrap"
-                            hx-post="{{ url_for('admin-timer-hours-update') }}"
-                            hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
-                            hx-target="#admin-modal-container"
-                            hx-swap="innerHTML"
-                            hx-indicator="#please-wait">
-                        <i class="bi-copy"></i>
-                    </button>
-                    <button
-                            class="btn btn-sm btn-danger text-nowrap"
-                            hx-post="{{ url_for('admin-timer-hours-update') }}"
-                            hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
-                            hx-target="#admin-timer-hours-modal"
-                            hx-swap="innerHTML"
-                            hx-indicator="#please-wait">
-                        <i class="bi-trash-fill"></i>
-                    </button>
-                {% endif %}
+        <div class="admin-timer-hour-div border {% if timer_hour.error %}border-danger{% else %}border-secondary{% endif %} p-1 mb-1">
+            <div class="row">
+                <div class="col-10">
+                    <b>{% if timer_hour.timestamp %}{% if timer_hour.stored_timer_hour.date_str %}{{ timer_hour.stored_timer_hour.date_str }} {%endif %}{{ timer_hour.stored_timer_hour.time_str }}{% else %}??/??/???? ??:??{% endif %}</b> :
+                    {{ timer_hour.uniq_id }}
+                    ({% if timer_hour.text_before %}{{ timer_hour.text_before }}{% else %}???{% endif %}
+                    /
+                    {% if timer_hour.text_after %}{{ timer_hour.text_after }}{% else %}???{% endif %})
+                    {% if timer_hour.error %}<br/><span class="text-danger">{{ timer_hour.error }}</span>{%endif %}
+                </div>
+                <div class="col-2 text-nowrap text-end">
+                    {% if not admin_timer_hour %}
+                        <i class="bi-arrows-move"></i>
+                        <button
+                                class="btn btn-sm btn-primary text-nowrap"
+                                hx-post="{{ url_for('admin-timer-render-hours-modal') }}"
+                                hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait">
+                            <i class="bi-pencil-fill"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-primary text-nowrap"
+                                hx-post="{{ url_for('admin-timer-hours-update') }}"
+                                hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait">
+                            <i class="bi-copy"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-danger text-nowrap"
+                                hx-post="{{ url_for('admin-timer-hours-update') }}"
+                                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
+                                hx-target="#admin-timer-hours-modal"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait">
+                            <i class="bi-trash-fill"></i>
+                        </button>
+                    {% endif %}
+                </div>
             </div>
         </div>
     {% endif %}

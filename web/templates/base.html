@@ -30,7 +30,7 @@
         {% endblock %}
     </head>
     <body hx-ext="multi-swap">
-        <div id="messages">
+        <div id="messages" class="width-33">
             {% include 'messages.html' %}
         </div>
         {% block header %}
@@ -39,7 +39,7 @@
             Body content
         {% endblock %}
         <div id="copyright-wrapper" class="copyright-wrapper">
-            <div id="copyright" class="copyright">
+            <div id="copyright" class="copyright fst-italic text-center">
                 Papi-web {{ papi_web_config.version }} - {{ papi_web_config.copyright }} - <a href="{{ papi_web_config.url }}" rel = "noopener noreferrer" target="_blank">{{ papi_web_config.url }}</a>
             </div>
         </div>

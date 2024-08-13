@@ -7,10 +7,6 @@ body {
 	background-position: center center;
 	overflow: auto !important;
 }
-.copyright {
-    text-align: center;
-    font-style: italic;
-}
 .please-wait {
     position: absolute;
     top: 50%;
@@ -29,54 +25,27 @@ body {
     position:fixed;
     top: 0.5rem;
     right: 0.5rem;
-    width: 33%;
     z-index: 1;
 }
-
-#messages .alert-danger {
-    background-color: rgba(248, 215, 218, 0.85);
-}
-#messages .alert-warning {
-    background-color: rgba(255, 243, 205, 0.85);
-}
-#messages .alert-info {
-    background-color: rgba(207, 244, 252, 0.85);
-}
-#messages .alert-success {
-    background-color: rgba(209, 231, 221, 0.85);
-}
-#messages .alert {
-    padding: 0.2rem 1.8rem 0.2rem 0.3rem;
-}
-#messages .alert button {
-    padding: 0.4rem;
-}
-
 .width-100 {
     width: 100%;
 }
-
 .width-50 {
     width: 50%;
 }
-
 .width-33 {
     width: 33%;
 }
-
 .width-25 {
     width: 25%;
 }
-
 .width-20 {
     width: 20%;
 }
-
 .modal-footer {
     display: block;
 }
-
 .modal-dialog {
-    max-width: 50%;
+    max-width: 75%;
     display: block;
 }

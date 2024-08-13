@@ -7,8 +7,8 @@ from litestar import Request
 class Message:
     text: str
     level: int
-    tag: str | None = field(default=None, init=False)
     html_class: str | None = field(default=None, init=False)
+    auto_remove: str | None = field(default=None, init=False)
 
     DEBUG = 10
     INFO = 20
@@ -16,19 +16,25 @@ class Message:
     WARNING = 30
     ERROR = 40
 
-    TAGS = {
-        DEBUG: 'alert-secondary',
-        INFO: 'alert-info',
-        SUCCESS: 'alert-success',
-        WARNING: 'alert-warning',
-        ERROR: 'alert-danger',
+    CLASS = {
+        DEBUG: 'border border-secondary bg-secondary-subtle',
+        INFO: 'border border-info bg-info-subtle',
+        SUCCESS: 'border border-success bg-success-subtle',
+        WARNING: 'border border-warning bg-success-warning-subtle',
+        ERROR: 'border border-danger bg-danger-subtle',
+    }
+
+    AUTO_REMOVE = {
+        DEBUG: True,
+        INFO: True,
+        SUCCESS: True,
+        WARNING: False,
+        ERROR: False,
     }
 
     def __post_init__(self):
-        try:
-            self.tag = self.TAGS[self.level]
-        except KeyError:
-            self.html_class = f'tag-{self.level}'
+        self.html_class: str = self.CLASS[self.level]
+        self.auto_remove: bool = self.AUTO_REMOVE[self.level]
 
     @staticmethod
     def _message(request: Request, text: str, level: int) -> None:
