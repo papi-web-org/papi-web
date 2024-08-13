@@ -51,7 +51,7 @@
                                             player-{{ tournament.uniq_id }}-{{ player.id }}"></i>
                                         {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}
                                     </td>
-                                    <td colspan="2"><em>{{ player.not_paired_str }}</em></td>
+                                    <td colspan="2"><span class="fst-italic">{{ player.not_paired_str }}</span></td>
                                 </tr>
                             {% endif %}
                         {% endfor %}

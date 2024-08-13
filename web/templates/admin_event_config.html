@@ -69,7 +69,7 @@
             <td class="text-nowrap">&nbsp;</td>
             <th scope="row" class="text-nowrap">Chronomètres</th>
             <td class="text-nowrap">
-                {% if admin_event.timers_by_id|length %}{{ admin_event.timers_by_id|length }}{% else %}<em>Aucun</em>{% endif %}
+                {% if admin_event.timers_by_id|length %}{{ admin_event.timers_by_id|length }}{% else %}<span class="fst-italic">Aucun</span>{% endif %}
             </td>
             <td class="text-nowrap">
                 <button
@@ -88,7 +88,7 @@
             <td class="text-nowrap">&nbsp;</td>
             <th scope="row" class="text-nowrap">Connexions à ChessEvent</th>
             <td class="text-nowrap">
-                {% if admin_event.chessevents_by_id|length %}{{ admin_event.chessevents_by_id|length }}{% else %}<em>Aucune</em>{% endif %}
+                {% if admin_event.chessevents_by_id|length %}{{ admin_event.chessevents_by_id|length }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}
             </td>
             <td class="text-nowrap">
                 <button
@@ -110,7 +110,7 @@
                 {% if admin_event.tournaments_by_uniq_id|length %}
                     {{ admin_event.tournaments_by_uniq_id|length }}
                 {% else %}
-                    <em>Aucun</em>
+                    <span class="fst-italic">Aucun</span>
                 {% endif %}
             </td>
             <td class="text-nowrap">
@@ -126,11 +126,11 @@
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Personnalisation CSS</th>
-            <td class="text-nowrap">{% if admin_event.css %}{{ admin_event.css }}{% else %}<em>Aucune</em>{% endif %}</td>
+            <td class="text-nowrap">{% if admin_event.css %}{{ admin_event.css }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}</td>
             <td class="text-nowrap">&nbsp;</td>
             <th scope="row" class="text-nowrap">Écrans</th>
             <td class="text-nowrap">
-                {% if admin_event.basic_screens_by_id|length %}{{ admin_event.basic_screens_by_id|length }}{% else %}<em>Aucun</em>{% endif %}
+                {% if admin_event.basic_screens_by_id|length %}{{ admin_event.basic_screens_by_id|length }}{% else %}<span class="fst-italic">Aucun</span>{% endif %}
             </td>
             <td class="text-nowrap">
                 <button
@@ -145,11 +145,11 @@
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Mot de passe de saisie des scores</th>
-            <td class="text-nowrap">{% if admin_event.update_password %}********{% else %}<em>Aucun</em>{% endif %}</td>
+            <td class="text-nowrap">{% if admin_event.update_password %}********{% else %}<span class="fst-italic">Aucun</span>{% endif %}</td>
             <td class="text-nowrap">&nbsp;</td>
             <th scope="row" class="text-nowrap">Familles d'écrans</th>
             <td class="text-nowrap">
-                {% if admin_event.families_by_id|length %}{{ admin_event.families_by_id|length }}{% else %}<em>Aucune</em>{% endif %}
+                {% if admin_event.families_by_id|length %}{{ admin_event.families_by_id|length }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}
             </td>
             <td class="text-nowrap">
                 <button

@@ -17,12 +17,12 @@
             <tr>
                 <th scope="row" class="text-nowrap">{{ tournament.uniq_id }}</th>
                 <td class="text-nowrap">{{ tournament.name }}</td>
-                <td class="text-nowrap">{% if tournament.file %}{{ tournament.file }}{% if tournament.download_allowed %} <a href="{{ url_for('download-tournament', event_uniq_id=admin_event.uniq_id, tournament_uniq_id=tournament.uniq_id) }}"><i class="bi-cloud-arrow-down"></i></a>{% endif %}{% else %}<em>-</em>{% endif %}</td>
-                <td class="text-nowrap text-center">{% if tournament.file %}{{ tournament.players_by_name_with_unpaired | length }}{% else %}<em>-</em>{% endif %}</td>
-                <td class="text-nowrap text-center">{% if tournament.file %}{{ tournament.current_round }} / {{ tournament.rounds }}{% else %}<em>-</em>{% endif %}</td>
-                <td class="text-nowrap text-center">{% if tournament.ffe_id %}{{ tournament.ffe_id }}{% else %}<em>Aucun</em>{% endif %}</td>
-                <td class="text-nowrap">{% if tournament.ffe_password %}**********{% else %}<em>Aucun</em>{% endif %}</td>
-                <td>{% if tournament.handicap %}<i class="bi-plus-slash-minus"></i><i class="bi-hourglass-split">Oui</i>{% else %}<em>-</em>{% endif %}</td>
+                <td class="text-nowrap">{% if tournament.file %}{{ tournament.file }}{% if tournament.download_allowed %} <a href="{{ url_for('download-tournament', event_uniq_id=admin_event.uniq_id, tournament_uniq_id=tournament.uniq_id) }}"><i class="bi-cloud-arrow-down"></i></a>{% endif %}{% else %}<span class="fst-italic">-</span>{% endif %}</td>
+                <td class="text-nowrap text-center">{% if tournament.file %}{{ tournament.players_by_name_with_unpaired | length }}{% else %}<span class="fst-italic">-</span>{% endif %}</td>
+                <td class="text-nowrap text-center">{% if tournament.file %}{{ tournament.current_round }} / {{ tournament.rounds }}{% else %}<span class="fst-italic">-</span>{% endif %}</td>
+                <td class="text-nowrap text-center">{% if tournament.ffe_id %}{{ tournament.ffe_id }}{% else %}<span class="fst-italic">Aucun</span>{% endif %}</td>
+                <td class="text-nowrap">{% if tournament.ffe_password %}**********{% else %}<span class="fst-italic">Aucun</span>{% endif %}</td>
+                <td>{% if tournament.handicap %}<i class="bi-plus-slash-minus"></i><i class="bi-hourglass-split">Oui</i>{% else %}<span class="fst-italic">-</span>{% endif %}</td>
             </tr>
         {% endfor %}
     </tbody>

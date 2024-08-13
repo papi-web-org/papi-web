@@ -91,11 +91,11 @@
                             </tr>
                             <tr>
                                 <th scope="row">Personnalisation CSS</th>
-                                <td>{% if event.css %}{{ event.css }}{% else %}<em>Aucune</em>{% endif %}</td>
+                                <td>{% if event.css %}{{ event.css }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}</td>
                             </tr>
                             <tr>
                                 <th scope="row">Mot de passe de saisie des scores</th>
-                                <td>{% if event.update_password %}********{% else %}<em>Aucun</em>{% endif %}</td>
+                                <td>{% if event.update_password %}********{% else %}<span class="fst-italic">Aucun</span>{% endif %}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -121,12 +121,12 @@
                                 <tr>
                                     <th scope="row">{{ tournament.uniq_id }}</th>
                                     <td>{{ tournament.name }}</td>
-                                    <td>{% if tournament.file %}{{ tournament.file }}{% if tournament.download_allowed %} <a href="{{ url_for('download-tournament', event_uniq_id=event.uniq_id, tournament_uniq_id=tournament.uniq_id) }}"><i class="bi-cloud-arrow-down"></i></a>{% endif %}{% else %}<em>-</em>{% endif %}</td>
-                                    <td>{% if tournament.file %}{{ tournament.players_by_name_with_unpaired | length }}{% else %}<em>-</em>{% endif %}</td>
-                                    <td>{% if tournament.file %}{{ tournament.current_round }} / {{ tournament.rounds }}{% else %}<em>-</em>{% endif %}</td>
-                                    <td>{% if tournament.ffe_id %}{{ tournament.ffe_id }}{% else %}<em>Aucun</em>{% endif %}</td>
-                                    <td>{% if tournament.ffe_password %}**********{% else %}<em>Aucun</em>{% endif %}</td>
-                                    <td>{% if tournament.handicap %}<i class="bi-plus-slash-minus"></i><i class="bi-hourglass-split">Oui</i>{% else %}<em>-</em>{% endif %}</td>
+                                    <td>{% if tournament.file %}{{ tournament.file }}{% if tournament.download_allowed %} <a href="{{ url_for('download-tournament', event_uniq_id=event.uniq_id, tournament_uniq_id=tournament.uniq_id) }}"><i class="bi-cloud-arrow-down"></i></a>{% endif %}{% else %}<span class="fst-italic">-</span>{% endif %}</td>
+                                    <td>{% if tournament.file %}{{ tournament.players_by_name_with_unpaired | length }}{% else %}<span class="fst-italic">-</span>{% endif %}</td>
+                                    <td>{% if tournament.file %}{{ tournament.current_round }} / {{ tournament.rounds }}{% else %}<span class="fst-italic">-</span>{% endif %}</td>
+                                    <td>{% if tournament.ffe_id %}{{ tournament.ffe_id }}{% else %}<span class="fst-italic">Aucun</span>{% endif %}</td>
+                                    <td>{% if tournament.ffe_password %}**********{% else %}<span class="fst-italic">Aucun</span>{% endif %}</td>
+                                    <td>{% if tournament.handicap %}<i class="bi-plus-slash-minus"></i><i class="bi-hourglass-split">Oui</i>{% else %}<span class="fst-italic">-</span>{% endif %}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -160,8 +160,8 @@
                                     <td><i class="{{ screen.icon_str }}"></i>&nbsp;{{ screen.type_str }}</td>
                                     <td>{% if screen.type == 'results' %}{% if screen.limit %}{{ screen.limit }} max.{% else %}Tous{% endif %}{% else %}{{ screen.sets_str }}{% endif %}</td>
                                     <td>{{ screen.columns }}</td>
-                                    <td>{% if screen.menu %}{% if screen.menu == '@view' %}Visualisation{% else %}{% if screen.menu == '@update' %}Saisie{% else %}{% if screen.menu.startswith('@family') %}{{ screen.family_id }}-*{% else %}{% if screen.menu %}{{ screen.menu }}{%else %}<em>-</em>{% endif %}{% endif %}{% endif %}{% endif %}{% endif %}</td>
-                                    <td>{% if screen.menu_label %}{{ screen.menu_label }}{% else %}<em>-</em>{% endif %}</td>
+                                    <td>{% if screen.menu %}{% if screen.menu == '@view' %}Visualisation{% else %}{% if screen.menu == '@update' %}Saisie{% else %}{% if screen.menu.startswith('@family') %}{{ screen.family_id }}-*{% else %}{% if screen.menu %}{{ screen.menu }}{%else %}<span class="fst-italic">-</span>{% endif %}{% endif %}{% endif %}{% endif %}{% endif %}</td>
+                                    <td>{% if screen.menu_label %}{{ screen.menu_label }}{% else %}<span class="fst-italic">-</span>{% endif %}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

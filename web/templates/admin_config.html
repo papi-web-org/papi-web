@@ -17,11 +17,11 @@
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Accès depuis le réseau local (LAN/WAN)</th>
-            <td>{% if papi_web_config.lan_url %}<a href="{{ papi_web_config.lan_url }}" target="_blank">{{ papi_web_config.lan_url }}</a>{% else %}<em>-</em>{% endif %}</td>
+            <td>{% if papi_web_config.lan_url %}<a href="{{ papi_web_config.lan_url }}" target="_blank">{{ papi_web_config.lan_url }}</a>{% else %}<span class="fst-italic">-</span>{% endif %}</td>
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Lancement du navigateur au démarrage du serveur</th>
-            <td>{% if papi_web_config.web_launch_browser %}Oui{% else %}<em>Non</em>{% endif %}</td>
+            <td>{% if papi_web_config.web_launch_browser %}Oui{% else %}<span class="fst-italic">Non</span>{% endif %}</td>
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Version de Papi-web</th>
