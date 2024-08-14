@@ -17,6 +17,7 @@ from data.event import NewEvent
 from data.loader import EventLoader
 from database.access import access_driver, odbc_drivers
 from web.messages import Message
+from web.session import SessionHandler
 from web.views import AController
 
 logger: Logger = get_logger()
@@ -168,6 +169,7 @@ class AAdminController(AController):
                 # '@pairings': 'Appariements',
             },
             'admin_event_selector': admin_event_selector,
+            'show_family_screens_on_event_list': SessionHandler.get_session_show_family_screens_on_screen_list(request),
         }
         return HTMXTemplate(
             template_name="admin.html",
@@ -194,6 +196,7 @@ class AdminController(AAdminController):
         admin_main_selector: str = data.get('admin_main_selector', '')
         admin_event_selector: str = data.get('admin_event_selector', '')
         admin_event: NewEvent | None = None
+        logger.warning(f'data={data}')
         if not admin_main_selector:
             pass
         elif admin_main_selector == '@events':
@@ -204,6 +207,9 @@ class AdminController(AAdminController):
             except PapiWebException as pwe:
                 Message.error(request, f'L\'évènement [{admin_main_selector}] est introuvable : {pwe}')
                 return self._render_messages(request)
+        if 'show_family_screens_on_screen_list' in data:
+            SessionHandler.set_session_show_family_screens_on_screen_list(
+                request, self.form_data_to_bool_or_none(data, 'show_family_screens_on_screen_list'))
         return self._admin_render_index(
             request, event_loader, admin_main_selector=admin_main_selector, admin_event=admin_event,
             admin_event_selector=admin_event_selector)

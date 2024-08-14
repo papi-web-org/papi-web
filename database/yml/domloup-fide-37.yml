@@ -238,23 +238,23 @@ screens:
     timer_uniq_id: "chronometre"
     results_limit: 20
     results_tournament_uniq_ids:
-      - A
-      - B
-      - C
+      - "A"
+      - "B"
+      - "C"
   resultats-DEF:
     type: "results"
     timer_uniq_id: "chronometre"
     results_limit: 20
     results_tournament_uniq_ids:
-      - D
-      - E
-      - F
+      - "D"
+      - "E"
+      - "F"
 rotators:
-  resultats:
+  affichage-abc-def:
     screen_uniq_ids:
       - "resultats-ABC"
       - "resultats-DEF"
-  affichage:
+  affichage-ab-cd-ef:
     screen_uniq_ids:
       - "affichage-AB"
       - "affichage-CD"

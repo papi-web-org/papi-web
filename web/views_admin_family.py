@@ -93,11 +93,15 @@ class AdminFamilyController(AAdminController):
             case 'create' | 'update':
                 field: str = 'tournament_id'
                 try:
-                    tournament_id = self.form_data_to_int_or_none(data, field)
-                    if not tournament_id:
-                        errors[field] = f'Veuillez indiquer le tournoi.'
-                    elif tournament_id not in admin_event.tournaments_by_id:
-                        errors[field] = f'Le tournoi [{tournament_id}] n\'existe pas.'
+                    if len(admin_event.tournaments_by_id) == 1:
+                        tournament_id = list(admin_event.tournaments_by_id.keys())[0]
+                        data[field] = self.value_to_form_data(tournament_id)
+                    else:
+                        tournament_id = self.form_data_to_int_or_none(data, field)
+                        if not tournament_id:
+                            errors[field] = f'Veuillez indiquer le tournoi.'
+                        elif tournament_id not in admin_event.tournaments_by_id:
+                            errors[field] = f'Le tournoi [{tournament_id}] n\'existe pas.'
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
             case _:
@@ -120,23 +124,22 @@ class AdminFamilyController(AAdminController):
                         errors[field] = f'Le chronomètre [{timer_id}] n\'existe pas.'
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
-                field: str = 'first'
-                try:
-                    first = self.form_data_to_int_or_none(data, field, minimum=1)
-                except ValueError:
-                    errors[field] = 'Un entier positif est attendu.'
-                field: str = 'last'
-                try:
-                    last = self.form_data_to_int_or_none(data, field, minimum=1)
-                except ValueError:
-                    errors[field] = 'Un entier positif est attendu.'
-                if first and last and first > last:
-                    error: str = f'Les nombres {first} et {last} ne sont pas compatibles ({first} > {last}).'
-                    errors['first'] = error
-                    errors['last'] = error
                 match type:
                     case 'boards':
-                        pass
+                        field: str = 'first'
+                        try:
+                            first = self.form_data_to_int_or_none(data, field, minimum=1)
+                        except ValueError:
+                            errors[field] = 'Un entier positif est attendu.'
+                        field: str = 'last'
+                        try:
+                            last = self.form_data_to_int_or_none(data, field, minimum=1)
+                        except ValueError:
+                            errors[field] = 'Un entier positif est attendu.'
+                        if first and last and first > last:
+                            error: str = f'Les nombres {first} et {last} ne sont pas compatibles ({first} > {last}).'
+                            errors['first'] = error
+                            errors['last'] = error
                     case 'players':
                         players_show_unpaired = self.form_data_to_bool_or_none(data, 'players_show_unpaired')
                     case _:
@@ -195,14 +198,56 @@ class AdminFamilyController(AAdminController):
             options[str(tournament.id)] = f'{tournament.name} ({tournament.filename})'
         return options
 
-    @classmethod
     def _admin_family_render_edit_modal(
-            cls, action: str,
+            self, action: str,
             admin_event: NewEvent,
             admin_family: NewFamily | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        if data is None:
+            data = {}
+            if admin_family:
+                data: dict[str, str] = {}
+                match action:
+                    case 'update':
+                        data['uniq_id'] = self.value_to_form_data(admin_family.stored_family.uniq_id)
+                    case 'create' | 'clone':
+                        data['uniq_id'] = ''
+                    case 'delete':
+                        pass
+                    case _:
+                        raise ValueError(f'action=[{action}]')
+                match action:
+                    case 'update':
+                        data['name'] = self.value_to_form_data(admin_family.stored_family.name)
+                        data['tournament_id'] = self.value_to_form_data(admin_family.stored_family.tournament_id)
+                        data['columns'] = self.value_to_form_data(admin_family.stored_family.columns)
+                        data['menu_text'] = self.value_to_form_data(admin_family.stored_family.menu_text)
+                        data['menu'] = self.value_to_form_data(admin_family.stored_family.menu)
+                        data['timer_id'] = self.value_to_form_data(admin_family.stored_family.timer_id)
+                        match admin_family.type:
+                            case ScreenType.Boards:
+                                data['first'] = self.value_to_form_data(admin_family.stored_family.first)
+                                data['last'] = self.value_to_form_data(admin_family.stored_family.last)
+                            case ScreenType.Players:
+                                data['players_show_unpaired'] = self.value_to_form_data(
+                                    admin_family.stored_family.players_show_unpaired)
+                            case _:
+                                raise ValueError(f'type=[{admin_family.type}]')
+                        data['parts'] = self.value_to_form_data(admin_family.stored_family.parts)
+                        data['number'] = self.value_to_form_data(admin_family.stored_family.number)
+                    case 'create':
+                        data['type'] = ''
+                    case 'delete':
+                        pass
+                    case _:
+                        raise ValueError(f'action=[{action}]')
+            stored_family: StoredFamily = self._admin_validate_family_update_data(
+                action, admin_event, admin_family, data)
+            errors = stored_family.errors
+        if errors is None:
+            errors = {}
         return HTMXTemplate(
             template_name='admin_family_edit_modal.html',
             re_swap='innerHTML',
@@ -213,10 +258,10 @@ class AdminFamilyController(AAdminController):
                 'admin_event': admin_event,
                 'admin_family': admin_family,
                 'data': data,
-                'tournament_options': cls._get_tournament_options(admin_event),
-                'screen_type_options': cls._get_screen_type_options(results_screen_allowed=False),
-                'timer_options': cls._get_timer_options(admin_event),
-                'players_show_unpaired_options': cls._get_players_show_unpaired_options(),
+                'tournament_options': self._get_tournament_options(admin_event),
+                'screen_type_options': self._get_screen_type_options(results_screen_allowed=False),
+                'timer_options': self._get_timer_options(admin_event),
+                'players_show_unpaired_options': self._get_players_show_unpaired_options(),
                 'errors': errors,
             })
 
@@ -249,44 +294,7 @@ class AdminFamilyController(AAdminController):
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
-        data: dict[str, str] = {}
-        match action:
-            case 'update':
-                data['uniq_id'] = self.value_to_form_data(admin_family.uniq_id)
-            case 'create':
-                data['uniq_id'] = ''
-            case 'delete':
-                pass
-            case _:
-                raise ValueError(f'action=[{action}]')
-        match action:
-            case 'update':
-                data['name'] = self.value_to_form_data(admin_family.stored_family.name)
-                data['tournament_id'] = self.value_to_form_data(admin_family.stored_family.tournament_id)
-                data['columns'] = self.value_to_form_data(admin_family.stored_family.columns)
-                data['menu_text'] = self.value_to_form_data(admin_family.stored_family.menu_text)
-                data['menu'] = self.value_to_form_data(admin_family.stored_family.menu)
-                data['timer_id'] = self.value_to_form_data(admin_family.stored_family.timer_id)
-                data['first'] = self.value_to_form_data(admin_family.stored_family.first)
-                data['last'] = self.value_to_form_data(admin_family.stored_family.last)
-                match admin_family.type:
-                    case ScreenType.Boards:
-                        pass
-                    case ScreenType.Players:
-                        data['players_show_unpaired'] = self.value_to_form_data(
-                            admin_family.stored_family.players_show_unpaired)
-                    case _:
-                        raise ValueError(f'type=[{admin_family.type}]')
-                data['parts'] = self.value_to_form_data(admin_family.stored_family.parts)
-                data['number'] = self.value_to_form_data(admin_family.stored_family.number)
-            case 'create':
-                data['type'] = ''
-            case 'delete':
-                pass
-            case _:
-                raise ValueError(f'action=[{action}]')
-        stored_family: StoredFamily = self._admin_validate_family_update_data(action, admin_event, admin_family, data)
-        return self._admin_family_render_edit_modal(action, admin_event, admin_family, data, stored_family.errors)
+        return self._admin_family_render_edit_modal(action, admin_event, admin_family)
 
     @post(
         path='/admin-family-update',
@@ -304,6 +312,9 @@ class AdminFamilyController(AAdminController):
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
+        if action == 'close':
+            return self._admin_render_index(
+                request, event_loader, admin_event=admin_event, admin_event_selector='@families')
         admin_family: NewFamily | None = None
         match action:
             case 'update' | 'delete':
@@ -320,6 +331,8 @@ class AdminFamilyController(AAdminController):
         stored_family: StoredFamily = self._admin_validate_family_update_data(action, admin_event, admin_family, data)
         if stored_family.errors:
             return self._admin_family_render_edit_modal(action, admin_event, admin_family, data, stored_family.errors)
+        next_family_id: int | None = None
+        next_action: str | None = None
         with (EventDatabase(admin_event.uniq_id, write=True) as event_database):
             match action:
                 case 'update':
@@ -328,6 +341,8 @@ class AdminFamilyController(AAdminController):
                 case 'create':
                     stored_family = event_database.add_stored_family(stored_family)
                     Message.success(request, f'La famille [{stored_family.uniq_id}] a été créée.')
+                    next_family_id = stored_family.id
+                    next_action = 'update'
                 case 'delete':
                     event_database.delete_stored_family(admin_family.id)
                     Message.success(request, f'La famille [{admin_family.uniq_id}] a été supprimée.')
@@ -335,5 +350,9 @@ class AdminFamilyController(AAdminController):
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
         admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
-        return self._admin_render_index(
-            request, event_loader, admin_event=admin_event, admin_event_selector='@families')
+        if next_family_id:
+            admin_family = admin_event.families_by_id[next_family_id]
+            return self._admin_family_render_edit_modal(next_action, admin_event, admin_family)
+        else:
+            return self._admin_render_index(
+                request, event_loader, admin_event=admin_event, admin_event_selector='@families')

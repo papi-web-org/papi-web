@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col">
         <h1 class="text-nowrap">
-            {{ admin_event.name }} - Familles d'écran
+            {{ admin_event.name }} - Familles d'écrans
         </h1>
     </div>
     <div class="col-1 d-flex justify-content-end">
@@ -111,7 +111,7 @@
                                         {% if tournament.current_round and screen.type == 'boards' %}
                                             Échiquiers du n°{{ screen.screen_sets_sorted_by_order[0].first_board.id }} au n°{{ screen.screen_sets_sorted_by_order[0].last_board.id }}
                                         {% else %}
-                                            Joueur·euses de {{ screen.screen_sets_sorted_by_order[0].first_player_by_name.last_name[:3] }} à {{ screen.screen_sets_sorted_by_order[0].last_player_by_name.last_name[:3] }}
+                                            Joueur·euses de {{ screen.screen_sets_sorted_by_order[0].first_player_by_name.last_name[:8] }} à {{ screen.screen_sets_sorted_by_order[0].last_player_by_name.last_name[:8] }}
                                         {% endif %}
                                     {% endwith %}
                                 </div>

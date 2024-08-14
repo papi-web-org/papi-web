@@ -11,7 +11,7 @@ import fnmatch
 
 from typing import TYPE_CHECKING
 
-from common.config_reader import ConfigReader, TMP_DIR, EVENTS_PATH
+from common.config_reader import ConfigReader, TMP_DIR
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.result import Result
@@ -509,7 +509,7 @@ class ScreenBuilder:
             family_id: str = self._config_reader.get(screen_section_key, key)
         screen: AScreen | None = None
         screen_file_dependencies: list[Path] = [
-            EVENTS_PATH / f'{self.event_uniq_id}.ini', ]
+            PapiWebConfig().event_path / f'{self.event_uniq_id}.ini', ]
         if screen_type == ScreenType.Boards:
             screen = BoardsScreen(
                 self.event_uniq_id,
@@ -815,9 +815,9 @@ class ANewScreen:
     def screen_type_str(type: ScreenType, boards_update: bool | None) -> str:
         match type:
             case ScreenType.Boards:
-                return 'Saisie' if boards_update else 'Appariements'
+                return 'Saisie' if boards_update else 'Échiquiers'
             case ScreenType.Players:
-                return 'Alphabétique'
+                return 'Joueur·euses'
             case ScreenType.Results:
                 return 'Résultats'
             case _:
@@ -889,7 +889,7 @@ class ANewScreenWithSets(ANewScreen):
 
     @property
     def name(self) -> str | None:
-        name: str = self.stored_screen.name if self.stored_screen else self.family.name
+        name: str = self.stored_screen.name if self.stored_screen else None
         if name:
             return name
         if self.screen_sets_sorted_by_order:

@@ -1,7 +1,7 @@
 name: "Tournoi minimal"
 tournaments:
   T:
-    filename: "t"
+    filename: "minimal"
     name: "Tournoi"
 screens:
   saisie:

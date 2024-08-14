@@ -111,7 +111,10 @@ class NewChessEvent:
 
     @property
     def shadowed_password(self) -> str:
-        return f'{self.password[:4] + "*" * (len(self.password) - 4)}' if self.password else None
+        if self.password:
+            return '*' * min(8, len(self.password))
+        else:
+            return ''
 
     @property
     def event_id(self) -> str:

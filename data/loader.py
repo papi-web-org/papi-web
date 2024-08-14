@@ -48,7 +48,7 @@ class EventLoader:
     @property
     def event_ids(self) -> list[str]:
         if self._event_ids is None:
-            self._event_ids = [file.stem for file in PapiWebConfig().db_path.glob(f'*.{PapiWebConfig().db_ext}')]
+            self._event_ids = [file.stem for file in PapiWebConfig().event_path.glob(f'*.{PapiWebConfig().event_ext}')]
         return self._event_ids
 
     @property

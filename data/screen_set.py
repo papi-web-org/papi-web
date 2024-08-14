@@ -599,16 +599,17 @@ class NewScreenSet:
 
     @property
     def name_for_boards(self) -> str | None:
-        if self.tournament.current_round:
-            self._extract_boards()
-        else:
-            self._extract_players_by_name()
-        return self.name
+        if self.tournament:
+            if self.tournament.current_round:
+                self._extract_boards()
+            else:
+                self._extract_players_by_name()
+        return self.name if self.name else '???'
 
     @property
     def name_for_players(self) -> str | None:
         self._extract_players_by_name()
-        return self.name
+        return self.name if self.name else '???'
 
     def _extract_data(self, items: list[Any]):
         if not items:
@@ -697,9 +698,9 @@ class NewScreenSet:
                     self.name = '%t'
             self.name = self.name.replace('%t', str(self.tournament.name))
             if self.first_item is not None:
-                self.name = self.name.replace('%f', self.first_player_by_name.last_name)
+                self.name = self.name.replace('%f', self.first_player_by_name.last_name[:8])
             if self.last_item is not None:
-                self.name = self.name.replace('%l', self.last_player_by_name.last_name)
+                self.name = self.name.replace('%l', self.last_player_by_name.last_name[:8])
 
     @property
     def players_by_name_lists(self) -> list[list[Player]]:
@@ -780,9 +781,9 @@ class NewScreenSet:
             case (first, None) if first is not None:
                 return f'{name} à partir du n°{first}'
             case (first, last) if first is not None and last is not None:
-                return f'{name} du n°{first} à {last}'
+                return f'{name} du n°{first} au n°{last}'
             case (None, last) if last is not None:
-                return f"{name} jusqu'à n°{last}"
+                return f"{name} jusqu'au n°{last}"
             case _:
                 raise ValueError(
                     f'first={self.first}, last={self.last}')

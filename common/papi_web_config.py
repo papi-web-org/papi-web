@@ -164,11 +164,11 @@ class PapiWebConfig:
         return '© Pascal AUBRY 2013-2024'
 
     @property
-    def db_path(self) -> Path:
-        return Path('.') / 'db'
+    def event_path(self) -> Path:
+        return Path('.') / 'events'
 
     @property
-    def db_ext(self) -> str:
+    def event_ext(self) -> str:
         return 'db'
 
     @property

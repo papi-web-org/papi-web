@@ -6,7 +6,7 @@ from logging import Logger
 from pathlib import Path
 from typing import Iterator
 
-from common.config_reader import ConfigReader, TMP_DIR, EVENTS_PATH
+from common.config_reader import ConfigReader, TMP_DIR
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.chessevent import ChessEvent, ChessEventBuilder, NewChessEvent
@@ -30,7 +30,7 @@ class Event:
     def __init__(self, event_uniq_id: str, load_screens: bool):
         self.uniq_id: str = event_uniq_id
         self.reader = ConfigReader(
-            EVENTS_PATH / f'{self.uniq_id}.ini',
+            PapiWebConfig().event_path / f'{self.uniq_id}.ini',
             TMP_DIR / 'events' / event_uniq_id / 'config' / f'{event_uniq_id}.ini.{os.getpid()}.read',
             silent=self.uniq_id in silent_event_uniq_ids)
         with EventDatabase(self.uniq_id) as self.database:
@@ -287,7 +287,7 @@ class Event:
 
 
 def __get_events(load_screens: bool, with_tournaments_only: bool = False) -> dict[str, Event]:
-    event_files: Iterator[Path] = EVENTS_PATH.glob('*.ini')
+    event_files: Iterator[Path] = PapiWebConfig().event_path.glob('*.ini')
     events: dict[str, Event] = {}
     for event_file in event_files:
         event_uniq_id: str = event_file.stem
@@ -316,6 +316,7 @@ class NewEvent:
         self.tournaments_by_id: dict[int, NewTournament] = {}
         self.tournaments_by_uniq_id: dict[str, NewTournament] = {}
         self.screens_by_uniq_id: dict[str, ANewScreen] = {}
+        self._screens_sorted_by_uniq_id: list[ANewScreen] | None = None
         self.basic_screens_by_id: dict[int, ANewScreen] = {}
         self.basic_screens_by_uniq_id: dict[str, ANewScreen] = {}
         self.families_by_id: dict[int, NewFamily] = {}
@@ -434,6 +435,13 @@ class NewEvent:
                 else PapiWebConfig().default_timer_delays[i]
                 for i in range(1, 4)}
         return self._timer_delays
+
+    @property
+    def screens_sorted_by_uniq_id(self) -> list[ANewScreen]:
+        if self._screens_sorted_by_uniq_id is None:
+            self._screens_sorted_by_uniq_id = sorted(
+                self.screens_by_uniq_id.values(), key=lambda screen: screen.uniq_id)
+        return self._screens_sorted_by_uniq_id
 
     def build_root(self):
         if not self.stored_event.name:

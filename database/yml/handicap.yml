@@ -1,0 +1,17 @@
+name: "Tournoi à handicap"
+tournaments:
+  T:
+    filename: "handicap"
+    name: "Tournoi à handicap"
+    time_control_initial_time: 300
+    time_control_increment: 2
+    time_control_handicap_penalty_value: 30
+    time_control_handicap_penalty_step: 50
+    time_control_handicap_min_time: 60
+screens:
+  saisie:
+    type: "boards"
+    boards_update: true
+    sets:
+      -
+        tournament_uniq_id: "T"

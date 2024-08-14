@@ -166,9 +166,20 @@
             <th scope="row" class="text-nowrap">Nombre maximum de coups illégaux enregistrés</th>
             <td class="text-nowrap">{% if admin_event.record_illegal_moves %}{{ admin_event.record_illegal_moves }}{% else %}Aucun{% endif %}{% if admin_event.stored_event.record_illegal_moves is none %} (par défaut){% endif %}</td>
             <td class="text-nowrap">&nbsp;</td>
-            <th scope="row" class="text-nowrap">&nbsp;</th>
-            <td class="text-nowrap">&nbsp;</td>
-            <td class="text-nowrap">&nbsp;</td>
+            <th scope="row" class="text-nowrap">Écrans rotatifs</th>
+            <td class="text-nowrap">
+                {% if admin_event.rotators_by_id|length %}{{ admin_event.rotators_by_id|length }}{% else %}<span class="fst-italic">Aucun</span>{% endif %}
+            </td>
+            <td class="text-nowrap">
+                <button
+                        class="btn btn-sm btn-primary p-1"
+                        hx-post="{{ url_for('admin-update-header') }}"
+                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@rotators"}'
+                        hx-swap="multi:#admin-header,#admin-content"
+                        hx-indicator="#please-wait">
+                    <i class="bi-caret-right-square-fill"></i> Gérer les écrans rotatifs
+                </button>
+            </td>
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Suppression des résultats entrés sur les écrans de saisie</th>

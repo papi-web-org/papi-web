@@ -110,7 +110,7 @@ class EventDatabase(SQLiteDatabase):
     @staticmethod
     def event_database_path(uniq_id: str) -> Path:
         papi_web_config: PapiWebConfig = PapiWebConfig()
-        return papi_web_config.db_path / f'{uniq_id}.{papi_web_config.db_ext}'
+        return papi_web_config.event_path / f'{uniq_id}.{papi_web_config.event_ext}'
 
     def exists(self) -> bool:
         return self.file.exists()
@@ -120,7 +120,10 @@ class EventDatabase(SQLiteDatabase):
             yml_file: Path,
             dict_path: str, supposed_dict: dict,
             mandatory_fields: list[str] = None,
-            optional_fields: list['str'] = None):
+            optional_fields: list['str'] = None,
+            field_type: type = None,
+            empty_allowed: bool = True,
+    ):
         assert isinstance(supposed_dict, dict), f'{yml_file.name}: {dict_path}/ is no dictionary'
         fields: list[str] = []
         if mandatory_fields is not None:
@@ -132,19 +135,36 @@ class EventDatabase(SQLiteDatabase):
         if fields:
             for k in supposed_dict:
                 assert k in fields, f'{yml_file.name}: invalid key {dict_path}/{k} (valid_keys: {", ".join(fields)})'
+                if field_type is not None:
+                    assert isinstance(supposed_dict[k], field_type), \
+                        f'{yml_file.name}: {dict_path} should contain only items of type [{field_type}]'
+        if not empty_allowed:
+            assert supposed_dict, f'{yml_file.name}: dictionary {dict_path} is empty'
 
     @staticmethod
     def _check_populate_list(
             yml_file: Path,
-            list_path: str, supposed_list: list):
+            list_path: str, supposed_list: list,
+            item_type: type = None,
+            items_number: int = None,
+            empty_allowed: bool = True,
+    ):
         assert isinstance(supposed_list, list), f'{yml_file.name}: {list_path} is no list'
+        if item_type is not None:
+            assert all(isinstance(item, item_type) for item in supposed_list), \
+                f'{yml_file.name}: {list_path} should contain only items of type [{item_type}]'
+        if items_number is not None:
+            assert len(supposed_list) == items_number, \
+                f'{yml_file.name}: {list_path} should contain exactly {items_number} items'
+        if not empty_allowed:
+            assert supposed_list, f'{yml_file.name}: list {list_path} is empty'
 
     def create(self, populate: bool = False):
         if self.exists():
             raise PapiWebException(
                 f'La base de données ne peut être créée car le fichier [{self.file.resolve()}] existe déjà.')
         papi_web_config: PapiWebConfig = PapiWebConfig()
-        papi_web_config.db_path.mkdir(parents=True, exist_ok=True)
+        papi_web_config.event_path.mkdir(parents=True, exist_ok=True)
         database: Connection | None = None
         cursor: Cursor | None = None
         try:
@@ -164,7 +184,23 @@ class EventDatabase(SQLiteDatabase):
                         yml_file, '', event_dict,
                         mandatory_fields=['name', ],
                         optional_fields=['css', 'update_password', 'record_illegal_moves', 'allow_results_deletion',
-                                         'chessevents', 'tournaments', 'timers', 'screens', 'families', 'rotators'])
+                                         'chessevents', 'tournaments', 'timers', 'screens', 'families', 'rotators',
+                                         'timer_colors', 'timer_delays', ],
+                        empty_allowed=False)
+                    timer_delays: dict[int, int] | None = None
+                    if 'timer_delays' in event_dict:
+                        self._check_populate_list(
+                            yml_file, f'/timer_delays', event_dict['timer_delays'],
+                            items_number=3, item_type=int)
+                        timer_delays = {i + 1: event_dict[
+                            'timer_delays'][i] for i in range(0, len(event_dict['timer_delays']))}
+                    timer_colors: dict[int, str] | None = None
+                    if 'timer_colors' in event_dict:
+                        self._check_populate_list(
+                            yml_file, f'/timer_colors', event_dict['timer_colors'],
+                            items_number=3, item_type=str)
+                        timer_colors = {i + 1: event_dict[
+                            'timer_colors'][i] for i in range(0, len(event_dict['timer_colors']))}
                     event_database.update_stored_event(StoredEvent(
                         uniq_id=self.uniq_id,
                         name=event_dict['name'],
@@ -173,6 +209,8 @@ class EventDatabase(SQLiteDatabase):
                         update_password=event_dict.get('update_password', None),
                         record_illegal_moves=event_dict.get('record_illegal_moves', None),
                         allow_results_deletion=event_dict.get('allow_results_deletion', None),
+                        timer_colors=timer_colors,
+                        timer_delays=timer_delays,
                     ))
                     chessevent_ids_by_uniq_id: dict[str, int] = {}
                     if 'chessevents' in event_dict:
@@ -195,12 +233,24 @@ class EventDatabase(SQLiteDatabase):
                         for timer_uniq_id, timer_dict in event_dict['timers'].items():
                             self._check_populate_dict(
                                 yml_file, f'/timers/{timer_uniq_id}', timer_dict,
-                                mandatory_fields=['hours', ])
+                                mandatory_fields=['hours', ], optional_fields=['delays', 'colors', ])
+                            delays: dict[int, int] | None = None
+                            if 'delays' in timer_dict:
+                                self._check_populate_list(
+                                    yml_file, f'/timers/{timer_uniq_id}/delays', timer_dict['delays'],
+                                    items_number=3, item_type=int)
+                                delays = {i + 1: timer_dict['delays'][i] for i in range(0, len(timer_dict['delays']))}
+                            colors: dict[int, str] | None = None
+                            if 'colors' in timer_dict:
+                                self._check_populate_list(
+                                    yml_file, f'/timers/{timer_uniq_id}/colors', timer_dict['colors'],
+                                    items_number=3, item_type=str)
+                                colors = {i + 1: timer_dict['colors'][i] for i in range(0, len(timer_dict['colors']))}
                             stored_timer: StoredTimer = event_database.add_stored_timer(StoredTimer(
                                 id=None,
                                 uniq_id=timer_uniq_id,
-                                colors=None,
-                                delays=None,
+                                colors=colors,
+                                delays=delays,
                             ))
                             timer_ids_by_uniq_id[timer_uniq_id] = stored_timer.id
                             self._check_populate_dict(yml_file, f'/timers/{timer_uniq_id}/hours', timer_dict['hours'])
@@ -281,13 +331,17 @@ class EventDatabase(SQLiteDatabase):
                                 case 'players':
                                     players_show_unpaired = screen_dict.get('players_show_unpaired', False)
                                 case 'results':
-                                    results_limit: list[str] = screen_dict.get('results_limit', None)
-                                    results_tournament_uniq_ids: list[str] = screen_dict.get(
-                                        'results_tournament_uniq_ids', None)
-                                    results_tournament_ids = [
-                                        tournament_ids_by_uniq_id[tournament_uniq_id]
-                                        for tournament_uniq_id in results_tournament_uniq_ids
-                                    ] if results_tournament_uniq_ids else []
+                                    results_limit: int = screen_dict.get('results_limit', None)
+                                    if 'results_tournament_uniq_ids' in screen_dict:
+                                        self._check_populate_list(
+                                            yml_file, f'/screens/{screen_uniq_id}/results_tournament_uniq_ids',
+                                            screen_dict['results_tournament_uniq_ids'])
+                                        results_tournament_ids = [
+                                            tournament_ids_by_uniq_id[tournament_uniq_id]
+                                            for tournament_uniq_id in screen_dict['results_tournament_uniq_ids']
+                                        ]
+                                    else:
+                                        results_tournament_ids = []
                                 case _:
                                     raise ValueError
                             stored_screen: StoredScreen = event_database.add_stored_screen(StoredScreen(
@@ -355,7 +409,7 @@ class EventDatabase(SQLiteDatabase):
                                     raise ValueError
                             stored_family: StoredFamily = event_database.add_stored_family(StoredFamily(
                                 id=None,
-                                uniq_id=screen_uniq_id,
+                                uniq_id=family_uniq_id,
                                 name=family_dict.get('name', None),
                                 tournament_id=tournament_id,
                                 type=type,
@@ -377,16 +431,28 @@ class EventDatabase(SQLiteDatabase):
                             self._check_populate_dict(
                                 yml_file, f'/rotators/{rotator_uniq_id}', rotator_dict,
                                 optional_fields=['delay', 'show_menus', 'screen_uniq_ids', 'family_uniq_ids', ])
-                            screen_uniq_ids: list[str] = rotator_dict.get('screen_uniq_ids', None)
-                            screen_ids = [
-                                screen_ids_by_uniq_id[screen_uniq_id]
-                                for screen_uniq_id in screen_uniq_ids
-                            ] if screen_uniq_ids else []
-                            family_uniq_ids: list[str] = rotator_dict.get('family_uniq_ids', None)
-                            family_ids = [
-                                family_ids_by_uniq_id[family_uniq_id]
-                                for family_uniq_id in family_uniq_ids
-                            ] if family_uniq_ids else []
+                            screen_ids: list[int]
+                            family_ids: list[int]
+                            if 'screen_uniq_ids' in rotator_dict:
+                                self._check_populate_list(
+                                    yml_file, f'/rotator/{rotator_uniq_id}/screen_uniq_ids',
+                                    rotator_dict['screen_uniq_ids'])
+                                screen_ids = [
+                                    screen_ids_by_uniq_id[screen_uniq_id]
+                                    for screen_uniq_id in rotator_dict['screen_uniq_ids']
+                                ]
+                            else:
+                                screen_ids = []
+                            if 'family_uniq_ids' in rotator_dict:
+                                self._check_populate_list(
+                                    yml_file, f'/rotator/{rotator_uniq_id}/family_uniq_ids',
+                                    rotator_dict['family_uniq_ids'])
+                                family_ids = [
+                                    family_ids_by_uniq_id[family_uniq_id]
+                                    for family_uniq_id in rotator_dict['family_uniq_ids']
+                                ]
+                            else:
+                                family_ids = []
                             event_database.add_stored_rotator(StoredRotator(
                                 id=None,
                                 uniq_id=rotator_uniq_id,
@@ -714,7 +780,9 @@ class EventDatabase(SQLiteDatabase):
         return self._write_stored_timer_hour(stored_timer_hour)
 
     def add_stored_timer_hour(
-            self, timer_id: int,
+            self,
+            timer_id: int,
+            set_datetime: bool = False,
     ) -> StoredTimerHour:
         stored_timer_hour: StoredTimerHour = StoredTimerHour(
             id=None,
@@ -722,6 +790,10 @@ class EventDatabase(SQLiteDatabase):
             uniq_id=str(self.get_stored_timer_next_round(timer_id)),
             order=self.get_stored_timer_next_hour_order(timer_id),
         )
+        if set_datetime:
+            now: datetime = datetime.now()
+            stored_timer_hour.date_str = now.strftime("%Y-%m-%d")
+            stored_timer_hour.time_str = now.strftime("%H:%M")
         return self._write_stored_timer_hour(stored_timer_hour)
 
     def clone_stored_timer_hour(self, id: int, timer_id: int | None = None):

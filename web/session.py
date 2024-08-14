@@ -54,3 +54,11 @@ class SessionHandler:
     @staticmethod
     def get_session_last_check_in_updated(request: HTMXRequest):
         return request.session.get('last_check_in_updated', None)
+
+    @staticmethod
+    def set_session_show_family_screens_on_screen_list(request: HTMXRequest, b: bool):
+        request.session['show_family_screens_on_screen_list']: bool = b
+
+    @staticmethod
+    def get_session_show_family_screens_on_screen_list(request: HTMXRequest):
+        return request.session.get('show_family_screens_on_screen_list', True)

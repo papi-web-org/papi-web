@@ -326,7 +326,13 @@ class NewFamily:
 
     @property
     def name(self) -> str | None:
-        return self.stored_family.name
+        if self.stored_family.name:
+            return self.stored_family.name
+        else:
+            if len(self.screens_by_uniq_id) > 1:
+                return '%f à %l'
+            else:
+                return '%t'
 
     @property
     def tournament_id(self) -> int | None:
@@ -388,9 +394,9 @@ class NewFamily:
     def screen_type_str(type: ScreenType, boards_update: bool | None) -> str:
         match type:
             case ScreenType.Boards:
-                return 'Saisie' if boards_update else 'Appariements'
+                return 'Saisie' if boards_update else 'Échiquiers'
             case ScreenType.Players:
-                return 'Alphabétique'
+                return 'Joueur·euses'
             case ScreenType.Results:
                 return 'Résultats'
             case _:

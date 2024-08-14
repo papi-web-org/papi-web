@@ -99,11 +99,17 @@
                         </div>
                     </div>
                     <h3>
-                        Écrans
+                        Sélection des affichages
+                        (<i class="bi-card-list"></i>&nbsp;échiquiers,
+                        <i class="bi-pencil-fill"></i>&nbsp;saisie,
+                        <i class="bi-people-fill"></i>&nbsp;appariements,
+                        <i class="bi-trophy-fill"></i>&nbsp;résultats)
                     </h3>
                     <div class="row">
                         <div class="col-6">
-                            <label class="form-label">Écrans affichés :</label>
+                            <label class="form-label">
+                                Écrans :
+                            </label>
                             <div>
                                 {% if admin_event.basic_screens_by_id %}
                                     {% for first in [true, false] %}
@@ -118,7 +124,8 @@
                                                                         type="checkbox" id="{{ id }}"
                                                                         class=""
                                                                         {% if data[name] %}checked{% endif %} />
-                                                                <label for="{{ id }}" class="form-label">
+                                                                <label for="{{ id }}" class="form-label {% if not first %}fst-italic{%endif %}">
+                                                                    <i class="{{ screen.icon_str }}"></i>
                                                                     {{ screen.name }}
                                                                 </label>
                                                             </span>
@@ -137,7 +144,7 @@
                             </div>
                         </div>
                         <div class="col-6">
-                            <label class="form-label">Familles affichées :</label>
+                            <label class="form-label">Familles :</label>
                             <div>
                                 {% if admin_event.families_by_id %}
                                     {% for first in [true, false] %}
@@ -152,7 +159,8 @@
                                                                         type="checkbox" id="{{ id }}"
                                                                         class=""
                                                                         {% if data[name] %}checked{% endif %} />
-                                                                <label for="{{ id }}" class="form-label">
+                                                                <label for="{{ id }}" class="form-label {% if not first %}fst-italic{%endif %}">
+                                                                    <i class="{{ family.icon_str }}"></i>
                                                                     {{ family.name }}
                                                                 </label>
                                                             </span>
@@ -188,7 +196,15 @@
                         </button>
                     </div>
                     <div class="col col-6 text-end">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi-x-circle-fill"></i> Annuler</button>
+                        <button
+                                class="btn btn-secondary text-nowrap"
+                                hx-post="{{ url_for('admin-rotator-update') }}"
+                                hx-vals='{"action": "close", "admin_event_uniq_id": "{{ admin_event.uniq_id }}" }'
+                                hx-swap="multi:#messages,#admin-header,#admin-content"
+                                hx-indicator="#please-wait"
+                                data-bs-dismiss="modal">
+                            <i class="bi-x-circle-fill"></i> Annuler
+                        </button>
                     </div>
                 </div>
             </div>

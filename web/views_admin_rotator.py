@@ -65,6 +65,7 @@ class AdminRotatorController(AAdminController):
                     field = f'screen_{screen_id}'
                     if self.form_data_to_bool_or_none(data, field):
                         screen_ids.append(screen_id)
+                family_ids = []
                 for family_id in admin_event.families_by_id:
                     field = f'family_{family_id}'
                     if self.form_data_to_bool_or_none(data, field):
@@ -93,15 +94,40 @@ class AdminRotatorController(AAdminController):
         options[''] = f'Par défaut ({options["1" if PapiWebConfig().default_rotator_show_menus else "0"]})'
         return options
 
-    @classmethod
     def _admin_rotator_render_edit_modal(
-            cls,
+            self,
             action: str,
             admin_event: NewEvent,
             admin_rotator: NewRotator | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        if data is None:
+            data = {}
+            if admin_rotator:
+                data: dict[str, str]
+                match action:
+                    case 'update':
+                        data = {
+                            'uniq_id': self.value_to_form_data(admin_rotator.stored_rotator.uniq_id),
+                            'delay': self.value_to_form_data(admin_rotator.stored_rotator.delay),
+                            'show_menus': self.value_to_form_data(admin_rotator.stored_rotator.show_menus),
+                        }
+                        for screen_id in admin_event.basic_screens_by_id:
+                            data[f'screen_{screen_id}'] = self.value_to_form_data(
+                                screen_id in admin_rotator.stored_rotator.screen_ids)
+                        for family_id in admin_event.families_by_id:
+                            data[f'family_{family_id}'] = self.value_to_form_data(
+                                family_id in admin_rotator.stored_rotator.family_ids)
+                    case 'delete' | 'create':
+                        data = {}
+                    case _:
+                        raise ValueError(f'action=[{action}]')
+            stored_rotator: StoredRotator = self._admin_validate_rotator_update_data(
+                action, admin_event, admin_rotator, data)
+            errors = stored_rotator.errors
+        if errors is None:
+            errors = {}
         return HTMXTemplate(
             template_name='admin_rotator_edit_modal.html',
             re_swap='innerHTML',
@@ -111,7 +137,7 @@ class AdminRotatorController(AAdminController):
                 'action': action,
                 'admin_event': admin_event,
                 'admin_rotator': admin_rotator,
-                'show_menus_options': cls._get_show_menus_options(),
+                'show_menus_options': self._get_show_menus_options(),
                 'data': data,
                 'errors': errors,
             })
@@ -148,27 +174,7 @@ class AdminRotatorController(AAdminController):
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
-        data: dict[str, str]
-        match action:
-            case 'update':
-                data = {
-                    'uniq_id': self.value_to_form_data(admin_rotator.stored_rotator.uniq_id),
-                    'delay': self.value_to_form_data(admin_rotator.stored_rotator.delay),
-                    'show_menus': self.value_to_form_data(admin_rotator.stored_rotator.show_menus),
-                }
-                for screen_id in admin_event.basic_screens_by_id:
-                    data[f'screen_{screen_id}'] = self.value_to_form_data(
-                        screen_id in admin_rotator.stored_rotator.screen_ids)
-                for family_id in admin_event.families_by_id:
-                    data[f'family_{family_id}'] = self.value_to_form_data(
-                        family_id in admin_rotator.stored_rotator.family_ids)
-            case 'delete' | 'create':
-                data = {}
-            case _:
-                raise ValueError(f'action=[{action}]')
-        stored_rotator: StoredRotator = self._admin_validate_rotator_update_data(
-            action, admin_event, admin_rotator, data)
-        return self._admin_rotator_render_edit_modal(action, admin_event, admin_rotator, data, stored_rotator.errors)
+        return self._admin_rotator_render_edit_modal(action, admin_event, admin_rotator)
 
     @post(
         path='/admin-rotator-update',
@@ -189,6 +195,9 @@ class AdminRotatorController(AAdminController):
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
+        if action == 'close':
+            return self._admin_render_index(
+                request, event_loader, admin_event=admin_event, admin_event_selector='@rotators')
         admin_rotator: NewRotator | None = None
         match action:
             case 'update' | 'delete' | 'clone':
@@ -207,6 +216,8 @@ class AdminRotatorController(AAdminController):
         if stored_rotator.errors:
             return self._admin_rotator_render_edit_modal(
                 action, admin_event, admin_rotator, data, stored_rotator.errors)
+        next_rotator_id: int | None = None
+        next_action: str | None = None
         with EventDatabase(admin_event.uniq_id, write=True) as event_database:
             match action:
                 case 'update':
@@ -215,6 +226,8 @@ class AdminRotatorController(AAdminController):
                 case 'create':
                     stored_rotator = event_database.add_stored_rotator(stored_rotator)
                     Message.success(request, f'L\'écran rotatif [{stored_rotator.uniq_id}] a été créé.')
+                    next_rotator_id = stored_rotator.id
+                    next_action = 'update'
                 case 'delete':
                     event_database.delete_stored_rotator(admin_rotator.id)
                     Message.success(request, f'L\'écran rotatif [{admin_rotator.uniq_id}] a été supprimé.')
@@ -223,9 +236,15 @@ class AdminRotatorController(AAdminController):
                     Message.success(
                         request,
                         f'L\'écran rotatif [{admin_rotator.uniq_id}] a été dupliqué ([{stored_rotator.uniq_id}]).')
+                    next_rotator_id = stored_rotator.id
+                    next_action = 'update'
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
         admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
-        return self._admin_render_index(
-            request, event_loader, admin_event=admin_event, admin_event_selector='@rotators')
+        if next_rotator_id:
+            admin_rotator = admin_event.rotators_by_id[next_rotator_id]
+            return self._admin_rotator_render_edit_modal(next_action, admin_event, admin_rotator)
+        else:
+            return self._admin_render_index(
+                request, event_loader, admin_event=admin_event, admin_event_selector='@rotators')

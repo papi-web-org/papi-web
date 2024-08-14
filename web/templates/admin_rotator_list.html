@@ -25,7 +25,7 @@
     <thead class="table-dark position-sticky top-0">
         <tr>
             <th scope="col" class="text-nowrap">Id</th>
-            <th scope="col" class="text-nowrap">Familles<br/>d'écrans</th>
+            <th scope="col" class="text-nowrap">Familles d'écrans</th>
             <th scope="col" class="text-nowrap">Écrans</th>
             <th scope="col" class="text-nowrap">Paramètres</th>
             <th scope="col" class="width-100"></th>
@@ -41,22 +41,22 @@
                         {% if rotator.families %}
                             {% for family in rotator.families %}
                                 <div>
-                                    {{ loop.counter }}. {{ family.name }} : {{ family.screens_by_uniq_id|length }} écran{% if family.screens_by_uniq_id|length > 1 %}s{% endif %}
+                                    {{ loop.index }}. {{ family.name }} : {{ family.screens_by_uniq_id|length }} écran{% if family.screens_by_uniq_id|length > 1 %}s{% endif %}
                                 </div>
                             {% endfor %}
                         {% else %}
-                            <div><span class="fst-italic">-</span></div>
+                            <div><span class="fst-italic">Aucun écran</span></div>
                         {% endif %}
                     </td>
                     <td class="text-nowrap">
                         {% if rotator.screens %}
                             {% for screen in rotator.screens %}
                                 <div>
-                                    {{ loop.counter }}. {{ screen.name }}
+                                    {{ loop.index }}. {{ screen.name }}
                                 </div>
                             {% endfor %}
                         {% else %}
-                            <div><span class="fst-italic">-</span></div>
+                            <div><span class="fst-italic">Aucune famille</span></div>
                         {% endif %}
                     </td>
                     <td class="text-nowrap">
