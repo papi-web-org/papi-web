@@ -30,7 +30,7 @@ class AdminEventController(AAdminController):
         if data is None:
             data = {}
         errors: dict[str, str] = {}
-        uniq_id: str | None = self.form_data_to_str_or_none(data, 'uniq_id')
+        uniq_id: str | None = self._form_data_to_str_or_none(data, 'uniq_id')
         if action == 'delete':
             if not uniq_id:
                 errors['uniq_id'] = 'Veuillez entrer l\'identifiant de l\'évènement.'
@@ -51,7 +51,7 @@ class AdminEventController(AAdminController):
                             errors['uniq_id'] = f'L\'évènement [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')
-        name: str | None = self.form_data_to_str_or_none(data, 'name')
+        name: str | None = self._form_data_to_str_or_none(data, 'name')
         match action:
             case 'create' | 'clone' | 'update':
                 if not name:
@@ -60,9 +60,9 @@ class AdminEventController(AAdminController):
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
-        path: str | None = self.form_data_to_str_or_none(data, 'path')
-        css: str | None = self.form_data_to_str_or_none(data, 'css')
-        update_password: str | None = self.form_data_to_str_or_none(data, 'update_password')
+        path: str | None = self._form_data_to_str_or_none(data, 'path')
+        css: str | None = self._form_data_to_str_or_none(data, 'css')
+        update_password: str | None = self._form_data_to_str_or_none(data, 'update_password')
         record_illegal_moves: int | None = None
         allow_results_deletion: bool | None = None
         timer_colors: dict[int, str | None] = {i: None for i in range(1, 4)}
@@ -71,25 +71,25 @@ class AdminEventController(AAdminController):
         match action:
             case 'update':
                 try:
-                    record_illegal_moves = self.form_data_to_int_or_none(data, 'record_illegal_moves')
+                    record_illegal_moves = self._form_data_to_int_or_none(data, 'record_illegal_moves')
                     assert record_illegal_moves is None or 0 <= record_illegal_moves <= 3
                 except (ValueError, AssertionError):
                     errors['record_illegal_moves'] = 'La valeur entrée n\'est pas valide.'
                 try:
-                    allow_results_deletion = self.form_data_to_bool_or_none(data, 'allow_results_deletion')
+                    allow_results_deletion = self._form_data_to_bool_or_none(data, 'allow_results_deletion')
                 except ValueError:
                     errors['allow_results_deletion'] = 'La valeur entrée n\'est pas valide.'
                 for i in range(1, 4):
                     field: str = f'color_{i}'
-                    timer_color_checkboxes[i] = self.form_data_to_bool_or_none(data, field+'_checkbox')
+                    timer_color_checkboxes[i] = self._form_data_to_bool_or_none(data, field + '_checkbox')
                     if not timer_color_checkboxes[i]:
                         try:
-                            timer_colors[i] = self.form_data_to_rgb_or_none(data, field)
+                            timer_colors[i] = self._form_data_to_rgb_or_none(data, field)
                         except ValueError:
                             errors[field] = f'La couleur n\'est pas valide [{data[field]}] (attendu [#HHHHHH]).'
                     field: str = f'delay_{i}'
                     try:
-                        timer_delays[i] = self.form_data_to_int_or_none(data, field, minimum=1)
+                        timer_delays[i] = self._form_data_to_int_or_none(data, field, minimum=1)
                     except ValueError:
                         errors[field] = f'Le délai [{data[field]}] n\'est pas valide (attendu un entier positif).'
             case 'create' | 'clone' | 'delete':
@@ -148,13 +148,13 @@ class AdminEventController(AAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
+        action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event: NewEvent | None = None
         match action:
             case 'create':
                 pass
             case 'clone' | 'update' | 'delete':
-                admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+                admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
                 try:
                     admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
                 except PapiWebException as pwe:
@@ -169,20 +169,20 @@ class AdminEventController(AAdminController):
             case 'clone' | 'update':
                 data = {
                     'uniq_id':
-                        '' if action == 'clone' else self.value_to_form_data(admin_event.stored_event.uniq_id),
-                    'name': self.value_to_form_data(admin_event.stored_event.name),
-                    'css': self.value_to_form_data(admin_event.stored_event.css),
-                    'path': self.value_to_form_data(admin_event.stored_event.path),
-                    'update_password': self.value_to_form_data(admin_event.stored_event.update_password),
-                    'record_illegal_moves': self.value_to_form_data(admin_event.stored_event.record_illegal_moves),
+                        '' if action == 'clone' else self._value_to_form_data(admin_event.stored_event.uniq_id),
+                    'name': self._value_to_form_data(admin_event.stored_event.name),
+                    'css': self._value_to_form_data(admin_event.stored_event.css),
+                    'path': self._value_to_form_data(admin_event.stored_event.path),
+                    'update_password': self._value_to_form_data(admin_event.stored_event.update_password),
+                    'record_illegal_moves': self._value_to_form_data(admin_event.stored_event.record_illegal_moves),
                     'allow_results_deletion':
-                        self.value_to_form_data(admin_event.stored_event.allow_results_deletion),
+                        self._value_to_form_data(admin_event.stored_event.allow_results_deletion),
                 }
                 for i in range(1, 4):
-                    data[f'color_{i}'] = self.value_to_form_data(admin_event.timer_colors[i])
-                    data[f'color_{i}_checkbox'] = self.value_to_form_data(
+                    data[f'color_{i}'] = self._value_to_form_data(admin_event.timer_colors[i])
+                    data[f'color_{i}_checkbox'] = self._value_to_form_data(
                         admin_event.stored_event.timer_colors[i] is None)
-                    data[f'delay_{i}'] = self.value_to_form_data(admin_event.stored_event.timer_delays[i])
+                    data[f'delay_{i}'] = self._value_to_form_data(admin_event.stored_event.timer_delays[i])
             case _:
                 raise ValueError(f'action=[{action}]')
         stored_event: StoredEvent = self._admin_validate_event_update_data(event_loader, action, admin_event, data)
@@ -197,13 +197,13 @@ class AdminEventController(AAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
+        action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event: NewEvent | None = None
         match action:
             case 'create':
                 pass
             case 'clone' | 'update' | 'delete':
-                admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+                admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
                 try:
                     admin_event = event_loader.load_event(admin_event_uniq_id)
                 except PapiWebException as pwe:

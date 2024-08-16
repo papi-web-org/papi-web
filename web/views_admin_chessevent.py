@@ -31,7 +31,7 @@ class AdminChessEventController(AAdminController):
         errors: dict[str, str] = {}
         if data is None:
             data = {}
-        uniq_id: str = self.form_data_to_str_or_none(data, 'uniq_id')
+        uniq_id: str = self._form_data_to_str_or_none(data, 'uniq_id')
         match action:
             case 'create':
                 if not uniq_id:
@@ -48,9 +48,9 @@ class AdminChessEventController(AAdminController):
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
-        user_id: str = self.form_data_to_str_or_none(data, 'user_id')
-        password: str = self.form_data_to_str_or_none(data, 'password')
-        event_id: str = self.form_data_to_str_or_none(data, 'event_id')
+        user_id: str = self._form_data_to_str_or_none(data, 'user_id')
+        password: str = self._form_data_to_str_or_none(data, 'password')
+        event_id: str = self._form_data_to_str_or_none(data, 'event_id')
         match action:
             case 'create' | 'update':
                 if not user_id:
@@ -105,8 +105,8 @@ class AdminChessEventController(AAdminController):
             ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+        action: str = self._form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
@@ -115,7 +115,7 @@ class AdminChessEventController(AAdminController):
         admin_chessevent: NewChessEvent | None = None
         match action:
             case 'update' | 'delete':
-                admin_chessevent_id: int = self.form_data_to_int_or_none(data, 'admin_chessevent_id')
+                admin_chessevent_id: int = self._form_data_to_int_or_none(data, 'admin_chessevent_id')
                 try:
                     admin_chessevent = admin_event.chessevents_by_id[admin_chessevent_id]
                 except KeyError:
@@ -129,10 +129,10 @@ class AdminChessEventController(AAdminController):
         match action:
             case 'update':
                 data = {
-                    'uniq_id': self.value_to_form_data(admin_chessevent.stored_chessevent.uniq_id),
-                    'user_id': self.value_to_form_data(admin_chessevent.stored_chessevent.user_id),
-                    'password': self.value_to_form_data(admin_chessevent.stored_chessevent.password),
-                    'event_id': self.value_to_form_data(admin_chessevent.stored_chessevent.event_id),
+                    'uniq_id': self._value_to_form_data(admin_chessevent.stored_chessevent.uniq_id),
+                    'user_id': self._value_to_form_data(admin_chessevent.stored_chessevent.user_id),
+                    'password': self._value_to_form_data(admin_chessevent.stored_chessevent.password),
+                    'event_id': self._value_to_form_data(admin_chessevent.stored_chessevent.event_id),
                 }
             case 'delete' | 'create':
                 data = {}
@@ -155,8 +155,8 @@ class AdminChessEventController(AAdminController):
             ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+        action: str = self._form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
@@ -165,7 +165,7 @@ class AdminChessEventController(AAdminController):
         admin_chessevent: NewChessEvent | None = None
         match action:
             case 'update' | 'delete' | 'clone':
-                admin_chessevent_id: int = self.form_data_to_int_or_none(data, 'admin_chessevent_id')
+                admin_chessevent_id: int = self._form_data_to_int_or_none(data, 'admin_chessevent_id')
                 try:
                     admin_chessevent = admin_event.chessevents_by_id[admin_chessevent_id]
                 except KeyError:

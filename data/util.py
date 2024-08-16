@@ -737,32 +737,65 @@ class Color(StrEnum):
 
 class ScreenType(StrEnum):
     Boards = auto()
+    Input = auto()
     Players = auto()
     Results = auto()
 
     def __str__(self) -> str:
         match self:
             case ScreenType.Boards:
-                return "Appariements par table"
+                return "Échiquiers"
+            case ScreenType.Input:
+                return "Saisie"
             case ScreenType.Players:
-                return "Appariements par joueur.euse"
+                return "Appariements"
             case ScreenType.Results:
                 return "Résultats"
             case _:
-                raise ValueError
+                raise ValueError(f'Invalid screen type: {self}')
 
     @classmethod
-    def from_str(cls, value) -> Self:
+    def from_str(cls, value: str) -> Self:
         match value:
             case 'boards':
                 return cls.Boards
+            case 'input':
+                return cls.Input
             case 'players':
                 return cls.Players
             case 'results':
                 return cls.Results
             case _:
-                raise ValueError(f'Invalid board type: {value}')
+                raise ValueError(f'Invalid screen type: {value}')
 
+    def to_str(self) -> Self:
+        match self:
+            case self.Boards:
+                return 'boards'
+            case self.Input:
+                return 'input'
+            case self.Players:
+                return 'players'
+            case self.Results:
+                return 'results'
+            case _:
+                raise ValueError(f'Invalid screen type: {self}')
+
+    @property
+    def icon_str(self) -> str:
+        match self:
+            case self.Boards:
+                return 'bi-card-list'
+            case self.Input:
+                return 'bi-pencil-fill'
+            case self.Players:
+                return 'bi-people-fill'
+            case self.Results:
+                return 'bi-trophy-fill'
+            case _:
+                raise ValueError(f'Invalid screen type: {self}')
+
+    # TODO remove this unused method
     @classmethod
     def names(cls) -> list[str]:
         return [member.value for member in iter(cls)]

@@ -18,7 +18,7 @@ from database.store import StoredScreenSet
 
 if TYPE_CHECKING:
     from data.event import NewEvent
-    from data.screen import ANewScreenWithSets
+    from data.screen import NewScreen
 
 logger: Logger = get_logger()
 
@@ -505,7 +505,7 @@ class ScreenSetBuilder:
 class NewScreenSet:
     def __init__(
             self,
-            screen: 'ANewScreenWithSets',
+            screen: 'NewScreen',
             stored_screen_set: StoredScreenSet | None = None,
             family: 'NewFamily | None' = None,
             family_part: int | None = None,
@@ -516,7 +516,7 @@ class NewScreenSet:
         else:
             assert family is None and family_part is None, \
                    f'screen_set={stored_screen_set}, family={family}, family_part={family_part}'
-        self.screen: 'ANewScreenWithSets' = screen
+        self.screen: 'NewScreen' = screen
         self.stored_screen_set: StoredScreenSet | None = stored_screen_set
         self.family: 'NewFamily | None' = family
         self.family_part: int | None = family_part
@@ -588,10 +588,6 @@ class NewScreenSet:
     @property
     def columns(self) -> int:
         return self.screen.columns
-
-    @property
-    def boards_update(self) -> bool:
-        return self.screen.boards_update
 
     @property
     def players_show_unpaired(self) -> bool:
@@ -772,12 +768,13 @@ class NewScreenSet:
 
     @property
     def numbers_str(self):
-        name: str = 'échiquiers' if self.screen.type == ScreenType.Boards else 'joueur·euses'
+        name: str = 'échiquiers' if self.screen.type in [ScreenType.Boards, ScreenType.Input] else 'joueur·euses'
         if self.fixed_board_numbers:
             return f'{name} {", ".join(map(str, self.fixed_board_numbers))}'
         match (self.first, self.last):
             case (None, None):
-                return 'tous les échiquiers' if self.screen.type == ScreenType.Boards else 'tou·tes les joueur·euses'
+                return 'tous les échiquiers' if self.screen.type in [ScreenType.Boards, ScreenType.Input] \
+                    else 'tou·tes les joueur·euses'
             case (first, None) if first is not None:
                 return f'{name} à partir du n°{first}'
             case (first, last) if first is not None and last is not None:

@@ -34,31 +34,31 @@
                     </button>
                 </li>
             {% endwith %}
-            {% with id='tournaments' %}
+            {% with id='tournaments', tournaments_len=event.tournaments_by_id|length %}
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="{{ id }}-tab" data-bs-toggle="tab" data-bs-target="#{{ id }}-tab-pane" type="button" role="tab" aria-controls="{{ id }}-tab-pane" aria-selected="true">
-                        <i class="bi-people-fill" ></i>&nbsp;{{ event.tournaments|length }} tournoi{% if event.tournaments|length > 1 %}s{% endif %}
+                        <i class="bi-people-fill" ></i>&nbsp;{{ tournaments_len }} tournoi{% if tournaments_len > 1 %}s{% endif %}
                     </button>
                 </li>
             {% endwith %}
-            {% with id='screens' %}
+            {% with id='screens', screen_len=event.screens_by_uniq_id|length %}
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="{{ id }}-tab" data-bs-toggle="tab" data-bs-target="#{{ id }}-tab-pane" type="button" role="tab" aria-controls="{{ id }}-tab-pane" aria-selected="true">
-                        <i class="bi-arrows-fullscreen" ></i>&nbsp;{{ event.screens|length }} écran{% if event.screens|length > 1 %}s{% endif %}
+                        <i class="bi-arrows-fullscreen" ></i>&nbsp;{{ screen_len }} écran{% if screen_len > 1 %}s{% endif %}
                     </button>
                 </li>
             {% endwith %}
-            {% with id='rotators' %}
+            {% with id='rotators', rotators_len=event.rotators_by_id|length %}
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="{{ id }}-tab" data-bs-toggle="tab" data-bs-target="#{{ id }}-tab-pane" type="button" role="tab" aria-controls="{{ id }}-tab-pane" aria-selected="true">
-                        <i class="bi-repeat" ></i>&nbsp;{{ event.rotators|length }} écran{% if event.rotators|length > 1 %}s{% endif %} rotatif{% if event.rotators|length > 1 %}s{% endif %}
+                        <i class="bi-repeat" ></i>&nbsp;{{ rotators_len }} écran{% if rotators_len > 1 %}s{% endif %} rotatif{% if rotators_len > 1 %}s{% endif %}
                     </button>
                 </li>
             {% endwith %}
-            {% with id='timer' %}
+            {% with id='timers', timers_len=event.timers_by_id|length %}
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="{{ id }}-tab" data-bs-toggle="tab" data-bs-target="#{{ id }}-tab-pane" type="button" role="tab" aria-controls="{{ id }}-tab-pane" aria-selected="true">
-                        <i class="bi-calendar2-event-fill" ></i>&nbsp;{% if event.timer %}{{ event.timer.hours|length }} horaire{% if event.timer.hours|length > 1 %}s{% endif %}{% else %}0 horaire{% endif %}
+                        <i class="bi-calendar2-event-fill" ></i>&nbsp;{{ timers_len }} chronomètre{% if timers_len > 1 %}s{% endif %} rotatif{% if timers_len > 1 %}s{% endif %}
                     </button>
                 </li>
             {% endwith %}

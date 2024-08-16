@@ -91,7 +91,6 @@ class StoredScreen:
     menu_text: str | None
     menu: str | None
     timer_id: int | None
-    boards_update: bool | None
     players_show_unpaired: bool | None
     results_limit: int | None | None
     results_tournament_ids: list[int] = field(default_factory=list[int])
@@ -110,7 +109,6 @@ class StoredFamily:
     menu_text: str | None
     menu: str | None
     timer_id: int | None
-    boards_update: bool | None
     players_show_unpaired: bool | None
     first: int | None
     last: int | None

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from common.config_reader import ConfigReader
 from common.papi_web_config import PapiWebConfig
-from data.screen import ANewScreen, ANewScreenWithSets, NewBoardsScreen, NewPlayersScreen
+from data.screen import NewScreen
 from data.template import Template
 from data.tournament import Tournament, NewTournament
 from data.util import ScreenType
@@ -303,7 +303,7 @@ class NewFamily:
     ):
         self.event: 'NewEvent' = event
         self.stored_family: StoredFamily = stored_family
-        self.screens_by_uniq_id: dict[str, ANewScreen] = {}
+        self.screens_by_uniq_id: dict[str, NewScreen] = {}
         self.error: str | None = None
         self.calculated_first: int | None = None
         self.calculated_last: int | None = None
@@ -365,46 +365,18 @@ class NewFamily:
         return self.event.timers_by_id[self.timer_id] if self.timer_id else None
 
     @property
-    def boards_update(self) -> bool:
-        return self.stored_family.boards_update
-
-    @property
     def players_show_unpaired(self) -> bool:
         if self.stored_family.players_show_unpaired is None:
             return PapiWebConfig().default_players_show_unpaired
         return self.stored_family.players_show_unpaired
 
-    @staticmethod
-    def screen_icon_str(type: ScreenType, boards_update: bool = None) -> str:
-        match type:
-            case ScreenType.Boards:
-                return 'bi-pencil-fill' if boards_update else 'bi-card-list'
-            case ScreenType.Players:
-                return 'bi-people-fill'
-            case ScreenType.Results:
-                return 'bi-trophy-fill'
-            case _:
-                raise ValueError(f'type=[{type}]')
-
     @property
     def icon_str(self) -> str:
-        return self.screen_icon_str(self.type, self.boards_update if self.type == ScreenType.Boards else None)
-
-    @staticmethod
-    def screen_type_str(type: ScreenType, boards_update: bool | None) -> str:
-        match type:
-            case ScreenType.Boards:
-                return 'Saisie' if boards_update else 'Échiquiers'
-            case ScreenType.Players:
-                return 'Joueur·euses'
-            case ScreenType.Results:
-                return 'Résultats'
-            case _:
-                raise ValueError(f'type=[{type}]')
+        return self.type.icon_str
 
     @property
     def type_str(self) -> str:
-        return self.screen_type_str(self.type, self.boards_update if self.type == ScreenType.Boards else None)
+        return str(self.type)
 
     @property
     def first(self) -> int | None:
@@ -441,7 +413,7 @@ class NewFamily:
             return False
         first_item_number: int
         match ScreenType.from_str(self.type):
-            case ScreenType.Boards:
+            case ScreenType.Boards | ScreenType.Input:
                 if tournament.current_round:
                     total_items_number: int = len(tournament.boards)
                     if self.first:
@@ -500,11 +472,7 @@ class NewFamily:
 
     def _build_screens(self):
         for family_index in range(1, self.calculated_parts + 1):
-            screen: ANewScreenWithSets
-            if self.type == ScreenType.Boards:
-                screen = NewBoardsScreen(self.event, family=self, family_part=family_index)
-            else:
-                screen = NewPlayersScreen(self.event, family=self, family_part=family_index)
+            screen: NewScreen = NewScreen(self.event, family=self, family_part=family_index)
             self.screens_by_uniq_id[screen.uniq_id] = screen
 
     @property

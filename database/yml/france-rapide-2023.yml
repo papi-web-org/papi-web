@@ -54,8 +54,7 @@ families:
     players_show_unpaired: false
     tournament_uniq_id: "france-rapide"
   saisie:
-    type: "boards"
-    boards_update: true
+    type: "input"
     columns: 2
     menu: "@family"
     menu_text: "[%f-%l]"
@@ -65,7 +64,6 @@ families:
     tournament_uniq_id: "france-rapide"
   affichage:
     type: "boards"
-    boards_update: false
     columns: 2
     menu: "@family"
     menu_text: "[%f-%l]"

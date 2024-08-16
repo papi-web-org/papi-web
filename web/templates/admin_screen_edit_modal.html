@@ -182,11 +182,12 @@
                                             type="text" id="{{ id }}"
                                             class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
                                             aria-describedby="{{ id }}-help {{ id }}-error"
-                                            placeholder="Exemple : @view, echiquiers-fixes, tournoi-a-*"
+                                            placeholder="Exemple : @boards, echiquiers-fixes, tournoi-a-*"
                                             value="{{ data[name] }}" />
                                     <div id="{{ id }}-help" class="form-text">
                                       Ce champ permet de spécifier les liens qui seront affichés sur le menu de l'écran.
-                                      Les identifiants des écrans doivent être séparés par des virgules, les mots-clés @view (tous les écrans d'affichage) et @update (tous les écrans de saisie), ainsi que le joker * peuvent être utilisés.
+                                      Les identifiants des écrans doivent être séparés par des virgules, les mots-clés @boards (tous les écrans d'affichage des échiquiers),
+                                        @input (tous les écrans de saisie), @players (tous les écrans d'affichage des appariements) ainsi que le joker * peuvent être utilisés.
                                       Si ce champ est laissé vide, aucun menu ne sera affiché sur l'écran.
                                     </div>
                                     {% if name in errors %}

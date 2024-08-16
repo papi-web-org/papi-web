@@ -1,0 +1,12 @@
+<div class="form-check form-switch d-inline-block pe-3">
+    <input
+            name="{{ name }}"
+            hx-post="{{ url_for('admin-update-header') }}"
+            hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@families", "{{ name }}": "{% if show %}off{% else %}on{% endif %}"}'
+            hx-swap="multi:#admin-header,#admin-content"
+            hx-indicator="#please-wait"
+            class="form-check-input"
+            type="checkbox"
+            id="{{ id }}"
+            {% if show %}checked{% endif %} /><label for="{{ id }}" class="form-check-label"> <i class="{{ icon }}"></i></label>
+</div>

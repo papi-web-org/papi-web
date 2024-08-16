@@ -39,7 +39,7 @@ class AdminTimerController(AAdminController):
             data = {}
         match action:
             case 'delete' | 'create' | 'clone' | 'update':
-                uniq_id: str = self.form_data_to_str_or_none(data, 'uniq_id')
+                uniq_id: str = self._form_data_to_str_or_none(data, 'uniq_id')
             case _:
                 raise ValueError(f'action=[{action}]')
         match action:
@@ -68,15 +68,15 @@ class AdminTimerController(AAdminController):
             case 'update':
                 for i in range(1, 4):
                     field: str = f'color_{i}'
-                    color_checkboxes[i] = self.form_data_to_bool_or_none(data, field+'_checkbox')
+                    color_checkboxes[i] = self._form_data_to_bool_or_none(data, field + '_checkbox')
                     if not color_checkboxes[i]:
                         try:
-                            colors[i] = self.form_data_to_rgb_or_none(data, field)
+                            colors[i] = self._form_data_to_rgb_or_none(data, field)
                         except ValueError:
                             errors[field] = f'La couleur n\'est pas valide [{data[field]}] (attendu [#HHHHHH]).'
                     field: str = f'delay_{i}'
                     try:
-                        delays[i] = self.form_data_to_int_or_none(data, field, minimum=1)
+                        delays[i] = self._form_data_to_int_or_none(data, field, minimum=1)
                     except ValueError:
                         errors[field] = f'Le délai [{data[field]}] n\'est pas valide (attendu un entier positif).'
             case 'create' | 'clone' | 'delete':
@@ -103,7 +103,7 @@ class AdminTimerController(AAdminController):
             if admin_timer:
                 match action:
                     case 'update':
-                        data['uniq_id'] = self.value_to_form_data(admin_timer.stored_timer.uniq_id)
+                        data['uniq_id'] = self._value_to_form_data(admin_timer.stored_timer.uniq_id)
                     case 'create' | 'clone':
                         data['uniq_id'] = ''
                     case 'delete':
@@ -113,10 +113,10 @@ class AdminTimerController(AAdminController):
                 match action:
                     case 'update' | 'clone':
                         for i in range(1, 4):
-                            data[f'color_{i}'] = self.value_to_form_data(admin_timer.colors[i])
-                            data[f'color_{i}_checkbox'] = self.value_to_form_data(
+                            data[f'color_{i}'] = self._value_to_form_data(admin_timer.colors[i])
+                            data[f'color_{i}_checkbox'] = self._value_to_form_data(
                                 admin_timer.stored_timer.colors[i] is None)
-                            data[f'delay_{i}'] = self.value_to_form_data(admin_timer.stored_timer.delays[i])
+                            data[f'delay_{i}'] = self._value_to_form_data(admin_timer.stored_timer.delays[i])
                     case 'create':
                         for i in range(1, 4):
                             data[f'color_{i}'] = ''
@@ -157,8 +157,8 @@ class AdminTimerController(AAdminController):
             ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+        action: str = self._form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
@@ -167,7 +167,7 @@ class AdminTimerController(AAdminController):
         admin_timer: NewTimer | None = None
         match action:
             case 'update' | 'delete' | 'clone':
-                admin_timer_id: int = self.form_data_to_int_or_none(data, 'admin_timer_id')
+                admin_timer_id: int = self._form_data_to_int_or_none(data, 'admin_timer_id')
                 try:
                     admin_timer = admin_event.timers_by_id[admin_timer_id]
                 except KeyError:
@@ -191,8 +191,8 @@ class AdminTimerController(AAdminController):
             ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+        action: str = self._form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
@@ -204,7 +204,7 @@ class AdminTimerController(AAdminController):
         admin_timer: NewTimer | None = None
         match action:
             case 'update' | 'delete' | 'clone':
-                admin_timer_id: int = self.form_data_to_int_or_none(data, 'admin_timer_id')
+                admin_timer_id: int = self._form_data_to_int_or_none(data, 'admin_timer_id')
                 try:
                     admin_timer = admin_event.timers_by_id[admin_timer_id]
                 except KeyError:
@@ -278,11 +278,11 @@ class AdminTimerController(AAdminController):
         errors: dict[str, str] = {}
         if data is None:
             data = {}
-        uniq_id: str = self.form_data_to_str_or_none(data, 'uniq_id')
+        uniq_id: str = self._form_data_to_str_or_none(data, 'uniq_id')
         if not uniq_id:
             errors['uniq_id'] = 'Veuillez entrer l\'identifiant de l\'horaire (ou le numéro de ronde).'
-        time_str: str = self.form_data_to_str_or_none(data, 'time_str')
-        date_str: str = self.form_data_to_str_or_none(data, 'date_str')
+        time_str: str = self._form_data_to_str_or_none(data, 'time_str')
+        date_str: str = self._form_data_to_str_or_none(data, 'date_str')
         if not time_str:
             errors['time_str'] = f'Veuillez entrer l\'heure.'
         else:
@@ -314,8 +314,8 @@ class AdminTimerController(AAdminController):
                     errors['date_str'] = errors['time_str']
         if uniq_id != admin_timer_hour.uniq_id and uniq_id in admin_timer.timer_hour_uniq_ids:
             errors['uniq_id'] = f'L\'horaire [{uniq_id}] existe déjà.'
-        text_before: str = self.form_data_to_str_or_none(data, 'text_before')
-        text_after: str = self.form_data_to_str_or_none(data, 'text_after')
+        text_before: str = self._form_data_to_str_or_none(data, 'text_before')
+        text_after: str = self._form_data_to_str_or_none(data, 'text_after')
         try:
             round: int = int(uniq_id)
             if round <= 0:
@@ -350,11 +350,11 @@ class AdminTimerController(AAdminController):
         if data is None:
             if admin_timer_hour:
                 data = {
-                    'uniq_id': self.value_to_form_data(admin_timer_hour.stored_timer_hour.uniq_id),
-                    'date_str': self.value_to_form_data(admin_timer_hour.stored_timer_hour.date_str),
-                    'time_str': self.value_to_form_data(admin_timer_hour.stored_timer_hour.time_str),
-                    'text_before': self.value_to_form_data(admin_timer_hour.stored_timer_hour.text_before),
-                    'text_after': self.value_to_form_data(admin_timer_hour.stored_timer_hour.text_after),
+                    'uniq_id': self._value_to_form_data(admin_timer_hour.stored_timer_hour.uniq_id),
+                    'date_str': self._value_to_form_data(admin_timer_hour.stored_timer_hour.date_str),
+                    'time_str': self._value_to_form_data(admin_timer_hour.stored_timer_hour.time_str),
+                    'text_before': self._value_to_form_data(admin_timer_hour.stored_timer_hour.text_before),
+                    'text_after': self._value_to_form_data(admin_timer_hour.stored_timer_hour.text_after),
                 }
                 stored_timer_hour = self._admin_validate_timer_hour_update_data(
                     admin_timer, admin_timer_hour, admin_timer.get_previous_timer_hour(admin_timer_hour), data)
@@ -388,19 +388,19 @@ class AdminTimerController(AAdminController):
             ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
         admin_timer: NewTimer | None = None
-        admin_timer_id: int = self.form_data_to_int_or_none(data, 'admin_timer_id')
+        admin_timer_id: int = self._form_data_to_int_or_none(data, 'admin_timer_id')
         try:
             admin_timer = admin_event.timers_by_id[admin_timer_id]
         except KeyError:
             Message.error(request, f'Le chronomètre [{admin_timer_id}] est introuvable.')
-        admin_timer_hour_id: int = self.form_data_to_int_or_none(data, 'admin_timer_hour_id')
+        admin_timer_hour_id: int = self._form_data_to_int_or_none(data, 'admin_timer_hour_id')
         if admin_timer_hour_id:
             try:
                 admin_timer_hour: NewTimerHour = admin_timer.timer_hours_by_id[admin_timer_hour_id]
@@ -422,8 +422,8 @@ class AdminTimerController(AAdminController):
             ],
     ) -> Template | Reswap:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+        action: str = self._form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
@@ -435,7 +435,7 @@ class AdminTimerController(AAdminController):
         admin_timer: NewTimer
         match action:
             case 'delete' | 'clone' | 'update' | 'add' | 'reorder' | 'cancel':
-                admin_timer_id: int = self.form_data_to_int_or_none(data, 'admin_timer_id')
+                admin_timer_id: int = self._form_data_to_int_or_none(data, 'admin_timer_id')
                 try:
                     admin_timer = admin_event.timers_by_id[admin_timer_id]
                 except KeyError:
@@ -446,7 +446,7 @@ class AdminTimerController(AAdminController):
         admin_timer_hour: NewTimerHour | None = None
         match action:
             case 'delete' | 'clone' | 'update':
-                admin_timer_hour_id: int = self.form_data_to_int_or_none(data, 'admin_timer_hour_id')
+                admin_timer_hour_id: int = self._form_data_to_int_or_none(data, 'admin_timer_hour_id')
                 try:
                     admin_timer_hour = admin_timer.timer_hours_by_id[admin_timer_hour_id]
                 except KeyError:

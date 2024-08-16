@@ -28,14 +28,26 @@
             <th scope="col" class="text-nowrap">Type</th>
             <th scope="col" class="text-nowrap">Menu</th>
             <th scope="col" class="text-nowrap">Paramètres</th>
-            <th scope="col" class="text-nowrap" colspan="2">Tournois / répartition</th>
-            <th scope="col" class="">Écrans de la famille</th>
-            <th scope="col" class=""></th>
+            <th scope="col" class="text-nowrap">Tournois / répartition</th>
+            <th scope="col" class="text-nowrap">Écrans de la famille</th>
+            <th scope="col" class="text-nowrap text-end width-100" colspan="2">
+                {% with id='show-boards-families-on-family-list', name='show_boards_families_on_family_list', show='boards' in screen_types_on_family_list, icon='bi-card-list' %}
+                    {% include 'admin_family_list_screen_type_switch.html' %}
+                {% endwith %}
+                {% with id='show-input-families-on-family-list', name='show_input_families_on_family_list', show='input' in screen_types_on_family_list, icon='bi-pencil-fill' %}
+                    {% include 'admin_family_list_screen_type_switch.html' %}
+                {% endwith %}
+                {% with id='show-players-families-on-family-list', name='show_players_families_on_family_list', show='players' in screen_types_on_family_list, icon='bi-people-fill' %}
+                    {% include 'admin_family_list_screen_type_switch.html' %}
+                {% endwith %}
+            </th>
         </tr>
     </thead>
     <tbody>
-        {% if admin_event.families_by_id|length > 0 %}
-            {% for family in admin_event.families_by_id.values() %}
+        {% set ns = namespace(family_found=false) %}
+        {% for family in admin_event.families_by_id.values() %}
+            {% if family.type in screen_types_on_family_list %}
+                {% set ns.family_found=true %}
                 <tr>
                     <th scope="row" class="text-nowrap">
                         <div>
@@ -89,26 +101,13 @@
                             </div>
                         </div>
                     </td>
-                    <td class="text-nowrap width-50">
-                        <button
-                                class="btn btn-sm btn-primary p-1"
-                                hx-post="{{ url_for('admin-family-render-edit-modal') }}"
-                                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_family_id": "{{ family.id }}"}'
-                                hx-target="#admin-modal-container"
-                                hx-swap="innerHTML"
-                                data-bs-toggle="modal"
-                                data-bs-target="#admin-modal-container"
-                                hx-indicator="#please-wait" >
-                            <i class="bi-pencil-fill"></i> Éditer
-                        </button>
-                    </td>
-                    <td class="text-nowrap width-50">
+                    <td class="text-nowrap">
                         {% if family.screens_by_uniq_id|length > 0 %}
                             {% for screen in family.screens_by_uniq_id.values() %}
                                 <div>
                                     {% with tournament=screen.screen_sets_sorted_by_order[0].tournament %}
                                         {{ loop.index }}.
-                                        {% if tournament.current_round and screen.type == 'boards' %}
+                                        {% if tournament.current_round and screen.type in ['boards', 'input'] %}
                                             Échiquiers du n°{{ screen.screen_sets_sorted_by_order[0].first_board.id }} au n°{{ screen.screen_sets_sorted_by_order[0].last_board.id }}
                                         {% else %}
                                             Joueur·euses de {{ screen.screen_sets_sorted_by_order[0].first_player_by_name.last_name[:8] }} à {{ screen.screen_sets_sorted_by_order[0].last_player_by_name.last_name[:8] }}
@@ -121,6 +120,19 @@
                                 Aucun écran dans cette famille.
                             </div>
                         {% endif %}
+                    </td>
+                    <td class="text-nowrap">
+                        <button
+                                class="btn btn-sm btn-primary p-1"
+                                hx-post="{{ url_for('admin-family-render-edit-modal') }}"
+                                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_family_id": "{{ family.id }}"}'
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                data-bs-toggle="modal"
+                                data-bs-target="#admin-modal-container"
+                                hx-indicator="#please-wait" >
+                            <i class="bi-pencil-fill"></i> Éditer
+                        </button>
                     </td>
                     <td class="text-nowrap text-end">
                         <button
@@ -136,11 +148,12 @@
                         </button>
                     </td>
                 </tr>
-            {% endfor %}
-        {% else %}
+            {% endif %}
+        {% endfor %}
+        {% if not ns.family_found %}
             <tr>
                 <td
-                        colspan="9"
+                        colspan="8"
                         class="text-nowrap" >
                     <span class="fst-italic">Aucune famille d'écran trouvée.</span>
                 </td>

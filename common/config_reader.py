@@ -17,6 +17,7 @@ TMP_DIR: Path = Path('tmp')
 # https://docs.python.org/3/library/configparser.html
 class ConfigReader(ConfigParser):
 
+    # TODO remove these keys when the config reader is only used for the main config
     screen_set_keys: tuple[str] = (
         'tournament',
         'name',

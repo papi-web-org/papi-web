@@ -61,7 +61,14 @@
             {% endif %}
         {% endif %}
         {% if screen.type == 'boards' %}
-            <div class="screen boards-screen {% if screen.update %}update{% else %}view{% endif %}">
+            <div class="screen boards-screen view">
+                {% for screen_set in screen.sets %}
+                    {% include 'boards_screen_set.html' %}
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if screen.type == 'input' %}
+            <div class="screen boards-screen update">
                 {% include 'login_modal.html' %}
                 {% for screen_set in screen.sets %}
                     {% include 'boards_screen_set.html' %}

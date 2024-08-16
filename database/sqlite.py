@@ -314,20 +314,19 @@ class EventDatabase(SQLiteDatabase):
                             self._check_populate_dict(
                                 yml_file, f'/screens/{screen_uniq_id}', screen_dict,
                                 mandatory_fields=['type', ],
-                                optional_fields=['boards_update', 'timer_uniq_id', 'players_show_unpaired',
+                                optional_fields=['timer_uniq_id', 'players_show_unpaired',
                                                  'results_limit', 'results_tournament_uniq_ids', 'name', 'columns',
                                                  'menu_text', 'menu', 'sets'])
                             assert screen_dict, f'{yml_file.name}: dictionary screens.{screen_uniq_id} is empty'
                             timer_uniq_id: str | None = screen_dict.get('timer_uniq_id', None)
                             timer_id: int = timer_ids_by_uniq_id[timer_uniq_id] if timer_uniq_id else None
                             type: str = screen_dict.get('type', None)
-                            boards_update: bool | None = None
                             players_show_unpaired: bool | None = None
                             results_limit: int | None = None
                             results_tournament_ids: list[int] | None = None
                             match type:
-                                case 'boards':
-                                    boards_update = screen_dict.get('boards_update', False)
+                                case 'boards' | 'input':
+                                    pass
                                 case 'players':
                                     players_show_unpaired = screen_dict.get('players_show_unpaired', False)
                                 case 'results':
@@ -353,7 +352,6 @@ class EventDatabase(SQLiteDatabase):
                                 menu_text=screen_dict.get('menu_text', None),
                                 menu=screen_dict.get('menu', None),
                                 timer_id=timer_id,
-                                boards_update=boards_update,
                                 players_show_unpaired=players_show_unpaired,
                                 results_limit=results_limit,
                                 results_tournament_ids=results_tournament_ids,
@@ -387,7 +385,7 @@ class EventDatabase(SQLiteDatabase):
                             self._check_populate_dict(
                                 yml_file, f'/families/{family_uniq_id}', family_dict,
                                 mandatory_fields=['type', ],
-                                optional_fields=['tournament_uniq_id', 'timer_uniq_id', 'boards_update',
+                                optional_fields=['tournament_uniq_id', 'timer_uniq_id',
                                                  'players_show_unpaired', 'name', 'columns', 'menu_text', 'menu',
                                                  'first', 'last', 'parts', 'number', ])
                             timer_uniq_id: str | None = family_dict.get('timer_uniq_id', None)
@@ -396,11 +394,10 @@ class EventDatabase(SQLiteDatabase):
                             tournament_uniq_id: str = family_dict.get('tournament_uniq_id', None)
                             tournament_id: int = tournament_ids_by_uniq_id[
                                 tournament_uniq_id] if tournament_uniq_id else None
-                            boards_update: bool | None = None
                             players_show_unpaired: bool | None = None
                             match type:
-                                case 'boards':
-                                    boards_update = family_dict.get('boards_update', False)
+                                case 'boards' | 'input':
+                                    pass
                                 case 'players':
                                     players_show_unpaired = family_dict.get('players_show_unpaired', False)
                                 case 'results':
@@ -417,7 +414,6 @@ class EventDatabase(SQLiteDatabase):
                                 menu_text=family_dict.get('menu_text', None),
                                 menu=family_dict.get('menu', None),
                                 timer_id=timer_id,
-                                boards_update=boards_update,
                                 players_show_unpaired=players_show_unpaired,
                                 first=family_dict.get('first', None),
                                 last=family_dict.get('last', None),
@@ -1353,7 +1349,6 @@ class EventDatabase(SQLiteDatabase):
             name=row['name'],
             type=row['type'],
             tournament_id=row['tournament_id'],
-            boards_update=row['boards_update'],
             players_show_unpaired=row['players_show_unpaired'],
             columns=row['columns'],
             menu_text=row['menu_text'],
@@ -1386,13 +1381,13 @@ class EventDatabase(SQLiteDatabase):
             self, stored_family: StoredFamily,
     ) -> StoredFamily:
         fields: list[str] = [
-            'uniq_id', 'name', 'type', 'tournament_id', 'columns', 'menu_text', 'menu', 'timer_id', 'boards_update',
+            'uniq_id', 'name', 'type', 'tournament_id', 'columns', 'menu_text', 'menu', 'timer_id',
             'players_show_unpaired', 'first', 'last', 'parts', 'number',
         ]
         params: list = [
             stored_family.uniq_id, stored_family.name, stored_family.type, stored_family.tournament_id,
             stored_family.columns, stored_family.menu_text, stored_family.menu, stored_family.timer_id,
-            stored_family.boards_update, stored_family.players_show_unpaired, stored_family.first, stored_family.last,
+            stored_family.players_show_unpaired, stored_family.first, stored_family.last,
             stored_family.parts, stored_family.number,
         ]
         if stored_family.id is None:
@@ -1441,7 +1436,6 @@ class EventDatabase(SQLiteDatabase):
             menu_text=row['menu_text'],
             menu=row['menu'],
             timer_id=row['timer_id'],
-            boards_update=row['boards_update'],
             players_show_unpaired=row['players_show_unpaired'],
             results_limit=row['results_limit'],
             results_tournament_ids=cls.load_json_from_database_field(row['results_tournament_ids']),
@@ -1477,12 +1471,11 @@ class EventDatabase(SQLiteDatabase):
             self, stored_screen: StoredScreen,
     ) -> StoredScreen:
         fields: list[str] = [
-            'uniq_id', 'name', 'type', 'boards_update', 'players_show_unpaired', 'columns', 'menu_text', 'menu',
+            'uniq_id', 'name', 'type', 'players_show_unpaired', 'columns', 'menu_text', 'menu',
             'timer_id', 'results_limit', 'results_tournament_ids',
         ]
         params: list = [
             stored_screen.uniq_id, stored_screen.name, stored_screen.type,
-            stored_screen.boards_update if stored_screen.type == 'boards' else None,
             stored_screen.players_show_unpaired if stored_screen.type == 'players' else None,
             stored_screen.columns, stored_screen.menu_text, stored_screen.menu, stored_screen.timer_id,
             stored_screen.results_limit if stored_screen.type == 'results' else None,

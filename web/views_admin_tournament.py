@@ -35,7 +35,7 @@ class AdminTournamentController(AAdminController):
         errors: dict[str, str] = {}
         if data is None:
             data = {}
-        uniq_id: str = self.form_data_to_str_or_none(data, 'uniq_id')
+        uniq_id: str = self._form_data_to_str_or_none(data, 'uniq_id')
         if action == 'delete':
             if not uniq_id:
                 errors['uniq_id'] = 'Veuillez entrer l\'identifiant du tournoi.'
@@ -63,16 +63,16 @@ class AdminTournamentController(AAdminController):
         ffe_password: str | None = None
         match action:
             case 'create' | 'update' | 'clone':
-                name = self.form_data_to_str_or_none(data, 'name')
+                name = self._form_data_to_str_or_none(data, 'name')
                 if not name:
                     errors['name'] = 'Veuillez entrer le nom du tournoi.'
-                path = self.form_data_to_str_or_none(data, 'path')
-                filename = self.form_data_to_str_or_none(data, 'filename')
+                path = self._form_data_to_str_or_none(data, 'path')
+                filename = self._form_data_to_str_or_none(data, 'filename')
                 try:
-                    ffe_id = self.form_data_to_int_or_none(data, 'ffe_id')
+                    ffe_id = self._form_data_to_int_or_none(data, 'ffe_id')
                 except ValueError:
                     errors['ffe_id'] = 'L\'identifiant FFE est un entier positif.'
-                ffe_password = self.form_data_to_str_or_none(data, 'ffe_password')
+                ffe_password = self._form_data_to_str_or_none(data, 'ffe_password')
                 if ffe_password and not re.match('^[A-Z]{10}$', ffe_password):
                     errors['ffe_password'] = \
                         'Le mot de passe du tournoi sur le site FFE doit être composé de 10 lettres majuscules.'
@@ -90,17 +90,17 @@ class AdminTournamentController(AAdminController):
         record_illegal_moves: int | None = None
         match action:
             case 'update':
-                time_control_initial_time = self.form_data_to_int_or_none(data, 'time_control_initial_time')
-                time_control_increment = self.form_data_to_int_or_none(data, 'time_control_increment')
-                time_control_handicap_penalty_value = self.form_data_to_int_or_none(
+                time_control_initial_time = self._form_data_to_int_or_none(data, 'time_control_initial_time')
+                time_control_increment = self._form_data_to_int_or_none(data, 'time_control_increment')
+                time_control_handicap_penalty_value = self._form_data_to_int_or_none(
                     data, 'time_control_handicap_penalty_value')
-                time_control_handicap_penalty_step = self.form_data_to_int_or_none(
+                time_control_handicap_penalty_step = self._form_data_to_int_or_none(
                     data, 'time_control_handicap_penalty_step')
-                time_control_handicap_min_time = self.form_data_to_int_or_none(
+                time_control_handicap_min_time = self._form_data_to_int_or_none(
                     data, 'time_control_handicap_min_time')
-                chessevent_id = self.form_data_to_int_or_none(data, 'chessevent_id')
-                chessevent_tournament_name = self.form_data_to_str_or_none(data, 'chessevent_tournament_name')
-                record_illegal_moves = self.form_data_to_str_or_none(data, 'record_illegal_moves')
+                chessevent_id = self._form_data_to_int_or_none(data, 'chessevent_id')
+                chessevent_tournament_name = self._form_data_to_str_or_none(data, 'chessevent_tournament_name')
+                record_illegal_moves = self._form_data_to_str_or_none(data, 'record_illegal_moves')
             case 'delete' | 'create' | 'clone':
                 pass
             case _:
@@ -147,7 +147,7 @@ class AdminTournamentController(AAdminController):
             if admin_tournament:
                 match action:
                     case 'update':
-                        data['uniq_id'] = self.value_to_form_data(admin_tournament.stored_tournament.uniq_id)
+                        data['uniq_id'] = self._value_to_form_data(admin_tournament.stored_tournament.uniq_id)
                     case 'create' | 'clone':
                         data['uniq_id'] = ''
                     case 'delete':
@@ -156,11 +156,11 @@ class AdminTournamentController(AAdminController):
                         raise ValueError(f'action=[{action}]')
                 match action:
                     case 'update' | 'clone':
-                        data['name'] = self.value_to_form_data(admin_tournament.stored_tournament.name)
-                        data['path'] = self.value_to_form_data(admin_tournament.stored_tournament.path)
-                        data['filename'] = self.value_to_form_data(admin_tournament.stored_tournament.filename)
-                        data['ffe_id'] = self.value_to_form_data(admin_tournament.stored_tournament.ffe_id)
-                        data['ffe_password'] = self.value_to_form_data(admin_tournament.stored_tournament.ffe_password)
+                        data['name'] = self._value_to_form_data(admin_tournament.stored_tournament.name)
+                        data['path'] = self._value_to_form_data(admin_tournament.stored_tournament.path)
+                        data['filename'] = self._value_to_form_data(admin_tournament.stored_tournament.filename)
+                        data['ffe_id'] = self._value_to_form_data(admin_tournament.stored_tournament.ffe_id)
+                        data['ffe_password'] = self._value_to_form_data(admin_tournament.stored_tournament.ffe_password)
                     case 'create':
                         data['name'] = ''
                         data['path'] = ''
@@ -173,21 +173,21 @@ class AdminTournamentController(AAdminController):
                         raise ValueError(f'action=[{action}]')
                 match action:
                     case 'update':
-                        data['time_control_initial_time'] = self.value_to_form_data(
+                        data['time_control_initial_time'] = self._value_to_form_data(
                             admin_tournament.stored_tournament.time_control_initial_time)
-                        data['time_control_increment'] = self.value_to_form_data(
+                        data['time_control_increment'] = self._value_to_form_data(
                             admin_tournament.stored_tournament.time_control_increment)
-                        data['time_control_handicap_penalty_value'] = self.value_to_form_data(
+                        data['time_control_handicap_penalty_value'] = self._value_to_form_data(
                             admin_tournament.stored_tournament.time_control_handicap_penalty_value)
-                        data['time_control_handicap_penalty_step'] = self.value_to_form_data(
+                        data['time_control_handicap_penalty_step'] = self._value_to_form_data(
                             admin_tournament.stored_tournament.time_control_handicap_penalty_step)
-                        data['time_control_handicap_min_time'] = self.value_to_form_data(
+                        data['time_control_handicap_min_time'] = self._value_to_form_data(
                             admin_tournament.stored_tournament.time_control_handicap_min_time)
-                        data['chessevent_id'] = self.value_to_form_data(
+                        data['chessevent_id'] = self._value_to_form_data(
                             admin_tournament.stored_tournament.chessevent_id)
-                        data['chessevent_tournament_name'] = self.value_to_form_data(
+                        data['chessevent_tournament_name'] = self._value_to_form_data(
                             admin_tournament.stored_tournament.chessevent_tournament_name)
-                        data['record_illegal_moves'] = self.value_to_form_data(
+                        data['record_illegal_moves'] = self._value_to_form_data(
                             admin_tournament.stored_tournament.record_illegal_moves)
                     case 'delete' | 'clone' | 'create':
                         pass
@@ -226,8 +226,8 @@ class AdminTournamentController(AAdminController):
             ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+        action: str = self._form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
@@ -236,7 +236,7 @@ class AdminTournamentController(AAdminController):
         admin_tournament: NewTournament | None = None
         match action:
             case 'update' | 'delete' | 'clone':
-                admin_tournament_id: int = self.form_data_to_int_or_none(data, 'admin_tournament_id')
+                admin_tournament_id: int = self._form_data_to_int_or_none(data, 'admin_tournament_id')
                 try:
                     admin_tournament = admin_event.tournaments_by_id[admin_tournament_id]
                 except KeyError:
@@ -260,8 +260,8 @@ class AdminTournamentController(AAdminController):
             ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+        action: str = self._form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
@@ -273,7 +273,7 @@ class AdminTournamentController(AAdminController):
         admin_tournament: NewTournament | None = None
         match action:
             case 'update' | 'delete' | 'clone':
-                admin_tournament_id: int = self.form_data_to_int_or_none(data, 'admin_tournament_id')
+                admin_tournament_id: int = self._form_data_to_int_or_none(data, 'admin_tournament_id')
                 try:
                     admin_tournament = admin_event.tournaments_by_id[admin_tournament_id]
                 except KeyError:

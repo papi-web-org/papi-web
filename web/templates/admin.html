@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-Papi-web
+Papi-web - Arbitrage
 {% endblock title %}
 
 {% block head %}
@@ -10,8 +10,16 @@ Papi-web
 
 {% block header %}
     <div id="admin-header-wrapper" class="admin-header-wrapper p-1 position-sticky top-0">
-        <form id="admin-header" class="admin row">
-            <div class="col col-md-auto">
+        <form method="POST" class="d-inline-block">
+            <input type="hidden" name="target" value="" />
+            <button
+                    type="submit"
+                    class="btn btn-link link-dark">
+                <i class="bi-house-fill"></i>
+            </button>
+        </form>
+        <form id="admin-header" class="admin row d-inline-block">
+            <div class="col col-md-auto d-inline-block">
                 <span id="admin-main-selector" class="admin">
                     <select
                         name="admin_main_selector"
@@ -28,7 +36,7 @@ Papi-web
                     </select>
                 </span>
             </div>
-            <div class="col col-md-auto">
+            <div class="col col-md-auto d-inline-block">
                 <span id="admin-event-selector" class="">
                     {% if admin_event %}
                         <select

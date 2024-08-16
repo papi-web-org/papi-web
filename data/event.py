@@ -12,7 +12,7 @@ from common.papi_web_config import PapiWebConfig
 from data.chessevent import ChessEvent, ChessEventBuilder, NewChessEvent
 from data.family import FamilyBuilder, NewFamily
 from data.rotator import Rotator, RotatorBuilder, NewRotator
-from data.screen import AScreen, ScreenBuilder, ANewScreen, NewBoardsScreen, NewPlayersScreen, NewResultsScreen
+from data.screen import AScreen, ScreenBuilder, NewScreen
 from data.template import Template, TemplateBuilder
 from data.timer import Timer, TimerBuilder, NewTimer
 from data.tournament import Tournament, TournamentBuilder, NewTournament
@@ -315,13 +315,13 @@ class NewEvent:
         self.chessevents_by_uniq_id: dict[str, NewChessEvent] = {}
         self.tournaments_by_id: dict[int, NewTournament] = {}
         self.tournaments_by_uniq_id: dict[str, NewTournament] = {}
-        self.screens_by_uniq_id: dict[str, ANewScreen] = {}
-        self._screens_sorted_by_uniq_id: list[ANewScreen] | None = None
-        self.basic_screens_by_id: dict[int, ANewScreen] = {}
-        self.basic_screens_by_uniq_id: dict[str, ANewScreen] = {}
+        self.screens_by_uniq_id: dict[str, NewScreen] = {}
+        self._screens_sorted_by_uniq_id: list[NewScreen] | None = None
+        self.basic_screens_by_id: dict[int, NewScreen] = {}
+        self.basic_screens_by_uniq_id: dict[str, NewScreen] = {}
         self.families_by_id: dict[int, NewFamily] = {}
         self.families_by_uniq_id: dict[str, NewFamily] = {}
-        self.family_screens_by_uniq_id: dict[str, ANewScreen] = {}
+        self.family_screens_by_uniq_id: dict[str, NewScreen] = {}
         self.rotators_by_id: dict[int, NewRotator] = {}
         self.rotators_by_uniq_id: dict[str, NewRotator] = {}
         self.timers_by_id: dict[int, NewTimer] = {}
@@ -437,7 +437,7 @@ class NewEvent:
         return self._timer_delays
 
     @property
-    def screens_sorted_by_uniq_id(self) -> list[ANewScreen]:
+    def screens_sorted_by_uniq_id(self) -> list[NewScreen]:
         if self._screens_sorted_by_uniq_id is None:
             self._screens_sorted_by_uniq_id = sorted(
                 self.screens_by_uniq_id.values(), key=lambda screen: screen.uniq_id)
@@ -483,15 +483,7 @@ class NewEvent:
 
     def _build_screens(self):
         for stored_screen in self.stored_event.stored_screens:
-            match ScreenType.from_str(stored_screen.type):
-                case ScreenType.Boards:
-                    screen: NewBoardsScreen = NewBoardsScreen(self, stored_screen=stored_screen)
-                case ScreenType.Players:
-                    screen: NewPlayersScreen = NewPlayersScreen(self, stored_screen=stored_screen)
-                case ScreenType.Results:
-                    screen: NewResultsScreen = NewResultsScreen(self, stored_screen=stored_screen)
-                case _:
-                    raise ValueError(f'stored_screen.type={stored_screen.type}')
+            screen: NewScreen = NewScreen(self, stored_screen=stored_screen)
             self.basic_screens_by_id[screen.id] = screen
             self.basic_screens_by_uniq_id[screen.uniq_id] = screen
             self.screens_by_uniq_id[screen.uniq_id] = screen
@@ -512,14 +504,22 @@ class NewEvent:
             self.rotators_by_id[stored_rotator.id] = rotator
 
     def _set_screen_menus(self):
-        view_menu_screens: list[ANewScreen] = []
-        update_menu_screens: list[ANewScreen] = []
+        boards_menu_screens: list[NewScreen] = []
+        input_menu_screens: list[NewScreen] = []
+        players_menu_screens: list[NewScreen] = []
         for screen in self.screens_by_uniq_id.values():
             if screen.menu_label:
-                if screen.type == ScreenType.Boards and screen.boards_update:
-                    update_menu_screens.append(screen)
-                else:
-                    view_menu_screens.append(screen)
+                match screen.type:
+                    case ScreenType.Boards:
+                        boards_menu_screens.append(screen)
+                    case ScreenType.Input:
+                        input_menu_screens.append(screen)
+                    case ScreenType.Players:
+                        players_menu_screens.append(screen)
+                    case ScreenType.Results:
+                        boards_menu_screens.append(screen)
+                    case _:
+                        raise ValueError(f'type={screen.type}')
         for screen in self.screens_by_uniq_id.values():
             if screen.menu is None:
                 screen.menu_screens = []
@@ -527,11 +527,14 @@ class NewEvent:
             for menu_part in map(str.strip, screen.menu.split(',')):
                 if not menu_part:
                     continue
-                if menu_part == '@update':
-                    screen.menu_screens += update_menu_screens
+                if menu_part == '@boards':
+                    screen.menu_screens += boards_menu_screens
                     continue
-                if menu_part == '@view':
-                    screen.menu_screens += view_menu_screens
+                if menu_part == '@input':
+                    screen.menu_screens += input_menu_screens
+                    continue
+                if menu_part == '@players':
+                    screen.menu_screens += players_menu_screens
                     continue
                 if menu_part == '@family':
                     assert screen.family_id is not None

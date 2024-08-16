@@ -2,7 +2,7 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2 class="modal-title">
-                {% if admin_screen.type == 'boards' %}
+                {% if admin_screen.type in ['boards', 'input'] %}
                     Ensembles d'échiquiers de l'écran [{{ admin_screen.uniq_id }}]
                 {% else %}
                     Ensembles de joueur·euses de l'écran [{{ admin_screen.uniq_id }}]

@@ -115,7 +115,7 @@
                                     {% for first in [true, false] %}
                                         {% with class='border-black text-black' if first else 'border-secondary-subtle text-secondary-subtle' %}
                                             {% for screen in admin_event.basic_screens_by_id.values() %}
-                                                {% with is_first=(screen.type != 'boards' or not screen.boards_update) %}
+                                                {% with is_first=(screen.type != 'input') %}
                                                     {% if first == is_first %}
                                                         {% with id='screen-' ~ screen.id, name='screen_' ~ screen.id %}
                                                             <span class="text-nowrap border {{ class }} p-1 m-1">
@@ -150,7 +150,7 @@
                                     {% for first in [true, false] %}
                                         {% with class='border-black text-black' if first else 'border-secondary-subtle text-secondary-subtle' %}
                                             {% for family in admin_event.families_by_id.values() %}
-                                                {% with is_first=family.type != 'boards' or not family.boards_update %}
+                                                {% with is_first=family.type != 'input' %}
                                                     {% if first == is_first %}
                                                         {% with id='family-' ~ family.id, name='family_' ~ family.id %}
                                                             <span class="text-nowrap border {{ class }} p-1 m-1">

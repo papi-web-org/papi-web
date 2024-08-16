@@ -9,119 +9,44 @@ Papi-web
 {% endblock head %}
 
 {% block content %}
-    <div id="content-wrapper" class="content-wrapper p-3">
-        <h1>Papi-web</h1>
-        <h2>Configuration</h2>
-        <table class="table table-striped table-sm table-hover border-black">
-            <thead class="table-dark">
-                <tr>
-                    <th scope="col">Configuration</th>
-                    <th scope="col">Valeur</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th scope="row">Port</th>
-                    <td>{{ papi_web_config.web_port }}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Accès depuis le serveur Papi-web</th>
-                    <td><a href="{{ papi_web_config.local_url }}" target="_blank">{{ papi_web_config.local_url }}</a></td>
-                </tr>
-                <tr>
-                    <th scope="row">Accès depuis le réseau local (LAN/WAN)</th>
-                    <td>{% if papi_web_config.lan_url %}<a href="{{ papi_web_config.lan_url }}" target="_blank">{{ papi_web_config.lan_url }}</a>{% else %}<span class="fst-italic">-</span>{% endif %}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Lancement du navigateur au démarrage du serveur</th>
-                    <td>{% if papi_web_config.web_launch_browser %}Oui{% else %}<span class="fst-italic">Non</span>{% endif %}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Version de Papi-web</th>
-                    <td>{{ papi_web_config['version'] }}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Version de Uvicorn</th>
-                    <td>{{ papi_web_config.uvicorn_version }}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Version de LiteStar</th>
-                    <td>{{ papi_web_config.litestar_version }}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Version de Jinja2</th>
-                    <td>{{ papi_web_config.jinja2_version }}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Version de HTMX</th>
-                    <td id="htmx-version"></td>
-                </tr>
-                <tr>
-                    <th scope="row">Version de jQuery</th>
-                    <td id="jquery-version"></td>
-                </tr>
-                <tr>
-                    <th scope="row">Version de Bootstrap</th>
-                    <td id="bootstrap-version"></td>
-                </tr>
-                <tr>
-                    <th scope="row">Version de PyODBC</th>
-                    <td>{{ papi_web_config.pyodbc_version }}</td>
-                </tr>
-                <tr>
-                    <th scope="row">Pilote Access</th>
-                    <td>{{ access_driver }} ({% if access_driver not in odbc_drivers %}présent{% else %}introuvable{% endif %})</td>
-                </tr>
-                <tr>
-                    <th scope="row">
-                        Autres pilotes ODBC trouvés sur le serveur
-                    </th>
-                    <td>
-                        {% for odbc_driver in odbc_drivers %}
-                            {% if odbc_driver != access_driver %}
-                                <div class="{% if odbc_driver == access_driver %}access-driver{% endif %}">
-                                    {{ odbc_driver }}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <h2>Évènements</h2>
-        <table class="table table-striped table-sm table-hover border-black">
-            <thead class="table-dark">
-                <tr>
-                    <th scope="col">Nom</th>
-                    <th scope="col">Evènement</th>
-                    <th scope="col">Messages</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for event in events %}
+<div id="content-wrapper" class="content-wrapper p-3">
+    <div class="row justify-content-center">
+        <div class="d-grid gap-2 col-auto mx-auto">
+            <h1 class="text-center">Bienvenue dans Papi-web !</h1>
+            <table class="table table-responsive table-striped table-sm table-hover border-black w-auto">
+                <thead class="table-dark">
                     <tr>
-                        <th scope="row"><a href="{{ url_for('render-event', event_uniq_id=event.uniq_id) }}" target="_blank">{{ event.name }}</a></th>
-                        <td>
-                            <i class="bi-people-fill" ></i>&nbsp;{{ event.tournaments|length }} tournoi{% if event.tournaments|length > 1 %}s{% endif %}
-                            <i class="bi-arrows-fullscreen" ></i>&nbsp;{{ event.screens|length }} écran{% if event.screens|length > 1 %}s{% endif %}
-                            <i class="bi-repeat" ></i>&nbsp;{{ event.rotators|length }} écran{% if event.rotators|length > 1 %}s{% endif %} rotatif{% if event.rotators|length > 1 %}s{% endif %}
-                            <i class="bi-calendar2-event-fill" ></i>&nbsp;{% if event.timer %}{{ event.timer.hours|length }}{% else %}0{% endif %} horaire{% if event.timer %}{% if event.timer.hours|length > 1 %}s{% endif %}{% endif %}
-                        </td>
-                        {% with messages_len=event.errors|length + event.warnings|length + event.infos|length %}
-                            <td>
-                                <i class="bi-chat-fill" ></i>&nbsp;{{ messages_len }} message{% if messages_len > 1 %}s{% endif %}&nbsp;:&nbsp;&nbsp;<i class="bi-bug" ></i>&nbsp;{{ event.errors|length }}&nbsp;&nbsp;<i class="bi-exclamation-triangle" ></i>&nbsp;{{ event.warnings|length }}&nbsp;&nbsp;<i class="bi-info-circle" ></i>&nbsp;{{ event.infos|length }}
-                            </td>
-                        {% endwith %}
+                        <th scope="col" colspan="2">Configuration</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">Accès depuis le serveur Papi-web</th>
+                        <td><a href="{{ papi_web_config.local_url }}" target="_blank">{{ papi_web_config.local_url }}</a></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Accès depuis le réseau local (LAN/WAN)</th>
+                        <td>{% if papi_web_config.lan_url %}<a href="{{ papi_web_config.lan_url }}" target="_blank">{{ papi_web_config.lan_url }}</a>{% else %}<span class="fst-italic">-</span>{% endif %}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <form method="POST">
+                <input type="hidden" name="target" value="user" />
+                <button
+                        type="submit"
+                        class="btn btn-primary btn-lg p-4 width-100">
+                    Salles de jeu<br/>(accès public)
+                </button>
+            </form>
+            <form method="POST">
+                <input type="hidden" name="target" value="admin" />
+                <button
+                        type="submit"
+                        class="btn btn-danger btn-lg p-1 width-100">
+                    Arbitrage<br/>(accès réservé)
+                </button>
+            </form>
+        </div>
     </div>
-    <script>
-        $(document).ready(function(){
-            $('#htmx-version').html(htmx.version);
-            $('#jquery-version').html(jQuery().jquery);
-            $('#bootstrap-version').html(bootstrap.Tooltip.VERSION);
-        });
-    </script>
+</div>
 {% endblock content %}

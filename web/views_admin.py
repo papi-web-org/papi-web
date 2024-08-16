@@ -1,5 +1,4 @@
 from logging import Logger
-from pathlib import Path
 from typing import Annotated
 
 from litestar import get, post
@@ -7,15 +6,12 @@ from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
 
-from common import RGB, check_rgb_str
 from common.exception import PapiWebException
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.event import NewEvent
 from data.loader import EventLoader
-from database.access import access_driver, odbc_drivers
 from web.messages import Message
 from web.session import SessionHandler
 from web.views import AController
@@ -24,63 +20,6 @@ logger: Logger = get_logger()
 
 
 class AAdminController(AController):
-
-    @staticmethod
-    def form_data_to_str_or_none(
-            data: dict[str, str], field: str, empty_value: int | None = None
-    ) -> str | None:
-        data[field] = data.get(field, '')
-        if data[field] is not None:
-            data[field] = data[field].strip()
-        if not data[field]:
-            return empty_value
-        return data[field]
-
-    @staticmethod
-    def form_data_to_int_or_none(
-            data: dict[str, str], field: str, empty_value: int | None = None, minimum: int = None
-    ) -> int | None:
-        data[field] = data.get(field, '')
-        if data[field] is not None:
-            data[field] = data[field].strip()
-        if not data[field]:
-            return empty_value
-        int_val = int(data[field])
-        if minimum is not None and int_val < minimum:
-            raise ValueError(f'{int_val} < {minimum}')
-        return int_val
-
-    @staticmethod
-    def form_data_to_bool_or_none(data: dict[str, str], field: str, empty_value: bool | None = None) -> bool | None:
-        data[field] = data.get(field, '')
-        if data[field] is not None:
-            data[field] = data[field].strip().lower()
-        if not data[field]:
-            return empty_value
-        return data[field] in ['true', 'on', ]
-
-    @staticmethod
-    def form_data_to_rgb_or_none(data: dict[str, str], field: str, empty_value: RGB | None = None) -> str | None:
-        data[field] = data.get(field, '')
-        if data[field] is not None:
-            data[field] = data[field].strip().lower()
-        if not data[field]:
-            return empty_value
-        return check_rgb_str(data[field])
-
-    @staticmethod
-    def value_to_form_data(value: str | int | bool | Path | None) -> str | None:
-        if value is None:
-            return ''
-        if isinstance(value, str):
-            return value.strip()
-        if isinstance(value, bool):
-            return 'true' if value else ''
-        if isinstance(value, int):
-            return str(value)
-        if isinstance(value, Path):
-            return str(value)
-        raise ValueError
 
     @staticmethod
     def _get_record_illegal_moves_options(default: int | None, ) -> dict[str, str]:
@@ -136,45 +75,6 @@ class AAdminController(AController):
         options[''] = f'Par défaut ({options["1" if PapiWebConfig().default_players_show_unpaired else "0"]})'
         return options
 
-    @staticmethod
-    def _admin_render_index(
-        request: HTMXRequest,
-        event_loader: EventLoader,
-        admin_main_selector: str = '',
-        admin_event: NewEvent = None,
-        admin_event_selector: str = '',
-    ) -> Template:
-        context: dict = {
-            'papi_web_config': PapiWebConfig(),
-            'odbc_drivers': odbc_drivers(),
-            'access_driver': access_driver(),
-            'event_loader': event_loader,
-            'messages': Message.messages(request),
-            'admin_main_selector_options': {
-                '': '-- Configuration de Papi-web',
-                '@events': '-- Liste des évènements',
-            },
-            'admin_main_selector': admin_event.uniq_id if admin_event else admin_main_selector,
-            'admin_event': admin_event,
-            'admin_event_selector_options': {
-                '': 'Configuration générale',
-                '@chessevents': 'Connexions à ChessEvent',
-                '@timers': 'Chronomètres',
-                '@tournaments': 'Tournois',
-                '@screens': 'Écrans',
-                '@families': 'Familles d\'écrans',
-                '@rotators': 'Écrans rotatifs',
-                # '@messages': 'Messages',
-                # '@check_in': 'Pointage',
-                # '@pairings': 'Appariements',
-            },
-            'admin_event_selector': admin_event_selector,
-            'show_family_screens_on_event_list': SessionHandler.get_session_show_family_screens_on_screen_list(request),
-        }
-        return HTMXTemplate(
-            template_name="admin.html",
-            context=context)
-
 
 class AdminController(AAdminController):
     @get(
@@ -196,7 +96,6 @@ class AdminController(AAdminController):
         admin_main_selector: str = data.get('admin_main_selector', '')
         admin_event_selector: str = data.get('admin_event_selector', '')
         admin_event: NewEvent | None = None
-        logger.warning(f'data={data}')
         if not admin_main_selector:
             pass
         elif admin_main_selector == '@events':
@@ -209,7 +108,37 @@ class AdminController(AAdminController):
                 return self._render_messages(request)
         if 'show_family_screens_on_screen_list' in data:
             SessionHandler.set_session_show_family_screens_on_screen_list(
-                request, self.form_data_to_bool_or_none(data, 'show_family_screens_on_screen_list'))
+                request, self._form_data_to_bool_or_none(data, 'show_family_screens_on_screen_list'))
+        screen_types: list[str] = SessionHandler.get_session_screen_types_on_screen_list(request)
+        for field, screen_type in {
+            'show_boards_screens_on_screen_list': 'boards',
+            'show_input_screens_on_screen_list': 'input',
+            'show_players_screens_on_screen_list': 'players',
+            'show_results_screens_on_screen_list': 'results',
+        }.items():
+            if field in data:
+                if self._form_data_to_bool_or_none(data, field):
+                    screen_types.append(screen_type)
+                else:
+                    screen_types.remove(screen_type)
+                SessionHandler.set_session_screen_types_on_screen_list(request, screen_types)
+                continue
+        screen_types: list[str] = SessionHandler.get_session_screen_types_on_family_list(request)
+        logger.warning(f'data={data}')
+        logger.warning(f'get_session_screen_types_on_family_list()=>{screen_types}')
+        for field, family_type in {
+            'show_boards_families_on_family_list': 'boards',
+            'show_input_families_on_family_list': 'input',
+            'show_players_families_on_family_list': 'players',
+        }.items():
+            if field in data:
+                if self._form_data_to_bool_or_none(data, field):
+                    screen_types.append(family_type)
+                else:
+                    screen_types.remove(family_type)
+                logger.warning(f'set_session_screen_types_on_family_list({screen_types})')
+                SessionHandler.set_session_screen_types_on_family_list(request, screen_types)
+                continue
         return self._admin_render_index(
             request, event_loader, admin_main_selector=admin_main_selector, admin_event=admin_event,
             admin_event_selector=admin_event_selector)

@@ -20,7 +20,7 @@
         </h1>
     </div>
 </div>
-
+{{ screen_types_on_screen_list }}
 <table class="table border-black">
     <thead class="table-dark position-sticky top-0">
         <tr>
@@ -30,20 +30,31 @@
             <th scope="col" class="text-nowrap">Paramètres</th>
             <th scope="col" class="width-50"></th>
             <th scope="col" class="text-nowrap">Ensembles / Tournois</th>
-            <th scope="col" class="width-50"></th>
-            <th scope="col" class="text-nowrap text-end">
-                {% with id='show-family-screens-on-screen-list', name='show_family_screens_on_screen_list' %}
-                    <div class="form-check form-switch">
+            <th scope="col" class="text-nowrap text-end width-50" colspan="2">
+                {% with id='show-boards-screens-on-screen-list', name='show_boards_screens_on_screen_list', show='boards' in screen_types_on_event_list, icon='bi-card-list' %}
+                    {% include 'admin_screen_list_screen_type_switch.html' %}
+                {% endwith %}
+                {% with id='show-input-screens-on-screen-list', name='show_input_screens_on_screen_list', show='input' in screen_types_on_event_list, icon='bi-pencil-fill' %}
+                    {% include 'admin_screen_list_screen_type_switch.html' %}
+                {% endwith %}
+                {% with id='show-players-screens-on-screen-list', name='show_players_screens_on_screen_list', show='players' in screen_types_on_event_list, icon='bi-people-fill' %}
+                    {% include 'admin_screen_list_screen_type_switch.html' %}
+                {% endwith %}
+                {% with id='show-results-screens-on-screen-list', name='show_results_screens_on_screen_list', show='results' in screen_types_on_event_list, icon='bi-trophy-fill' %}
+                    {% include 'admin_screen_list_screen_type_switch.html' %}
+                {% endwith %}
+                {% with id='show-family-screens-on-screen-list', name='show_family_screens_on_screen_list', show=show_family_screens_on_event_list %}
+                    <div class="form-check form-switch d-inline-block">
                         <input
                                 name="{{ name }}"
                                 hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@screens", "{{ name }}": "{% if show_family_screens_on_event_list %}off{% else %}on{% endif %}"}'
+                                hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@screens", "{{ name }}": "{% if show %}off{% else %}on{% endif %}"}'
                                 hx-swap="multi:#admin-header,#admin-content"
                                 hx-indicator="#please-wait"
                                 class="form-check-input"
                                 type="checkbox"
                                 id="{{ id }}"
-                                {% if show_family_screens_on_event_list %}checked{% endif %} /><label for="{{ id }}" class="form-check-label"> Écrans des familles</label>
+                                {% if show %}checked{% endif %} /><label for="{{ id }}" class="form-check-label"> Familles</label>
                     </div>
                 {% endwith %}
             </th>
@@ -51,14 +62,16 @@
     </thead>
     <tbody>
         {% with screens=admin_event.screens_sorted_by_uniq_id if show_family_screens_on_event_list else admin_event.basic_screens_by_uniq_id.values() %}
-            {% if screens|length > 0 %}
-                {% for screen in screens %}
+            {% set ns = namespace(screen_found=false) %}
+            {% for screen in screens %}
+                {% if screen.type in screen_types_on_event_list %}
+                    {% set ns.screen_found=true %}
                     {% with basic=screen.id in admin_event.basic_screens_by_id %}
                     {% with td_class='' if basic else 'bg-secondary-subtle text-secondary' %}
                         <tr>
                             <th scope="row" class="text-nowrap {{ td_class }}">
                                 <div>
-                                    [{{ screen.uniq_id }}]
+                                    {{ screen_found }} [{{ screen.uniq_id }}]
                                 </div>
                                 <div>
                                     {{ screen.name }}
@@ -110,7 +123,7 @@
                                 {% endif %}
                             </td>
                             <td class="text-nowrap {{ td_class }}">
-                                {% if screen.type in ['boards', 'players'] %}
+                                {% if screen.type in ['boards', 'input', 'players'] %}
                                     {% if screen.screen_sets_sorted_by_order|length > 0 %}
                                         {% for screen_set in screen.screen_sets_sorted_by_order %}
                                             <div class="{% if screen_set.error %}text-danger{% endif %}">
@@ -137,7 +150,7 @@
                                 {% endif %}
                             </td>
                             <td class="text-nowrap {{ td_class }} width-50">
-                                {% if basic and screen.type in ['boards', 'players'] %}
+                                {% if basic and screen.type in ['boards', 'input', 'players'] %}
                                     <button
                                             class="btn btn-sm btn-primary p-1"
                                             hx-post="{{ url_for('admin-screen-render-sets-modal') }}"
@@ -148,7 +161,7 @@
                                             data-bs-target="#admin-modal-container"
                                             hx-indicator="#please-wait" >
                                         <i class="bi-collection-fill"></i>
-                                        {% if screen.type == 'boards' %}
+                                        {% if screen.type in ['boards', 'input'] %}
                                             Ensembles d'échiquiers
                                         {% else %}
                                             Ensembles de joueur·euses
@@ -185,8 +198,9 @@
                         </tr>
                     {% endwith %}
                     {% endwith %}
-                {% endfor %}
-            {% else %}
+                {% endif %}
+            {% endfor %}
+            {% if not ns.screen_found %}
                 <tr>
                     <td
                             colspan="8"

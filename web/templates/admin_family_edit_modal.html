@@ -31,7 +31,7 @@
                                 {% with id='type', name='type' %}
                                     <label for="{{ id }}" class="form-label">Type d'écran :</label>
                                     <select
-                                            name="{{ name }}"
+                                            multiple name="{{ name }}"
                                             id="{{ id }}"
                                             class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
                                             aria-describedby="{{ id }}-help {{ id }}-error" >
@@ -49,6 +49,9 @@
                                         </div>
                                     {% endif %}
                                 {% endwith %}
+                                <script>
+                                    $('.selectpicker').selectpicker();
+                                </script>
                             {% else %}
                                 <label class="form-label">Type d'écran :</label>
                                 <input
@@ -129,7 +132,7 @@
                         </div>
                     </div>
                     {% if action == 'update' %}
-                        {% if admin_family.type == 'boards' %}
+                        {% if admin_family.type in ['boards', 'input'] %}
                             <h3>
                                 Sélection des échiquiers (par ordre croissant)
                             </h3>
@@ -181,7 +184,7 @@
                             </div>
                         {% endif %}
                         <h3>
-                            {% if admin_family.type == 'boards' %}
+                            {% if admin_family.type in ['boards', 'input'] %}
                                 Répartition des échiquiers
                             {% else %}
                                 Répartition des joueur·euses
@@ -201,7 +204,7 @@
                                             placeholder="Exemple : 4 (répartition sur 4 écrans)"
                                             value="{{ data[name] }}" />
                                     <div id="{{ id }}-help" class="form-text">
-                                        {% if admin_family.type == 'boards' %}
+                                        {% if admin_family.type in ['boards', 'input'] %}
                                             Le nombre d'écrans sur lesquels les échiquiers seront répartis (facultatif).
                                             Avec cette répartition, le nombre d'écrans reste toujours le même et le nombre d'échiquiers par écran s'adapte.
                                         {% else %}
@@ -226,10 +229,10 @@
                                             type="number" id="{{ id }}" min="1"
                                             class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
                                             aria-describedby="{{ id }}-help {{ id }}-error"
-                                            placeholder="Exemple : 20 (répartition sur des écrans de 20 {% if admin_family.type == 'boards' %}échiquiers{% else %}joueur·euses{% endif %})"
+                                            placeholder="Exemple : 20 (répartition sur des écrans de 20 {% if admin_family.type in ['boards', 'input'] %}échiquiers{% else %}joueur·euses{% endif %})"
                                             value="{{ data[name] }}" />
                                     <div id="{{ id }}-help" class="form-text">
-                                        {% if admin_family.type == 'boards' %}
+                                        {% if admin_family.type in ['boards', 'input'] %}
                                             Le nombre de d'échiquiers sur chaque écran (facultatif).
                                             Avec ce découpage, le nombre d'échiquiers par écran reste toujours le même et le nombre d'écrans s'adapte.
                                         {% else %}

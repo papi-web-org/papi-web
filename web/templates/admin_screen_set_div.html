@@ -28,7 +28,7 @@
                                 {% endfor %}
                             </select>
                             <div id="{{ id }}-help" class="form-text">
-                                {% if admin_screen.type == 'boards' %}
+                                {% if admin_screen.type in ['boards', 'input'] %}
                                     Le tournoi dont on souhaite afficher les échiquiers, obligatoire.
                                 {% else %}
                                     Le tournoi dont on souhaite afficher les joueur·euses, obligatoire.
@@ -49,7 +49,7 @@
                                     type="text" id="{{ id }}"
                                     class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
                                     aria-describedby="{{ id }}-help {{ id }}-error"
-                                    placeholder="Exemple : {% if admin_screen.type == 'boards' %}Échiquiers{% else %}Joueur·euses{% endif %} %f à %l"
+                                    placeholder="Exemple : {% if admin_screen.type in ['boards', 'input'] %}Échiquiers{% else %}Joueur·euses{% endif %} %f à %l"
                                     value="{{ data[name] }}" />
                             <div id="{{ id }}-help" class="form-text">
                                 Le nom de l'ensemble (le nom du premier ensemble d'un écran est par défaut le nom de l'écran).
@@ -82,19 +82,19 @@
                         </button>
                     </div>
                 </div>
-                {% if admin_screen.type in ['boards', 'players'] %}
+                {% if admin_screen.type in ['boards', 'input', 'players'] %}
                     <h3>
-                        {% if admin_screen.type == 'boards' %}
+                        {% if admin_screen.type in ['boards', 'input'] %}
                             Sélection des échiquiers (par ordre croissant)
                         {% else %}
                             Sélection des joueur·euses (par ordre alphabétique)
                         {% endif %}
                     </h3>
                     <div class="row">
-                        <div class="{% if admin_screen.type == 'boards' %}col-4{% else %}col-6{% endif %}">
+                        <div class="{% if admin_screen.type in ['boards', 'input'] %}col-4{% else %}col-6{% endif %}">
                             {% with id='first', name='first' %}
                                 <label for="{{ id }}" class="form-label">
-                                    {% if admin_screen.type == 'boards' %}
+                                    {% if admin_screen.type in ['boards', 'input'] %}
                                         Premier échiquier :
                                     {% else %}
                                         Premier·e joueur·euse :
@@ -108,7 +108,7 @@
                                         placeholder="Exemple : 15"
                                         value="{{ data[name] }}" />
                                 <div id="{{ id }}-help" class="form-text">
-                                    {% if admin_screen.type == 'boards' %}
+                                    {% if admin_screen.type in ['boards', 'input'] %}
                                         Le numéro du premier échiquier à prendre en compte, facultatif (par défaut le premier échiquier).
                                     {% else %}
                                         Le numéro du·de la premier·e joueur·euse, facultatif (par défaut le·la premier·e par ordre alphabétique).
@@ -121,10 +121,10 @@
                                 {% endif %}
                             {% endwith %}
                         </div>
-                        <div class="{% if admin_screen.type == 'boards' %}col-4{% else %}col-6{% endif %}">
+                        <div class="{% if admin_screen.type in ['boards', 'input'] %}col-4{% else %}col-6{% endif %}">
                             {% with id='last', name='last' %}
                                 <label for="{{ id }}" class="form-label">
-                                    {% if admin_screen.type == 'boards' %}
+                                    {% if admin_screen.type in ['boards', 'input'] %}
                                         Dernier échiquier :
                                     {% else %}
                                         Dernier·e joueur·euse :
@@ -138,7 +138,7 @@
                                         placeholder="Exemple : 40"
                                         value="{{ data[name] }}" />
                                 <div id="{{ id }}-help" class="form-text">
-                                    {% if admin_screen.type == 'boards' %}
+                                    {% if admin_screen.type in ['boards', 'input'] %}
                                         Le numéro du dernier échiquier à prendre en compte, facultatif (par défaut le premier échiquier).
                                     {% else %}
                                         Le numéro du·de la dernier·e joueur·euse, facultatif (par défaut le·la dernier·e par ordre alphabétique).
@@ -151,7 +151,7 @@
                                 {% endif %}
                             {% endwith %}
                         </div>
-                        {% if admin_screen.type == 'boards' %}
+                        {% if admin_screen.type in ['boards', 'input'] %}
                             <div class="col-4">
                                 {% with id='fixed-boards-str', name='fixed_boards_str' %}
                                     <label for="{{ id }}" class="form-label">Échiquiers fixes :</label>

@@ -16,7 +16,8 @@ from litestar.contrib.htmx.response import HTMXTemplate, Reswap, ClientRedirect,
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.board import Board
-from data.event import Event
+from data.event import Event, NewEvent
+from data.loader import EventLoader
 from data.player import Player
 from data.rotator import Rotator
 from data.screen import AScreen
@@ -32,12 +33,16 @@ logger: Logger = get_logger()
 
 
 class UserController(AController):
+    @get(path='/user', name='user-render-index')
+    async def user_render_index(self, request: HTMXRequest) -> Template:
+        return self._user_render_index(request)
+
     @get(
         path='/event/{event_uniq_id:str}',
         name='render-event'
     )
     async def render_event(self, request: HTMXRequest, event_uniq_id: str) -> Template | Redirect:
-        event: Event = Event(event_uniq_id, True)
+        event: NewEvent = EventLoader().load_event(event_uniq_id)
         if event.errors:
             for error in event.errors:
                 Message.error(request, error)

@@ -36,30 +36,23 @@ class AdminFamilyController(AAdminController):
         if data is None:
             data = {}
         type: str
-        boards_update: bool | None = None
         field: str = 'type'
         match action:
             case 'create':
-                type = self.form_data_to_str_or_none(data, field)
+                type = self._form_data_to_str_or_none(data, field)
                 match type:
-                    case 'boards':
-                        boards_update = False
-                    case 'boards-update':
-                        type = 'boards'
-                        boards_update = True
-                    case 'players':
+                    case 'boards' | 'input' | 'players':
                         pass
                     case None:
-                        errors[field] = 'Veuillez choisir le type de famille'
+                        errors[field] = 'Veuillez choisir le type de famille.'
                     case _:
                         raise ValueError(f'type=[{type}]')
             case 'update' | 'delete':
                 type = admin_family.stored_family.type
-                boards_update = admin_family.boards_update
             case _:
                 raise ValueError(f'action=[{action}]')
         field = 'uniq_id'
-        uniq_id: str = self.form_data_to_str_or_none(data, field)
+        uniq_id: str = self._form_data_to_str_or_none(data, field)
         name: str | None = None
         if action == 'delete':
             pass
@@ -76,7 +69,7 @@ class AdminFamilyController(AAdminController):
                             errors[field] = f'La famille [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')
-            name = self.form_data_to_str_or_none(data, 'name')
+            name = self._form_data_to_str_or_none(data, 'name')
         menu: str | None = None
         menu_text: str | None = None
         columns: int | None = None
@@ -95,9 +88,9 @@ class AdminFamilyController(AAdminController):
                 try:
                     if len(admin_event.tournaments_by_id) == 1:
                         tournament_id = list(admin_event.tournaments_by_id.keys())[0]
-                        data[field] = self.value_to_form_data(tournament_id)
+                        data[field] = self._value_to_form_data(tournament_id)
                     else:
-                        tournament_id = self.form_data_to_int_or_none(data, field)
+                        tournament_id = self._form_data_to_int_or_none(data, field)
                         if not tournament_id:
                             errors[field] = f'Veuillez indiquer le tournoi.'
                         elif tournament_id not in admin_event.tournaments_by_id:
@@ -112,28 +105,28 @@ class AdminFamilyController(AAdminController):
             case 'update':
                 field = 'columns'
                 try:
-                    columns = self.form_data_to_int_or_none(data, field, minimum=1)
+                    columns = self._form_data_to_int_or_none(data, field, minimum=1)
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
-                menu_text = self.form_data_to_str_or_none(data, 'menu_text')
-                menu = self.form_data_to_str_or_none(data, 'menu')
+                menu_text = self._form_data_to_str_or_none(data, 'menu_text')
+                menu = self._form_data_to_str_or_none(data, 'menu')
                 field = 'timer_id'
                 try:
-                    timer_id = self.form_data_to_int_or_none(data, field)
+                    timer_id = self._form_data_to_int_or_none(data, field)
                     if timer_id and timer_id not in admin_event.timers_by_id:
                         errors[field] = f'Le chronomètre [{timer_id}] n\'existe pas.'
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
                 match type:
-                    case 'boards':
+                    case 'boards' | 'input':
                         field: str = 'first'
                         try:
-                            first = self.form_data_to_int_or_none(data, field, minimum=1)
+                            first = self._form_data_to_int_or_none(data, field, minimum=1)
                         except ValueError:
                             errors[field] = 'Un entier positif est attendu.'
                         field: str = 'last'
                         try:
-                            last = self.form_data_to_int_or_none(data, field, minimum=1)
+                            last = self._form_data_to_int_or_none(data, field, minimum=1)
                         except ValueError:
                             errors[field] = 'Un entier positif est attendu.'
                         if first and last and first > last:
@@ -141,12 +134,12 @@ class AdminFamilyController(AAdminController):
                             errors['first'] = error
                             errors['last'] = error
                     case 'players':
-                        players_show_unpaired = self.form_data_to_bool_or_none(data, 'players_show_unpaired')
+                        players_show_unpaired = self._form_data_to_bool_or_none(data, 'players_show_unpaired')
                     case _:
                         raise ValueError(f'type=[{type}]')
                 field: str = 'tournament_id'
                 try:
-                    tournament_id = self.form_data_to_int_or_none(data, field)
+                    tournament_id = self._form_data_to_int_or_none(data, field)
                     if not tournament_id:
                         errors[field] = f'Veuillez indiquer le tournoi.'
                     elif tournament_id not in admin_event.tournaments_by_id:
@@ -155,12 +148,12 @@ class AdminFamilyController(AAdminController):
                     errors[field] = 'Un entier positif est attendu.'
                 field: str = 'parts'
                 try:
-                    parts = self.form_data_to_int_or_none(data, field, minimum=1)
+                    parts = self._form_data_to_int_or_none(data, field, minimum=1)
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
                 field: str = 'number'
                 try:
-                    number = self.form_data_to_int_or_none(data, field, minimum=1)
+                    number = self._form_data_to_int_or_none(data, field, minimum=1)
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
                 if parts and number:
@@ -180,7 +173,6 @@ class AdminFamilyController(AAdminController):
             menu_text=menu_text,
             menu=menu,
             timer_id=timer_id,
-            boards_update=boards_update,
             players_show_unpaired=players_show_unpaired,
             first=first,
             last=last,
@@ -211,7 +203,7 @@ class AdminFamilyController(AAdminController):
                 data: dict[str, str] = {}
                 match action:
                     case 'update':
-                        data['uniq_id'] = self.value_to_form_data(admin_family.stored_family.uniq_id)
+                        data['uniq_id'] = self._value_to_form_data(admin_family.stored_family.uniq_id)
                     case 'create' | 'clone':
                         data['uniq_id'] = ''
                     case 'delete':
@@ -220,23 +212,23 @@ class AdminFamilyController(AAdminController):
                         raise ValueError(f'action=[{action}]')
                 match action:
                     case 'update':
-                        data['name'] = self.value_to_form_data(admin_family.stored_family.name)
-                        data['tournament_id'] = self.value_to_form_data(admin_family.stored_family.tournament_id)
-                        data['columns'] = self.value_to_form_data(admin_family.stored_family.columns)
-                        data['menu_text'] = self.value_to_form_data(admin_family.stored_family.menu_text)
-                        data['menu'] = self.value_to_form_data(admin_family.stored_family.menu)
-                        data['timer_id'] = self.value_to_form_data(admin_family.stored_family.timer_id)
+                        data['name'] = self._value_to_form_data(admin_family.stored_family.name)
+                        data['tournament_id'] = self._value_to_form_data(admin_family.stored_family.tournament_id)
+                        data['columns'] = self._value_to_form_data(admin_family.stored_family.columns)
+                        data['menu_text'] = self._value_to_form_data(admin_family.stored_family.menu_text)
+                        data['menu'] = self._value_to_form_data(admin_family.stored_family.menu)
+                        data['timer_id'] = self._value_to_form_data(admin_family.stored_family.timer_id)
                         match admin_family.type:
                             case ScreenType.Boards:
-                                data['first'] = self.value_to_form_data(admin_family.stored_family.first)
-                                data['last'] = self.value_to_form_data(admin_family.stored_family.last)
+                                data['first'] = self._value_to_form_data(admin_family.stored_family.first)
+                                data['last'] = self._value_to_form_data(admin_family.stored_family.last)
                             case ScreenType.Players:
-                                data['players_show_unpaired'] = self.value_to_form_data(
+                                data['players_show_unpaired'] = self._value_to_form_data(
                                     admin_family.stored_family.players_show_unpaired)
                             case _:
                                 raise ValueError(f'type=[{admin_family.type}]')
-                        data['parts'] = self.value_to_form_data(admin_family.stored_family.parts)
-                        data['number'] = self.value_to_form_data(admin_family.stored_family.number)
+                        data['parts'] = self._value_to_form_data(admin_family.stored_family.parts)
+                        data['number'] = self._value_to_form_data(admin_family.stored_family.number)
                     case 'create':
                         data['type'] = ''
                     case 'delete':
@@ -274,8 +266,8 @@ class AdminFamilyController(AAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+        action: str = self._form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
@@ -284,7 +276,7 @@ class AdminFamilyController(AAdminController):
         admin_family: NewFamily | None = None
         match action:
             case 'update' | 'delete':
-                admin_family_id: int = self.form_data_to_int_or_none(data, 'admin_family_id')
+                admin_family_id: int = self._form_data_to_int_or_none(data, 'admin_family_id')
                 try:
                     admin_family = admin_event.families_by_id[admin_family_id]
                 except KeyError:
@@ -305,8 +297,8 @@ class AdminFamilyController(AAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+        action: str = self._form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
@@ -318,7 +310,7 @@ class AdminFamilyController(AAdminController):
         admin_family: NewFamily | None = None
         match action:
             case 'update' | 'delete':
-                admin_screen_id: int = self.form_data_to_int_or_none(data, 'admin_family_id')
+                admin_screen_id: int = self._form_data_to_int_or_none(data, 'admin_family_id')
                 try:
                     admin_family = admin_event.families_by_id[admin_screen_id]
                 except KeyError:

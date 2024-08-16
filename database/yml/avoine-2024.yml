@@ -53,8 +53,7 @@ tournaments:
 screens:
   saisie-ec-fixes:
     name: "Tables fixes espace culturel"
-    type: "boards"
-    boards_update: true
+    type: "input"
     menu: "saisie-ec*"
     menu_text: "Fixes espace culturel"
     timer_uniq_id: "chronometre"
@@ -64,8 +63,7 @@ screens:
         fixed_boards_str: "212,213,214"
   saisie-sdf-fixes:
     name: "Tables fixes salles des fêtes"
-    type: "boards"
-    boards_update: true
+    type: "input"
     menu: "saisie-sdf*"
     menu_text: "Fixes salles des fêtes"
     timer_uniq_id: "chronometre"
@@ -76,7 +74,6 @@ screens:
   echiquiers-ec:
     name: "Espace culturel"
     type: "boards"
-    boards_update: false
     menu: "echiquiers-*"
     menu_text: "Espace culturel"
     timer_uniq_id: "chronometre"
@@ -87,7 +84,6 @@ screens:
   echiquiers-sdf:
     name: "Salle des fêtes"
     type: "boards"
-    boards_update: false
     menu: "echiquiers-*"
     menu_text: "Salle des fêtes"
     timer_uniq_id: "chronometre"
@@ -98,7 +94,6 @@ screens:
   echiquiers-fixes:
     name: "Tables fixes"
     type: "boards"
-    boards_update: false
     menu: "echiquiers-*"
     menu_text: Fixes
     timer_uniq_id: "chronometre"
@@ -117,8 +112,7 @@ screens:
 families:
   saisie-ec:
     name: "Saisie Espace Culturel"
-    type: "boards"
-    boards_update: true
+    type: "input"
     menu: "saisie-ec-*"
     menu_text: "Tables [%f-%l]"
     timer_uniq_id: "chronometre"
@@ -127,8 +121,7 @@ families:
     number: 24
   saisie-sdf:
     name: "Saisie salle des fêtes"
-    type: "boards"
-    boards_update: true
+    type: "input"
     menu: "saisie-sdf-*"
     menu_text: "Tables [%f-%l]"
     timer_uniq_id: "chronometre"
@@ -138,7 +131,6 @@ families:
   appariements:
     name: "Échiquiers %f à %l"
     type: "boards"
-    boards_update: false
     menu: "@family"
     menu_text: "[%f-%l]"
     timer_uniq_id: "chronometre"

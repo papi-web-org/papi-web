@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 from common.config_reader import ConfigReader
 from common.logger import get_logger
-from data.screen import AScreen, ANewScreen
+from data.screen import AScreen, NewScreen
 from database.store import StoredRotator
 
 logger: Logger = get_logger()
@@ -140,7 +140,7 @@ class NewRotator:
         self.event: 'NewEvent' = event
         self.stored_rotator: StoredRotator = stored_rotator
         self._families: list[NewFamily] | None = None
-        self._screens: list[ANewScreen] | None = None
+        self._screens: list[NewScreen] | None = None
 
     @property
     def id(self) -> int:
@@ -161,7 +161,7 @@ class NewRotator:
             else PapiWebConfig().default_rotator_show_menus
 
     @property
-    def screens(self) -> list[ANewScreen]:
+    def screens(self) -> list[NewScreen]:
         if self._screens is None:
             self._screens = []
             if self.stored_rotator.screen_ids:

@@ -32,7 +32,7 @@ class AdminRotatorController(AAdminController):
         errors: dict[str, str] = {}
         if data is None:
             data = {}
-        uniq_id: str = self.form_data_to_str_or_none(data, 'uniq_id')
+        uniq_id: str = self._form_data_to_str_or_none(data, 'uniq_id')
         match action:
             case 'create':
                 if not uniq_id:
@@ -56,19 +56,19 @@ class AdminRotatorController(AAdminController):
         match action:
             case 'create' | 'update':
                 try:
-                    delay = self.form_data_to_int_or_none(data, 'delay', minimum=1)
+                    delay = self._form_data_to_int_or_none(data, 'delay', minimum=1)
                 except ValueError:
                     errors['delay'] = 'Un entier positif est attendu.'
-                show_menus = self.form_data_to_bool_or_none(data, 'show_menus')
+                show_menus = self._form_data_to_bool_or_none(data, 'show_menus')
                 screen_ids = []
                 for screen_id in admin_event.basic_screens_by_id:
                     field = f'screen_{screen_id}'
-                    if self.form_data_to_bool_or_none(data, field):
+                    if self._form_data_to_bool_or_none(data, field):
                         screen_ids.append(screen_id)
                 family_ids = []
                 for family_id in admin_event.families_by_id:
                     field = f'family_{family_id}'
-                    if self.form_data_to_bool_or_none(data, field):
+                    if self._form_data_to_bool_or_none(data, field):
                         family_ids.append(family_id)
             case 'delete' | 'clone':
                 pass
@@ -109,15 +109,15 @@ class AdminRotatorController(AAdminController):
                 match action:
                     case 'update':
                         data = {
-                            'uniq_id': self.value_to_form_data(admin_rotator.stored_rotator.uniq_id),
-                            'delay': self.value_to_form_data(admin_rotator.stored_rotator.delay),
-                            'show_menus': self.value_to_form_data(admin_rotator.stored_rotator.show_menus),
+                            'uniq_id': self._value_to_form_data(admin_rotator.stored_rotator.uniq_id),
+                            'delay': self._value_to_form_data(admin_rotator.stored_rotator.delay),
+                            'show_menus': self._value_to_form_data(admin_rotator.stored_rotator.show_menus),
                         }
                         for screen_id in admin_event.basic_screens_by_id:
-                            data[f'screen_{screen_id}'] = self.value_to_form_data(
+                            data[f'screen_{screen_id}'] = self._value_to_form_data(
                                 screen_id in admin_rotator.stored_rotator.screen_ids)
                         for family_id in admin_event.families_by_id:
-                            data[f'family_{family_id}'] = self.value_to_form_data(
+                            data[f'family_{family_id}'] = self._value_to_form_data(
                                 family_id in admin_rotator.stored_rotator.family_ids)
                     case 'delete' | 'create':
                         data = {}
@@ -154,8 +154,8 @@ class AdminRotatorController(AAdminController):
             ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+        action: str = self._form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
@@ -164,7 +164,7 @@ class AdminRotatorController(AAdminController):
         admin_rotator: NewRotator | None = None
         match action:
             case 'update' | 'delete':
-                admin_rotator_id: int = self.form_data_to_int_or_none(data, 'admin_rotator_id')
+                admin_rotator_id: int = self._form_data_to_int_or_none(data, 'admin_rotator_id')
                 try:
                     admin_rotator = admin_event.rotators_by_id[admin_rotator_id]
                 except KeyError:
@@ -188,8 +188,8 @@ class AdminRotatorController(AAdminController):
             ],
     ) -> Template:
         event_loader: EventLoader = EventLoader()
-        action: str = self.form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self.form_data_to_str_or_none(data, 'admin_event_uniq_id')
+        action: str = self._form_data_to_str_or_none(data, 'action')
+        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
@@ -201,7 +201,7 @@ class AdminRotatorController(AAdminController):
         admin_rotator: NewRotator | None = None
         match action:
             case 'update' | 'delete' | 'clone':
-                admin_rotator_id: int = self.form_data_to_int_or_none(data, 'admin_rotator_id')
+                admin_rotator_id: int = self._form_data_to_int_or_none(data, 'admin_rotator_id')
                 try:
                     admin_rotator = admin_event.rotators_by_id[admin_rotator_id]
                 except KeyError:

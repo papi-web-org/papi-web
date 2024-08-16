@@ -114,35 +114,31 @@ tournaments:
 screens:
   affichage-petits-u8:
     type: "boards"
-    menu: "saisie-petits-*"
+    menu: "affichage-petits-*"
     menu_text: "U8"
     timer_uniq_id: "petits"
-    boards_update: false
     sets:
       -
         tournament_uniq_id: "U8"
   affichage-petits-u10:
     type: "boards"
-    menu: "saisie-petits-*"
+    menu: "affichage-petits-*"
     menu_text: "U10"
     timer_uniq_id: "petits"
-    boards_update: false
     sets:
       -
         tournament_uniq_id: "U10"
   affichage-petits-open-b:
     type: "boards"
-    menu: "saisie-petits-*"
+    menu: "affichage-petits-*"
     menu_text: "Open A"
     timer_uniq_id: "petits"
-    boards_update: false
     sets:
       -
         tournament_uniq_id: "Open_A"
   affichage-petits:
     type: "boards"
     timer_uniq_id: "petits"
-    boards_update: false
     columns: 2
     sets:
       -
@@ -153,44 +149,39 @@ screens:
         tournament_uniq_id: "Open_B"
   affichage-grands-u12:
     type: "boards"
-    menu: "saisie-grands-*"
+    menu: "affichage-grands-*"
     menu_text: "U12"
     timer_uniq_id: "grands"
-    boards_update: false
     sets:
       -
         tournament_uniq_id: "U12"
   affichage-grands-u14:
     type: "boards"
-    menu: "saisie-grands-*"
+    menu: "affichage-grands-*"
     menu_text: "U14"
     timer_uniq_id: "grands"
-    boards_update: false
     sets:
       -
         tournament_uniq_id: "U14"
   affichage-grands-u16:
     type: "boards"
-    menu: "saisie-grands-*"
+    menu: "affichage-grands-*"
     menu_text: "U16"
     timer_uniq_id: "grands"
-    boards_update: false
     sets:
       -
         tournament_uniq_id: "U16"
   affichage-grands-open-a:
     type: "boards"
-    menu: "saisie-petits-*"
+    menu: "affichage-petits-*"
     menu_text: "Open A"
     timer_uniq_id: "grands"
-    boards_update: false
     sets:
       -
         tournament_uniq_id: "Open_A"
   affichage-grands:
     type: "boards"
     timer_uniq_id: "grands"
-    boards_update: false
     columns: 2
     sets:
       -
@@ -204,7 +195,6 @@ screens:
   affichage-tous:
     type: "boards"
     timer_uniq_id: "grands"
-    boards_update: false
     columns: 4
     sets:
       -
@@ -222,65 +212,58 @@ screens:
       -
         tournament_uniq_id: "Open_A"
   saisie-petits-u8:
-    type: "boards"
+    type: "input"
     menu: "saisie-petits-*"
     menu_text: "U8"
     timer_uniq_id: "petits"
-    boards_update: true
     sets:
       -
         tournament_uniq_id: "U8"
   saisie-petits-u10:
-    type: "boards"
+    type: "input"
     menu: "saisie-petits-*"
     menu_text: "U10"
     timer_uniq_id: "petits"
-    boards_update: true
     sets:
       -
         tournament_uniq_id: "U10"
   saisie-petits-open-b:
-    type: "boards"
+    type: "input"
     menu: "saisie-petits-*"
     menu_text: "Open A"
     timer_uniq_id: "petits"
-    boards_update: true
     sets:
       -
         tournament_uniq_id: "Open_A"
   saisie-grands-u12:
-    type: "boards"
+    type: "input"
     menu: "saisie-grands-*"
     menu_text: "U12"
     timer_uniq_id: "grands"
-    boards_update: true
     sets:
       -
         tournament_uniq_id: "U12"
   saisie-grands-u14:
-    type: "boards"
+    type: "input"
     menu: "saisie-grands-*"
     menu_text: "U14"
     timer_uniq_id: "grands"
-    boards_update: true
     sets:
       -
         tournament_uniq_id: "U14"
   saisie-grands-u16:
-    type: "boards"
+    type: "input"
     menu: "saisie-grands-*"
     menu_text: "U16"
     timer_uniq_id: "grands"
-    boards_update: true
     sets:
       -
         tournament_uniq_id: "U16"
   saisie-grands-open-a:
-    type: "boards"
+    type: "input"
     menu: "saisie-petits-*"
     menu_text: "Open A"
     timer_uniq_id: "grands"
-    boards_update: true
     sets:
       -
         tournament_uniq_id: "Open_A"
@@ -308,7 +291,7 @@ screens:
         tournament_uniq_id: "Open_A"
   resultats-tous:
     type: "results"
-    boards_update: false
+    results_limit: 30
     sets:
       -
         tournament_uniq_id: "U8"

@@ -5,14 +5,12 @@ tournaments:
     name: "Tournoi"
 screens:
   saisie:
-    type: "boards"
-    boards_update: true
+    type: "input"
     sets:
       -
         tournament_uniq_id: "T"
   affichage:
     type: "boards"
-    boards_update: false
     sets:
       -
         tournament_uniq_id: "T"
