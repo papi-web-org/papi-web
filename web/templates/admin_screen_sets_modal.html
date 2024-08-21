@@ -1,4 +1,4 @@
-<div id="admin-screen-sets-modal" class="modal-dialog modal-dialog-centered admin-screen-sets-modal">
+<div id="admin-screen-sets-modal" class="modal-dialog modal-dialog-centered admin-screen-sets-modal d-block w-80 mw-100">
     <div class="modal-content">
         <div class="modal-header">
             <h2 class="modal-title">
@@ -15,9 +15,9 @@
             {% elif admin_screen.screen_sets_by_id|length > 1 %}
                 <p>Déplacez les ensembles pour les ordonner.</p>
             {% endif %}
-            {% if not admin_screen_set %}
+            {% if not admin_screen_set and admin_screen.screen_sets_sorted_by_order|length > 1 %}
                 <form
-                        class="{% if not admin_screen_set %}sortable{% endif %}"
+                        class="sortable"
                         hx-post="{{ url_for('admin-screen-sets-update') }}"
                         hx-vals='{"action": "reorder", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}" }'
                         hx-target="#admin-screen-sets-modal"
@@ -25,18 +25,14 @@
                         hx-trigger="end"
                         hx-indicator="#please-wait">
             {% endif %}
-                {% if admin_screen.screen_sets_sorted_by_order %}
-                    {% for screen_set in admin_screen.screen_sets_sorted_by_order %}
-                        {% include 'admin_screen_set_div.html' %}
-                    {% endfor %}
-                {% else %}
-                        <div class="text-danger">Aucun ensemble défini.</div>
-                {% endif %}
-            {% if not admin_screen_set %}
+                {% for screen_set in admin_screen.screen_sets_sorted_by_order %}
+                    {% include 'admin_screen_set_div.html' %}
+                {% endfor %}
+            {% if not admin_screen_set and admin_screen.screen_sets_sorted_by_order|length > 1 %}
                 </form>
             {% endif %}
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer d-block">
             <div class="row">
                 <div class="col col-6 text-start">
                     <button

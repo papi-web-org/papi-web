@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <div id="user-event-header" class="header user-header user-event-header p-1 position-sticky top-0">
+        <button
+                class="btn btn-link link-dark"
+                hx-get="{{ url_for('user-render') }}"
+                hx-target="body"
+                hx-indicator="#please-wait"
+                hx-trigger="click, keyup[key=='Escape'] from:body"
+        >
+            <i class="bi-arrow-left-circle-fill fs-3"></i>
+        </button>
+        <input
+                class="updater event-updater"
+                type="hidden"
+                name="date"
+                value="{{ now }}"
+                hx-post="{{ url_for('user-event-render-if-updated') }}"
+                hx-vals='{"event_uniq_id": "{{ event.uniq_id }}"}'
+                hx-include="this"
+                hx-target="body"
+                hx-trigger="every {{ papi_web_config.user_event_update_delay }}s queue:none"
+                hx-indicator="#please-wait"
+        />
+        <h1 class="d-inline-block">{{ event.name }} - Écrans</h1>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div id="user-event-content" class="content user-content user-event-content p-3">
+        <section class="pt-1 pb-1 shadow-sm">
+            <div class="container-fluid">
+                {% with title='Saisie des résultats', screens=event.input_screens, class='bg-danger-subtle', icon='bi-pencil-fill' %}
+                    {% include 'user_event_screen_cards.html' %}
+                {% endwith %}
+                {% with title='Affichage des échiquiers', screens=event.boards_screens, class='bg-info-subtle', icon='bi-card-list' %}
+                    {% include 'user_event_screen_cards.html' %}
+                {% endwith %}
+                {% with title='Affichage des appariements', screens=event.players_screens, class='bg-primary-subtle', icon='bi-people-fill' %}
+                    {% include 'user_event_screen_cards.html' %}
+                {% endwith %}
+                {% with title='Affichage des résultats', screens=event.results_screens, class='bg-secondary-subtle', icon='bi-trophy-fill' %}
+                    {% include 'user_event_screen_cards.html' %}
+                {% endwith %}
+            </div>
+        </section>
+    </div>
+{% endblock content %}

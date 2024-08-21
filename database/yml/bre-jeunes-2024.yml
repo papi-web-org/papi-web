@@ -1,4 +1,6 @@
 name: "Championnat de Bretagne jeunes 2024"
+start: "2024-03-07 00:00"
+stop: "2024-03-10 23:59"
 css: "ligue/BRE/BRE.css"
 chessevents:
   bre-jeunes-2024:
@@ -64,49 +66,49 @@ timers:
 tournaments:
   U8:
     filename: "bre-jeunes-2024-u8"
-    name: "Bretagne jeunes 2024 - Tournoi U8"
+    name: "Tournoi U8"
     ffe_id: 62486
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "bre-jeunes-2024"
     chessevent_tournament_name: "Tournoi U8"
   U10:
     filename: "bre-jeunes-2024-u10"
-    name: "Bretagne jeunes 2024 - Tournoi U10"
+    name: "Tournoi U10"
     ffe_id: 62487
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "bre-jeunes-2024"
     chessevent_tournament_name: "Tournoi U12"
   U12:
     filename: "bre-jeunes-2024-u12"
-    name: "Bretagne jeunes 2024 - Tournoi U12"
+    name: "Tournoi U12"
     ffe_id: 62488
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "bre-jeunes-2024"
     chessevent_tournament_name: "Tournoi U12"
   U14:
     filename: "bre-jeunes-2024-u14"
-    name: "Bretagne jeunes 2024 - Tournoi U14"
+    name: "Tournoi U14"
     ffe_id: 62489
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "bre-jeunes-2024"
     chessevent_tournament_name: "Tournoi U14"
   U16:
     filename: "bre-jeunes-2024-u16"
-    name: "Bretagne jeunes 2024 - Tournoi U16"
+    name: "Tournoi U16"
     ffe_id: 62490
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "bre-jeunes-2024"
     chessevent_tournament_name: "Tournoi U16"
   Open_A:
     filename: "bre-jeunes-2024-open-a"
-    name: "Bretagne jeunes 2024 - Open A"
+    name: "Open A"
     ffe_id: 62487
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "bre-jeunes-2024"
     chessevent_tournament_name: "Open A"
   Open_B:
     filename: "bre-jeunes-2024-open-b"
-    name: "Bretagne jeunes 2024 - Open B"
+    name: "Open B"
     ffe_id: 62492
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "bre-jeunes-2024"
@@ -193,6 +195,7 @@ screens:
       -
         tournament_uniq_id: "Open_A"
   affichage-tous:
+    public: false
     type: "boards"
     timer_uniq_id: "grands"
     columns: 4

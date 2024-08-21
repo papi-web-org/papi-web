@@ -1,4 +1,4 @@
-<div class="modal-dialog modal-dialog-centered admin-rotator-edit-modal">
+<div class="modal-dialog modal-dialog-centered admin-rotator-edit-modal d-block w-80 mw-100">
     <form
             hx-post="{{ url_for('admin-rotator-update') }}"
             hx-vals='{"action": "{{ action }}", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"{% if admin_rotator %}, "admin_rotator_id": "{{ admin_rotator.id }}"{% endif %} }'
@@ -46,6 +46,36 @@
                                         </div>
                                     {% endif %}
                                 </div>
+                            {% endwith %}
+                        </div>
+                        <div class="col-6">
+                            {% with id='public', name='public' %}
+                                <div>
+                                    <label
+                                            for="{{ id }}"
+                                            class="form-check-label"
+                                    >
+                                        Visibilité :
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch d-inline-block pe-3">
+                                    <input
+                                            name="{{ name }}"
+                                            class="form-check-input"
+                                            value="on"
+                                            type="checkbox"
+                                            id="{{ id }}"
+                                            {% if data[name] %}checked{% endif %} />
+                                    Écran public
+                                </div>
+                                <div id="{{ id }}-help" class="form-text">
+                                  Seuls les arbitres peuvent ouvrir les écrans rotatifs privés.
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
                             {% endwith %}
                         </div>
                     </div>
@@ -184,7 +214,7 @@
             <div class="modal-footer">
                 <div class="row">
                     <div class="col col-6 text-start">
-                        <button type="submit" class="white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %}">
+                        <button type="submit" class="text-nowrap white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %}">
                             <i class="bi-floppy-fill"></i>
                             {% if action == 'create' %}
                                 Créer

@@ -17,7 +17,7 @@ from data.loader import EventLoader
 from database.sqlite import EventDatabase
 from database.store import StoredChessEvent
 from web.messages import Message
-from web.views_admin import AAdminController
+from web.views_admin_index import AAdminController
 
 logger: Logger = get_logger()
 

@@ -8,6 +8,7 @@ from collections.abc import Iterable
 
 from typing import Any, TYPE_CHECKING
 
+from common import format_timestamp_date_time
 from common.config_reader import ConfigReader, TMP_DIR
 from common.logger import get_logger
 from data.board import Board
@@ -520,15 +521,12 @@ class NewScreenSet:
         self.stored_screen_set: StoredScreenSet | None = stored_screen_set
         self.family: 'NewFamily | None' = family
         self.family_part: int | None = family_part
-        self.error: str | None = None
         self.uniq_id: str = f'{self.screen.uniq_id}_{self.stored_screen_set.order}' \
             if self.stored_screen_set \
             else f'{self.family.uniq_id}_{self.family_part}'
-        if not self.tournament:
-            self.error = self.error or 'Le tournoi n\'est pas défini.'
         self.name: int | None = self.stored_screen_set.name if self.stored_screen_set else self.family.name
         fixed_boards_str: str | None = self.stored_screen_set.fixed_boards_str \
-            if self.screen.type == ScreenType.Boards and self.stored_screen_set \
+            if self.screen.type in [ScreenType.Boards, ScreenType.Input] and self.stored_screen_set \
             else None
         self.fixed_board_numbers: list[int] | None = None
         self.first: int | None = None
@@ -542,9 +540,7 @@ class NewScreenSet:
                             try:
                                 self.fixed_board_numbers.append(int(fixed_board_str))
                             except ValueError:
-                                self.error = self.error \
-                                             or f'le numéro d\'échiquier {fixed_board_str} n\'est pas valide.'
-                                break
+                                logger.warning(f'le numéro d\'échiquier [{fixed_board_str}] n\'est pas valide.')
                 else:
                     self.fixed_board_numbers = [
                         player.fixed for player in self.tournament.players_by_id.values() if player.fixed
@@ -559,8 +555,8 @@ class NewScreenSet:
                 self.family.calculated_last,
                 self.family.calculated_first + self.family_part * self.family.calculated_number - 1)
         if self.first and self.last and self.first > self.last:
-            self.error = self.error or (f'Les nombres {self.first} et {self.last} ne sont pas compatibles '
-                                        f'({self.first} > {self.last}).')
+            logger.warning(
+                f'Les nombres {self.first} et {self.last} ne sont pas compatibles ({self.first} > {self.last}).')
         self.first_item: Any | None = None  # change this to Board | Player | None ?
         self.last_item: Any | None = None  # change this to Board | Player | None ?
         self.items_lists: list[list[Any]] | None = None  # change this to Board | Player | None ?
@@ -568,6 +564,10 @@ class NewScreenSet:
     @property
     def id(self) -> int | None:
         return self.stored_screen_set.id if self.stored_screen_set else None
+
+    @property
+    def type(self) -> ScreenType:
+        return self.screen.type
 
     @property
     def order(self) -> int | None:
@@ -578,12 +578,12 @@ class NewScreenSet:
         return self.screen.event
 
     @property
-    def tournament_id(self) -> int | None:
+    def tournament_id(self) -> int:
         return self.stored_screen_set.tournament_id if self.stored_screen_set else self.family.tournament_id
 
     @property
-    def tournament(self) -> NewTournament | None:
-        return self.event.tournaments_by_id[self.tournament_id] if self.tournament_id else None
+    def tournament(self) -> NewTournament:
+        return self.event.tournaments_by_id[self.tournament_id]
 
     @property
     def columns(self) -> int:
@@ -595,17 +595,16 @@ class NewScreenSet:
 
     @property
     def name_for_boards(self) -> str | None:
-        if self.tournament:
-            if self.tournament.current_round:
-                self._extract_boards()
-            else:
-                self._extract_players_by_name()
-        return self.name if self.name else '???'
+        if self.tournament.current_round:
+            self._extract_boards()
+        else:
+            self._extract_players_by_name()
+        return self.name
 
     @property
     def name_for_players(self) -> str | None:
         self._extract_players_by_name()
-        return self.name if self.name else '???'
+        return self.name
 
     def _extract_data(self, items: list[Any]):
         if not items:
@@ -748,32 +747,21 @@ class NewScreenSet:
         return self.last_item
 
     @property
-    def __get_screen_set_file_dependencies_file(self) -> Path:
-        return TMP_DIR / 'events' / self.event.uniq_id / 'screen_set_file_dependencies' / f'{self.uniq_id}.json'
+    def last_update(self) -> int | None:
+        return self.stored_screen_set.last_update if self.stored_screen_set else self.family.last_update
 
-    def get_screen_set_file_dependencies(self) -> list[Path]:
-        try:
-            with open(self.__get_screen_set_file_dependencies_file, 'r', encoding='utf-8') as f:
-                return [Path(file) for file in json.load(f)]
-        except FileNotFoundError:
-            return []
-
-    def set_file_dependencies(self, files: list[Path]):
-        try:
-            self.__get_screen_set_file_dependencies_file.parents[0].mkdir(parents=True, exist_ok=True)
-            with open(self.__get_screen_set_file_dependencies_file, 'w', encoding='utf-8') as f:
-                return f.write(json.dumps([str(file) for file in files]))
-        except FileNotFoundError:
-            return []
+    @property
+    def last_update_str(self) -> str | None:
+        return format_timestamp_date_time(self.last_update)
 
     @property
     def numbers_str(self):
-        name: str = 'échiquiers' if self.screen.type in [ScreenType.Boards, ScreenType.Input] else 'joueur·euses'
+        name: str = 'échiquiers' if self.type in [ScreenType.Boards, ScreenType.Input] else 'joueur·euses'
         if self.fixed_board_numbers:
             return f'{name} {", ".join(map(str, self.fixed_board_numbers))}'
         match (self.first, self.last):
             case (None, None):
-                return 'tous les échiquiers' if self.screen.type in [ScreenType.Boards, ScreenType.Input] \
+                return 'tous les échiquiers' if self.type in [ScreenType.Boards, ScreenType.Input] \
                     else 'tou·tes les joueur·euses'
             case (first, None) if first is not None:
                 return f'{name} à partir du n°{first}'
@@ -786,7 +774,4 @@ class NewScreenSet:
                     f'first={self.first}, last={self.last}')
 
     def __str__(self):
-        if self.tournament:
-            return f'Tournoi {self.tournament.uniq_id} ({self.numbers_str})'
-        else:
-            return f'Tournoi non défini ({self.numbers_str})'
+        return f'Tournoi {self.tournament.uniq_id} ({self.numbers_str})'

@@ -1,15 +1,25 @@
 {% with tournament=screen_set.tournament %}
     <div
-        class="players-screen-set"
-        hx-get="{{ url_for('render-players-screen-set-if-updated', event_uniq_id=event.uniq_id, screen_id=screen.id, screen_set_id=screen_set.id, date=now) }}"
-        hx-swap="outerHTML"
-        hx-trigger="every 5s"
+            class="players-screen-set"
     >
+        <input
+                class="updater screen-set-updater"
+                type="hidden"
+                name="date"
+                value="{{ now }}"
+                hx-post="{{ url_for('user-players-screen-set-render-if-updated') }}"
+                hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "screen_uniq_id": "{{ screen.uniq_id }}", "screen_set_uniq_id": "{{ screen_set.uniq_id }}"}'
+                hx-include="this"
+                hx-target="closest .players-screen-set"
+                hx-swap="outerHTML"
+                hx-trigger="every {{ papi_web_config.user_screen_set_update_delay }}s queue:none"
+                hx-indicator="#please-wait"
+        />
         <h2 class="set-title">{{ screen_set.name_for_players }}{% if tournament.current_round %} (ronde {{ tournament.current_round }}){% endif %}</h2>
-        <div class="row screen-set-row">
+        <div class="row screen-set-row mx-0 w-100">
             {% for players in screen_set.players_by_name_lists %}
                 <div class="col screen-set-col">
-                    <table class="table table-striped table-sm">
+                    <table class="table table-striped table-sm bg-light">
                         <thead class="table-dark">
                             <tr>
                                 <th scope="col" class="player">Joueur.euse Elo{% if tournament.current_round %} [Pts]{% endif %}</th>
@@ -48,7 +58,7 @@
                                             {% else %}
                                                 bi-square player-check-in
                                             {% endif %}
-                                            player-{{ tournament.uniq_id }}-{{ player.id }}"></i>
+                                            player-{{ tournament.id }}-{{ player.id }}"></i>
                                         {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}
                                     </td>
                                     <td colspan="2"><span class="fst-italic">{{ player.not_paired_str }}</span></td>

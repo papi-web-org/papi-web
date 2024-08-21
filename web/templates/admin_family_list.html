@@ -1,11 +1,23 @@
 <div class="row">
     <div class="col">
         <h1 class="text-nowrap">
+            {% with public=admin_event.public %}
+                {% include 'admin_visibility_icon.html' %}
+            {% endwith %}
             {{ admin_event.name }} - Familles d'écrans
         </h1>
     </div>
-    <div class="col-1 d-flex justify-content-end">
+    <div class="col-1 d-flex justify-content-end text-nowrap">
         <h1>
+            <button
+                    class="btn btn-primary text-nowrap"
+                    hx-post="{{ url_for('admin-update-header') }}"
+                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@families"}'
+                    hx-swap="multi:#admin-header,#admin-content"
+                    hx-indicator="#please-wait"
+            >
+                <i class="bi-arrow-clockwise"></i>
+            </button>
             <button
                     class="btn btn-primary text-nowrap"
                     hx-post="{{ url_for('admin-family-render-edit-modal') }}"
@@ -14,23 +26,25 @@
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"
                     data-bs-target="#admin-modal-container"
-                    hx-indicator="#please-wait">
+                    hx-indicator="#please-wait"
+                    {% if not admin_event.tournaments_by_id %}disabled{% endif %}
+            >
                 <i class="bi-plus-square-fill"></i> Créer une famille
             </button>
         </h1>
     </div>
 </div>
 
-<table class="table border-black">
+<table class="table border-black bg-light">
     <thead class="table-dark position-sticky top-0">
         <tr>
-            <th scope="col" class="text-nowrap">[Id] / Nom</th>
+            <th scope="col" colspan="2" class="text-nowrap">[Id] / Nom</th>
             <th scope="col" class="text-nowrap">Type</th>
             <th scope="col" class="text-nowrap">Menu</th>
             <th scope="col" class="text-nowrap">Paramètres</th>
             <th scope="col" class="text-nowrap">Tournois / répartition</th>
             <th scope="col" class="text-nowrap">Écrans de la famille</th>
-            <th scope="col" class="text-nowrap text-end width-100" colspan="2">
+            <th scope="col" class="text-nowrap text-end w-100" colspan="2">
                 {% with id='show-boards-families-on-family-list', name='show_boards_families_on_family_list', show='boards' in screen_types_on_family_list, icon='bi-card-list' %}
                     {% include 'admin_family_list_screen_type_switch.html' %}
                 {% endwith %}
@@ -49,6 +63,21 @@
             {% if family.type in screen_types_on_family_list %}
                 {% set ns.family_found=true %}
                 <tr>
+                        <td
+                                class="text-nowrap"
+                        >
+                            <div class="fw-bold">
+                                {% if family.public %}
+                                    <span class="text-success">
+                                        <i class="bi-unlock-fill fs-3"></i>
+                                    </span>
+                                {% else %}
+                                    <span class="text-danger">
+                                        <i class="bi-lock-fill fs-3"></i>
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </td>
                     <th scope="row" class="text-nowrap">
                         <div>
                             [{{ family.uniq_id }}]
@@ -153,9 +182,13 @@
         {% if not ns.family_found %}
             <tr>
                 <td
-                        colspan="8"
-                        class="text-nowrap" >
-                    <span class="fst-italic">Aucune famille d'écran trouvée.</span>
+                        colspan="9"
+                        class="text-nowrap fst-italic">
+                    {% if not admin_event.tournaments_by_id %}
+                        La création de familles d'écrans est impossible car il n'y a pas de tournoi dans l'évènement.
+                    {% else %}
+                        Aucune famille d'écrans trouvée.
+                    {% endif %}
                 </td>
             </tr>
         {% endif %}

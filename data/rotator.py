@@ -141,10 +141,15 @@ class NewRotator:
         self.stored_rotator: StoredRotator = stored_rotator
         self._families: list[NewFamily] | None = None
         self._screens: list[NewScreen] | None = None
+        self._rotating_screens: list[NewScreen] | None = None
 
     @property
     def id(self) -> int:
         return self.stored_rotator.id
+
+    @property
+    def public(self) -> bool:
+        return self.stored_rotator.public
 
     @property
     def uniq_id(self) -> str:
@@ -179,3 +184,11 @@ class NewRotator:
                     with suppress(KeyError):
                         self._families.append(self.event.families_by_id[family_id])
         return self._families
+
+    @property
+    def rotating_screens(self) -> list[NewScreen]:
+        if self._rotating_screens is None:
+            self._rotating_screens = [screen for screen in self.screens]
+            for family in self.families:
+                self._rotating_screens += [screen for screen in family.screens_by_uniq_id.values()]
+        return self._rotating_screens

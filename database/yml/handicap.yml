@@ -1,4 +1,5 @@
-name: "Tournoi à handicap"
+name: "Évènement avec tournoi à handicap"
+public: true
 tournaments:
   T:
     filename: "handicap"

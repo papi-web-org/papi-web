@@ -1,10 +1,10 @@
 from logging import Logger
 from typing import Annotated
 
-from litestar import get, post
+from litestar import post, get
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template, Redirect
+from litestar.response import Template
 from litestar.contrib.htmx.request import HTMXRequest
 
 from common.exception import PapiWebException
@@ -49,7 +49,7 @@ class AAdminController(AController):
         options: dict[str, str] = {
             '': '-',
             'boards': 'Affichage des échiquiers',
-            'boards-update': 'Saisie des résultats',
+            'input': 'Saisie des résultats',
             'players': 'Appariements par ordre alphabétique',
         }
         if results_screen_allowed:
@@ -76,12 +76,12 @@ class AAdminController(AController):
         return options
 
 
-class AdminController(AAdminController):
+class AdminIndexController(AAdminController):
     @get(
-        path='/admin',
-        name='admin-render-index'
+        path='/admin-render',
+        name='admin-render'
     )
-    async def admin_render_index(self, request: HTMXRequest) -> Template | Redirect:
+    async def htmx_admin_render_index(self, request: HTMXRequest) -> Template:
         return self._admin_render_index(request, EventLoader())
 
     @post(

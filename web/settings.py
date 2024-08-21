@@ -9,8 +9,8 @@ from litestar.static_files import create_static_files_router
 from litestar.template import TemplateConfig
 from litestar.types import ControllerRouterHandler, Middleware
 
-from web.views import LoginController, IndexController
-from web.views_admin import AdminController
+from web.views import IndexController
+from web.views_admin_index import AdminIndexController
 from web.views_admin_chessevent import AdminChessEventController
 from web.views_admin_event import AdminEventController
 from web.views_admin_timer import AdminTimerController
@@ -18,7 +18,16 @@ from web.views_admin_tournament import AdminTournamentController
 from web.views_admin_screen import AdminScreenController
 from web.views_admin_family import AdminFamilyController
 from web.views_admin_rotator import AdminRotatorController
-from web.views_user import UserController
+from web.views_user_check_in import UserCheckInController
+from web.views_user_download import UserDownloadController
+from web.views_user_event import UserEventController
+from web.views_user_illegal_move import UserIllegalMoveController
+from web.views_user_index import UserIndexController
+from web.views_user_login import UserLoginController
+from web.views_user_result import UserResultController
+from web.views_user_rotator import UserRotatorController
+from web.views_user_screen import UserScreenController
+from web.views_user_screen_set import UserScreenSetController
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,11 +42,20 @@ static_files_router: Router = create_static_files_router(
     name='static',
 )
 
+
 route_handlers: Sequence[ControllerRouterHandler] = [
-    LoginController,
     IndexController,
-    UserController,
-    AdminController,
+    UserIndexController,
+    UserLoginController,
+    UserEventController,
+    UserScreenController,
+    UserRotatorController,
+    UserScreenSetController,
+    UserResultController,
+    UserCheckInController,
+    UserIllegalMoveController,
+    UserDownloadController,
+    AdminIndexController,
     AdminEventController,
     AdminChessEventController,
     AdminTournamentController,

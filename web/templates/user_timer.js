@@ -51,44 +51,44 @@ function update_timer() {
 	now = new Date();
 	time = Math.floor(now.getTime() / 1000);
 	clock_html = two_digits(now.getHours())+':'+two_digits(now.getMinutes())+':'+two_digits(now.getSeconds());
-{% for hour in timer.hours %}
-  {% if not hour.error %}
-	if (time < {{ hour.timestamp_1 }}) { // {{ hour.datetime_str_1 }} color_1 {{ hour.text_before }}
+{% for timer_hour in timer.timer_hours_sorted_by_order %}
+  {% if not timer_hour.error %}
+	if (time < {{ timer_hour.timestamp_1 }}) { // {{ timer_hour.datetime_str_1 }} color_1 {{ timer_hour.text_before }}
 		color = 'rgb({{ color_1_r }},{{ color_1_g }},{{ color_1_b }})';
-		dur = duration({{ hour.timestamp }} - time);
-		text_html = '{{ hour.text_before }}'.replace('%s', dur);
+		dur = duration({{ timer_hour.timestamp }} - time);
+		text_html = '{{ timer_hour.text_before }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
 		return;
 	}
-	if (time < {{ hour.timestamp_2 }}) { // {{ hour.datetime_str_2 }} color_1 -> color_2 {{ hour.text_before }}
-		color_r = Math.floor({{ color_1_r }} + (time - {{ hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_r - color_1_r }}));
-		color_g = Math.floor({{ color_1_g }} + (time - {{ hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_g - color_1_g }}));
-		color_b = Math.floor({{ color_1_b }} + (time - {{ hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_b - color_1_b }}));
+	if (time < {{ timer_hour.timestamp_2 }}) { // {{ timer_hour.datetime_str_2 }} color_1 -> color_2 {{ timer_hour.text_before }}
+		color_r = Math.floor({{ color_1_r }} + (time - {{ timer_hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_r - color_1_r }}));
+		color_g = Math.floor({{ color_1_g }} + (time - {{ timer_hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_g - color_1_g }}));
+		color_b = Math.floor({{ color_1_b }} + (time - {{ timer_hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_b - color_1_b }}));
 		color = 'rgb(' + color_r + ',' + color_g + ',' + color_b + ')';
-		dur = duration({{ hour.timestamp }} - time);
-		text_html = '{{ hour.text_before }}'.replace('%s', dur);
+		dur = duration({{ timer_hour.timestamp }} - time);
+		text_html = '{{ timer_hour.text_before }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
 		return;
 	}
-	if (time < {{ hour.timestamp_3 }}) { // {{ hour.datetime_str_3 }} color_2 -> color_3 {{ hour.text_before }}
-		color_r = Math.floor({{ color_2_r }} + (time - {{ hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_r - color_2_r }}));
-		color_g = Math.floor({{ color_2_g }} + (time - {{ hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_g - color_2_g }}));
-		color_b = Math.floor({{ color_2_b }} + (time - {{ hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_b - color_2_b }}));
+	if (time < {{ timer_hour.timestamp_3 }}) { // {{ timer_hour.datetime_str_3 }} color_2 -> color_3 {{ timer_hour.text_before }}
+		color_r = Math.floor({{ color_2_r }} + (time - {{ timer_hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_r - color_2_r }}));
+		color_g = Math.floor({{ color_2_g }} + (time - {{ timer_hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_g - color_2_g }}));
+		color_b = Math.floor({{ color_2_b }} + (time - {{ timer_hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_b - color_2_b }}));
 		color = 'rgb(' + color_r + ',' + color_g + ',' + color_b + ')';
-		dur = duration({{ hour.timestamp }} - time);
-		text_html = '{{ hour.text_before }}'.replace('%s', dur);
+		dur = duration({{ timer_hour.timestamp }} - time);
+		text_html = '{{ timer_hour.text_before }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
 		return;
 	}
-	{% if not hour.last_valid %}
-	if (time < {{ hour.timestamp_next }}) { // {{ hour.datetime_str_next }} color_3 {{ hour.text_after }}
+	{% if not timer_hour.last_valid %}
+	if (time < {{ timer_hour.timestamp_next }}) { // {{ timer_hour.datetime_str_next }} color_3 {{ timer_hour.text_after }}
 	{% endif %}
 		color = 'rgb({{ color_3_r }},{{ color_3_g }},{{ color_3_b }})';
-		dur = duration(time - {{ hour.timestamp }});
-		text_html = '{{ hour.text_after }}'.replace('%s', dur);
+		dur = duration(time - {{ timer_hour.timestamp }});
+		text_html = '{{ timer_hour.text_after }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
 		return;
-	{% if not hour.last %}
+	{% if not timer_hour.last_valid %}
 	}
 	{% endif %}
   {% endif %}

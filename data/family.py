@@ -2,6 +2,7 @@ import re
 from math import ceil
 from typing import TYPE_CHECKING
 
+from common import format_timestamp_date_time
 from common.config_reader import ConfigReader
 from common.papi_web_config import PapiWebConfig
 from data.screen import NewScreen
@@ -304,7 +305,6 @@ class NewFamily:
         self.event: 'NewEvent' = event
         self.stored_family: StoredFamily = stored_family
         self.screens_by_uniq_id: dict[str, NewScreen] = {}
-        self.error: str | None = None
         self.calculated_first: int | None = None
         self.calculated_last: int | None = None
         self.calculated_number: int | None = None
@@ -321,11 +321,15 @@ class NewFamily:
         return ScreenType.from_str(self.stored_family.type)
 
     @property
+    def public(self) -> bool:
+        return self.stored_family.public
+
+    @property
     def uniq_id(self) -> str:
         return self.stored_family.uniq_id
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         if self.stored_family.name:
             return self.stored_family.name
         else:
@@ -335,12 +339,12 @@ class NewFamily:
                 return '%t'
 
     @property
-    def tournament_id(self) -> int | None:
+    def tournament_id(self) -> int:
         return self.stored_family.tournament_id
 
     @property
-    def tournament(self) -> Tournament | None:
-        return self.event.tournaments_by_id[self.tournament_id] if self.tournament_id else None
+    def tournament(self) -> NewTournament:
+        return self.event.tournaments_by_id[self.tournament_id]
 
     @property
     def columns(self) -> int:
@@ -394,28 +398,25 @@ class NewFamily:
     def number(self) -> int | None:
         return self.stored_family.number
 
+    @property
+    def last_update(self) -> float | None:
+        return self.stored_family.last_update
+
+    @property
+    def last_update_str(self) -> str | None:
+        return format_timestamp_date_time(self.last_update)
+
     def _calculate_screens(self) -> bool:
         assert self.parts is None or self.number is None  # already checked on family creation
-        # At first get the items
-        if not self.tournament_id:
-            self.error = f'Le tournoi de la famille n\'est pas défini, famille ignorée.'
-            self.event.add_warning(self.error, family_uniq_id=self.uniq_id)
-            return False
-        try:
-            tournament: NewTournament = self.event.tournaments_by_id[self.tournament_id]
-        except KeyError:
-            self.error = f'Le tournoi [{self.tournament_id}] n\'existe pas, famille ignorée.'
-            self.event.add_warning(self.error, family_uniq_id=self.uniq_id)
-            return False
-        if not tournament.rounds:
-            self.error = f'Le tournoi [{self.tournament_id}] ne peut être lu, famille ignorée.'
+        if not self.tournament.rounds:
+            self.error = f'Le tournoi [{self.tournament.uniq_id}] ne peut être lu, famille ignorée.'
             self.event.add_warning(self.error, family_uniq_id=self.uniq_id)
             return False
         first_item_number: int
         match ScreenType.from_str(self.type):
             case ScreenType.Boards | ScreenType.Input:
-                if tournament.current_round:
-                    total_items_number: int = len(tournament.boards)
+                if self.tournament.current_round:
+                    total_items_number: int = len(self.tournament.boards)
                     if self.first:
                         if self.first > total_items_number:
                             self.error = f'Le tournoi ne comporte que [{total_items_number}] échiquiers, ' \
@@ -431,7 +432,7 @@ class NewFamily:
                         self.calculated_last = total_items_number
                     cut_items_number = self.calculated_last - self.calculated_first + 1
                 else:
-                    cut_items_number = len(tournament.players_by_name_with_unpaired)
+                    cut_items_number = len(self.tournament.players_by_name_with_unpaired)
                     self.calculated_first = 1
                     self.calculated_last = cut_items_number
             case ScreenType.Players:
@@ -441,15 +442,16 @@ class NewFamily:
                 else:
                     players_show_unpaired = self.players_show_unpaired
                 if players_show_unpaired:
-                    cut_items_number = len(tournament.players_by_name_with_unpaired)
+                    cut_items_number = len(self.tournament.players_by_name_with_unpaired)
                 else:
-                    cut_items_number = len(tournament.players_by_name_without_unpaired)
+                    cut_items_number = len(self.tournament.players_by_name_without_unpaired)
                 self.calculated_first = 1
                 self.calculated_last = cut_items_number
             case _:
                 raise ValueError(f'type={self.type}')
         if not cut_items_number:
-            self.error = f'Il n\'y a aucun élément à afficher pour le tournoi [{tournament.uniq_id}], famille ignorée.'
+            self.error = \
+                f'Il n\'y a aucun élément à afficher pour le tournoi [{self.tournament.uniq_id}], famille ignorée.'
             self.event.add_warning(self.error, family_uniq_id=self.uniq_id)
             return False
         # OK now we know the number of items and the number of the first item to take
@@ -508,7 +510,4 @@ class NewFamily:
                     f'first={self.first}, last={self.last}, parts={self.parts}, number={self.number}')
 
     def __str__(self):
-        if self.tournament:
-            return f'Tournoi {self.tournament.uniq_id} ({self.numbers_str})'
-        else:
-            return f'Tournoi non défini ({self.numbers_str})'
+        return f'Tournoi {self.tournament.uniq_id} ({self.numbers_str})'

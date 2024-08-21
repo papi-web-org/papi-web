@@ -19,7 +19,7 @@ from data.util import ScreenType
 from database.sqlite import EventDatabase
 from database.store import StoredScreen, StoredScreenSet
 from web.messages import Message
-from web.views_admin import AAdminController
+from web.views_admin_index import AAdminController
 
 logger: Logger = get_logger()
 
@@ -55,6 +55,7 @@ class AdminScreenController(AAdminController):
         field = 'uniq_id'
         uniq_id: str = self._form_data_to_str_or_none(data, field)
         name: str | None = None
+        public: bool | None = None
         if action == 'delete':
             pass
         else:
@@ -71,6 +72,7 @@ class AdminScreenController(AAdminController):
                     case _:
                         raise ValueError(f'action=[{action}]')
             name = self._form_data_to_str_or_none(data, 'name')
+            public = self._form_data_to_bool_or_none(data, 'public')
         menu: str | None = None
         menu_text: str | None = None
         columns: int | None = None
@@ -120,6 +122,7 @@ class AdminScreenController(AAdminController):
             id=admin_screen.id if action != 'create' else None,
             uniq_id=uniq_id,
             type=type,
+            public=public,
             name=name,
             columns=columns,
             menu_text=menu_text,
@@ -153,6 +156,7 @@ class AdminScreenController(AAdminController):
                         raise ValueError(f'action=[{action}]')
                 match action:
                     case 'update' | 'clone':
+                        data['public'] = self._value_to_form_data(admin_screen.stored_screen.public)
                         data['name'] = self._value_to_form_data(admin_screen.stored_screen.name)
                         data['columns'] = self._value_to_form_data(admin_screen.stored_screen.columns)
                         data['menu_text'] = self._value_to_form_data(admin_screen.stored_screen.menu_text)
@@ -174,6 +178,9 @@ class AdminScreenController(AAdminController):
                                 raise ValueError(f'action={action}')
                     case 'create':
                         data['type'] = ''
+                        data['public'] = self._value_to_form_data(True)
+                        data['uniq_id'] = ''
+                        data['name'] = ''
                     case 'delete':
                         pass
                     case _:
@@ -275,22 +282,11 @@ class AdminScreenController(AAdminController):
                 case 'update':
                     stored_screen = event_database.update_stored_screen(stored_screen)
                     Message.success(request, f'L\'écran [{stored_screen.uniq_id}] a été modifié.')
-                    if admin_screen.type in [ScreenType.Boards, ScreenType.Input, ScreenType.Players]:
-                        if not admin_screen.screen_sets_sorted_by_order:
-                            stored_screen_set: StoredScreenSet = event_database.add_stored_screen_set(admin_screen.id)
-                            if len(admin_event.tournaments_by_id) == 1:
-                                stored_screen_set.tournament_id = list(admin_event.tournaments_by_id.keys())[0]
-                                event_database.update_stored_screen_set(stored_screen_set)
-                            next_screen_id = admin_screen.id
-                            next_screen_set_id = stored_screen_set.id
-                        else:
-                            for screen_set in admin_screen.screen_sets_sorted_by_order:
-                                if screen_set.error:
-                                    next_screen_id = admin_screen.id
-                                    next_screen_set_id = screen_set.id
-                                    continue
                 case 'create':
                     stored_screen = event_database.add_stored_screen(stored_screen)
+                    if admin_screen.type in [ScreenType.Boards, ScreenType.Input, ScreenType.Players]:
+                        event_database.add_stored_screen_set(
+                            admin_screen.id, list(admin_event.tournaments_by_id.keys())[0])
                     Message.success(request, f'L\'écran [{stored_screen.uniq_id}] a été créé.')
                     next_screen_id = stored_screen.id
                     next_action = 'update'
@@ -339,6 +335,7 @@ class AdminScreenController(AAdminController):
         try:
             if len(admin_screen.event.tournaments_by_id) == 1:
                 tournament_id = list(admin_screen.event.tournaments_by_id.keys())[0]
+                data[field] = self._value_to_form_data(tournament_id)
             else:
                 tournament_id = self._form_data_to_int_or_none(data, field)
                 if not tournament_id:
@@ -387,7 +384,6 @@ class AdminScreenController(AAdminController):
     @staticmethod
     def _get_tournament_options(admin_event: NewEvent) -> dict[str, str]:
         options: dict[str, str] = {
-            '': 'Choisir le tournoi',
         }
         for tournament in admin_event.tournaments_by_id.values():
             options[str(tournament.id)] = f'{tournament.name} ({tournament.filename})'
@@ -506,6 +502,15 @@ class AdminScreenController(AAdminController):
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
+        match action:
+            case 'delete':
+                if len(admin_screen.screen_sets_sorted_by_order) <= 1:
+                    Message.error(request, f'Le dernier ensemble d\'un écran ne peut être supprimé.')
+                    return self._render_messages(request)
+            case 'update' | 'clone' | 'add' | 'reorder' | 'cancel':
+                pass
+            case _:
+                raise ValueError(f'action=[{action}]')
         next_screen_set_id: int | None = None
         with (EventDatabase(admin_event.uniq_id, write=True) as event_database):
             match action:
@@ -517,16 +522,16 @@ class AdminScreenController(AAdminController):
                             admin_event, admin_screen, admin_screen_set, data, stored_screen_set.errors)
                     event_database.update_stored_screen_set(stored_screen_set)
                 case 'delete':
-                    event_database.delete_stored_screen_set(admin_screen_set.id)
-                    event_database.order_stored_screen_sets(admin_screen.id)
+                    event_database.delete_stored_screen_set(admin_screen_set.id, admin_screen.id)
                 case 'clone':
                     stored_screen_set = event_database.clone_stored_screen_set(admin_screen_set.id, admin_screen.id)
                     next_screen_set_id = stored_screen_set.id
                 case 'add':
-                    stored_screen_set = event_database.add_stored_screen_set(admin_screen.id)
+                    stored_screen_set = event_database.add_stored_screen_set(
+                        admin_screen.id, list(admin_event.tournaments_by_id.keys())[0])
                     next_screen_set_id = stored_screen_set.id
                 case 'reorder':
-                    event_database.reorder_stored_screen_sets(data['item'])
+                    event_database.reorder_stored_screen_sets(admin_screen.id, data['item'])
                 case 'cancel':
                     pass
                 case _:

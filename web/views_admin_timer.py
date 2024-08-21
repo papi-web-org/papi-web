@@ -20,7 +20,7 @@ from data.loader import EventLoader
 from database.sqlite import EventDatabase
 from database.store import StoredTimer, StoredTimerHour
 from web.messages import Message
-from web.views_admin import AAdminController
+from web.views_admin_index import AAdminController
 
 logger: Logger = get_logger()
 
@@ -237,7 +237,7 @@ class AdminTimerController(AAdminController):
                             if timer_hour.error:
                                 next_timer_id = admin_timer.id
                                 next_timer_hour_id = timer_hour.id
-                                continue
+                                break
                 case 'create':
                     stored_timer = event_database.add_stored_timer(stored_timer)
                     Message.success(request, f'Le chronomètre [{stored_timer.uniq_id}] a été créé.')
@@ -467,8 +467,7 @@ class AdminTimerController(AAdminController):
                             admin_event, admin_timer, admin_timer_hour, data, stored_timer_hour.errors)
                     event_database.update_stored_timer_hour(stored_timer_hour)
                 case 'delete':
-                    event_database.delete_stored_timer_hour(admin_timer_hour.id)
-                    event_database.order_stored_timer_hours(admin_timer.id)
+                    event_database.delete_stored_timer_hour(admin_timer_hour.id, admin_timer.id)
                 case 'clone':
                     stored_timer_hour = event_database.clone_stored_timer_hour(admin_timer_hour.id)
                     next_timer_hour_id = stored_timer_hour.id

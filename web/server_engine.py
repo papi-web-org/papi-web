@@ -61,6 +61,16 @@ class ServerEngine(Engine):
             template_config=template_config,
             middleware=middlewares,
         )
+        # This code is intended to check the uniformity of the paths and names used for the application URLs
+        url_map: dict[str, list[str]] = {}
+        for route in app.routes:
+            for handler in route.route_handlers:
+                if handler.name:
+                    if handler.name not in url_map:
+                        url_map[handler.name] = []
+                    url_map[handler.name].append(route.path)
+        for name in sorted(url_map.keys()):
+            logger.debug(f'{name}: {url_map[name]}')
         uvicorn.run(app, host=papi_web_config.web_host, port=papi_web_config.web_port, log_level='info',)
 
     @staticmethod

@@ -1,52 +1,77 @@
 {% extends 'base.html' %}
 
-{% block title %}
-Papi-web
-{% endblock title %}
-
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', file_path='/css/index.css') }}" type="text/css" />
-{% endblock head %}
-
 {% block content %}
-<div id="content-wrapper" class="content-wrapper p-3">
-    <div class="row justify-content-center">
-        <div class="d-grid gap-2 col-auto mx-auto">
-            <h1 class="text-center">Bienvenue dans Papi-web !</h1>
-            <table class="table table-responsive table-striped table-sm table-hover border-black w-auto">
-                <thead class="table-dark">
-                    <tr>
-                        <th scope="col" colspan="2">Configuration</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="row">Accès depuis le serveur Papi-web</th>
-                        <td><a href="{{ papi_web_config.local_url }}" target="_blank">{{ papi_web_config.local_url }}</a></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Accès depuis le réseau local (LAN/WAN)</th>
-                        <td>{% if papi_web_config.lan_url %}<a href="{{ papi_web_config.lan_url }}" target="_blank">{{ papi_web_config.lan_url }}</a>{% else %}<span class="fst-italic">-</span>{% endif %}</td>
-                    </tr>
-                </tbody>
-            </table>
-            <form method="POST">
-                <input type="hidden" name="target" value="user" />
+    <div id="home-content" class="content home-content">
+        <div class="row justify-content-center">
+            <div class="d-grid gap-2 col-auto mx-auto">
+                <h1 class="text-center">Bienvenue dans Papi-web !</h1>
+                <table class="table table-responsive table-sm border-black w-auto bg-light">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col" colspan="2">Accès</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">
+                                Depuis le serveur Papi-web
+                            </th>
+                            <td>
+                                <a href="{{ papi_web_config.local_url }}" target="_blank">{{ papi_web_config.local_url }}</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                Depuis le réseau local (LAN/WAN)
+                            </th>
+                            <td>
+                                {% if papi_web_config.lan_url %}
+                                    <a href="{{ papi_web_config.lan_url }}" target="_blank">{{ papi_web_config.lan_url }}</a>
+                                {% else %}
+                                    <span class="fst-italic">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
                 <button
-                        type="submit"
-                        class="btn btn-primary btn-lg p-4 width-100">
-                    Salles de jeu<br/>(accès public)
+                        hx-get="{{ url_for('user-render') }}"
+                        hx-target="body"
+                        hx-indicator="#please-wait"
+                        class="btn btn-primary btn-lg p-4 w-100"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="right"
+                        data-bs-html="true"
+                        data-bs-custom-class="papi-web-tooltip-info"
+                        data-bs-title="<i class='bi bi-info-circle-fill'></i> Cliquez ici pour accéder aux écrans publics des évènements."
+                >
+                    Évènements (accès public)
                 </button>
-            </form>
-            <form method="POST">
-                <input type="hidden" name="target" value="admin" />
-                <button
-                        type="submit"
-                        class="btn btn-danger btn-lg p-1 width-100">
-                    Arbitrage<br/>(accès réservé)
-                </button>
-            </form>
+                <div
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="right"
+                        data-bs-html="true"
+                        {% if admin_auth %}
+                            data-bs-custom-class="papi-web-tooltip-info"
+                            data-bs-title="<i class='bi bi-info-circle-fill'></i> L'interface d'arbitrage permet la gestion des tournois des évènements."
+                        {% else %}
+                            data-bs-custom-class="papi-web-tooltip-danger"
+                            data-bs-title="<i class='bi bi-exclamation-diamond-fill'></i> L'accès à l'interface d'arbitrage n'est pas autorisé depuis cette machine."
+                        {% endif %}
+                >
+                    <button
+                            hx-get="{{ url_for('admin-render') }}"
+                            hx-target="body"
+                            hx-indicator="#please-wait"
+                            class="btn btn-danger btn-lg p-1 w-100"
+                            {% if not admin_auth %}
+                                disabled
+                            {% endif %}
+                    >
+                        Arbitrage (accès privé)
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 {% endblock content %}

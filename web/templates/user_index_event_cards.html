@@ -1,0 +1,44 @@
+<div class="row pt-1">
+    <div class="col-12">
+        <h2 class="border-bottom mb-4">{{ title }}</h2>
+    </div>
+</div>
+<div class="row">
+    {% for event in events %}
+        <div class="col-lg-3 mb-3 d-flex align-items-stretch">
+            <button
+                    class="card btn w-100 {{ class }}"
+                    hx-get="{{ url_for('user-event-render', event_uniq_id=event.uniq_id) }}"
+                    hx-target="body"
+                    hx-indicator="#please-wait"
+            >
+                <div class="card-header w-100">
+                    <i class="{{ calendar_icon }}"></i>
+
+                    {% if event.formatted_start_date == event.formatted_stop_date %}
+                         <span class="fw-bold">{{ event.formatted_start_date }}</span> {{ event.formatted_start_time }}-{{ event.formatted_stop_time }}
+                    {% else %}
+                         <span class="fw-bold">{{ event.formatted_start_date }} - {{ event.formatted_stop_date }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h3 class="card-title text-start">
+                        {{ event.name }}
+                    </h3>
+                    <div class="card-text mb-1 mt-auto align-self-start">
+                        <div class="row">
+                            <div class="col">
+                                <div class="text-nowrap text-start">Tournois : </div>
+                                <div class="text-nowrap text-start">Joueur·euses : </div>
+                            </div>
+                            <div class="col">
+                                <div class="text-end text-nowrap">{{ event.tournaments_by_id|length }}</div>
+                                <div class="text-end text-nowrap">{{ event.players_number }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </button>
+        </div>
+    {% endfor %}
+</div>

@@ -1,24 +1,16 @@
 {% extends 'base.html' %}
 
-{% block title %}
-Papi-web - Arbitrage
-{% endblock title %}
-
-{% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', file_path='/css/admin.css') }}" type="text/css" />
-{% endblock head %}
-
 {% block header %}
-    <div id="admin-header-wrapper" class="admin-header-wrapper p-1 position-sticky top-0">
-        <form method="POST" class="d-inline-block">
-            <input type="hidden" name="target" value="" />
-            <button
-                    type="submit"
-                    class="btn btn-link link-dark">
-                <i class="bi-house-fill"></i>
-            </button>
-        </form>
-        <form id="admin-header" class="admin row d-inline-block">
+    <div id="admin-header" class="header admin-header p-1 position-sticky top-0">
+        <button
+                class="btn btn-link link-dark"
+                hx-get="{{ url_for('index') }}"
+                hx-target="body"
+                hx-indicator="#please-wait"
+        >
+            <i class="bi-house-fill fs-3"></i>
+        </button>
+        <form class="row d-inline-block">
             <div class="col col-md-auto d-inline-block">
                 <span id="admin-main-selector" class="admin">
                     <select
@@ -59,61 +51,52 @@ Papi-web - Arbitrage
 {% endblock header %}
 
 {% block content %}
-    <div id="admin-content-wrapper" class="admin-content-wrapper p-1">
-        <div id="admin-content" class="">
-            {% if admin_main_selector == '' %}
-                {% include 'admin_config.html' %}
-            {% elif admin_main_selector == '@events' %}
-                {% include 'admin_event_list.html' %}
-            {% else %}{# admin_event is not None #}
-                {% if admin_event_selector == '' %}
-                    {% include 'admin_event_config.html' %}
-                {% elif admin_event_selector == '@chessevents' %}
-                    {% include 'admin_chessevent_list.html' %}
-                {% elif admin_event_selector == '@tournaments' %}
-                    {% include 'admin_tournament_list.html' %}
-                {% elif admin_event_selector == '@screens' %}
-                    {% include 'admin_screen_list.html' %}
-                {% elif admin_event_selector == '@families' %}
-                    {% include 'admin_family_list.html' %}
-                {% elif admin_event_selector == '@rotators' %}
-                    {% include 'admin_rotator_list.html' %}
-                {% elif admin_event_selector == '@timers' %}
-                    {% include 'admin_timer_list.html' %}
-                {% elif admin_event_selector == '@messages' %}
-                    {% include 'admin_messages.html' %}
-                {% elif admin_event_selector == '@players' %}
-                    {% include 'admin_players.html' %}
-                {% elif admin_event_selector == '@check_in' %}
-                    {% include 'admin_check_in.html' %}
-                {% elif admin_event_selector == '@pairings' %}
-                    {% include 'admin_pairings.html' %}
-                {% endif %}
+    <div id="admin-content" class="content admin-content p-3">
+        {% if admin_main_selector == '' %}
+            {% include 'admin_config.html' %}
+        {% elif admin_main_selector == '@events' %}
+            {% include 'admin_event_list.html' %}
+        {% else %}{# admin_event is not None #}
+            {% if admin_event_selector == '' %}
+                {% include 'admin_event_config.html' %}
+            {% elif admin_event_selector == '@chessevents' %}
+                {% include 'admin_chessevent_list.html' %}
+            {% elif admin_event_selector == '@tournaments' %}
+                {% include 'admin_tournament_list.html' %}
+            {% elif admin_event_selector == '@screens' %}
+                {% include 'admin_screen_list.html' %}
+            {% elif admin_event_selector == '@families' %}
+                {% include 'admin_family_list.html' %}
+            {% elif admin_event_selector == '@rotators' %}
+                {% include 'admin_rotator_list.html' %}
+            {% elif admin_event_selector == '@timers' %}
+                {% include 'admin_timer_list.html' %}
+            {% elif admin_event_selector == '@messages' %}
+                {% include 'admin_messages.html' %}
+            {% elif admin_event_selector == '@players' %}
+                {% include 'admin_players.html' %}
+            {% elif admin_event_selector == '@check_in' %}
+                {% include 'admin_check_in.html' %}
+            {% elif admin_event_selector == '@pairings' %}
+                {% include 'admin_pairings.html' %}
             {% endif %}
-            <div id="admin-modal-container"
-                class="modal modal-blur fade"
-                style="display: none"
-                aria-hidden="false"
-                data-bs-backdrop="static"
-                data-bs-keyboard="false"
-                tabindex="-1">
-                <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-                    <div class="modal-content"></div>
-                </div>
+        {% endif %}
+        <div id="admin-modal-container"
+            class="modal modal-blur fade overflow-auto"
+            style="display: none"
+            aria-hidden="false"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false"
+            tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered d-block w-80 mw-100" role="document">
+                <div class="modal-content"></div>
             </div>
-            <script>
-                {# manually remove the modal backdrop when reloading #admin-content #}
-                $(document).ready(function(){
-                    $('body .modal-backdrop').remove();
-                });
-            </script>
         </div>
+        <script>
+            {# manually remove the modal backdrop when reloading #admin-content (too many modal-backdrop divs are created by Bootstrap when opening modals) #}
+            $(document).ready(function(){
+                $('body .modal-backdrop').remove();
+            });
+        </script>
     </div>
 {% endblock content %}
-
-{% block footer %}
-    <div id="admin-footer-wrapper" class="">
-        <div id="admin-footer" class="">
-        </div>
-    </div>
-{% endblock footer %}

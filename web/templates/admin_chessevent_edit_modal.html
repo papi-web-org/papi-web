@@ -1,4 +1,4 @@
-<div class="modal-dialog modal-dialog-centered admin-chessevent-edit-modal">
+<div class="modal-dialog modal-dialog-centered admin-chessevent-edit-modal d-block w-80 mw-100">
     <form
             hx-post="{{ url_for('admin-chessevent-update') }}"
             hx-vals='{"action": "{{ action }}", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"{% if admin_chessevent %}, "admin_chessevent_id": "{{ admin_chessevent.id }}"{% endif %} }'
@@ -21,6 +21,14 @@
                     <h3 class="text-danger">
                         Attention : la suppression d'une connexion à ChessEvent est définitive !
                     </h3>
+                    {% if admin_chessevent.dependent_tournaments %}
+                        <p>Les tournois suivants ne seront plus connectés à ChessEvent :</p>
+                        <ul>
+                            {% for tournament in admin_chessevent.dependent_tournaments %}
+                                <li>{{ tournament.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 {% else %}
                     <h3>
                         Propriétés
@@ -125,7 +133,7 @@
             <div class="modal-footer">
                 <div class="row">
                     <div class="col col-6 text-start">
-                        <button type="submit" class="white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %}">
+                        <button type="submit" class="text-nowrap white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %}">
                             <i class="bi-floppy-fill"></i>
                             {% if action == 'create' %}
                                 Créer

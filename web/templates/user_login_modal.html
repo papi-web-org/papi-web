@@ -7,31 +7,32 @@
         tabindex="-1"
         aria-labelledby="login-modal-label"
         aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog d-block w-80 mw-100">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title" id="login-modal-label">Veuillez entrer le code d'accès à l'interface de saisie des résultats :</h2>
             </div>
             <div class="modal-body">
                 <form
-                        hx-post="{{ url_for('login', event_uniq_id=event.uniq_id) }}"
-                        hx-target="#login-modal"
-                        hx-swap="outerHTML"
+                        hx-post="{{ url_for('user-login') }}"
+                        hx-target="body"
                 >
+                    <input type="hidden" class="form-control" name="screen_uniq_id" value="{{ screen.uniq_id }}" />
+                    <input type="hidden" class="form-control" name="event_uniq_id" value="{{ event.uniq_id }}" />
                     <div class="mb-3">
                         <label for="event-uniq-id" class="form-label">Évènement</label>
-                        <input type="text" class="form-control" id="event-uniq-id" aria-describedby="event-uniq-id-help" value="{{ event.uniq_id }}" disabled>
-                        <div id="event-uniq-id-help" class="form-text">Veuillez vous rapprocher de l'organisateur pour obtenir le code d'accès.</div>
+                        <input type="text" class="form-control" id="event-uniq-id" aria-describedby="event-uniq-id-help" value="{{ event.uniq_id }}" disabled />
+                        <div id="event-uniq-id-help" class="form-text">L'accès aux écrans de saisie des résultats de l'évènement [{{ event.uniq_id }}] est protégé par un code.</div>
                     </div>
                     <div class="mb-3">
                         <label for="event-password" class="form-label">Password</label>
                         <input type="password" class="form-control" id="event-password" aria-describedby="event-password-help" name="password">
-                        <div id="event-password-help" class="form-text">Entrez ici le code d'accès défini dans le fichier events/{{ event.uniq_id }}.ini.</div>
+                        <div id="event-password-help" class="form-text">Veuillez vous rapprocher de l'organisateur pour obtenir le code d'accès.</div>
                     </div>
                     <button type="submit" class="btn btn-primary">Connexion</button>
                 </form>
             </div>
-            <!--div class="modal-footer">
+            <!--div class="modal-footer d-block">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
             </div-->
         </div>

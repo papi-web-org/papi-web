@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>{% block title %}Base title{% endblock %}</title>
+        <title>{% block title %}Papi-web{% endblock %}</title>
         <link rel="shortcut icon" type="image/png" href="{{ url_for('static', file_path='/images/papi-web.ico') }}"/>
         {# https://github.com/twbs/bootstrap/releases #}
         <link href="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-5.3.3-dist/css/bootstrap.min.css') }}" rel="stylesheet">
         {# https://github.com/twbs/icons/releases #}
         <link rel="stylesheet" href="{{ url_for('static', file_path='/lib/bootstrap-icons/bootstrap-icons-1.11.3/font/bootstrap-icons.min.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', file_path='/css/base.css') }}" type="text/css" />
+        <link rel="stylesheet" href="{{ url_for('static', file_path='/css/user.css') }}" type="text/css" />
+        <link rel="stylesheet" href="{{ url_for('static', file_path='/css/admin.css') }}" type="text/css" />
         {# https://jquery.com/download/ #}
         <script src="{{ url_for('static', file_path='/lib/jquery/jquery-3.7.1.min.js') }}"></script>
         {# https://unpkg.com/browse/htmx.org@1.9.12/dist/ #}
@@ -16,7 +18,7 @@
         <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/ext/multi-swap.js') }}"></script>
         {# https://github.com/SortableJS/Sortable #}
         <script src="{{ url_for('static', file_path='/lib/sortable/sortable-1.15.2/Sortable.min.js') }}"></script>
-{# TODO this was really nicer than the HTMX code in messages.html
+        {# TODO this was really nicer than the HTMX code in messages.html
         <script>
             $(document).ready(function(){
                 setTimeout(function(){
@@ -25,35 +27,46 @@
                 }, 10000)
             });
         </script>
-#}
+        #}
         {% block head %}
         {% endblock %}
     </head>
-    <body hx-ext="multi-swap">
-        <div id="messages" class="width-33">
+    <body hx-ext="multi-swap" class="bg-body-secondary">
+        <div id="messages" class="w-50 position-fixed top-0 end-0 m-2">
             {% include 'messages.html' %}
         </div>
-        {% block header %}
-        {% endblock %}
-        {% block content %}
-            Body content
-        {% endblock %}
+        <div id="header-wrapper" class="header-wrapper">
+            {% block header %}
+            {% endblock %}
+        </div>
+        <div id="content-wrapper" class="content-wrapper">
+            {% block content %}
+                Body content
+            {% endblock %}
+        </div>
+        <div id="footer-wrapper" class="footer-wrapper">
+            {% block footer %}
+            {% endblock %}
+        </div>
         <div id="copyright-wrapper" class="copyright-wrapper">
             <div id="copyright" class="copyright fst-italic text-center">
                 Papi-web {{ papi_web_config.version }} - {{ papi_web_config.copyright }} - <a href="{{ papi_web_config.url }}" rel = "noopener noreferrer" target="_blank">{{ papi_web_config.url }}</a>
             </div>
         </div>
 	    <div id="please-wait-wrapper">
-            <div id="please-wait" class="please-wait htmx-indicator"></div>
+            <div
+                    id="please-wait"
+                    class="please-wait htmx-indicator position-absolute top-50 start-50 translate-middle"
+            ></div>
         </div>
         <div id="modals"
-            class="modal modal-blur fade"
+            class="modal modal-blur fade overflow-auto"
             style="display: none"
             aria-hidden="false"
             data-bs-backdrop="static"
             data-bs-keyboard="false"
             tabindex="-1">
-            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-dialog modal-lg modal-dialog-centered d-block w-80 mw-100" role="document">
                 <div class="modal-content"></div>
             </div>
         </div>
@@ -82,8 +95,9 @@
                     });
                 }
             })
+            {# https://getbootstrap.com/docs/5.3/components/tooltips/ #}
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
         </script>
     </body>
-    {% block footer %}
-    {% endblock %}
 </html>

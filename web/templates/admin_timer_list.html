@@ -1,11 +1,23 @@
 <div class="row">
     <div class="col">
         <h1 class="text-nowrap">
+            {% with public=admin_event.public %}
+                {% include 'admin_visibility_icon.html' %}
+            {% endwith %}
             {{ admin_event.name }} - Chronomètres
         </h1>
     </div>
-    <div class="col-1 d-flex justify-content-end">
+    <div class="col-1 d-flex justify-content-end text-nowrap">
         <h1>
+            <button
+                    class="btn btn-primary text-nowrap"
+                    hx-post="{{ url_for('admin-update-header') }}"
+                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@timers"}'
+                    hx-swap="multi:#admin-header,#admin-content"
+                    hx-indicator="#please-wait"
+            >
+                <i class="bi-arrow-clockwise"></i>
+            </button>
             <button
                     class="btn btn-primary text-nowrap"
                     hx-post="{{ url_for('admin-timer-render-edit-modal') }}"
@@ -21,14 +33,14 @@
     </div>
 </div>
 
-<table class="table border-black">
+<table class="table border-black bg-light">
     <thead class="table-dark position-sticky top-0">
         <tr>
             <th scope="col" class="text-nowrap">Id</th>
             <th scope="col" class="text-nowrap">Couleurs et délais</th>
-            <th scope="col" class="width-50"></th>
+            <th scope="col" class="w-50"></th>
             <th scope="col" class="text-nowrap">Horaires</th>
-            <th scope="col" class="width-50"></th>
+            <th scope="col" class="w-50"></th>
             <th scope="col" class=""></th>
         </tr>
     </thead>

@@ -5,6 +5,7 @@ from common.logger import get_logger
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from data.event import NewEvent
+    from data.event import NewTournament
 from database.store import StoredChessEvent
 
 logger: Logger = get_logger()
@@ -92,6 +93,7 @@ class NewChessEvent:
     def __init__(self, event: 'NewEvent', stored_chessevent: StoredChessEvent, ):
         self.stored_chessevent: StoredChessEvent = stored_chessevent
         self.event: 'NewEvent' = event
+        self._dependent_tournaments: list['NewTournament'] | None = None
 
     @property
     def id(self) -> int:
@@ -120,4 +122,12 @@ class NewChessEvent:
     def event_id(self) -> str:
         return self.stored_chessevent.event_id
 
-
+    @property
+    def dependent_tournaments(self) -> list['NewTournament']:
+        if self._dependent_tournaments is None:
+            self._dependent_tournaments = [
+                tournament
+                for tournament in self.event.tournaments_by_id.values()
+                if tournament.chessevent and tournament.chessevent.id == self.id
+            ]
+        return self._dependent_tournaments

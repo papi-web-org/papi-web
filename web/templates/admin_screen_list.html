@@ -1,11 +1,23 @@
 <div class="row">
     <div class="col">
         <h1 class="text-nowrap">
+            {% with public=admin_event.public %}
+                {% include 'admin_visibility_icon.html' %}
+            {% endwith %}
             {{ admin_event.name }} - Écrans
         </h1>
     </div>
-    <div class="col-1 d-flex justify-content-end">
+    <div class="col-1 d-flex justify-content-end text-nowrap">
         <h1>
+            <button
+                    class="btn btn-primary text-nowrap"
+                    hx-post="{{ url_for('admin-update-header') }}"
+                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@screens"}'
+                    hx-swap="multi:#admin-header,#admin-content"
+                    hx-indicator="#please-wait"
+            >
+                <i class="bi-arrow-clockwise"></i>
+            </button>
             <button
                     class="btn btn-primary text-nowrap"
                     hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
@@ -14,23 +26,27 @@
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"
                     data-bs-target="#admin-modal-container"
-                    hx-indicator="#please-wait">
+                    hx-indicator="#please-wait"
+                    {% if not admin_event.tournaments_by_id %}
+                        disabled
+                    {% endif %}
+            >
                 <i class="bi-plus-square-fill"></i> Créer un écran
             </button>
         </h1>
     </div>
 </div>
 {{ screen_types_on_screen_list }}
-<table class="table border-black">
+<table class="table border-black bg-light">
     <thead class="table-dark position-sticky top-0">
         <tr>
-            <th scope="col" class="text-nowrap">[Id] / Nom</th>
+            <th scope="col" colspan="2" class="text-nowrap">[Id] / Nom</th>
             <th scope="col" class="text-nowrap">Type</th>
             <th scope="col" class="text-nowrap">Menu</th>
             <th scope="col" class="text-nowrap">Paramètres</th>
-            <th scope="col" class="width-50"></th>
+            <th scope="col" class="w-50"></th>
             <th scope="col" class="text-nowrap">Ensembles / Tournois</th>
-            <th scope="col" class="text-nowrap text-end width-50" colspan="2">
+            <th scope="col" class="text-nowrap text-end w-50" colspan="2">
                 {% with id='show-boards-screens-on-screen-list', name='show_boards_screens_on_screen_list', show='boards' in screen_types_on_event_list, icon='bi-card-list' %}
                     {% include 'admin_screen_list_screen_type_switch.html' %}
                 {% endwith %}
@@ -69,6 +85,19 @@
                     {% with basic=screen.id in admin_event.basic_screens_by_id %}
                     {% with td_class='' if basic else 'bg-secondary-subtle text-secondary' %}
                         <tr>
+                            <th scope="row" class="text-nowrap {{ td_class }}">
+                                <div class="fw-bold">
+                                    {% if screen.public %}
+                                        <span class="text-success">
+                                            <i class="bi-unlock-fill fs-3"></i>
+                                        </span>
+                                    {% else %}
+                                        <span class="text-danger">
+                                            <i class="bi-lock-fill fs-3"></i>
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </th>
                             <th scope="row" class="text-nowrap {{ td_class }}">
                                 <div>
                                     {{ screen_found }} [{{ screen.uniq_id }}]
@@ -149,7 +178,7 @@
                                     {% endif %}
                                 {% endif %}
                             </td>
-                            <td class="text-nowrap {{ td_class }} width-50">
+                            <td class="text-nowrap {{ td_class }} w-50">
                                 {% if basic and screen.type in ['boards', 'input', 'players'] %}
                                     <button
                                             class="btn btn-sm btn-primary p-1"
@@ -204,8 +233,12 @@
                 <tr>
                     <td
                             colspan="8"
-                            class="text-nowrap" >
-                        <span class="fst-italic">Aucun écran trouvé.</span>
+                            class="text-nowrap fst-italic">
+                        {% if not admin_event.tournaments_by_id %}
+                            La création d'écrans est impossible car il n'y a pas de tournoi dans l'évènement.
+                        {% else %}
+                            Aucun écran trouvé.
+                        {% endif %}
                     </td>
                 </tr>
             {% endif %}

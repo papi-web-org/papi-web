@@ -60,8 +60,10 @@ class StoredTournament:
     chessevent_id: int | None
     chessevent_tournament_name: str | None
     record_illegal_moves: int | None
+    last_update: float = field(default=0.0)
     last_result_update: float = field(default=0.0)
     last_illegal_move_update: float = field(default=0.0)
+    last_check_in_update: float = field(default=0.0)
     last_ffe_upload: float = field(default=0.0)
     last_chessevent_download: float = field(default=0.0)
     stored_skipped_rounds: list[StoredSkippedRound] = field(default_factory=list[StoredSkippedRound])
@@ -72,12 +74,13 @@ class StoredTournament:
 class StoredScreenSet:
     id: int | None
     screen_id: int
-    tournament_id: int | None
+    tournament_id: int
     name: str | None
     order: int | None
     fixed_boards_str: str | None
     first: int | None
     last: int | None
+    last_update: float = field(default=0.0)
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
@@ -95,6 +98,8 @@ class StoredScreen:
     results_limit: int | None | None
     results_tournament_ids: list[int] = field(default_factory=list[int])
     stored_screen_sets: list[StoredScreenSet] = field(default_factory=list[StoredScreenSet])
+    last_update: float = field(default=0.0)
+    public: bool = field(default=True)
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
@@ -114,6 +119,8 @@ class StoredFamily:
     last: int | None
     parts: int | None
     number: int | None
+    public: bool = field(default=True)
+    last_update: float = field(default=0.0)
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
@@ -125,6 +132,7 @@ class StoredRotator:
     screen_ids: list[int] | None
     delay: int | None
     show_menus: bool | None
+    public: bool = field(default=True)
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
@@ -132,27 +140,31 @@ class StoredRotator:
 class StoredEvent:
     uniq_id: str
     name: str
-    path: str | None
-    css: str | None
-    update_password: str | None
-    record_illegal_moves: int | None
-    allow_results_deletion: bool | None
+    start: float
+    stop: float
+    public: bool = field(default=False)
+    path: str | None = field(default=None)
+    css: str | None = field(default=None)
+    update_password: str | None = field(default=None)
+    record_illegal_moves: int | None = field(default=None)
+    allow_results_deletion_on_input_screens: bool | None = field(default=None)
+    version: str | None = field(default=None)
+    timer_colors: dict[int, str | None] = field(default=None)
+    timer_delays: dict[int, int | None] = field(default=None)
+    last_update: float = field(default=0.0)
     stored_chessevents: list[StoredChessEvent] = field(default_factory=list[StoredChessEvent])
     stored_timers: list[StoredTimer] = field(default_factory=list[StoredTimer])
     stored_tournaments: list[StoredTournament] = field(default_factory=list[StoredTournament])
     stored_screens: list[StoredScreen] = field(default_factory=list[StoredScreen])
     stored_families: list[StoredFamily] = field(default_factory=list[StoredFamily])
     stored_rotators: list[StoredRotator] = field(default_factory=list[StoredRotator])
-    version: str | None = field(default=None)
-    timer_colors: dict[int, str | None] = field(default=None)
-    timer_delays: dict[int, int | None] = field(default=None)
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass
 class StoredIllegalMove:
     id: int | None
-    tournament_id: str
+    tournament_id: int
     round: int
     player_id: int
     date: float

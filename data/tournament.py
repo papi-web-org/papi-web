@@ -6,10 +6,13 @@ from operator import attrgetter
 from pathlib import Path
 from typing import NamedTuple, TYPE_CHECKING
 
+from common import format_timestamp_date_time
 from common.papi_web_config import PapiWebConfig
 
 if TYPE_CHECKING:
     from data.event import NewEvent
+    from data.screen import NewScreen
+    from data.family import NewFamily
 
 from common.config_reader import TMP_DIR, ConfigReader
 from common.logger import get_logger
@@ -286,14 +289,14 @@ class Tournament:
 
     def store_illegal_move(self, player: Player):
         with EventDatabase(self.event_uniq_id, write=True) as event_database:
-            event_database.add_illegal_move_with_tournament_uniq_id(self.uniq_id, self.current_round, player.id)
+            event_database.add_stored_illegal_move_with_tournament_uniq_id(self.uniq_id, self.current_round, player.id)
             event_database.commit()
         self._touch_illegal_moves_marker()
         logger.info('le coup illégal a été enregistré')
     
     def delete_illegal_move(self, player: Player) -> bool:
         with EventDatabase(self.event_uniq_id, write=True) as event_database:
-            deleted: bool = event_database.delete_illegal_move_with_tournament_uniq_id(
+            deleted: bool = event_database.delete_stored_illegal_move_with_tournament_uniq_id(
                 self.uniq_id, self.current_round, player.id)
             event_database.commit()
         self._touch_illegal_moves_marker()
@@ -305,7 +308,7 @@ class Tournament:
 
     def get_illegal_moves(self) -> Counter[int]:
         with EventDatabase(self.event_uniq_id, write=True) as event_database:
-            return event_database.get_illegal_moves_with_tournament_uniq_id(self.uniq_id, self.current_round)
+            return event_database.get_stored_illegal_moves_with_tournament_uniq_id(self.uniq_id, self.current_round)
 
     def _set_players_illegal_moves(self):
         illegal_moves: Counter[int] = self.get_illegal_moves()
@@ -398,7 +401,7 @@ class Tournament:
             papi_database.add_board_result(board.black_player.id, self._current_round, black_result)
             papi_database.commit()
         with EventDatabase(self.event_uniq_id, write=True) as event_database:
-            event_database.add_result_with_tournament_uniq_id(self.uniq_id, self.current_round, board, white_result)
+            event_database.add_stored_result_with_tournament_uniq_id(self.uniq_id, self.current_round, board, white_result)
             event_database.commit()
         self._touch_results_marker()
         logger.info('Added result: %s %s %d.%d %s %s %d %s %s %s %d',
@@ -413,7 +416,7 @@ class Tournament:
             papi_database.remove_board_result(board.black_player.id, self._current_round)
             papi_database.commit()
         with EventDatabase(self.event_uniq_id, write=True) as event_database:
-            event_database.delete_result_with_tournament_uniq_id(self.uniq_id, self.current_round, board.id)
+            event_database.delete_stored_result_with_tournament_uniq_id(self.uniq_id, self.current_round, board.id)
             event_database.commit()
         self._touch_results_marker()
         logger.info('Removed result: %s %s %d.%d',
@@ -704,7 +707,7 @@ class TournamentBuilder:
             self._event_uniq_id, tournament_uniq_id, name, file, ffe_id, ffe_password, *handicap_values,
             chessevent, chessevent_tournament_name, record_illegal_moves)
         stored_tournament: StoredTournament = self.event_database.get_stored_tournament_with_uniq_id(
-            uniq_id=tournament_uniq_id)
+            tournament_uniq_id=tournament_uniq_id)
         tournament.last_illegal_move_update = stored_tournament.last_illegal_move_update
         tournament.last_result_update = stored_tournament.last_result_update
 
@@ -843,6 +846,8 @@ class NewTournament:
         self._unpaired_players: list[Player] | None = None
         self._papi_read = False
         self._players_by_name: list[Player] | None = None
+        self._dependent_families: list['NewFamily'] | None = None
+        self._dependent_screens: list['NewScreen'] | None = None
 
     @property
     def id(self) -> int:
@@ -927,12 +932,24 @@ class NewTournament:
         return self.event.record_illegal_moves
 
     @property
-    def last_result_update(self) -> float:
-        return self.stored_tournament.last_result_update
+    def last_update(self) -> float:
+        return self.stored_tournament.last_update
+
+    @property
+    def last_update_str(self) -> str:
+        return format_timestamp_date_time(self.last_update)
 
     @property
     def last_illegal_move_update(self) -> float:
         return self.stored_tournament.last_illegal_move_update
+
+    @property
+    def last_result_update(self) -> float:
+        return self.stored_tournament.last_result_update
+
+    @property
+    def last_check_in_update(self) -> float:
+        return self.stored_tournament.last_check_in_update
 
     @property
     def last_ffe_upload(self) -> float:
@@ -1023,6 +1040,26 @@ class NewTournament:
     def unpaired_players(self) -> list[Player] | None:
         self.read_papi()
         return self._unpaired_players
+
+    @property
+    def dependent_families(self) -> list['NewFamily']:
+        if self._dependent_families is None:
+            self._dependent_families = [
+                family
+                for family in self.event.families_by_id.values()
+                if family.tournament.id == self.id
+            ]
+        return self._dependent_families
+
+    @property
+    def dependent_screens(self) -> list['NewScreen']:
+        if self._dependent_screens is None:
+            self._dependent_screens = []
+            for screen in self.event.basic_screens_by_id.values():
+                for screen_set in screen.screen_sets_sorted_by_order:
+                    if screen_set.tournament.id == self.id:
+                        self.dependent_screens.append(screen)
+        return self._dependent_screens
 
     @property
     def print_real_points(self) -> bool:
@@ -1167,13 +1204,13 @@ class NewTournament:
 
     def store_illegal_move(self, player: Player):
         with EventDatabase(self.event.uniq_id, write=True) as event_database:
-            event_database.add_illegal_move(self.id, self.current_round, player.id)
+            event_database.add_stored_illegal_move(self.id, self.current_round, player.id)
             event_database.commit()
         logger.info('le coup illégal a été enregistré')
 
     def delete_illegal_move(self, player: Player) -> bool:
         with EventDatabase(self.event.uniq_id, write=True) as event_database:
-            deleted: bool = event_database.delete_illegal_move(self.id, self.current_round, player.id)
+            deleted: bool = event_database.delete_stored_illegal_move(self.id, self.current_round, player.id)
             event_database.commit()
         if deleted:
             logger.info('un coup illégal a été supprimé pour le·la joueur·euse [%s]', player.id)
@@ -1183,7 +1220,7 @@ class NewTournament:
 
     def get_illegal_moves(self) -> Counter[int]:
         with EventDatabase(self.event.uniq_id, write=True) as event_database:
-            return event_database.get_illegal_moves(self.id, self.current_round)
+            return event_database.get_stored_illegal_moves(self.id, self.current_round)
 
     def _set_players_illegal_moves(self):
         illegal_moves: Counter[int] = self.get_illegal_moves()
@@ -1263,7 +1300,7 @@ class NewTournament:
             papi_database.add_board_result(board.black_player.id, self._current_round, black_result)
             papi_database.commit()
         with EventDatabase(self.event.uniq_id, write=True) as event_database:
-            event_database.add_result_with_tournament_uniq_id(self.uniq_id, self.current_round, board, white_result)
+            event_database.add_stored_result_with_tournament_uniq_id(self.uniq_id, self.current_round, board, white_result)
             event_database.commit()
         logger.info('Added result: %s %s %d.%d %s %s %d %s %s %s %d',
                     self.event.uniq_id, self.uniq_id, self._current_round, board.id, board.white_player.last_name,
@@ -1277,7 +1314,7 @@ class NewTournament:
             papi_database.remove_board_result(board.black_player.id, self._current_round)
             papi_database.commit()
         with EventDatabase(self.event.uniq_id, write=True) as event_database:
-            event_database.delete_result_with_tournament_uniq_id(self.uniq_id, self.current_round, board.id)
+            event_database.delete_stored_result_with_tournament_uniq_id(self.uniq_id, self.current_round, board.id)
             event_database.commit()
         logger.info('Removed result: %s %s %d.%d',
                     self.event.uniq_id, self.uniq_id, self._current_round, board.id)
@@ -1300,5 +1337,8 @@ class NewTournament:
 
     def check_in_player(self, player: Player, check_in: bool):
         with PapiDatabase(self.file, write=True) as papi_database:
-            papi_database.check_in_player(player.id, check_in, self.skipped_rounds_as_dict)
-            papi_database.commit()
+            with EventDatabase(self.event.uniq_id, write=True) as event_database:
+                papi_database.check_in_player(player.id, check_in, self.skipped_rounds_as_dict)
+                event_database.set_tournament_last_check_in_update(self.stored_tournament.id)
+                event_database.commit()
+                papi_database.commit()

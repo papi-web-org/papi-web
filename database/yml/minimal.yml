@@ -1,4 +1,5 @@
-name: "Tournoi minimal"
+name: "Évènement minimal"
+public: true
 tournaments:
   T:
     filename: "minimal"

@@ -265,7 +265,7 @@ class PapiWebConfig:
         return 0
 
     @property
-    def default_allow_results_deletion(self) -> bool:
+    def default_allow_results_deletion_on_input_screens(self) -> bool:
         return False
 
     @property
@@ -295,3 +295,27 @@ class PapiWebConfig:
     @property
     def default_rotator_show_menus(self) -> bool:
         return False
+
+    @property
+    def default_timer_round_text_before(self) -> str:
+        return 'Début de la ronde {} dans %s'
+
+    @property
+    def default_timer_round_text_after(self) -> str:
+        return 'Ronde {} commencée depuis %s'
+
+    @property
+    def user_index_update_delay(self) -> int:
+        return 5
+
+    @property
+    def user_event_update_delay(self) -> int:
+        return 5
+
+    @property
+    def user_screen_update_delay(self) -> int:
+        return 5
+
+    @property
+    def user_screen_set_update_delay(self) -> int:
+        return 5

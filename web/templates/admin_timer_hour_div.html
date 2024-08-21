@@ -1,4 +1,4 @@
-<div class="admin-timer-hours-modal-timer-hour-div">
+<div class="admin-timer-hours-modal-timer-hour-div {% if not admin_timer_hour and admin_timer.timer_hours_sorted_by_order|length > 1 %}cursor-grab{% endif %}">
     <input type='hidden' name='item' value='{{ timer_hour.id }}'/>
     {% if admin_timer_hour.id == timer_hour.id %}
         <form
@@ -152,7 +152,9 @@
                 </div>
                 <div class="col-2 text-nowrap text-end">
                     {% if not admin_timer_hour %}
-                        <i class="bi-arrows-move"></i>
+                        {% if not admin_timer_hour and admin_timer.timer_hours_sorted_by_order|length > 1 %}
+                            <i class="bi-arrows-move"></i>
+                        {% endif %}
                         <button
                                 class="btn btn-sm btn-primary text-nowrap"
                                 hx-post="{{ url_for('admin-timer-render-hours-modal') }}"

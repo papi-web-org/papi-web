@@ -1,11 +1,23 @@
 <div class="row">
     <div class="col">
         <h1 class="text-nowrap">
+            {% with public=admin_event.public %}
+                {% include 'admin_visibility_icon.html' %}
+            {% endwith %}
             {{ admin_event.name }} - Écrans rotatifs
         </h1>
     </div>
-    <div class="col-1 d-flex justify-content-end">
+    <div class="col-1 d-flex justify-content-end text-nowrap">
         <h1>
+            <button
+                    class="btn btn-primary text-nowrap"
+                    hx-post="{{ url_for('admin-update-header') }}"
+                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@rotators"}'
+                    hx-swap="multi:#admin-header,#admin-content"
+                    hx-indicator="#please-wait"
+            >
+                <i class="bi-arrow-clockwise"></i>
+            </button>
             <button
                     class="btn btn-primary text-nowrap"
                     hx-post="{{ url_for('admin-rotator-render-edit-modal') }}"
@@ -21,14 +33,14 @@
     </div>
 </div>
 
-<table class="table border-black">
+<table class="table border-black bg-light">
     <thead class="table-dark position-sticky top-0">
         <tr>
-            <th scope="col" class="text-nowrap">Id</th>
+            <th scope="col" colspan="2" class="text-nowrap">Id</th>
             <th scope="col" class="text-nowrap">Familles d'écrans</th>
             <th scope="col" class="text-nowrap">Écrans</th>
             <th scope="col" class="text-nowrap">Paramètres</th>
-            <th scope="col" class="width-100"></th>
+            <th scope="col" class="w-100"></th>
             <th scope="col" class="text-nowrap"></th>
         </tr>
     </thead>
@@ -36,6 +48,19 @@
         {% if admin_event.rotators_by_id| length > 0 %}
             {% for rotator in admin_event.rotators_by_id.values() %}
                 <tr>
+                    <th scope="row" class="text-nowrap {{ td_class }}">
+                        <div class="fw-bold">
+                            {% if rotator.public %}
+                                <span class="text-success">
+                                    <i class="bi-unlock-fill fs-3"></i>
+                                </span>
+                            {% else %}
+                                <span class="text-danger">
+                                    <i class="bi-lock-fill fs-3"></i>
+                                </span>
+                            {% endif %}
+                        </div>
+                    </th>
                     <th scope="row" class="text-nowrap">{{ rotator.uniq_id }}</th>
                     <td class="text-nowrap">
                         {% if rotator.families %}

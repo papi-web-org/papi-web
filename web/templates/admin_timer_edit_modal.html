@@ -1,4 +1,4 @@
-<div class="modal-dialog modal-dialog-centered admin-timer-edit-modal">
+<div class="modal-dialog modal-dialog-centered admin-timer-edit-modal d-block w-80 mw-100">
     <form
             hx-post="{{ url_for('admin-timer-update') }}"
             hx-vals='{"action": "{{ action }}", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"{% if admin_timer %}, "admin_timer_id": "{{ admin_timer.id }}"{% endif %} }'
@@ -65,7 +65,7 @@
             <div class="modal-footer">
                 <div class="row">
                     <div class="col col-6 text-start">
-                        <button type="submit" class="white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %}">
+                        <button type="submit" class="text-nowrap white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %}">
                             <i class="bi-floppy-fill"></i>
                             {% if action == 'create' %}
                                 Créer

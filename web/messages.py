@@ -37,26 +37,27 @@ class Message:
         self.auto_remove: bool = self.AUTO_REMOVE[self.level]
 
     @staticmethod
-    def _message(request: Request, text: str, level: int) -> None:
+    def _message(request: Request, string_or_list: str | list[str], level: int) -> None:
         if '_messages' not in request.session:
             request.session['_messages']: list[Message] = []
-        request.session['_messages'].append(Message(text, level))
+        for text in string_or_list if isinstance(string_or_list, list) else [string_or_list, ]:
+            request.session['_messages'].append(Message(text, level))
 
     @staticmethod
-    def info(request: Request, text: str) -> None:
-        Message._message(request, text, Message.INFO)
+    def info(request: Request, string_or_list: str | list[str]) -> None:
+        Message._message(request, string_or_list, Message.INFO)
 
     @staticmethod
-    def success(request: Request, text: str) -> None:
-        Message._message(request, text, Message.SUCCESS)
+    def success(request: Request, string_or_list: str | list[str]) -> None:
+        Message._message(request, string_or_list, Message.SUCCESS)
 
     @staticmethod
-    def warning(request: Request, text: str) -> None:
-        Message._message(request, text, Message.WARNING)
+    def warning(request: Request, string_or_list: str | list[str]) -> None:
+        Message._message(request, string_or_list, Message.WARNING)
 
     @staticmethod
-    def error(request: Request, text: str) -> None:
-        Message._message(request, text, Message.ERROR)
+    def error(request: Request, string_or_list: str | list[str]) -> None:
+        Message._message(request, string_or_list, Message.ERROR)
 
     @staticmethod
     def messages(request: Request) -> list:

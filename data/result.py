@@ -3,6 +3,7 @@ from functools import total_ordering
 from logging import Logger
 from dataclasses import dataclass
 
+from common import format_timestamp_time
 from common.logger import get_logger
 from data.util import Result as UtilResult
 
@@ -13,7 +14,7 @@ logger: Logger = get_logger()
 @total_ordering
 class Result:
     timestamp: float
-    tournament_uniq_id: str
+    tournament_id: int
     round: int
     board_id: int
     white_player_id: int
@@ -22,7 +23,7 @@ class Result:
 
     @property
     def timestamp_str(self) -> str:
-        return datetime.fromtimestamp(self.timestamp).strftime('%H:%M')
+        return format_timestamp_time(self.timestamp)
 
     @property
     def result_str(self) -> str:
@@ -38,7 +39,7 @@ class Result:
 
     def __repr__(self):
         return (f'{self.__class__.__name__}('
-                f'{self.timestamp_str} {self.tournament_uniq_id}.{self.board_id} '
+                f'{self.timestamp_str} {self.tournament_id}.{self.board_id} '
                 f'{self.white_player_id} '
                 f'{self.result_str} '
                 f'{self.black_player_id})')

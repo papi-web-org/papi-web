@@ -10,6 +10,9 @@
                     hx-indicator="#please-wait">
                 <i class="bi-caret-left-square-fill"></i>
             </button>
+            {% with public=admin_event.public %}
+                {% include 'admin_visibility_icon.html' %}
+            {% endwith %}
             {{ admin_event.name }} - Configuration
         </h1>
     </div>
@@ -52,154 +55,186 @@
     </div>
 </div>
 
-<table class="table border-black">
-    <thead class="table-dark position-sticky top-0">
-        <tr>
-            <th scope="col" class="text-nowrap">Personnalisation</th>
-            <th scope="col" class="text-nowrap">Valeur</th>
-            <th scope="col" class="text-nowrap width-50">&nbsp;</th>
-            <th scope="col" class="text-nowrap" colspan="2">Éléments de l'évènement</th>
-            <th scope="col" class="text-nowrap width-50">&nbsp;</th>
-       </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <th scope="row" class="text-nowrap">Identifiant unique de l'évènement</th>
-            <td class="text-nowrap">{{ admin_event.uniq_id }}</td>
-            <td class="text-nowrap">&nbsp;</td>
-            <th scope="row" class="text-nowrap">Chronomètres</th>
-            <td class="text-nowrap">
-                {% if admin_event.timers_by_id|length %}{{ admin_event.timers_by_id|length }}{% else %}<span class="fst-italic">Aucun</span>{% endif %}
-            </td>
-            <td class="text-nowrap">
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-update-header') }}"
-                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@timers"}'
-                        hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait">
-                    <i class="bi-caret-right-square-fill"></i> Gérer les chronomètres
-                </button>
-            </td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Nom de l'évènement</th>
-            <td class="text-nowrap">{{ admin_event.name }}</td>
-            <td class="text-nowrap">&nbsp;</td>
-            <th scope="row" class="text-nowrap">Connexions à ChessEvent</th>
-            <td class="text-nowrap">
-                {% if admin_event.chessevents_by_id|length %}{{ admin_event.chessevents_by_id|length }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}
-            </td>
-            <td class="text-nowrap">
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-update-header') }}"
-                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@chessevents"}'
-                        hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait">
-                    <i class="bi-caret-right-square-fill"></i> Gérer les connexions à ChessEvent
-                </button>
-            </td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Répertoire par défaut des fichiers Papi</th>
-            <td class="text-nowrap">{{ admin_event.path }}{% if not admin_event.stored_event.path %} (par défaut){% endif %}</td>
-            <td class="text-nowrap">&nbsp;</td>
-            <th scope="row" class="text-nowrap">Tournois</th>
-            <td class="text-nowrap">
-                {% if admin_event.tournaments_by_uniq_id|length %}
-                    {{ admin_event.tournaments_by_uniq_id|length }}
-                {% else %}
-                    <span class="fst-italic">Aucun</span>
-                {% endif %}
-            </td>
-            <td class="text-nowrap">
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-update-header') }}"
-                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@tournaments"}'
-                        hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait">
-                    <i class="bi-caret-right-square-fill"></i> Gérer les tournois
-                </button>
-            </td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Personnalisation CSS</th>
-            <td class="text-nowrap">{% if admin_event.css %}{{ admin_event.css }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}</td>
-            <td class="text-nowrap">&nbsp;</td>
-            <th scope="row" class="text-nowrap">Écrans</th>
-            <td class="text-nowrap">
-                {% if admin_event.basic_screens_by_id|length %}{{ admin_event.basic_screens_by_id|length }}{% else %}<span class="fst-italic">Aucun</span>{% endif %}
-            </td>
-            <td class="text-nowrap">
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-update-header') }}"
-                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@screens"}'
-                        hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait">
-                    <i class="bi-caret-right-square-fill"></i> Gérer les écrans
-                </button>
-            </td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Mot de passe de saisie des scores</th>
-            <td class="text-nowrap">{% if admin_event.update_password %}********{% else %}<span class="fst-italic">Aucun</span>{% endif %}</td>
-            <td class="text-nowrap">&nbsp;</td>
-            <th scope="row" class="text-nowrap">Familles d'écrans</th>
-            <td class="text-nowrap">
-                {% if admin_event.families_by_id|length %}{{ admin_event.families_by_id|length }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}
-            </td>
-            <td class="text-nowrap">
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-update-header') }}"
-                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@families"}'
-                        hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait">
-                    <i class="bi-caret-right-square-fill"></i> Gérer les familles d'écrans
-                </button>
-            </td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Nombre maximum de coups illégaux enregistrés</th>
-            <td class="text-nowrap">{% if admin_event.record_illegal_moves %}{{ admin_event.record_illegal_moves }}{% else %}Aucun{% endif %}{% if admin_event.stored_event.record_illegal_moves is none %} (par défaut){% endif %}</td>
-            <td class="text-nowrap">&nbsp;</td>
-            <th scope="row" class="text-nowrap">Écrans rotatifs</th>
-            <td class="text-nowrap">
-                {% if admin_event.rotators_by_id|length %}{{ admin_event.rotators_by_id|length }}{% else %}<span class="fst-italic">Aucun</span>{% endif %}
-            </td>
-            <td class="text-nowrap">
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-update-header') }}"
-                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@rotators"}'
-                        hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait">
-                    <i class="bi-caret-right-square-fill"></i> Gérer les écrans rotatifs
-                </button>
-            </td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Suppression des résultats entrés sur les écrans de saisie</th>
-            <td class="text-nowrap">{% if admin_event.allow_results_deletion %}Autorisée{% else %}Non autorisée{% endif %}{% if admin_event.stored_event.allow_results_deletion is none %} (par défaut){% endif %}</td>
-            <td class="text-nowrap">&nbsp;</td>
-            <th scope="row" class="text-nowrap">&nbsp;</th>
-            <td class="text-nowrap">&nbsp;</td>
-            <td class="text-nowrap">&nbsp;</td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Paramètres par défaut des chronomètres</th>
-            <td class="text-nowrap">
-                <div style="background-color: {{ admin_event.timer_colors[1] }}">&nbsp;{{ admin_event.timer_delays[1] }} minutes avant&nbsp;</div>
-                <div style="background-color: {{ admin_event.timer_colors[2] }}">&nbsp;{{ admin_event.timer_delays[2] }} minutes avant&nbsp;</div>
-                <div style="background-color: {{ admin_event.timer_colors[3] }}">&nbsp;{{ admin_event.timer_delays[3] }} minutes après&nbsp;</div>
-            </td>
-             <td class="text-nowrap">&nbsp;</td>
-           <th scope="row" class="text-nowrap">&nbsp;</th>
-            <td class="text-nowrap">&nbsp;</td>
-            <td class="text-nowrap">&nbsp;</td>
-        </tr>
-    </tbody>
-</table>
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-auto mx-auto">
+            <table class="table border-black w-auto bg-light">
+                <thead class="table-dark position-sticky top-0">
+                    <tr>
+                        <th scope="col" class="text-nowrap" colspan="2">Personnalisation</th>
+                   </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Identifiant unique de l'évènement</th>
+                        <td class="text-nowrap">{{ admin_event.uniq_id }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Nom de l'évènement</th>
+                        <td class="text-nowrap">{{ admin_event.name }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Début</th>
+                        <td class="">{{ admin_event.formatted_start }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Fin</th>
+                        <td class="">{{ admin_event.formatted_stop }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Visibilité</th>
+                        <td class="">
+                            {% with public=admin_event.public, public_str='Publique', private_str='Privée' %}
+                                {% include 'admin_visibility_icon.html' %}
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Répertoire par défaut des fichiers Papi</th>
+                        <td class="">{{ admin_event.path }}{% if not admin_event.stored_event.path %} (par défaut){% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Personnalisation CSS</th>
+                        <td class="text-nowrap">{% if admin_event.css %}{{ admin_event.css }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Mot de passe de saisie des scores</th>
+                        <td class="text-nowrap">{% if admin_event.update_password %}********{% else %}<span class="fst-italic">Aucun</span>{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Nombre maximum de coups illégaux enregistrés</th>
+                        <td class="text-nowrap">{% if admin_event.record_illegal_moves %}{{ admin_event.record_illegal_moves }}{% else %}Aucun{% endif %}{% if admin_event.stored_event.record_illegal_moves is none %} (par défaut){% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Suppression des résultats entrés sur les écrans de saisie</th>
+                        <td class="text-nowrap">{% if admin_event.allow_results_deletion %}Autorisée{% else %}Non autorisée{% endif %}{% if admin_event.stored_event.allow_results_deletion is none %} (par défaut){% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Paramètres par défaut des chronomètres</th>
+                        <td class="text-nowrap">
+                            <div style="background-color: {{ admin_event.timer_colors[1] }}">&nbsp;{{ admin_event.timer_delays[1] }} minutes avant&nbsp;</div>
+                            <div style="background-color: {{ admin_event.timer_colors[2] }}">&nbsp;{{ admin_event.timer_delays[2] }} minutes avant&nbsp;</div>
+                            <div style="background-color: {{ admin_event.timer_colors[3] }}">&nbsp;{{ admin_event.timer_delays[3] }} minutes après&nbsp;</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Dernière mise à jour</th>
+                        <td class="text-nowrap">{{ admin_event.last_update_str }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-auto mx-auto">
+            <table class="table border-black w-auto bg-light">
+                <thead class="table-dark position-sticky top-0">
+                    <tr>
+                        <th scope="col" class="text-nowrap" colspan="3">Éléments de l'évènement</th>
+                   </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Chronomètres</th>
+                        <td class="text-nowrap">
+                            {% if admin_event.timers_by_id|length %}{{ admin_event.timers_by_id|length }}{% else %}<span class="fst-italic">Aucun</span>{% endif %}
+                        </td>
+                        <td class="text-nowrap">
+                            <button
+                                    class="btn btn-sm btn-primary p-1"
+                                    hx-post="{{ url_for('admin-update-header') }}"
+                                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@timers"}'
+                                    hx-swap="multi:#admin-header,#admin-content"
+                                    hx-indicator="#please-wait">
+                                <i class="bi-caret-right-square-fill"></i> Gérer les chronomètres
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Connexions à ChessEvent</th>
+                        <td class="text-nowrap">
+                            {% if admin_event.chessevents_by_id|length %}{{ admin_event.chessevents_by_id|length }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}
+                        </td>
+                        <td class="text-nowrap">
+                            <button
+                                    class="btn btn-sm btn-primary p-1"
+                                    hx-post="{{ url_for('admin-update-header') }}"
+                                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@chessevents"}'
+                                    hx-swap="multi:#admin-header,#admin-content"
+                                    hx-indicator="#please-wait">
+                                <i class="bi-caret-right-square-fill"></i> Gérer les connexions à ChessEvent
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Tournois</th>
+                        <td class="text-nowrap">
+                            {% if admin_event.tournaments_by_uniq_id|length %}
+                                {{ admin_event.tournaments_by_uniq_id|length }}
+                            {% else %}
+                                <span class="fst-italic">Aucun</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-nowrap">
+                            <button
+                                    class="btn btn-sm btn-primary p-1"
+                                    hx-post="{{ url_for('admin-update-header') }}"
+                                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@tournaments"}'
+                                    hx-swap="multi:#admin-header,#admin-content"
+                                    hx-indicator="#please-wait">
+                                <i class="bi-caret-right-square-fill"></i> Gérer les tournois
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Écrans</th>
+                        <td class="text-nowrap">
+                            {% if admin_event.basic_screens_by_id|length %}{{ admin_event.basic_screens_by_id|length }}{% else %}<span class="fst-italic">Aucun</span>{% endif %}
+                        </td>
+                        <td class="text-nowrap">
+                            <button
+                                    class="btn btn-sm btn-primary p-1"
+                                    hx-post="{{ url_for('admin-update-header') }}"
+                                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@screens"}'
+                                    hx-swap="multi:#admin-header,#admin-content"
+                                    hx-indicator="#please-wait">
+                                <i class="bi-caret-right-square-fill"></i> Gérer les écrans
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Familles d'écrans</th>
+                        <td class="text-nowrap">
+                            {% if admin_event.families_by_id|length %}{{ admin_event.families_by_id|length }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}
+                        </td>
+                        <td class="text-nowrap">
+                            <button
+                                    class="btn btn-sm btn-primary p-1"
+                                    hx-post="{{ url_for('admin-update-header') }}"
+                                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@families"}'
+                                    hx-swap="multi:#admin-header,#admin-content"
+                                    hx-indicator="#please-wait">
+                                <i class="bi-caret-right-square-fill"></i> Gérer les familles d'écrans
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="text-nowrap">Écrans rotatifs</th>
+                        <td class="text-nowrap">
+                            {% if admin_event.rotators_by_id|length %}{{ admin_event.rotators_by_id|length }}{% else %}<span class="fst-italic">Aucun</span>{% endif %}
+                        </td>
+                        <td class="text-nowrap">
+                            <button
+                                    class="btn btn-sm btn-primary p-1"
+                                    hx-post="{{ url_for('admin-update-header') }}"
+                                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@rotators"}'
+                                    hx-swap="multi:#admin-header,#admin-content"
+                                    hx-indicator="#please-wait">
+                                <i class="bi-caret-right-square-fill"></i> Gérer les écrans rotatifs
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+

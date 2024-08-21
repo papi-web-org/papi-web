@@ -11,6 +11,7 @@ import fnmatch
 
 from typing import TYPE_CHECKING
 
+from common import format_timestamp_date_time
 from common.config_reader import ConfigReader, TMP_DIR
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
@@ -232,7 +233,7 @@ class ResultsScreen(AScreen):
     def results_lists(self) -> Iterator[list[Result]]:
         with EventDatabase(self.event_uniq_id) as event_database:
             results: tuple[Result] = tuple(
-                event_database.get_results(self.limit, *self.tournament_uniq_ids))
+                event_database.get_stored_results(self.limit, *self.tournament_uniq_ids))
         column_size: int = (
             self.limit if self.limit else len(results)) // self.columns
         for i in range(self.columns):
@@ -744,30 +745,34 @@ class NewScreen:
         self.family: 'NewFamily | None' = family
         self.family_part: int | None = family_part
         self.screen_sets_by_id: dict[int, NewScreenSet] = {}
+        self._screen_sets_by_uniq_id: dict[int, NewScreenSet] | None = None
         self._screen_sets_sorted_by_order: list[NewScreenSet] | None = None
         self._results_limit: int | None = None
         self._results_tournament_ids: list[int] | None = None
         self._results: list[Result] | None = None
-        self.error: str | None = None
         self._build_screen_sets()
+        tournament_ids: list[int] = []
+        if self.type == ScreenType.Results:
+            results_tournament_ids = self.results_tournament_ids if self.results_tournament_ids \
+                else list(self.event.tournaments_by_id.keys())
+            for tournament_id in results_tournament_ids:
+                if tournament_id not in tournament_ids:
+                    tournament_ids.append(tournament_id)
+        else:
+            for screen_set in self.screen_sets_sorted_by_order:
+                if screen_set.tournament.id not in tournament_ids:
+                    tournament_ids.append(screen_set.tournament.id)
 
     def _build_screen_sets(self):
         match self.type:
             case ScreenType.Boards | ScreenType.Input | ScreenType.Players:
-                valid_screen_set: bool = False
                 if self.stored_screen:
                     for stored_screen_set in self.stored_screen.stored_screen_sets:
                         screen_set: NewScreenSet = NewScreenSet(self, stored_screen_set=stored_screen_set)
                         self.screen_sets_by_id[screen_set.id] = screen_set
-                        if not screen_set.error:
-                            valid_screen_set = True
                 else:
                     screen_set: NewScreenSet = NewScreenSet(self, family=self.family, family_part=self.family_part)
                     self.screen_sets_by_id[screen_set.id] = screen_set
-                    if not screen_set.error:
-                        valid_screen_set = True
-                if not valid_screen_set:
-                    self.error = 'Aucun ensemble valide défini.'
             case ScreenType.Results:
                 pass
             case _:
@@ -786,6 +791,10 @@ class NewScreen:
         return ScreenType.from_str(self.stored_screen.type) if self.stored_screen else self.family.type
 
     @property
+    def public(self) -> bool:
+        return self.stored_screen.public if self.stored_screen else self.family.public
+
+    @property
     def uniq_id(self) -> str:
         return self.stored_screen.uniq_id if self.stored_screen else f'{self.family.uniq_id}:{self.family_part}'
 
@@ -796,13 +805,9 @@ class NewScreen:
                 return self.stored_screen.name
         match self.type:
             case ScreenType.Boards | ScreenType.Input:
-                if self.screen_sets_sorted_by_order:
-                    return self.screen_sets_sorted_by_order[0].name_for_boards
-                return 'Non défini'
+                return self.screen_sets_sorted_by_order[0].name_for_boards
             case ScreenType.Players:
-                if self.screen_sets_sorted_by_order:
-                    return self.screen_sets_sorted_by_order[0].name_for_players
-                return 'Non défini'
+                return self.screen_sets_sorted_by_order[0].name_for_players
             case ScreenType.Results:
                 return 'Derniers résultats'
             case _:
@@ -825,37 +830,33 @@ class NewScreen:
                 menu_text: str = self.stored_screen.menu_text if self.stored_screen else self.family.menu_text
                 if menu_text is None:
                     return None
-                text: str = menu_text
-                if self.screen_sets_sorted_by_order:
-                    screen_set: NewScreenSet = self.screen_sets_sorted_by_order[0]
-                    text = text.replace('%t', screen_set.tournament.name)
-                    if screen_set.tournament.current_round:
-                        if '%f' in text:
-                            text = text.replace('%f', str(screen_set.first_board.id))
-                        if '%l' in text:
-                            text = text.replace('%l', str(screen_set.last_board.id))
-                    else:
-                        if screen_set.first_player_by_name:
-                            text = text.replace(
-                                '%f', str(screen_set.first_player_by_name.last_name[:3]).upper())
-                        if screen_set.last_player_by_name:
-                            text = text.replace(
-                                '%l', str(screen_set.last_player_by_name.last_name[:3]).upper())
+                screen_set: NewScreenSet = self.screen_sets_sorted_by_order[0]
+                text: str = menu_text.replace('%t', screen_set.tournament.name)
+                if screen_set.tournament.current_round:
+                    if '%f' in text:
+                        text = text.replace('%f', str(screen_set.first_board.id))
+                    if '%l' in text:
+                        text = text.replace('%l', str(screen_set.last_board.id))
+                else:
+                    if screen_set.first_player_by_name:
+                        text = text.replace(
+                            '%f', str(screen_set.first_player_by_name.last_name[:3]).upper())
+                    if screen_set.last_player_by_name:
+                        text = text.replace(
+                            '%l', str(screen_set.last_player_by_name.last_name[:3]).upper())
                 return text
             case ScreenType.Players:
                 menu_text: str = self.stored_screen.menu_text if self.stored_screen else self.family.menu_text
                 if menu_text is None:
                     return None
-                text: str = menu_text
-                if self.screen_sets_sorted_by_order:
-                    screen_set: NewScreenSet = self.screen_sets_sorted_by_order[0]
-                    text = text.replace('%t', screen_set.tournament.name)
-                    if screen_set.first_player_by_name:
-                        text = text.replace(
-                            '%f', str(screen_set.first_player_by_name.last_name)[:3].upper())
-                    if screen_set.last_player_by_name:
-                        text = text.replace(
-                            '%l', str(screen_set.last_player_by_name.last_name)[:3].upper())
+                screen_set: NewScreenSet = self.screen_sets_sorted_by_order[0]
+                text: str = menu_text.replace('%t', screen_set.tournament.name)
+                if screen_set.first_player_by_name:
+                    text = text.replace(
+                        '%f', str(screen_set.first_player_by_name.last_name)[:3].upper())
+                if screen_set.last_player_by_name:
+                    text = text.replace(
+                        '%l', str(screen_set.last_player_by_name.last_name)[:3].upper())
                 return text
             case ScreenType.Results:
                 return self.stored_screen.menu_text if self.stored_screen.menu_text else 'Derniers résultats'
@@ -870,6 +871,14 @@ class NewScreen:
     def timer(self) -> NewTimer | None:
         timer_id: int | None = self.stored_screen.timer_id if self.stored_screen else self.family.timer_id
         return self.event.timers_by_id[timer_id] if timer_id else None
+
+    @property
+    def screen_sets_by_uniq_id(self) -> dict[str, NewScreenSet]:
+        if self._screen_sets_by_uniq_id is None:
+            self._screen_sets_by_uniq_id = {
+                screen_set.uniq_id: screen_set for screen_set in self.screen_sets_by_id.values()
+            }
+        return self._screen_sets_by_uniq_id
 
     @property
     def screen_sets_sorted_by_order(self) -> list[NewScreenSet]:
@@ -950,26 +959,15 @@ class NewScreen:
     def results_lists(self) -> Iterator[list[Result]]:
         if self._results is None:
             with EventDatabase(self.event.uniq_id) as event_database:
-                self._results = event_database.get_results(self.results_limit, self._results_tournament_ids)
+                self._results = event_database.get_stored_results(self.results_limit, self._results_tournament_ids)
         column_size: int = (self.results_limit if self.results_limit else len(self._results)) // self.columns
         for i in range(self.columns):
             yield self._results[i * column_size:(i + 1) * column_size]
 
     @property
-    def _file_dependencies_file(self) -> Path:
-        return TMP_DIR / 'events' / self.event.uniq_id / 'screen_file_dependencies' / f'{self.uniq_id}.json'
+    def last_update(self) -> float:
+        return self.stored_screen.last_update if self.stored_screen else self.family.last_update
 
-    def get_screen_file_dependencies(self) -> list[Path]:
-        try:
-            with open(self._file_dependencies_file, 'r', encoding='utf-8') as f:
-                return [Path(file) for file in json.load(f)]
-        except FileNotFoundError:
-            return []
-
-    def set_file_dependencies(self, files: list[Path]):
-        try:
-            self._file_dependencies_file.parents[0].mkdir(parents=True, exist_ok=True)
-            with open(self._file_dependencies_file, 'w', encoding='utf-8') as f:
-                return f.write(json.dumps([str(file) for file in files]))
-        except FileNotFoundError:
-            return []
+    @property
+    def last_update_str(self) -> str | None:
+        return format_timestamp_date_time(self.last_update)

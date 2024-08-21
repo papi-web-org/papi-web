@@ -1,4 +1,4 @@
-<div id="admin-timer-hours-modal" class="modal-dialog modal-dialog-centered admin-timer-hours-modal">
+<div id="admin-timer-hours-modal" class="modal-dialog modal-dialog-centered admin-timer-hours-modal d-block w-80 mw-100">
     <div class="modal-content">
         <div class="modal-header">
             <h2 class="modal-title">
@@ -11,9 +11,9 @@
             {% elif admin_timer.timer_hours_by_id|length > 1 %}
                 <p>Déplacez les horaires pour les ordonner.</p>
             {% endif %}
-            {% if not admin_screen_set %}
+            {% if not admin_timer_hour and admin_timer.timer_hours_sorted_by_order|length > 1 %}
                 <form
-                        class="{% if not admin_timer_hour %}sortable{% endif %}"
+                        class="sortable"
                         hx-post="{{ url_for('admin-timer-hours-update') }}"
                         hx-vals='{"action": "reorder", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}" }'
                         hx-target="#admin-timer-hours-modal"
@@ -28,7 +28,7 @@
                 {% else %}
                         <div class="text-danger">Aucun horaire défini.</div>
                 {% endif %}
-            {% if not admin_screen_set %}
+            {% if not admin_timer_hour and admin_timer.timer_hours_sorted_by_order|length > 1 %}
                 </form>
             {% endif %}
         </div>

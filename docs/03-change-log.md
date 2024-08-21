@@ -2,13 +2,21 @@
 
 # Papi-web - ChangeLog
 
-## Version 2.4 - juillet 2024
+## Version 2.4 - août 2024
+- Déclaration de tous les objets par l'interface web (Abandon du format INI)
+- Ajout de la création automatique de tournois d'exemple
 - Fluidification de la navigation (HTMX)
+- Masquage de toutes les URLs de l'application
 - Ajout de la possibilité (configurable) de supprimer un résultat mal rentré
-- Ajout de l'option `fixed_boards` pour spécifier des tables fixes sur les écrans d'appariements
-- Changement des valeurs de l'option de `menu` (`@view`, `@update`, `@family`)
-- Ajout de l'option `tournaments` pour choisir les tournois affichés sur les écrans de résultats
+- Ajout de la possibilité de spécifier des tables fixes sur les écrans d'appariements
+- Ajout de la possibilité de spécifier les tournois affichés sur les écrans de résultats
 - Affichage du numéro de ronde sur les écrans de résultats
+- Simplification de la page d'accueil de la page d'accueil utilisateur
+- Présentation des évènements et des écrans en tuile
+- Amélioration de l'authentification sur les écrans de saisie
+- Ajout de la possibilité de restreindre la visibilité de certains évènements
+- Ajout de la possibilité de restreindre la visibilité de certains écrans
+- 
 
 ## Version 2.3.2 - 15 avril 2024
 - Correction d'un problème d'affichage des appariements par ordre alphabétique

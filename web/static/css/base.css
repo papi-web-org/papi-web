@@ -5,13 +5,11 @@ body {
 	background-image: url('/static/images/papi-web-background.png');
 	background-repeat: no-repeat;
 	background-position: center center;
+	background-size: contain;
+	background-attachment: fixed;
 	overflow: auto !important;
 }
 .please-wait {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     pointer-events: none;
     height: 80px;
     width: 80px;
@@ -22,30 +20,25 @@ body {
     background-size: 100% auto;
 }
 #messages {
-    position:fixed;
-    top: 0.5rem;
-    right: 0.5rem;
     z-index: 1;
 }
-.width-100 {
-    width: 100%;
+.cursor-grab {
+    cursor: grab;
 }
-.width-50 {
-    width: 50%;
+.w-80 {
+    width: 80%; !important;
 }
-.width-33 {
-    width: 33%;
+/* https://stackoverflow.com/questions/39588698/bootstrap-multiple-modals-modal-backdrop-issue */
+.modal-backdrop + .modal-backdrop {
+  display: none;
 }
-.width-25 {
-    width: 25%;
+.papi-web-tooltip-info, .papi-web-tooltip-danger {
+  --bs-tooltip-bg: #d0d000;
+  --bs-tooltip-color: black;
 }
-.width-20 {
-    width: 20%;
+.papi-web-tooltip-info {
+  --bs-tooltip-color: #600090;
 }
-.modal-footer {
-    display: block;
-}
-.modal-dialog {
-    max-width: 75%;
-    display: block;
+.papi-web-tooltip-danger {
+  --bs-tooltip-color: #900000;
 }

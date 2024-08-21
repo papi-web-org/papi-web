@@ -1,6 +1,11 @@
 /* TODO use Bootstrap styles wherever possible */
 /*
 ###########################################################
+# EVENT
+###########################################################
+*/
+/*
+###########################################################
 # SCREENS
 ###########################################################
 */
@@ -23,81 +28,97 @@
 }
 /*
 ###########################################################
-# BOARDS SCREENS - LOGIN MODAL
+# INPUT SCREENS - LOGIN MODAL
 ###########################################################
 */
-.boards-screen.update .login-modal .modal-content {
+.input-screen .login-modal .modal-content {
     background-color: lightgrey;
 }
 /*
 ###########################################################
-# BOARDS SCREENS - BOARD RESULT MODAL
+# INPUT SCREENS - RESULT MODAL
 ###########################################################
 */
-.boards-screen-board-result-modal {
+.input-screen-result-modal {
     max-width: 80%;
 }
-.boards-screen-board-result-modal .modal-content {
+.input-screen-result-modal .modal-content {
     background-color: lightgrey;
 }
-.boards-screen-board-result-modal .modal-title,
-.boards-screen-board-result-modal .btn {
+.input-screen-result-modal .modal-title,
+.input-screen-result-modal .btn {
     font-weight: bold;
     font-size: x-large;
 }
-.boards-screen-board-result-modal .result-button {
+.input-screen-result-modal .result-button {
     border: 3px #000080 solid;
 }
-.boards-screen-board-result-modal .result-button.white {
+.input-screen-result-modal .result-button.white {
     background-color: white;
     color: black;
 }
-.boards-screen-board-result-modal .result-button.draw {
+.input-screen-result-modal .result-button.draw {
     color: #000080;
 }
-.boards-screen-board-result-modal .result-button.black {
+.input-screen-result-modal .result-button.black {
     background-color: black;
     color: white;
 }
-.boards-screen-board-result-modal .result-button:hover {
+.input-screen-result-modal .result-button:hover {
     background-color: yellow;
     color: #000080;
 }
 /*
 ###########################################################
-# BOARDS SCREENS - BOARD/PLAYER ROWS
+# BOARDS/INPUT SCREENS - BOARD/PLAYER ROWS
 ###########################################################
 */
 .boards-screen .board-row th,
+.input-screen .board-row th,
 .boards-screen .board-row td,
+.input-screen .board-row td,
 .boards-screen .player-row th,
-.boards-screen .player-row td {
+.input-screen .player-row th,
+.boards-screen .player-row td,
+.input-screen .player-row td {
     background-color: transparent;
 }
-.boards-screen.update .board-row.result-not-set:hover {
+.input-screen .board-row.result-not-set:hover {
     background-color: yellow;
     cursor: pointer;
 }
-.boards-screen.update .board-row.result-set:hover {
+.input-screen .board-row.result-set:hover {
     background-color: #ffffcc;
 }
 .handicap-modified-time .minutes,
 .handicap-modified-time .seconds {
     color: red;
 }
-.boards-screen .board-row.result-not-set {
+.boards-screen .board-row.result-not-set,
+.input-screen .board-row.result-not-set {
     font-weight: bold;
 }
-.boards-screen .board-number {
+.boards-screen .board-number,
+.input-screen .board-number {
     text-align: right;
 }
 .boards-screen .score,
+.input-screen .score,
+.boards-screen .points,
 .boards-screen .points {
     text-align: center;
 }
-.boards-screen .illegal-moves-cell {
+.boards-screen .illegal-moves-cell,
+.input-screen .illegal-moves-cell {
     width: 1%;
     white-space: nowrap;
+}
+.player-cell.last_check_in_updated, .player-cell.last_illegal_move_updated,
+.illegal-moves-cell.last_check_in_updated, .illegal-moves-cell.last_illegal_move_updated {
+    color: red !important;
+}
+.board-row.last_result_updated > * {
+    color: red !important;
 }
 /*
 ###########################################################
@@ -161,4 +182,21 @@
 .menu-item:hover {
     background-color: #ffff00;
     color: #000080;
+}
+.timer {
+    font-size: x-large;
+    font-weight: bold;
+    width: 100%;
+    margin: 0;
+}
+/*
+###########################################################
+# MENUS
+###########################################################
+*/
+.timer-text {
+    text-align: left;
+}
+.timer-clock {
+    text-align: right;
 }

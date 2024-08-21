@@ -1,3 +1,5 @@
+import time
+from datetime import datetime
 from logging import Logger
 from typing import Annotated
 
@@ -8,6 +10,7 @@ from litestar.response import Template
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 
+from common import format_timestamp_date
 from common.exception import PapiWebException
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
@@ -16,7 +19,7 @@ from data.loader import EventLoader
 from database.sqlite import EventDatabase
 from database.store import StoredEvent
 from web.messages import Message
-from web.views_admin import AAdminController
+from web.views_admin_index import AAdminController
 
 logger: Logger = get_logger()
 
@@ -52,14 +55,27 @@ class AdminEventController(AAdminController):
                     case _:
                         raise ValueError(f'action=[{action}]')
         name: str | None = self._form_data_to_str_or_none(data, 'name')
+        start: float | None = None
+        stop: float | None = None
         match action:
             case 'create' | 'clone' | 'update':
                 if not name:
                     errors['name'] = 'Veuillez entrer le nom de l\'évènement.'
+                start_str: str | None = self._form_data_to_str_or_none(data, 'start')
+                if not start_str:
+                    errors['start'] = 'Veuillez entrer la date de début de l\'évènement.'
+                else:
+                    start = time.mktime(datetime.strptime(start_str, '%Y-%m-%dT%H:%M').timetuple())
+                stop_str: str | None = self._form_data_to_str_or_none(data, 'stop')
+                if not stop_str:
+                    errors['stop'] = 'Veuillez entrer la date de fin de l\'évènement.'
+                else:
+                    stop = time.mktime(datetime.strptime(stop_str, '%Y-%m-%dT%H:%M').timetuple())
             case 'delete':
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
+        public: bool | None = self._form_data_to_bool_or_none(data, 'public')
         path: str | None = self._form_data_to_str_or_none(data, 'path')
         css: str | None = self._form_data_to_str_or_none(data, 'css')
         update_password: str | None = self._form_data_to_str_or_none(data, 'update_password')
@@ -99,11 +115,14 @@ class AdminEventController(AAdminController):
         return StoredEvent(
             uniq_id=uniq_id,
             name=name,
+            start=start,
+            stop=stop,
+            public=public,
             path=path,
             css=css,
             update_password=update_password,
             record_illegal_moves=record_illegal_moves,
-            allow_results_deletion=allow_results_deletion,
+            allow_results_deletion_on_input_screens=allow_results_deletion,
             timer_colors=timer_colors,
             timer_delays=timer_delays,
             errors=errors,
@@ -121,8 +140,9 @@ class AdminEventController(AAdminController):
             '0': 'Non autorisée',
             '1': 'Autorisée',
         }
+        default_allow_results_deletion_option = PapiWebConfig().default_allow_results_deletion_on_input_screens
         allow_results_deletion_options[''] = \
-            f'Par défaut ({allow_results_deletion_options[str(int(PapiWebConfig().default_allow_results_deletion))]})'
+            f'Par défaut ({allow_results_deletion_options[str(int(default_allow_results_deletion_option))]})'
         return HTMXTemplate(
             template_name='admin_event_edit_modal.html',
             re_swap='innerHTML',
@@ -164,19 +184,32 @@ class AdminEventController(AAdminController):
                 raise ValueError(f'action=[{action}]')
         data: dict[str, str]
         match action:
-            case 'create' | 'delete':
+            case 'delete':
                 data = {}
+            case 'create':
+                today_str: str = format_timestamp_date()
+                start = time.mktime(datetime.strptime(
+                        f'{today_str} 00:00', '%Y-%m-%d %H:%M').timetuple())
+                stop = time.mktime(datetime.strptime(
+                        f'{today_str} 23:59', '%Y-%m-%d %H:%M').timetuple())
+                data = {
+                    'start': self._value_to_datetime_form_data(start),
+                    'stop': self._value_to_datetime_form_data(stop),
+                }
             case 'clone' | 'update':
                 data = {
                     'uniq_id':
                         '' if action == 'clone' else self._value_to_form_data(admin_event.stored_event.uniq_id),
                     'name': self._value_to_form_data(admin_event.stored_event.name),
+                    'public': self._value_to_form_data(admin_event.stored_event.public),
+                    'start': self._value_to_datetime_form_data(admin_event.stored_event.start),
+                    'stop': self._value_to_datetime_form_data(admin_event.stored_event.stop),
                     'css': self._value_to_form_data(admin_event.stored_event.css),
                     'path': self._value_to_form_data(admin_event.stored_event.path),
                     'update_password': self._value_to_form_data(admin_event.stored_event.update_password),
                     'record_illegal_moves': self._value_to_form_data(admin_event.stored_event.record_illegal_moves),
                     'allow_results_deletion':
-                        self._value_to_form_data(admin_event.stored_event.allow_results_deletion),
+                        self._value_to_form_data(admin_event.stored_event.allow_results_deletion_on_input_screens),
                 }
                 for i in range(1, 4):
                     data[f'color_{i}'] = self._value_to_form_data(admin_event.timer_colors[i])

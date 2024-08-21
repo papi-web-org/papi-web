@@ -17,7 +17,7 @@ from data.rotator import NewRotator
 from database.sqlite import EventDatabase
 from database.store import StoredRotator
 from web.messages import Message
-from web.views_admin import AAdminController
+from web.views_admin_index import AAdminController
 
 logger: Logger = get_logger()
 
@@ -32,29 +32,32 @@ class AdminRotatorController(AAdminController):
         errors: dict[str, str] = {}
         if data is None:
             data = {}
-        uniq_id: str = self._form_data_to_str_or_none(data, 'uniq_id')
+        field = 'uniq_id'
+        uniq_id: str = self._form_data_to_str_or_none(data, field)
         match action:
             case 'create':
                 if not uniq_id:
-                    errors['uniq_id'] = 'Veuillez entrer l\'identifiant de l\'écran rotatif.'
+                    errors[field] = 'Veuillez entrer l\'identifiant de l\'écran rotatif.'
                 elif uniq_id in admin_event.rotators_by_uniq_id:
-                    errors['uniq_id'] = f'L\'écran rotatif [{uniq_id}] existe déjà.'
+                    errors[field] = f'L\'écran rotatif [{uniq_id}] existe déjà.'
             case 'update':
                 if not uniq_id:
-                    errors['uniq_id'] = 'Veuillez entrer l\'identifiant de l\'écran rotatif.'
+                    errors[field] = 'Veuillez entrer l\'identifiant de l\'écran rotatif.'
                 elif uniq_id != admin_rotator.uniq_id and uniq_id in admin_event.rotators_by_uniq_id:
-                    errors['uniq_id'] = \
+                    errors[field] = \
                         f'Un autre écran rotatif avec l\'identifiant [{uniq_id}] existe déjà.'
             case 'delete' | 'clone':
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
+        public: bool | None = None
         delay: int | None = None
         show_menus: bool | None = None
         screen_ids: list[int] | None = None
         family_ids: list[int] | None = None
         match action:
             case 'create' | 'update':
+                public: bool = self._form_data_to_bool_or_none(data, 'public')
                 try:
                     delay = self._form_data_to_int_or_none(data, 'delay', minimum=1)
                 except ValueError:
@@ -77,6 +80,7 @@ class AdminRotatorController(AAdminController):
         return StoredRotator(
             id=admin_rotator.id if action != 'create' else None,
             uniq_id=uniq_id,
+            public=public,
             delay=delay,
             show_menus=show_menus,
             screen_ids=screen_ids,
@@ -110,6 +114,7 @@ class AdminRotatorController(AAdminController):
                     case 'update':
                         data = {
                             'uniq_id': self._value_to_form_data(admin_rotator.stored_rotator.uniq_id),
+                            'public': self._value_to_form_data(admin_rotator.stored_rotator.public),
                             'delay': self._value_to_form_data(admin_rotator.stored_rotator.delay),
                             'show_menus': self._value_to_form_data(admin_rotator.stored_rotator.show_menus),
                         }
@@ -119,8 +124,14 @@ class AdminRotatorController(AAdminController):
                         for family_id in admin_event.families_by_id:
                             data[f'family_{family_id}'] = self._value_to_form_data(
                                 family_id in admin_rotator.stored_rotator.family_ids)
-                    case 'delete' | 'create':
-                        data = {}
+                    case 'create':
+                        data = {
+                            'type': '',
+                            'public': self._value_to_form_data(True),
+                            'uniq_id': '',
+                        }
+                    case 'delete':
+                        pass
                     case _:
                         raise ValueError(f'action=[{action}]')
             stored_rotator: StoredRotator = self._admin_validate_rotator_update_data(

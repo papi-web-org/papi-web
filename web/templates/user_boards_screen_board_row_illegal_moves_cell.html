@@ -1,7 +1,7 @@
-{% if screen.update and tournament.record_illegal_moves %}
+{% if screen.type == 'input' and tournament.record_illegal_moves %}
     <td class="
         illegal-moves-cell
-        {% if screen.update and last_illegal_move_updated and last_illegal_move_updated.expiration > now and last_illegal_move_updated.tournament_uniq_id == tournament.uniq_id and last_illegal_move_updated.player_id == player.id %}
+        {% if screen.update and last_illegal_move_updated and last_illegal_move_updated.expiration > now and last_illegal_move_updated.tournament_id == tournament.id and last_illegal_move_updated.player_id == player.id %}
             last_illegal_move_updated
         {% endif %}"
     >
@@ -14,7 +14,7 @@
                         {% if not board.result_str %}delete{% endif %}"
                     hx-target="closest tr"
                     hx-swap="outerHTML transition:true"
-                    hx-delete="{{ url_for('delete-player-illegal-move', event_uniq_id=event.uniq_id, tournament_uniq_id=tournament.uniq_id, player_id=player.id, screen_id=screen.id) }}"
+                    hx-delete="{{ url_for('user-input-screen-delete-illegal-move', event_uniq_id=event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, player_id=player.id) }}"
                     hx-indicator="#please-wait"
                 ></i>
             </span>
@@ -22,10 +22,10 @@
         {% if not board.result_str and player.illegal_moves < tournament.record_illegal_moves %}
             <span class="illegal-move-flag-wrapper">
                 <i
-                    class="bi-flag illegal-move-flag add player-{{ tournament.uniq_id }}-{{ player.id }}"
+                    class="bi-flag illegal-move-flag add player-{{ tournament.id }}-{{ player.id }}"
                     hx-target="closest tr"
                     hx-swap="outerHTML transition:true"
-                    hx-put="{{ url_for('put-player-illegal-move', event_uniq_id=event.uniq_id, tournament_uniq_id=tournament.uniq_id, player_id=player.id, screen_id=screen.id) }}"
+                    hx-put="{{ url_for('user-input-screen-add-illegal-move', event_uniq_id=event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, player_id=player.id) }}"
                     hx-indicator="#please-wait"
                 ></i>
             </span>

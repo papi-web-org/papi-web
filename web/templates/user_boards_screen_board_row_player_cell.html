@@ -1,0 +1,21 @@
+<td
+        class="
+            player-cell
+            {% if screen.type == 'input' and last_illegal_move_updated and last_illegal_move_updated.expiration > now and last_illegal_move_updated.tournament_id == tournament.id and last_illegal_move_updated.player_id == player.id %}
+                last_illegal_move_updated
+            {% endif %}"
+        {% if screen.type == 'input' and not board.result_str %}
+            hx-get="{{ url_for('user-input-screen-render-result-modal', event_uniq_id=event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, board_id=board.id) }}"
+            hx-target="#modals"
+            hx-swap="innerHTML"
+            hx-on:click="$('.updater').val('0');"
+            data-bs-toggle="modal"
+            data-bs-target="#modals"
+        {% endif %}
+>
+    {% if player.id == 1 %}
+        <span class="fst-italic">EXEMPT</span>
+    {% else %}{% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}
+    {% if tournament.handicap and opponent.id != 1 %}(<span class="{%if wp.handicap_time_modified %}handicap-modified-time{% else %}base-time{% endif %}">{%if player.handicap_initial_time_minutes %}<span class="minutes">{{ player.handicap_initial_time_minutes }}'</span>{% endif %}{%if player.handicap_initial_time_seconds %}<span class="seconds">{{ player.handicap_initial_time_seconds }}"</span>{% endif %}
+    {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}{% endif %}
+</td>

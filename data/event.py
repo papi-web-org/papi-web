@@ -6,6 +6,7 @@ from logging import Logger
 from pathlib import Path
 from typing import Iterator
 
+from common import format_timestamp_date_time, format_timestamp_date, format_timestamp_time
 from common.config_reader import ConfigReader, TMP_DIR
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
@@ -40,7 +41,7 @@ class Event:
             self.update_password: str | None = None
             self.record_illegal_moves: int = 0
             self.check_in_players: bool = False
-            self.allow_deletion: bool = False
+            self.allow_result_deletion_on_input_screens: bool = False
             self.chessevents: dict[str, ChessEvent] = {}
             self.tournaments: dict[str, Tournament] = {}
             self.templates: dict[str, Template] = {}
@@ -259,13 +260,13 @@ class Event:
             allow_deletion: bool | None = self.reader.getboolean_safe(section_key, key)
             if allow_deletion is None:
                 self.reader.add_warning(
-                    f'un booléen est attendu, par défaut [{self.allow_deletion}]',
+                    f'un booléen est attendu, par défaut [{self.allow_result_deletion_on_input_screens}]',
                     section_key,
                     key)
             else:
-                self.allow_deletion = allow_deletion
+                self.allow_result_deletion_on_input_screens = allow_deletion
         else:
-            self.reader.add_debug(f'option absente, par défaut [{self.allow_deletion}]')
+            self.reader.add_debug(f'option absente, par défaut [{self.allow_result_deletion_on_input_screens}]')
 
         section_keys: list[str] = [
             'name', 'path', 'update_password', 'css', 'record_illegal_moves', 'check_in_players',
@@ -309,7 +310,7 @@ def get_events_by_uniq_id(load_screens: bool, with_tournaments_only: bool = Fals
 
 @total_ordering
 class NewEvent:
-    def __init__(self, stored_event: StoredEvent):
+    def __init__(self, stored_event: StoredEvent, last_load_date: float):
         self.stored_event: StoredEvent = stored_event
         self.chessevents_by_id: dict[int, NewChessEvent] = {}
         self.chessevents_by_uniq_id: dict[str, NewChessEvent] = {}
@@ -331,6 +332,7 @@ class NewEvent:
         self._infos: list[str] = []
         self._warnings: list[str] = []
         self._errors: list[str] = []
+        self._silent = last_load_date is not None and last_load_date > self.stored_event.last_update
         self.build_root()
         if self.errors:
             self.add_warning(
@@ -379,9 +381,8 @@ class NewEvent:
                         tournament_ids.append(tournament_id)
             else:
                 for screen_set in screen.screen_sets_sorted_by_order:
-                    if screen_set.tournament and screen_set.tournament.id not in tournament_ids:
+                    if screen_set.tournament.id not in tournament_ids:
                         tournament_ids.append(screen_set.tournament.id)
-        self.set_file_dependencies([self.tournaments_by_id[tournament_id].file for tournament_id in tournament_ids])
 
     @property
     def uniq_id(self) -> str:
@@ -390,6 +391,42 @@ class NewEvent:
     @property
     def name(self) -> str:
         return self.stored_event.name if self.stored_event.name else self.uniq_id
+
+    @property
+    def start(self) -> float:
+        return self.stored_event.start
+
+    @property
+    def stop(self) -> float:
+        return self.stored_event.stop
+
+    @property
+    def formatted_start_date_time(self) -> str:
+        return format_timestamp_date_time(self.start)
+
+    @property
+    def formatted_start_date(self) -> str:
+        return format_timestamp_date(self.start)
+
+    @property
+    def formatted_start_time(self) -> str:
+        return format_timestamp_time(self.start)
+
+    @property
+    def formatted_stop_date_time(self) -> str:
+        return format_timestamp_date_time(self.stop)
+
+    @property
+    def formatted_stop_date(self) -> str:
+        return format_timestamp_date(self.stop)
+
+    @property
+    def formatted_stop_time(self) -> str:
+        return format_timestamp_time(self.stop)
+
+    @property
+    def players_number(self) -> int:
+        return sum([len(tournament.players_by_name_with_unpaired) for tournament in self.tournaments_by_id.values()])
 
     @property
     def path(self) -> Path:
@@ -410,11 +447,11 @@ class NewEvent:
         return self.stored_event.record_illegal_moves
 
     @property
-    def allow_results_deletion(self) -> int:
-        if self.stored_event.allow_results_deletion is None:
-            return PapiWebConfig().default_allow_results_deletion
+    def allow_results_deletion_on_input_screens(self) -> int:
+        if self.stored_event.allow_results_deletion_on_input_screens is None:
+            return PapiWebConfig().default_allow_results_deletion_on_input_screens
         else:
-            return self.stored_event.allow_results_deletion
+            return self.stored_event.allow_results_deletion_on_input_screens
 
     @property
     def timer_colors(self) -> dict[int, str]:
@@ -437,11 +474,42 @@ class NewEvent:
         return self._timer_delays
 
     @property
+    def public(self) -> bool:
+        return self.stored_event.public
+
+    @property
     def screens_sorted_by_uniq_id(self) -> list[NewScreen]:
         if self._screens_sorted_by_uniq_id is None:
             self._screens_sorted_by_uniq_id = sorted(
                 self.screens_by_uniq_id.values(), key=lambda screen: screen.uniq_id)
         return self._screens_sorted_by_uniq_id
+
+    def _screen_type_screens(self, screen_type: ScreenType) -> list[NewScreen]:
+        return [screen for screen in self.screens_sorted_by_uniq_id if screen.type == screen_type]
+
+    @property
+    def boards_screens(self) -> list[NewScreen]:
+        return self._screen_type_screens(ScreenType.Boards)
+
+    @property
+    def input_screens(self) -> list[NewScreen]:
+        return self._screen_type_screens(ScreenType.Input)
+
+    @property
+    def players_screens(self) -> list[NewScreen]:
+        return self._screen_type_screens(ScreenType.Players)
+
+    @property
+    def results_screens(self) -> list[NewScreen]:
+        return self._screen_type_screens(ScreenType.Results)
+
+    @property
+    def last_update(self) -> float | None:
+        return self.stored_event.last_update
+
+    @property
+    def last_update_str(self) -> str | None:
+        return format_timestamp_date_time(self.last_update)
 
     def build_root(self):
         if not self.stored_event.name:
@@ -458,10 +526,10 @@ class NewEvent:
             self.add_debug('pas de mot de passe défini pour les écrans de saisie')
         if self.stored_event.record_illegal_moves is None:
             self.add_debug(f'nombre de coups illégaux non défini, par défaut [{self.record_illegal_moves}]')
-        if self.stored_event.allow_results_deletion is None:
+        if self.stored_event.allow_results_deletion_on_input_screens is None:
             self.add_debug(
                 f'Autorisation de suppression des résultats entrés non définie, par défaut '
-                f'[{"autorisée" if self.allow_results_deletion else "non autorisée"}]')
+                f'[{"autorisée" if self.allow_results_deletion_on_input_screens else "non autorisée"}]')
 
     def _build_chessevents(self):
         for stored_chessevent in self.stored_event.stored_chessevents:
@@ -585,7 +653,8 @@ class NewEvent:
             text, tournament_uniq_id=tournament_uniq_id, chessevent_uniq_id=chessevent_uniq_id,
             family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
             rotator_uniq_id=rotator_uniq_id)
-        logger.debug(message)
+        if not self._silent:
+            logger.debug(message)
 
     @property
     def infos(self) -> list[str]:
@@ -601,7 +670,8 @@ class NewEvent:
             text, tournament_uniq_id=tournament_uniq_id, chessevent_uniq_id=chessevent_uniq_id,
             family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
             rotator_uniq_id=rotator_uniq_id)
-        logger.info(message)
+        if not self._silent:
+            logger.info(message)
         self._infos.append(message)
 
     @property
@@ -637,28 +707,6 @@ class NewEvent:
             rotator_uniq_id=rotator_uniq_id)
         logger.error(message)
         self._errors.append(message)
-
-    @classmethod
-    def __get_event_file_dependencies_file(cls, event_uniq_id: str) -> Path:
-        return TMP_DIR / 'events' / event_uniq_id / 'event_file_dependencies.json'
-
-    @classmethod
-    def get_event_file_dependencies(cls, event_uniq_id: str) -> list[Path]:
-        file_dependencies_file = cls.__get_event_file_dependencies_file(event_uniq_id)
-        try:
-            with open(file_dependencies_file, 'r', encoding='utf-8') as f:
-                return [Path(file) for file in json.load(f)]
-        except FileNotFoundError:
-            return []
-
-    def set_file_dependencies(self, files: list[Path]):
-        file_dependencies_file = self.__get_event_file_dependencies_file(self.uniq_id)
-        try:
-            file_dependencies_file.parents[0].mkdir(parents=True, exist_ok=True)
-            with open(file_dependencies_file, 'w', encoding='utf-8') as f:
-                return f.write(json.dumps([str(file) for file in files]))
-        except FileNotFoundError:
-            return []
 
     @property
     def download_allowed(self) -> bool:

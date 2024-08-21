@@ -1,5 +1,5 @@
 <h1>{{ admin_event.name }} - Tournois</h1>
-<table class="table border-black">
+<table class="table border-black bg-light">
     <thead class="table-dark">
         <tr>
             <th scope="col" class="text-nowrap">Id</th>
@@ -9,15 +9,15 @@
             <th scope="col" class="text-nowrap">Rondes</th>
             <th scope="col" class="text-nowrap">N° FFE</th>
             <th scope="col" class="text-nowrap">Mot de passe FFE</th>
-            <th scope="col" class="width-100">Handicap</th>
+            <th scope="col" class="w-100">Handicap</th>
         </tr>
     </thead>
     <tbody>
-        {% for tournament in admin_event.tournaments.values() %}
+        {% for tournament in admin_event.tournaments_by_id.values() %}
             <tr>
                 <th scope="row" class="text-nowrap">{{ tournament.uniq_id }}</th>
                 <td class="text-nowrap">{{ tournament.name }}</td>
-                <td class="text-nowrap">{% if tournament.file %}{{ tournament.file }}{% if tournament.download_allowed %} <a href="{{ url_for('download-tournament', event_uniq_id=admin_event.uniq_id, tournament_uniq_id=tournament.uniq_id) }}"><i class="bi-cloud-arrow-down"></i></a>{% endif %}{% else %}<span class="fst-italic">-</span>{% endif %}</td>
+                <td class="text-nowrap">{% if tournament.file %}{{ tournament.file }}{% if tournament.download_allowed %} <a href="{{ url_for('user-download-tournament', event_uniq_id=admin_event.uniq_id, tournament_id=tournament.id) }}"><i class="bi-cloud-arrow-down"></i></a>{% endif %}{% else %}<span class="fst-italic">-</span>{% endif %}</td>
                 <td class="text-nowrap text-center">{% if tournament.file %}{{ tournament.players_by_name_with_unpaired | length }}{% else %}<span class="fst-italic">-</span>{% endif %}</td>
                 <td class="text-nowrap text-center">{% if tournament.file %}{{ tournament.current_round }} / {{ tournament.rounds }}{% else %}<span class="fst-italic">-</span>{% endif %}</td>
                 <td class="text-nowrap text-center">{% if tournament.ffe_id %}{{ tournament.ffe_id }}{% else %}<span class="fst-italic">Aucun</span>{% endif %}</td>
@@ -29,6 +29,6 @@
 </table>
 {% if admin_event.download_allowed %}
     <div>
-        <a href="{{ url_for('download-event-tournaments', event_uniq_id=admin_event.uniq_id) }}"><strong><i class="bi-cloud-arrow-down-fill"></i></strong></a>
+        <a href="{{ url_for('user-download-event-tournaments', event_uniq_id=admin_event.uniq_id) }}"><strong><i class="bi-cloud-arrow-down-fill"></i></strong></a>
     </div>
 {% endif %}

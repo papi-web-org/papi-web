@@ -8,7 +8,8 @@ import warnings
 
 from typing import TYPE_CHECKING
 
-from common import RGB, rgb_to_hexa, hexa_to_rgb
+from common import RGB, rgb_to_hexa, hexa_to_rgb, format_timestamp_date_time, format_timestamp_date, \
+    format_timestamp_time
 from common.papi_web_config import PapiWebConfig
 from database.store import StoredTimerHour, StoredTimer
 
@@ -19,21 +20,6 @@ from common.config_reader import ConfigReader
 from common.logger import get_logger
 
 logger: Logger = get_logger()
-
-ROUND_DEFAULT_TEXT_BEFORE: str = 'Début de la ronde {} dans %s'
-ROUND_DEFAULT_TEXT_AFTER: str = 'Ronde {} commencée depuis %s'
-
-
-def timestamp_to_datetime(ts: int) -> datetime:
-    return datetime.fromtimestamp(ts)
-
-
-def datetime_to_str(dt: datetime) -> str:
-    return dt.strftime('%Y-%m-%d %H:%M')
-
-
-def timestamp_to_str(ts: int) -> str:
-    return datetime_to_str(timestamp_to_datetime(ts))
 
 
 @dataclass
@@ -51,11 +37,12 @@ class TimerHour:
     last: bool = field(default=False, init=False)
 
     def __post_init__(self):
+        papi_web_config: PapiWebConfig = PapiWebConfig()
         if self.text_before is None and self.round is not None:
-            self.text_before = ROUND_DEFAULT_TEXT_BEFORE.format(self.round)
+            self.text_before = papi_web_config.default_timer_round_text_before.format(self.round)
         if self.text_after is None and self.round is not None:
-            self.text_after = ROUND_DEFAULT_TEXT_AFTER.format(self.round)
-        self.datetime = timestamp_to_datetime(self.timestamp)
+            self.text_after = papi_web_config.default_timer_round_text_after.format(self.round)
+        self.datetime = datetime.fromtimestamp(self.timestamp)
 
     @property
     def id(self) -> int | str:
@@ -63,15 +50,15 @@ class TimerHour:
 
     @property
     def datetime_str(self) -> str:
-        return self.datetime.strftime('%Y-%m-%d %H:%M')
+        return format_timestamp_date_time(self.timestamp)
 
     @property
     def date_str(self) -> str:
-        return self.datetime.strftime('%Y-%m-%d')
+        return format_timestamp_date(self.timestamp)
 
     @property
     def time_str(self) -> str:
-        return self.datetime.strftime('%H:%M')
+        return format_timestamp_time(self.timestamp)
 
     def set_text_before(self, text: str):
         warnings.warn("Use direct assignment to text_before instead")
@@ -82,24 +69,25 @@ class TimerHour:
         self.text_after = text
 
     def set_round(self, round_: int):
-        self.text_before = ROUND_DEFAULT_TEXT_BEFORE.format(round_)
-        self.text_after = ROUND_DEFAULT_TEXT_AFTER.format(round_)
+        papi_web_config: PapiWebConfig = PapiWebConfig()
+        self.text_before = papi_web_config.default_timer_round_text_before.format(round_)
+        self.text_after = papi_web_config.default_timer_round_text_after.format(round_)
 
     @property
     def datetime_str_1(self) -> str:
-        return timestamp_to_str(self.timestamp_1)
+        return format_timestamp_date_time(self.timestamp_1)
 
     @property
     def datetime_str_2(self) -> str:
-        return timestamp_to_str(self.timestamp_2)
+        return format_timestamp_date_time(self.timestamp_2)
 
     @property
     def datetime_str_3(self) -> str:
-        return timestamp_to_str(self.timestamp_3)
+        return format_timestamp_date_time(self.timestamp_3)
 
     @property
     def datetime_str_next(self) -> str:
-        return timestamp_to_str(self.timestamp_next)
+        return format_timestamp_date_time(self.timestamp_next)
 
     def set_timestamps(self, timestamp_1: int, timestamp_2: int, timestamp_3: int, timestamp_next: int):
         self.timestamp_1 = timestamp_1
@@ -327,37 +315,21 @@ class NewTimerHour:
     last_valid: bool = field(init=False, default=None)
     error: str | None = field(default=None)
 
-    @staticmethod
-    def _timestamp_to_datetime(timestamp: int) -> datetime | None:
-        return datetime.fromtimestamp(timestamp) if timestamp else None
-
-    @classmethod
-    def _timestamp_to_datetime_str(cls, timestamp: int) -> str:
-        return cls._timestamp_to_datetime(timestamp).strftime('%Y-%m-%d %H:%M') if timestamp else ''
-
-    @classmethod
-    def _timestamp_to_date_str(cls, timestamp: int) -> str:
-        return cls._timestamp_to_datetime(timestamp).strftime('%Y-%m-%d') if timestamp else ''
-
-    @classmethod
-    def _timestamp_to_time_str(cls, timestamp: int) -> str:
-        return cls._timestamp_to_datetime(timestamp).strftime('%H:%M') if timestamp else ''
-
     @property
     def datetime(self) -> datetime | None:
-        return self._timestamp_to_datetime(self.timestamp) if self.timestamp else None
+        return datetime.fromtimestamp(self.timestamp) if self.timestamp else None
 
     @property
     def datetime_str(self) -> str | None:
-        return self._timestamp_to_datetime_str(self.timestamp) if self.timestamp else None
+        return format_timestamp_date_time(self.timestamp) if self.timestamp else None
 
     @property
     def date_str(self) -> str | None:
-        return self._timestamp_to_date_str(self.timestamp) if self.timestamp else None
+        return format_timestamp_date(self.timestamp) if self.timestamp else None
 
     @property
     def time_str(self) -> str | None:
-        return self._timestamp_to_time_str(self.timestamp) if self.timestamp else None
+        return format_timestamp_time(self.timestamp) if self.timestamp else None
 
     @property
     def id(self) -> int | None:
@@ -388,14 +360,18 @@ class NewTimerHour:
 
     @property
     def text_before(self) -> str:
+        papi_web_config: PapiWebConfig = PapiWebConfig()
         if self._text_before is None:
-            self._text_before = self._format_stored_text(self.stored_timer_hour.text_before, ROUND_DEFAULT_TEXT_BEFORE)
+            self._text_before = self._format_stored_text(
+                self.stored_timer_hour.text_before, papi_web_config.default_timer_round_text_before)
         return self._text_before
 
     @property
     def text_after(self) -> str:
+        papi_web_config: PapiWebConfig = PapiWebConfig()
         if self._text_after is None:
-            self._text_after = self._format_stored_text(self.stored_timer_hour.text_after, ROUND_DEFAULT_TEXT_AFTER)
+            self._text_after = self._format_stored_text(
+                self.stored_timer_hour.text_after, papi_web_config.default_timer_round_text_after)
         return self._text_after
 
     @property
@@ -416,19 +392,19 @@ class NewTimerHour:
 
     @property
     def datetime_str_1(self) -> str:
-        return self._timestamp_to_datetime_str(self.timestamp_1)
+        return format_timestamp_date_time(self.timestamp_1)
 
     @property
     def datetime_str_2(self) -> str:
-        return self._timestamp_to_datetime_str(self.timestamp_2)
+        return format_timestamp_date_time(self.timestamp_2)
 
     @property
     def datetime_str_3(self) -> str:
-        return self._timestamp_to_datetime_str(self.timestamp_3)
+        return format_timestamp_date_time(self.timestamp_3)
 
     @property
     def datetime_str_next(self) -> str:
-        return self._timestamp_to_datetime_str(self.timestamp_next)
+        return format_timestamp_date_time(self.timestamp_next)
 
     def __repr__(self):
         return (f'{self.__class__.__name__}(id={self.id} order={self.order} uniq_id={self.uniq_id} '

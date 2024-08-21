@@ -4,8 +4,17 @@
             Évènements
         </h1>
     </div>
-    <div class="col-1 d-flex justify-content-end">
+    <div class="col-1 d-flex justify-content-end text-nowrap">
         <h1>
+            <button
+                    class="btn btn-primary text-nowrap"
+                    hx-post="{{ url_for('admin-update-header') }}"
+                    hx-vals='{"admin_main_selector": "@events"}'
+                    hx-swap="multi:#admin-header,#admin-content"
+                    hx-indicator="#please-wait"
+            >
+                <i class="bi-arrow-clockwise"></i>
+            </button>
             <button
                     class="btn btn-primary text-nowrap"
                     hx-post="{{ url_for('admin-event-render-edit-modal') }}"
@@ -20,10 +29,10 @@
         </h1>
     </div>
 </div>
-<table class="table table-striped table-sm table-hover border-black">
+<table class="table table-striped table-sm table-hover border-black bg-light">
     <thead class="table-dark position-sticky top-0">
         <tr>
-            <th scope="col" class="text-nowrap width-25">[Id] / Nom</th>
+            <th scope="col" colspan="2" class="text-nowrap">[Id] / Nom</th>
             <th scope="col" colspan="3" class="text-nowrap">Évènement</th>
             <th scope="col" colspan="3" class="text-nowrap">Affichage</th>
             <th scope="col" colspan="3" class="text-nowrap"><i class="bi-chat-fill" ></i>&nbsp;Messages</th>
@@ -36,7 +45,26 @@
                 {% for event in events %}
                     <tr>
                         <td
-                                class="width-25"
+                                class=""
+                                role="button"
+                                hx-post="{{ url_for('admin-update-header') }}"
+                                hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
+                                hx-swap="multi:#admin-header,#admin-content"
+                                hx-indicator="#please-wait">
+                            <div class="fw-bold">
+                                {% if event.public %}
+                                    <span class="text-success">
+                                        <i class="bi-unlock-fill fs-3"></i>
+                                    </span>
+                                {% else %}
+                                    <span class="text-danger">
+                                        <i class="bi-lock-fill fs-3"></i>
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td
+                                class="w-25"
                                 role="button"
                                 hx-post="{{ url_for('admin-update-header') }}"
                                 hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
@@ -74,7 +102,7 @@
                             </div>
                         </td>
                         <td
-                                class="text-nowrap width-25"
+                                class="text-nowrap w-25"
                                 role="button"
                                 hx-post="{{ url_for('admin-update-header') }}"
                                 hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
@@ -110,7 +138,7 @@
                             </div>
                         </td>
                         <td
-                                class="text-nowrap width-25"
+                                class="text-nowrap w-25"
                                 role="button"
                                 hx-post="{{ url_for('admin-update-header') }}"
                                 hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
@@ -144,7 +172,7 @@
                             </div>
                         </td>
                         <td
-                                class="text-nowrap width-25"
+                                class="text-nowrap w-25"
                                 role="button"
                                 hx-post="{{ url_for('admin-update-header') }}"
                                 hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
@@ -154,7 +182,7 @@
                                 <i class="bi-info-circle" ></i>&nbsp;{{ event.infos|length }} information{% if event.infos|length > 1 %}s{% endif %}
                             </div>
                         </td>
-                        <td class="text-nowrap text-end width-25">
+                        <td class="text-nowrap text-end w-25">
                             <button
                                     class="btn btn-sm btn-primary p-1"
                                     hx-post="{{ url_for('admin-update-header') }}"
@@ -163,18 +191,24 @@
                                     hx-indicator="#please-wait">
                                 <i class="bi-caret-right-square-fill"></i> Ouvrir
                             </button>
-                            <a href="{{ url_for('render-event', event_uniq_id=event.uniq_id) }}" target="_blank">
-                                <button class="btn btn-sm btn-info p-1"><i class="bi-share-fill"></i> Partager</button>
-                            </a>
+                            <button
+                                    class="btn btn-sm btn-info p-1 text-nowrap"
+                                    hx-get="{{ url_for('user-event-render', event_uniq_id=event.uniq_id) }}"
+                                    hx-target="body"
+                                    hx-indicator="#please-wait"
+                            >
+                                <i class="bi-share-fill"></i>
+                                Partager
+                            </button>
                         </td>
                     </tr>
                 {% endfor %}
             {% else %}
                 <tr>
                     <td
-                            colspan="5"
-                            class="text-nowrap" >
-                        <span class="fst-italic">Aucun évènement trouvé.</span>
+                            colspan="12"
+                            class="text-nowrap fst-italic" >
+                        Aucun évènement trouvé.
                     </td>
                 </tr>
             {% endif %}

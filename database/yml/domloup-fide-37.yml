@@ -1,8 +1,10 @@
 name: "37e open Fide de Domloup"
+start: "2024-08-24 00:00"
+stop: "2024-08-25 23:59"
 css: "club/F35043/F35043.css"
 update_password: "mot_de_passe"
 record_illegal_moves: 0
-allow_results_deletion: false
+allow_results_deletion_on_input_screens: true
 chessevents:
   domloup-fide-37:
     user_id: C69548
@@ -73,6 +75,7 @@ tournaments:
     name: "Tournoi E"
     ffe_id: 999994
     ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide-37"
     chessevent_tournament_name: "Tournoi E"
   F:
     filename: "domloup-fide-37-f"
@@ -85,7 +88,7 @@ screens:
   saisie-A:
     name: "Tournoi A"
     type: "input"
-    menu: "@update"
+    menu: "@input"
     timer_uniq_id: "chronometre"
     sets:
       -
@@ -93,7 +96,7 @@ screens:
   saisie-B:
     name: "Tournoi B"
     type: "input"
-    menu: "@update"
+    menu: "@input"
     timer_uniq_id: "chronometre"
     sets:
       -
@@ -101,7 +104,7 @@ screens:
   saisie-C:
     name: "Tournoi C"
     type: "input"
-    menu: "@update"
+    menu: "@input"
     timer_uniq_id: "chronometre"
     sets:
       -
@@ -109,7 +112,7 @@ screens:
   saisie-D:
     name: "Tournoi D"
     type: "input"
-    menu: "@update"
+    menu: "@input"
     timer_uniq_id: "chronometre"
     sets:
       -
@@ -117,7 +120,7 @@ screens:
   saisie-E:
     name: "Tournoi E"
     type: "input"
-    menu: "@update"
+    menu: "@input"
     timer_uniq_id: "chronometre"
     sets:
       -
@@ -125,7 +128,7 @@ screens:
   saisie-F:
     name: "Tournoi F"
     type: "input"
-    menu: "@update"
+    menu: "@input"
     timer_uniq_id: "chronometre"
     sets:
       -

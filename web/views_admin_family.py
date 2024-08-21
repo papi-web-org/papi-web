@@ -18,7 +18,7 @@ from data.util import ScreenType
 from database.sqlite import EventDatabase
 from database.store import StoredFamily
 from web.messages import Message
-from web.views_admin import AAdminController
+from web.views_admin_index import AAdminController
 
 logger: Logger = get_logger()
 
@@ -54,6 +54,7 @@ class AdminFamilyController(AAdminController):
         field = 'uniq_id'
         uniq_id: str = self._form_data_to_str_or_none(data, field)
         name: str | None = None
+        public: bool | None = None
         if action == 'delete':
             pass
         else:
@@ -70,6 +71,7 @@ class AdminFamilyController(AAdminController):
                     case _:
                         raise ValueError(f'action=[{action}]')
             name = self._form_data_to_str_or_none(data, 'name')
+            public: bool = self._form_data_to_bool_or_none(data, 'public')
         menu: str | None = None
         menu_text: str | None = None
         columns: int | None = None
@@ -167,6 +169,7 @@ class AdminFamilyController(AAdminController):
             id=admin_family.id if action != 'create' else None,
             uniq_id=uniq_id,
             type=type,
+            public=public,
             tournament_id=tournament_id,
             name=name,
             columns=columns,
@@ -184,7 +187,6 @@ class AdminFamilyController(AAdminController):
     @staticmethod
     def _get_tournament_options(admin_event: NewEvent) -> dict[str, str]:
         options: dict[str, str] = {
-            '': 'Choisir le tournoi',
         }
         for tournament in admin_event.tournaments_by_id.values():
             options[str(tournament.id)] = f'{tournament.name} ({tournament.filename})'
@@ -212,6 +214,7 @@ class AdminFamilyController(AAdminController):
                         raise ValueError(f'action=[{action}]')
                 match action:
                     case 'update':
+                        data['public'] = self._value_to_form_data(admin_family.stored_family.public)
                         data['name'] = self._value_to_form_data(admin_family.stored_family.name)
                         data['tournament_id'] = self._value_to_form_data(admin_family.stored_family.tournament_id)
                         data['columns'] = self._value_to_form_data(admin_family.stored_family.columns)
@@ -219,7 +222,7 @@ class AdminFamilyController(AAdminController):
                         data['menu'] = self._value_to_form_data(admin_family.stored_family.menu)
                         data['timer_id'] = self._value_to_form_data(admin_family.stored_family.timer_id)
                         match admin_family.type:
-                            case ScreenType.Boards:
+                            case ScreenType.Boards | ScreenType.Input:
                                 data['first'] = self._value_to_form_data(admin_family.stored_family.first)
                                 data['last'] = self._value_to_form_data(admin_family.stored_family.last)
                             case ScreenType.Players:
@@ -231,6 +234,10 @@ class AdminFamilyController(AAdminController):
                         data['number'] = self._value_to_form_data(admin_family.stored_family.number)
                     case 'create':
                         data['type'] = ''
+                        data['public'] = self._value_to_form_data(True)
+                        data['uniq_id'] = ''
+                        data['name'] = ''
+                        data['tournament_id'] = self._value_to_form_data(list(admin_event.tournaments_by_id.keys())[0])
                     case 'delete':
                         pass
                     case _:

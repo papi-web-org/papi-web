@@ -1,39 +1,44 @@
 {% extends 'base.html' %}
 
-{% block title %}
-Papi-web - Salles de jeu
-{% endblock title %}
-
-{% block head %}
-    {% if event %}
-        <link rel="stylesheet" href="{{ url_for('static', file_path=event.css) }}" type="text/css" />
-    {% endif %}
-{% endblock head %}
-
 {% block header %}
-{% endblock header %}
+    <div id="user-home-header" class="header user-header user-home-header p-3">
+        <button
+                class="btn btn-link link-dark"
+                hx-get="{{ url_for('index') }}"
+                hx-target="body"
+                hx-indicator="#please-wait"
+                hx-trigger="click, keyup[key=='Escape'] from:body"
+        >
+            <i class="bi-house-fill fs-3"></i>
+        </button>
+        <input
+                class="updater user-updater"
+                type="hidden"
+                name="date"
+                value="{{ now }}"
+                hx-post="{{ url_for('user-render-if-updated') }}"
+                hx-include="this"
+                hx-target="body"
+                hx-trigger="every {{ papi_web_config.user_index_update_delay }}s queue:none"
+                hx-indicator="#please-wait"
+        />
+        <h1 class="d-inline-block">Évènements</h1>
+{% endblock %}
 
 {% block content %}
-    <form method="POST" class="d-inline-block">
-        <input type="hidden" name="target" value="" />
-        <button
-                type="submit"
-                class="btn btn-link link-dark">
-            <i class="bi-house-fill"></i>
-        </button>
-    </form>
-    <h1 class="d-inline-block">Salles de jeu</h1>
-    <h2>Évènements en cours</h2>
-    <div>Aucun élement en cours.</div>
-    <h2>Évènements à venir</h2>
-    <div>Aucun élement à venir.</div>
-    <h2>Évènements terminés</h2>
-    <div>Aucun élement terminé.</div>
-{% endblock content %}
-
-{% block footer %}
-    <div id="admin-footer-wrapper" class="">
-        <div id="admin-footer" class="">
-        </div>
+        {# cf https://codepen.io/Kerrys7777/pen/QWgwEeG Equal height Bootstrap 5 cards #}
+        <section class="pt-1 pb-1 shadow-sm">
+            <div class="container-fluid">
+                {% with title='Évènements en cours', events=event_loader.current_public_events, class='bg-primary-subtle', calendar_icon='bi-calendar' %}
+                    {% include 'user_index_event_cards.html' %}
+                {% endwith %}
+                {% with title='Évènements à venir', events=event_loader.coming_public_events, class='bg-info-subtle', calendar_icon='bi-calendar-check' %}
+                    {% include 'user_index_event_cards.html' %}
+                {% endwith %}
+                {% with title='Évènements passés', events=event_loader.passed_public_events, class='bg-secondary-subtle', calendar_icon='bi-calendar-minus' %}
+                    {% include 'user_index_event_cards.html' %}
+                {% endwith %}
+            </div>
+        </section>
     </div>
-{% endblock footer %}
+{% endblock content %}

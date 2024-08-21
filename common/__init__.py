@@ -1,5 +1,7 @@
 import re
+import time
 from collections import namedtuple
+from datetime import datetime
 from logging import Logger
 
 from common.logger import get_logger
@@ -29,3 +31,15 @@ def hexa_to_rgb(color: str) -> RGB | None:
 
 def rgb_to_hexa(rgb: RGB) -> str:
     return '#' + ''.join(f'{max(0, min(255, i)):02X}' for i in rgb)
+
+
+def format_timestamp_date_time(ts: float = None) -> str:
+    return datetime.strftime(datetime.fromtimestamp(ts if ts is not None else time.time()), '%Y-%m-%d %H:%M')
+
+
+def format_timestamp_date(ts: float = None) -> str:
+    return datetime.strftime(datetime.fromtimestamp(ts if ts is not None else time.time()), '%Y-%m-%d')
+
+
+def format_timestamp_time(ts: float) -> str:
+    return datetime.strftime(datetime.fromtimestamp(ts if ts is not None else time.time()), '%H:%M')

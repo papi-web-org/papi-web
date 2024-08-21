@@ -1,8 +1,0 @@
-/* TODO use Bootstrap styles wherever possible */
-.table tbody th,
-.table tbody td {
-    background: transparent;
-}
-.access-driver {
-    font-weight: bold;
-}

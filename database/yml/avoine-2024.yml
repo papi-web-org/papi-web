@@ -1,7 +1,9 @@
 name: "38e Open international d'échecs d'Avoine"
+start: "2024-07-20 00:00"
+stop: "2024-07-28 23:59"
 update_password: "mot_de_passe"
 record_illegal_moves: 0
-allow_results_deletion: true
+allow_results_deletion_on_input_screens: true
 timers:
   chronometre:
     hours:
@@ -103,12 +105,10 @@ screens:
         fixed_boards_str: "212,213,214,215"
   resultats:
     type: "results"
-    menu_text: "Fixes espace culturel"
+    menu_text: "Résultats"
     timer_uniq_id: "chronometre"
-    sets:
-      -
-        tournament_uniq_id: "avoine"
-        fixed_boards_str: "212,213,214"
+    results_tournament_uniq_ids:
+      - "avoine"
 families:
   saisie-ec:
     name: "Saisie Espace Culturel"
