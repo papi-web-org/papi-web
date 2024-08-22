@@ -57,3 +57,15 @@ data-bs-title="<i class='{% if tooltip_type == 'error' %}bi-exclamation-triangle
 {% macro rotator_visibility_icon(event, class) %}
     {{ visibility_icon('rotator', event.public, '', '', 'top', class) }}
 {% endmacro %}
+
+{% macro tournament_status_icon_class(tournament) %}
+    {% if not tournament.rounds %}
+        bi-exclamation-triangle-fill text-danger
+    {% elif not tournament.current_round %}
+        bi-pause-fill
+    {% elif tournament.playing %}
+        bi-caret-right-square-fill
+    {% else %}
+        bi-check-circle-fill text-success
+    {% endif %}
+{% endmacro %}

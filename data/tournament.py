@@ -841,6 +841,7 @@ class NewTournament:
         self._rating: TournamentRating | None = None
         self._players_by_id: dict[int, Player] = {}
         self._current_round: int = 0
+        self._playing: bool = False
         self._rating_limit1: int = 0
         self._rating_limit2: int = 0
         self._boards: list[Board] | None = None
@@ -1033,6 +1034,11 @@ class NewTournament:
         return self._current_round
 
     @property
+    def playing(self) -> bool:
+        self.read_papi()
+        return self._playing
+
+    @property
     def boards(self) -> list[Board] | None:
         self.read_papi()
         return self._boards
@@ -1127,6 +1133,7 @@ class NewTournament:
             for round_ in paired_rounds:
                 if round_infos[round_]['results_missing']:
                     self._current_round = round_
+                    self._playing = True
                     break
             if self._current_round == 0:
                 self._current_round = paired_rounds[-1]
