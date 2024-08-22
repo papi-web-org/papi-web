@@ -1,0 +1,21 @@
+<div class="row mb-2">
+    <div class="col fs-3 fw-bold">
+        {% block cards_container_title %}
+            BLOCK CARDS_CONTAINER_TITLE
+        {% endblock %}
+    </div>
+    <div class="col-1 d-flex justify-content-end text-nowrap fs-3">
+        {% block cards_container_right_icons %}
+            BLOCK CARDS_CONTAINER_RIGHT_ICONS
+        {% endblock %}
+    </div>
+</div>
+<section class="pt-1 pb-1 shadow-sm">
+    <div class="container-fluid">
+        <div class="row">
+            {% block cards_container_cards %}
+                BLOCK CARDS_CONTAINER_CARDS
+            {% endblock %}
+        </div>
+    </div>
+</section>

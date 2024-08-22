@@ -1,0 +1,59 @@
+{% macro tooltip_attributes(tooltip_type, tooltip_text, tooltip_placement) %}
+data-bs-toggle="tooltip"
+data-bs-placement="{{ tooltip_placement or 'top' }}"
+data-bs-html="true"
+data-bs-custom-class="{% if tooltip_type == 'error' %}papi-web-tooltip-error{% elif tooltip_type == 'warning' %}papi-web-tooltip-warning{% else %}papi-web-tooltip-info{% endif %}"
+data-bs-title="<i class='{% if tooltip_type == 'error' %}bi-exclamation-triangle-fill{% elif tooltip_type == 'warning' %}bi-exclamation-triangle{% else %}bi-info-circle-fill{% endif %}'></i> {{ tooltip_text }}"
+{% endmacro %}
+
+{% macro visibility_icon(object_type, public, tooltip_public_text, tooltip_private_text, tooltip_placement, class) %}
+    {% if public %}
+        {% if object_type == 'event' %}
+            {% set tooltip_text=tooltip_public_text or 'Cet évènement est public (par défaut, les écrans sont visibles des utilisateur·ices).' %}
+        {% elif object_type == 'screen' %}
+            {% set tooltip_text=tooltip_public_text or 'Cet écran est public (visible des utilisateur·ices).' %}
+        {% elif object_type == 'family' %}
+            {% set tooltip_text=tooltip_public_text or 'Cette famille d\'écrans est publique (visible des utilisateur·ices).' %}
+        {% elif object_type == 'rotator' %}
+            {% set tooltip_text=tooltip_public_text or 'Cet écran rotatif est public (visible des utilisateur·ices).' %}
+        {% else %}
+            {% set tooltip_text=tooltip_public_text or '???' %}
+        {% endif %}
+        {% set icon_class='bi-unlock-fill text-success' %}
+    {% else %}
+        {% if object_type == 'event' %}
+            {% set tooltip_text=tooltip_private_text or 'Cet évènement est privé (par défaut, les écrans ne sont pas visibles des utilisateur·ices).' %}
+        {% elif object_type == 'screen' %}
+            {% set tooltip_text=tooltip_private_text or 'Cet écran est privé (non visible des utilisateur·ices).' %}
+        {% elif object_type == 'family' %}
+            {% set tooltip_text=tooltip_private_text or 'Cette famille d\'écrans est privée (non visible des utilisateur·ices).' %}
+        {% elif object_type == 'rotator' %}
+            {% set tooltip_text=tooltip_private_text or 'Cet écran rotatif est privé (non visible des utilisateur·ices).' %}
+        {% else %}
+            {% set tooltip_text=tooltip_private_text or '???' %}
+        {% endif %}
+        {% set icon_class='bi-lock-fill text-danger' %}
+    {% endif %}
+    <span
+            class="fw-bold {{ class }}"
+            {{ tooltip_attributes('info', tooltip_text, tooltip_placement or 'top') }}"
+        >
+        <i class="{{ icon_class }}"></i>
+    </span>
+{% endmacro %}
+
+{% macro event_visibility_icon(event, class) %}
+    {{ visibility_icon('event', event.public, '', '', 'top', class) }}
+{% endmacro %}
+
+{% macro screen_visibility_icon(event, class) %}
+    {{ visibility_icon('screen', event.public, '', '', 'top', class) }}
+{% endmacro %}
+
+{% macro family_visibility_icon(event, class) %}
+    {{ visibility_icon('family', event.public, '', '', 'top', class) }}
+{% endmacro %}
+
+{% macro rotator_visibility_icon(event, class) %}
+    {{ visibility_icon('rotator', event.public, '', '', 'top', class) }}
+{% endmacro %}

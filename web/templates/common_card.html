@@ -1,0 +1,35 @@
+<div class="col-lg-3 mb-3 d-flex align-items-stretch">
+    <div class="card {{ card_class }} p-1 w-100" >
+        <div class="card-header fw-bold text-center">
+            {% block card_header %}
+                CARD_HEADER
+            {% endblock %}
+        </div>
+        <div class="card-body p-2 d-flex flex-column">
+            <div class="card-title text-start fs-4">
+                {% block card_title %}
+                    CARD_TITLE
+                {% endblock %}
+            </div>
+            <div class="card-text mb-auto mt-1 text-start">
+                {% block card_text %}
+                    CARD_TEXT
+                {% endblock %}
+            </div>
+            <div class="card-buttons mb-1 mt-auto align-self-start w-100">
+                <div class="row">
+                    <div class="col-6 text-start">
+                        {% block card_buttons_left %}
+                            CARD_BUTTON_LEFT
+                        {% endblock %}
+                    </div>
+                    <div class="col-6 text-end text-nowrap">
+                        {% block card_buttons_right %}
+                            CARD_BUTTON_RIGHT
+                        {% endblock %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

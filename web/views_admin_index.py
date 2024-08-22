@@ -124,8 +124,6 @@ class AdminIndexController(AAdminController):
                 SessionHandler.set_session_screen_types_on_screen_list(request, screen_types)
                 continue
         screen_types: list[str] = SessionHandler.get_session_screen_types_on_family_list(request)
-        logger.warning(f'data={data}')
-        logger.warning(f'get_session_screen_types_on_family_list()=>{screen_types}')
         for field, family_type in {
             'show_boards_families_on_family_list': 'boards',
             'show_input_families_on_family_list': 'input',
@@ -136,7 +134,6 @@ class AdminIndexController(AAdminController):
                     screen_types.append(family_type)
                 else:
                     screen_types.remove(family_type)
-                logger.warning(f'set_session_screen_types_on_family_list({screen_types})')
                 SessionHandler.set_session_screen_types_on_family_list(request, screen_types)
                 continue
         return self._admin_render_index(

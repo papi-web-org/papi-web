@@ -1,9 +1,8 @@
+{% from 'macros.j2' import tooltip_attributes, event_visibility_icon %}
 <div class="row">
     <div class="col">
         <h1 class="text-nowrap">
-            {% with public=admin_event.public %}
-                {% include 'admin_visibility_icon.html' %}
-            {% endwith %}
+            {{ event_visibility_icon(admin_event, '') }}
             {{ admin_event.name }} - Écrans
         </h1>
     </div>
@@ -36,7 +35,6 @@
         </h1>
     </div>
 </div>
-{{ screen_types_on_screen_list }}
 <table class="table border-black bg-light">
     <thead class="table-dark position-sticky top-0">
         <tr>

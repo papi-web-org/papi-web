@@ -156,24 +156,48 @@ class AController(Controller):
             'access_driver': access_driver(),
             'event_loader': event_loader if event_loader else EventLoader(),
             'messages': Message.messages(request),
-            'admin_main_selector_options': {
-                '': '-- Configuration de Papi-web',
-                '@events': '-- Liste des évènements',
+            'main_nav_tabs': {
+                '': {
+                    'title': 'Configuration Papi-web',
+                    'template': 'admin_config.html',
+                },
+                '@events': {
+                    'title': 'Évènements',
+                    'template': 'admin_event_list.html',
+                },
+            },
+            'event_nav_tabs': {
+                '': {
+                    'title': admin_event.uniq_id if admin_event else '',
+                    'template': 'admin_event_config.html',
+                },
+                '@tournaments': {
+                    'title': f'Tournois ({len(admin_event.tournaments_by_id) if admin_event else "-"})',
+                    'template': 'admin_tournament_list.html',
+                },
+                '@screens': {
+                    'title': f'Écrans ({len(admin_event.basic_screens_by_id) if admin_event else "-"})',
+                    'template': 'admin_screen_list.html',
+                },
+                '@families': {
+                    'title': f'Familles ({len(admin_event.families_by_id) if admin_event else "-"})',
+                    'template': 'admin_family_list.html',
+                },
+                '@rotators': {
+                    'title': f'Écrans rotatifs ({len(admin_event.families_by_id) if admin_event else "-"})',
+                    'template': 'admin_rotator_list.html',
+                },
+                '@timers': {
+                    'title': f'Écrans rotatifs ({len(admin_event.rotators_by_id) if admin_event else "-"})',
+                    'template': 'admin_timer_list.html',
+                },
+                '@chessevents': {
+                    'title': f'ChessEvent ({len(admin_event.chessevents_by_id) if admin_event else "-"})',
+                    'template': 'admin_chessevent_list.html',
+                },
             },
             'admin_main_selector': admin_event.uniq_id if admin_event else admin_main_selector,
             'admin_event': admin_event,
-            'admin_event_selector_options': {
-                '': 'Configuration générale',
-                '@chessevents': 'Connexions à ChessEvent',
-                '@timers': 'Chronomètres',
-                '@tournaments': 'Tournois',
-                '@screens': 'Écrans',
-                '@families': 'Familles d\'écrans',
-                '@rotators': 'Écrans rotatifs',
-                # '@messages': 'Messages',
-                # '@check_in': 'Pointage',
-                # '@pairings': 'Appariements',
-            },
             'admin_event_selector': admin_event_selector,
             'show_family_screens_on_event_list': SessionHandler.get_session_show_family_screens_on_screen_list(request),
             'screen_types_on_event_list': SessionHandler.get_session_screen_types_on_screen_list(request),

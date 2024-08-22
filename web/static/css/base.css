@@ -32,13 +32,16 @@ body {
 .modal-backdrop + .modal-backdrop {
   display: none;
 }
-.papi-web-tooltip-info, .papi-web-tooltip-danger {
+.papi-web-tooltip-info, .papi-web-tooltip-warning, .papi-web-tooltip-error {
   --bs-tooltip-bg: #d0d000;
   --bs-tooltip-color: black;
 }
 .papi-web-tooltip-info {
   --bs-tooltip-color: #600090;
 }
-.papi-web-tooltip-danger {
+.papi-web-tooltip-warning {
+  --bs-tooltip-color: #900000;
+}
+.papi-web-tooltip-error {
   --bs-tooltip-color: #900000;
 }

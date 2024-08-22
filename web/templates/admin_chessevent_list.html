@@ -1,9 +1,8 @@
+{% from 'macros.j2' import tooltip_attributes, event_visibility_icon %}
 <div class="row">
     <div class="col">
         <h1 class="text-nowrap">
-            {% with public=admin_event.public %}
-                {% include 'admin_visibility_icon.html' %}
-            {% endwith %}
+            {{ event_visibility_icon(admin_event, '') }}
             {{ admin_event.name }} - Connexions à ChessEvent
         </h1>
     </div>

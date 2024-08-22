@@ -1,38 +1,48 @@
-<div class="row">
-    <div class="col-11">
-        <h1 class="text-nowrap">
-            {% with public=admin_event.public %}
-                {% include 'admin_visibility_icon.html' %}
-            {% endwith %}
-            {{ admin_event.name }} - Tournois
-        </h1>
-    </div>
-    <div class="col-1 d-flex justify-content-end text-nowrap">
-        <h1>
-            <button
-                    class="btn btn-primary text-nowrap"
-                    hx-post="{{ url_for('admin-update-header') }}"
-                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@tournaments"}'
-                    hx-swap="multi:#admin-header,#admin-content"
-                    hx-indicator="#please-wait"
-            >
-                <i class="bi-arrow-clockwise"></i>
-            </button>
-            <button
-                    class="btn btn-primary text-nowrap"
-                    hx-post="{{ url_for('admin-tournament-render-edit-modal') }}"
-                    hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
-                    hx-target="#admin-modal-container"
-                    hx-swap="innerHTML"
-                    data-bs-toggle="modal"
-                    data-bs-target="#admin-modal-container"
-                    hx-indicator="#please-wait">
-                <i class="bi-plus-square-fill"></i> Créer un tournoi
-            </button>
-        </h1>
-    </div>
-</div>
+{% extends 'common_cards_container.html' %}
+{% from 'macros.j2' import tooltip_attributes, event_visibility_icon %}
 
+{% block cards_container_title %}
+    {{ event_visibility_icon(admin_event, '') }}
+    {{ admin_event.name }} - Tournois
+{% endblock %}
+
+{% block cards_container_right_icons %}
+    <span {{ tooltip_attributes('info', 'Rafraîchir cet onglet.', 'top') }}>
+        <button
+                class="btn btn-primary text-nowrap ms-1"
+                hx-post="{{ url_for('admin-update-header') }}"
+                hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@tournaments"}'
+                hx-swap="multi:#admin-header,#admin-content"
+                hx-indicator="#please-wait"
+        >
+            <i class="bi-arrow-clockwise"></i>
+        </button>
+    </span>
+    <span {{ tooltip_attributes('info', 'Ajouter un nouveau tournoi à l\'évènement.', 'top') }}>
+        <button
+                class="btn btn-primary text-nowrap ms-1"
+                hx-post="{{ url_for('admin-tournament-render-edit-modal') }}"
+                hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait"
+        >
+            <i class="bi-plus-square-fill"></i> Créer un tournoi
+        </button>
+    </span>
+{% endblock %}
+
+{% block cards_container_cards %}
+    {% for tournament in admin_event.tournaments_by_id.values() %}
+        {% with card_class='bg-terciary-subtle' %}
+            {% include 'admin_tournament_card.html' %}
+        {% endwith %}
+    {% endfor %}
+{% endblock %}
+
+{#
 <table class="table border-black bg-light">
     <thead class="table-dark position-sticky top-0">
         <tr>
@@ -117,3 +127,4 @@
         {% endif %}
     </tbody>
 </table>
+#}

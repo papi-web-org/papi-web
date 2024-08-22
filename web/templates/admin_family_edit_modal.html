@@ -411,7 +411,9 @@
                     <div class="col col-6 text-start">
                         <button
                                 type="submit"
-                                class="text-nowrap white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %}">
+                                class="text-nowrap white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %}"
+                                data-bs-dismiss="modal"
+                        >
                             <i class="bi-floppy-fill"></i>
                             {% if action == 'create' %}
                                 Créer
