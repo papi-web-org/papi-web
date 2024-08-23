@@ -1,229 +1,144 @@
-{% from 'macros.j2' import tooltip_attributes, event_visibility_icon %}
-<div class="row">
-    <div class="col">
-        <h1 class="text-nowrap">
-            {{ event_visibility_icon(admin_event, '') }}
-            {{ admin_event.name }} - Écrans
-        </h1>
-    </div>
-    <div class="col-1 d-flex justify-content-end text-nowrap">
-        <h1>
-            <button
-                    class="btn btn-primary text-nowrap"
+{% extends 'common_cards_container.html' %}
+{% from 'macros.j2' import tooltip_attributes, event_visibility_icon, screen_type_icon %}
+
+{% block cards_container_title %}
+    {{ event_visibility_icon(admin_event, '') }}
+    {{ admin_event.name }} - Écrans
+{% endblock %}
+
+{% block cards_container_right_buttons %}
+    {% with id='show-family-screens-on-screen-list', name='show_family_screens_on_screen_list', show=show_family_screens_on_screen_list %}
+        <div class="form-check form-switch d-inline-block pe-3 mt-2">
+            <input
+                    name="{{ name }}"
                     hx-post="{{ url_for('admin-update-header') }}"
-                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@screens"}'
+                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@screens", "{{ name }}": "{% if show %}off{% else %}on{% endif %}"}'
                     hx-swap="multi:#admin-header,#admin-content"
                     hx-indicator="#please-wait"
-            >
-                <i class="bi-arrow-clockwise"></i>
-            </button>
-            <button
-                    class="btn btn-primary text-nowrap"
-                    hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
-                    hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
-                    hx-target="#admin-modal-container"
-                    hx-swap="innerHTML"
-                    data-bs-toggle="modal"
-                    data-bs-target="#admin-modal-container"
+                    class="form-check-input"
+                    type="checkbox"
+                    id="{{ id }}"
+                    {% if show %}checked{% endif %} /><label for="{{ id }}" class="form-check-label"> Familles</label>
+        </div>
+    {% endwith %}
+    {% with id='show-details-on-screen-list', name='show_details_on_screen_list', show=show_details_on_screen_list %}
+        <div class="form-check form-switch d-inline-block pe-3 mt-2">
+            <input
+                    name="{{ name }}"
+                    hx-post="{{ url_for('admin-update-header') }}"
+                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@screens", "{{ name }}": "{% if show %}off{% else %}on{% endif %}"}'
+                    hx-swap="multi:#admin-header,#admin-content"
                     hx-indicator="#please-wait"
-                    {% if not admin_event.tournaments_by_id %}
-                        disabled
+                    class="form-check-input"
+                    type="checkbox"
+                    id="{{ id }}"
+                    {% if show %}checked{% endif %} /><label for="{{ id }}" class="form-check-label"> Détails</label>
+        </div>
+    {% endwith %}
+    <button
+            class="btn btn-primary text-nowrap me-2"
+            hx-post="{{ url_for('admin-update-header') }}"
+            hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@screens"}'
+            hx-swap="multi:#admin-header,#admin-content"
+            hx-indicator="#please-wait"
+    >
+        <i class="bi-arrow-clockwise"></i>
+    </button>
+    <button
+            class="btn btn-primary text-nowrap"
+            hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
+            hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+            hx-target="#admin-modal-container"
+            hx-swap="innerHTML"
+            data-bs-toggle="modal"
+            data-bs-target="#admin-modal-container"
+            hx-indicator="#please-wait"
+            {% if not admin_event.tournaments_by_id %}
+                disabled
+            {% endif %}
+    >
+        <i class="bi-plus-square-fill"></i> Créer un écran
+    </button>
+{% endblock %}
+
+{% block cards_container_cards %}
+    {% with screens=admin_event.screens_sorted_by_uniq_id if show_family_screens_on_screen_list else admin_event.basic_screens_by_uniq_id.values() %}
+        {% for screen_type, screen_data in {
+            'input': {
+                'title': 'Saisie des résultats',
+                'screens': admin_event.input_screens,
+                'icon_class': 'bi-pencil-fill',
+            },
+            'boards': {
+                'title': 'Affichage des échiquiers',
+                'screens': admin_event.boards_screens,
+                'icon_class': 'bi-card-list',
+            },
+            'players': {
+                'title': 'Affichage des appariements',
+                'screens': admin_event.players_screens,
+                'icon_class': 'bi-people-fill',
+            },
+            'results': {
+                'title': 'Affichage des résultats',
+                'screens': admin_event.results_screens,
+                'icon_class': 'bi-trophy-fill',
+            },
+        }.items() %}
+            <div class="row">
+                <div class="col-12 mt-3 fs-4 fw-bold text-nowrap {% if not screen_type in screen_types_on_screen_list %}text-secondary{% endif %}">
+                    {% with id='show-'~screen_type~'-screens-on-screen-list', name='show_'~screen_type~'_screens_on_screen_list' %}
+                        <div class="form-check form-switch d-inline-block pe-3 mt-2">
+                            <input
+                                    name="{{ name }}"
+                                    hx-post="{{ url_for('admin-update-header') }}"
+                                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@screens", "{{ name }}": "{% if screen_type in screen_types_on_screen_list %}off{% else %}on{% endif %}"}'
+                                    hx-swap="multi:#admin-header,#admin-content"
+                                    hx-indicator="#please-wait"
+                                    class="form-check-input fs-5 mt-2"
+                                    type="checkbox"
+                                    id="{{ id }}"
+                                    {% if screen_type in screen_types_on_screen_list %}checked{% endif %} />
+                            <label for="{{ id }}" class="form-check-label">
+                                <i class="{{ screen_data.icon_class }}"></i>
+                                {{ screen_data.title }}
+                            </label>
+                        </div>
+                    {% endwith %}
+                </div>
+            </div>
+            {% if screen_type in screen_types_on_screen_list %}
+                {% set ns = namespace(screen_found=false) %}
+                <div class="row">
+                    {% for screen in screens %}
+                        {% if screen.type == screen_type %}
+                            {% set ns.screen_found=true %}
+                            {% with card_class='bg-info-subtle' if not screen.family else 'bg-secondary-subtle text-secondary' %}
+                                {% include 'admin_screen_card.html' %}
+                            {% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if not ns.screen_found %}
+                        <div class="col-12">
+                            Aucun écran de ce type.
+                        </div>
                     {% endif %}
-            >
-                <i class="bi-plus-square-fill"></i> Créer un écran
-            </button>
-        </h1>
-    </div>
-</div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endwith %}
+{% endblock %}
+
 <table class="table border-black bg-light">
-    <thead class="table-dark position-sticky top-0">
-        <tr>
-            <th scope="col" colspan="2" class="text-nowrap">[Id] / Nom</th>
-            <th scope="col" class="text-nowrap">Type</th>
-            <th scope="col" class="text-nowrap">Menu</th>
-            <th scope="col" class="text-nowrap">Paramètres</th>
-            <th scope="col" class="w-50"></th>
-            <th scope="col" class="text-nowrap">Ensembles / Tournois</th>
-            <th scope="col" class="text-nowrap text-end w-50" colspan="2">
-                {% with id='show-boards-screens-on-screen-list', name='show_boards_screens_on_screen_list', show='boards' in screen_types_on_event_list, icon='bi-card-list' %}
-                    {% include 'admin_screen_list_screen_type_switch.html' %}
-                {% endwith %}
-                {% with id='show-input-screens-on-screen-list', name='show_input_screens_on_screen_list', show='input' in screen_types_on_event_list, icon='bi-pencil-fill' %}
-                    {% include 'admin_screen_list_screen_type_switch.html' %}
-                {% endwith %}
-                {% with id='show-players-screens-on-screen-list', name='show_players_screens_on_screen_list', show='players' in screen_types_on_event_list, icon='bi-people-fill' %}
-                    {% include 'admin_screen_list_screen_type_switch.html' %}
-                {% endwith %}
-                {% with id='show-results-screens-on-screen-list', name='show_results_screens_on_screen_list', show='results' in screen_types_on_event_list, icon='bi-trophy-fill' %}
-                    {% include 'admin_screen_list_screen_type_switch.html' %}
-                {% endwith %}
-                {% with id='show-family-screens-on-screen-list', name='show_family_screens_on_screen_list', show=show_family_screens_on_event_list %}
-                    <div class="form-check form-switch d-inline-block">
-                        <input
-                                name="{{ name }}"
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@screens", "{{ name }}": "{% if show %}off{% else %}on{% endif %}"}'
-                                hx-swap="multi:#admin-header,#admin-content"
-                                hx-indicator="#please-wait"
-                                class="form-check-input"
-                                type="checkbox"
-                                id="{{ id }}"
-                                {% if show %}checked{% endif %} /><label for="{{ id }}" class="form-check-label"> Familles</label>
-                    </div>
-                {% endwith %}
-            </th>
-        </tr>
-    </thead>
     <tbody>
-        {% with screens=admin_event.screens_sorted_by_uniq_id if show_family_screens_on_event_list else admin_event.basic_screens_by_uniq_id.values() %}
+        {% with screens=admin_event.screens_sorted_by_uniq_id if show_family_screens_on_screen_list else admin_event.basic_screens_by_uniq_id.values() %}
             {% set ns = namespace(screen_found=false) %}
             {% for screen in screens %}
-                {% if screen.type in screen_types_on_event_list %}
+                {% if screen.type in screen_types_on_screen_list %}
                     {% set ns.screen_found=true %}
-                    {% with basic=screen.id in admin_event.basic_screens_by_id %}
                     {% with td_class='' if basic else 'bg-secondary-subtle text-secondary' %}
                         <tr>
-                            <th scope="row" class="text-nowrap {{ td_class }}">
-                                <div class="fw-bold">
-                                    {% if screen.public %}
-                                        <span class="text-success">
-                                            <i class="bi-unlock-fill fs-3"></i>
-                                        </span>
-                                    {% else %}
-                                        <span class="text-danger">
-                                            <i class="bi-lock-fill fs-3"></i>
-                                        </span>
-                                    {% endif %}
-                                </div>
-                            </th>
-                            <th scope="row" class="text-nowrap {{ td_class }}">
-                                <div>
-                                    {{ screen_found }} [{{ screen.uniq_id }}]
-                                </div>
-                                <div>
-                                    {{ screen.name }}
-                                </div>
-                            </th>
-                            <td scope="row" class="text-nowrap {{ td_class }}">
-                                <i class="{{ screen.icon_str }}"></i>
-                                {{ screen.type_str }}
-                            </td>
-                            <td scope="row" class="text-nowrap {{ td_class }}">
-                                <div>
-                                    Étiquette : {% if screen.menu_label %}{{ screen.menu_label }}{% else %}<span class="fst-italic">-</span>{% endif %}
-                                </div>
-                                <div>
-                                    Menu : {% if screen.menu %}{{ screen.menu }}{% else %}<span class="fst-italic">-</span>{% endif %}
-                                </div>
-                            </td>
-                            <td scope="row" class="text-nowrap {{ td_class }}">
-                                <div>
-                                    Colonnes : {{ screen.columns }}
-                                </div>
-                                <div>
-                                    Chronomètre : {% if screen.timer %}<i class="bi-clock-fill"></i> {% if admin_event.timers_by_id|length > 1 %}{{ screen.timer.uniq_id }}{% else %}Oui{% endif %}{% else %}<span class="fst-italic">Non</span>{% endif %}
-                                </div>
-                                {% if screen.type == 'players' %}
-                                    <div>
-                                        Non apparié·es : {% if screen.players_show_unpaired %}Oui{% else %}Non{% endif %} {% if screen.stored_screen.players_show_unpaired is none %}(par défaut){% endif %}
-                                    </div>
-                                {% endif %}
-                                {% if screen.type == 'results' %}
-                                    <div>
-                                        Nombre max : {% if screen.results_limit %}{{ screen.results_limit }}{% else %}<span class="fst-italic">-</span>{% endif %}
-                                    </div>
-                                {% endif %}
-                            </td>
-                            <td class="text-nowrap {{ td_class }}">
-                                {% if basic %}
-                                    <button
-                                            class="btn btn-sm btn-primary p-1"
-                                            hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
-                                            hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
-                                            hx-target="#admin-modal-container"
-                                            hx-swap="innerHTML"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#admin-modal-container"
-                                            hx-indicator="#please-wait" >
-                                        <i class="bi-pencil-fill"></i> Éditer
-                                    </button>
-                                {% endif %}
-                            </td>
-                            <td class="text-nowrap {{ td_class }}">
-                                {% if screen.type in ['boards', 'input', 'players'] %}
-                                    {% if screen.screen_sets_sorted_by_order|length > 0 %}
-                                        {% for screen_set in screen.screen_sets_sorted_by_order %}
-                                            <div class="{% if screen_set.error %}text-danger{% endif %}">
-                                                {% if screen_set.error %}<i class="bi-exclamation-triangle-fill"></i>{% endif %}
-                                                {% if screen_set.tournament %}
-                                                    {{ screen_set.tournament.name }}
-                                                    ({{ screen_set.numbers_str }})
-                                                {% else %}
-                                                    <span class="text-danger">Tournoi non défini</span>
-                                                {% endif %}
-                                            </div>
-                                        {% endfor %}
-                                    {% else %}
-                                    <div class="text-danger">
-                                        <i class="bi-exclamation-triangle-fill"></i> Aucun ensemble défini
-                                    </div>
-                                    {% endif %}
-                                {% else %}
-                                    {% if screen.results_tournament_ids %}
-                                        {{ screen.results_tournament_names }}
-                                    {% else %}
-                                        Tous les tournois
-                                    {% endif %}
-                                {% endif %}
-                            </td>
-                            <td class="text-nowrap {{ td_class }} w-50">
-                                {% if basic and screen.type in ['boards', 'input', 'players'] %}
-                                    <button
-                                            class="btn btn-sm btn-primary p-1"
-                                            hx-post="{{ url_for('admin-screen-render-sets-modal') }}"
-                                            hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
-                                            hx-target="#admin-modal-container"
-                                            hx-swap="innerHTML"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#admin-modal-container"
-                                            hx-indicator="#please-wait" >
-                                        <i class="bi-collection-fill"></i>
-                                        {% if screen.type in ['boards', 'input'] %}
-                                            Ensembles d'échiquiers
-                                        {% else %}
-                                            Ensembles de joueur·euses
-                                        {% endif %}
-                                    </button>
-                                {% endif %}
-                            </td>
-                            <td class="text-nowrap text-end {{ td_class }}">
-                                {% if basic %}
-                                    <button
-                                            class="btn btn-sm btn-primary p-1"
-                                            hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
-                                            hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
-                                            hx-target="#admin-modal-container"
-                                            hx-swap="innerHTML"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#admin-modal-container"
-                                            hx-indicator="#please-wait" >
-                                        <i class="bi-copy"></i> Dupliquer
-                                    </button>
-                                    <button
-                                            class="btn btn-sm btn-danger p-1"
-                                            hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
-                                            hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
-                                            hx-target="#admin-modal-container"
-                                            hx-swap="innerHTML"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#admin-modal-container"
-                                            hx-indicator="#please-wait" >
-                                        <i class="bi-trash-fill"></i> Supprimer
-                                    </button>
-                                {% endif %}
-                            </td>
                         </tr>
-                    {% endwith %}
                     {% endwith %}
                 {% endif %}
             {% endfor %}

@@ -76,6 +76,16 @@ class SessionHandler:
     def get_session_show_family_screens_on_screen_list(cls, request: HTMXRequest) -> bool:
         return request.session.get(cls.SHOW_FAMILY_SCREENS_ON_SCREEN_LIST, True)
 
+    SHOW_DETAILS_ON_SCREEN_LIST: str = 'show_details_on_screen_list'
+
+    @classmethod
+    def set_session_show_details_on_screen_list(cls, request: HTMXRequest, b: bool):
+        request.session[cls.SHOW_DETAILS_ON_SCREEN_LIST]: bool = b
+
+    @classmethod
+    def get_session_show_details_on_screen_list(cls, request: HTMXRequest) -> bool:
+        return request.session.get(cls.SHOW_DETAILS_ON_SCREEN_LIST, True)
+
     SCREEN_TYPES_ON_SCREEN_LIST_SESSION_KEY: str = 'screen_types_on_screen_list'
 
     @classmethod

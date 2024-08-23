@@ -2,7 +2,8 @@ from logging import Logger
 
 from common.singleton import singleton
 from common.logger import get_logger, print_interactive, input_interactive
-from data.event import Event, get_events_sorted_by_name
+from data.event import NewEvent
+from data.loader import EventLoader
 from ffe.action_selector import ActionSelector
 
 logger: Logger = get_logger()
@@ -14,8 +15,7 @@ class EventSelector:
         self.__silent: bool = False
 
     def run(self) -> bool:
-        events: list[Event] = get_events_sorted_by_name(False, with_tournaments_only=True)
-        self.__silent = True  # verbose on the first call only
+        events: list[NewEvent] = EventLoader().events_with_tournaments_sorted_by_name
         if not events:
             logger.error('Aucun évènement trouvé')
             return False
@@ -28,7 +28,7 @@ class EventSelector:
             print_interactive('Veuillez entrer le numéro de votre évènement :')
             event_range = range(1, len(events) + 1)
             for num in event_range:
-                event: Event = events[num - 1]
+                event: NewEvent = events[num - 1]
                 print_interactive(f'  - [{num}] {event.name} ({event.uniq_id}.ini)')
             print_interactive('  - [Q] Quitter')
             while event_num is None:
@@ -41,7 +41,7 @@ class EventSelector:
                         event_num = None
                 except ValueError:
                     pass
-        event: Event = events[event_num - 1]
+        event: NewEvent = events[event_num - 1]
         while ActionSelector().run(event.uniq_id):
             pass
         return True

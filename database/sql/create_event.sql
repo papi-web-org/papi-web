@@ -88,7 +88,7 @@ CREATE TABLE `tournament` (
     `last_result_update` FLOAT NOT NULL DEFAULT 0.0,
     `last_check_in_update` FLOAT NOT NULL DEFAULT 0.0,
     `last_ffe_upload` FLOAT NOT NULL DEFAULT 0.0,
-    `last_chessevent_download` FLOAT NOT NULL DEFAULT 0.0,
+    `last_chessevent_download_md5` TEXT,
     PRIMARY KEY(`id` AUTOINCREMENT),
     UNIQUE(`uniq_id`),
     FOREIGN KEY (`chessevent_id`) REFERENCES `chessevent`(`id`)

@@ -12,9 +12,11 @@ from common.config_reader import TMP_DIR
 from common.logger import get_logger, print_interactive, input_interactive
 from common.singleton import singleton
 from data.chessevent_tournament import ChessEventTournament
-from data.event import Event
-from data.tournament import Tournament
+from data.event import NewEvent
+from data.loader import EventLoader
+from data.tournament import NewTournament
 from database.papi_template import create_empty_papi_database, PAPI_VERSIONS
+from database.sqlite import EventDatabase
 from ffe.ffe_session import FFESession
 
 logger: Logger = get_logger()
@@ -24,11 +26,11 @@ logger: Logger = get_logger()
 class ActionSelector:
 
     @classmethod
-    def __get_chessevent_tournaments(cls, event: Event) -> list[Tournament]:
-        if not event.tournaments:
+    def __get_chessevent_tournaments(cls, event: NewEvent) -> list[NewTournament]:
+        if not event.tournaments_by_id:
             return []
-        tournaments: list[Tournament] = []
-        for tournament in event.tournaments.values():
+        tournaments: list[NewTournament] = []
+        for tournament in event.tournaments_by_id.values():
             if not tournament.chessevent_tournament_name:
                 logger.warning('Connexion à Chess Event non définie pour le tournoi [%s]', tournament.uniq_id)
             elif not tournament.file:
@@ -40,9 +42,9 @@ class ActionSelector:
         return tournaments
 
     def run(self, event_uniq_id: str) -> bool:
-        event: Event = Event(event_uniq_id, False)
+        event: NewEvent = EventLoader().load_event(event_uniq_id)
         logger.info('Évènement : %s', event.name)
-        tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
+        tournaments: list[NewTournament] = self.__get_chessevent_tournaments(event)
         if not tournaments:
             logger.error('La création des fichiers Papi n\'est possible pour aucun tournoi')
             return False
@@ -121,19 +123,12 @@ class ActionSelector:
                                              '(erreur ligne %s, colonne %s, position %s)',
                                              encoding, error_output, jde.lineno, jde.colno, jde.pos)
                                 continue
-                            # NOTE(Amaras) we should probably use another hashing algorithm
-                            # MD5 has been proven unsecure, even for this usecase.
-                            # I recommend something like SHA-2 (not proven unsecure yet).
                             data_md5 = hashlib.md5(data.encode('utf-8')).hexdigest()
-                            try:
-                                with open(tournament.chessevent_download_marker, 'r', encoding='utf-8)') as f:
-                                    if data_md5 == f.read() and tournament.file.exists():
-                                        logger.info('Les données du tournoi [%s] sur Chess Event '
-                                                    'n\'ont pas été modifiées.',
-                                                    tournament.name)
-                                        continue
-                            except FileNotFoundError:
-                                pass
+                            if data_md5 == tournament.last_chessevent_download_md5 and tournament.file.exists():
+                                logger.info('Les données du tournoi [%s] sur Chess Event '
+                                            'n\'ont pas été modifiées.',
+                                            tournament.name)
+                                continue
                             chessevent_tournament = ChessEventTournament(chessevent_tournament_info)
                             if chessevent_tournament.error:
                                 continue
@@ -143,9 +138,9 @@ class ActionSelector:
                             players_number: int = tournament.write_chessevent_info_to_database(chessevent_tournament)
                             logger.info('Le fichier %s a été créé (%s joueur·euses).',
                                         tournament.file, players_number)
-                            tournament.chessevent_download_marker.parents[0].mkdir(parents=True, exist_ok=True)
-                            with open(tournament.chessevent_download_marker, 'w', encoding='utf-8') as f:
-                                f.write(data_md5)
+                            with EventDatabase(tournament.event.uniq_id, write=True) as event_database:
+                                event_database.set_tournament_last_chessevent_download_md5(tournament.id, data_md5)
+                                event_database.commit()
                             if action_choice == 'U':
                                 if not tournament.ffe_id or not tournament.ffe_password:
                                     logger.warning('Identifiants de connexion au site fédéral non définis pour le '
@@ -158,7 +153,7 @@ class ActionSelector:
                             return True
                         time.sleep(chessevent_timeout)
                         chessevent_timeout = min(chessevent_timeout_max, int(chessevent_timeout * 1.2))
-                        tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
+                        tournaments: list[NewTournament] = self.__get_chessevent_tournaments(event)
                         if not tournaments:
                             logger.error('Plus aucun tournoi n\'est éligible pour la création des fichiers Papi.')
                             return False

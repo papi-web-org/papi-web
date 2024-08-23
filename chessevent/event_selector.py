@@ -4,7 +4,8 @@ from logging import Logger
 from chessevent.action_selector import ActionSelector
 from common.singleton import singleton
 from common.logger import get_logger, print_interactive, input_interactive
-from data.event import Event, get_events_sorted_by_name
+from data.event import Event, get_events_sorted_by_name, NewEvent
+from data.loader import EventLoader
 
 logger: Logger = get_logger()
 
@@ -15,12 +16,11 @@ class EventSelector:
         self.__silent: bool = False
 
     def run(self) -> bool:
-        events: List[Event] = get_events_sorted_by_name(False, with_tournaments_only=True)
-        self.__silent = True  # verbose on the first call only
+        events: List[NewEvent] = EventLoader().events_sorted_by_name
         if not events:
             logger.error('Aucun évènement trouvé')
             return False
-        event_num: Optional[int] = None
+        event_num: int | None = None
         if len(events) == 1:
             event_num = 1
             if input_interactive('Un seul évènement trouvé, tapez Entrée pour continuer (Q pour quitter) ') == 'Q':
@@ -29,7 +29,7 @@ class EventSelector:
             print_interactive('Veuillez entrer le numéro de votre évènement :')
             event_range = range(1, len(events) + 1)
             for num in event_range:
-                event: Event = events[num - 1]
+                event: NewEvent = events[num - 1]
                 print_interactive(f'  - [{num}] {event.name} ({event.uniq_id}.ini)')
             print_interactive('  - [Q] Quitter')
             while event_num is None:
@@ -42,7 +42,7 @@ class EventSelector:
                         event_num = None
                 except ValueError:
                     pass
-        event: Event = events[event_num - 1]
+        event: NewEvent = events[event_num - 1]
         while ActionSelector().run(event.uniq_id):
             pass
         return True

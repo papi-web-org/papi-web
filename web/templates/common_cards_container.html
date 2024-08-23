@@ -4,18 +4,16 @@
             BLOCK CARDS_CONTAINER_TITLE
         {% endblock %}
     </div>
-    <div class="col-1 d-flex justify-content-end text-nowrap fs-3">
-        {% block cards_container_right_icons %}
-            BLOCK CARDS_CONTAINER_RIGHT_ICONS
+    <div class="col-1 d-flex justify-content-end text-nowrap">
+        {% block cards_container_right_buttons %}
+            BLOCK CARDS_CONTAINER_RIGHT_BUTTONS
         {% endblock %}
     </div>
 </div>
 <section class="pt-1 pb-1 shadow-sm">
     <div class="container-fluid">
-        <div class="row">
-            {% block cards_container_cards %}
-                BLOCK CARDS_CONTAINER_CARDS
-            {% endblock %}
-        </div>
+        {% block cards_container_cards %}
+            BLOCK CARDS_CONTAINER_CARDS
+        {% endblock %}
     </div>
 </section>

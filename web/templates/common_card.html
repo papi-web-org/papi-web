@@ -6,7 +6,7 @@
             {% endblock %}
         </div>
         <div class="card-body p-2 d-flex flex-column">
-            <div class="card-title text-start fs-4">
+            <div class="card-title text-start fs-4 fw-bold">
                 {% block card_title %}
                     CARD_TITLE
                 {% endblock %}
@@ -18,12 +18,12 @@
             </div>
             <div class="card-buttons mb-1 mt-auto align-self-start w-100">
                 <div class="row">
-                    <div class="col-6 text-start">
+                    <div class="col-9 text-start">
                         {% block card_buttons_left %}
                             CARD_BUTTON_LEFT
                         {% endblock %}
                     </div>
-                    <div class="col-6 text-end text-nowrap">
+                    <div class="col-3 text-end text-nowrap">
                         {% block card_buttons_right %}
                             CARD_BUTTON_RIGHT
                         {% endblock %}

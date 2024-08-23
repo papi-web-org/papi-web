@@ -1,8 +1,8 @@
 {% extends 'common_card.html' %}
-{% from 'macros.j2' import tooltip_attributes, tournament_status_icon_class %}
+{% from 'macros.j2' import tooltip_attributes, tournament_status_icon %}
 
 {% block card_header %}
-    <i class="{{ tournament_status_icon_class(tournament) }}"></i> {{ tournament.uniq_id }}
+    {{ tournament_status_icon(tournament) }} {{ tournament.uniq_id }}
 {% endblock %}
 
 {% block card_title %}
@@ -61,7 +61,7 @@
                     {{ tooltip_attributes('info', 'Le tournoi est en cours.' if tournament.current_round else 'Le tournoi n\'est pas commencé.', 'top') }}
                 {% endif %}
         >
-            <i class="{{ tournament_status_icon_class(tournament) }}"></i>
+            {{ tournament_status_icon(tournament) }}
             {% if tournament.rounds %}
                 {{ tournament.current_round }}/{{ tournament.rounds }}
             {% else %}

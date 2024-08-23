@@ -6,7 +6,7 @@
     {{ admin_event.name }} - Tournois
 {% endblock %}
 
-{% block cards_container_right_icons %}
+{% block cards_container_right_buttons %}
     <span {{ tooltip_attributes('info', 'Rafraîchir cet onglet.', 'top') }}>
         <button
                 class="btn btn-primary text-nowrap ms-1"
@@ -35,11 +35,13 @@
 {% endblock %}
 
 {% block cards_container_cards %}
-    {% for tournament in admin_event.tournaments_by_id.values() %}
-        {% with card_class='bg-terciary-subtle' %}
-            {% include 'admin_tournament_card.html' %}
-        {% endwith %}
-    {% endfor %}
+    <div class="row">
+        {% for tournament in admin_event.tournaments_by_id.values() %}
+            {% with card_class='bg-info-subtle' %}
+                {% include 'admin_tournament_card.html' %}
+            {% endwith %}
+        {% endfor %}
+    </div>
 {% endblock %}
 
 {#

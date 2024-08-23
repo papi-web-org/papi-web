@@ -958,8 +958,8 @@ class NewTournament:
         return self.stored_tournament.last_ffe_upload
 
     @property
-    def last_chessevent_download(self) -> float:
-        return self.stored_tournament.last_chessevent_download
+    def last_chessevent_download_md5(self) -> str:
+        return self.stored_tournament.last_chessevent_download_md5
 
     @property
     def download_allowed(self) -> bool:
@@ -1289,6 +1289,7 @@ class NewTournament:
                     strong_time, self.time_control_increment, penalties > 0)
                 weak_player.set_handicap(weak_time, self.time_control_increment, False)
 
+    @property
     def ffe_upload_needed(self) -> NeedsUpload:
         try:
             if self.stored_tournament.last_ffe_upload > self.file.lstat().st_mtime:

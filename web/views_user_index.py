@@ -1,6 +1,3 @@
-from contextlib import suppress
-from pathlib import Path
-
 import time
 
 from logging import Logger

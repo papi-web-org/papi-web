@@ -1,0 +1,129 @@
+{% extends 'common_card.html' %}
+{% from 'macros.j2' import tooltip_attributes, screen_visibility_icon, screen_type_icon %}
+
+{% block card_header %}
+    {{ screen_visibility_icon(screen, '') }} {{ screen.uniq_id }}
+{% endblock %}
+
+{% block card_title %}
+    {{ screen_type_icon(screen.type) }} {{ screen.name }}
+{% endblock %}
+
+{% block card_text %}
+    {% if show_details_on_screen_list %}
+        <div>
+            Type : {{ screen_type_icon(screen.type) }} {{ screen.type_str }}
+        </div>
+        <div>
+            Colonnes : {% for i in range(screen.columns) %}<i class="bi-square-fill"></i> {% endfor %}
+        </div>
+        <div class="{% if not screen.menu_label %}text-secondary{% endif %}">
+            Étiquette de menu : {% if screen.menu_label %}{{ screen.menu_label }}{% else %}-{% endif %}
+        </div>
+        <div class="{% if not screen.menu %}text-secondary{% endif %}">
+            Menu : {% if screen.menu %}{{ screen.menu }}{% else %}-{% endif %}
+        </div>
+        <div class="{% if not screen.timer %}text-secondary{% endif %}">
+            Chronomètre : {% if screen.timer %}<i class="bi-clock-fill"></i> {% if admin_event.timers_by_id|length > 1 %}{{ screen.timer.uniq_id }}{% else %}Oui{% endif %}{% else %}Non{% endif %}
+        </div>
+        {% if screen.type == 'players' %}
+            <div>
+                Non apparié·es : {% if screen.players_show_unpaired %}Oui{% else %}Non{% endif %} {% if screen.stored_screen.players_show_unpaired is none %}(par défaut){% endif %}
+            </div>
+        {% endif %}
+        {% if screen.type == 'results' %}
+            <div>
+                Nombre max : {% if screen.results_limit %}{{ screen.results_limit }}{% else %}illimité{% endif %}
+            </div>
+        {% endif %}
+        <hr/>
+    {% endif %}
+    <div class="mb-2">
+        {% if screen.type in ['boards', 'input', 'players'] %}
+            {% for screen_set in screen.screen_sets_sorted_by_order %}
+                <div>
+                    {% if screen_set.tournament %}
+                        {{ screen_set.tournament.name }}
+                        ({{ screen_set.numbers_str }})
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            {% if screen.results_tournament_ids %}
+                {{ screen.results_tournament_names }}
+            {% else %}
+                Tous les tournois
+            {% endif %}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block card_buttons_left %}
+    {% if not screen.family  %}
+        <span {{ tooltip_attributes('info', 'Modifier les propriétés de l\'écran.', 'top') }}>
+            <button
+                    class="btn btn-sm btn-primary p-1"
+                    hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
+                    hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait" >
+                <i class="bi-pencil-fill"></i> Éditer
+            </button>
+        </span>
+    {% endif %}
+    {% if not screen.family and screen.type in ['boards', 'input', 'players'] %}
+        <span {{ tooltip_attributes('info', 'Modifier les ensembles d\'échiquiers affichés sur l\'écran.' if screen.type in ['boards', 'input'] else 'Modifier les ensembles de joueur·euses affiché·es sur l\'écran.', 'top') }}>
+            <button
+                    class="btn btn-sm btn-primary p-1"
+                    hx-post="{{ url_for('admin-screen-render-sets-modal') }}"
+                    hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait" >
+                <i class="bi-collection-fill"></i>
+                {% if screen.type in ['boards', 'input'] %}
+                    Échiquiers
+                {% else %}
+                    Joueur·euses
+                {% endif %}
+            </button>
+        </span>
+    {% endif %}
+{% endblock %}
+
+{% block card_buttons_right %}
+    {% if not screen.family %}
+        <span {{ tooltip_attributes('info', 'Dupliquer l\'écran.', 'top') }}>
+            <button
+                    class="btn btn-sm btn-primary p-1"
+                    hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
+                    hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait" >
+                <i class="bi-copy"></i>
+            </button>
+        </span>
+        <span {{ tooltip_attributes('info', 'Supprimer l\'écran.', 'top') }}>
+            <button
+                    class="btn btn-sm btn-danger p-1"
+                    hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
+                    hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
+                    hx-target="#admin-modal-container"
+                    hx-swap="innerHTML"
+                    data-bs-toggle="modal"
+                    data-bs-target="#admin-modal-container"
+                    hx-indicator="#please-wait" >
+                <i class="bi-trash-fill"></i>
+            </button>
+        </span>
+    {% endif %}
+{% endblock %}
+

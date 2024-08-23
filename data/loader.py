@@ -22,6 +22,7 @@ class EventLoader:
         self._loaded_events_by_id: dict[str, NewEvent | None] = {}
         self._events_by_id: dict[str, NewEvent] | None = None
         self._events_sorted_by_name: list[NewEvent] | None = None
+        self._events_with_tournaments_sorted_by_name: list[NewEvent] | None = None
         self._passed_events: list[NewEvent] | None = None
         self._current_events: list[NewEvent] | None = None
         self._coming_events: list[NewEvent] | None = None
@@ -101,6 +102,14 @@ class EventLoader:
             self._events_sorted_by_name = sorted(
                 self.events_by_id.values(), key=lambda event: event.name)
         return self._events_sorted_by_name
+
+    @property
+    def events_with_tournaments_sorted_by_name(self) -> list[NewEvent]:
+        if self._events_with_tournaments_sorted_by_name is None:
+            self._events_with_tournaments_sorted_by_name = [
+                event for event in self.events_sorted_by_name if event.tournaments_by_id
+            ]
+        return self._events_with_tournaments_sorted_by_name
 
     @property
     def passed_public_events(self) -> list[NewEvent]:

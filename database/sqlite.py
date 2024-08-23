@@ -1046,7 +1046,7 @@ class EventDatabase(SQLiteDatabase):
             last_illegal_move_update=row['last_illegal_move_update'],
             last_check_in_update=row['last_check_in_update'],
             last_ffe_upload=row['last_ffe_upload'],
-            last_chessevent_download=row['last_chessevent_download'],
+            last_chessevent_download_md5=row['last_chessevent_download_md5'],
         )
 
     def get_stored_tournament(self, tournament_id: int) -> StoredTournament | None:
@@ -1088,7 +1088,7 @@ class EventDatabase(SQLiteDatabase):
             'time_control_initial_time', 'time_control_increment', 'time_control_handicap_penalty_step',
             'time_control_handicap_penalty_value', 'time_control_handicap_min_time', 'chessevent_id',
             'chessevent_tournament_name', 'record_illegal_moves', 'last_update', 'last_result_update',
-            'last_illegal_move_update', 'last_check_in_update', 'last_ffe_upload', 'last_chessevent_download',
+            'last_illegal_move_update', 'last_check_in_update', 'last_ffe_upload', 'last_chessevent_download_md5',
         ]
         params: list = [
             stored_tournament.uniq_id, stored_tournament.name, stored_tournament.path, stored_tournament.filename,
@@ -1098,7 +1098,7 @@ class EventDatabase(SQLiteDatabase):
             stored_tournament.chessevent_id, stored_tournament.chessevent_tournament_name,
             stored_tournament.record_illegal_moves, time.time(), stored_tournament.last_result_update,
             stored_tournament.last_illegal_move_update, stored_tournament.last_check_in_update,
-            stored_tournament.last_ffe_upload, stored_tournament.last_chessevent_download,
+            stored_tournament.last_ffe_upload, stored_tournament.last_chessevent_download_md5,
         ]
         if stored_tournament.id is None:
             protected_fields = [f"`{f}`" for f in fields]
@@ -1158,15 +1158,15 @@ class EventDatabase(SQLiteDatabase):
         stored_tournament.last_chessevent_download = 0.0
         return self._write_stored_tournament(stored_tournament)
 
-    def set_tournament_last_ffe_upload(self, tournament_id: int, timestamp: float):
+    def set_tournament_last_ffe_upload(self, tournament_id: int, timestamp: float = None):
         self._execute(
             f'UPDATE `tournament` SET `last_ffe_upload` = ? WHERE `id` = ?',
             (tournament_id, timestamp if timestamp else time.time()))
 
-    def set_tournament_last_chessevent_download(self, tournament_id: int, timestamp: float = None):
+    def set_tournament_last_chessevent_download_md5(self, tournament_id: int, md5: str = None):
         self._execute(
-            f'UPDATE `tournament` SET `last_chessevent_download` = ? WHERE `id` = ?',
-            (tournament_id, timestamp if timestamp else time.time()))
+            f'UPDATE `tournament` SET `last_chessevent_download_md5` = ? WHERE `id` = ?',
+            (tournament_id, md5, ))
 
     def _set_tournament_last_illegal_move_update(self, tournament_id: int):
         self._execute(
