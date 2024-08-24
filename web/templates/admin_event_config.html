@@ -67,7 +67,7 @@
         <tr>
             <th scope="row" class="text-nowrap">Visibilité</th>
             <td class="">
-                {{ event_visibility_icon(admin_event.public, '') }}
+                {{ event_visibility_icon(admin_event, '') }}{{ admin_event.public }}
                 {% if admin_event.public %}Publique{% else %}Privée{% endif %}
             </td>
             <td></td>
