@@ -188,7 +188,7 @@ class AController(Controller):
                     'template': 'admin_rotator_list.html',
                 },
                 '@timers': {
-                    'title': f'Écrans rotatifs ({len(admin_event.rotators_by_id) if admin_event else "-"})',
+                    'title': f'Chronomètres ({len(admin_event.rotators_by_id) if admin_event else "-"})',
                     'template': 'admin_timer_list.html',
                 },
                 '@chessevents': {
