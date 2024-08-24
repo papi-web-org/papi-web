@@ -57,9 +57,6 @@
         </span>
         <span
                 class="me-2 text-nowrap {% if not tournament.rounds %}text-secondary{% endif %}"
-                {% if tournament.rounds %}
-                    {{ tooltip_attributes('info', 'Le tournoi est en cours.' if tournament.current_round else 'Le tournoi n\'est pas commencé.', 'top') }}
-                {% endif %}
         >
             {{ tournament_status_icon(tournament) }}
             {% if tournament.rounds %}

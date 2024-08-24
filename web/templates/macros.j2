@@ -74,7 +74,7 @@
     {% endif %}
     <span
             class="fw-bold {{ class }}"
-            {% if _tooltip_text %}{{ tooltip_attributes('info', tooltip_text, 'top') }}{% endif %}
+            {% if _tooltip_text %}{{ tooltip_attributes('info', _tooltip_text, 'top') }}{% endif %}
         >
         <i class="{{ _icon_class }}"></i>
     </span>
