@@ -484,25 +484,6 @@ class NewEvent:
                 self.screens_by_uniq_id.values(), key=lambda screen: screen.uniq_id)
         return self._screens_sorted_by_uniq_id
 
-    def _screen_type_screens(self, screen_type: ScreenType) -> list[NewScreen]:
-        return [screen for screen in self.screens_sorted_by_uniq_id if screen.type == screen_type]
-
-    @property
-    def boards_screens(self) -> list[NewScreen]:
-        return self._screen_type_screens(ScreenType.Boards)
-
-    @property
-    def input_screens(self) -> list[NewScreen]:
-        return self._screen_type_screens(ScreenType.Input)
-
-    @property
-    def players_screens(self) -> list[NewScreen]:
-        return self._screen_type_screens(ScreenType.Players)
-
-    @property
-    def results_screens(self) -> list[NewScreen]:
-        return self._screen_type_screens(ScreenType.Results)
-
     @property
     def last_update(self) -> float | None:
         return self.stored_event.last_update

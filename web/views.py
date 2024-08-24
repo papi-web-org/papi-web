@@ -201,6 +201,7 @@ class AController(Controller):
             'admin_event_selector': admin_event_selector,
             'show_family_screens_on_screen_list': SessionHandler.get_session_show_family_screens_on_screen_list(request),
             'show_details_on_screen_list': SessionHandler.get_session_show_details_on_screen_list(request),
+            'show_details_on_family_list': SessionHandler.get_session_show_details_on_family_list(request),
             'screen_types_on_screen_list': SessionHandler.get_session_screen_types_on_screen_list(request),
             'screen_types_on_family_list': SessionHandler.get_session_screen_types_on_family_list(request),
         }

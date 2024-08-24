@@ -83,23 +83,23 @@
 {% macro screen_type_icon(screen_type, class) %}
     {% if screen_type == 'boards' %}
         {% set _icon_class='bi-card-list' %}
-        {% set _tooltip_text='Cet écran affiche les appariements des joueur·euses par ordre croissant des échiquiers.' %}
+        {% set _tooltip_text='Les écrans d\'affichage des échiquiers présentent les appariements des joueur·euses par ordre croissant des échiquiers.' %}
     {% elif screen_type == 'input' %}
         {% set _icon_class='bi-pencil-fill' %}
-        {% set _tooltip_text='Cet écran affiche les appariements des joueur·euses par ordre croissant des échiquiers et permet la saisie des résultats par les joueur·euses ou les arbitres.' %}
+        {% set _tooltip_text='Les écrans de saisie des résultats présentent les appariements des joueur·euses par ordre croissant des échiquiers et permet l\'entrée des résultats par les joueur·euses ou les arbitres.' %}
     {% elif screen_type == 'players' %}
         {% set _icon_class='bi-people-fill' %}
-        {% set _tooltip_text='Cet écran affiche les appariements des joueur·euses par ordre alphabétique des joueur·euses.' %}
+        {% set _tooltip_text='Les écrans d\'affichage des joueur·euses présentent les appariements des joueur·euses par ordre alphabétique.' %}
     {% elif screen_type == 'results' %}
         {% set _icon_class='bi-trophy-fill' %}
-        {% set _tooltip_text='Cet écran affiche les derniers résultats saisis par ordre anti-chronologique (le plus récent d\'abord).' %}
+        {% set _tooltip_text='Les écrans de résultats affichent les derniers résultats saisis par ordre anti-chronologique (le plus récent d\'abord).' %}
     {% else %}
         {% set _icon_class='bi-question' %}
         {% set _tooltip_text='' %}
     {% endif %}
     <span
             class="fw-bold {{ class }}"
-            {% if _tooltip_text %}{{ tooltip_attributes('info', tooltip_text, 'top') }}{% endif %}
+            {% if _tooltip_text %}{{ tooltip_attributes('info', _tooltip_text, 'top') }}{% endif %}
         >
         <i class="{{ _icon_class }}"></i>
     </span>

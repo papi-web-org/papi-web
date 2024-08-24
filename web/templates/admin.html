@@ -135,6 +135,12 @@
             $(document).ready(function(){
                 $('body .modal-backdrop').remove();
             });
+            {# manually remove the modal backdrop when reloading #admin-content (too many modal-backdrop divs are created by Bootstrap when opening modals) #}
+            $(document).ready(function(){
+                $('body .tooltip').remove();
+                $('body .tooltip-inner').remove();
+                $('body .tooltip-arrow').remove();
+            });
         </script>
         <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-tooltips.js') }}"></script>
     </div>

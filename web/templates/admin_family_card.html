@@ -1,0 +1,99 @@
+{% extends 'common_card.html' %}
+{% from 'macros.j2' import tooltip_attributes, family_visibility_icon, screen_type_icon %}
+
+{% block card_header %}
+    {{ family_visibility_icon(family, '') }} {{ family.uniq_id }}
+{% endblock %}
+
+{% block card_title %}
+    {{ screen_type_icon(family.type) }} {{ family.name }}
+{% endblock %}
+
+{% block card_text %}
+    {% if show_details_on_family_list %}
+        <div>
+            Type : {{ screen_type_icon(family.type) }} {{ family.type_str }}
+        </div>
+        <div>
+            Colonnes : {% for i in range(family.columns) %}<i class="bi-square-fill"></i> {% endfor %}
+        </div>
+        <div class="{% if not family.menu_label %}text-secondary{% endif %}">
+            Étiquette de menu : {% if family.menu_label %}{{ family.menu_label }}{% else %}-{% endif %}
+        </div>
+        <div class="{% if not family.menu %}text-secondary{% endif %}">
+            Menu : {% if family.menu %}{{ family.menu }}{% else %}-{% endif %}
+        </div>
+        <div class="{% if not family.timer %}text-secondary{% endif %}">
+            Chronomètre : {% if family.timer %}<i class="bi-clock-fill"></i> {% if admin_event.timers_by_id|length > 1 %}{{ family.timer.uniq_id }}{% else %}Oui{% endif %}{% else %}Non{% endif %}
+        </div>
+        {% if family.type == 'players' %}
+            <div>
+                Non apparié·es : {% if family.players_show_unpaired %}Oui{% else %}Non{% endif %} {% if family.stored_family.players_show_unpaired is none %}(par défaut){% endif %}
+            </div>
+        {% endif %}
+        <hr/>
+    {% endif %}
+    <div class="mb-2">
+        {% if family.screens_by_uniq_id|length > 0 %}
+            {% for screen in family.screens_by_uniq_id.values() %}
+                <div>
+                    {{ loop.index }}.
+                    {% if family.tournament.current_round and family.type in ['boards', 'input'] %}
+                        Échiquiers du n°{{ screen.screen_sets_sorted_by_order[0].first_board.id }} au n°{{ screen.screen_sets_sorted_by_order[0].last_board.id }}
+                    {% else %}
+                        Joueur·euses de {{ screen.screen_sets_sorted_by_order[0].first_player_by_name.last_name[:8] }} à {{ screen.screen_sets_sorted_by_order[0].last_player_by_name.last_name[:8] }}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-danger">
+                Aucun écran dans cette famille.
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block card_buttons_left %}
+    <span {{ tooltip_attributes('info', 'Modifier les propriétés de la famille d\'écrans.', 'top') }}>
+        <button
+                class="btn btn-sm btn-primary p-1"
+                hx-post="{{ url_for('admin-family-render-edit-modal') }}"
+                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_family_id": "{{ family.id }}"}'
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait" >
+            <i class="bi-pencil-fill"></i> Éditer
+        </button>
+    </span>
+{% endblock %}
+
+{% block card_buttons_right %}
+    <span {{ tooltip_attributes('info', 'Dupliquer la famille d\'écrans.', 'top') }}>
+        <button
+                class="btn btn-sm btn-primary p-1"
+                hx-post="{{ url_for('admin-family-render-edit-modal') }}"
+                hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_family_id": "{{ family.id }}"}'
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait" >
+            <i class="bi-copy"></i>
+        </button>
+    </span>
+    <span {{ tooltip_attributes('info', 'Supprimer la famille d\'écrans.', 'top') }}>
+        <button
+                class="btn btn-sm btn-danger p-1"
+                hx-post="{{ url_for('admin-family-render-edit-modal') }}"
+                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_family_id": "{{ family.id }}"}'
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait" >
+            <i class="bi-trash-fill"></i>
+        </button>
+    </span>
+{% endblock %}

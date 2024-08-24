@@ -112,6 +112,9 @@ class AdminIndexController(AAdminController):
         if 'show_details_on_screen_list' in data:
             SessionHandler.set_session_show_details_on_screen_list(
                 request, self._form_data_to_bool_or_none(data, 'show_details_on_screen_list'))
+        if 'show_details_on_family_list' in data:
+            SessionHandler.set_session_show_details_on_family_list(
+                request, self._form_data_to_bool_or_none(data, 'show_details_on_family_list'))
         screen_types: list[str] = SessionHandler.get_session_screen_types_on_screen_list(request)
         for field, screen_type in {
             'show_boards_screens_on_screen_list': 'boards',
