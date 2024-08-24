@@ -13,6 +13,7 @@ from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
+from common.papi_web_config import PapiWebConfig
 from data.event import NewEvent
 from data.loader import EventLoader
 from data.screen import NewScreen
@@ -93,6 +94,7 @@ class UserScreenSetController(AUserController):
             return HTMXTemplate(
                 template_name='user_boards_screen_set.html',
                 context={
+                    'papi_web_config': PapiWebConfig(),
                     'event': event,
                     'screen': screen,
                     'screen_set': screen_set,

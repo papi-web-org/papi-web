@@ -16,7 +16,6 @@ from data.event import NewEvent
 from data.loader import EventLoader
 from data.tournament import NewTournament
 from database.papi_template import create_empty_papi_database, PAPI_VERSIONS
-from database.sqlite import EventDatabase
 from ffe.ffe_session import FFESession
 
 logger: Logger = get_logger()
@@ -42,7 +41,7 @@ class ActionSelector:
         return tournaments
 
     def run(self, event_uniq_id: str) -> bool:
-        event: NewEvent = EventLoader().load_event(event_uniq_id)
+        event: NewEvent = EventLoader().load_event(event_uniq_id, reload=True)
         logger.info('Évènement : %s', event.name)
         tournaments: list[NewTournament] = self.__get_chessevent_tournaments(event)
         if not tournaments:
@@ -135,12 +134,10 @@ class ActionSelector:
                             chessevent_timeout = chessevent_timeout_min
                             tournament.file.unlink(missing_ok=True)
                             create_empty_papi_database(tournament.file, papi_version)
-                            players_number: int = tournament.write_chessevent_info_to_database(chessevent_tournament)
+                            players_number: int = tournament.write_chessevent_info_to_database(
+                                chessevent_tournament, data_md5)
                             logger.info('Le fichier %s a été créé (%s joueur·euses).',
                                         tournament.file, players_number)
-                            with EventDatabase(tournament.event.uniq_id, write=True) as event_database:
-                                event_database.set_tournament_last_chessevent_download_md5(tournament.id, data_md5)
-                                event_database.commit()
                             if action_choice == 'U':
                                 if not tournament.ffe_id or not tournament.ffe_password:
                                     logger.warning('Identifiants de connexion au site fédéral non définis pour le '

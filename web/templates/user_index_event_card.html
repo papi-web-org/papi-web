@@ -1,0 +1,21 @@
+{% extends 'user_card.html' %}
+{% from 'macros.j2' import tooltip_attributes, screen_visibility_icon, screen_type_icon %}
+
+{% block card_header %}
+    <i class="{{ icon_class }}"></i>
+    {% if event.formatted_start_date == event.formatted_stop_date %}
+         <span class="fw-bold">{{ event.formatted_start_date }}</span> {{ event.formatted_start_time }}-{{ event.formatted_stop_time }}
+    {% else %}
+         <span class="fw-bold">{{ event.formatted_start_date }} - {{ event.formatted_stop_date }}</span>
+    {% endif %}
+{% endblock %}
+
+{% block card_title %}
+    {{ event.name }}
+{% endblock %}
+
+{% block card_text %}
+    <div>Tournois : {{ event.tournaments_by_id|length }}</div>
+    <div class="text-nowrap text-start">Joueur·euses : {{ event.players_number }}</div>
+{% endblock %}
+

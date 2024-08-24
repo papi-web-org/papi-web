@@ -189,7 +189,7 @@ class EventDatabase(SQLiteDatabase):
                     self._check_populate_dict(
                         yml_file, '', event_dict,
                         mandatory_fields=['name', ],
-                        optional_fields=['start', 'stop', 'css', 'public', 'update_password', 'record_illegal_moves',
+                        optional_fields=['start', 'stop', 'path', 'css', 'public', 'update_password', 'record_illegal_moves',
                                          'allow_results_deletion_on_input_screens', 'chessevents', 'tournaments',
                                          'timers', 'screens', 'families', 'rotators', 'timer_colors', 'timer_delays', ],
                         empty_allowed=False)
@@ -218,7 +218,7 @@ class EventDatabase(SQLiteDatabase):
                         name=event_dict['name'],
                         start=event_start,
                         stop=event_stop,
-                        path=None,
+                        path=event_dict.get('path', None),
                         css=event_dict.get('css', None),
                         update_password=event_dict.get('update_password', None),
                         record_illegal_moves=event_dict.get('record_illegal_moves', None),
@@ -1166,7 +1166,7 @@ class EventDatabase(SQLiteDatabase):
     def set_tournament_last_chessevent_download_md5(self, tournament_id: int, md5: str = None):
         self._execute(
             f'UPDATE `tournament` SET `last_chessevent_download_md5` = ? WHERE `id` = ?',
-            (tournament_id, md5, ))
+            (md5, tournament_id, ))
 
     def _set_tournament_last_illegal_move_update(self, tournament_id: int):
         self._execute(

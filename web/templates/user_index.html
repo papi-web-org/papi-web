@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <div id="user-home-header" class="header user-header user-home-header p-3">
+        <button
+                class="btn btn-link link-dark"
+                hx-get="{{ url_for('index') }}"
+                hx-target="body"
+                hx-indicator="#please-wait"
+                hx-trigger="click, keyup[key=='Escape'] from:body"
+        >
+            <i class="bi-house-fill fs-3"></i>
+        </button>
+        <input
+                class="updater user-updater"
+                type="hidden"
+                name="date"
+                value="{{ now }}"
+                hx-post="{{ url_for('user-render-if-updated') }}"
+                hx-include="this"
+                hx-target="body"
+                hx-trigger="every {{ papi_web_config.user_index_update_delay }}s queue:none"
+                hx-indicator="#please-wait"
+        />
+        <h1 class="d-inline-block">Évènements</h1>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div id="user-index-content" class="content user-content user-index-content p-3">
+        <section class="pt-1 pb-1 shadow-sm">
+            <div class="container-fluid">
+                {% for event_data in [
+                    {
+                        'title': 'Évènements en cours',
+                        'empty_str': 'Aucun évènement en cours.',
+                        'events': event_loader.current_public_events,
+                        'class': 'bg-primary-subtle',
+                        'calendar_icon_class': 'bi-calendar',
+                    },
+                    {
+                        'title': 'Évènements à venir',
+                        'empty_str': 'Aucun évènement à venir.',
+                        'events': event_loader.coming_public_events,
+                        'class': 'bg-info-subtle',
+                        'calendar_icon_class': 'bi-calendar-check',
+                    },
+                    {
+                        'title': 'Évènements passés',
+                        'empty_str': 'Aucun évènement passé.',
+                        'events': event_loader.passed_public_events,
+                        'class': 'bg-secondary-subtle',
+                        'calendar_icon_class': 'bi-calendar-minus',
+                    },
+                ] %}
+                    <div class="row">
+                        <h2 class="col-12 text-nowrap">
+                            {{ event_data.title }}
+                        </h2>
+                    </div>
+                    <div class="row">
+                        {% if event_data.events %}
+                            {% for event in event_data.events %}
+                                {% with card_url=url_for('user-event-render', event_uniq_id=event.uniq_id), card_class=event_data.class %}
+                                    {% include 'user_index_event_card.html' %}
+                                {% endwith %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12 mb-3">
+                                {{ event_data.empty_str }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+{% endblock content %}

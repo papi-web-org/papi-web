@@ -151,7 +151,7 @@ class AUserController(AController):
             event_loader: EventLoader | None,
     ) -> Template:
         return HTMXTemplate(
-            template_name="user.html",
+            template_name="user_index.html",
             context={
                 'papi_web_config': PapiWebConfig(),
                 'event_loader': event_loader if event_loader else EventLoader(),

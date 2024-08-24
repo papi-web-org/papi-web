@@ -1329,7 +1329,8 @@ class NewTournament:
         logger.info('Removed result: %s %s %d.%d',
                     self.event.uniq_id, self.uniq_id, self._current_round, board.id)
 
-    def write_chessevent_info_to_database(self, chessevent_tournament: ChessEventTournament) -> int:
+    def write_chessevent_info_to_database(
+            self, chessevent_tournament: ChessEventTournament, chessevent_download_md5: str) -> int:
         with PapiDatabase(self.file, write=True) as papi_database:
             with EventDatabase(self.event.uniq_id, write=True) as event_database:
                 event_database.delete_tournament_stored_skipped_rounds(self.id)
@@ -1341,6 +1342,7 @@ class NewTournament:
                         self.id, player_id, chessevent_player.skipped_rounds)
                     papi_database.add_chessevent_player(
                         player_id, chessevent_player, chessevent_tournament.check_in_started)
+                event_database.set_tournament_last_chessevent_download_md5(self.id, chessevent_download_md5)
                 event_database.commit()
                 papi_database.commit()
         return player_id - 1

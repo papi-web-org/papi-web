@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% from 'macros.j2' import tooltip_attributes, event_visibility_icon, screen_type_icon %}
+
 {% block header %}
     <div id="user-event-header" class="header user-header user-event-header p-1 position-sticky top-0">
         <button
@@ -31,18 +33,47 @@
     <div id="user-event-content" class="content user-content user-event-content p-3">
         <section class="pt-1 pb-1 shadow-sm">
             <div class="container-fluid">
-                {% with title='Saisie des résultats', screens=event.input_screens, class='bg-danger-subtle', icon='bi-pencil-fill' %}
-                    {% include 'user_event_screen_cards.html' %}
-                {% endwith %}
-                {% with title='Affichage des échiquiers', screens=event.boards_screens, class='bg-info-subtle', icon='bi-card-list' %}
-                    {% include 'user_event_screen_cards.html' %}
-                {% endwith %}
-                {% with title='Affichage des appariements', screens=event.players_screens, class='bg-primary-subtle', icon='bi-people-fill' %}
-                    {% include 'user_event_screen_cards.html' %}
-                {% endwith %}
-                {% with title='Affichage des résultats', screens=event.results_screens, class='bg-secondary-subtle', icon='bi-trophy-fill' %}
-                    {% include 'user_event_screen_cards.html' %}
-                {% endwith %}
+                {% for screen_type, screen_data in {
+                    'input': {
+                        'title': 'Saisie des résultats',
+                        'class': 'bg-danger-subtle',
+                    },
+                    'boards': {
+                        'title': 'Affichage des échiquiers',
+                        'class': 'bg-info-subtle',
+                    },
+                    'players': {
+                        'title': 'Affichage des appariements',
+                        'class': 'bg-primary-subtle',
+                    },
+                    'results': {
+                        'title': 'Affichage des résultats',
+                        'class': 'bg-secondary-subtle',
+                    },
+                }.items() %}
+                    <div class="row">
+                        <h2 class="col-12 text-nowrap">
+                            {{ screen_type_icon(screen_type) }}
+                            {{ screen_data.title }}
+                        </h2>
+                    </div>
+                    {% set ns = namespace(screen_found=false) %}
+                    <div class="row">
+                        {% for screen in event.screens_sorted_by_uniq_id %}
+                            {% if screen.type == screen_type %}
+                                {% set ns.screen_found=true %}
+                                {% with card_url=url_for('user-screen-render', event_uniq_id=event.uniq_id, screen_uniq_id=screen.uniq_id), card_class=screen_data.class %}
+                                    {% include 'user_event_screen_card.html' %}
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if not ns.screen_found %}
+                            <div class="col-12 mb-3">
+                                Aucun écran de ce type.
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
             </div>
         </section>
     </div>

@@ -1,0 +1,26 @@
+<div class="col-lg-3 mb-3 d-flex align-items-stretch">
+    <div
+            class="card btn p-1 w-100 {{ card_class }}"
+            hx-get="{{ card_url }}"
+            hx-target="body"
+            hx-indicator="#please-wait"
+    >
+        <div class="card-header fw-bold text-center">
+            {% block card_header %}
+                CARD_HEADER
+            {% endblock %}
+        </div>
+        <div class="card-body p-2 d-flex flex-column">
+            <div class="card-title text-start fs-4 fw-bold">
+                {% block card_title %}
+                    CARD_TITLE
+                {% endblock %}
+            </div>
+            <div class="card-text mb-auto mt-1 text-start">
+                {% block card_text %}
+                    CARD_TEXT
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>

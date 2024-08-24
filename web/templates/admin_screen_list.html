@@ -1,4 +1,4 @@
-{% extends 'common_cards_container.html' %}
+{% extends 'admin_cards_container.html' %}
 {% from 'macros.j2' import tooltip_attributes, event_visibility_icon, screen_type_icon %}
 
 {% block cards_container_title %}
@@ -132,7 +132,7 @@
                         {% endif %}
                     {% endfor %}
                     {% if not ns.screen_found %}
-                        <div class="col-12">
+                        <div class="col-12 mb-3">
                             Aucun écran de ce type.
                         </div>
                     {% endif %}
