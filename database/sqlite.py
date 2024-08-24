@@ -1158,10 +1158,10 @@ class EventDatabase(SQLiteDatabase):
         stored_tournament.last_chessevent_download = 0.0
         return self._write_stored_tournament(stored_tournament)
 
-    def set_tournament_last_ffe_upload(self, tournament_id: int, timestamp: float = None):
+    def set_tournament_last_ffe_upload(self, tournament_id: int):
         self._execute(
             f'UPDATE `tournament` SET `last_ffe_upload` = ? WHERE `id` = ?',
-            (tournament_id, timestamp if timestamp else time.time()))
+            (time.time(), tournament_id, ))
 
     def set_tournament_last_chessevent_download_md5(self, tournament_id: int, md5: str = None):
         self._execute(
