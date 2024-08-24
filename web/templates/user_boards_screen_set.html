@@ -27,9 +27,9 @@
                                         <th scope="col" class="board-number">Ech</th>
                                         <th scope="col" class="points">Pts</th>
                                         {% if tournament.print_real_points %}<th scope="col" class="points">&nbsp;</th>{% endif %}
-                                        <th scope="col" class="player" {% if screen.type == 'input' and tournament.record_illegal_moves %}colspan="2">{% endif %}Blancs{% if tournament.handicap %} (temps){% endif %}</th>
+                                        <th scope="col" class="player w-50" {% if screen.type == 'input' and tournament.record_illegal_moves %}colspan="2">{% endif %}Blancs{% if tournament.handicap %} (temps){% endif %}</th>
                                         <th scope="col" class="score">Score</th>
-                                        <th scope="col" class="player" {% if screen.type == 'input' and tournament.record_illegal_moves %}colspan="2">{% endif %}Noirs{% if tournament.handicap %} (temps){% endif %}</th>
+                                        <th scope="col" class="player w-50" {% if screen.type == 'input' and tournament.record_illegal_moves %}colspan="2">{% endif %}Noirs{% if tournament.handicap %} (temps){% endif %}</th>
                                         {% if tournament.print_real_points %}<th scope="col" class="points">&nbsp;</th>{% endif %}
                                         <th scope="col" class="points">Pts</th>
                                     </tr>
