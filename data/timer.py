@@ -485,6 +485,7 @@ class NewTimer:
             for timer_hour in reversed(self.timer_hours_sorted_by_order):
                 if not timer_hour.error:
                     timer_hour.last_valid = True
+                    break
         else:
             self.error = 'Aucun horaire valide défini.'
             self.event.add_warning(self.error, timer_uniq_id=self.uniq_id)
