@@ -835,7 +835,9 @@ class NewTournament:
             self.event.add_info(
                 f'la connexion à la plateforme ChessEvent n\'est pas définie', tournament_uniq_id=self.uniq_id)
         if self.chessevent and not self.stored_tournament.chessevent_tournament_name:
-            self.event.add_warning(f'le répertoire [{self.path}] n\'existe pas', tournament_uniq_id=self.uniq_id)
+            self.event.add_warning(
+                f'le nom du tournoi [{self.uniq_id}] n\'est pas renseigné, la connexion à la plateforme '
+                f'ChessEvent ne sera pas fonctionnelle', tournament_uniq_id=self.uniq_id)
         self._rounds: int = 0
         self._pairing: TournamentPairing | None = None
         self._rating: TournamentRating | None = None
