@@ -72,14 +72,45 @@ class AdminChessEventController(AAdminController):
             errors=errors,
         )
 
-    @staticmethod
     def _admin_chessevent_render_edit_modal(
+            self,
             action: str,
             admin_event: NewEvent,
             admin_chessevent: NewChessEvent | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        if data is None:
+            data: dict[str, str] = {}
+            match action:
+                case 'update':
+                    data['uniq_id'] = self._value_to_form_data(admin_chessevent.stored_chessevent.uniq_id)
+                case 'create' | 'clone':
+                    data['uniq_id'] = ''
+                case 'delete':
+                    pass
+                case _:
+                    raise ValueError(f'action=[{action}]')
+            match action:
+                case 'update':
+                    data['uniq_id'] = self._value_to_form_data(admin_chessevent.stored_chessevent.uniq_id)
+                    data['event_id'] = self._value_to_form_data(admin_chessevent.stored_chessevent.event_id)
+                    data['user_id'] = self._value_to_form_data(admin_chessevent.stored_chessevent.user_id)
+                    data['password'] = self._value_to_form_data(admin_chessevent.stored_chessevent.password)
+                case 'create':
+                    data['uniq_id'] = ''
+                    data['event_id'] = ''
+                    data['user_id'] = ''
+                    data['password'] = ''
+                case 'delete':
+                    pass
+                case _:
+                    raise ValueError(f'action=[{action}]')
+            stored_chessevent: StoredChessEvent = self._admin_validate_chessevent_update_data(
+                action, admin_event, admin_chessevent, data)
+            errors = stored_chessevent.errors
+        if errors is None:
+            errors = {}
         return HTMXTemplate(
             template_name='admin_chessevent_edit_modal.html',
             re_swap='innerHTML',
@@ -125,23 +156,7 @@ class AdminChessEventController(AAdminController):
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
-        data: dict[str, str]
-        match action:
-            case 'update':
-                data = {
-                    'uniq_id': self._value_to_form_data(admin_chessevent.stored_chessevent.uniq_id),
-                    'user_id': self._value_to_form_data(admin_chessevent.stored_chessevent.user_id),
-                    'password': self._value_to_form_data(admin_chessevent.stored_chessevent.password),
-                    'event_id': self._value_to_form_data(admin_chessevent.stored_chessevent.event_id),
-                }
-            case 'delete' | 'create':
-                data = {}
-            case _:
-                raise ValueError(f'action=[{action}]')
-        stored_chessevent: StoredChessEvent = self._admin_validate_chessevent_update_data(
-            action, admin_event, admin_chessevent, data)
-        return self._admin_chessevent_render_edit_modal(
-            action, admin_event, admin_chessevent, data, stored_chessevent.errors)
+        return self._admin_chessevent_render_edit_modal(action, admin_event, admin_chessevent)
 
     @post(
         path='/admin-chessevent-update',

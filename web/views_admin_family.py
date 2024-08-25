@@ -200,48 +200,46 @@ class AdminFamilyController(AAdminController):
             errors: dict[str, str] | None = None,
     ) -> Template:
         if data is None:
-            data = {}
-            if admin_family:
-                data: dict[str, str] = {}
-                match action:
-                    case 'update':
-                        data['uniq_id'] = self._value_to_form_data(admin_family.stored_family.uniq_id)
-                    case 'create' | 'clone':
-                        data['uniq_id'] = ''
-                    case 'delete':
-                        pass
-                    case _:
-                        raise ValueError(f'action=[{action}]')
-                match action:
-                    case 'update':
-                        data['public'] = self._value_to_form_data(admin_family.stored_family.public)
-                        data['name'] = self._value_to_form_data(admin_family.stored_family.name)
-                        data['tournament_id'] = self._value_to_form_data(admin_family.stored_family.tournament_id)
-                        data['columns'] = self._value_to_form_data(admin_family.stored_family.columns)
-                        data['menu_text'] = self._value_to_form_data(admin_family.stored_family.menu_text)
-                        data['menu'] = self._value_to_form_data(admin_family.stored_family.menu)
-                        data['timer_id'] = self._value_to_form_data(admin_family.stored_family.timer_id)
-                        match admin_family.type:
-                            case ScreenType.Boards | ScreenType.Input:
-                                data['first'] = self._value_to_form_data(admin_family.stored_family.first)
-                                data['last'] = self._value_to_form_data(admin_family.stored_family.last)
-                            case ScreenType.Players:
-                                data['players_show_unpaired'] = self._value_to_form_data(
-                                    admin_family.stored_family.players_show_unpaired)
-                            case _:
-                                raise ValueError(f'type=[{admin_family.type}]')
-                        data['parts'] = self._value_to_form_data(admin_family.stored_family.parts)
-                        data['number'] = self._value_to_form_data(admin_family.stored_family.number)
-                    case 'create':
-                        data['type'] = ''
-                        data['public'] = self._value_to_form_data(True)
-                        data['uniq_id'] = ''
-                        data['name'] = ''
-                        data['tournament_id'] = self._value_to_form_data(list(admin_event.tournaments_by_id.keys())[0])
-                    case 'delete':
-                        pass
-                    case _:
-                        raise ValueError(f'action=[{action}]')
+            data: dict[str, str] = {}
+            match action:
+                case 'update':
+                    data['uniq_id'] = self._value_to_form_data(admin_family.stored_family.uniq_id)
+                case 'create' | 'clone':
+                    data['uniq_id'] = ''
+                case 'delete':
+                    pass
+                case _:
+                    raise ValueError(f'action=[{action}]')
+            match action:
+                case 'update':
+                    data['public'] = self._value_to_form_data(admin_family.stored_family.public)
+                    data['name'] = self._value_to_form_data(admin_family.stored_family.name)
+                    data['tournament_id'] = self._value_to_form_data(admin_family.stored_family.tournament_id)
+                    data['columns'] = self._value_to_form_data(admin_family.stored_family.columns)
+                    data['menu_text'] = self._value_to_form_data(admin_family.stored_family.menu_text)
+                    data['menu'] = self._value_to_form_data(admin_family.stored_family.menu)
+                    data['timer_id'] = self._value_to_form_data(admin_family.stored_family.timer_id)
+                    match admin_family.type:
+                        case ScreenType.Boards | ScreenType.Input:
+                            data['first'] = self._value_to_form_data(admin_family.stored_family.first)
+                            data['last'] = self._value_to_form_data(admin_family.stored_family.last)
+                        case ScreenType.Players:
+                            data['players_show_unpaired'] = self._value_to_form_data(
+                                admin_family.stored_family.players_show_unpaired)
+                        case _:
+                            raise ValueError(f'type=[{admin_family.type}]')
+                    data['parts'] = self._value_to_form_data(admin_family.stored_family.parts)
+                    data['number'] = self._value_to_form_data(admin_family.stored_family.number)
+                case 'create':
+                    data['type'] = ''
+                    data['public'] = self._value_to_form_data(True)
+                    data['uniq_id'] = ''
+                    data['name'] = ''
+                    data['tournament_id'] = self._value_to_form_data(list(admin_event.tournaments_by_id.keys())[0])
+                case 'delete':
+                    pass
+                case _:
+                    raise ValueError(f'action=[{action}]')
             stored_family: StoredFamily = self._admin_validate_family_update_data(
                 action, admin_event, admin_family, data)
             errors = stored_family.errors

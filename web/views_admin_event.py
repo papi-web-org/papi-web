@@ -27,7 +27,7 @@ logger: Logger = get_logger()
 class AdminEventController(AAdminController):
 
     def _admin_validate_event_update_data(
-            self, event_loader: EventLoader, action: str, admin_event: NewEvent | None,
+            self, action: str, event_loader: EventLoader, admin_event: NewEvent | None,
             data: dict[str, str] | None = None,
     ) -> StoredEvent:
         if data is None:
@@ -131,10 +131,58 @@ class AdminEventController(AAdminController):
     def _admin_event_render_edit_modal(
             self,
             action: str,
+            event_loader: EventLoader,
             admin_event: NewEvent | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        if data is None:
+            data: dict[str, str] = {}
+            match action:
+                case 'update':
+                    data['uniq_id'] = self._value_to_form_data(admin_event.stored_event.uniq_id)
+                case 'create' | 'clone':
+                    data['uniq_id'] = ''
+                case 'delete':
+                    pass
+                case _:
+                    raise ValueError(f'action=[{action}]')
+            match action:
+                case 'update':
+                    data['uniq_id'] = '' if action == 'clone' else self._value_to_form_data(
+                        admin_event.stored_event.uniq_id)
+                    data['name'] = self._value_to_form_data(admin_event.stored_event.name)
+                    data['public'] = self._value_to_form_data(admin_event.stored_event.public)
+                    data['start'] = self._value_to_datetime_form_data(admin_event.stored_event.start)
+                    data['stop'] = self._value_to_datetime_form_data(admin_event.stored_event.stop)
+                    data['css'] = self._value_to_form_data(admin_event.stored_event.css)
+                    data['path'] = self._value_to_form_data(admin_event.stored_event.path)
+                    data['update_password'] = self._value_to_form_data(admin_event.stored_event.update_password)
+                    data['record_illegal_moves'] = self._value_to_form_data(admin_event.stored_event.record_illegal_moves)
+                    data['allow_results_deletion'] = self._value_to_form_data(
+                        admin_event.stored_event.allow_results_deletion_on_input_screens)
+                    for i in range(1, 4):
+                        data[f'color_{i}'] = self._value_to_form_data(admin_event.timer_colors[i])
+                        data[f'color_{i}_checkbox'] = self._value_to_form_data(
+                            admin_event.stored_event.timer_colors[i] is None)
+                        data[f'delay_{i}'] = self._value_to_form_data(admin_event.stored_event.timer_delays[i])
+                case 'create':
+                    data['public'] = self._value_to_form_data(False)
+                    today_str: str = format_timestamp_date()
+                    start = time.mktime(datetime.strptime(
+                        f'{today_str} 00:00', '%Y-%m-%d %H:%M').timetuple())
+                    stop = time.mktime(datetime.strptime(
+                        f'{today_str} 23:59', '%Y-%m-%d %H:%M').timetuple())
+                    data['start'] = self._value_to_datetime_form_data(start)
+                    data['stop'] = self._value_to_datetime_form_data(stop)
+                case 'delete':
+                    pass
+                case _:
+                    raise ValueError(f'action=[{action}]')
+            stored_event: StoredEvent = self._admin_validate_event_update_data(action, event_loader, admin_event, data)
+            errors = stored_event.errors
+        if errors is None:
+            errors = {}
         allow_results_deletion_options: dict[str, str] = {
             '': '',
             '0': 'Non autorisée',
@@ -182,44 +230,7 @@ class AdminEventController(AAdminController):
                     return self._render_messages(request)
             case _:
                 raise ValueError(f'action=[{action}]')
-        data: dict[str, str]
-        match action:
-            case 'delete':
-                data = {}
-            case 'create':
-                today_str: str = format_timestamp_date()
-                start = time.mktime(datetime.strptime(
-                        f'{today_str} 00:00', '%Y-%m-%d %H:%M').timetuple())
-                stop = time.mktime(datetime.strptime(
-                        f'{today_str} 23:59', '%Y-%m-%d %H:%M').timetuple())
-                data = {
-                    'start': self._value_to_datetime_form_data(start),
-                    'stop': self._value_to_datetime_form_data(stop),
-                }
-            case 'clone' | 'update':
-                data = {
-                    'uniq_id':
-                        '' if action == 'clone' else self._value_to_form_data(admin_event.stored_event.uniq_id),
-                    'name': self._value_to_form_data(admin_event.stored_event.name),
-                    'public': self._value_to_form_data(admin_event.stored_event.public),
-                    'start': self._value_to_datetime_form_data(admin_event.stored_event.start),
-                    'stop': self._value_to_datetime_form_data(admin_event.stored_event.stop),
-                    'css': self._value_to_form_data(admin_event.stored_event.css),
-                    'path': self._value_to_form_data(admin_event.stored_event.path),
-                    'update_password': self._value_to_form_data(admin_event.stored_event.update_password),
-                    'record_illegal_moves': self._value_to_form_data(admin_event.stored_event.record_illegal_moves),
-                    'allow_results_deletion':
-                        self._value_to_form_data(admin_event.stored_event.allow_results_deletion_on_input_screens),
-                }
-                for i in range(1, 4):
-                    data[f'color_{i}'] = self._value_to_form_data(admin_event.timer_colors[i])
-                    data[f'color_{i}_checkbox'] = self._value_to_form_data(
-                        admin_event.stored_event.timer_colors[i] is None)
-                    data[f'delay_{i}'] = self._value_to_form_data(admin_event.stored_event.timer_delays[i])
-            case _:
-                raise ValueError(f'action=[{action}]')
-        stored_event: StoredEvent = self._admin_validate_event_update_data(event_loader, action, admin_event, data)
-        return self._admin_event_render_edit_modal(action, admin_event, data, stored_event.errors)
+        return self._admin_event_render_edit_modal(action, event_loader, admin_event, )
 
     @post(
         path='/admin-event-update',
@@ -244,9 +255,9 @@ class AdminEventController(AAdminController):
                     return self._render_messages(request)
             case _:
                 raise ValueError(f'action=[{action}]')
-        stored_event: StoredEvent = self._admin_validate_event_update_data(event_loader, action, admin_event, data)
+        stored_event: StoredEvent = self._admin_validate_event_update_data(action, event_loader, admin_event, data)
         if stored_event.errors:
-            return self._admin_event_render_edit_modal(action, admin_event, data, stored_event.errors)
+            return self._admin_event_render_edit_modal(action, event_loader, admin_event, data, stored_event.errors)
         uniq_id: str = stored_event.uniq_id
         match action:
             case 'create':

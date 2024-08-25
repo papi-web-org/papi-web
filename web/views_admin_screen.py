@@ -143,51 +143,50 @@ class AdminScreenController(AAdminController):
     ) -> Template:
         if data is None:
             data = {}
-            if admin_screen:
-                data: dict[str, str] = {}
-                match action:
-                    case 'update':
-                        data['uniq_id'] = self._value_to_form_data(admin_screen.stored_screen.uniq_id)
-                    case 'create' | 'clone':
-                        data['uniq_id'] = ''
-                    case 'delete':
-                        pass
-                    case _:
-                        raise ValueError(f'action=[{action}]')
-                match action:
-                    case 'update' | 'clone':
-                        data['public'] = self._value_to_form_data(admin_screen.stored_screen.public)
-                        data['name'] = self._value_to_form_data(admin_screen.stored_screen.name)
-                        data['columns'] = self._value_to_form_data(admin_screen.stored_screen.columns)
-                        data['menu_text'] = self._value_to_form_data(admin_screen.stored_screen.menu_text)
-                        data['menu'] = self._value_to_form_data(admin_screen.stored_screen.menu)
-                        data['timer_id'] = self._value_to_form_data(admin_screen.stored_screen.timer_id)
-                        match admin_screen.type:
-                            case ScreenType.Boards | ScreenType.Input:
-                                pass
-                            case ScreenType.Players:
-                                data['players_show_unpaired'] = self._value_to_form_data(
-                                    admin_screen.stored_screen.players_show_unpaired)
-                            case ScreenType.Results:
-                                data['results_limit'] = self._value_to_form_data(
-                                    admin_screen.stored_screen.results_limit)
-                                for tournament_id in admin_event.tournaments_by_id:
-                                    data[f'results_tournament_{tournament_id}'] = self._value_to_form_data(
-                                        tournament_id in admin_screen.stored_screen.results_tournament_ids)
-                            case _:
-                                raise ValueError(f'action={action}')
-                    case 'create':
-                        data['type'] = ''
-                        data['public'] = self._value_to_form_data(True)
-                        data['uniq_id'] = ''
-                        data['name'] = ''
-                    case 'delete':
-                        pass
-                    case _:
-                        raise ValueError(f'action=[{action}]')
-            stored_screen: StoredScreen = self._admin_validate_screen_update_data(
-                action, admin_event, admin_screen, data)
-            errors = stored_screen.errors
+            data: dict[str, str] = {}
+            match action:
+                case 'update':
+                    data['uniq_id'] = self._value_to_form_data(admin_screen.stored_screen.uniq_id)
+                case 'create' | 'clone':
+                    data['uniq_id'] = ''
+                case 'delete':
+                    pass
+                case _:
+                    raise ValueError(f'action=[{action}]')
+            match action:
+                case 'update' | 'clone':
+                    data['public'] = self._value_to_form_data(admin_screen.stored_screen.public)
+                    data['name'] = self._value_to_form_data(admin_screen.stored_screen.name)
+                    data['columns'] = self._value_to_form_data(admin_screen.stored_screen.columns)
+                    data['menu_text'] = self._value_to_form_data(admin_screen.stored_screen.menu_text)
+                    data['menu'] = self._value_to_form_data(admin_screen.stored_screen.menu)
+                    data['timer_id'] = self._value_to_form_data(admin_screen.stored_screen.timer_id)
+                    match admin_screen.type:
+                        case ScreenType.Boards | ScreenType.Input:
+                            pass
+                        case ScreenType.Players:
+                            data['players_show_unpaired'] = self._value_to_form_data(
+                                admin_screen.stored_screen.players_show_unpaired)
+                        case ScreenType.Results:
+                            data['results_limit'] = self._value_to_form_data(
+                                admin_screen.stored_screen.results_limit)
+                            for tournament_id in admin_event.tournaments_by_id:
+                                data[f'results_tournament_{tournament_id}'] = self._value_to_form_data(
+                                    tournament_id in admin_screen.stored_screen.results_tournament_ids)
+                        case _:
+                            raise ValueError(f'action={action}')
+                case 'create':
+                    data['type'] = ''
+                    data['public'] = self._value_to_form_data(True)
+                    data['uniq_id'] = ''
+                    data['name'] = ''
+                case 'delete':
+                    pass
+                case _:
+                    raise ValueError(f'action=[{action}]')
+        stored_screen: StoredScreen = self._admin_validate_screen_update_data(
+            action, admin_event, admin_screen, data)
+        errors = stored_screen.errors
         if errors is None:
             errors = {}
         return HTMXTemplate(

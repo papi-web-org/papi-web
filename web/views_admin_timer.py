@@ -100,32 +100,31 @@ class AdminTimerController(AAdminController):
     ) -> Template:
         if data is None:
             data = {}
-            if admin_timer:
-                match action:
-                    case 'update':
-                        data['uniq_id'] = self._value_to_form_data(admin_timer.stored_timer.uniq_id)
-                    case 'create' | 'clone':
-                        data['uniq_id'] = ''
-                    case 'delete':
-                        pass
-                    case _:
-                        raise ValueError(f'action=[{action}]')
-                match action:
-                    case 'update' | 'clone':
-                        for i in range(1, 4):
-                            data[f'color_{i}'] = self._value_to_form_data(admin_timer.colors[i])
-                            data[f'color_{i}_checkbox'] = self._value_to_form_data(
-                                admin_timer.stored_timer.colors[i] is None)
-                            data[f'delay_{i}'] = self._value_to_form_data(admin_timer.stored_timer.delays[i])
-                    case 'create':
-                        for i in range(1, 4):
-                            data[f'color_{i}'] = ''
-                            data[f'color_{i}_checkbox'] = ''
-                            data[f'delay_{i}'] = ''
-                    case 'delete':
-                        pass
-                    case _:
-                        raise ValueError(f'action=[{action}]')
+            match action:
+                case 'update':
+                    data['uniq_id'] = self._value_to_form_data(admin_timer.stored_timer.uniq_id)
+                case 'create' | 'clone':
+                    data['uniq_id'] = ''
+                case 'delete':
+                    pass
+                case _:
+                    raise ValueError(f'action=[{action}]')
+            match action:
+                case 'update' | 'clone':
+                    for i in range(1, 4):
+                        data[f'color_{i}'] = self._value_to_form_data(admin_timer.colors[i])
+                        data[f'color_{i}_checkbox'] = self._value_to_form_data(
+                            admin_timer.stored_timer.colors[i] is None)
+                        data[f'delay_{i}'] = self._value_to_form_data(admin_timer.stored_timer.delays[i])
+                case 'create':
+                    for i in range(1, 4):
+                        data[f'color_{i}'] = ''
+                        data[f'color_{i}_checkbox'] = ''
+                        data[f'delay_{i}'] = ''
+                case 'delete':
+                    pass
+                case _:
+                    raise ValueError(f'action=[{action}]')
             stored_timer: StoredTimer = self._admin_validate_timer_update_data(
                 action, admin_event, admin_timer, data)
             errors = stored_timer.errors

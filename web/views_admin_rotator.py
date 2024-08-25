@@ -108,32 +108,27 @@ class AdminRotatorController(AAdminController):
     ) -> Template:
         if data is None:
             data = {}
-            if admin_rotator:
-                data: dict[str, str]
-                match action:
-                    case 'update':
-                        data = {
-                            'uniq_id': self._value_to_form_data(admin_rotator.stored_rotator.uniq_id),
-                            'public': self._value_to_form_data(admin_rotator.stored_rotator.public),
-                            'delay': self._value_to_form_data(admin_rotator.stored_rotator.delay),
-                            'show_menus': self._value_to_form_data(admin_rotator.stored_rotator.show_menus),
-                        }
-                        for screen_id in admin_event.basic_screens_by_id:
-                            data[f'screen_{screen_id}'] = self._value_to_form_data(
-                                screen_id in admin_rotator.stored_rotator.screen_ids)
-                        for family_id in admin_event.families_by_id:
-                            data[f'family_{family_id}'] = self._value_to_form_data(
-                                family_id in admin_rotator.stored_rotator.family_ids)
-                    case 'create':
-                        data = {
-                            'type': '',
-                            'public': self._value_to_form_data(True),
-                            'uniq_id': '',
-                        }
-                    case 'delete':
-                        pass
-                    case _:
-                        raise ValueError(f'action=[{action}]')
+            data: dict[str, str]
+            match action:
+                case 'update':
+                    data['uniq_id'] = self._value_to_form_data(admin_rotator.stored_rotator.uniq_id)
+                    data['public'] = self._value_to_form_data(admin_rotator.stored_rotator.public)
+                    data['delay'] = self._value_to_form_data(admin_rotator.stored_rotator.delay)
+                    data['show_menus'] = self._value_to_form_data(admin_rotator.stored_rotator.show_menus)
+                    for screen_id in admin_event.basic_screens_by_id:
+                        data[f'screen_{screen_id}'] = self._value_to_form_data(
+                            screen_id in admin_rotator.stored_rotator.screen_ids)
+                    for family_id in admin_event.families_by_id:
+                        data[f'family_{family_id}'] = self._value_to_form_data(
+                            family_id in admin_rotator.stored_rotator.family_ids)
+                case 'create':
+                    data['type'] = ''
+                    data['public'] = self._value_to_form_data(True)
+                    data['uniq_id'] = ''
+                case 'delete':
+                    pass
+                case _:
+                    raise ValueError(f'action=[{action}]')
             stored_rotator: StoredRotator = self._admin_validate_rotator_update_data(
                 action, admin_event, admin_rotator, data)
             errors = stored_rotator.errors
