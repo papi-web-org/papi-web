@@ -96,6 +96,11 @@ class ActionSelector:
                     chessevent_timeout_max: int = 180
                     chessevent_timeout: int = chessevent_timeout_min
                     while True:
+                        event = EventLoader().load_event(event_uniq_id, reload=True)
+                        tournaments: list[NewTournament] = self.__get_chessevent_tournaments(event)
+                        if not tournaments:
+                            logger.error('Plus aucun tournoi n\'est éligible pour la création des fichiers Papi.')
+                            return False
                         for tournament in tournaments:
                             data: str | None = ChessEventSession(tournament).read_data()
                             if data is None:
@@ -150,10 +155,6 @@ class ActionSelector:
                             return True
                         time.sleep(chessevent_timeout)
                         chessevent_timeout = min(chessevent_timeout_max, int(chessevent_timeout * 1.2))
-                        tournaments: list[NewTournament] = self.__get_chessevent_tournaments(event)
-                        if not tournaments:
-                            logger.error('Plus aucun tournoi n\'est éligible pour la création des fichiers Papi.')
-                            return False
                 except KeyboardInterrupt:
                     return False
         return True
