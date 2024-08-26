@@ -1,10 +1,10 @@
 {% from 'macros.j2' import event_visibility_icon %}
 <div class="row mb-2">
-    <div class="col fs-3 fw-bold">
+    <div class="col-auto fs-3 fw-bold">
         {{ event_visibility_icon(admin_event, '') }}
         {{ admin_event.name }}
     </div>
-    <div class="col-1 d-flex justify-content-end text-nowrap fs-3">
+    <div class="col text-end fs-3">
         <button
                 class="btn btn-primary text-nowrap ms-1"
                 hx-post="{{ url_for('admin-event-render-edit-modal') }}"
@@ -67,7 +67,7 @@
         <tr>
             <th scope="row" class="text-nowrap">Visibilité</th>
             <td class="">
-                {{ event_visibility_icon(admin_event, '') }}{{ admin_event.public }}
+                {{ event_visibility_icon(admin_event, '') }}
                 {% if admin_event.public %}Publique{% else %}Privée{% endif %}
             </td>
             <td></td>
