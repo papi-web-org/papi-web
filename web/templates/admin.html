@@ -52,45 +52,6 @@
                 </div>
             </nav>
         </div>
-        {#
-        <form class="row d-inline-block">
-            <div class="col col-md-auto d-inline-block">
-                <span id="admin-main-selector" class="admin">
-                    <select
-                        name="admin_main_selector"
-                        hx-post="{{ url_for('admin-update-header') }}"
-                        hx-swap="multi:#admin-header,#admin-content"
-                        class="form-select form-select-sm"
-                        hx-indicator="#please-wait">
-                        {% for option_value, option_text in admin_main_selector_options.items() %}
-                            <option value="{{ option_value }}" {% if admin_main_selector == option_value %}selected{% endif %}>{{ option_text }}</option>
-                        {% endfor %}
-                        {% for event in event_loader.events_sorted_by_name %}
-                            <option value="{{ event.uniq_id }}" {% if admin_event and admin_event.uniq_id == event.uniq_id %}selected{% endif %}>{{ event.name }}</option>
-                        {% endfor %}
-                    </select>
-                </span>
-            </div>
-            <div class="col col-md-auto d-inline-block">
-                <span id="admin-event-selector" class="">
-                    {% if admin_event %}
-                        <select
-                            name="admin_event_selector"
-                            hx-post="{{ url_for('admin-update-header') }}"
-                            hx-swap="multi:#admin-header,#admin-content"
-                            class="form-select form-select-sm"
-                            hx-indicator="#please-wait">
-                            {% for option_value, option_text in admin_event_selector_options.items() %}
-                                <option value="{{ option_value }}" {% if admin_event_selector == option_value %}selected{% endif %}>{{ option_text }}</option>
-                            {% endfor %}
-                        </select>
-                    {% endif %}
-                </span>
-            </div>
-            <div class="col">
-            </div>
-        </form>
-        #}
         <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-tooltips.js') }}"></script>
     </div>
 {% endwith %}
