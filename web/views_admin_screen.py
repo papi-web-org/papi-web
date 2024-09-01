@@ -283,9 +283,9 @@ class AdminScreenController(AAdminController):
                     Message.success(request, f'L\'écran [{stored_screen.uniq_id}] a été modifié.')
                 case 'create':
                     stored_screen = event_database.add_stored_screen(stored_screen)
-                    if admin_screen.type in [ScreenType.Boards, ScreenType.Input, ScreenType.Players]:
+                    if stored_screen.type in [ScreenType.Boards, ScreenType.Input, ScreenType.Players]:
                         event_database.add_stored_screen_set(
-                            admin_screen.id, list(admin_event.tournaments_by_id.keys())[0])
+                            stored_screen.id, admin_event.tournaments_sorted_by_uniq_id[0].id)
                     Message.success(request, f'L\'écran [{stored_screen.uniq_id}] a été créé.')
                     next_screen_id = stored_screen.id
                     next_action = 'update'
