@@ -5,7 +5,7 @@
 {% block header %}
 {% with print_main_tabs=admin_main_selector in main_nav_tabs %}
 {% with nav_tabs=main_nav_tabs if print_main_tabs else event_nav_tabs %}
-    <div id="admin-header" class="header admin-header position-sticky top-0 mx-2">
+    <div id="admin-header" class="header admin-header position-sticky top-0 mx-2 border-bottom border-dark">
         <div hx-ext="bs-tabs" class="bs-tabs">
             <nav>
                 <div class="nav nav-tabs mt-1" id="nav-tab" role="tablist">
@@ -36,7 +36,7 @@
                             active=(admin_main_selector == nav_id) if print_main_tabs else (admin_event_selector == nav_id)
                         %}
                             <button
-                                    class="nav-link border-dark {%if active %}active{% endif %} fw-bold px-2 py-0 ms-1"
+                                    class="nav-link border-dark {%if active %}active{%else%}bg-body-secondary{% endif %} fw-bold px-2 py-0 ms-1"
                                     id="nav-{{ nav_id }}-tab"
                                     hx-post="{{ url_for('admin-update-header') }}"
                                     hx-vals='{{ vals }}'
