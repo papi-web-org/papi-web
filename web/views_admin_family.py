@@ -270,11 +270,10 @@ class AdminFamilyController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
-            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
+            admin_event: NewEvent = EventLoader.get(request=request, lazy_load=True).load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
@@ -301,7 +300,7 @@ class AdminFamilyController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
@@ -310,8 +309,7 @@ class AdminFamilyController(AAdminController):
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
         if action == 'close':
-            return self._admin_render_index(
-                request, event_loader, admin_event=admin_event, admin_event_selector='@families')
+            return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='@families')
         admin_family: NewFamily | None = None
         match action:
             case 'update' | 'delete':
@@ -346,10 +344,10 @@ class AdminFamilyController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
+        admin_event = event_loader.reload_event(admin_event.uniq_id)
         if next_family_id:
             admin_family = admin_event.families_by_id[next_family_id]
             return self._admin_family_render_edit_modal(next_action, admin_event, admin_family)
         else:
             return self._admin_render_index(
-                request, event_loader, admin_event=admin_event, admin_event_selector='@families')
+                request, admin_event=admin_event, admin_event_selector='@families')

@@ -61,6 +61,8 @@ class AdminScreenController(AAdminController):
         else:
             if not uniq_id:
                 errors[field] = 'Veuillez entrer l\'identifiant de l\'écran.'
+            elif ':' in uniq_id:
+                errors[field] = 'Le caractère [:] est interdit.'
             else:
                 match action:
                     case 'create' | 'clone':
@@ -142,7 +144,6 @@ class AdminScreenController(AAdminController):
             errors: dict[str, str] | None = None,
     ) -> Template:
         if data is None:
-            data = {}
             data: dict[str, str] = {}
             match action:
                 case 'update':
@@ -184,9 +185,9 @@ class AdminScreenController(AAdminController):
                     pass
                 case _:
                     raise ValueError(f'action=[{action}]')
-        stored_screen: StoredScreen = self._admin_validate_screen_update_data(
-            action, admin_event, admin_screen, data)
-        errors = stored_screen.errors
+            stored_screen: StoredScreen = self._admin_validate_screen_update_data(
+                action, admin_event, admin_screen, data)
+            errors = stored_screen.errors
         if errors is None:
             errors = {}
         return HTMXTemplate(
@@ -213,11 +214,10 @@ class AdminScreenController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
-            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
+            admin_event: NewEvent = EventLoader.get(request=request, lazy_load=True).load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
@@ -244,7 +244,7 @@ class AdminScreenController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
@@ -254,7 +254,7 @@ class AdminScreenController(AAdminController):
             return self._render_messages(request)
         if action == 'close':
             return self._admin_render_index(
-                request, event_loader, admin_event=admin_event, admin_event_selector='@screens')
+                request, admin_event=admin_event, admin_event_selector='@screens')
         admin_screen: NewScreen | None = None
         match action:
             case 'update' | 'delete' | 'clone':
@@ -303,7 +303,7 @@ class AdminScreenController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
+        admin_event = event_loader.reload_event(admin_event.uniq_id)
         if next_screen_id:
             admin_screen = admin_event.basic_screens_by_id[next_screen_id]
             if next_screen_set_id:
@@ -312,8 +312,7 @@ class AdminScreenController(AAdminController):
             else:
                 return self._admin_screen_render_edit_modal(next_action, admin_event, admin_screen=admin_screen)
         else:
-            return self._admin_render_index(
-                request, event_loader, admin_event=admin_event, admin_event_selector='@screens')
+            return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='@screens')
 
     def _admin_validate_screen_set_update_data(
             self,
@@ -436,7 +435,7 @@ class AdminScreenController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
@@ -467,7 +466,7 @@ class AdminScreenController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Reswap:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
             admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
@@ -476,8 +475,7 @@ class AdminScreenController(AAdminController):
             return self._render_messages(request)
         action: str = self._form_data_to_str_or_none(data, 'action')
         if action == 'close':
-            return self._admin_render_index(
-                request, event_loader, admin_event=admin_event, admin_event_selector='@screens')
+            return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='@screens')
         match action:
             case 'delete' | 'clone' | 'update' | 'add' | 'reorder' | 'cancel':
                 admin_screen_id: int = self._form_data_to_int_or_none(data, 'admin_screen_id')
@@ -536,7 +534,7 @@ class AdminScreenController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
+        admin_event = event_loader.reload_event(admin_event.uniq_id)
         admin_screen = admin_event.basic_screens_by_id[admin_screen.id]
         admin_screen_set: NewScreenSet
         if next_screen_set_id:

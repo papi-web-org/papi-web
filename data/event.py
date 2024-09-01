@@ -1,6 +1,7 @@
 import fnmatch
 import json
 import os
+import time
 from functools import total_ordering
 from logging import Logger
 from pathlib import Path
@@ -23,6 +24,7 @@ from database.store import StoredEvent
 
 logger: Logger = get_logger()
 
+event_last_load_date_by_uniq_id: dict[str, float] = {}
 silent_event_uniq_ids: list[str] = []
 
 
@@ -310,8 +312,9 @@ def get_events_by_uniq_id(load_screens: bool, with_tournaments_only: bool = Fals
 
 @total_ordering
 class NewEvent:
-    def __init__(self, stored_event: StoredEvent, last_load_date: float):
+    def __init__(self, stored_event: StoredEvent, lazy_load: bool):
         self.stored_event: StoredEvent = stored_event
+        self.lazy_load = lazy_load
         self.chessevents_by_id: dict[int, NewChessEvent] = {}
         self.chessevents_by_uniq_id: dict[str, NewChessEvent] = {}
         self.tournaments_by_id: dict[int, NewTournament] = {}
@@ -332,7 +335,12 @@ class NewEvent:
         self._infos: list[str] = []
         self._warnings: list[str] = []
         self._errors: list[str] = []
+        last_load_date: float = event_last_load_date_by_uniq_id.get(self.uniq_id, None)
         self._silent = last_load_date is not None and last_load_date > self.stored_event.last_update
+        self.build()
+        event_last_load_date_by_uniq_id[self.uniq_id] = time.time()
+
+    def build(self):
         self.build_root()
         if self.errors:
             self.add_warning(
@@ -348,8 +356,8 @@ class NewEvent:
         self._build_timers()
         if self.errors:
             self.add_warning(
-                'Des erreurs ont été trouvées sur les chronomètres, les tournois, écrans, familles et écrans rotatifs '
-                'ne seront pas chargés')
+                'Des erreurs ont été trouvées sur les chronomètres, les tournois, écrans, familles et écrans '
+                'rotatifs ne seront pas chargés')
             return
         self._build_tournaments()
         if self.errors:
@@ -357,32 +365,24 @@ class NewEvent:
                 'Des erreurs ont été trouvées sur les tournois, les écrans, familles et écrans rotatifs ne seront pas '
                 'chargés')
             return
+        # if lazy_load screen sets will not be calculated
         self._build_screens()
         if self.errors:
             self.add_warning(
                 'Des erreurs ont été trouvées sur les écrans, les familles et écrans rotatifs ne seront pas chargés')
             return
+        # if lazy_load family screens will not be calculated
         self._build_families()
         if self.errors:
             self.add_warning(
                 'Des erreurs ont été trouvées sur les familles, les écrans rotatifs ne seront pas chargés')
             return
-        self._set_screen_menus()
-        self._build_rotators()
-        if self.errors:
-            return
-        tournament_ids: list[int] = []
-        for screen in self.screens_by_uniq_id.values():
-            if screen.type == ScreenType.Results:
-                results_tournament_ids = screen.results_tournament_ids if screen.results_tournament_ids \
-                    else list(self.tournaments_by_id.keys())
-                for tournament_id in results_tournament_ids:
-                    if tournament_id not in tournament_ids:
-                        tournament_ids.append(tournament_id)
-            else:
-                for screen_set in screen.screen_sets_sorted_by_order:
-                    if screen_set.tournament.id not in tournament_ids:
-                        tournament_ids.append(screen_set.tournament.id)
+        if not self.lazy_load:
+            self._set_screen_menus()
+        if not self.lazy_load:
+            self._build_rotators()
+            if self.errors:
+                return
 
     @property
     def uniq_id(self) -> str:

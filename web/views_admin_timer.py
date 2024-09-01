@@ -155,11 +155,10 @@ class AdminTimerController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
-            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
+            admin_event: NewEvent = EventLoader.get(request=request, lazy_load=True).load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
@@ -189,7 +188,7 @@ class AdminTimerController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
@@ -198,8 +197,7 @@ class AdminTimerController(AAdminController):
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
         if action == 'close':
-            return self._admin_render_index(
-                request, event_loader, admin_event=admin_event, admin_event_selector='@timers')
+            return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='@timers')
         admin_timer: NewTimer | None = None
         match action:
             case 'update' | 'delete' | 'clone':
@@ -255,7 +253,9 @@ class AdminTimerController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
+        admin_event = event_loader.reload_event(admin_event.uniq_id)
+        logger.warning(f'admin_event={admin_event}')
+        logger.warning(f'timer_uniq_ids={admin_event.timers_by_uniq_id.keys()}')
         if next_timer_id:
             admin_timer = admin_event.timers_by_id[next_timer_id]
             if next_timer_hour_id:
@@ -264,8 +264,7 @@ class AdminTimerController(AAdminController):
             else:
                 return self._admin_timer_render_edit_modal(next_action, admin_event, admin_timer, )
         else:
-            return self._admin_render_index(
-                request, event_loader, admin_event=admin_event, admin_event_selector='@timers')
+            return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='@timers')
 
     def _admin_validate_timer_hour_update_data(
             self,
@@ -386,10 +385,9 @@ class AdminTimerController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
-            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
+            admin_event: NewEvent = EventLoader.get(request=request, lazy_load=True).load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
@@ -420,7 +418,7 @@ class AdminTimerController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template | Reswap:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
@@ -430,7 +428,7 @@ class AdminTimerController(AAdminController):
             return self._render_messages(request)
         if action == 'close':
             return self._admin_render_index(
-                request, event_loader=event_loader, admin_event=admin_event, admin_event_selector='@timers')
+                request, admin_event=admin_event, admin_event_selector='@timers')
         admin_timer: NewTimer
         match action:
             case 'delete' | 'clone' | 'update' | 'add' | 'reorder' | 'cancel':
@@ -480,7 +478,7 @@ class AdminTimerController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
+        admin_event = event_loader.reload_event(admin_event.uniq_id)
         admin_timer = admin_event.timers_by_id[admin_timer.id]
         if next_timer_hour_id:
             admin_timer_hour = admin_timer.timer_hours_by_id[next_timer_hour_id]

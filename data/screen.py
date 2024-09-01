@@ -751,17 +751,6 @@ class NewScreen:
         self._results_tournament_ids: list[int] | None = None
         self._results: list[Result] | None = None
         self._build_screen_sets()
-        tournament_ids: list[int] = []
-        if self.type == ScreenType.Results:
-            results_tournament_ids = self.results_tournament_ids if self.results_tournament_ids \
-                else list(self.event.tournaments_by_id.keys())
-            for tournament_id in results_tournament_ids:
-                if tournament_id not in tournament_ids:
-                    tournament_ids.append(tournament_id)
-        else:
-            for screen_set in self.screen_sets_sorted_by_order:
-                if screen_set.tournament.id not in tournament_ids:
-                    tournament_ids.append(screen_set.tournament.id)
 
     def _build_screen_sets(self):
         match self.type:

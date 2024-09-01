@@ -27,7 +27,7 @@ class AController(Controller):
 
     @staticmethod
     def _form_data_to_str_or_none(
-            data: dict[str, str], field: str, empty_value: int | None = None
+            data: dict[str, str], field: str, empty_value: str | None = None
     ) -> str | None:
         data[field] = data.get(field, '')
         if data[field] is not None:
@@ -145,7 +145,6 @@ class AController(Controller):
     @staticmethod
     def _admin_render_index(
         request: HTMXRequest,
-        event_loader: EventLoader = None,
         admin_main_selector: str = '',
         admin_event: NewEvent = None,
         admin_event_selector: str = '',
@@ -154,7 +153,7 @@ class AController(Controller):
             'papi_web_config': PapiWebConfig(),
             'odbc_drivers': odbc_drivers(),
             'access_driver': access_driver(),
-            'event_loader': event_loader if event_loader else EventLoader(),
+            'event_loader': EventLoader.get(request=request, lazy_load=True),
             'messages': Message.messages(request),
             'main_nav_tabs': {
                 '': {
@@ -184,11 +183,11 @@ class AController(Controller):
                     'template': 'admin_family_list.html',
                 },
                 '@rotators': {
-                    'title': f'Écrans rotatifs ({len(admin_event.families_by_id) if admin_event else "-"})',
+                    'title': f'Écrans rotatifs ({len(admin_event.rotators_by_id) if admin_event else "-"})',
                     'template': 'admin_rotator_list.html',
                 },
                 '@timers': {
-                    'title': f'Chronomètres ({len(admin_event.rotators_by_id) if admin_event else "-"})',
+                    'title': f'Chronomètres ({len(admin_event.timers_by_id) if admin_event else "-"})',
                     'template': 'admin_timer_list.html',
                 },
                 '@chessevents': {
@@ -199,11 +198,13 @@ class AController(Controller):
             'admin_main_selector': admin_event.uniq_id if admin_event else admin_main_selector,
             'admin_event': admin_event,
             'admin_event_selector': admin_event_selector,
-            'show_family_screens_on_screen_list': SessionHandler.get_session_show_family_screens_on_screen_list(request),
+            'admin_columns': SessionHandler.get_session_admin_columns(request),
+            'show_family_screens_on_screen_list': SessionHandler.get_session_show_family_screens_on_screen_list(
+                request),
             'show_details_on_screen_list': SessionHandler.get_session_show_details_on_screen_list(request),
             'show_details_on_family_list': SessionHandler.get_session_show_details_on_family_list(request),
+            'show_details_on_rotator_list': SessionHandler.get_session_show_details_on_rotator_list(request),
             'screen_types_on_screen_list': SessionHandler.get_session_screen_types_on_screen_list(request),
-            'screen_types_on_family_list': SessionHandler.get_session_screen_types_on_family_list(request),
         }
         return HTMXTemplate(
             template_name="admin.html",

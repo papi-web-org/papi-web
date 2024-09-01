@@ -2,6 +2,7 @@ import time
 
 from litestar.contrib.htmx.request import HTMXRequest
 
+from common.papi_web_config import PapiWebConfig
 from data.event import NewEvent
 
 
@@ -96,6 +97,16 @@ class SessionHandler:
     def get_session_show_details_on_family_list(cls, request: HTMXRequest) -> bool:
         return request.session.get(cls.SHOW_DETAILS_ON_FAMILY_LIST, True)
 
+    SHOW_DETAILS_ON_ROTATOR_LIST: str = 'show_details_on_rotator_list'
+
+    @classmethod
+    def set_session_show_details_on_rotator_list(cls, request: HTMXRequest, b: bool):
+        request.session[cls.SHOW_DETAILS_ON_ROTATOR_LIST]: bool = b
+
+    @classmethod
+    def get_session_show_details_on_rotator_list(cls, request: HTMXRequest) -> bool:
+        return request.session.get(cls.SHOW_DETAILS_ON_ROTATOR_LIST, True)
+
     SCREEN_TYPES_ON_SCREEN_LIST_SESSION_KEY: str = 'screen_types_on_screen_list'
 
     @classmethod
@@ -107,12 +118,13 @@ class SessionHandler:
         return request.session.get(
             cls.SCREEN_TYPES_ON_SCREEN_LIST_SESSION_KEY, ['boards', 'input', 'players', 'results'])
 
-    SCREEN_TYPES_ON_FAMILY_LIST_SESSION_KEY: str = 'screen_types_on_family_list'
+    ADMIN_COLUMNS_SESSION_KEY: str = 'admin_columns'
 
     @classmethod
-    def set_session_screen_types_on_family_list(cls, request: HTMXRequest, screen_types: list[str]):
-        request.session[cls.SCREEN_TYPES_ON_FAMILY_LIST_SESSION_KEY]: list[str] = screen_types
+    def set_session_admin_columns(cls, request: HTMXRequest, columns: int):
+        assert columns in PapiWebConfig().admin_allowed_columns
+        request.session[cls.ADMIN_COLUMNS_SESSION_KEY]: int = columns
 
     @classmethod
-    def get_session_screen_types_on_family_list(cls, request: HTMXRequest) -> list[str]:
-        return request.session.get(cls.SCREEN_TYPES_ON_FAMILY_LIST_SESSION_KEY, ['boards', 'input', 'players'])
+    def get_session_admin_columns(cls, request: HTMXRequest) -> int:
+        return request.session.get(cls.ADMIN_COLUMNS_SESSION_KEY, PapiWebConfig().default_admin_columns)

@@ -85,10 +85,13 @@ class UserEventController(AUserController):
             return self._render_messages(request)
         if not date:
             return Reswap(content=None, method='none', status_code=286)  # stop pooling
-        response, event = self._load_event_context(request, EventLoader(), event_uniq_id)
+        response, event = self._load_event_context(request, EventLoader.get(request=request, lazy_load=True), event_uniq_id)
         if response:
             return response
         if self._user_event_page_update_needed(event, date):
+            response, event = self._load_event_context(request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
+            if response:
+                return response
             return self._user_render_event(request, event)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
@@ -100,7 +103,7 @@ class UserEventController(AUserController):
     async def htmx_user_event_render(
             self, request: HTMXRequest, event_uniq_id: str
     ) -> Template:
-        response, event = self._load_event_context(request, EventLoader(), event_uniq_id)
+        response, event = self._load_event_context(request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
         if response:
             return response
         return self._user_render_event(request, event)

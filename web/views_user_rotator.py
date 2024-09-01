@@ -6,7 +6,6 @@ from litestar.contrib.htmx.request import HTMXRequest
 
 from common.logger import get_logger
 from data.event import NewEvent
-from data.loader import EventLoader
 from data.rotator import NewRotator
 from web.messages import Message
 from web.views_user_index import AUserController
@@ -19,7 +18,7 @@ class UserRotatorController(AUserController):
     def _load_rotator_context(
             cls, request: HTMXRequest, event_uniq_id: str, rotator_id: int, rotator_screen_index: int,
     ) -> tuple[Template | Redirect | None, NewEvent | None, NewRotator | None, int | None]:
-        response, event = cls._load_event_context(request, EventLoader(), event_uniq_id)
+        response, event = cls._load_event_context(request, True, event_uniq_id)
         if response:
             return response, None, None, None
         try:
@@ -50,7 +49,8 @@ class UserRotatorController(AUserController):
             request, event_uniq_id, rotator_id, 0)
         if response:
             return response
-        return self._user_render_screen(request, event=event, rotator=rotator, rotator_screen_index=rotator_screen_index)
+        return self._user_render_screen(
+            request, event=event, rotator=rotator, rotator_screen_index=rotator_screen_index)
 
     @get(
         path='/user-rotator-render-screen/{event_uniq_id:str}/{rotator_id:int}/{rotator_screen_index:int}',
@@ -63,4 +63,5 @@ class UserRotatorController(AUserController):
             request, event_uniq_id, rotator_id, rotator_screen_index)
         if response:
             return response
-        return self._user_render_screen(request, event=event, rotator=rotator, rotator_screen_index=rotator_screen_index)
+        return self._user_render_screen(
+            request, event=event, rotator=rotator, rotator_screen_index=rotator_screen_index)

@@ -11,7 +11,7 @@
         <button
                 class="btn btn-primary text-nowrap ms-1"
                 hx-post="{{ url_for('admin-update-header') }}"
-                hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@tournaments"}'
+                hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "{{ admin_event_selector }}"}'
                 hx-swap="multi:#admin-header,#admin-content"
                 hx-indicator="#please-wait"
         >

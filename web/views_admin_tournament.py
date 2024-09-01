@@ -224,7 +224,7 @@ class AdminTournamentController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
@@ -258,7 +258,7 @@ class AdminTournamentController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
@@ -267,8 +267,7 @@ class AdminTournamentController(AAdminController):
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
         if action == 'close':
-            return self._admin_render_index(
-                request, event_loader, admin_event=admin_event, admin_event_selector='@tournaments')
+            return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='@tournaments')
         admin_tournament: NewTournament | None = None
         match action:
             case 'update' | 'delete' | 'clone':
@@ -310,10 +309,10 @@ class AdminTournamentController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
+        admin_event = event_loader.reload_event(admin_event.uniq_id)
         if stored_tournament:
             admin_tournament = admin_event.tournaments_by_id[stored_tournament.id]
             return self._admin_tournament_render_edit_modal('update', admin_event, admin_tournament)
         else:
             return self._admin_render_index(
-                request, event_loader, admin_event=admin_event, admin_event_selector='@tournaments')
+                request, admin_event=admin_event, admin_event_selector='@tournaments')

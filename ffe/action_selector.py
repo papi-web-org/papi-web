@@ -45,8 +45,8 @@ class ActionSelector:
         return tournaments
 
     def run(self, event_uniq_id: str) -> bool:
-        event_loader: EventLoader = EventLoader()
-        event: NewEvent = event_loader.load_event(event_uniq_id, reload=True)
+        event_loader: EventLoader = EventLoader.get(request=None, lazy_load=True)
+        event: NewEvent = event_loader.reload_event(event_uniq_id)
         logger.info('Évènement : %s', event.name)
         tournaments = self.__get_qualified_tournaments(event)
         if not tournaments:
@@ -66,7 +66,7 @@ class ActionSelector:
             return False
         if choice == 'T':
             logger.info('Action : test des codes d\'accès')
-            tournaments = self.__get_qualified_tournaments(event_loader.load_event(event_uniq_id, reload=True))
+            tournaments = self.__get_qualified_tournaments(event_loader.reload_event(event_uniq_id))
             if not tournaments:
                 logger.error('Aucun tournoi éligible pour cette action')
                 return True
@@ -75,7 +75,8 @@ class ActionSelector:
             return True
         if choice == 'V':
             logger.info('Action : affichage des tournois en ligne')
-            tournaments = self.__get_qualified_tournaments_with_existing_file(event_loader.load_event(event_uniq_id, reload=True))
+            tournaments = self.__get_qualified_tournaments_with_existing_file(event_loader.reload_event(
+                event_uniq_id))
             if not tournaments:
                 logger.error('Aucun tournoi éligible pour cette action')
                 return True
@@ -84,7 +85,7 @@ class ActionSelector:
             return True
         if choice == 'H':
             logger.info('Action : téléchargement des factures d\'homologation')
-            tournaments = self.__get_qualified_tournaments(event_loader.load_event(event_uniq_id, reload=True))
+            tournaments = self.__get_qualified_tournaments(event_loader.reload_event(event_uniq_id))
             if not tournaments:
                 logger.error('Aucun tournoi éligible pour cette action')
                 return True
@@ -97,7 +98,7 @@ class ActionSelector:
             try:
                 while True:
                     tournaments = self.__get_qualified_tournaments_with_existing_file(
-                        event_loader.load_event(event_uniq_id, reload=True))
+                        event_loader.reload_event(event_uniq_id))
                     if not tournaments:
                         logger.error('Aucun tournoi éligible pour cette action')
                         return True

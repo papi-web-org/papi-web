@@ -20,14 +20,13 @@ class UserCheckInController(AUserController):
     def _render_input_screen_player_row_player_cell(
             cls,
             request: HTMXRequest,
-            event_loader: EventLoader,
             event_uniq_id: str,
             screen_uniq_id: str,
             tournament_id: int,
             player_id: int,
     ) -> Template | Redirect:
         response, event, screen, tournament, player, board = cls._load_player_context(
-            request, event_loader, event_uniq_id, screen_uniq_id, tournament_id, False, player_id)
+            request, event_uniq_id, screen_uniq_id, tournament_id, False, player_id)
         if response:
             return response
         return HTMXTemplate(
@@ -49,13 +48,13 @@ class UserCheckInController(AUserController):
     async def htmx_user_input_screen_toggle_check_in(
             self, request: HTMXRequest, event_uniq_id: str, screen_uniq_id: str, tournament_id: int, player_id: int
     ) -> Template | Redirect:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=False)
         response, event, screen, tournament, player, board = self._load_player_context(
-            request, event_loader, event_uniq_id, screen_uniq_id, tournament_id, False, player_id)
+            request, event_uniq_id, screen_uniq_id, tournament_id, False, player_id)
         if response:
             return response
         tournament.check_in_player(player, not player.check_in)
         SessionHandler.set_session_last_check_in_updated(request, tournament_id, player_id)
         event_loader.clear_cache(event.uniq_id)
         return self._render_input_screen_player_row_player_cell(
-            request, event_loader, event_uniq_id, screen_uniq_id, tournament_id, player_id)
+            request, event_uniq_id, screen_uniq_id, tournament_id, player_id)

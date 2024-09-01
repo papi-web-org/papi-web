@@ -39,9 +39,7 @@
     </div>
 </div>
 <script>
-$(document).ready(function(){
-    $('#login-modal').show();
+    (new bootstrap.Modal(document.getElementById('login-modal'))).show();
     $('#event-password').focus();
-});
 </script>
 {% endif %}

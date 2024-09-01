@@ -29,17 +29,19 @@ class UserLoginController(AUserController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        response, event, screen = self._load_screen_context(
-            request,
-            EventLoader(),
-            self._form_data_to_str_or_none(data, 'event_uniq_id'),
-            self._form_data_to_str_or_none(data, 'screen_uniq_id'),
-        )
+        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
+        screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
+        response, event = self._load_event_context(
+            request, EventLoader.get(request=request, lazy_load=True), event_uniq_id)
         if response:
             return response
         if data['password'] == event.update_password:
             Message.success(request, 'Authentification réussie !')
             SessionHandler.store_password(request, event, data['password'])
+            response, event, screen = self._load_screen_context(
+                request, EventLoader.get(request=request, lazy_load=False), event_uniq_id, screen_uniq_id)
+            if response:
+                return response
             return self._user_render_screen(request, event, screen)
         if data['password'] == '':
             Message.warning(request, 'Veuillez indiquer le code d\'accès.')

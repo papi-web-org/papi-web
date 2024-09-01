@@ -309,8 +309,9 @@ class NewFamily:
         self.calculated_last: int | None = None
         self.calculated_number: int | None = None
         self.calculated_parts: int | None = None
-        if self._calculate_screens():
-            self._build_screens()
+        if not self.event.lazy_load:
+            if self._calculate_screens():
+                self._build_screens()
 
     @property
     def id(self) -> int:

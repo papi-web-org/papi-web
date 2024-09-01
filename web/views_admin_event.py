@@ -27,7 +27,7 @@ logger: Logger = get_logger()
 class AdminEventController(AAdminController):
 
     def _admin_validate_event_update_data(
-            self, action: str, event_loader: EventLoader, admin_event: NewEvent | None,
+            self, request: HTMXRequest, action: str, admin_event: NewEvent | None,
             data: dict[str, str] | None = None,
     ) -> StoredEvent:
         if data is None:
@@ -45,12 +45,13 @@ class AdminEventController(AAdminController):
             elif uniq_id.find('/') != -1:
                 errors['uniq_id'] = "le caractère « / » n\'est pas autorisé"
             else:
+                event_ids: list[str] = EventLoader.get(request=request, lazy_load=True).event_ids
                 match action:
                     case 'create' | 'clone':
-                        if uniq_id in event_loader.event_ids:
+                        if uniq_id in event_ids:
                             errors['uniq_id'] = f'L\'évènement [{uniq_id}] existe déjà.'
                     case 'update':
-                        if uniq_id != admin_event.uniq_id and uniq_id in event_loader.event_ids:
+                        if uniq_id != admin_event.uniq_id and uniq_id in event_ids:
                             errors['uniq_id'] = f'L\'évènement [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')
@@ -130,8 +131,8 @@ class AdminEventController(AAdminController):
 
     def _admin_event_render_edit_modal(
             self,
+            request: HTMXRequest,
             action: str,
-            event_loader: EventLoader,
             admin_event: NewEvent | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
@@ -158,7 +159,8 @@ class AdminEventController(AAdminController):
                     data['css'] = self._value_to_form_data(admin_event.stored_event.css)
                     data['path'] = self._value_to_form_data(admin_event.stored_event.path)
                     data['update_password'] = self._value_to_form_data(admin_event.stored_event.update_password)
-                    data['record_illegal_moves'] = self._value_to_form_data(admin_event.stored_event.record_illegal_moves)
+                    data['record_illegal_moves'] = self._value_to_form_data(
+                        admin_event.stored_event.record_illegal_moves)
                     data['allow_results_deletion'] = self._value_to_form_data(
                         admin_event.stored_event.allow_results_deletion_on_input_screens)
                     for i in range(1, 4):
@@ -179,7 +181,7 @@ class AdminEventController(AAdminController):
                     pass
                 case _:
                     raise ValueError(f'action=[{action}]')
-            stored_event: StoredEvent = self._admin_validate_event_update_data(action, event_loader, admin_event, data)
+            stored_event: StoredEvent = self._admin_validate_event_update_data(request, action, admin_event, data)
             errors = stored_event.errors
         if errors is None:
             errors = {}
@@ -215,7 +217,6 @@ class AdminEventController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event: NewEvent | None = None
         match action:
@@ -224,13 +225,14 @@ class AdminEventController(AAdminController):
             case 'clone' | 'update' | 'delete':
                 admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
                 try:
-                    admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
+                    admin_event: NewEvent = EventLoader.get(request=request, lazy_load=True).load_event(
+                        admin_event_uniq_id)
                 except PapiWebException as pwe:
                     Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : {pwe}.')
                     return self._render_messages(request)
             case _:
                 raise ValueError(f'action=[{action}]')
-        return self._admin_event_render_edit_modal(action, event_loader, admin_event, )
+        return self._admin_event_render_edit_modal(request, action, admin_event, )
 
     @post(
         path='/admin-event-update',
@@ -240,7 +242,7 @@ class AdminEventController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event: NewEvent | None = None
         match action:
@@ -255,9 +257,9 @@ class AdminEventController(AAdminController):
                     return self._render_messages(request)
             case _:
                 raise ValueError(f'action=[{action}]')
-        stored_event: StoredEvent = self._admin_validate_event_update_data(action, event_loader, admin_event, data)
+        stored_event: StoredEvent = self._admin_validate_event_update_data(request, action, admin_event, data)
         if stored_event.errors:
-            return self._admin_event_render_edit_modal(action, event_loader, admin_event, data, stored_event.errors)
+            return self._admin_event_render_edit_modal(request, action, admin_event, data, stored_event.errors)
         uniq_id: str = stored_event.uniq_id
         match action:
             case 'create':
@@ -265,13 +267,13 @@ class AdminEventController(AAdminController):
                 with EventDatabase(uniq_id, write=True) as event_database:
                     event_database.update_stored_event(stored_event)
                     event_database.commit()
-                event_loader.clear_cache()
                 Message.success(request, f'L\'évènement [{uniq_id}] a été créé.')
-                admin_event = event_loader.load_event(uniq_id)
-                return self._admin_render_index(request, event_loader, admin_event=admin_event, admin_event_selector='')
+                admin_event = event_loader.reload_event(uniq_id)
+                return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='')
             case 'update':
                 rename: bool = uniq_id != admin_event.uniq_id
                 if rename:
+                    event_loader.clear_cache(admin_event.uniq_id)
                     try:
                         EventDatabase(admin_event.uniq_id).rename(new_uniq_id=uniq_id)
                     except PermissionError as pe:
@@ -280,14 +282,13 @@ class AdminEventController(AAdminController):
                 with EventDatabase(uniq_id, write=True) as event_database:
                     event_database.update_stored_event(stored_event)
                     event_database.commit()
-                event_loader.clear_cache(admin_event.uniq_id)
                 if rename:
                     Message.success(
                         request, f'L\'évènement [{admin_event.uniq_id}] a été renommé ([{uniq_id}) et modifié.')
                 else:
                     Message.success(request, f'L\'évènement [{uniq_id}] a été modifié.')
-                admin_event = event_loader.load_event(uniq_id)
-                return self._admin_render_index(request, event_loader, admin_event=admin_event, admin_event_selector='')
+                admin_event = event_loader.reload_event(uniq_id)
+                return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='')
             case 'clone':
                 EventDatabase(admin_event.uniq_id).clone(new_uniq_id=uniq_id)
                 with EventDatabase(uniq_id, write=True) as event_database:
@@ -295,13 +296,13 @@ class AdminEventController(AAdminController):
                     event_database.commit()
                 Message.success(request, f'L\'évènement [{admin_event.uniq_id}] a été dupliqué ([{uniq_id}]).')
                 admin_event = event_loader.load_event(uniq_id)
-                return self._admin_render_index(request, event_loader, admin_event=admin_event, admin_event_selector='')
+                return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='')
             case 'delete':
                 arch = EventDatabase(admin_event.uniq_id).delete()
                 event_loader.clear_cache(admin_event.uniq_id)
                 Message.success(
                     request,
                     f'L\'évènement [{admin_event.uniq_id}] a été supprimé, la base de données a été archivée ({arch}).')
-                return self._admin_render_index(request, event_loader, admin_main_selector='@events')
+                return self._admin_render_index(request, admin_main_selector='@events')
             case _:
                 raise ValueError(f'action=[{action}]')

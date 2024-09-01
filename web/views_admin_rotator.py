@@ -159,11 +159,10 @@ class AdminRotatorController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
-            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
+            admin_event: NewEvent = EventLoader.get(request=request, lazy_load=True).load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
@@ -193,7 +192,7 @@ class AdminRotatorController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
@@ -203,7 +202,7 @@ class AdminRotatorController(AAdminController):
             return self._render_messages(request)
         if action == 'close':
             return self._admin_render_index(
-                request, event_loader, admin_event=admin_event, admin_event_selector='@rotators')
+                request, admin_event=admin_event, admin_event_selector='@rotators')
         admin_rotator: NewRotator | None = None
         match action:
             case 'update' | 'delete' | 'clone':
@@ -247,10 +246,9 @@ class AdminRotatorController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
+        admin_event = event_loader.reload_event(admin_event.uniq_id)
         if next_rotator_id:
             admin_rotator = admin_event.rotators_by_id[next_rotator_id]
             return self._admin_rotator_render_edit_modal(next_action, admin_event, admin_rotator)
         else:
-            return self._admin_render_index(
-                request, event_loader, admin_event=admin_event, admin_event_selector='@rotators')
+            return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='@rotators')

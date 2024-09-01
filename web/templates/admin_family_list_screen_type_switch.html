@@ -2,7 +2,7 @@
     <input
             name="{{ name }}"
             hx-post="{{ url_for('admin-update-header') }}"
-            hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@families", "{{ name }}": "{% if show %}off{% else %}on{% endif %}"}'
+            hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "{{ admin_event_selector }}", "{{ name }}": "{% if show %}off{% else %}on{% endif %}"}'
             hx-swap="multi:#admin-header,#admin-content"
             hx-indicator="#please-wait"
             class="form-check-input"

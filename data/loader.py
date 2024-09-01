@@ -2,6 +2,8 @@ import time
 from contextlib import suppress
 from logging import Logger
 
+from litestar.contrib.htmx.request import HTMXRequest
+
 from common.papi_web_config import PapiWebConfig
 from data.event import NewEvent
 from database.sqlite import EventDatabase
@@ -10,11 +12,10 @@ from common.logger import get_logger
 
 logger: Logger = get_logger()
 
-event_last_load_date_by_uniq_id: dict[str, float] = {}
-
 
 class EventLoader:
-    def __init__(self):
+    def __init__(self, lazy_load: bool):
+        self.lazy_load = lazy_load
         self._event_ids: list[str] | None = None
         self._loaded_stored_events_by_id: dict[str, StoredEvent | None] = {}
         self._stored_events_by_id: dict[str, StoredEvent] | None = None
@@ -26,6 +27,17 @@ class EventLoader:
         self._passed_events: list[NewEvent] | None = None
         self._current_events: list[NewEvent] | None = None
         self._coming_events: list[NewEvent] | None = None
+
+    @staticmethod
+    def get(request: HTMXRequest | None, lazy_load: bool):
+        if not request:
+            return EventLoader(lazy_load=lazy_load)
+        event_loader: EventLoader = request.state.get('event_loader')
+        if event_loader and lazy_load:
+            return event_loader
+        event_loader = EventLoader(lazy_load=False)
+        request.state['event_loader'] = event_loader
+        return event_loader
 
     def clear_cache(self, event_uniq_id: str = None):
         self._event_ids = None
@@ -73,20 +85,21 @@ class EventLoader:
                 self.stored_events_by_id.values(), key=lambda event: event.name)
         return self._stored_events_sorted_by_name
 
-    def _load_event(self, uniq_id: str) -> NewEvent:
-        stored_event: StoredEvent = self.load_stored_event(uniq_id)
-        event: NewEvent = NewEvent(stored_event, event_last_load_date_by_uniq_id.get(uniq_id, None))
-        event_last_load_date_by_uniq_id[uniq_id] = time.time()
-        return event
-
-    def load_event(self, uniq_id: str, reload: bool = False) -> NewEvent:
+    def _load_event(self, uniq_id: str, reload: bool) -> NewEvent:
         if reload:
             self.clear_cache(uniq_id)
         try:
             return self._loaded_events_by_id[uniq_id]
         except KeyError:
-            self._loaded_events_by_id[uniq_id] = self._load_event(uniq_id)
+            stored_event: StoredEvent = self.load_stored_event(uniq_id)
+            self._loaded_events_by_id[uniq_id] = NewEvent(stored_event, lazy_load=self.lazy_load)
             return self._loaded_events_by_id[uniq_id]
+
+    def load_event(self, uniq_id: str) -> NewEvent:
+        return self._load_event(uniq_id, reload=False)
+
+    def reload_event(self, uniq_id: str) -> NewEvent:
+        return self._load_event(uniq_id, reload=True)
 
     @property
     def events_by_id(self) -> dict[str, NewEvent]:

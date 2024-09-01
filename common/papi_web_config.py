@@ -306,16 +306,24 @@ class PapiWebConfig:
 
     @property
     def user_index_update_delay(self) -> int:
-        return 5
+        return 10
 
     @property
     def user_event_update_delay(self) -> int:
-        return 5
+        return 10
 
     @property
     def user_screen_update_delay(self) -> int:
-        return 5
+        return 10
 
     @property
     def user_screen_set_update_delay(self) -> int:
-        return 5
+        return 10
+
+    @property
+    def admin_allowed_columns(self) -> list[int]:
+        return [1, 2, 3, 4, 6]
+
+    @property
+    def default_admin_columns(self) -> int:
+        return 4

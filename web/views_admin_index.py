@@ -82,7 +82,7 @@ class AdminIndexController(AAdminController):
         name='admin-render'
     )
     async def htmx_admin_render_index(self, request: HTMXRequest) -> Template:
-        return self._admin_render_index(request, EventLoader())
+        return self._admin_render_index(request)
 
     @post(
         path='/admin-update-header',
@@ -92,9 +92,8 @@ class AdminIndexController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
-        admin_main_selector: str = data.get('admin_main_selector', '')
-        admin_event_selector: str = data.get('admin_event_selector', '')
+        admin_main_selector: str = self._form_data_to_str_or_none(data, 'admin_main_selector', '')
+        admin_event_selector: str = self._form_data_to_str_or_none(data, 'admin_event_selector', '')
         admin_event: NewEvent | None = None
         if not admin_main_selector:
             pass
@@ -102,19 +101,29 @@ class AdminIndexController(AAdminController):
             pass
         else:
             try:
-                admin_event = event_loader.load_event(admin_main_selector)
+                admin_event = EventLoader.get(request=request, lazy_load=False).load_event(admin_main_selector)
             except PapiWebException as pwe:
                 Message.error(request, f'L\'évènement [{admin_main_selector}] est introuvable : {pwe}')
                 return self._render_messages(request)
-        if 'show_family_screens_on_screen_list' in data:
+        field: str = f'admin_columns'
+        if field in data:
+            SessionHandler.set_session_admin_columns(request, self._form_data_to_int_or_none(data, field))
+        field: str = 'show_family_screens_on_screen_list'
+        if field in data:
             SessionHandler.set_session_show_family_screens_on_screen_list(
-                request, self._form_data_to_bool_or_none(data, 'show_family_screens_on_screen_list'))
-        if 'show_details_on_screen_list' in data:
+                request, self._form_data_to_bool_or_none(data, field))
+        field: str = 'show_details_on_screen_list'
+        if field in data:
             SessionHandler.set_session_show_details_on_screen_list(
-                request, self._form_data_to_bool_or_none(data, 'show_details_on_screen_list'))
-        if 'show_details_on_family_list' in data:
+                request, self._form_data_to_bool_or_none(data, field))
+        field: str = 'show_details_on_family_list'
+        if field in data:
             SessionHandler.set_session_show_details_on_family_list(
-                request, self._form_data_to_bool_or_none(data, 'show_details_on_family_list'))
+                request, self._form_data_to_bool_or_none(data, field))
+        field: str = 'show_details_on_rotator_list'
+        if field in data:
+            SessionHandler.set_session_show_details_on_rotator_list(
+                request, self._form_data_to_bool_or_none(data, field))
         screen_types: list[str] = SessionHandler.get_session_screen_types_on_screen_list(request)
         for field, screen_type in {
             'show_boards_screens_on_screen_list': 'boards',
@@ -129,19 +138,6 @@ class AdminIndexController(AAdminController):
                     screen_types.remove(screen_type)
                 SessionHandler.set_session_screen_types_on_screen_list(request, screen_types)
                 continue
-        screen_types: list[str] = SessionHandler.get_session_screen_types_on_family_list(request)
-        for field, family_type in {
-            'show_boards_families_on_family_list': 'boards',
-            'show_input_families_on_family_list': 'input',
-            'show_players_families_on_family_list': 'players',
-        }.items():
-            if field in data:
-                if self._form_data_to_bool_or_none(data, field):
-                    screen_types.append(family_type)
-                else:
-                    screen_types.remove(family_type)
-                SessionHandler.set_session_screen_types_on_family_list(request, screen_types)
-                continue
         return self._admin_render_index(
-            request, event_loader, admin_main_selector=admin_main_selector, admin_event=admin_event,
+            request, admin_main_selector=admin_main_selector, admin_event=admin_event,
             admin_event_selector=admin_event_selector)

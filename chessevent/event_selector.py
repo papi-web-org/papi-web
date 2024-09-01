@@ -1,10 +1,10 @@
-from typing import List, Optional
+from typing import List
 from logging import Logger
 
 from chessevent.action_selector import ActionSelector
 from common.singleton import singleton
 from common.logger import get_logger, print_interactive, input_interactive
-from data.event import Event, get_events_sorted_by_name, NewEvent
+from data.event import NewEvent
 from data.loader import EventLoader
 
 logger: Logger = get_logger()
@@ -16,7 +16,7 @@ class EventSelector:
         self.__silent: bool = False
 
     def run(self) -> bool:
-        events: List[NewEvent] = EventLoader().events_sorted_by_name
+        events: List[NewEvent] = EventLoader.get(request=None, lazy_load=True).events_sorted_by_name
         if not events:
             logger.error('Aucun évènement trouvé')
             return False

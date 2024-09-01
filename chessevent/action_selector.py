@@ -41,7 +41,7 @@ class ActionSelector:
         return tournaments
 
     def run(self, event_uniq_id: str) -> bool:
-        event: NewEvent = EventLoader().load_event(event_uniq_id, reload=True)
+        event: NewEvent = EventLoader.get(request=None, lazy_load=False).load_event(event_uniq_id, reload=True)
         logger.info('Évènement : %s', event.name)
         tournaments: list[NewTournament] = self.__get_chessevent_tournaments(event)
         if not tournaments:
@@ -96,7 +96,7 @@ class ActionSelector:
                     chessevent_timeout_max: int = 180
                     chessevent_timeout: int = chessevent_timeout_min
                     while True:
-                        event = EventLoader().load_event(event_uniq_id, reload=True)
+                        event = EventLoader.get(request=None, lazy_load=False).load_event(event_uniq_id, reload=True)
                         tournaments: list[NewTournament] = self.__get_chessevent_tournaments(event)
                         if not tournaments:
                             logger.error('Plus aucun tournoi n\'est éligible pour la création des fichiers Papi.')

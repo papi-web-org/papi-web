@@ -1,9 +1,11 @@
+{% from 'macros.j2' import tooltip_attributes %}
+
 {% extends 'base.html' %}
 
 {% block header %}
 {% with print_main_tabs=admin_main_selector in main_nav_tabs %}
 {% with nav_tabs=main_nav_tabs if print_main_tabs else event_nav_tabs %}
-    <div id="admin-header" class="header admin-header position-sticky top-0 mx-2 px-3">
+    <div id="admin-header" class="header admin-header position-sticky top-0 mx-2">
         <div hx-ext="bs-tabs" class="bs-tabs">
             <nav>
                 <div class="nav nav-tabs mt-1" id="nav-tab" role="tablist">
@@ -49,6 +51,7 @@
                             >{{ nav_tab.title }}</button>
                         {% endwith %}
                     {% endfor %}
+                    {% include 'admin_columns_buttons.html' %}
                 </div>
             </nav>
         </div>
@@ -83,7 +86,7 @@
         <div id="admin-modal-container"
             class="modal modal-blur fade overflow-auto"
             style="display: none"
-            aria-hidden="false"
+            aria-hidden="true"
             data-bs-backdrop="static"
             data-bs-keyboard="false"
             tabindex="-1">
@@ -96,7 +99,7 @@
             $(document).ready(function(){
                 $('body .modal-backdrop').remove();
             });
-            {# manually remove the modal backdrop when reloading #admin-content (too many modal-backdrop divs are created by Bootstrap when opening modals) #}
+            {# manually remove the tooltips when reloading #admin-content (tooltip elements are created by Bootstrap when tooltips but sometimes not removed) #}
             $(document).ready(function(){
                 $('body .tooltip').remove();
                 $('body .tooltip-inner').remove();

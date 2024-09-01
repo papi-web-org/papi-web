@@ -53,7 +53,7 @@ class UserResultController(AUserController):
             screen_uniq_id: str,
     ) -> Redirect | Template:
         response, event, screen, tournament, board = self._load_board_context(
-            request, EventLoader(), event_uniq_id, screen_uniq_id, tournament_id, True, board_id)
+            request, event_uniq_id, screen_uniq_id, tournament_id, True, board_id)
         if response:
             return response
         return self._render_input_screen_result_modal(event, screen, tournament, board)
@@ -72,9 +72,9 @@ class UserResultController(AUserController):
             self, request: HTMXRequest,
             event_uniq_id: str, screen_uniq_id: str, tournament_id: int, round: int, board_id: int, result: int | None,
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=False)
         response, event, screen, tournament, board = self._load_board_context(
-            request, event_loader, event_uniq_id, screen_uniq_id, tournament_id, True, board_id)
+            request, event_uniq_id, screen_uniq_id, tournament_id, True, board_id)
         if response:
             return response
         if result not in Result.imputable_results():
@@ -83,8 +83,7 @@ class UserResultController(AUserController):
         tournament.add_result(board, Result.from_papi_value(result))
         SessionHandler.set_session_last_result_updated(request, tournament_id, round, board_id)
         event_loader.clear_cache(event.uniq_id)
-        return self._render_input_screen_board_row(
-            request, event_loader, event_uniq_id, screen_uniq_id, tournament_id, board_id)
+        return self._render_input_screen_board_row(request, event_uniq_id, screen_uniq_id, tournament_id, board_id)
 
     @delete(
         path='/user-input-screen-delete-result'
@@ -96,9 +95,9 @@ class UserResultController(AUserController):
             self, request: HTMXRequest, event_uniq_id: str, screen_uniq_id: str, tournament_id: int, round: int,
             board_id: int,
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=False)
         response, event, screen, tournament, board = self._load_board_context(
-            request, event_loader, event_uniq_id, screen_uniq_id, tournament_id, True, board_id)
+            request, event_uniq_id, screen_uniq_id, tournament_id, True, board_id)
         if response:
             return response
         with suppress(ValueError):
@@ -106,4 +105,4 @@ class UserResultController(AUserController):
             SessionHandler.set_session_last_result_updated(request, tournament_id, round, board_id)
         event_loader.clear_cache(event.uniq_id)
         return self._render_input_screen_board_row(
-            request, event_loader, event_uniq_id, screen_uniq_id, tournament_id, board_id)
+            request, event_uniq_id, screen_uniq_id, tournament_id, board_id)

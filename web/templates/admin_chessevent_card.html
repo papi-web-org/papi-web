@@ -1,0 +1,67 @@
+{% extends 'admin_card.html' %}
+{% from 'macros.j2' import tooltip_attributes %}
+
+{% block card_header %}
+    {{ chessevent.uniq_id }}
+{% endblock %}
+
+{% block card_title %}
+    {{ chessevent.uniq_id }}
+{% endblock %}
+
+{% block card_text %}
+    <div>
+        Utilisateur : {{ chessevent.user_id }}
+    </div>
+    <div>
+        Mot de passe : {{ chessevent.password }}
+    </div>
+    <div>
+        Évènement : {{ chessevent.event_id }}
+    </div>
+{% endblock %}
+
+{% block card_buttons_left %}
+    <span {{ tooltip_attributes('info', 'Modifier les propriétés de la connexion à ChessEvent.', 'top') }}>
+        <button
+                class="btn btn-sm btn-primary p-1"
+                hx-post="{{ url_for('admin-rotator-render-edit-modal') }}"
+                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_chessevent_id": "{{ chessevent.id }}"}'
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait" >
+            <i class="bi-pencil-fill"></i> Éditer
+        </button>
+    </span>
+{% endblock %}
+
+{% block card_buttons_right %}
+    <span {{ tooltip_attributes('info', 'Dupliquer la connexion à ChessEvent.', 'top') }}>
+        <button
+                class="btn btn-sm btn-primary p-1"
+                hx-post="{{ url_for('admin-chessevent-update') }}"
+                hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_chessevent_id": "{{ chessevent.id }}"}'
+                hx-swap="multi:#messages,#admin-header,#admin-content"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait" >
+            <i class="bi-copy"></i>
+        </button>
+    </span>
+    <span {{ tooltip_attributes('info', 'Supprimer la connexion à ChessEvent.', 'top') }}>
+        <button
+                class="btn btn-sm btn-danger p-1"
+                hx-post="{{ url_for('admin-chessevent-render-edit-modal') }}"
+                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_chessevent_id": "{{ chessevent.id }}"}'
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait" >
+            <i class="bi-trash-fill"></i>
+        </button>
+    </span>
+{% endblock %}
+

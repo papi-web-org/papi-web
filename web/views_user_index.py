@@ -15,6 +15,7 @@ from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.board import Board
 from data.event import NewEvent
+from data.family import NewFamily
 from data.loader import EventLoader
 from data.player import Player
 from data.rotator import NewRotator
@@ -32,46 +33,73 @@ class AUserController(AController):
     def _load_event_context(
             cls,
             request: HTMXRequest,
-            event_loader: EventLoader,
+            lazy_load: bool,
             event_uniq_id: str,
     ) -> tuple[Redirect | Template | None, NewEvent | None, ]:
-        event: NewEvent = event_loader.load_event(event_uniq_id)
+        event: NewEvent = EventLoader.get(request=request, lazy_load=lazy_load).load_event(event_uniq_id)
         if event.errors:
             return cls._redirect_to_index_on_error(request, event.errors), None
         if not event.public:
             Message.error(request, f'L\'évènement [{event.uniq_id}] est privé.')
-            return cls._user_render_index(request, event_loader), None
+            return cls._user_render_index(request), None
         return None, event
 
     @classmethod
     def _load_screen_context(
             cls,
             request: HTMXRequest,
-            event_loader: EventLoader,
+            lazy_load: bool,
             event_uniq_id: str,
             screen_uniq_id: str,
-    ) -> tuple[Redirect | Template | None, NewEvent | None, NewScreen | None, ]:
-        response, event = cls._load_event_context(request, event_loader, event_uniq_id)
+    ) -> tuple[Redirect | Template | None, NewEvent | None, NewScreen | None]:
+        response, event = cls._load_event_context(request, lazy_load, event_uniq_id)
         if response:
             return response, None, None
         try:
             screen = event.screens_by_uniq_id[screen_uniq_id]
+            return None, event, screen
         except KeyError:
             return cls._redirect_to_index_on_error(
                 request, f'L\'écran [{screen_uniq_id}] n\'existe pas.'), None, None
-        return None, event, screen
+
+    @classmethod
+    def _load_basic_screen_or_family_context(
+            cls,
+            request: HTMXRequest,
+            lazy_load: bool,
+            event_uniq_id: str,
+            screen_uniq_id: str,
+    ) -> tuple[Redirect | Template | None, NewEvent | None, NewScreen | None, NewFamily | None]:
+        response, event = cls._load_event_context(request, lazy_load, event_uniq_id)
+        if response:
+            return response, None, None, None
+        if ':' in screen_uniq_id:
+            family_uniq_id: str = screen_uniq_id.split(':')[0]
+            try:
+                family: NewFamily = event.families_by_uniq_id[family_uniq_id]
+                return None, event, None, family
+            except KeyError:
+                return cls._redirect_to_index_on_error(
+                    request, f'La famille [{family_uniq_id}] n\'existe pas.'), None, None, None
+        else:
+            try:
+                screen = event.basic_screens_by_uniq_id[screen_uniq_id]
+                return None, event, screen, None
+            except KeyError:
+                return cls._redirect_to_index_on_error(
+                    request, f'L\'écran [{screen_uniq_id}] n\'existe pas.'), None, None, None
 
     @classmethod
     def _load_tournament_context(
             cls,
             request: HTMXRequest,
-            event_loader: EventLoader,
+            lazy_load: bool,
             event_uniq_id: str,
             screen_uniq_id: str,
             tournament_id: int,
             tournament_started: bool | None,
     ) -> tuple[Redirect | Template | None, NewEvent | None, NewScreen | None, NewTournament | None, ]:
-        response, event, screen = cls._load_screen_context(request, event_loader, event_uniq_id, screen_uniq_id)
+        response, event, screen = cls._load_screen_context(request, lazy_load, event_uniq_id, screen_uniq_id)
         if response:
             return response, None, None, None
         try:
@@ -96,7 +124,6 @@ class AUserController(AController):
     def _load_board_context(
             cls,
             request: HTMXRequest,
-            event_loader: EventLoader,
             event_uniq_id: str,
             screen_uniq_id: str,
             tournament_id: int,
@@ -104,7 +131,7 @@ class AUserController(AController):
             board_id: int,
     ) -> tuple[Redirect | Template | None, NewEvent | None, NewScreen | None, NewTournament | None, Board | None, ]:
         response, event, screen, tournament = cls._load_tournament_context(
-            request, event_loader, event_uniq_id, screen_uniq_id, tournament_id, tournament_started)
+            request, False, event_uniq_id, screen_uniq_id, tournament_id, tournament_started)
         if response:
             return response, None, None, None, None
         if cls._event_login_needed(request, event, screen):
@@ -121,7 +148,6 @@ class AUserController(AController):
     def _load_player_context(
             cls,
             request: HTMXRequest,
-            event_loader: EventLoader,
             event_uniq_id: str,
             screen_uniq_id: str,
             tournament_id: int,
@@ -131,7 +157,7 @@ class AUserController(AController):
         Template | Redirect | None, NewEvent | None, NewScreen | None, NewTournament | None, Player | None, Board | None
     ]:
         response, event, screen, tournament = cls._load_tournament_context(
-            request, event_loader, event_uniq_id, screen_uniq_id, tournament_id, tournament_started)
+            request, False, event_uniq_id, screen_uniq_id, tournament_id, tournament_started)
         if response:
             return response, None, None, None, None, None
         if cls._event_login_needed(request, event, screen):
@@ -148,13 +174,12 @@ class AUserController(AController):
     @staticmethod
     def _user_render_index(
             request: HTMXRequest,
-            event_loader: EventLoader | None,
     ) -> Template:
         return HTMXTemplate(
             template_name="user_index.html",
             context={
                 'papi_web_config': PapiWebConfig(),
-                'event_loader': event_loader if event_loader else EventLoader(),
+                'event_loader': EventLoader.get(request=request, lazy_load=True),
                 'messages': Message.messages(request),
                 'now': time.time(),
             })
@@ -192,14 +217,13 @@ class AUserController(AController):
     def _render_input_screen_board_row(
             cls,
             request: HTMXRequest,
-            event_loader: EventLoader,
             event_uniq_id: str,
             screen_uniq_id: str,
             tournament_id: int,
             board_id: int,
     ) -> Template:
         response, event, screen, tournament, board = cls._load_board_context(
-            request, event_loader, event_uniq_id, screen_uniq_id, tournament_id, True, board_id)
+            request, event_uniq_id, screen_uniq_id, tournament_id, True, board_id)
         if response:
             return response
         return HTMXTemplate(
@@ -218,7 +242,8 @@ class AUserController(AController):
 
 class UserIndexController(AUserController):
     @staticmethod
-    def _user_index_update_needed(event_loader: EventLoader, date: float, ) -> bool:
+    def _user_index_update_needed(request: HTMXRequest, date: float, ) -> bool:
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         for event_uniq_id in event_loader.events_by_id:
             event: NewEvent = event_loader.load_event(event_uniq_id)
             if event.last_update > date:
@@ -241,9 +266,8 @@ class UserIndexController(AUserController):
         except ValueError as ve:
             Message.error(request, str(ve))
             return self._render_messages(request)
-        event_loader: EventLoader = EventLoader()
-        if self._user_index_update_needed(event_loader, date):
-            return self._user_render_index(request, event_loader)
+        if self._user_index_update_needed(request, date):
+            return self._user_render_index(request)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
 
@@ -252,4 +276,4 @@ class UserIndexController(AUserController):
         name='user-render',
     )
     async def htmx_user_render_index(self, request: HTMXRequest) -> Template:
-        return self._user_render_index(request, None)
+        return self._user_render_index(request)

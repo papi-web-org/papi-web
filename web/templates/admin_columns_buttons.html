@@ -1,0 +1,22 @@
+<span
+        class="text-nowrap ms-auto mt-1"
+        {{ tooltip_attributes('info', 'Changer le nombre de colonnes utilisées.', 'top') }}
+>
+    {% for c in papi_web_config.admin_allowed_columns %}
+        {% with id='admin-columns-'~c, name='admin_columns' %}
+            <button
+                    class="btn btn-primary text-nowrap py-0 px-1"
+                    {% if c != admin_columns %}
+                        hx-post="{{ url_for('admin-update-header') }}"
+                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_columns": "{{ c }}"}'
+                        hx-swap="multi:#admin-header,#admin-content"
+                        hx-indicator="#please-wait"
+                    {% else %}
+                        disabled
+                    {% endif %}
+            >
+                {{ c }}
+            </button>
+        {% endwith %}
+    {% endfor %}
+</span>

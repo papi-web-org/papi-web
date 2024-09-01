@@ -1,0 +1,91 @@
+{% extends 'admin_card.html' %}
+{% from 'macros.j2' import tooltip_attributes %}
+
+{% block card_header %}
+    {{ timer.uniq_id }}
+{% endblock %}
+
+{% block card_title %}
+    {{ timer.uniq_id }}
+{% endblock %}
+
+{% block card_text %}
+    <div style="background-color: {{ timer.colors[1] }}">&nbsp;{{ timer.delays[1] }} minutes avant&nbsp;</div>
+    <div style="background-color: {{ timer.colors[2] }}">&nbsp;{{ timer.delays[2] }} minutes avant&nbsp;</div>
+    <div style="background-color: {{ timer.colors[3] }}">&nbsp;{{ timer.delays[3] }} minutes après&nbsp;</div>
+    <hr/>
+    {% if timer.timer_hours_by_id|length > 0 %}
+        {% for timer_hour in timer.timer_hours_sorted_by_order %}
+            <div class="mb-2 {% if timer_hour.error %}text-danger{% endif %}">
+                {% if timer_hour.error %}<i class="bi-exclamation-triangle-fill"></i>{% endif %}
+                {% if timer_hour.date_str %}{{ timer_hour.date_str }} {% endif %}
+                {% if timer_hour.time_str %}{{ timer_hour.time_str }}{% else %}???{% endif %}
+                {% if timer_hour.round %}Ronde n°{{ timer_hour.round }}{% else %}{{ timer_hour.uniq_id }}{% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class=" mb-2 text-danger">
+            <i class="bi-exclamation-triangle-fill"></i> Aucun horaire défini
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block card_buttons_left %}
+    <span {{ tooltip_attributes('info', 'Modifier les propriétés du chronomètre.', 'top') }}>
+        <button
+                class="btn btn-sm btn-primary p-1"
+                hx-post="{{ url_for('admin-timer-render-edit-modal') }}"
+                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ timer.id }}"}'
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait" >
+            <i class="bi-pencil-fill"></i> Éditer
+        </button>
+    </span>
+    <span {{ tooltip_attributes('info', 'Modifier les horaires du chronomètre.', 'top') }}>
+        <button
+                class="btn btn-sm btn-primary p-1"
+                hx-post="{{ url_for('admin-timer-render-hours-modal') }}"
+                hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ timer.id }}"}'
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait" >
+            <i class="bi-collection-fill"></i>
+            Horaires
+        </button>
+    </span>
+{% endblock %}
+
+{% block card_buttons_right %}
+    <span {{ tooltip_attributes('info', 'Dupliquer le chronomètre.', 'top') }}>
+        <button
+                class="btn btn-sm btn-primary p-1"
+                hx-post="{{ url_for('admin-timer-render-edit-modal') }}"
+                hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ timer.id }}"}'
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait" >
+            <i class="bi-copy"></i>
+        </button>
+    </span>
+    <span {{ tooltip_attributes('info', 'Supprimer le chronomètre.', 'top') }}>
+        <button
+                class="btn btn-sm btn-danger p-1"
+                hx-post="{{ url_for('admin-timer-render-edit-modal') }}"
+                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ timer.id }}"}'
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait" >
+            <i class="bi-trash-fill"></i>
+        </button>
+    </span>
+{% endblock %}
+

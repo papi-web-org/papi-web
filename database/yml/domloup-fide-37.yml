@@ -7,7 +7,7 @@ record_illegal_moves: 0
 allow_results_deletion_on_input_screens: true
 chessevents:
   domloup-fide-37:
-    user_id: C69548
+    user_id: "C69548"
     password: "Find it!"
     event_id: "BRE_35_domloupfide37"
 timers:
@@ -84,6 +84,11 @@ tournaments:
     ffe_password: "ABCDEFGHIJ"
     chessevent_uniq_id: "domloup-fide-37"
     chessevent_tournament_name: "Tournoi F"
+  X:
+    filename: "domloup-fide-37-x"
+    name: "Tournoi X"
+    chessevent_uniq_id: "domloup-fide-37"
+    chessevent_tournament_name: "Tournois par niveaux"
 screens:
   saisie-A:
     name: "Tournoi A"
@@ -133,7 +138,7 @@ screens:
     sets:
       -
         tournament_uniq_id: "F"
-  affichage-AB:
+  affichage-2-AB:
     name: "Tournois A et B"
     type: "boards"
     menu:
@@ -143,7 +148,7 @@ screens:
         tournament_uniq_id: "A"
       -
         tournament_uniq_id: "B"
-  affichage-CD:
+  affichage-2-CD:
     name: "Tournois C et D"
     type: "boards"
     menu:
@@ -153,7 +158,7 @@ screens:
         tournament_uniq_id: "C"
       -
         tournament_uniq_id: "D"
-  affichage-EF:
+  affichage-2-EF:
     name: "Tournois E et F"
     type: "boards"
     menu:
@@ -163,7 +168,7 @@ screens:
         tournament_uniq_id: "E"
       -
         tournament_uniq_id: "F"
-  affichage-ABC:
+  affichage-3-ABC:
     name: "Tournois A, B et C"
     type: "boards"
     menu:
@@ -175,7 +180,7 @@ screens:
         tournament_uniq_id: "B"
       -
         tournament_uniq_id: "C"
-  affichage-DEF:
+  affichage-3-DEF:
     name: "Tournois D, E et F"
     type: "boards"
     menu:
@@ -247,6 +252,7 @@ screens:
     results_limit: 20
   resultats-ABC:
     type: "results"
+    name: "Derniers résultats tournois A, B et C"
     timer_uniq_id: "chronometre"
     results_limit: 20
     results_tournament_uniq_ids:
@@ -255,6 +261,7 @@ screens:
       - "C"
   resultats-DEF:
     type: "results"
+    name: "Derniers résultats tournois D, E et F"
     timer_uniq_id: "chronometre"
     results_limit: 20
     results_tournament_uniq_ids:
@@ -262,12 +269,12 @@ screens:
       - "E"
       - "F"
 rotators:
-  affichage-abc-def:
+  affichage-3:
     screen_uniq_ids:
-      - "affichage-ABC"
-      - "affichage-DEF"
-  affichage-ab-cd-ef:
+      - "affichage-3-ABC"
+      - "affichage-3-DEF"
+  affichage-2:
     screen_uniq_ids:
-      - "affichage-AB"
-      - "affichage-CD"
-      - "affichage-EF"
+      - "affichage-2-AB"
+      - "affichage-2-CD"
+      - "affichage-2-EF"

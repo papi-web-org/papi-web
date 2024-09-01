@@ -25,7 +25,8 @@ class UserDownloadController(AUserController):
     async def htmx_user_download_event_tournaments(
             self, request: HTMXRequest, event_uniq_id: str
     ) -> Response[bytes] | Template:
-        response, event = self._load_event_context(request, EventLoader(), event_uniq_id)
+        response, event = self._load_event_context(
+            request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
         if response:
             return response
         tournament_files: list[Path] = [
@@ -52,7 +53,8 @@ class UserDownloadController(AUserController):
     async def htmx_user_download_tournament(
             self, request: HTMXRequest, event_uniq_id: str, tournament_id: int
     ) -> File | Template:
-        response, event = self._load_event_context(request, EventLoader(), event_uniq_id)
+        response, event = self._load_event_context(
+            request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
         if response:
             return response
         try:

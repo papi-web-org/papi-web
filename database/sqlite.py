@@ -189,9 +189,10 @@ class EventDatabase(SQLiteDatabase):
                     self._check_populate_dict(
                         yml_file, '', event_dict,
                         mandatory_fields=['name', ],
-                        optional_fields=['start', 'stop', 'path', 'css', 'public', 'update_password', 'record_illegal_moves',
-                                         'allow_results_deletion_on_input_screens', 'chessevents', 'tournaments',
-                                         'timers', 'screens', 'families', 'rotators', 'timer_colors', 'timer_delays', ],
+                        optional_fields=['start', 'stop', 'path', 'css', 'public', 'update_password',
+                                         'record_illegal_moves', 'allow_results_deletion_on_input_screens',
+                                         'chessevents', 'tournaments', 'timers', 'screens', 'families', 'rotators',
+                                         'timer_colors', 'timer_delays', ],
                         empty_allowed=False)
                     timer_delays: dict[int, int] | None = None
                     if 'timer_delays' in event_dict:

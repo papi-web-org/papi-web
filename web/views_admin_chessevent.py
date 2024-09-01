@@ -85,7 +85,7 @@ class AdminChessEventController(AAdminController):
             match action:
                 case 'update':
                     data['uniq_id'] = self._value_to_form_data(admin_chessevent.stored_chessevent.uniq_id)
-                case 'create' | 'clone':
+                case 'create':
                     data['uniq_id'] = ''
                 case 'delete':
                     pass
@@ -135,11 +135,10 @@ class AdminChessEventController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
-            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
+            admin_event: NewEvent = EventLoader.get(request=request, lazy_load=True).load_event(admin_event_uniq_id)
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
@@ -169,7 +168,7 @@ class AdminChessEventController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = self._form_data_to_str_or_none(data, 'action')
         admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
         try:
@@ -177,6 +176,9 @@ class AdminChessEventController(AAdminController):
         except PapiWebException as pwe:
             Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
             return self._render_messages(request)
+        if action == 'close':
+            return self._admin_render_index(
+                request, admin_event=admin_event, admin_event_selector='@chessevents')
         admin_chessevent: NewChessEvent | None = None
         match action:
             case 'update' | 'delete' | 'clone':
@@ -195,6 +197,8 @@ class AdminChessEventController(AAdminController):
         if stored_chessevent.errors:
             return self._admin_chessevent_render_edit_modal(
                 action, admin_event, admin_chessevent, data, stored_chessevent.errors)
+        next_chessevent_id: int | None = None
+        next_action: str | None = None
         with EventDatabase(admin_event.uniq_id, write=True) as event_database:
             match action:
                 case 'update':
@@ -203,6 +207,8 @@ class AdminChessEventController(AAdminController):
                 case 'create':
                     stored_chessevent = event_database.add_stored_chessevent(stored_chessevent)
                     Message.success(request, f'La connexion à ChessEvent [{stored_chessevent.uniq_id}] a été créée.')
+                    next_chessevent_id = stored_chessevent.id
+                    next_action = 'update'
                 case 'delete':
                     event_database.delete_stored_chessevent(admin_chessevent.id)
                     Message.success(request, f'La connexion à ChessEvent [{admin_chessevent.uniq_id}] a été supprimée.')
@@ -212,9 +218,14 @@ class AdminChessEventController(AAdminController):
                         request,
                         f'La connexion à ChessEvent [{admin_chessevent.uniq_id}] a été dupliquée '
                         f'([{stored_chessevent.uniq_id}]).')
+                    next_chessevent_id = stored_chessevent.id
+                    next_action = 'update'
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.load_event(admin_event.uniq_id, reload=True)
-        return self._admin_render_index(
-            request, event_loader, admin_event=admin_event, admin_event_selector='@chessevents')
+        admin_event = event_loader.reload_event(admin_event.uniq_id)
+        if next_chessevent_id:
+            admin_chessevent = admin_event.chessevents_by_id[next_chessevent_id]
+            return self._admin_chessevent_render_edit_modal(next_action, admin_event, admin_chessevent)
+        else:
+            return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='@chessevents')

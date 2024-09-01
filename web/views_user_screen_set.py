@@ -15,9 +15,10 @@ from litestar.status_codes import HTTP_304_NOT_MODIFIED
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.event import NewEvent
+from data.family import NewFamily
 from data.loader import EventLoader
-from data.screen import NewScreen
 from data.screen_set import NewScreenSet
+from data.tournament import NewTournament
 from data.util import ScreenType
 from web.messages import Message
 from web.session import SessionHandler
@@ -28,45 +29,52 @@ logger: Logger = get_logger()
 
 class UserScreenSetController(AUserController):
     @staticmethod
-    def _user_screen_set_div_update_needed(screen_set: NewScreenSet, date: float, ) -> bool:
-        if screen_set.tournament.last_update > date:
+    def _user_screen_set_div_update_needed(screen_set: NewScreenSet, family: NewFamily, date: float, ) -> bool:
+        tournament: NewTournament = screen_set.tournament if screen_set else family.tournament
+        if tournament.last_update > date:
+            if tournament.last_update > date:
+                return True
+        if tournament.last_check_in_update > date:
             return True
-        if screen_set.tournament.last_check_in_update > date:
-            return True
-        match screen_set.type:
+        type: ScreenType = screen_set.type if screen_set else family.type
+        match type:
             case ScreenType.Boards | ScreenType.Input:
-                if screen_set.tournament.last_illegal_move_update > date:
+                if tournament.last_illegal_move_update > date:
                     return True
-                if screen_set.tournament.last_result_update > date:
+                if tournament.last_result_update > date:
                     return True
             case ScreenType.Players:
                 pass
             case _:
                 raise ValueError(f'type={screen_set.type}')
         with suppress(FileNotFoundError):
-            if screen_set.tournament.file.lstat().st_mtime > date:
+            if tournament.file.lstat().st_mtime > date:
                 return True
         return False
 
     @classmethod
-    def _load_screen_set_context(
+    def _load_screen_set_or_family_context(
             cls,
             request: HTMXRequest,
-            event_loader: EventLoader,
+            lazy_load: bool,
             event_uniq_id: str,
             screen_uniq_id: str,
             screen_set_uniq_id: str,
-    ) -> tuple[Template | Redirect | None, NewEvent | None, NewScreen | None, NewScreenSet | None, ]:
-        response, event, screen = cls._load_screen_context(request, event_loader, event_uniq_id, screen_uniq_id)
+    ) -> tuple[Template | Redirect | None, NewEvent | None, NewScreenSet | None, NewFamily | None]:
+        response, event, screen, family = cls._load_basic_screen_or_family_context(
+            request, lazy_load, event_uniq_id, screen_uniq_id)
         if response:
             return response, None, None, None
-        try:
-            screen_set: NewScreenSet = screen.screen_sets_by_uniq_id[screen_set_uniq_id]
-        except KeyError:
-            Message.error(
-                request, f'L\'ensemble [{screen_set_uniq_id}] de l\'écran [{screen.uniq_id}] est introuvable.')
-            return cls._render_messages(request), None, None, None
-        return None, event, screen, screen_set
+        if screen:
+            try:
+                screen_set: NewScreenSet = screen.screen_sets_by_uniq_id[screen_set_uniq_id]
+                return None, event, screen_set, None
+            except KeyError:
+                Message.error(
+                    request, f'L\'ensemble [{screen_set_uniq_id}] de l\'écran [{screen.uniq_id}] est introuvable.')
+                return cls._render_messages(request), None, None, None
+        else:
+            return None, event, None, family
 
     @post(
         path='/user-boards-screen-set-render-if-updated',
@@ -86,26 +94,30 @@ class UserScreenSetController(AUserController):
             return self._render_messages(request)
         if not date:
             return Reswap(content=None, method='none', status_code=286)  # stop pooling
-        response, event, screen, screen_set = self._load_screen_set_context(
-            request, EventLoader(), event_uniq_id, screen_uniq_id, screen_set_uniq_id)
+        response, event, screen_set, family = self._load_screen_set_or_family_context(
+            request, True, event_uniq_id, screen_uniq_id, screen_set_uniq_id)
         if response:
             return response
-        if self._user_screen_set_div_update_needed(screen_set, date):
-            return HTMXTemplate(
-                template_name='user_boards_screen_set.html',
-                context={
-                    'papi_web_config': PapiWebConfig(),
-                    'event': event,
-                    'screen': screen,
-                    'screen_set': screen_set,
-                    'now': time.time(),
-                    'last_result_updated': SessionHandler.get_session_last_result_updated(request),
-                    'last_illegal_move_updated': SessionHandler.get_session_last_illegal_move_updated(request),
-                    'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(request),
-                },
-            )
-        else:
+        if not self._user_screen_set_div_update_needed(screen_set, family, date):
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
+        response, event, screen = self._load_screen_context(
+            request, False, event_uniq_id, screen_uniq_id)
+        if response:
+            return response
+        screen_set = screen.screen_sets_by_uniq_id[screen_set_uniq_id]
+        return HTMXTemplate(
+            template_name='user_boards_screen_set.html',
+            context={
+                'papi_web_config': PapiWebConfig(),
+                'event': event,
+                'screen': screen,
+                'screen_set': screen_set,
+                'now': time.time(),
+                'last_result_updated': SessionHandler.get_session_last_result_updated(request),
+                'last_illegal_move_updated': SessionHandler.get_session_last_illegal_move_updated(request),
+                'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(request),
+            },
+        )
 
     @post(
         path='/user-players-screen-set-render-if-updated',
@@ -125,17 +137,20 @@ class UserScreenSetController(AUserController):
             return self._render_messages(request)
         if not date:
             return Reswap(content=None, method='none', status_code=286)  # stop pooling
-        response, event, screen, screen_set = self._load_screen_set_context(
-            request, EventLoader(), event_uniq_id, screen_uniq_id, screen_set_uniq_id)
-        if self._user_screen_set_div_update_needed(screen_set, date):
-            return HTMXTemplate(
-                template_name='user_players_screen_set.html',
-                context={
-                    'event': event,
-                    'screen': screen,
-                    'screen_set': screen_set,
-                    'now': time.time(),
-                },
-            )
-        else:
+        response, event, screen_set, family = self._load_screen_set_or_family_context(
+            request, False, event_uniq_id, screen_uniq_id, screen_set_uniq_id)
+        if not self._user_screen_set_div_update_needed(screen_set, family, date):
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
+        response, event, screen = self._load_screen_context(request, False, event_uniq_id, screen_uniq_id)
+        if response:
+            return response
+        screen_set = screen.screen_sets_by_uniq_id[screen_set_uniq_id]
+        return HTMXTemplate(
+            template_name='user_players_screen_set.html',
+            context={
+                'event': event,
+                'screen': screen,
+                'screen_set': screen_set,
+                'now': time.time(),
+            },
+        )
