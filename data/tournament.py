@@ -1083,6 +1083,7 @@ class NewTournament:
                 return False
 
     def read_papi(self):
+        assert not self.event.lazy_load
         if self._papi_read:
             return
         if self.file_exists:
@@ -1229,7 +1230,7 @@ class NewTournament:
         return deleted
 
     def get_illegal_moves(self) -> Counter[int]:
-        with EventDatabase(self.event.uniq_id, write=True) as event_database:
+        with EventDatabase(self.event.uniq_id) as event_database:
             return event_database.get_stored_illegal_moves(self.id, self.current_round)
 
     def _set_players_illegal_moves(self):
