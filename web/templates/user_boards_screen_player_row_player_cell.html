@@ -1,6 +1,6 @@
 <td
     class="
-        player-cell
+        player-cell bg-transparent
         {% if screen.type == 'input' and last_check_in_updated and last_check_in_updated.expiration > now and last_check_in_updated.tournament_id == tournament.id and last_check_in_updated.player_id == player.id %}
             last_check_in_updated
         {% endif %}"

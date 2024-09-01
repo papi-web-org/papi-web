@@ -15,16 +15,16 @@
                 hx-trigger="every {{ papi_web_config.user_screen_set_update_delay }}s queue:none"
                 hx-indicator="#please-wait"
         />
-        <h2 class="set-title">{{ screen_set.name_for_players }}{% if tournament.current_round %} (ronde {{ tournament.current_round }}){% endif %}</h2>
+        <h2 class="set-title text-center">{{ screen_set.name_for_players }}{% if tournament.current_round %} (ronde {{ tournament.current_round }}){% endif %}</h2>
         <div class="row screen-set-row mx-0 w-100">
             {% for players in screen_set.players_by_name_lists %}
-                <div class="col screen-set-col">
+                <div class="col screen-set-col {% if loop.first %}ps-0{% endif %} {% if loop.last %}pe-0{% endif %}">
                     <table class="table table-striped table-sm bg-light">
                         <thead class="table-dark">
                             <tr>
-                                <th scope="col" class="player w-50">Joueur.euse Elo{% if tournament.current_round %} [Pts]{% endif %}</th>
+                                <th scope="col" class="player w-50 text-nowrap">Joueur.euse Elo{% if tournament.current_round %} [Pts]{% endif %}</th>
                                 <th scope="col" class="pairing">Table & Couleur</th>
-                                <th scope="col" class="opponent w-50">Adversaire Elo{% if tournament.current_round %} [Pts]{% endif %}</th>
+                                <th scope="col" class="opponent w-50 text-nowrap">Adversaire Elo{% if tournament.current_round %} [Pts]{% endif %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -32,26 +32,26 @@
                             {% if tournament.current_round %}
                                 {% with pairing=player.pairings[tournament.current_round] %}
                                 {% with opponent_id=pairing.opponent_id %}
-                                    <tr class="player-row {% if not opponent_id or opponent_id == 1 %}not-paired{% else %}paired{% endif %}">
-                                        <td  class="player {% if opponent_id and opponent_id != 1 %}{% if player.color == 'W' %}white{%else %}black{%endif %}{%endif %}">
+                                    <tr class="player-row {% if not opponent_id or opponent_id == 1 %}not-paired fs-italic{% else %}paired fw-bold{% endif %}">
+                                        <td  class="player bg-transparent text-nowrap {% if opponent_id and opponent_id != 1 %}{% if player.color == 'W' %}white{%else %}black{%endif %}{%endif %}">
                                             {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }} [{{ player.vpoints_str }}]
                                         </td>
                                         {% if not opponent_id %}
-                                            <td colspan="2">{{ player.not_paired_str }}</td>
+                                            <td colspan="2" class="bg-transparent text-nowrap">{{ player.not_paired_str }}</td>
                                         {% elif opponent_id == 1 %}
-                                            <td colspan="2">{{ player.exempt_str }}</td>
+                                            <td colspan="2" class="bg-transparent text-nowrap">{{ player.exempt_str }}</td>
                                         {% else %}
                                             {% with opponent=tournament.players_by_id[opponent_id] %}
-                                                <td class="pairing {% if player.color == 'W' %}white{%else %}black{%endif %}">Table n°{{ player.board_number }} avec les {{ player.color_str }}</td>
-                                                <td class="opponent {% if player.color == 'W' %}white{%else %}black{%endif %}">contre {% if opponent.title_str %}{{ opponent.title_str }}&nbsp;{% endif %}{{ opponent.last_name }} {{ opponent.first_name }} {{ opponent.rating }}{{ opponent.rating_type }} [{{ opponent.vpoints_str }}]</td>
+                                                <td class="pairing bg-transparent text-nowrap {% if player.color == 'W' %}white{%else %}black{%endif %}">Table n°{{ player.board_number }} avec les {{ player.color_str }}</td>
+                                                <td class="opponent bg-transparent text-nowrap {% if player.color == 'W' %}white{%else %}black{%endif %}">contre {% if opponent.title_str %}{{ opponent.title_str }}&nbsp;{% endif %}{{ opponent.last_name }} {{ opponent.first_name }} {{ opponent.rating }}{{ opponent.rating_type }} [{{ opponent.vpoints_str }}]</td>
                                             {% endwith %}
                                         {% endif %}
                                     </tr>
                                 {% endwith %}
                                 {% endwith %}
                             {% else %}
-                                <tr class="player-row not-paired">
-                                    <td class="player">
+                                <tr class="player-row not-paired fs-italic">
+                                    <td class="player bg-transparent">
                                         <i class="
                                             {% if player.check_in %}
                                                 bi-check-square-fill player-check-out
@@ -61,7 +61,7 @@
                                             player-{{ tournament.id }}-{{ player.id }}"></i>
                                         {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}
                                     </td>
-                                    <td colspan="2"><span class="fst-italic">{{ player.not_paired_str }}</span></td>
+                                    <td colspan="2" class="bg-transparent"><span class="fst-italic">{{ player.not_paired_str }}</span></td>
                                 </tr>
                             {% endif %}
                         {% endfor %}

@@ -5,7 +5,7 @@ from typing import Annotated
 from litestar import get, post
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template
+from litestar.response import Template, Redirect
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import Reswap
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
@@ -85,25 +85,30 @@ class UserEventController(AUserController):
             return self._render_messages(request)
         if not date:
             return Reswap(content=None, method='none', status_code=286)  # stop pooling
-        response, event = self._load_event_context(request, EventLoader.get(request=request, lazy_load=True), event_uniq_id)
+        response, event = self._load_event_context(
+            request, EventLoader.get(request=request, lazy_load=True), event_uniq_id)
         if response:
             return response
         if self._user_event_page_update_needed(event, date):
-            response, event = self._load_event_context(request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
+            response, event = self._load_event_context(
+                request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
             if response:
                 return response
             return self._user_render_event(request, event)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
 
-    @get(
-        path='/user-event-render/{event_uniq_id:str}',
+    @post(
+        path='/user-event-render',
         name='user-event-render',
     )
     async def htmx_user_event_render(
-            self, request: HTMXRequest, event_uniq_id: str
-    ) -> Template:
-        response, event = self._load_event_context(request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+    ) -> Template | Redirect:
+        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
+        response, event = self._load_event_context(
+            request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
         if response:
             return response
         return self._user_render_event(request, event)

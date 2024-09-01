@@ -193,7 +193,8 @@
                             </button>
                             <button
                                     class="btn btn-sm btn-info p-1 text-nowrap"
-                                    hx-get="{{ url_for('user-event-render', event_uniq_id=event.uniq_id) }}"
+                                    hx-post="{{ url_for('user-event-render') }}"
+                                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}"}'
                                     hx-target="body"
                                     hx-indicator="#please-wait"
                             >

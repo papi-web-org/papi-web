@@ -4,65 +4,29 @@
 # EVENT
 ###########################################################
 */
+
 /*
 ###########################################################
 # SCREENS
 ###########################################################
 */
-.screen .screen-set-row,
-.screen .screen-set-tuple-row {
-    margin-right: 0;
-    margin-left: 0;
-    width: 100%;
-}
-.screen .screen-set-col:last-child,
-.screen .screen-set-tuple-col:last-child {
-    padding-right: 0;
-}
-.screen .screen-set-col:first-child,
-.screen .screen-set-tuple-col:first-child {
-    padding-left: 0;
-}
-.screen .set-title {
-    text-align: center;
-}
+
 /*
 ###########################################################
 # INPUT SCREENS - LOGIN MODAL
 ###########################################################
 */
-.input-screen .login-modal .modal-content {
-    background-color: lightgrey;
-}
+
 /*
 ###########################################################
 # INPUT SCREENS - RESULT MODAL
 ###########################################################
 */
-.input-screen-result-modal {
-    max-width: 80%;
-}
-.input-screen-result-modal .modal-content {
-    background-color: lightgrey;
-}
-.input-screen-result-modal .modal-title,
-.input-screen-result-modal .btn {
-    font-weight: bold;
-    font-size: x-large;
-}
 .input-screen-result-modal .result-button {
     border: 3px #000080 solid;
 }
-.input-screen-result-modal .result-button.white {
-    background-color: white;
-    color: black;
-}
 .input-screen-result-modal .result-button.draw {
     color: #000080;
-}
-.input-screen-result-modal .result-button.black {
-    background-color: black;
-    color: white;
 }
 .input-screen-result-modal .result-button:hover {
     background-color: yellow;
@@ -73,16 +37,6 @@
 # BOARDS/INPUT SCREENS - BOARD/PLAYER ROWS
 ###########################################################
 */
-.boards-screen .board-row th,
-.input-screen .board-row th,
-.boards-screen .board-row td,
-.input-screen .board-row td,
-.boards-screen .player-row th,
-.input-screen .player-row th,
-.boards-screen .player-row td,
-.input-screen .player-row td {
-    background-color: transparent;
-}
 .input-screen .board-row.result-not-set:hover {
     background-color: yellow;
     cursor: pointer;
@@ -93,25 +47,6 @@
 .handicap-modified-time .minutes,
 .handicap-modified-time .seconds {
     color: red;
-}
-.boards-screen .board-row.result-not-set,
-.input-screen .board-row.result-not-set {
-    font-weight: bold;
-}
-.boards-screen .board-number,
-.input-screen .board-number {
-    text-align: right;
-}
-.boards-screen .score,
-.input-screen .score,
-.boards-screen .points,
-.boards-screen .points {
-    text-align: center;
-}
-.boards-screen .illegal-moves-cell,
-.input-screen .illegal-moves-cell {
-    width: 1%;
-    white-space: nowrap;
 }
 .player-cell.last_check_in_updated, .player-cell.last_illegal_move_updated,
 .illegal-moves-cell.last_check_in_updated, .illegal-moves-cell.last_illegal_move_updated {
@@ -125,78 +60,35 @@
 # PLAYERS SCREENS - ROWS
 ###########################################################
 */
-.players-screen .player-row th,
-.players-screen .player-row td {
-    background-color: transparent;
-}
-.players-screen .player,
-.players-screen .pairing,
-.players-screen .opponent {
-    white-space: nowrap
-}
-.players-screen .paired .player,
-.players-screen .paired .pairing {
-    font-weight: bold
-}
-.players-screen .not-paired {
-    font-style: italic
-}
 /*
 ###########################################################
 # RESULTS SCREENS - ROWS
 ###########################################################
 */
-.results-screen .result-row th,
-.results-screen .result-row td {
-    background-color: transparent;
-}
-.results-screen .time,
-.results-screen .score,
-.results-screen .board-number {
-    text-align: center;
-}
 /*
 ###########################################################
 # MENUS
 ###########################################################
 */
-.menu {
-    text-align: left;
+.screen-menu {
     font-size: x-large;
-    font-weight: bold;
-    width: 100%;
-    margin: 0;
-    padding: 0.5% 0px 0.5% 0px;
 }
-.menu-item {
-    white-space: nowrap;
-    padding-left: 5px;
-    padding-right: 5px;
-    margin-left: 5px;
+.screen-menu-item {
     color: red;
 }
-.menu-item.selected {
+.screen-menu-item.selected {
     background-color: red;
     color: white;
 }
-.menu-item:hover {
+.screen-menu-item:hover {
     background-color: #ffff00;
     color: #000080;
 }
-.timer {
-    font-size: x-large;
-    font-weight: bold;
-    width: 100%;
-    margin: 0;
-}
 /*
 ###########################################################
-# MENUS
+# TIMERS
 ###########################################################
 */
-.timer-text {
-    text-align: left;
-}
-.timer-clock {
-    text-align: right;
+.timer {
+    font-size: x-large;
 }

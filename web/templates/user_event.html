@@ -62,7 +62,7 @@
                         {% for screen in event.screens_sorted_by_uniq_id %}
                             {% if screen.type == screen_type %}
                                 {% set ns.screen_found=true %}
-                                {% with card_url=url_for('user-screen-render', event_uniq_id=event.uniq_id, screen_uniq_id=screen.uniq_id), card_class=screen_data.class %}
+                                {% with card_url=url_for('user-screen-render'), card_payload='{"event_uniq_id": "' ~ event.uniq_id ~ '", "screen_uniq_id": "' ~ screen.uniq_id ~ '"}', card_class=screen_data.class %}
                                     {% include 'user_event_screen_card.html' %}
                                 {% endwith %}
                             {% endif %}

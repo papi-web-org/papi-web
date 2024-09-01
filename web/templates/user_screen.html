@@ -4,7 +4,8 @@
     <div id="user-screen-header" class="header user-header user-screen-header">
         <div
                 hx-trigger="click, keyup[key=='Escape'] from:body"
-                hx-get="{{ url_for('user-event-render', event_uniq_id=event.uniq_id) }}"
+                hx-post="{{ url_for('user-event-render') }}"
+                hx-vals='{"event_uniq_id": "{{ event.uniq_id }}"}'
                 hx-target="body"
                 hx-indicator="#please-wait">
         </div>
@@ -16,12 +17,17 @@
             {% endif %}
         </script>
         {% if screen.menu_screens %}
-            <div id="#menu" class="menu">
+            <div id="#screen-menu" class="screen-menu text-start w-100 m-0 p-2 fw-bold">
                 {% for entry in screen.menu_screens %}
-                    <a
-                            href="{{ url_for('user-screen-render', event_uniq_id=event.uniq_id, screen_uniq_id=entry.uniq_id) }}"
-                            class="menu-item {% if screen.id == entry.id %}selected{% endif %}"
-                    >{{ entry.menu_label }}</a>
+                    {% if entry.menu_label is not none %}
+                        <a
+                                class="screen-menu-item text-nowrap py-0 px-2 my-0 mx-1 {% if screen.id == entry.id %}selected{% endif %}"
+                                hx-post="{{ url_for('user-screen-render') }}"
+                                hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "screen_uniq_id": "{{ entry.uniq_id }}"}'
+                                hx-target="body"
+                                hx-indicator="#please-wait"
+                        >{{ entry.menu_label }}</a>
+                    {% endif %}
                 {% endfor %}
             </div>
         {% endif %}
@@ -33,7 +39,7 @@
             <div
                     class="rotator-updater"
                     hx-post="{{ url_for('user-rotator-render-screen') }}"
-                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "rotator_id": "{{ rotator.id }}, "rotator_screen_index": {{ rotator_screen_index + 1}}"}'
+                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "rotator_id": "{{ rotator.id }}", "rotator_screen_index": "{{ rotator_screen_index + 1}}"}'
                     hx-target="body"
                     hx-trigger="every {{ rotator.delay }}s"
                     hx-indicator="#please-wait"
@@ -85,4 +91,16 @@
             </div>
         {% endif %}
     </div>
+    <script>
+        {# manually remove the modal backdrop when reloading #user-screen-content (too many modal-backdrop divs are created by Bootstrap when opening modals) #}
+        $(document).ready(function(){
+            $('body .modal-backdrop').remove();
+        });
+        {# manually remove the tooltips when reloading #user-screen-content (tooltip elements are created by Bootstrap when tooltips but sometimes not removed) #}
+        $(document).ready(function(){
+            $('body .tooltip').remove();
+            $('body .tooltip-inner').remove();
+            $('body .tooltip-arrow').remove();
+        });
+    </script>
 {% endblock content %}

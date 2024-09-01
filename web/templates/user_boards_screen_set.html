@@ -17,10 +17,10 @@
         />
         {% if tournament.current_round %}
             <div class="boards-set">
-                <h2 class="set-title">{{ screen_set.name_for_boards }} (ronde {{ tournament.current_round }})</h2>
+                <h2 class="set-title text-center">{{ screen_set.name_for_boards }} (ronde {{ tournament.current_round }})</h2>
                 <div class="row screen-set-row mx-0 w-100">
                     {% for boards in screen_set.boards_lists %}
-                        <div class="col screen-set-col">
+                        <div class="col screen-set-col {% if loop.first %}ps-0{% endif %} {% if loop.last %}pe-0{% endif %}">
                             <table class="table table-striped table-sm bg-light">
                                 <thead class="table-dark">
                                     <tr>
@@ -46,13 +46,13 @@
             </div>
         {% else %}
             <div class="players-set">
-                <h2 class="set-title">{{ screen_set.name_for_boards }} (pointage)</h2>
+                <h2 class="set-title text-center">{{ screen_set.name_for_boards }} (pointage)</h2>
                 <div class="row screen-set-row mx-0 w-100">
                     {% for players_by_name_tuple in screen_set.players_by_name_tuple_lists %}
                         <div class="col screen-set-col">
-                            <div class="row screen-set-tuple-row">
+                            <div class="row screen-set-tuple-row w-100 px-0">
                                 {% for players_by_name in players_by_name_tuple %}
-                                    <div class="col screen-set-tuple-col">
+                                    <div class="col screen-set-tuple-col {% if loop.first %}ps-0{% endif %} {% if loop.last %}pe-0{% endif %}">
                                         <table class="table table-striped table-sm bg-light">
                                             <thead class="table-dark">
                                                 <tr>

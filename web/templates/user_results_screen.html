@@ -1,9 +1,9 @@
 {% with tournament_ids=screen.results_tournament_ids if screen.results_tournament_ids else event.tournaments_by_id.keys() %}
 {% with print_tournament=tournament_ids|length > 1 %}
-<h2 class="set-title">{{ screen.name }}</h2>
+<h2 class="set-title text-center">{{ screen.name }}</h2>
 <div class="row screen-set-row mx-0 w-100">
     {% for results in screen.results_lists %}
-        <div class="col-auto mx-auto screen-set-col">
+        <div class="col-auto mx-auto screen-set-col {% if loop.first %}ps-0{% endif %} {% if loop.last %}pe-0{% endif %}">
             <table class="table table-striped table-sm bg-light">
                 <thead class="table-dark">
                     <tr>
@@ -18,16 +18,16 @@
                 <tbody>
                 {% for result in results %}
                     <tr class="result-row">
-                        <td scope="row" class="timestamp">{{ result.timestamp_str }}</td>
+                        <td scope="row" class="time bg-transparent text-center">{{ result.timestamp_str }}</td>
                         {% with tournament=event.tournaments_by_id[result.tournament_id] %}
                         {% with players_by_id=tournament.players_by_id %}
                         {% with white_player=players_by_id[result.white_player_id] %}
                         {% with black_player=players_by_id[result.black_player_id] %}
-                        {% if print_tournament %}<td scope="row" class="tournament">{{ tournament.uniq_id }}</td>{% endif %}
-                        <td scope="row" class="board-number">{{ result.round }}.{{ result.board_id }}</td>
-                        <td scope="row" class="player">{{ white_player.last_name }} {{ white_player.first_name }} {{ white_player.rating }}</td>
-                        <td scope="row" class="score">{{ result.result_str }}</td>
-                        <td scope="row" class="player">{{ black_player.last_name }} {{ black_player.first_name }} {{ black_player.rating }}</td>
+                        {% if print_tournament %}<td scope="row" class="tournament bg-transparent">{{ tournament.uniq_id }}</td>{% endif %}
+                        <td scope="row" class="board-number bg-transparent text-center">{{ result.round }}.{{ result.board_id }}</td>
+                        <td scope="row" class="player bg-transparent">{{ white_player.last_name }} {{ white_player.first_name }} {{ white_player.rating }}</td>
+                        <td scope="row" class="score bg-transparent text-center">{{ result.result_str }}</td>
+                        <td scope="row" class="player bg-transparent">{{ black_player.last_name }} {{ black_player.first_name }} {{ black_player.rating }}</td>
                         {% endwith %}
                         {% endwith %}
                         {% endwith %}

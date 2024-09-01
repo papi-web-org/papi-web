@@ -319,6 +319,7 @@ class NewEvent:
         self.chessevents_by_uniq_id: dict[str, NewChessEvent] = {}
         self.tournaments_by_id: dict[int, NewTournament] = {}
         self.tournaments_by_uniq_id: dict[str, NewTournament] = {}
+        self._tournaments_sorted_by_uniq_id: list[NewTournament] | None = None
         self.screens_by_uniq_id: dict[str, NewScreen] = {}
         self._screens_sorted_by_uniq_id: list[NewScreen] | None = None
         self.basic_screens_by_id: dict[int, NewScreen] = {}
@@ -476,6 +477,13 @@ class NewEvent:
     @property
     def public(self) -> bool:
         return self.stored_event.public
+
+    @property
+    def tournaments_sorted_by_uniq_id(self) -> list[NewTournament]:
+        if self._tournaments_sorted_by_uniq_id is None:
+            self._tournaments_sorted_by_uniq_id = sorted(
+                self.tournaments_by_id.values(), key=lambda tournament: tournament.uniq_id)
+        return self._tournaments_sorted_by_uniq_id
 
     @property
     def screens_sorted_by_uniq_id(self) -> list[NewScreen]:

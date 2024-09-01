@@ -28,6 +28,9 @@ body {
 .w-80 {
     width: 80%; !important;
 }
+.w-1 {
+    width: 1%; !important;
+}
 /* https://stackoverflow.com/questions/39588698/bootstrap-multiple-modals-modal-backdrop-issue */
 .modal-backdrop + .modal-backdrop {
   display: none;

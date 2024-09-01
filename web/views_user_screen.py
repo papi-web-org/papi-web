@@ -2,7 +2,7 @@ from contextlib import suppress
 from logging import Logger
 from typing import Annotated
 
-from litestar import get, post
+from litestar import post
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect
@@ -12,7 +12,6 @@ from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
 from data.family import NewFamily
-from data.loader import EventLoader
 from data.screen import NewScreen
 from data.tournament import NewTournament
 from data.util import ScreenType
@@ -23,13 +22,16 @@ logger: Logger = get_logger()
 
 
 class UserScreenController(AUserController):
-    @get(
-        path='/user-screen-render/{event_uniq_id:str}/{screen_uniq_id:str}',
+    @post(
+        path='/user-screen-render',
         name='user-screen-render',
     )
     async def htmx_user_screen_render(
-            self, request: HTMXRequest, event_uniq_id: str, screen_uniq_id: str
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED),],
     ) -> Template | Redirect:
+        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
+        screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
         response, event, screen = self._load_screen_context(request, False, event_uniq_id, screen_uniq_id)
         if response:
             return response
