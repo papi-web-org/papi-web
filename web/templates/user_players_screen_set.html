@@ -9,7 +9,7 @@
                     name="date"
                     value="{{ now }}"
                     hx-post="{{ url_for('user-players-screen-set-render-if-updated') }}"
-                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_selector": "{{ user_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "screen_set_uniq_id": "{{ screen_set.uniq_id }}"}'
+                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "screen_set_uniq_id": "{{ screen_set.uniq_id }}"}'
                     hx-include="this"
                     hx-target="closest .players-screen-set"
                     hx-swap="outerHTML"

@@ -287,14 +287,14 @@ class AController(Controller):
             cls,
             request: HTMXRequest,
             event: NewEvent,
-            user_selector: str | None,
+            user_event_selector: str | None,
     ) -> Template | Redirect:
         return HTMXTemplate(
             template_name="user_event.html",
             context={
                 'papi_web_config': PapiWebConfig(),
                 'event': event,
-                'user_selector': user_selector or 'input',
+                'user_event_selector': user_event_selector or 'input',
                 'messages': Message.messages(request),
                 'now': time.time(),
                 'user_columns': SessionHandler.get_session_user_columns(request),

@@ -114,7 +114,7 @@ class UserScreenSetController(AUserController):
             template_name='user_players_screen_set.html',
             context={
                 'event': web_context.event,
-                'user_selector': web_context.user_selector,
+                'user_event_selector': web_context.user_event_selector,
                 'screen': web_context.screen,
                 'rotator': web_context.rotator,
                 'rotator_screen_index': web_context.rotator_screen_index,

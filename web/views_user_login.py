@@ -37,9 +37,9 @@ class UserLoginController(AUserController):
             web_context: ScreenUserWebContext = ScreenUserWebContext(request, data, False)
             if web_context.error:
                 return web_context.error
-            user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
+            user_event_selector: str = self._form_data_to_str_or_none(data, 'user_event_selector')
             return self._user_render_screen(
-                request, web_context.event, user_selector, screen=web_context.screen, rotator=web_context.rotator)
+                request, web_context.event, user_event_selector, screen=web_context.screen, rotator=web_context.rotator)
         if data['password'] == '':
             Message.warning(request, 'Veuillez indiquer le code d\'accès.')
         else:

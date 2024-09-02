@@ -8,7 +8,7 @@
                     class="btn {% if c == user_columns %}btn-primary{% else %}btn-secondary{% endif %} text-nowrap py-0 px-1"
                     {% if c != user_columns %}
                         hx-post="{{ url_for('user-update-header') }}"
-                        hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_selector": "{{ user_selector }}", "user_columns": "{{ c }}"}'
+                        hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "user_columns": "{{ c }}"}'
                         hx-swap="multi:#user-header,#user-content"
                         hx-indicator="#please-wait"
                     {% else %}

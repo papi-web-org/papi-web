@@ -35,7 +35,7 @@ class UserWebContext(WebContext):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ):
         super().__init__(request, data)
-        self.user_selector: str = self._form_data_to_str('user_selector')
+        self.user_event_selector: str = self._form_data_to_str('user_event_selector')
 
 
 class EventUserWebContext(UserWebContext):
@@ -250,7 +250,7 @@ class AUserController(AController):
     def _user_render_screen(
             cls, request: HTMXRequest,
             event: NewEvent,
-            user_selector: str,
+            user_event_selector: str,
             screen: NewScreen = None,
             rotator: NewRotator = None,
             rotator_screen_index: int = None,
@@ -264,7 +264,7 @@ class AUserController(AController):
             context={
                 'papi_web_config': PapiWebConfig(),
                 'event': event,
-                'user_selector': user_selector,
+                'user_event_selector': user_event_selector,
                 'screen': the_screen,
                 'rotator': rotator,
                 'now': time.time(),
@@ -290,7 +290,7 @@ class AUserController(AController):
             template_name='user_boards_screen_board_row.html',
             context={
                 'event': web_context.event,
-                'user_selector': web_context.user_selector,
+                'user_event_selector': web_context.user_event_selector,
                 'tournament': web_context.tournament,
                 'board': web_context.board,
                 'screen': web_context.screen,

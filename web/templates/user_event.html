@@ -10,7 +10,7 @@
                 name="date"
                 value="{{ now }}"
                 hx-post="{{ url_for('user-event-render-if-updated') }}"
-                hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_selector": "{{ user_selector }}"}'
+                hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}"}'
                 hx-include="this"
                 hx-target="body"
                 hx-trigger="every {{ papi_web_config.user_event_update_delay }}s queue:none"
@@ -29,12 +29,12 @@
                         <i class="bi-arrow-left-circle-fill"></i>
                     </button>
                     {% for nav_id, nav_tab in nav_tabs.items() %}
-                        {% with active=(user_selector == nav_id) %}
+                        {% with active=(user_event_selector == nav_id) %}
                             <button
                                     class="nav-link border-dark {%if active %}active{%else%}bg-body-secondary{% endif %} fw-bold px-2 py-0 ms-1 text-nowrap"
                                     id="nav-{{ nav_id }}-tab"
                                     hx-post="{{ url_for('user-update-header') }}"
-                                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_selector": "{{ nav_id }}"}'
+                                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_event_selector": "{{ nav_id }}"}'
                                     hx-swap="multi:#user-header,#user-content"
                                     data-bs-toggle="tab"
                                     data-bs-target="#nav-{{ nav_id }}"
@@ -69,7 +69,7 @@
     <div id="user-content" class="content user-content user-event-content tab-content border border-dark mx-2 p-3">
         {% for nav_id, nav_tab in nav_tabs.items() %}
             {% with
-                active=user_selector == nav_id
+                active=user_event_selector == nav_id
             %}
                 <div
                         class="tab-pane fade {% if active %}show active{% endif %}"
@@ -83,7 +83,7 @@
                             <div class="container-fluid">
                                 <div class="row">
                                     <div class="col-12 fs-3 fw-bold text-nowrap mb-2">
-                                        {% if user_selector == 'rotators' %}
+                                        {% if user_event_selector == 'rotators' %}
                                             {{ rotator_icon() }} {{ event.name }} - {{ nav_tab.title }}
                                         {% else %}
                                             {{ screen_type_icon(nav_id) }} {{ event.name }} - {{ nav_tab.title }}
@@ -91,12 +91,12 @@
                                     </div>
                                 </div>
                                 <div class="row">
-                                    {% if user_selector == 'rotators' %}
+                                    {% if user_event_selector == 'rotators' %}
                                         {% if nav_tab.rotators %}
                                             {% for rotator in nav_tab.rotators %}
                                                 {% with
                                                     card_url=url_for('user-rotator-render'),
-                                                    card_payload='{"event_uniq_id": "' ~ event.uniq_id ~ '", "user_selector": "' ~ user_selector ~ '", "rotator_id": "' ~ rotator.id ~ '"}',
+                                                    card_payload='{"event_uniq_id": "' ~ event.uniq_id ~ '", "user_event_selector": "' ~ user_event_selector ~ '", "rotator_id": "' ~ rotator.id ~ '"}',
                                                     card_class='bg-info-subtle'
                                                 %}
                                                     {% include 'user_event_rotator_card.html' %}
@@ -112,7 +112,7 @@
                                             {% for screen in nav_tab.screens %}
                                                 {% with
                                                     card_url=url_for('user-screen-render'),
-                                                    card_payload='{"event_uniq_id": "' ~ event.uniq_id ~ '", "user_selector": "' ~ user_selector ~ '", "screen_uniq_id": "' ~ screen.uniq_id ~ '"}',
+                                                    card_payload='{"event_uniq_id": "' ~ event.uniq_id ~ '", "user_event_selector": "' ~ user_event_selector ~ '", "screen_uniq_id": "' ~ screen.uniq_id ~ '"}',
                                                     card_class='bg-info-subtle'
                                                 %}
                                                     {% include 'user_event_screen_card.html' %}

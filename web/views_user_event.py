@@ -92,8 +92,8 @@ class UserEventController(AUserController):
             web_context: EventUserWebContext = EventUserWebContext(request, data, False)
             if web_context.error:
                 return web_context.error
-            user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
-            return self._user_render_event(request, web_context.event, user_selector)
+            user_event_selector: str = self._form_data_to_str_or_none(data, 'user_event_selector')
+            return self._user_render_event(request, web_context.event, user_event_selector)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
 
@@ -108,7 +108,7 @@ class UserEventController(AUserController):
         web_context: EventUserWebContext = EventUserWebContext(request, data, False)
         if web_context.error:
             return web_context.error
-        return self._user_render_event(request, web_context.event, web_context.user_selector)
+        return self._user_render_event(request, web_context.event, web_context.user_event_selector)
 
     @post(
         path='/user-update-header',
@@ -124,4 +124,4 @@ class UserEventController(AUserController):
         field: str = f'user_columns'
         if field in data:
             SessionHandler.set_session_user_columns(request, self._form_data_to_int_or_none(data, field))
-        return self._user_render_event(request, web_context.event, web_context.user_selector)
+        return self._user_render_event(request, web_context.event, web_context.user_event_selector)

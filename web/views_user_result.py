@@ -40,7 +40,7 @@ class UserResultController(AUserController):
             template_name="user_input_screen_board_result_modal.html",
             context={
                 'event': web_context.event,
-                'user_selector': web_context.user_selector,
+                'user_event_selector': web_context.user_event_selector,
                 'tournament': web_context.tournament,
                 'board': web_context.board,
                 'screen': web_context.screen,

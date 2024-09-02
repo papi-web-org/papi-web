@@ -35,7 +35,7 @@ class UserScreenController(AUserController):
         if web_context.error:
             return web_context.error
         return self._user_render_screen(
-            request, web_context.event, web_context.user_selector, screen=web_context.screen,
+            request, web_context.event, web_context.user_event_selector, screen=web_context.screen,
             rotator=web_context.rotator, rotator_screen_index=web_context.rotator_screen_index)
 
     @staticmethod
@@ -91,7 +91,7 @@ class UserScreenController(AUserController):
             if web_context.error:
                 return web_context.error
             return self._user_render_screen(
-                request, web_context.event, web_context.user_selector, screen=web_context.screen,
+                request, web_context.event, web_context.user_event_selector, screen=web_context.screen,
                 rotator=web_context.rotator, rotator_screen_index=web_context.rotator_screen_index)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)

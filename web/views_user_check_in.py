@@ -31,7 +31,7 @@ class UserCheckInController(AUserController):
             template_name='user_boards_screen_player_row_player_cell.html',
             context={
                 'event': web_context.event,
-                'user_selector': web_context.user_selector,
+                'user_event_selector': web_context.user_event_selector,
                 'tournament': web_context.tournament,
                 'player': web_context.player,
                 'screen': web_context.screen,
