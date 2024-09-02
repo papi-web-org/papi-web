@@ -16,7 +16,7 @@
                 {% endif %}
             {% endif %}
         </script>
-        {% if screen.menu_screens %}
+        {% if screen.menu_screens and (not rotator or rotator.show_menus) %}
             <div id="#screen-menu" class="screen-menu text-start w-100 m-0 p-2 fw-bold">
                 {% for entry in screen.menu_screens %}
                     {% if entry.menu_label is not none %}
