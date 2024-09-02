@@ -104,3 +104,12 @@
         <i class="{{ _icon_class }}"></i>
     </span>
 {% endmacro %}
+
+{% macro rotator_icon(class) %}
+    <span
+            class="fw-bold {{ class }}"
+            {{ tooltip_attributes('info', 'Les écrans rotatifs permettent de faire défiler automatiquement plusieurs écrans.', 'top') }}
+        >
+        <i class="bi-arrow-repeat"></i>
+    </span>
+{% endmacro %}

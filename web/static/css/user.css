@@ -29,8 +29,8 @@
     color: #000080;
 }
 .input-screen-result-modal .result-button:hover {
-    background-color: yellow;
-    color: #000080;
+    background-color: yellow !important;
+    color: #000080 !important;
 }
 /*
 ###########################################################

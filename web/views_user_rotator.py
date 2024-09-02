@@ -1,6 +1,9 @@
 from logging import Logger
+from typing import Annotated
 
-from litestar import get
+from litestar import post
+from litestar.enums import RequestEncodingType
+from litestar.params import Body
 from litestar.response import Template, Redirect
 from litestar.contrib.htmx.request import HTMXRequest
 
@@ -16,7 +19,8 @@ logger: Logger = get_logger()
 class UserRotatorController(AUserController):
     @classmethod
     def _load_rotator_context(
-            cls, request: HTMXRequest, event_uniq_id: str, rotator_id: int, rotator_screen_index: int,
+            cls, request: HTMXRequest, event_uniq_id: str, rotator_id: int,
+            rotator_screen_index: int,
     ) -> tuple[Template | Redirect | None, NewEvent | None, NewRotator | None, int | None]:
         response, event = cls._load_event_context(request, True, event_uniq_id)
         if response:
@@ -38,30 +42,21 @@ class UserRotatorController(AUserController):
             return cls._render_messages(request), None, None, None
         return None, event, rotator, rotator_screen_index
 
-    @get(
-        path='/user-rotator-render/{event_uniq_id:str}/{rotator_id:int}',
+    @post(
+        path='/user-rotator-render',
         name='user-rotator-render'
     )
-    async def htmx_user_rotator_render(
-            self, request: HTMXRequest, event_uniq_id: str, rotator_id: int,
-    ) -> Template | Redirect:
-        response, event, rotator, rotator_screen_index = self._load_rotator_context(
-            request, event_uniq_id, rotator_id, 0)
-        if response:
-            return response
-        return self._user_render_screen(
-            request, event=event, rotator=rotator, rotator_screen_index=rotator_screen_index)
-
-    @get(
-        path='/user-rotator-render-screen/{event_uniq_id:str}/{rotator_id:int}/{rotator_screen_index:int}',
-        name='user-rotator-render-screen'
-    )
     async def htmx_user_rotator_render_screen(
-            self, request: HTMXRequest, event_uniq_id: str, rotator_id: int, rotator_screen_index: int
+        self, request: HTMXRequest,
+        data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Redirect:
+        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
+        rotator_id: int = self._form_data_to_int_or_none(data, 'rotator_id')
+        rotator_screen_index: int = self._form_data_to_int_or_none(data, 'rotator_screen_index', 0)
         response, event, rotator, rotator_screen_index = self._load_rotator_context(
             request, event_uniq_id, rotator_id, rotator_screen_index)
         if response:
             return response
+        user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
         return self._user_render_screen(
-            request, event=event, rotator=rotator, rotator_screen_index=rotator_screen_index)
+            request, event, user_selector, rotator=rotator, rotator_screen_index=rotator_screen_index)

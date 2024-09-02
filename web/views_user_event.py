@@ -2,7 +2,7 @@ from contextlib import suppress
 from logging import Logger
 from typing import Annotated
 
-from litestar import get, post
+from litestar import post
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect
@@ -15,6 +15,7 @@ from data.event import NewEvent
 from data.loader import EventLoader
 from data.util import ScreenType
 from web.messages import Message
+from web.session import SessionHandler
 from web.views_user_index import AUserController
 
 logger: Logger = get_logger()
@@ -79,12 +80,12 @@ class UserEventController(AUserController):
     ) -> Template | Reswap:
         try:
             event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
-            date: float = self._form_data_to_float_or_none(data, 'date')
+            date: float = self._form_data_to_float_or_none(data, 'date', 0.0)
         except ValueError as ve:
             Message.error(request, str(ve))
             return self._render_messages(request)
-        if not date:
-            return Reswap(content=None, method='none', status_code=286)  # stop pooling
+        if date <= 0.0:
+            return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         response, event = self._load_event_context(
             request, EventLoader.get(request=request, lazy_load=True), event_uniq_id)
         if response:
@@ -94,7 +95,8 @@ class UserEventController(AUserController):
                 request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
             if response:
                 return response
-            return self._user_render_event(request, event)
+            user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
+            return self._user_render_event(request, event, user_selector)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
 
@@ -111,4 +113,23 @@ class UserEventController(AUserController):
             request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
         if response:
             return response
-        return self._user_render_event(request, event)
+        user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
+        return self._user_render_event(request, event, user_selector)
+
+    @post(
+        path='/user-update-header',
+        name='user-update-header'
+    )
+    async def htmx_user_event_update_header(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+    ) -> Template:
+        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
+        response, event = self._load_event_context(request=request, lazy_load=False, event_uniq_id=event_uniq_id)
+        if response:
+            return response
+        field: str = f'user_columns'
+        if field in data:
+            SessionHandler.set_session_user_columns(request, self._form_data_to_int_or_none(data, field))
+        user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
+        return self._user_render_event(request, event, user_selector)

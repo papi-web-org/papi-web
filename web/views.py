@@ -215,14 +215,39 @@ class AController(Controller):
             cls,
             request: HTMXRequest,
             event: NewEvent,
+            user_selector: str | None,
     ) -> Template | Redirect:
         return HTMXTemplate(
             template_name="user_event.html",
             context={
                 'papi_web_config': PapiWebConfig(),
                 'event': event,
+                'user_selector': user_selector or 'input',
                 'messages': Message.messages(request),
                 'now': time.time(),
+                'user_columns': SessionHandler.get_session_user_columns(request),
+                'nav_tabs': {
+                    'input': {
+                        'title': 'Saisie des résultats',
+                        'screens': event.input_screens_sorted_by_uniq_id,
+                    },
+                    'boards': {
+                        'title': 'Affichage des échiquiers',
+                        'screens': event.boards_screens_sorted_by_uniq_id,
+                    },
+                    'players': {
+                        'title': 'Affichage des appariements par ordre alphabétique',
+                        'screens': event.players_screens_sorted_by_uniq_id,
+                    },
+                    'results': {
+                        'title': 'Affichage des résultats',
+                        'screens': event.results_screens_sorted_by_uniq_id,
+                    },
+                    'rotators': {
+                        'title': 'Écrans rotatifs',
+                        'rotators': event.rotators_sorted_by_uniq_id,
+                    },
+                }
             })
 
 

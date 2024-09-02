@@ -5,7 +5,7 @@
         <div
                 hx-trigger="click, keyup[key=='Escape'] from:body"
                 hx-post="{{ url_for('user-event-render') }}"
-                hx-vals='{"event_uniq_id": "{{ event.uniq_id }}"}'
+                hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_selector": "{{ user_selector }}"}'
                 hx-target="body"
                 hx-indicator="#please-wait">
         </div>
@@ -21,9 +21,9 @@
                 {% for entry in screen.menu_screens %}
                     {% if entry.menu_label is not none %}
                         <a
-                                class="screen-menu-item text-nowrap py-0 px-2 my-0 mx-1 {% if screen.id == entry.id %}selected{% endif %}"
+                                class="screen-menu-item text-nowrap py-0 px-1 my-0 {% if loop.first %}ms-0{% else %}ms-1{% endif %} {% if loop.last %}me-0{% else %}me-1{% endif %} {% if screen.id == entry.id %}selected{% endif %}"
                                 hx-post="{{ url_for('user-screen-render') }}"
-                                hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "screen_uniq_id": "{{ entry.uniq_id }}"}'
+                                hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_selector": "{{ user_selector }}", "screen_uniq_id": "{{ entry.uniq_id }}"}'
                                 hx-target="body"
                                 hx-indicator="#please-wait"
                         >{{ entry.menu_label }}</a>
@@ -38,8 +38,8 @@
         {% if rotator %}
             <div
                     class="rotator-updater"
-                    hx-post="{{ url_for('user-rotator-render-screen') }}"
-                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "rotator_id": "{{ rotator.id }}", "rotator_screen_index": "{{ rotator_screen_index + 1}}"}'
+                    hx-post="{{ url_for('user-rotator-render') }}"
+                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_selector": "{{ user_selector }}", "rotator_id": "{{ rotator.id }}", "rotator_screen_index": "{{ rotator_screen_index + 1}}"}'
                     hx-target="body"
                     hx-trigger="every {{ rotator.delay }}s"
                     hx-indicator="#please-wait"
@@ -51,7 +51,7 @@
                     name="date"
                     value="{{ now }}"
                     hx-post="{{ url_for('user-screen-render-if-updated') }}"
-                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "screen_uniq_id": "{{ screen.uniq_id }}"}'
+                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_selector": "{{ user_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}"}'
                     hx-include="this"
                     hx-target="body"
                     hx-trigger="every {{ papi_web_config.user_screen_update_delay }}s queue:none"

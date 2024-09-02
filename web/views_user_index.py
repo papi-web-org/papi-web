@@ -125,6 +125,7 @@ class AUserController(AController):
             cls,
             request: HTMXRequest,
             event_uniq_id: str,
+            user_selector: str,
             screen_uniq_id: str,
             tournament_id: int,
             tournament_started: bool | None,
@@ -135,7 +136,8 @@ class AUserController(AController):
         if response:
             return response, None, None, None, None
         if cls._event_login_needed(request, event, screen):
-            return cls._user_render_screen(request, event, screen, retarget_to_body=True), None, None, None, None
+            return cls._user_render_screen(
+                request, event, user_selector, screen=screen, retarget_to_body=True), None, None, None, None
         try:
             board: Board = tournament.boards[board_id - 1]
         except KeyError:
@@ -149,6 +151,7 @@ class AUserController(AController):
             cls,
             request: HTMXRequest,
             event_uniq_id: str,
+            user_selector: str,
             screen_uniq_id: str,
             tournament_id: int,
             tournament_started: bool,
@@ -161,7 +164,8 @@ class AUserController(AController):
         if response:
             return response, None, None, None, None, None
         if cls._event_login_needed(request, event, screen):
-            return cls._user_render_screen(request, event, screen, retarget_to_body=True), None, None, None, None, None
+            return cls._user_render_screen(
+                request, event, user_selector, screen=screen, retarget_to_body=True), None, None, None, None, None
         try:
             player: Player = tournament.players_by_id[player_id]
         except KeyError:
@@ -182,12 +186,14 @@ class AUserController(AController):
                 'event_loader': EventLoader.get(request=request, lazy_load=True),
                 'messages': Message.messages(request),
                 'now': time.time(),
+                'user_columns': SessionHandler.get_session_user_columns(request),
             })
 
     @classmethod
     def _user_render_screen(
             cls, request: HTMXRequest,
             event: NewEvent,
+            user_selector: str,
             screen: NewScreen = None,
             rotator: NewRotator = None, rotator_screen_index: int = 0,
             retarget_to_body: bool = False,
@@ -200,6 +206,7 @@ class AUserController(AController):
             context={
                 'papi_web_config': PapiWebConfig(),
                 'event': event,
+                'user_selector': user_selector,
                 'screen': the_screen,
                 'now': time.time(),
                 'login_needed': login_needed,
@@ -218,18 +225,20 @@ class AUserController(AController):
             cls,
             request: HTMXRequest,
             event_uniq_id: str,
+            user_selector: str,
             screen_uniq_id: str,
             tournament_id: int,
             board_id: int,
     ) -> Template:
         response, event, screen, tournament, board = cls._load_board_context(
-            request, event_uniq_id, screen_uniq_id, tournament_id, True, board_id)
+            request, event_uniq_id, user_selector, screen_uniq_id, tournament_id, True, board_id)
         if response:
             return response
         return HTMXTemplate(
             template_name='user_boards_screen_board_row.html',
             context={
                 'event': event,
+                'user_selector': user_selector,
                 'tournament': tournament,
                 'board': board,
                 'screen': screen,
@@ -262,10 +271,12 @@ class UserIndexController(AUserController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Reswap:
         try:
-            date: float = self._form_data_to_float_or_none(data, 'date')
+            date: float = self._form_data_to_float_or_none(data, 'date', 0.0)
         except ValueError as ve:
             Message.error(request, str(ve))
             return self._render_messages(request)
+        if date <= 0.0:
+            return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if self._user_index_update_needed(request, date):
             return self._user_render_index(request)
         else:

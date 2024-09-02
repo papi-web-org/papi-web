@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% from 'macros.j2' import tooltip_attributes, event_visibility_icon, screen_type_icon, rotator_icon %}
+
 {% block content %}
     <div id="home-content" class="content home-content">
         <div class="row justify-content-center">
@@ -39,11 +41,7 @@
                         hx-target="body"
                         hx-indicator="#please-wait"
                         class="btn btn-primary btn-lg p-4 w-100"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="right"
-                        data-bs-html="true"
-                        data-bs-custom-class="papi-web-tooltip-info"
-                        data-bs-title="<i class='bi bi-info-circle-fill'></i> Cliquez ici pour accéder aux écrans publics des évènements."
+                        {{ tooltip_attributes('info', 'Cliquez ici pour accéder aux écrans publics des évènements.', 'right') }}
                 >
                     Évènements (accès public)
                 </button>
@@ -52,11 +50,9 @@
                         data-bs-placement="right"
                         data-bs-html="true"
                         {% if admin_auth %}
-                            data-bs-custom-class="papi-web-tooltip-info"
-                            data-bs-title="<i class='bi bi-info-circle-fill'></i> L'interface d'arbitrage permet la gestion des tournois des évènements."
+                            {{ tooltip_attributes('info', 'L\'interface d\'arbitrage permet la gestion des tournois des évènements.', 'right') }}
                         {% else %}
-                            data-bs-custom-class="papi-web-tooltip-danger"
-                            data-bs-title="<i class='bi bi-exclamation-diamond-fill'></i> L'accès à l'interface d'arbitrage n'est pas autorisé depuis cette machine."
+                            {{ tooltip_attributes('error', 'L\'accès à l\'interface d\'arbitrage n\'est pas autorisé depuis cette machine.', 'right') }}
                         {% endif %}
                 >
                     <button

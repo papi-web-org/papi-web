@@ -42,7 +42,8 @@ class UserLoginController(AUserController):
                 request, EventLoader.get(request=request, lazy_load=False), event_uniq_id, screen_uniq_id)
             if response:
                 return response
-            return self._user_render_screen(request, event, screen)
+            user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
+            return self._user_render_screen(request, event, user_selector, screen=screen)
         if data['password'] == '':
             Message.warning(request, 'Veuillez indiquer le code d\'accès.')
         else:

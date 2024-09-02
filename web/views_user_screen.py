@@ -28,14 +28,15 @@ class UserScreenController(AUserController):
     )
     async def htmx_user_screen_render(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED),],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Redirect:
         event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
         screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
         response, event, screen = self._load_screen_context(request, False, event_uniq_id, screen_uniq_id)
         if response:
             return response
-        return self._user_render_screen(request, event=event, screen=screen, )
+        user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
+        return self._user_render_screen(request, event, user_selector, screen=screen, )
 
     @staticmethod
     def _user_screen_page_update_needed(screen: NewScreen, family: NewFamily, date: float, ) -> bool:
@@ -77,12 +78,12 @@ class UserScreenController(AUserController):
         event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
         screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
         try:
-            date: float = self._form_data_to_float_or_none(data, 'date')
+            date: float = self._form_data_to_float_or_none(data, 'date', 0.0)
         except ValueError as ve:
             Message.error(request, str(ve))
             return self._render_messages(request)
-        if not date:
-            return Reswap(content=None, method='none', status_code=286)  # stop pooling
+        if date <= 0.0:
+            return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         response, event, screen, family = self._load_basic_screen_or_family_context(
             request, True, event_uniq_id, screen_uniq_id)
         if response:
@@ -91,6 +92,7 @@ class UserScreenController(AUserController):
             response, event, screen = self._load_screen_context(request, False, event_uniq_id, screen_uniq_id)
             if response:
                 return response
-            return self._user_render_screen(request, event, screen)
+            user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
+            return self._user_render_screen(request, event, user_selector, screen=screen)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)

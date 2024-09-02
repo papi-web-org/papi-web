@@ -16,7 +16,6 @@ from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.event import NewEvent
 from data.family import NewFamily
-from data.loader import EventLoader
 from data.screen_set import NewScreenSet
 from data.tournament import NewTournament
 from data.util import ScreenType
@@ -88,12 +87,12 @@ class UserScreenSetController(AUserController):
             event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
             screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
             screen_set_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_set_uniq_id')
-            date: float = self._form_data_to_float_or_none(data, 'date')
+            date: float = self._form_data_to_float_or_none(data, 'date', 0.0)
         except ValueError as ve:
             Message.error(request, str(ve))
             return self._render_messages(request)
-        if not date:
-            return Reswap(content=None, method='none', status_code=286)  # stop pooling
+        if date <= 0.0:
+            return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         response, event, screen_set, family = self._load_screen_set_or_family_context(
             request, True, event_uniq_id, screen_uniq_id, screen_set_uniq_id)
         if response:
@@ -131,12 +130,12 @@ class UserScreenSetController(AUserController):
             event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
             screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
             screen_set_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_set_uniq_id')
-            date: float = self._form_data_to_float_or_none(data, 'date')
+            date: float = self._form_data_to_float_or_none(data, 'date', 0.0)
         except ValueError as ve:
             Message.error(request, str(ve))
             return self._render_messages(request)
-        if not date:
-            return Reswap(content=None, method='none', status_code=286)  # stop pooling
+        if date <= 0.0:
+            return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         response, event, screen_set, family = self._load_screen_set_or_family_context(
             request, False, event_uniq_id, screen_uniq_id, screen_set_uniq_id)
         if not self._user_screen_set_div_update_needed(screen_set, family, date):

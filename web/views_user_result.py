@@ -1,8 +1,11 @@
 from contextlib import suppress
 
 from logging import Logger
+from typing import Annotated
 
-from litestar import get, put, delete
+from litestar import put, delete, post
+from litestar.enums import RequestEncodingType
+from litestar.params import Body
 from litestar.response import Template, Redirect
 from litestar.status_codes import HTTP_200_OK
 from litestar.contrib.htmx.request import HTMXRequest
@@ -25,84 +28,84 @@ logger: Logger = get_logger()
 class UserResultController(AUserController):
     @staticmethod
     def _render_input_screen_result_modal(
-            event: NewEvent, screen: NewScreen, tournament: NewTournament, board: Board,
+            event: NewEvent, user_selector: str, screen: NewScreen, tournament: NewTournament, board: Board,
     ) -> Template:
         return HTMXTemplate(
             template_name="user_input_screen_board_result_modal.html",
             context={
                 'event': event,
+                'user_selector': user_selector,
                 'tournament': tournament,
                 'board': board,
                 'screen': screen,
             })
 
-    @get(
-        path='/user-input-screen-render-result-modal'
-             '/{event_uniq_id:str}'
-             '/{screen_uniq_id:str}'
-             '/{tournament_id:int}'
-             '/{board_id:int}',
+    @post(
+        path='/user-input-screen-render-result-modal',
         name='user-input-screen-render-result-modal'
     )
     async def htmx_user_input_screen_render_result_modal(
             self,
             request: HTMXRequest,
-            event_uniq_id: str,
-            tournament_id: int,
-            board_id: int,
-            screen_uniq_id: str,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Redirect | Template:
+        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
+        user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
+        screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
+        tournament_id: int = self._form_data_to_int_or_none(data, 'tournament_id')
+        board_id: int = self._form_data_to_int_or_none(data, 'board_id')
         response, event, screen, tournament, board = self._load_board_context(
-            request, event_uniq_id, screen_uniq_id, tournament_id, True, board_id)
+            request, event_uniq_id, user_selector, screen_uniq_id, tournament_id, True, board_id)
         if response:
             return response
-        return self._render_input_screen_result_modal(event, screen, tournament, board)
+        return self._render_input_screen_result_modal(event, user_selector, screen, tournament, board)
+
+    @classmethod
+    def _user_input_screen_update_result(
+            cls, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+    ) -> Template:
+        event_uniq_id: str = cls._form_data_to_str_or_none(data, 'event_uniq_id')
+        user_selector: str = cls._form_data_to_str_or_none(data, 'user_selector')
+        screen_uniq_id: str = cls._form_data_to_str_or_none(data, 'screen_uniq_id')
+        tournament_id: int = cls._form_data_to_int_or_none(data, 'tournament_id')
+        round: int = cls._form_data_to_int_or_none(data, 'round')
+        board_id: int = cls._form_data_to_int_or_none(data, 'board_id')
+        response, event, screen, tournament, board = cls._load_board_context(
+            request, event_uniq_id, user_selector, screen_uniq_id, tournament_id, True, board_id)
+        if response:
+            return response
+        result: int = cls._form_data_to_int_or_none(data, 'result')
+        if result is None:
+            with suppress(ValueError):
+                tournament.delete_result(board)
+        else:
+            if result not in Result.imputable_results():
+                Message.error(request, f'Le résultat [{result}] est invalide.')
+                return cls._render_messages(request)
+            tournament.add_result(board, Result.from_papi_value(result))
+        SessionHandler.set_session_last_result_updated(request, tournament_id, round, board_id)
+        EventLoader.get(request=request, lazy_load=False).clear_cache(event.uniq_id)
+        return cls._render_input_screen_board_row(
+            request, event_uniq_id, user_selector, screen_uniq_id, tournament_id, board_id)
 
     @put(
-        path='/user-input-screen-add-result'
-             '/{event_uniq_id:str}'
-             '/{screen_uniq_id:str}'
-             '/{tournament_id:int}'
-             '/{round:int}'
-             '/{board_id:int}'
-             '/{result:int}',
+        path='/user-input-screen-add-result',
         name='user-input-screen-add-result'
     )
     async def htmx_user_input_screen_add_result(
             self, request: HTMXRequest,
-            event_uniq_id: str, screen_uniq_id: str, tournament_id: int, round: int, board_id: int, result: int | None,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=False)
-        response, event, screen, tournament, board = self._load_board_context(
-            request, event_uniq_id, screen_uniq_id, tournament_id, True, board_id)
-        if response:
-            return response
-        if result not in Result.imputable_results():
-            Message.error(request, f'Le résultat [{result}] est invalide.')
-            return self._render_messages(request)
-        tournament.add_result(board, Result.from_papi_value(result))
-        SessionHandler.set_session_last_result_updated(request, tournament_id, round, board_id)
-        event_loader.clear_cache(event.uniq_id)
-        return self._render_input_screen_board_row(request, event_uniq_id, screen_uniq_id, tournament_id, board_id)
+        return self._user_input_screen_update_result(request, data)
 
     @delete(
-        path='/user-input-screen-delete-result'
-             '/{event_uniq_id:str}/{screen_uniq_id:str}/{tournament_id:int}/{round:int}/{board_id:int}',
+        path='/user-input-screen-delete-result',
         name='user-input-screen-delete-result',
         status_code=HTTP_200_OK,
     )
     async def htmx_user_input_screen_delete_result(
-            self, request: HTMXRequest, event_uniq_id: str, screen_uniq_id: str, tournament_id: int, round: int,
-            board_id: int,
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=False)
-        response, event, screen, tournament, board = self._load_board_context(
-            request, event_uniq_id, screen_uniq_id, tournament_id, True, board_id)
-        if response:
-            return response
-        with suppress(ValueError):
-            tournament.delete_result(board)
-            SessionHandler.set_session_last_result_updated(request, tournament_id, round, board_id)
-        event_loader.clear_cache(event.uniq_id)
-        return self._render_input_screen_board_row(
-            request, event_uniq_id, screen_uniq_id, tournament_id, board_id)
+        return self._user_input_screen_update_result(request, data)

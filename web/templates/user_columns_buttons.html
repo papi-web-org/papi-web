@@ -1,0 +1,22 @@
+<span
+        class="text-nowrap ms-auto mt-1"
+        {{ tooltip_attributes('info', 'Changer le nombre de colonnes utilisées.', 'top') }}
+>
+    {% for c in papi_web_config.allowed_columns %}
+        {% with id='user-columns-'~c, name='user_columns' %}
+            <button
+                    class="btn {% if c == user_columns %}btn-primary{% else %}btn-secondary{% endif %} text-nowrap py-0 px-1"
+                    {% if c != user_columns %}
+                        hx-post="{{ url_for('user-update-header') }}"
+                        hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_selector": "{{ user_selector }}", "user_columns": "{{ c }}"}'
+                        hx-swap="multi:#user-header,#user-content"
+                        hx-indicator="#please-wait"
+                    {% else %}
+                        disabled
+                    {% endif %}
+            >
+                {{ c }}
+            </button>
+        {% endwith %}
+    {% endfor %}
+</span>

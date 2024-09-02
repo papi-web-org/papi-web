@@ -183,24 +183,6 @@
                             </div>
                         </td>
                         <td class="text-nowrap text-end w-25">
-                            <button
-                                    class="btn btn-sm btn-primary p-1"
-                                    hx-post="{{ url_for('admin-update-header') }}"
-                                    hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
-                                    hx-swap="multi:#admin-header,#admin-content"
-                                    hx-indicator="#please-wait">
-                                <i class="bi-caret-right-square-fill"></i> Ouvrir
-                            </button>
-                            <button
-                                    class="btn btn-sm btn-info p-1 text-nowrap"
-                                    hx-post="{{ url_for('user-event-render') }}"
-                                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}"}'
-                                    hx-target="body"
-                                    hx-indicator="#please-wait"
-                            >
-                                <i class="bi-share-fill"></i>
-                                Partager
-                            </button>
                         </td>
                     </tr>
                 {% endfor %}

@@ -321,9 +321,9 @@ class PapiWebConfig:
         return 10
 
     @property
-    def admin_allowed_columns(self) -> list[int]:
+    def allowed_columns(self) -> list[int]:
         return [1, 2, 3, 4, 6]
 
     @property
-    def default_admin_columns(self) -> int:
+    def default_columns(self) -> int:
         return 4
