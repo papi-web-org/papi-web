@@ -24,9 +24,10 @@ class EventLoader:
         self._events_by_id: dict[str, NewEvent] | None = None
         self._events_sorted_by_name: list[NewEvent] | None = None
         self._events_with_tournaments_sorted_by_name: list[NewEvent] | None = None
-        self._passed_events: list[NewEvent] | None = None
-        self._current_events: list[NewEvent] | None = None
-        self._coming_events: list[NewEvent] | None = None
+        self._public_events: list[NewEvent] | None = None
+        self._passed_public_events: list[NewEvent] | None = None
+        self._current_public_events: list[NewEvent] | None = None
+        self._coming_public_events: list[NewEvent] | None = None
 
     @staticmethod
     def get(request: HTMXRequest | None, lazy_load: bool):
@@ -125,28 +126,37 @@ class EventLoader:
         return self._events_with_tournaments_sorted_by_name
 
     @property
+    def public_events(self) -> list[NewEvent]:
+        if self._public_events is None:
+            self._public_events = sorted([
+                event for event in self.events_by_id.values()
+                if event.public
+            ], key=lambda event: event.name)
+        return self._public_events
+
+    @property
     def passed_public_events(self) -> list[NewEvent]:
-        if self._passed_events is None:
-            self._passed_events = sorted([
+        if self._passed_public_events is None:
+            self._passed_public_events = sorted([
                 event for event in self.events_by_id.values()
                 if event.public and event.stop < time.time()
             ], key=lambda event: (-event.stop, -event.start, event.name))
-        return self._passed_events
+        return self._passed_public_events
 
     @property
     def current_public_events(self) -> list[NewEvent]:
-        if self._current_events is None:
-            self._current_events = sorted([
+        if self._current_public_events is None:
+            self._current_public_events = sorted([
                 event for event in self.events_by_id.values()
                 if event.public and event.start < time.time() < event.stop
             ], key=lambda event: (-event.stop, -event.start, event.name))
-        return self._current_events
+        return self._current_public_events
 
     @property
     def coming_public_events(self) -> list[NewEvent]:
-        if self._coming_events is None:
-            self._coming_events = sorted([
+        if self._coming_public_events is None:
+            self._coming_public_events = sorted([
                 event for event in self.events_by_id.values()
                 if event.public and time.time() < event.start
             ], key=lambda event: (-event.stop, -event.start, event.name))
-        return self._coming_events
+        return self._coming_public_events

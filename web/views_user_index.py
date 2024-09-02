@@ -309,9 +309,9 @@ class UserIndexController(AUserController):
             request: HTMXRequest,
             date: float, ) -> bool:
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
-        for event_uniq_id in event_loader.events_by_id:
+        for public_event in event_loader.public_events:
             web_context: EventUserWebContext = EventUserWebContext(
-                request, {'event_uniq_id': event_uniq_id, }, True)
+                request, {'event_uniq_id': public_event.uniq_id, }, True)
             if web_context.error:
                 return False
             if web_context.event.last_update > date:
