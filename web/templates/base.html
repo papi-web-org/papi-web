@@ -1,36 +1,38 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>{% block title %}Papi-web{% endblock %}</title>
-        <link rel="shortcut icon" type="image/png" href="{{ url_for('static', file_path='/images/papi-web.ico') }}"/>
-        {# https://github.com/twbs/bootstrap/releases #}
-        <link href="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-5.3.3-dist/css/bootstrap.min.css') }}" rel="stylesheet">
-        {# https://github.com/twbs/icons/releases #}
-        <link rel="stylesheet" href="{{ url_for('static', file_path='/lib/bootstrap-icons/bootstrap-icons-1.11.3/font/bootstrap-icons.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', file_path='/css/base.css') }}" type="text/css" />
-        <link rel="stylesheet" href="{{ url_for('static', file_path='/css/user.css') }}" type="text/css" />
-        <link rel="stylesheet" href="{{ url_for('static', file_path='/css/admin.css') }}" type="text/css" />
-        {# https://jquery.com/download/ #}
-        <script src="{{ url_for('static', file_path='/lib/jquery/jquery-3.7.1.min.js') }}"></script>
-        {# https://unpkg.com/browse/htmx.org@1.9.12/dist/ #}
-        <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/htmx.min.js') }}"></script>
-        <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/ext/remove-me.js') }}"></script>
-        <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/ext/multi-swap.js') }}"></script>
-        {# https://github.com/SortableJS/Sortable #}
-        <script src="{{ url_for('static', file_path='/lib/sortable/sortable-1.15.2/Sortable.min.js') }}"></script>
-        <script src="{{ url_for('static', file_path='/lib/htmx/htmx-sortable.js') }}"></script>
-        {# TODO this was really nicer than the HTMX code in messages.html
-        <script>
-            $(document).ready(function(){
-                setTimeout(function(){
-                    $('#messages .alert-info').hide()
-                    $('#messages .alert-success').hide()
-                }, 10000)
-            });
-        </script>
-        #}
-        {% block head %}
-        {% endblock %}
+        {% if not request.htmx %}
+            <title>{% block title %}Papi-web{% endblock %}</title>
+            <link rel="shortcut icon" type="image/png" href="{{ url_for('static', file_path='/images/papi-web.ico') }}"/>
+            {# https://github.com/twbs/bootstrap/releases #}
+            <link href="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-5.3.3-dist/css/bootstrap.min.css') }}" rel="stylesheet">
+            {# https://github.com/twbs/icons/releases #}
+            <link rel="stylesheet" href="{{ url_for('static', file_path='/lib/bootstrap-icons/bootstrap-icons-1.11.3/font/bootstrap-icons.min.css') }}">
+            <link rel="stylesheet" href="{{ url_for('static', file_path='/css/base.css') }}" type="text/css" />
+            <link rel="stylesheet" href="{{ url_for('static', file_path='/css/user.css') }}" type="text/css" />
+            <link rel="stylesheet" href="{{ url_for('static', file_path='/css/admin.css') }}" type="text/css" />
+            {# https://jquery.com/download/ #}
+            <script src="{{ url_for('static', file_path='/lib/jquery/jquery-3.7.1.min.js') }}"></script>
+            {# https://unpkg.com/browse/htmx.org@1.9.12/dist/ #}
+            <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/htmx.min.js') }}"></script>
+            <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/ext/remove-me.js') }}"></script>
+            <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/ext/multi-swap.js') }}"></script>
+            {# https://github.com/SortableJS/Sortable #}
+            <script src="{{ url_for('static', file_path='/lib/sortable/sortable-1.15.2/Sortable.min.js') }}"></script>
+            <script src="{{ url_for('static', file_path='/lib/htmx/htmx-sortable.js') }}"></script>
+            {# TODO this was really nicer than the HTMX code in messages.html
+            <script>
+                $(document).ready(function(){
+                    setTimeout(function(){
+                        $('#messages .alert-info').hide()
+                        $('#messages .alert-success').hide()
+                    }, 10000)
+                });
+            </script>
+            #}
+            {% block head %}
+            {% endblock %}
+        {% endif %}
     </head>
     <body hx-ext="multi-swap" class="bg-body-secondary">
         <div id="messages" class="w-50 position-fixed top-0 end-0 m-2">
@@ -71,8 +73,10 @@
                 <div class="modal-content"></div>
             </div>
         </div>
-        <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js') }}"></script>
-        <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-tooltips.js') }}"></script>
-        <script src="{{ url_for('static', file_path='/lib/htmx/htmx-bootstrap-tabs.js') }}"></script>
+        {% if not request.htmx %}
+            <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js') }}"></script>
+            <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-tooltips.js') }}"></script>
+            <script src="{{ url_for('static', file_path='/lib/htmx/htmx-bootstrap-tabs.js') }}"></script>
+        {% endif %}
     </body>
 </html>
