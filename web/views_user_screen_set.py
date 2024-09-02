@@ -7,21 +7,21 @@ from typing import Annotated
 from litestar import post
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template, Redirect
+from litestar.response import Template
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.event import NewEvent
 from data.family import NewFamily
 from data.screen_set import NewScreenSet
 from data.tournament import NewTournament
 from data.util import ScreenType
 from web.messages import Message
 from web.session import SessionHandler
-from web.views_user_index import AUserController
+from web.views import WebContext
+from web.views_user_index import AUserController, ScreenSetOrFamilyUserWebContext
 
 logger: Logger = get_logger()
 
@@ -51,30 +51,6 @@ class UserScreenSetController(AUserController):
                 return True
         return False
 
-    @classmethod
-    def _load_screen_set_or_family_context(
-            cls,
-            request: HTMXRequest,
-            lazy_load: bool,
-            event_uniq_id: str,
-            screen_uniq_id: str,
-            screen_set_uniq_id: str,
-    ) -> tuple[Template | Redirect | None, NewEvent | None, NewScreenSet | None, NewFamily | None]:
-        response, event, screen, family = cls._load_basic_screen_or_family_context(
-            request, lazy_load, event_uniq_id, screen_uniq_id)
-        if response:
-            return response, None, None, None
-        if screen:
-            try:
-                screen_set: NewScreenSet = screen.screen_sets_by_uniq_id[screen_set_uniq_id]
-                return None, event, screen_set, None
-            except KeyError:
-                Message.error(
-                    request, f'L\'ensemble [{screen_set_uniq_id}] de l\'écran [{screen.uniq_id}] est introuvable.')
-                return cls._render_messages(request), None, None, None
-        else:
-            return None, event, None, family
-
     @post(
         path='/user-boards-screen-set-render-if-updated',
         name='user-boards-screen-set-render-if-updated',
@@ -83,34 +59,30 @@ class UserScreenSetController(AUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Reswap:
+        web_context: ScreenSetOrFamilyUserWebContext = ScreenSetOrFamilyUserWebContext(request, data, True)
+        if web_context.error:
+            return web_context.error
         try:
-            event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
-            screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
-            screen_set_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_set_uniq_id')
-            date: float = self._form_data_to_float_or_none(data, 'date', 0.0)
+            date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
             Message.error(request, str(ve))
             return self._render_messages(request)
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
-        response, event, screen_set, family = self._load_screen_set_or_family_context(
-            request, True, event_uniq_id, screen_uniq_id, screen_set_uniq_id)
-        if response:
-            return response
-        if not self._user_screen_set_div_update_needed(screen_set, family, date):
+        if not self._user_screen_set_div_update_needed(web_context.screen_set, web_context.family, date):
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
-        response, event, screen = self._load_screen_context(
-            request, False, event_uniq_id, screen_uniq_id)
-        if response:
-            return response
-        screen_set = screen.screen_sets_by_uniq_id[screen_set_uniq_id]
+        web_context = ScreenSetOrFamilyUserWebContext(request, data, True)
+        if web_context.error:
+            return web_context.error
         return HTMXTemplate(
             template_name='user_boards_screen_set.html',
             context={
                 'papi_web_config': PapiWebConfig(),
-                'event': event,
-                'screen': screen,
-                'screen_set': screen_set,
+                'event': web_context.event,
+                'screen': web_context.screen,
+                'rotator': web_context.rotator,
+                'rotator_screen_index': web_context.rotator_screen_index,
+                'screen_set': web_context.screen_set,
                 'now': time.time(),
                 'last_result_updated': SessionHandler.get_session_last_result_updated(request),
                 'last_illegal_move_updated': SessionHandler.get_session_last_illegal_move_updated(request),
@@ -126,30 +98,27 @@ class UserScreenSetController(AUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Reswap:
+        web_context: ScreenSetOrFamilyUserWebContext = ScreenSetOrFamilyUserWebContext(request, data, False)
+        if web_context.error:
+            return web_context.error
         try:
-            event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
-            screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
-            screen_set_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_set_uniq_id')
-            date: float = self._form_data_to_float_or_none(data, 'date', 0.0)
+            date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
             Message.error(request, str(ve))
             return self._render_messages(request)
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
-        response, event, screen_set, family = self._load_screen_set_or_family_context(
-            request, False, event_uniq_id, screen_uniq_id, screen_set_uniq_id)
-        if not self._user_screen_set_div_update_needed(screen_set, family, date):
+        if not self._user_screen_set_div_update_needed(web_context.screen_set, web_context.family, date):
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
-        response, event, screen = self._load_screen_context(request, False, event_uniq_id, screen_uniq_id)
-        if response:
-            return response
-        screen_set = screen.screen_sets_by_uniq_id[screen_set_uniq_id]
         return HTMXTemplate(
             template_name='user_players_screen_set.html',
             context={
-                'event': event,
-                'screen': screen,
-                'screen_set': screen_set,
+                'event': web_context.event,
+                'user_selector': web_context.user_selector,
+                'screen': web_context.screen,
+                'rotator': web_context.rotator,
+                'rotator_screen_index': web_context.rotator_screen_index,
+                'screen_set': web_context.screen_set,
                 'now': time.time(),
             },
         )

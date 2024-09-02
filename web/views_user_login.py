@@ -8,10 +8,9 @@ from litestar.response import Template
 from litestar.contrib.htmx.request import HTMXRequest
 
 from common.logger import get_logger
-from data.loader import EventLoader
 from web.messages import Message
 from web.session import SessionHandler
-from web.views_user_index import AUserController
+from web.views_user_index import AUserController, EventUserWebContext, ScreenUserWebContext
 
 logger: Logger = get_logger()
 
@@ -29,24 +28,21 @@ class UserLoginController(AUserController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
-        screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
-        response, event = self._load_event_context(
-            request, EventLoader.get(request=request, lazy_load=True), event_uniq_id)
-        if response:
-            return response
-        if data['password'] == event.update_password:
+        web_context: EventUserWebContext = EventUserWebContext(request, data, True)
+        if web_context.error:
+            return web_context.error
+        if data['password'] == web_context.event.update_password:
             Message.success(request, 'Authentification réussie !')
-            SessionHandler.store_password(request, event, data['password'])
-            response, event, screen = self._load_screen_context(
-                request, EventLoader.get(request=request, lazy_load=False), event_uniq_id, screen_uniq_id)
-            if response:
-                return response
+            SessionHandler.store_password(request, web_context.event, data['password'])
+            web_context: ScreenUserWebContext = ScreenUserWebContext(request, data, False)
+            if web_context.error:
+                return web_context.error
             user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
-            return self._user_render_screen(request, event, user_selector, screen=screen)
+            return self._user_render_screen(
+                request, web_context.event, user_selector, screen=web_context.screen, rotator=web_context.rotator)
         if data['password'] == '':
             Message.warning(request, 'Veuillez indiquer le code d\'accès.')
         else:
             Message.error(request, 'Code d\'accès incorrect.')
-            SessionHandler.store_password(request, event, None)
+            SessionHandler.store_password(request, web_context.event, None)
         return self._render_messages(request)

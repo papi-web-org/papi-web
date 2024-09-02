@@ -16,7 +16,8 @@ from data.screen import NewScreen
 from data.tournament import NewTournament
 from data.util import ScreenType
 from web.messages import Message
-from web.views_user_index import AUserController
+from web.views import WebContext
+from web.views_user_index import AUserController, ScreenUserWebContext, BasicScreenOrFamilyUserWebContext
 
 logger: Logger = get_logger()
 
@@ -30,13 +31,12 @@ class UserScreenController(AUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Redirect:
-        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
-        screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
-        response, event, screen = self._load_screen_context(request, False, event_uniq_id, screen_uniq_id)
-        if response:
-            return response
-        user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
-        return self._user_render_screen(request, event, user_selector, screen=screen, )
+        web_context: ScreenUserWebContext = ScreenUserWebContext(request, data, False)
+        if web_context.error:
+            return web_context.error
+        return self._user_render_screen(
+            request, web_context.event, web_context.user_selector, screen=web_context.screen,
+            rotator=web_context.rotator, rotator_screen_index=web_context.rotator_screen_index)
 
     @staticmethod
     def _user_screen_page_update_needed(screen: NewScreen, family: NewFamily, date: float, ) -> bool:
@@ -75,24 +75,23 @@ class UserScreenController(AUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Reswap:
-        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
-        screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
+        web_context: BasicScreenOrFamilyUserWebContext = BasicScreenOrFamilyUserWebContext(
+            request, data, True)
+        if web_context.error:
+            return web_context.error
         try:
-            date: float = self._form_data_to_float_or_none(data, 'date', 0.0)
+            date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
             Message.error(request, str(ve))
             return self._render_messages(request)
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
-        response, event, screen, family = self._load_basic_screen_or_family_context(
-            request, True, event_uniq_id, screen_uniq_id)
-        if response:
-            return response
-        if self._user_screen_page_update_needed(screen, family, date):
-            response, event, screen = self._load_screen_context(request, False, event_uniq_id, screen_uniq_id)
-            if response:
-                return response
-            user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
-            return self._user_render_screen(request, event, user_selector, screen=screen)
+        if self._user_screen_page_update_needed(web_context.screen, web_context.family, date):
+            web_context: ScreenUserWebContext = ScreenUserWebContext(request, data, False)
+            if web_context.error:
+                return web_context.error
+            return self._user_render_screen(
+                request, web_context.event, web_context.user_selector, screen=web_context.screen,
+                rotator=web_context.rotator, rotator_screen_index=web_context.rotator_screen_index)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)

@@ -2,40 +2,41 @@ from io import BytesIO
 from pathlib import Path
 
 from logging import Logger
+from typing import Annotated
 from zipfile import ZipFile, ZipInfo
 
-from litestar import get, Response
+from litestar import get, Response, post
+from litestar.enums import RequestEncodingType
+from litestar.params import Body
 from litestar.response import Template, File
 from litestar.contrib.htmx.request import HTMXRequest
 
 from common.logger import get_logger
-from data.loader import EventLoader
-from data.tournament import NewTournament
 from web.messages import Message
-from web.views_user_index import AUserController
+from web.views_user_index import AUserController, EventUserWebContext, TournamentUserWebContext
 
 logger: Logger = get_logger()
 
 
 class UserDownloadController(AUserController):
-    @get(
-        path='/user-download-event-tournaments/{event_uniq_id:str}',
+    @post(
+        path='/user-download-event-tournaments',
         name='user-download-event-tournaments'
     )
     async def htmx_user_download_event_tournaments(
-            self, request: HTMXRequest, event_uniq_id: str
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Response[bytes] | Template:
-        response, event = self._load_event_context(
-            request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
-        if response:
-            return response
+        web_context: EventUserWebContext = EventUserWebContext(request, data, False)
+        if web_context.error:
+            return web_context.error
         tournament_files: list[Path] = [
             tournament.file
-            for tournament in event.tournaments_by_id.values()
+            for tournament in web_context.event.tournaments_by_id.values()
             if tournament.file_exists
         ]
         if not tournament_files:
-            Message.error(request, f'Aucun fichier de tournoi pour l\'évènement [{event_uniq_id}].')
+            Message.error(request, f'Aucun fichier de tournoi pour l\'évènement [{web_context.event.uniq_id}].')
             return self._render_messages(request)
         archive = BytesIO()
         with ZipFile(archive, 'w') as zip_archive:
@@ -46,23 +47,18 @@ class UserDownloadController(AUserController):
                         zip_entry, tournament_handler.read())
         return Response(content=bytes(archive.getbuffer()), media_type='application/zip')
 
-    @get(
-        path='/user-download-tournament/{event_uniq_id:str}/{tournament_uniq_id:str}',
+    @post(
+        path='/user-download-tournament',
         name='user-download-tournament'
     )
     async def htmx_user_download_tournament(
-            self, request: HTMXRequest, event_uniq_id: str, tournament_id: int
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> File | Template:
-        response, event = self._load_event_context(
-            request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
-        if response:
-            return response
-        try:
-            tournament: NewTournament = event.tournaments_by_id[tournament_id]
-        except KeyError:
-            Message.error(request, f'Le tournoi [{tournament_id}] n\'existe pas.')
+        web_context: TournamentUserWebContext = TournamentUserWebContext(request, data, None)
+        if web_context.error:
+            return web_context.error
+        if not web_context.tournament.file_exists:
+            Message.error(request, f'Le fichier [{web_context.tournament.file}] n\'existe pas.')
             return self._render_messages(request)
-        if not tournament.file_exists:
-            Message.error(request, f'Le fichier [{tournament.file}] n\'existe pas.')
-            return self._render_messages(request)
-        return File(path=tournament.file, filename=tournament.file.name)
+        return File(path=web_context.tournament.file, filename=web_context.tournament.file.name)

@@ -2,19 +2,21 @@
     <div
             class="players-screen-set"
     >
-        <input
-                class="updater screen-set-updater"
-                type="hidden"
-                name="date"
-                value="{{ now }}"
-                hx-post="{{ url_for('user-players-screen-set-render-if-updated') }}"
-                hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_selector": "{{ user_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "screen_set_uniq_id": "{{ screen_set.uniq_id }}"}'
-                hx-include="this"
-                hx-target="closest .players-screen-set"
-                hx-swap="outerHTML"
-                hx-trigger="every {{ papi_web_config.user_screen_set_update_delay }}s queue:none"
-                hx-indicator="#please-wait"
-        />
+        {% if not rotator %}
+            <input
+                    class="updater screen-set-updater"
+                    type="hidden"
+                    name="date"
+                    value="{{ now }}"
+                    hx-post="{{ url_for('user-players-screen-set-render-if-updated') }}"
+                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_selector": "{{ user_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "screen_set_uniq_id": "{{ screen_set.uniq_id }}"}'
+                    hx-include="this"
+                    hx-target="closest .players-screen-set"
+                    hx-swap="outerHTML"
+                    hx-trigger="every {{ papi_web_config.user_screen_set_update_delay }}s queue:none"
+                    hx-indicator="#please-wait"
+            />
+        {% endif %}
         <h2 class="set-title text-center">{{ screen_set.name_for_players }}{% if tournament.current_round %} (ronde {{ tournament.current_round }}){% endif %}</h2>
         <div class="row screen-set-row mx-0 w-100">
             {% for players in screen_set.players_by_name_lists %}

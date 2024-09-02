@@ -3,7 +3,11 @@ from datetime import datetime
 from logging import Logger
 
 from pathlib import Path
+from typing import Annotated
+
 from litestar import get, Controller
+from litestar.enums import RequestEncodingType
+from litestar.params import Body
 from litestar.response import Template, Redirect
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
@@ -21,6 +25,88 @@ from web.session import SessionHandler
 from web.urls import index_url
 
 logger: Logger = get_logger()
+
+
+class WebContext:
+    def __init__(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+    ):
+        self.request = request
+        self.data = data
+        self.error: Redirect | Template | None = None
+
+    @staticmethod
+    def form_data_to_str(data: dict[str, str], field: str, empty_value: str | None = None) -> str | None:
+        data[field] = data.get(field, '')
+        if data[field] is not None:
+            data[field] = data[field].strip()
+        if not data[field]:
+            return empty_value
+        return data[field]
+
+    def _form_data_to_str(self, field: str, empty_value: str | None = None) -> str | None:
+        return self.form_data_to_str(self.data, field, empty_value)
+
+    @staticmethod
+    def form_data_to_int(
+            data: dict[str, str], field: str, empty_value: int | None = None, minimum: int = None) -> int | None:
+        data[field] = data.get(field, '')
+        if data[field] is not None:
+            data[field] = data[field].strip()
+        if not data[field]:
+            return empty_value
+        int_val = int(data[field])
+        if minimum is not None and int_val < minimum:
+            raise ValueError(f'{int_val} < {minimum}')
+        return int_val
+
+    def _form_data_to_int(self, field: str, empty_value: int | None = None, minimum: int = None) -> int | None:
+        return self.form_data_to_int(self.data, field, empty_value, minimum)
+
+    @staticmethod
+    def form_data_to_float(
+            data: dict[str, str], field: str, empty_value: float | None = None, minimum: float = None) -> float | None:
+        data[field] = data.get(field, '')
+        if data[field] is not None:
+            data[field] = data[field].strip()
+        if not data[field]:
+            return empty_value
+        float_val = float(data[field])
+        if minimum is not None and float_val < minimum:
+            raise ValueError(f'{float_val} < {minimum}')
+        return float_val
+
+    def _form_data_to_float(self, field: str, empty_value: str | None = None, minimum: float = None) -> float | None:
+        return self.form_data_to_float(self.data, field, empty_value, minimum)
+
+    @staticmethod
+    def form_data_to_bool(data: dict[str, str], field: str, empty_value: bool | None = None) -> bool | None:
+        data[field] = data.get(field, '')
+        if data[field] is not None:
+            data[field] = data[field].strip().lower()
+        if not data[field]:
+            return empty_value
+        return data[field] in ['true', 'on', ]
+
+    def _form_data_to_bool(self, field: str, empty_value: str | None = None) -> bool | None:
+        return self.form_data_to_bool(self.data, field, empty_value)
+
+    @staticmethod
+    def form_data_to_rgb(data: dict[str, str], field: str, empty_value: RGB | None = None) -> str | None:
+        data[field] = data.get(field, '')
+        if data[field] is not None:
+            data[field] = data[field].strip().lower()
+        if not data[field]:
+            return empty_value
+        return check_rgb_str(data[field])
+
+    def _form_data_to_rgb(self, field: str, empty_value: RGB | None = None) -> str | None:
+        return self.form_data_to_rgb(self.data, field, empty_value)
+
+    def _redirect_to_index(self, errors: str | list[str]):
+        Message.error(self.request, errors)
+        self.error = Redirect(path=index_url(self.request))
 
 
 class AController(Controller):
@@ -49,20 +135,6 @@ class AController(Controller):
         if minimum is not None and int_val < minimum:
             raise ValueError(f'{int_val} < {minimum}')
         return int_val
-
-    @staticmethod
-    def _form_data_to_float_or_none(
-            data: dict[str, str], field: str, empty_value: float | None = None, minimum: float = None
-    ) -> float | None:
-        data[field] = data.get(field, '')
-        if data[field] is not None:
-            data[field] = data[field].strip()
-        if not data[field]:
-            return empty_value
-        float_val = float(data[field])
-        if minimum is not None and float_val < minimum:
-            raise ValueError(f'{float_val} < {minimum}')
-        return float_val
 
     @staticmethod
     def _form_data_to_bool_or_none(data: dict[str, str], field: str, empty_value: bool | None = None) -> bool | None:

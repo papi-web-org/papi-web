@@ -12,11 +12,11 @@ from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
 from data.event import NewEvent
-from data.loader import EventLoader
 from data.util import ScreenType
 from web.messages import Message
 from web.session import SessionHandler
-from web.views_user_index import AUserController
+from web.views import WebContext
+from web.views_user_index import AUserController, EventUserWebContext
 
 logger: Logger = get_logger()
 
@@ -78,25 +78,22 @@ class UserEventController(AUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Reswap:
+        web_context: EventUserWebContext = EventUserWebContext(request, data, True)
+        if web_context.error:
+            return web_context.error
         try:
-            event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
-            date: float = self._form_data_to_float_or_none(data, 'date', 0.0)
+            date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
             Message.error(request, str(ve))
             return self._render_messages(request)
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
-        response, event = self._load_event_context(
-            request, EventLoader.get(request=request, lazy_load=True), event_uniq_id)
-        if response:
-            return response
-        if self._user_event_page_update_needed(event, date):
-            response, event = self._load_event_context(
-                request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
-            if response:
-                return response
+        if self._user_event_page_update_needed(web_context.event, date):
+            web_context: EventUserWebContext = EventUserWebContext(request, data, False)
+            if web_context.error:
+                return web_context.error
             user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
-            return self._user_render_event(request, event, user_selector)
+            return self._user_render_event(request, web_context.event, user_selector)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
 
@@ -108,13 +105,10 @@ class UserEventController(AUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Redirect:
-        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
-        response, event = self._load_event_context(
-            request, EventLoader.get(request=request, lazy_load=False), event_uniq_id)
-        if response:
-            return response
-        user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
-        return self._user_render_event(request, event, user_selector)
+        web_context: EventUserWebContext = EventUserWebContext(request, data, False)
+        if web_context.error:
+            return web_context.error
+        return self._user_render_event(request, web_context.event, web_context.user_selector)
 
     @post(
         path='/user-update-header',
@@ -124,12 +118,10 @@ class UserEventController(AUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
-        response, event = self._load_event_context(request=request, lazy_load=False, event_uniq_id=event_uniq_id)
-        if response:
-            return response
+        web_context: EventUserWebContext = EventUserWebContext(request, data, False)
+        if web_context.error:
+            return web_context.error
         field: str = f'user_columns'
         if field in data:
             SessionHandler.set_session_user_columns(request, self._form_data_to_int_or_none(data, field))
-        user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
-        return self._user_render_event(request, event, user_selector)
+        return self._user_render_event(request, web_context.event, web_context.user_selector)

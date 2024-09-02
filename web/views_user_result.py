@@ -12,33 +12,17 @@ from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 
 from common.logger import get_logger
-from data.board import Board
-from data.event import NewEvent
 from data.loader import EventLoader
-from data.screen import NewScreen
-from data.tournament import NewTournament
 from data.util import Result
 from web.messages import Message
 from web.session import SessionHandler
-from web.views_user_index import AUserController
+from web.views import WebContext
+from web.views_user_index import AUserController, BoardUserWebContext
 
 logger: Logger = get_logger()
 
 
 class UserResultController(AUserController):
-    @staticmethod
-    def _render_input_screen_result_modal(
-            event: NewEvent, user_selector: str, screen: NewScreen, tournament: NewTournament, board: Board,
-    ) -> Template:
-        return HTMXTemplate(
-            template_name="user_input_screen_board_result_modal.html",
-            context={
-                'event': event,
-                'user_selector': user_selector,
-                'tournament': tournament,
-                'board': board,
-                'screen': screen,
-            })
 
     @post(
         path='/user-input-screen-render-result-modal',
@@ -49,45 +33,49 @@ class UserResultController(AUserController):
             request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Redirect | Template:
-        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
-        user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
-        screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
-        tournament_id: int = self._form_data_to_int_or_none(data, 'tournament_id')
-        board_id: int = self._form_data_to_int_or_none(data, 'board_id')
-        response, event, screen, tournament, board = self._load_board_context(
-            request, event_uniq_id, user_selector, screen_uniq_id, tournament_id, True, board_id)
-        if response:
-            return response
-        return self._render_input_screen_result_modal(event, user_selector, screen, tournament, board)
+        web_context: BoardUserWebContext = BoardUserWebContext(request, data)
+        if web_context.error:
+            return web_context.error
+        return HTMXTemplate(
+            template_name="user_input_screen_board_result_modal.html",
+            context={
+                'event': web_context.event,
+                'user_selector': web_context.user_selector,
+                'tournament': web_context.tournament,
+                'board': web_context.board,
+                'screen': web_context.screen,
+            })
 
-    @classmethod
     def _user_input_screen_update_result(
-            cls, request: HTMXRequest,
+            self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_uniq_id: str = cls._form_data_to_str_or_none(data, 'event_uniq_id')
-        user_selector: str = cls._form_data_to_str_or_none(data, 'user_selector')
-        screen_uniq_id: str = cls._form_data_to_str_or_none(data, 'screen_uniq_id')
-        tournament_id: int = cls._form_data_to_int_or_none(data, 'tournament_id')
-        round: int = cls._form_data_to_int_or_none(data, 'round')
-        board_id: int = cls._form_data_to_int_or_none(data, 'board_id')
-        response, event, screen, tournament, board = cls._load_board_context(
-            request, event_uniq_id, user_selector, screen_uniq_id, tournament_id, True, board_id)
-        if response:
-            return response
-        result: int = cls._form_data_to_int_or_none(data, 'result')
+        web_context: BoardUserWebContext = BoardUserWebContext(request, data)
+        if web_context.error:
+            return web_context.error
+        field: str = 'round'
+        try:
+            round: int | None = WebContext.form_data_to_int(data, field)
+        except ValueError as ve:
+            Message.error(request, f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
+            return self._render_messages(request)
+        field: str = 'result'
+        try:
+            result: int | None = WebContext.form_data_to_int(data, field)
+        except ValueError as ve:
+            Message.error(request, f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
+            return self._render_messages(request)
         if result is None:
             with suppress(ValueError):
-                tournament.delete_result(board)
+                web_context.tournament.delete_result(web_context.board)
         else:
             if result not in Result.imputable_results():
                 Message.error(request, f'Le résultat [{result}] est invalide.')
-                return cls._render_messages(request)
-            tournament.add_result(board, Result.from_papi_value(result))
-        SessionHandler.set_session_last_result_updated(request, tournament_id, round, board_id)
-        EventLoader.get(request=request, lazy_load=False).clear_cache(event.uniq_id)
-        return cls._render_input_screen_board_row(
-            request, event_uniq_id, user_selector, screen_uniq_id, tournament_id, board_id)
+                return self._render_messages(request)
+            web_context.tournament.add_result(web_context.board, Result.from_papi_value(result))
+        SessionHandler.set_session_last_result_updated(request, web_context.tournament.id, round, web_context.board.id)
+        EventLoader.get(request=request, lazy_load=False).clear_cache(web_context.event.uniq_id)
+        return self._render_input_screen_board_row(request, data)
 
     @put(
         path='/user-input-screen-add-result',

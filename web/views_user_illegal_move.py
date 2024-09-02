@@ -12,7 +12,7 @@ from common.logger import get_logger
 from data.loader import EventLoader
 from web.messages import Message
 from web.session import SessionHandler
-from web.views_user_index import AUserController
+from web.views_user_index import AUserController, PlayerUserWebContext
 
 logger: Logger = get_logger()
 
@@ -21,29 +21,23 @@ class UserIllegalMoveController(AUserController):
     @classmethod
     def _delete_or_add_illegal_move(
             cls, request: HTMXRequest,
-            event_uniq_id: str,
-            user_selector: str,
-            screen_uniq_id: str,
-            tournament_id: int,
-            player_id: int,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             add: bool
     ) -> Template | Redirect:
-        response, event, screen, tournament, player, board = cls._load_player_context(
-            request, event_uniq_id, user_selector, screen_uniq_id, tournament_id, True, player_id)
-        if response:
-            return response
+        web_context: PlayerUserWebContext = PlayerUserWebContext(request, data, True)
+        if web_context.error:
+            return web_context.error
         if add:
-            tournament.store_illegal_move(player)
+            web_context.tournament.store_illegal_move(web_context.player)
         else:
-            if not tournament.delete_illegal_move(player):
+            if not web_context.tournament.delete_illegal_move(web_context.player):
                 Message.error(
                     request,
-                    f'Le·la joueur·euse {player_id} n\'a pas de coup illégal enregistré.')
+                    f'Le·la joueur·euse {web_context.player.id} n\'a pas de coup illégal enregistré.')
                 return cls._render_messages(request)
-        SessionHandler.set_session_last_illegal_move_updated(request, tournament_id, player_id)
-        EventLoader.get(request=request, lazy_load=False).clear_cache(event_uniq_id)
-        return cls._render_input_screen_board_row(
-            request, event_uniq_id, user_selector, screen_uniq_id, tournament_id, board.id)
+        SessionHandler.set_session_last_illegal_move_updated(request, web_context.tournament.id, web_context.player.id)
+        EventLoader.get(request=request, lazy_load=False).clear_cache(web_context.event.uniq_id)
+        return cls._render_input_screen_board_row(request, data)
 
     @put(
         path='/user-input-screen-add-illegal-move',
@@ -54,13 +48,7 @@ class UserIllegalMoveController(AUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Redirect:
-        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
-        user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
-        screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
-        tournament_id: int = self._form_data_to_int_or_none(data, 'tournament_id')
-        player_id: int = self._form_data_to_int_or_none(data, 'player_id')
-        return self._delete_or_add_illegal_move(
-            request, event_uniq_id, user_selector, screen_uniq_id, tournament_id, player_id, add=True)
+        return self._delete_or_add_illegal_move(request, data, add=True)
 
     @delete(
         path='/user-input-screen-delete-illegal-move',
@@ -69,12 +57,6 @@ class UserIllegalMoveController(AUserController):
     )
     async def htmx_user_input_screen_delete_illegal_move(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED),],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Redirect:
-        event_uniq_id: str = self._form_data_to_str_or_none(data, 'event_uniq_id')
-        user_selector: str = self._form_data_to_str_or_none(data, 'user_selector')
-        screen_uniq_id: str = self._form_data_to_str_or_none(data, 'screen_uniq_id')
-        tournament_id: int = self._form_data_to_int_or_none(data, 'tournament_id')
-        player_id: int = self._form_data_to_int_or_none(data, 'player_id')
-        return self._delete_or_add_illegal_move(
-            request, event_uniq_id, user_selector, screen_uniq_id, tournament_id, player_id, add=False)
+        return self._delete_or_add_illegal_move(request, data, add=False)
