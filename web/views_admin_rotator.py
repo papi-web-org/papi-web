@@ -17,7 +17,7 @@ from data.rotator import NewRotator
 from database.sqlite import EventDatabase
 from database.store import StoredRotator
 from web.messages import Message
-from web.views_admin_index import AAdminController
+from web.views_admin import AAdminController
 
 logger: Logger = get_logger()
 

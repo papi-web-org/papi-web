@@ -20,7 +20,7 @@ from data.util import Result
 from web.messages import Message
 from web.session import SessionHandler
 from web.views import WebContext
-from web.views_user_index import AUserController, TournamentUserWebContext
+from web.views_user import AUserController, TournamentUserWebContext
 
 logger: Logger = get_logger()
 

@@ -21,7 +21,7 @@ from data.util import ScreenType
 from web.messages import Message
 from web.session import SessionHandler
 from web.views import WebContext
-from web.views_user_index import AUserController, BasicScreenOrFamilyUserWebContext
+from web.views_user import AUserController, BasicScreenOrFamilyUserWebContext
 
 logger: Logger = get_logger()
 

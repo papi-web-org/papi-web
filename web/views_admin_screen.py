@@ -19,7 +19,7 @@ from data.util import ScreenType
 from database.sqlite import EventDatabase
 from database.store import StoredScreen, StoredScreenSet
 from web.messages import Message
-from web.views_admin_index import AAdminController
+from web.views_admin import AAdminController
 
 logger: Logger = get_logger()
 

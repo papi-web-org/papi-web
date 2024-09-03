@@ -13,7 +13,7 @@ from litestar.contrib.htmx.request import HTMXRequest
 
 from common.logger import get_logger
 from web.messages import Message
-from web.views_user_index import AUserController, EventUserWebContext, TournamentUserWebContext
+from web.views_user import AUserController, EventUserWebContext, TournamentUserWebContext
 
 logger: Logger = get_logger()
 

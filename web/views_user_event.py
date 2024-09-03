@@ -18,7 +18,7 @@ from data.util import ScreenType
 from web.messages import Message
 from web.session import SessionHandler
 from web.views import WebContext
-from web.views_user_index import AUserController, EventUserWebContext
+from web.views_user import AUserController, EventUserWebContext
 
 logger: Logger = get_logger()
 
