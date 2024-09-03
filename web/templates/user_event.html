@@ -10,7 +10,7 @@
                 name="date"
                 value="{{ now }}"
                 hx-post="{{ url_for('user-event-render-if-updated') }}"
-                hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}"}'
+                hx-vals='{"user_event_uniq_id": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}"}'
                 hx-include="this"
                 hx-target="body"
                 hx-trigger="every {{ papi_web_config.user_event_update_delay }}s queue:none"
@@ -34,7 +34,7 @@
                                     class="nav-link border-dark {%if active %}active{%else%}bg-body-secondary{% endif %} fw-bold px-2 py-0 ms-1 text-nowrap"
                                     id="nav-{{ nav_id }}-tab"
                                     hx-post="{{ url_for('user-update-header') }}"
-                                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_event_selector": "{{ nav_id }}"}'
+                                    hx-vals='{"user_event_uniq_id": "{{ user_event.uniq_id }}", "user_event_selector": "{{ nav_id }}"}'
                                     hx-swap="multi:#user-header,#user-content"
                                     data-bs-toggle="tab"
                                     data-bs-target="#nav-{{ nav_id }}"
@@ -84,9 +84,9 @@
                                 <div class="row">
                                     <div class="col-12 fs-3 fw-bold text-nowrap mb-2">
                                         {% if user_event_selector == 'rotators' %}
-                                            {{ rotator_icon() }} {{ event.name }} - {{ nav_tab.title }}
+                                            {{ rotator_icon() }} {{ user_event.name }} - {{ nav_tab.title }}
                                         {% else %}
-                                            {{ screen_type_icon(nav_id) }} {{ event.name }} - {{ nav_tab.title }}
+                                            {{ screen_type_icon(nav_id) }} {{ user_event.name }} - {{ nav_tab.title }}
                                         {% endif %}
                                     </div>
                                 </div>
@@ -96,7 +96,7 @@
                                             {% for rotator in nav_tab.rotators %}
                                                 {% with
                                                     card_url=url_for('user-rotator-render'),
-                                                    card_payload='{"event_uniq_id": "' ~ event.uniq_id ~ '", "user_event_selector": "' ~ user_event_selector ~ '", "rotator_id": "' ~ rotator.id ~ '"}',
+                                                    card_payload='{"user_event_uniq_id": "' ~ user_event.uniq_id ~ '", "user_event_selector": "' ~ user_event_selector ~ '", "rotator_id": "' ~ rotator.id ~ '"}',
                                                     card_class='bg-info-subtle'
                                                 %}
                                                     {% include 'user_event_rotator_card.html' %}
@@ -112,7 +112,7 @@
                                             {% for screen in nav_tab.screens %}
                                                 {% with
                                                     card_url=url_for('user-screen-render'),
-                                                    card_payload='{"event_uniq_id": "' ~ event.uniq_id ~ '", "user_event_selector": "' ~ user_event_selector ~ '", "screen_uniq_id": "' ~ screen.uniq_id ~ '"}',
+                                                    card_payload='{"user_event_uniq_id": "' ~ user_event.uniq_id ~ '", "user_event_selector": "' ~ user_event_selector ~ '", "screen_uniq_id": "' ~ screen.uniq_id ~ '"}',
                                                     card_class='bg-info-subtle'
                                                 %}
                                                     {% include 'user_event_screen_card.html' %}

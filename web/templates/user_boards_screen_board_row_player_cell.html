@@ -6,7 +6,7 @@
             {% endif %}"
         {% if screen.type == 'input' and not board.result_str %}
             hx-post="{{ url_for('user-input-screen-render-result-modal') }}"
-            hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "screen_uniq_id": "{{ screen.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "tournament_id": "{{ tournament.id }}", "board_id": "{{ board.id }}"}'
+            hx-vals='{"user_event_uniq_id": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "board_id": "{{ board.id }}"}'
             hx-target="#modals"
             hx-swap="innerHTML"
             hx-on:click="$('.updater').val(function(i, old_value) { return -Math.abs(parseInt(old_value, 10)); });"

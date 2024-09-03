@@ -20,7 +20,7 @@
         Menu : {% if screen.menu %}{{ screen.menu }}{% else %}-{% endif %}
     </div>
     <div class="{% if not screen.timer %}text-secondary{% endif %}">
-        Chronomètre : {% if screen.timer %}<i class="bi-clock-fill"></i> {% if event.timers_by_id|length > 1 %}{{ screen.timer.uniq_id }}{% else %}Oui{% endif %}{% else %}Non{% endif %}
+        Chronomètre : {% if screen.timer %}<i class="bi-clock-fill"></i> {% if user_event.timers_by_id|length > 1 %}{{ screen.timer.uniq_id }}{% else %}Oui{% endif %}{% else %}Non{% endif %}
     </div>
     {% if screen.type == 'players' %}
         <div>

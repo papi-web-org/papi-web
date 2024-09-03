@@ -15,7 +15,7 @@
                     hx-target="closest tr"
                     hx-swap="outerHTML transition:true"
                     hx-delete="{{ url_for('user-input-screen-delete-illegal-move') }}"
-                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "screen_uniq_id": "{{ screen.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "tournament_id": "{{ tournament.id }}", "player_id": "{{ player.id }}"}'
+                    hx-vals='{"user_event_uniq_id": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "player_id": "{{ player.id }}"}'
                     hx-indicator="#please-wait"
                 ></i>
             </span>
@@ -27,7 +27,7 @@
                     hx-target="closest tr"
                     hx-swap="outerHTML transition:true"
                     hx-put="{{ url_for('user-input-screen-add-illegal-move') }}"
-                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "screen_uniq_id": "{{ screen.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "tournament_id": "{{ tournament.id }}", "player_id": "{{ player.id }}"}'
+                    hx-vals='{"user_event_uniq_id": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "player_id": "{{ player.id }}"}'
                     hx-indicator="#please-wait"
                 ></i>
             </span>

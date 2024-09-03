@@ -13,14 +13,11 @@ from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.board import Board
 from data.event import NewEvent
 from data.family import NewFamily
 from data.loader import EventLoader
-from data.player import Player
 from data.rotator import NewRotator
 from data.screen import NewScreen
-from data.screen_set import NewScreenSet
 from data.tournament import NewTournament
 from web.messages import Message
 from web.session import SessionHandler
@@ -46,11 +43,11 @@ class EventUserWebContext(UserWebContext):
     ):
         super().__init__(request, data)
         try:
-            event_uniq_id: str = self._form_data_to_str('event_uniq_id')
+            user_event_uniq_id: str = self._form_data_to_str('user_event_uniq_id')
         except ValueError as ve:
             self._redirect_to_index(str(ve))
             return
-        self.event: NewEvent = EventLoader.get(request=self.request, lazy_load=lazy_load).load_event(event_uniq_id)
+        self.event: NewEvent = EventLoader.get(request=self.request, lazy_load=lazy_load).load_event(user_event_uniq_id)
         if self.event.errors:
             self._redirect_to_index(self.event.errors)
             return
@@ -130,27 +127,6 @@ class BasicScreenOrFamilyUserWebContext(ScreenUserWebContext):
                 return
 
 
-class ScreenSetOrFamilyUserWebContext(BasicScreenOrFamilyUserWebContext):
-    def __init__(
-            self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
-    ):
-        super().__init__(request, data, lazy_load)
-        self.screen_set: NewScreenSet | None = None
-        if self.error:
-            return
-        if self.screen:
-            field: str = 'screen_set_uniq_id'
-            screen_set_uniq_id: str = self._form_data_to_str(field)
-            try:
-                self.screen_set = self.screen.screen_sets_by_uniq_id[screen_set_uniq_id]
-            except KeyError:
-                self._redirect_to_index(
-                    f'L\'ensemble [{screen_set_uniq_id}] de l\'écran [{self.screen.uniq_id}] est introuvable.')
-                return
-
-
 class TournamentUserWebContext(ScreenUserWebContext):
     def __init__(
             self, request: HTMXRequest,
@@ -183,55 +159,12 @@ class TournamentUserWebContext(ScreenUserWebContext):
                     return
 
 
-class BoardUserWebContext(TournamentUserWebContext):
-    def __init__(
-            self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ):
-        super().__init__(
-            request, data, True)
-        self.board: Board | None = None
-        if self.error:
-            return
-        field: str = 'board_id'
-        try:
-            board_id: int | None = self._form_data_to_int(field)
-        except ValueError as ve:
-            self._redirect_to_index(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
-            return
-        try:
-            self.board = self.tournament.boards[board_id - 1]
-        except KeyError:
-            self._redirect_to_index(f'L\'échiquier [{board_id}] n\'existe pas.')
-            return
-
-
-class PlayerUserWebContext(TournamentUserWebContext):
-    def __init__(
-            self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            tournament_started: bool | None,
-    ):
-        super().__init__(request, data, tournament_started)
-        self.player: Player | None = None
-        self.board: Board | None = None
-        if self.error:
-            return
-        field: str = 'player_id'
-        try:
-            player_id: int | None = self._form_data_to_int(field)
-        except ValueError as ve:
-            self._redirect_to_index(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
-            return
-        try:
-            self.player = self.tournament.players_by_id[player_id]
-        except KeyError:
-            self._redirect_to_index(f'Le·la joueur·euse [{player_id}] n\'existe pas.')
-            return
-        self.board = self.tournament.boards[self.player.board_id - 1] if self.player.board_id else None
-
-
 class AUserController(AController):
+    pass
+
+
+class UserIndexController(AUserController):
+
     @staticmethod
     def _user_render_index(
             request: HTMXRequest,
@@ -246,64 +179,6 @@ class AUserController(AController):
                 'user_columns': SessionHandler.get_session_user_columns(request),
             })
 
-    @classmethod
-    def _user_render_screen(
-            cls, request: HTMXRequest,
-            event: NewEvent,
-            user_event_selector: str,
-            screen: NewScreen = None,
-            rotator: NewRotator = None,
-            rotator_screen_index: int = None,
-    ) -> Template:
-        assert screen is not None or rotator is not None
-        the_screen: NewScreen = screen if screen else rotator.rotating_screens[
-            rotator_screen_index if rotator_screen_index is not None else 0]
-        login_needed: bool = cls._event_login_needed(request, event, the_screen)
-        return HTMXTemplate(
-            template_name="user_screen.html",
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'event': event,
-                'user_event_selector': user_event_selector,
-                'screen': the_screen,
-                'rotator': rotator,
-                'now': time.time(),
-                'login_needed': login_needed,
-                'rotator_screen_index': rotator_screen_index,
-                'last_result_updated': SessionHandler.get_session_last_result_updated(request),
-                'last_illegal_move_updated': SessionHandler.get_session_last_illegal_move_updated(request),
-                'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(request),
-                'messages': Message.messages(request),
-            },
-        )
-
-    @classmethod
-    def _render_input_screen_board_row(
-            cls,
-            request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> Template:
-        web_context: BoardUserWebContext = BoardUserWebContext(request, data)
-        if web_context.error:
-            return web_context.error
-        return HTMXTemplate(
-            template_name='user_boards_screen_board_row.html',
-            context={
-                'event': web_context.event,
-                'user_event_selector': web_context.user_event_selector,
-                'tournament': web_context.tournament,
-                'board': web_context.board,
-                'screen': web_context.screen,
-                'rotator': web_context.rotator,
-                'rotator_screen_index': web_context.rotator_screen_index if web_context.rotator else 0,
-                'now': time.time(),
-                'last_result_updated': SessionHandler.get_session_last_result_updated(request),
-                'last_illegal_move_updated': SessionHandler.get_session_last_illegal_move_updated(request),
-                'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(request),
-            })
-
-
-class UserIndexController(AUserController):
     @staticmethod
     def _user_index_update_needed(
             request: HTMXRequest,

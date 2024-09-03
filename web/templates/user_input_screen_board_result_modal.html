@@ -9,7 +9,7 @@
                 <button
                     class="result-button white text-black bg-white col-3 ms-auto me-auto btn fs-4 fw-bold"
                     hx-put="{{ url_for('user-input-screen-add-result') }}"
-                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "round": "{{ tournament.current_round }}", "board_id": "{{ board.id }}", "result": "3"}'
+                    hx-vals='{"user_event_uniq_id": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "round": "{{ tournament.current_round }}", "board_id": "{{ board.id }}", "result": "3"}'
                     hx-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-row"
                     hx-swap="outerHTML"
                     hx-on:click="$('.updater').val(function(i, old_value) { return Math.abs(parseInt(old_value, 10)); });"
@@ -19,7 +19,7 @@
                 <button
                     class="result-button draw col-3 ms-auto me-auto btn fs-4 fw-bold"
                     hx-put="{{ url_for('user-input-screen-add-result') }}"
-                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "round": "{{ tournament.current_round }}", "board_id": "{{ board.id }}", "result": "2"}'
+                    hx-vals='{"user_event_uniq_id": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "round": "{{ tournament.current_round }}", "board_id": "{{ board.id }}", "result": "2"}'
                     hx-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-row"
                     hx-swap="outerHTML"
                     hx-on:click="$('.updater').val(function(i, old_value) { return Math.abs(parseInt(old_value, 10)); });"
@@ -31,7 +31,7 @@
                 <button
                     class="result-button black text-white bg-black col-3 ms-auto me-auto btn fs-4 fw-bold"
                     hx-put="{{ url_for('user-input-screen-add-result') }}"
-                    hx-vals='{"event_uniq_id": "{{ event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "round": "{{ tournament.current_round }}", "board_id": "{{ board.id }}", "result": "1"}'
+                    hx-vals='{"user_event_uniq_id": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "round": "{{ tournament.current_round }}", "board_id": "{{ board.id }}", "result": "1"}'
                     hx-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-row"
                     hx-swap="outerHTML"
                     hx-on:click="$('.updater').val(function(i, old_value) { return Math.abs(parseInt(old_value, 10)); });"
@@ -45,7 +45,7 @@
                     type="button"
                     class="btn btn-secondary"
                     hx-post="{{ url_for('user-screen-render') }}"
-                    hx-vals='{"event_uniq_id": "{{ event.uniq_id}}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}"}'
+                    hx-vals='{"user_event_uniq_id": "{{ user_event.uniq_id}}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}"}'
                     hx-target="body"
                     hx-indicator="#please-wait"
                     data-bs-dismiss="modal"

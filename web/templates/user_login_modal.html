@@ -18,12 +18,12 @@
                         hx-target="body"
                 >
                     <input type="hidden" class="form-control" name="screen_uniq_id" value="{{ screen.uniq_id }}" />
-                    <input type="hidden" class="form-control" name="event_uniq_id" value="{{ event.uniq_id }}" />
+                    <input type="hidden" class="form-control" name="user_event_uniq_id" value="{{ user_event.uniq_id }}" />
                     <input type="hidden" class="form-control" name="user_event_selector" value="{{ user_event_selector }}" />
                     <div class="mb-3">
                         <label for="event-uniq-id" class="form-label">Évènement</label>
-                        <input type="text" class="form-control" id="event-uniq-id" aria-describedby="event-uniq-id-help" value="{{ event.uniq_id }}" disabled />
-                        <div id="event-uniq-id-help" class="form-text">L'accès aux écrans de saisie des résultats de l'évènement [{{ event.uniq_id }}] est protégé par un code.</div>
+                        <input type="text" class="form-control" id="event-uniq-id" aria-describedby="event-uniq-id-help" value="{{ user_event.uniq_id }}" disabled />
+                        <div id="event-uniq-id-help" class="form-text">L'accès aux écrans de saisie des résultats de l'évènement [{{ user_event.uniq_id }}] est protégé par un code.</div>
                     </div>
                     <div class="mb-3">
                         <label for="event-password" class="form-label">Password</label>

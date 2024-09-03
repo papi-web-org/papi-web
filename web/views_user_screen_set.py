@@ -21,12 +21,34 @@ from data.util import ScreenType
 from web.messages import Message
 from web.session import SessionHandler
 from web.views import WebContext
-from web.views_user_index import AUserController, ScreenSetOrFamilyUserWebContext
+from web.views_user_index import AUserController, BasicScreenOrFamilyUserWebContext
 
 logger: Logger = get_logger()
 
 
+class ScreenSetOrFamilyUserWebContext(BasicScreenOrFamilyUserWebContext):
+    def __init__(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            lazy_load: bool,
+    ):
+        super().__init__(request, data, lazy_load)
+        self.screen_set: NewScreenSet | None = None
+        if self.error:
+            return
+        if self.screen:
+            field: str = 'screen_set_uniq_id'
+            screen_set_uniq_id: str = self._form_data_to_str(field)
+            try:
+                self.screen_set = self.screen.screen_sets_by_uniq_id[screen_set_uniq_id]
+            except KeyError:
+                self._redirect_to_index(
+                    f'L\'ensemble [{screen_set_uniq_id}] de l\'écran [{self.screen.uniq_id}] est introuvable.')
+                return
+
+
 class UserScreenSetController(AUserController):
+
     @staticmethod
     def _user_screen_set_div_update_needed(screen_set: NewScreenSet, family: NewFamily, date: float, ) -> bool:
         tournament: NewTournament = screen_set.tournament if screen_set else family.tournament
@@ -78,7 +100,7 @@ class UserScreenSetController(AUserController):
             template_name='user_boards_screen_set.html',
             context={
                 'papi_web_config': PapiWebConfig(),
-                'event': web_context.event,
+                'user_event': web_context.event,
                 'screen': web_context.screen,
                 'rotator': web_context.rotator,
                 'rotator_screen_index': web_context.rotator_screen_index,
@@ -113,7 +135,7 @@ class UserScreenSetController(AUserController):
         return HTMXTemplate(
             template_name='user_players_screen_set.html',
             context={
-                'event': web_context.event,
+                'user_event': web_context.event,
                 'user_event_selector': web_context.user_event_selector,
                 'screen': web_context.screen,
                 'rotator': web_context.rotator,

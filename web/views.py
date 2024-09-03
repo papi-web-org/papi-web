@@ -293,7 +293,7 @@ class AController(Controller):
             template_name="user_event.html",
             context={
                 'papi_web_config': PapiWebConfig(),
-                'event': event,
+                'user_event': event,
                 'user_event_selector': user_event_selector or 'input',
                 'messages': Message.messages(request),
                 'now': time.time(),

@@ -5,7 +5,7 @@ from logging import Logger
 from typing import Annotated
 from zipfile import ZipFile, ZipInfo
 
-from litestar import get, Response, post
+from litestar import Response, post
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, File

@@ -18,14 +18,10 @@ from web.views_admin_tournament import AdminTournamentController
 from web.views_admin_screen import AdminScreenController
 from web.views_admin_family import AdminFamilyController
 from web.views_admin_rotator import AdminRotatorController
-from web.views_user_check_in import UserCheckInController
 from web.views_user_download import UserDownloadController
 from web.views_user_event import UserEventController
-from web.views_user_illegal_move import UserIllegalMoveController
+from web.views_user_input import UserCheckInController, UserIllegalMoveController, UserResultController
 from web.views_user_index import UserIndexController
-from web.views_user_login import UserLoginController
-from web.views_user_result import UserResultController
-from web.views_user_rotator import UserRotatorController
 from web.views_user_screen import UserScreenController
 from web.views_user_screen_set import UserScreenSetController
 
@@ -46,10 +42,8 @@ static_files_router: Router = create_static_files_router(
 route_handlers: Sequence[ControllerRouterHandler] = [
     IndexController,
     UserIndexController,
-    UserLoginController,
     UserEventController,
     UserScreenController,
-    UserRotatorController,
     UserScreenSetController,
     UserResultController,
     UserCheckInController,
