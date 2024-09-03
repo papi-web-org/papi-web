@@ -2,6 +2,7 @@ from logging import Logger
 from typing import Annotated
 
 from litestar import post, get
+from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
@@ -12,6 +13,7 @@ from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.event import NewEvent
 from data.loader import EventLoader
+from database.access import access_driver, odbc_drivers
 from web.messages import Message
 from web.session import SessionHandler
 from web.views import AController
@@ -74,6 +76,74 @@ class AAdminController(AController):
         }
         options[''] = f'Par défaut ({options["1" if PapiWebConfig().default_players_show_unpaired else "0"]})'
         return options
+
+    @staticmethod
+    def _admin_render_index(
+        request: HTMXRequest,
+        admin_main_selector: str = '',
+        admin_event: NewEvent = None,
+        admin_event_selector: str = '',
+    ) -> Template:
+        context: dict = {
+            'papi_web_config': PapiWebConfig(),
+            'odbc_drivers': odbc_drivers(),
+            'access_driver': access_driver(),
+            'event_loader': EventLoader.get(request=request, lazy_load=True),
+            'messages': Message.messages(request),
+            'main_nav_tabs': {
+                '': {
+                    'title': 'Configuration Papi-web',
+                    'template': 'admin_config.html',
+                },
+                '@events': {
+                    'title': 'Évènements',
+                    'template': 'admin_event_list.html',
+                },
+            },
+            'event_nav_tabs': {
+                '': {
+                    'title': admin_event.uniq_id if admin_event else '',
+                    'template': 'admin_event_config.html',
+                },
+                '@tournaments': {
+                    'title': f'Tournois ({len(admin_event.tournaments_by_id) if admin_event else "-"})',
+                    'template': 'admin_tournament_list.html',
+                },
+                '@screens': {
+                    'title': f'Écrans ({len(admin_event.basic_screens_by_id) if admin_event else "-"})',
+                    'template': 'admin_screen_list.html',
+                },
+                '@families': {
+                    'title': f'Familles ({len(admin_event.families_by_id) if admin_event else "-"})',
+                    'template': 'admin_family_list.html',
+                },
+                '@rotators': {
+                    'title': f'Écrans rotatifs ({len(admin_event.rotators_by_id) if admin_event else "-"})',
+                    'template': 'admin_rotator_list.html',
+                },
+                '@timers': {
+                    'title': f'Chronomètres ({len(admin_event.timers_by_id) if admin_event else "-"})',
+                    'template': 'admin_timer_list.html',
+                },
+                '@chessevents': {
+                    'title': f'ChessEvent ({len(admin_event.chessevents_by_id) if admin_event else "-"})',
+                    'template': 'admin_chessevent_list.html',
+                },
+            },
+            'admin_main_selector': admin_event.uniq_id if admin_event else admin_main_selector,
+            'admin_event': admin_event,
+            'admin_event_selector': admin_event_selector,
+            'admin_columns': SessionHandler.get_session_admin_columns(request),
+            'show_family_screens_on_screen_list': SessionHandler.get_session_show_family_screens_on_screen_list(
+                request),
+            'show_details_on_screen_list': SessionHandler.get_session_show_details_on_screen_list(request),
+            'show_details_on_family_list': SessionHandler.get_session_show_details_on_family_list(request),
+            'show_details_on_rotator_list': SessionHandler.get_session_show_details_on_rotator_list(request),
+            'screen_types_on_screen_list': SessionHandler.get_session_screen_types_on_screen_list(request),
+        }
+        return HTMXTemplate(
+            template_name="admin.html",
+            context=context)
 
 
 class AdminIndexController(AAdminController):

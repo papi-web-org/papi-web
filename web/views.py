@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 from logging import Logger
 
@@ -15,13 +14,7 @@ from litestar.contrib.htmx.response import HTMXTemplate
 from common import RGB, check_rgb_str
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.event import NewEvent
-from data.loader import EventLoader
-from data.screen import NewScreen
-from data.util import ScreenType
-from database.access import access_driver, odbc_drivers
 from web.messages import Message
-from web.session import SessionHandler
 from web.urls import index_url
 
 logger: Logger = get_logger()
@@ -190,141 +183,14 @@ class AController(Controller):
                 'messages': Message.messages(request),
             })
 
-    @staticmethod
-    def _event_login_needed(request: HTMXRequest, event: NewEvent, screen: NewScreen | None = None) -> bool:
-        if screen is not None:
-            if screen.type != ScreenType.Input:
-                return False
-        if not event.update_password:
-            return False
-        session_password: str | None = SessionHandler.get_stored_password(request, event)
-        logger.debug('session_password=%s', "*" * (8 if session_password else 0))
-        if session_password is None:
-            Message.error(request, f'Veuillez vous identifier pour accéder aux écrans de saisie de '
-                                   f'l\'évènement [{event.uniq_id}].')
-            return True
-        if session_password != event.update_password:
-            Message.error(request, 'Code d\'accès incorrect.')
-            SessionHandler.store_password(request, event, None)
-            return True
-        return False
-
-    @staticmethod
-    def _redirect_to_index_on_error(request: HTMXRequest, errors: str | list[str]) -> Redirect:
-        Message.error(request, errors)
-        return Redirect(path=index_url(request))
-
-    @staticmethod
-    def _admin_render_index(
-        request: HTMXRequest,
-        admin_main_selector: str = '',
-        admin_event: NewEvent = None,
-        admin_event_selector: str = '',
-    ) -> Template:
-        context: dict = {
-            'papi_web_config': PapiWebConfig(),
-            'odbc_drivers': odbc_drivers(),
-            'access_driver': access_driver(),
-            'event_loader': EventLoader.get(request=request, lazy_load=True),
-            'messages': Message.messages(request),
-            'main_nav_tabs': {
-                '': {
-                    'title': 'Configuration Papi-web',
-                    'template': 'admin_config.html',
-                },
-                '@events': {
-                    'title': 'Évènements',
-                    'template': 'admin_event_list.html',
-                },
-            },
-            'event_nav_tabs': {
-                '': {
-                    'title': admin_event.uniq_id if admin_event else '',
-                    'template': 'admin_event_config.html',
-                },
-                '@tournaments': {
-                    'title': f'Tournois ({len(admin_event.tournaments_by_id) if admin_event else "-"})',
-                    'template': 'admin_tournament_list.html',
-                },
-                '@screens': {
-                    'title': f'Écrans ({len(admin_event.basic_screens_by_id) if admin_event else "-"})',
-                    'template': 'admin_screen_list.html',
-                },
-                '@families': {
-                    'title': f'Familles ({len(admin_event.families_by_id) if admin_event else "-"})',
-                    'template': 'admin_family_list.html',
-                },
-                '@rotators': {
-                    'title': f'Écrans rotatifs ({len(admin_event.rotators_by_id) if admin_event else "-"})',
-                    'template': 'admin_rotator_list.html',
-                },
-                '@timers': {
-                    'title': f'Chronomètres ({len(admin_event.timers_by_id) if admin_event else "-"})',
-                    'template': 'admin_timer_list.html',
-                },
-                '@chessevents': {
-                    'title': f'ChessEvent ({len(admin_event.chessevents_by_id) if admin_event else "-"})',
-                    'template': 'admin_chessevent_list.html',
-                },
-            },
-            'admin_main_selector': admin_event.uniq_id if admin_event else admin_main_selector,
-            'admin_event': admin_event,
-            'admin_event_selector': admin_event_selector,
-            'admin_columns': SessionHandler.get_session_admin_columns(request),
-            'show_family_screens_on_screen_list': SessionHandler.get_session_show_family_screens_on_screen_list(
-                request),
-            'show_details_on_screen_list': SessionHandler.get_session_show_details_on_screen_list(request),
-            'show_details_on_family_list': SessionHandler.get_session_show_details_on_family_list(request),
-            'show_details_on_rotator_list': SessionHandler.get_session_show_details_on_rotator_list(request),
-            'screen_types_on_screen_list': SessionHandler.get_session_screen_types_on_screen_list(request),
-        }
-        return HTMXTemplate(
-            template_name="admin.html",
-            context=context)
-
-    @classmethod
-    def _user_render_event(
-            cls,
-            request: HTMXRequest,
-            event: NewEvent,
-            user_event_selector: str | None,
-    ) -> Template | Redirect:
-        return HTMXTemplate(
-            template_name="user_event.html",
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'user_event': event,
-                'user_event_selector': user_event_selector or 'input',
-                'messages': Message.messages(request),
-                'now': time.time(),
-                'user_columns': SessionHandler.get_session_user_columns(request),
-                'nav_tabs': {
-                    'input': {
-                        'title': 'Saisie des résultats',
-                        'screens': event.input_screens_sorted_by_uniq_id,
-                    },
-                    'boards': {
-                        'title': 'Affichage des échiquiers',
-                        'screens': event.boards_screens_sorted_by_uniq_id,
-                    },
-                    'players': {
-                        'title': 'Affichage des appariements par ordre alphabétique',
-                        'screens': event.players_screens_sorted_by_uniq_id,
-                    },
-                    'results': {
-                        'title': 'Affichage des résultats',
-                        'screens': event.results_screens_sorted_by_uniq_id,
-                    },
-                    'rotators': {
-                        'title': 'Écrans rotatifs',
-                        'rotators': event.rotators_sorted_by_uniq_id,
-                    },
-                }
-            })
-
 
 class IndexController(AController):
-    def _render_index(self, request: HTMXRequest, ) -> Template:
+
+    @get(
+        path='/',
+        name='index'
+    )
+    async def index(self, request: HTMXRequest, ) -> Template:
         return HTMXTemplate(
             template_name="index.html",
             context={
@@ -332,10 +198,3 @@ class IndexController(AController):
                 'messages': Message.messages(request),
                 'admin_auth': self.admin_auth(request),
             })
-
-    @get(
-        path='/',
-        name='index'
-    )
-    async def index(self, request: HTMXRequest, ) -> Template:
-        return self._render_index(request)

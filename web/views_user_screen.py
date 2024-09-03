@@ -30,6 +30,25 @@ logger: Logger = get_logger()
 
 class UserScreenController(AUserController):
 
+    @staticmethod
+    def _event_login_needed(request: HTMXRequest, event: NewEvent, screen: NewScreen | None = None) -> bool:
+        if screen is not None:
+            if screen.type != ScreenType.Input:
+                return False
+        if not event.update_password:
+            return False
+        session_password: str | None = SessionHandler.get_stored_password(request, event)
+        logger.debug('session_password=%s', "*" * (8 if session_password else 0))
+        if session_password is None:
+            Message.error(request, f'Veuillez vous identifier pour accéder aux écrans de saisie de '
+                                   f'l\'évènement [{event.uniq_id}].')
+            return True
+        if session_password != event.update_password:
+            Message.error(request, 'Code d\'accès incorrect.')
+            SessionHandler.store_password(request, event, None)
+            return True
+        return False
+
     @classmethod
     def _user_render_screen(
             cls, request: HTMXRequest,

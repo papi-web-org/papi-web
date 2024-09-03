@@ -1,3 +1,4 @@
+import time
 from contextlib import suppress
 from logging import Logger
 from typing import Annotated
@@ -7,10 +8,11 @@ from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import Reswap
+from litestar.contrib.htmx.response import Reswap, HTMXTemplate
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
+from common.papi_web_config import PapiWebConfig
 from data.event import NewEvent
 from data.util import ScreenType
 from web.messages import Message
@@ -22,6 +24,47 @@ logger: Logger = get_logger()
 
 
 class UserEventController(AUserController):
+
+    @classmethod
+    def _user_render_event(
+            cls,
+            request: HTMXRequest,
+            event: NewEvent,
+            user_event_selector: str | None,
+    ) -> Template | Redirect:
+        return HTMXTemplate(
+            template_name="user_event.html",
+            context={
+                'papi_web_config': PapiWebConfig(),
+                'user_event': event,
+                'user_event_selector': user_event_selector or 'input',
+                'messages': Message.messages(request),
+                'now': time.time(),
+                'user_columns': SessionHandler.get_session_user_columns(request),
+                'nav_tabs': {
+                    'input': {
+                        'title': 'Saisie des résultats',
+                        'screens': event.input_screens_sorted_by_uniq_id,
+                    },
+                    'boards': {
+                        'title': 'Affichage des échiquiers',
+                        'screens': event.boards_screens_sorted_by_uniq_id,
+                    },
+                    'players': {
+                        'title': 'Affichage des appariements par ordre alphabétique',
+                        'screens': event.players_screens_sorted_by_uniq_id,
+                    },
+                    'results': {
+                        'title': 'Affichage des résultats',
+                        'screens': event.results_screens_sorted_by_uniq_id,
+                    },
+                    'rotators': {
+                        'title': 'Écrans rotatifs',
+                        'rotators': event.rotators_sorted_by_uniq_id,
+                    },
+                }
+            })
+
     @staticmethod
     def _user_event_page_update_needed(event: NewEvent, date: float, ) -> bool:
         if event.last_update > date:
