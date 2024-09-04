@@ -16,9 +16,35 @@ from data.loader import EventLoader
 from database.access import access_driver, odbc_drivers
 from web.messages import Message
 from web.session import SessionHandler
-from web.views import AController
+from web.views import AController, WebContext
 
 logger: Logger = get_logger()
+
+
+class AdminWebContext(WebContext):
+    def __init__(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            lazy_load: bool,
+    ):
+        super().__init__(request, data)
+        self.admin_main_selector: str = ''
+        self.admin_event_selector: str = ''
+        self.admin_event: NewEvent | None = None
+        self.admin_main_selector: str = self._form_data_to_str('admin_main_selector', '')
+        if not self.admin_main_selector:
+            pass
+        elif self.admin_main_selector == '@config':
+            pass
+        else:
+            try:
+                self.admin_event = EventLoader.get(request=self.request, lazy_load=lazy_load).load_event(
+                    self.admin_main_selector)
+            except PapiWebException as pwe:
+                self._redirect_error(f'L\'évènement [{self.admin_main_selector}] est introuvable : {pwe}')
+                self.admin_main_selector = ''
+                return
+        self.admin_event_selector: str = self._form_data_to_str('admin_event_selector', '')
 
 
 class AAdminController(AController):
@@ -84,6 +110,38 @@ class AAdminController(AController):
         admin_event: NewEvent = None,
         admin_event_selector: str = '',
     ) -> Template:
+        event_nav_tabs: dict[str, dict[str]] | None = None
+        if admin_event:
+            event_nav_tabs: dict[str, dict[str]] = {
+                '': {
+                    'title': admin_event.uniq_id,
+                    'template': 'admin_event_config.html',
+                },
+                '@tournaments': {
+                    'title': f'Tournois ({len(admin_event.tournaments_by_id) or "-"})',
+                    'template': 'admin_tournament_list.html',
+                },
+                '@screens': {
+                    'title': f'Écrans ({len(admin_event.basic_screens_by_id) or "-"})',
+                    'template': 'admin_screen_list.html',
+                },
+                '@families': {
+                    'title': f'Familles ({len(admin_event.families_by_id) or  "-"})',
+                    'template': 'admin_family_list.html',
+                },
+                '@rotators': {
+                    'title': f'Écrans rotatifs ({len(admin_event.rotators_by_id) or "-"})',
+                    'template': 'admin_rotator_list.html',
+                },
+                '@timers': {
+                    'title': f'Chronomètres ({len(admin_event.timers_by_id) or "-"})',
+                    'template': 'admin_timer_list.html',
+                },
+                '@chessevents': {
+                    'title': f'ChessEvent ({len(admin_event.chessevents_by_id) or "-"})',
+                    'template': 'admin_chessevent_list.html',
+                },
+            }
         context: dict = {
             'papi_web_config': PapiWebConfig(),
             'odbc_drivers': odbc_drivers(),
@@ -92,44 +150,15 @@ class AAdminController(AController):
             'messages': Message.messages(request),
             'main_nav_tabs': {
                 '': {
-                    'title': 'Configuration Papi-web',
-                    'template': 'admin_config.html',
-                },
-                '@events': {
                     'title': 'Évènements',
                     'template': 'admin_event_list.html',
                 },
-            },
-            'event_nav_tabs': {
-                '': {
-                    'title': admin_event.uniq_id if admin_event else '',
-                    'template': 'admin_event_config.html',
-                },
-                '@tournaments': {
-                    'title': f'Tournois ({len(admin_event.tournaments_by_id) if admin_event else "-"})',
-                    'template': 'admin_tournament_list.html',
-                },
-                '@screens': {
-                    'title': f'Écrans ({len(admin_event.basic_screens_by_id) if admin_event else "-"})',
-                    'template': 'admin_screen_list.html',
-                },
-                '@families': {
-                    'title': f'Familles ({len(admin_event.families_by_id) if admin_event else "-"})',
-                    'template': 'admin_family_list.html',
-                },
-                '@rotators': {
-                    'title': f'Écrans rotatifs ({len(admin_event.rotators_by_id) if admin_event else "-"})',
-                    'template': 'admin_rotator_list.html',
-                },
-                '@timers': {
-                    'title': f'Chronomètres ({len(admin_event.timers_by_id) if admin_event else "-"})',
-                    'template': 'admin_timer_list.html',
-                },
-                '@chessevents': {
-                    'title': f'ChessEvent ({len(admin_event.chessevents_by_id) if admin_event else "-"})',
-                    'template': 'admin_chessevent_list.html',
+                '@config': {
+                    'title': 'Configuration Papi-web',
+                    'template': 'admin_config.html',
                 },
             },
+            'event_nav_tabs': event_nav_tabs,
             'admin_main_selector': admin_event.uniq_id if admin_event else admin_main_selector,
             'admin_event': admin_event,
             'admin_event_selector': admin_event_selector,
@@ -162,38 +191,26 @@ class AdminIndexController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        admin_main_selector: str = self._form_data_to_str_or_none(data, 'admin_main_selector', '')
-        admin_event_selector: str = self._form_data_to_str_or_none(data, 'admin_event_selector', '')
-        admin_event: NewEvent | None = None
-        if not admin_main_selector:
-            pass
-        elif admin_main_selector == '@events':
-            pass
-        else:
-            try:
-                admin_event = EventLoader.get(request=request, lazy_load=False).load_event(admin_main_selector)
-            except PapiWebException as pwe:
-                Message.error(request, f'L\'évènement [{admin_main_selector}] est introuvable : {pwe}')
-                return self._render_messages(request)
+        web_context: AdminWebContext = AdminWebContext(request, data, True)
         field: str = f'admin_columns'
         if field in data:
-            SessionHandler.set_session_admin_columns(request, self._form_data_to_int_or_none(data, field))
+            SessionHandler.set_session_admin_columns(request, WebContext.form_data_to_int(data, field))
         field: str = 'show_family_screens_on_screen_list'
         if field in data:
             SessionHandler.set_session_show_family_screens_on_screen_list(
-                request, self._form_data_to_bool_or_none(data, field))
+                request, WebContext.form_data_to_bool(data, field))
         field: str = 'show_details_on_screen_list'
         if field in data:
             SessionHandler.set_session_show_details_on_screen_list(
-                request, self._form_data_to_bool_or_none(data, field))
+                request, WebContext.form_data_to_bool(data, field))
         field: str = 'show_details_on_family_list'
         if field in data:
             SessionHandler.set_session_show_details_on_family_list(
-                request, self._form_data_to_bool_or_none(data, field))
+                request, WebContext.form_data_to_bool(data, field))
         field: str = 'show_details_on_rotator_list'
         if field in data:
             SessionHandler.set_session_show_details_on_rotator_list(
-                request, self._form_data_to_bool_or_none(data, field))
+                request, WebContext.form_data_to_bool(data, field))
         screen_types: list[str] = SessionHandler.get_session_screen_types_on_screen_list(request)
         for field, screen_type in {
             'show_boards_screens_on_screen_list': 'boards',
@@ -202,12 +219,12 @@ class AdminIndexController(AAdminController):
             'show_results_screens_on_screen_list': 'results',
         }.items():
             if field in data:
-                if self._form_data_to_bool_or_none(data, field):
+                if WebContext.form_data_to_bool(data, field):
                     screen_types.append(screen_type)
                 else:
                     screen_types.remove(screen_type)
                 SessionHandler.set_session_screen_types_on_screen_list(request, screen_types)
                 continue
         return self._admin_render_index(
-            request, admin_main_selector=admin_main_selector, admin_event=admin_event,
-            admin_event_selector=admin_event_selector)
+            request, admin_main_selector=web_context.admin_main_selector, admin_event=web_context.admin_event,
+            admin_event_selector=web_context.admin_event_selector)

@@ -7,7 +7,7 @@ from typing import Annotated
 from litestar import post
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template
+from litestar.response import Template, Redirect
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
@@ -20,7 +20,7 @@ from data.tournament import NewTournament
 from data.util import ScreenType
 from web.messages import Message
 from web.session import SessionHandler
-from web.views import WebContext
+from web.views import WebContext, AController
 from web.views_user import AUserController, BasicScreenOrFamilyUserWebContext
 
 logger: Logger = get_logger()
@@ -42,7 +42,7 @@ class ScreenSetOrFamilyUserWebContext(BasicScreenOrFamilyUserWebContext):
             try:
                 self.screen_set = self.screen.screen_sets_by_uniq_id[screen_set_uniq_id]
             except KeyError:
-                self._redirect_to_index(
+                self._redirect_error(
                     f'L\'ensemble [{screen_set_uniq_id}] de l\'écran [{self.screen.uniq_id}] est introuvable.')
                 return
 
@@ -80,15 +80,14 @@ class UserScreenSetController(AUserController):
     async def htmx_user_boards_screen_set_render_if_updated(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> Template | Reswap:
+    ) -> Template | Reswap | Redirect:
         web_context: ScreenSetOrFamilyUserWebContext = ScreenSetOrFamilyUserWebContext(request, data, True)
         if web_context.error:
             return web_context.error
         try:
             date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
-            Message.error(request, str(ve))
-            return self._render_messages(request)
+            return AController.redirect_error(request, str(ve))
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if not self._user_screen_set_div_update_needed(web_context.screen_set, web_context.family, date):
@@ -100,7 +99,7 @@ class UserScreenSetController(AUserController):
             template_name='user_boards_screen_set.html',
             context={
                 'papi_web_config': PapiWebConfig(),
-                'user_event': web_context.event,
+                'user_event': web_context.user_event,
                 'screen': web_context.screen,
                 'rotator': web_context.rotator,
                 'rotator_screen_index': web_context.rotator_screen_index,
@@ -119,15 +118,14 @@ class UserScreenSetController(AUserController):
     async def htmx_user_players_screen_set_render_if_updated(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> Template | Reswap:
+    ) -> Template | Reswap | Redirect:
         web_context: ScreenSetOrFamilyUserWebContext = ScreenSetOrFamilyUserWebContext(request, data, False)
         if web_context.error:
             return web_context.error
         try:
             date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
-            Message.error(request, str(ve))
-            return self._render_messages(request)
+            return AController.redirect_error(request, str(ve))
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if not self._user_screen_set_div_update_needed(web_context.screen_set, web_context.family, date):
@@ -135,7 +133,7 @@ class UserScreenSetController(AUserController):
         return HTMXTemplate(
             template_name='user_players_screen_set.html',
             context={
-                'user_event': web_context.event,
+                'user_event': web_context.user_event,
                 'user_event_selector': web_context.user_event_selector,
                 'screen': web_context.screen,
                 'rotator': web_context.rotator,

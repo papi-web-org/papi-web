@@ -8,11 +8,12 @@ from zipfile import ZipFile, ZipInfo
 from litestar import Response, post
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template, File
+from litestar.response import Template, File, Redirect
 from litestar.contrib.htmx.request import HTMXRequest
 
 from common.logger import get_logger
 from web.messages import Message
+from web.views import WebContext, AController
 from web.views_user import AUserController, EventUserWebContext, TournamentUserWebContext
 
 logger: Logger = get_logger()
@@ -32,12 +33,12 @@ class UserDownloadController(AUserController):
             return web_context.error
         tournament_files: list[Path] = [
             tournament.file
-            for tournament in web_context.event.tournaments_by_id.values()
+            for tournament in web_context.user_event.tournaments_by_id.values()
             if tournament.file_exists
         ]
         if not tournament_files:
-            Message.error(request, f'Aucun fichier de tournoi pour l\'évènement [{web_context.event.uniq_id}].')
-            return self._render_messages(request)
+            return AController.redirect_error(
+                request, f'Aucun fichier de tournoi pour l\'évènement [{web_context.user_event.uniq_id}].')
         archive = BytesIO()
         with ZipFile(archive, 'w') as zip_archive:
             for tournament_file in tournament_files:
@@ -54,11 +55,11 @@ class UserDownloadController(AUserController):
     async def htmx_user_download_tournament(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> File | Template:
+    ) -> File | Template | Redirect:
         web_context: TournamentUserWebContext = TournamentUserWebContext(request, data, None)
         if web_context.error:
             return web_context.error
         if not web_context.tournament.file_exists:
-            Message.error(request, f'Le fichier [{web_context.tournament.file}] n\'existe pas.')
-            return self._render_messages(request)
+            return AController.redirect_error(
+                request, f'Le fichier [{web_context.tournament.file}] n\'existe pas.')
         return File(path=web_context.tournament.file, filename=web_context.tournament.file.name)

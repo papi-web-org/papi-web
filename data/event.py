@@ -506,19 +506,19 @@ class NewEvent:
 
     @property
     def input_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
-        return self.screens_of_type_sorted_by_uniq_id[ScreenType.Input]
+        return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Input, [])
 
     @property
     def boards_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
-        return self.screens_of_type_sorted_by_uniq_id[ScreenType.Boards]
+        return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Boards, [])
 
     @property
     def players_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
-        return self.screens_of_type_sorted_by_uniq_id[ScreenType.Players]
+        return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Players, [])
 
     @property
     def results_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
-        return self.screens_of_type_sorted_by_uniq_id[ScreenType.Results]
+        return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Results, [])
 
     @property
     def rotators_sorted_by_uniq_id(self) -> list[NewRotator]:

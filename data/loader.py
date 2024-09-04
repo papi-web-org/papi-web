@@ -16,7 +16,7 @@ logger: Logger = get_logger()
 class EventLoader:
     def __init__(self, lazy_load: bool):
         self.lazy_load = lazy_load
-        self._event_ids: list[str] | None = None
+        self._event_uniq_ids: list[str] | None = None
         self._loaded_stored_events_by_id: dict[str, StoredEvent | None] = {}
         self._stored_events_by_id: dict[str, StoredEvent] | None = None
         self._stored_events_sorted_by_name: list[StoredEvent] | None = None
@@ -41,7 +41,7 @@ class EventLoader:
         return event_loader
 
     def clear_cache(self, event_uniq_id: str = None):
-        self._event_ids = None
+        self._event_uniq_ids = None
         if event_uniq_id:
             with suppress(KeyError):
                 del self._loaded_stored_events_by_id[event_uniq_id]
@@ -66,16 +66,18 @@ class EventLoader:
             return self._loaded_stored_events_by_id[uniq_id]
 
     @property
-    def event_ids(self) -> list[str]:
-        if self._event_ids is None:
-            self._event_ids = [file.stem for file in PapiWebConfig().event_path.glob(f'*.{PapiWebConfig().event_ext}')]
-        return self._event_ids
+    def event_uniq_ids(self) -> list[str]:
+        if self._event_uniq_ids is None:
+            self._event_uniq_ids = [
+                file.stem for file in PapiWebConfig().event_path.glob(f'*.{PapiWebConfig().event_ext}')
+            ]
+        return self._event_uniq_ids
 
     @property
     def stored_events_by_id(self) -> dict[str, StoredEvent]:
         if self._stored_events_by_id is None:
             self._stored_events_by_id: dict[str, StoredEvent] = {}
-            for uniq_id in self.event_ids:
+            for uniq_id in self.event_uniq_ids:
                 self._stored_events_by_id[uniq_id] = self.load_stored_event(uniq_id)
         return self._stored_events_by_id
 
@@ -106,7 +108,7 @@ class EventLoader:
     def events_by_id(self) -> dict[str, NewEvent]:
         if self._events_by_id is None:
             self._events_by_id: dict[str, NewEvent] = {}
-            for uniq_id in self.event_ids:
+            for uniq_id in self.event_uniq_ids:
                 self._events_by_id[uniq_id] = self.load_event(uniq_id)
         return self._events_by_id
 

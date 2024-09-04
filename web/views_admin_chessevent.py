@@ -8,7 +8,6 @@ from litestar.response import Template
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 
-from common.exception import PapiWebException
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.chessevent import NewChessEvent
@@ -17,21 +16,52 @@ from data.loader import EventLoader
 from database.sqlite import EventDatabase
 from database.store import StoredChessEvent
 from web.messages import Message
+from web.views import WebContext
 from web.views_admin import AAdminController
+from web.views_admin_event import EventAdminWebContext
 
 logger: Logger = get_logger()
 
 
+class ChessEventAdminWebContext(EventAdminWebContext):
+    def __init__(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            lazy_load: bool,
+            chessevent_needed: bool,
+    ):
+        super().__init__(request, data, lazy_load, True)
+        self.admin_chessevent: NewChessEvent | None = None
+        field: str = 'admin_chessevent_id'
+        if field in self.data:
+            try:
+                admin_chessevent_id: int | None = self._form_data_to_int(field, minimum=1)
+            except ValueError as ve:
+                self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
+                return
+            try:
+                self.admin_chessevent = self.admin_event.tournaments_by_id[admin_chessevent_id]
+            except KeyError:
+                self._redirect_error(f'La connexion à ChessEvent [{admin_chessevent_id}] n\'existe pas')
+                return
+        if chessevent_needed and not self.admin_chessevent:
+            self._redirect_error(f'La connexion à ChessEvent n\'est pas spécifié')
+            return
+
+
 class AdminChessEventController(AAdminController):
+
+    @staticmethod
     def _admin_validate_chessevent_update_data(
-            self, action: str, admin_event: NewEvent,
+            action: str,
+            admin_event: NewEvent,
             admin_chessevent: NewChessEvent,
             data: dict[str, str] | None = None,
     ) -> StoredChessEvent:
         errors: dict[str, str] = {}
         if data is None:
             data = {}
-        uniq_id: str = self._form_data_to_str_or_none(data, 'uniq_id')
+        uniq_id: str = WebContext.form_data_to_str(data, 'uniq_id')
         match action:
             case 'create':
                 if not uniq_id:
@@ -48,9 +78,9 @@ class AdminChessEventController(AAdminController):
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
-        user_id: str = self._form_data_to_str_or_none(data, 'user_id')
-        password: str = self._form_data_to_str_or_none(data, 'password')
-        event_id: str = self._form_data_to_str_or_none(data, 'event_id')
+        user_id: str = WebContext.form_data_to_str(data, 'user_id')
+        password: str = WebContext.form_data_to_str(data, 'password')
+        event_id: str = WebContext.form_data_to_str(data, 'event_id')
         match action:
             case 'create' | 'update':
                 if not user_id:
@@ -84,7 +114,7 @@ class AdminChessEventController(AAdminController):
             data: dict[str, str] = {}
             match action:
                 case 'update':
-                    data['uniq_id'] = self._value_to_form_data(admin_chessevent.stored_chessevent.uniq_id)
+                    data['uniq_id'] = WebContext.value_to_form_data(admin_chessevent.stored_chessevent.uniq_id)
                 case 'create':
                     data['uniq_id'] = ''
                 case 'delete':
@@ -93,10 +123,10 @@ class AdminChessEventController(AAdminController):
                     raise ValueError(f'action=[{action}]')
             match action:
                 case 'update':
-                    data['uniq_id'] = self._value_to_form_data(admin_chessevent.stored_chessevent.uniq_id)
-                    data['event_id'] = self._value_to_form_data(admin_chessevent.stored_chessevent.event_id)
-                    data['user_id'] = self._value_to_form_data(admin_chessevent.stored_chessevent.user_id)
-                    data['password'] = self._value_to_form_data(admin_chessevent.stored_chessevent.password)
+                    data['uniq_id'] = WebContext.value_to_form_data(admin_chessevent.stored_chessevent.uniq_id)
+                    data['event_id'] = WebContext.value_to_form_data(admin_chessevent.stored_chessevent.event_id)
+                    data['user_id'] = WebContext.value_to_form_data(admin_chessevent.stored_chessevent.user_id)
+                    data['password'] = WebContext.value_to_form_data(admin_chessevent.stored_chessevent.password)
                 case 'create':
                     data['uniq_id'] = ''
                     data['event_id'] = ''
@@ -135,27 +165,16 @@ class AdminChessEventController(AAdminController):
                 Body(media_type=RequestEncodingType.URL_ENCODED),
             ],
     ) -> Template:
-        action: str = self._form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
-        try:
-            admin_event: NewEvent = EventLoader.get(request=request, lazy_load=True).load_event(admin_event_uniq_id)
-        except PapiWebException as pwe:
-            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
-            return self._render_messages(request)
-        admin_chessevent: NewChessEvent | None = None
+        action: str = WebContext.form_data_to_str(data, 'action')
+        web_context: ChessEventAdminWebContext
         match action:
             case 'update' | 'delete':
-                admin_chessevent_id: int = self._form_data_to_int_or_none(data, 'admin_chessevent_id')
-                try:
-                    admin_chessevent = admin_event.chessevents_by_id[admin_chessevent_id]
-                except KeyError:
-                    Message.error(request, f'La connexion à ChessEvent [{admin_chessevent_id}] est introuvable.')
-                    return self._render_messages(request)
+                web_context = ChessEventAdminWebContext(request, data, True, True)
             case 'create':
-                pass
+                web_context = ChessEventAdminWebContext(request, data, True, True)
             case _:
                 raise ValueError(f'action=[{action}]')
-        return self._admin_chessevent_render_edit_modal(action, admin_event, admin_chessevent)
+        return self._admin_chessevent_render_edit_modal(action, web_context.admin_event, web_context.admin_chessevent)
 
     @post(
         path='/admin-chessevent-update',
@@ -163,43 +182,33 @@ class AdminChessEventController(AAdminController):
     )
     async def htmx_admin_chessevent_update(
             self, request: HTMXRequest,
-            data: Annotated[
-                dict[str, str],
-                Body(media_type=RequestEncodingType.URL_ENCODED),
-            ],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
-        action: str = self._form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
-        try:
-            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
-        except PapiWebException as pwe:
-            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
-            return self._render_messages(request)
+        action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
+            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
+            if web_context.error:
+                return web_context.error
             return self._admin_render_index(
-                request, admin_event=admin_event, admin_event_selector='@chessevents')
-        admin_chessevent: NewChessEvent | None = None
+                request, admin_event=web_context.admin_event, admin_event_selector=web_context.admin_event_selector)
         match action:
             case 'update' | 'delete' | 'clone':
-                admin_chessevent_id: int = self._form_data_to_int_or_none(data, 'admin_chessevent_id')
-                try:
-                    admin_chessevent = admin_event.chessevents_by_id[admin_chessevent_id]
-                except KeyError:
-                    Message.error(request, f'La connexion à ChessEvent [{admin_chessevent_id}] est introuvable.')
-                    return self._render_messages(request)
+                web_context: ChessEventAdminWebContext = ChessEventAdminWebContext(request, data, True, True)
             case 'create':
-                pass
+                web_context: ChessEventAdminWebContext = ChessEventAdminWebContext(request, data, True, False)
             case _:
                 raise ValueError(f'action=[{action}]')
+        if web_context.error:
+            return web_context.error
         stored_chessevent: StoredChessEvent = self._admin_validate_chessevent_update_data(
-            action, admin_event, admin_chessevent, data)
+            action, web_context.admin_event, web_context.admin_chessevent, data)
         if stored_chessevent.errors:
             return self._admin_chessevent_render_edit_modal(
-                action, admin_event, admin_chessevent, data, stored_chessevent.errors)
+                action, web_context.admin_event, web_context.admin_chessevent, data, stored_chessevent.errors)
         next_chessevent_id: int | None = None
         next_action: str | None = None
-        with EventDatabase(admin_event.uniq_id, write=True) as event_database:
+        with EventDatabase(web_context.admin_event.uniq_id, write=True) as event_database:
             match action:
                 case 'update':
                     stored_chessevent = event_database.update_stored_chessevent(stored_chessevent)
@@ -210,22 +219,24 @@ class AdminChessEventController(AAdminController):
                     next_chessevent_id = stored_chessevent.id
                     next_action = 'update'
                 case 'delete':
-                    event_database.delete_stored_chessevent(admin_chessevent.id)
-                    Message.success(request, f'La connexion à ChessEvent [{admin_chessevent.uniq_id}] a été supprimée.')
+                    event_database.delete_stored_chessevent(web_context.admin_chessevent.id)
+                    Message.success(
+                        request, f'La connexion à ChessEvent [{web_context.admin_chessevent.uniq_id}] a été supprimée.')
                 case 'clone':
-                    stored_chessevent = event_database.clone_stored_chessevent(admin_chessevent.id)
+                    stored_chessevent = event_database.clone_stored_chessevent(web_context.admin_chessevent.id)
                     Message.success(
                         request,
-                        f'La connexion à ChessEvent [{admin_chessevent.uniq_id}] a été dupliquée '
+                        f'La connexion à ChessEvent [{web_context.admin_chessevent.uniq_id}] a été dupliquée '
                         f'([{stored_chessevent.uniq_id}]).')
                     next_chessevent_id = stored_chessevent.id
                     next_action = 'update'
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.reload_event(admin_event.uniq_id)
+        admin_event = event_loader.reload_event(web_context.admin_event.uniq_id)
         if next_chessevent_id:
             admin_chessevent = admin_event.chessevents_by_id[next_chessevent_id]
             return self._admin_chessevent_render_edit_modal(next_action, admin_event, admin_chessevent)
         else:
-            return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='@chessevents')
+            return self._admin_render_index(
+                request, admin_event=admin_event, admin_event_selector=web_context.admin_event_selector)

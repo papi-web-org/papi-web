@@ -21,7 +21,7 @@
                 {% for entry in screen.menu_screens %}
                     {% if entry.menu_label is not none %}
                         <a
-                                class="screen-menu-item text-nowrap py-0 px-1 my-0 {% if loop.first %}ms-0{% else %}ms-1{% endif %} {% if loop.last %}me-0{% else %}me-1{% endif %} {% if screen.id == entry.id %}selected{% endif %}"
+                                class="screen-menu-item cursor-pointer text-nowrap py-0 px-1 my-0 {% if loop.first %}ms-0{% else %}ms-1{% endif %} {% if loop.last %}me-0{% else %}me-1{% endif %} {% if screen.id == entry.id %}selected{% endif %}"
                                 hx-post="{{ url_for('user-screen-render') }}"
                                 hx-vals='{"user_event_uniq_id": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ entry.uniq_id }}"}'
                                 hx-target="body"

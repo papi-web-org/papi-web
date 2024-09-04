@@ -17,7 +17,7 @@ from data.event import NewEvent
 from data.util import ScreenType
 from web.messages import Message
 from web.session import SessionHandler
-from web.views import WebContext
+from web.views import WebContext, AController
 from web.views_user import AUserController, EventUserWebContext
 
 logger: Logger = get_logger()
@@ -120,23 +120,21 @@ class UserEventController(AUserController):
     async def htmx_user_event_render_if_updated(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> Template | Reswap:
+    ) -> Template | Reswap | Redirect:
         web_context: EventUserWebContext = EventUserWebContext(request, data, True)
         if web_context.error:
             return web_context.error
         try:
             date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
-            Message.error(request, str(ve))
-            return self._render_messages(request)
+            return AController.redirect_error(request, str(ve))
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
-        if self._user_event_page_update_needed(web_context.event, date):
+        if self._user_event_page_update_needed(web_context.user_event, date):
             web_context: EventUserWebContext = EventUserWebContext(request, data, False)
             if web_context.error:
                 return web_context.error
-            user_event_selector: str = self._form_data_to_str_or_none(data, 'user_event_selector')
-            return self._user_render_event(request, web_context.event, user_event_selector)
+            return self._user_render_event(request, web_context.user_event, web_context.user_event_selector)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
 
@@ -151,7 +149,7 @@ class UserEventController(AUserController):
         web_context: EventUserWebContext = EventUserWebContext(request, data, False)
         if web_context.error:
             return web_context.error
-        return self._user_render_event(request, web_context.event, web_context.user_event_selector)
+        return self._user_render_event(request, web_context.user_event, web_context.user_event_selector)
 
     @post(
         path='/user-update-header',
@@ -166,5 +164,5 @@ class UserEventController(AUserController):
             return web_context.error
         field: str = f'user_columns'
         if field in data:
-            SessionHandler.set_session_user_columns(request, self._form_data_to_int_or_none(data, field))
-        return self._user_render_event(request, web_context.event, web_context.user_event_selector)
+            SessionHandler.set_session_user_columns(request, WebContext.form_data_to_int(data, field))
+        return self._user_render_event(request, web_context.user_event, web_context.user_event_selector)

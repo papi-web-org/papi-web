@@ -25,6 +25,9 @@ body {
 .cursor-grab {
     cursor: grab;
 }
+.cursor-pointer {
+    cursor: pointer;
+}
 .w-80 {
     width: 80%; !important;
 }

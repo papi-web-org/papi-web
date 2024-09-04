@@ -4,11 +4,10 @@ from typing import Annotated
 from litestar import post
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template
+from litestar.response import Template, Redirect
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 
-from common.exception import PapiWebException
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.screen import NewScreen
@@ -19,15 +18,71 @@ from data.util import ScreenType
 from database.sqlite import EventDatabase
 from database.store import StoredScreen, StoredScreenSet
 from web.messages import Message
+from web.views import WebContext, AController
 from web.views_admin import AAdminController
+from web.views_admin_event import EventAdminWebContext
 
 logger: Logger = get_logger()
 
 
+class ScreenAdminWebContext(EventAdminWebContext):
+    def __init__(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            lazy_load: bool,
+            screen_needed: bool,
+    ):
+        super().__init__(request, data, lazy_load, True)
+        self.admin_screen: NewScreen | None = None
+        field: str = 'admin_screen_id'
+        if field in self.data:
+            try:
+                admin_screen_id: int | None = self._form_data_to_int(field, minimum=1)
+            except ValueError as ve:
+                self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
+                return
+            try:
+                self.admin_screen = self.admin_event.basic_screens_by_id[admin_screen_id]
+            except KeyError:
+                self._redirect_error(f'L\'écran [{admin_screen_id}] n\'existe pas')
+                return
+        if screen_needed and not self.admin_screen:
+            self._redirect_error(f'L\'écran n\'est pas spécifié')
+            return
+
+
+class ScreenSetAdminWebContext(ScreenAdminWebContext):
+    def __init__(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            lazy_load: bool,
+            screen_set_needed: bool,
+    ):
+        super().__init__(request, data, lazy_load, True)
+        self.admin_screen_set: NewScreenSet | None = None
+        field: str = 'admin_screen_set_id'
+        if field in self.data:
+            try:
+                admin_screen_set_id: int | None = self._form_data_to_int(field, minimum=1)
+            except ValueError as ve:
+                self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
+                return
+            try:
+                self.admin_screen_set = self.admin_screen.screen_sets_by_id[admin_screen_set_id]
+            except KeyError:
+                self._redirect_error(
+                    f'L\'ensemble d\'écran [{admin_screen_set_id}] n\'existe pas pour l\'écran '
+                    f'[{self.admin_screen.uniq_id}]')
+                return
+        if screen_set_needed and not self.admin_screen_set:
+            self._redirect_error(f'L\'ensemble d\'écran n\'est pas spécifié')
+            return
+
+
 class AdminScreenController(AAdminController):
 
+    @staticmethod
     def _admin_validate_screen_update_data(
-            self,
             action: str,
             admin_event: NewEvent,
             admin_screen: NewScreen,
@@ -40,7 +95,7 @@ class AdminScreenController(AAdminController):
         field: str = 'type'
         match action:
             case 'create':
-                type = self._form_data_to_str_or_none(data, field)
+                type = WebContext.form_data_to_str(data, field)
                 match type:
                     case 'boards' | 'input' | 'players' | 'results':
                         pass
@@ -53,7 +108,7 @@ class AdminScreenController(AAdminController):
             case _:
                 raise ValueError(f'action=[{action}]')
         field = 'uniq_id'
-        uniq_id: str = self._form_data_to_str_or_none(data, field)
+        uniq_id: str = WebContext.form_data_to_str(data, field)
         name: str | None = None
         public: bool | None = None
         if action == 'delete':
@@ -73,8 +128,8 @@ class AdminScreenController(AAdminController):
                             errors[field] = f'L\'écran [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')
-            name = self._form_data_to_str_or_none(data, 'name')
-            public = self._form_data_to_bool_or_none(data, 'public')
+            name = WebContext.form_data_to_str(data, 'name')
+            public = WebContext.form_data_to_bool(data, 'public')
         menu: str | None = None
         menu_text: str | None = None
         columns: int | None = None
@@ -88,14 +143,14 @@ class AdminScreenController(AAdminController):
             case 'update':
                 field = 'columns'
                 try:
-                    columns = self._form_data_to_int_or_none(data, field, minimum=1)
+                    columns = WebContext.form_data_to_int(data, field, minimum=1)
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
-                menu_text = self._form_data_to_str_or_none(data, 'menu_text')
-                menu = self._form_data_to_str_or_none(data, 'menu')
+                menu_text = WebContext.form_data_to_str(data, 'menu_text')
+                menu = WebContext.form_data_to_str(data, 'menu')
                 field = 'timer_id'
                 try:
-                    timer_id = self._form_data_to_int_or_none(data, field)
+                    timer_id = WebContext.form_data_to_int(data, field)
                     if timer_id and timer_id not in admin_event.timers_by_id:
                         errors[field] = f'Le chronomètre [{timer_id}] n\'existe pas.'
                 except ValueError:
@@ -104,17 +159,17 @@ class AdminScreenController(AAdminController):
                     case ScreenType.Boards | ScreenType.Input:
                         pass
                     case ScreenType.Players:
-                        players_show_unpaired = self._form_data_to_bool_or_none(data, 'players_show_unpaired')
+                        players_show_unpaired = WebContext.form_data_to_bool(data, 'players_show_unpaired')
                     case ScreenType.Results:
                         field = 'results_limit'
                         try:
-                            results_limit = self._form_data_to_int_or_none(data, field)
+                            results_limit = WebContext.form_data_to_int(data, field)
                         except ValueError:
                             errors[field] = 'Un entier positif est attendu.'
                         results_tournament_ids = []
                         for tournament_id in admin_event.tournaments_by_id:
                             field = f'results_tournament_{tournament_id}'
-                            if self._form_data_to_bool_or_none(data, field):
+                            if WebContext.form_data_to_bool(data, field):
                                 results_tournament_ids.append(tournament_id)
                     case _:
                         raise ValueError(f'type=[{admin_screen.type}]')
@@ -147,7 +202,7 @@ class AdminScreenController(AAdminController):
             data: dict[str, str] = {}
             match action:
                 case 'update':
-                    data['uniq_id'] = self._value_to_form_data(admin_screen.stored_screen.uniq_id)
+                    data['uniq_id'] = WebContext.value_to_form_data(admin_screen.stored_screen.uniq_id)
                 case 'create' | 'clone':
                     data['uniq_id'] = ''
                 case 'delete':
@@ -156,29 +211,29 @@ class AdminScreenController(AAdminController):
                     raise ValueError(f'action=[{action}]')
             match action:
                 case 'update' | 'clone':
-                    data['public'] = self._value_to_form_data(admin_screen.stored_screen.public)
-                    data['name'] = self._value_to_form_data(admin_screen.stored_screen.name)
-                    data['columns'] = self._value_to_form_data(admin_screen.stored_screen.columns)
-                    data['menu_text'] = self._value_to_form_data(admin_screen.stored_screen.menu_text)
-                    data['menu'] = self._value_to_form_data(admin_screen.stored_screen.menu)
-                    data['timer_id'] = self._value_to_form_data(admin_screen.stored_screen.timer_id)
+                    data['public'] = WebContext.value_to_form_data(admin_screen.stored_screen.public)
+                    data['name'] = WebContext.value_to_form_data(admin_screen.stored_screen.name)
+                    data['columns'] = WebContext.value_to_form_data(admin_screen.stored_screen.columns)
+                    data['menu_text'] = WebContext.value_to_form_data(admin_screen.stored_screen.menu_text)
+                    data['menu'] = WebContext.value_to_form_data(admin_screen.stored_screen.menu)
+                    data['timer_id'] = WebContext.value_to_form_data(admin_screen.stored_screen.timer_id)
                     match admin_screen.type:
                         case ScreenType.Boards | ScreenType.Input:
                             pass
                         case ScreenType.Players:
-                            data['players_show_unpaired'] = self._value_to_form_data(
+                            data['players_show_unpaired'] = WebContext.value_to_form_data(
                                 admin_screen.stored_screen.players_show_unpaired)
                         case ScreenType.Results:
-                            data['results_limit'] = self._value_to_form_data(
+                            data['results_limit'] = WebContext.value_to_form_data(
                                 admin_screen.stored_screen.results_limit)
                             for tournament_id in admin_event.tournaments_by_id:
-                                data[f'results_tournament_{tournament_id}'] = self._value_to_form_data(
+                                data[f'results_tournament_{tournament_id}'] = WebContext.value_to_form_data(
                                     tournament_id in admin_screen.stored_screen.results_tournament_ids)
                         case _:
                             raise ValueError(f'action={action}')
                 case 'create':
                     data['type'] = ''
-                    data['public'] = self._value_to_form_data(True)
+                    data['public'] = WebContext.value_to_form_data(True)
                     data['uniq_id'] = ''
                     data['name'] = ''
                 case 'delete':
@@ -214,27 +269,16 @@ class AdminScreenController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        action: str = self._form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
-        try:
-            admin_event: NewEvent = EventLoader.get(request=request, lazy_load=True).load_event(admin_event_uniq_id)
-        except PapiWebException as pwe:
-            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
-            return self._render_messages(request)
-        admin_screen: NewScreen | None = None
+        action: str = WebContext.form_data_to_str(data, 'action')
+        web_context: ScreenAdminWebContext
         match action:
             case 'update' | 'delete' | 'clone':
-                admin_screen_id: int = self._form_data_to_int_or_none(data, 'admin_screen_id')
-                try:
-                    admin_screen = admin_event.basic_screens_by_id[admin_screen_id]
-                except KeyError:
-                    Message.error(request, f'L\'écran [{admin_screen_id}] est introuvable.')
-                    return self._render_messages(request)
+                web_context = ScreenAdminWebContext(request, data, True, True)
             case 'create':
-                pass
+                web_context = ScreenAdminWebContext(request, data, True, False)
             case _:
                 raise ValueError(f'action=[{action}]')
-        return self._admin_screen_render_edit_modal(action, admin_event, admin_screen)
+        return self._admin_screen_render_edit_modal(action, web_context.admin_event, web_context.admin_screen)
 
     @post(
         path='/admin-screen-update',
@@ -245,38 +289,32 @@ class AdminScreenController(AAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
-        action: str = self._form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
-        try:
-            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
-        except PapiWebException as pwe:
-            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
-            return self._render_messages(request)
+        action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
+            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
+            if web_context.error:
+                return web_context.error
             return self._admin_render_index(
-                request, admin_event=admin_event, admin_event_selector='@screens')
-        admin_screen: NewScreen | None = None
+                request, admin_event=web_context.admin_event,
+                admin_event_selector=web_context.admin_event_selector)
         match action:
             case 'update' | 'delete' | 'clone':
-                admin_screen_id: int = self._form_data_to_int_or_none(data, 'admin_screen_id')
-                try:
-                    admin_screen = admin_event.basic_screens_by_id[admin_screen_id]
-                except KeyError:
-                    Message.error(request, f'L\'écran [{admin_screen_id}] est introuvable.')
-                    return self._render_messages(request)
+                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True)
             case 'create':
-                pass
+                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True)
             case _:
                 raise ValueError(f'action=[{action}]')
+        if web_context.error:
+            return web_context.error
         stored_screen: StoredScreen | None = self._admin_validate_screen_update_data(
-            action, admin_event, admin_screen, data)
+            action, web_context.admin_event, web_context.admin_screen, data)
         if stored_screen.errors:
             return self._admin_screen_render_edit_modal(
-                action, admin_event, admin_screen, data, stored_screen.errors)
+                action, web_context.admin_event, web_context.admin_screen, data, stored_screen.errors)
         next_action: str | None = None
         next_screen_id: int | None = None
         next_screen_set_id: int | None = None
-        with (EventDatabase(admin_event.uniq_id, write=True) as event_database):
+        with EventDatabase(web_context.admin_event.uniq_id, write=True) as event_database:
             match action:
                 case 'update':
                     stored_screen = event_database.update_stored_screen(stored_screen)
@@ -285,25 +323,25 @@ class AdminScreenController(AAdminController):
                     stored_screen = event_database.add_stored_screen(stored_screen)
                     if stored_screen.type in [ScreenType.Boards, ScreenType.Input, ScreenType.Players]:
                         event_database.add_stored_screen_set(
-                            stored_screen.id, admin_event.tournaments_sorted_by_uniq_id[0].id)
+                            stored_screen.id, web_context.admin_event.tournaments_sorted_by_uniq_id[0].id)
                     Message.success(request, f'L\'écran [{stored_screen.uniq_id}] a été créé.')
                     next_screen_id = stored_screen.id
                     next_action = 'update'
                 case 'delete':
-                    event_database.delete_stored_screen(admin_screen.id)
-                    Message.success(request, f'L\'écran [{admin_screen.uniq_id}] a été supprimé.')
+                    event_database.delete_stored_screen(web_context.admin_screen.id)
+                    Message.success(request, f'L\'écran [{web_context.admin_screen.uniq_id}] a été supprimé.')
                 case 'clone':
                     stored_screen = event_database.clone_stored_screen(
-                        admin_screen.id, stored_screen.uniq_id, self._form_data_to_str_or_none(data, 'name'))
+                        web_context.admin_screen.id, stored_screen.uniq_id, WebContext.form_data_to_str(data, 'name'))
                     Message.success(
                         request,
-                        f'L\'écran [{admin_screen.uniq_id}] a été dupliqué ([{stored_screen.uniq_id}]).')
+                        f'L\'écran [{web_context.admin_screen.uniq_id}] a été dupliqué ([{stored_screen.uniq_id}]).')
                     next_screen_id = stored_screen.id
                     next_action = 'update'
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.reload_event(admin_event.uniq_id)
+        admin_event = event_loader.reload_event(web_context.admin_event.uniq_id)
         if next_screen_id:
             admin_screen = admin_event.basic_screens_by_id[next_screen_id]
             if next_screen_set_id:
@@ -312,10 +350,11 @@ class AdminScreenController(AAdminController):
             else:
                 return self._admin_screen_render_edit_modal(next_action, admin_event, admin_screen=admin_screen)
         else:
-            return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='@screens')
+            return self._admin_render_index(
+                request, admin_event=admin_event, admin_event_selector=web_context.admin_event_selector)
 
+    @staticmethod
     def _admin_validate_screen_set_update_data(
-            self,
             admin_screen: NewScreen,
             admin_screen_set: NewScreenSet,
             data: dict[str, str] | None = None,
@@ -328,14 +367,14 @@ class AdminScreenController(AAdminController):
         first: int | None = None
         last: int | None = None
         field: str = 'name'
-        name = self._form_data_to_str_or_none(data, field)
+        name = WebContext.form_data_to_str(data, field)
         field: str = 'tournament_id'
         try:
             if len(admin_screen.event.tournaments_by_id) == 1:
                 tournament_id = list(admin_screen.event.tournaments_by_id.keys())[0]
-                data[field] = self._value_to_form_data(tournament_id)
+                data[field] = WebContext.value_to_form_data(tournament_id)
             else:
-                tournament_id = self._form_data_to_int_or_none(data, field)
+                tournament_id = WebContext.form_data_to_int(data, field)
                 if not tournament_id:
                     errors[field] = f'Veuillez indiquer le tournoi.'
                 elif tournament_id not in admin_screen.event.tournaments_by_id:
@@ -344,12 +383,12 @@ class AdminScreenController(AAdminController):
             errors[field] = 'Un entier positif est attendu.'
         field: str = 'first'
         try:
-            first = self._form_data_to_int_or_none(data, field, minimum=1)
+            first = WebContext.form_data_to_int(data, field, minimum=1)
         except ValueError:
             errors[field] = 'Un entier positif est attendu.'
         field: str = 'last'
         try:
-            last = self._form_data_to_int_or_none(data, field, minimum=1)
+            last = WebContext.form_data_to_int(data, field, minimum=1)
         except ValueError:
             errors[field] = 'Un entier positif est attendu.'
         if first and last and first > last:
@@ -358,7 +397,7 @@ class AdminScreenController(AAdminController):
             errors['last'] = error
         fixed_boards_str: str | None = None
         if admin_screen.type in [ScreenType.Boards, ScreenType.Input]:
-            fixed_boards_str = self._form_data_to_str_or_none(data, 'fixed_boards_str')
+            fixed_boards_str = WebContext.form_data_to_str(data, 'fixed_boards_str')
             if fixed_boards_str:
                 for fixed_board_str in list(map(str.strip, fixed_boards_str.split(','))):
                     if fixed_board_str:
@@ -398,14 +437,15 @@ class AdminScreenController(AAdminController):
         if data is None:
             if admin_screen_set:
                 data = {
-                    'tournament_id': self._value_to_form_data(admin_screen_set.stored_screen_set.tournament_id),
-                    'fixed_boards_str': self._value_to_form_data(admin_screen_set.stored_screen_set.fixed_boards_str),
-                    'name': self._value_to_form_data(admin_screen_set.stored_screen_set.name),
-                    'first': self._value_to_form_data(admin_screen_set.stored_screen_set.first),
-                    'last': self._value_to_form_data(admin_screen_set.stored_screen_set.last),
+                    'tournament_id': WebContext.value_to_form_data(admin_screen_set.stored_screen_set.tournament_id),
+                    'fixed_boards_str': WebContext.value_to_form_data(
+                        admin_screen_set.stored_screen_set.fixed_boards_str),
+                    'name': WebContext.value_to_form_data(admin_screen_set.stored_screen_set.name),
+                    'first': WebContext.value_to_form_data(admin_screen_set.stored_screen_set.first),
+                    'last': WebContext.value_to_form_data(admin_screen_set.stored_screen_set.last),
                 }
                 if admin_screen.type in [ScreenType.Boards, ScreenType.Input]:
-                    data['fixed_boards_str'] = self._value_to_form_data(
+                    data['fixed_boards_str'] = WebContext.value_to_form_data(
                         admin_screen_set.stored_screen_set.fixed_boards_str)
                 stored_screen_set = self._admin_validate_screen_set_update_data(admin_screen, admin_screen_set, data)
                 errors = stored_screen_set.errors
@@ -435,28 +475,9 @@ class AdminScreenController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
-        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
-        try:
-            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
-        except PapiWebException as pwe:
-            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
-            return self._render_messages(request)
-        admin_screen: NewScreen | None = None
-        admin_screen_id: int = self._form_data_to_int_or_none(data, 'admin_screen_id')
-        try:
-            admin_screen = admin_event.basic_screens_by_id[admin_screen_id]
-        except KeyError:
-            Message.error(request, f'L\'écran [{admin_screen_id}] est introuvable.')
-        admin_screen_set_id: int = self._form_data_to_int_or_none(data, 'admin_screen_set_id')
-        if admin_screen_set_id:
-            try:
-                admin_screen_set: NewScreenSet = admin_screen.screen_sets_by_id[admin_screen_set_id]
-            except KeyError:
-                Message.error(request, f'L\'horaire [{admin_screen_set_id}] est introuvable.')
-                return self._render_messages(request)
-            return self._admin_screen_render_sets_modal(admin_event, admin_screen, admin_screen_set)
-        return self._admin_screen_render_sets_modal(admin_event, admin_screen, None)
+        web_context: ScreenSetAdminWebContext = ScreenSetAdminWebContext(request, data, True, True)
+        return self._admin_screen_render_sets_modal(
+            web_context.admin_event, web_context.admin_screen, web_context.admin_screen_set)
 
     @post(
         path='/admin-screen-sets-update',
@@ -465,80 +486,64 @@ class AdminScreenController(AAdminController):
     async def htmx_admin_screen_sets_update(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> Template | Reswap:
+    ) -> Template | Reswap | Redirect:
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
-        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
-        try:
-            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
-        except PapiWebException as pwe:
-            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
-            return self._render_messages(request)
-        action: str = self._form_data_to_str_or_none(data, 'action')
+        action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
-            return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='@screens')
-        match action:
-            case 'delete' | 'clone' | 'update' | 'add' | 'reorder' | 'cancel':
-                admin_screen_id: int = self._form_data_to_int_or_none(data, 'admin_screen_id')
-                try:
-                    admin_screen: NewScreen = admin_event.basic_screens_by_id[admin_screen_id]
-                except KeyError:
-                    Message.error(request, f'L\'écran [{admin_screen_id}] est introuvable.')
-                    return self._render_messages(request)
-            case _:
-                raise ValueError(f'action=[{action}]')
-        admin_screen_set: NewScreenSet | None = None
+            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
+            if web_context.error:
+                return web_context.error
+            return self._admin_render_index(
+                request, admin_event=web_context.admin_event, admin_event_selector=web_context.admin_event_selector)
         match action:
             case 'delete' | 'clone' | 'update':
-                admin_screen_set_id: int = self._form_data_to_int_or_none(data, 'admin_screen_set_id')
-                try:
-                    admin_screen_set = admin_screen.screen_sets_by_id[admin_screen_set_id]
-                except KeyError:
-                    Message.error(request, f'L\'ensemble [{admin_screen_set_id}] est introuvable.')
-                    return self._render_messages(request)
+                web_context: ScreenSetAdminWebContext = ScreenSetAdminWebContext(request, data, True, True)
             case 'add' | 'reorder' | 'cancel':
-                pass
+                web_context: ScreenSetAdminWebContext = ScreenSetAdminWebContext(request, data, True, False)
             case _:
                 raise ValueError(f'action=[{action}]')
+        if web_context.error:
+            return web_context.error
         match action:
             case 'delete':
-                if len(admin_screen.screen_sets_sorted_by_order) <= 1:
-                    Message.error(request, f'Le dernier ensemble d\'un écran ne peut être supprimé.')
-                    return self._render_messages(request)
+                if len(web_context.admin_screen.screen_sets_sorted_by_order) <= 1:
+                    return AController.redirect_error(request, f'Le dernier ensemble d\'un écran ne peut être supprimé.')
             case 'update' | 'clone' | 'add' | 'reorder' | 'cancel':
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
         next_screen_set_id: int | None = None
-        with (EventDatabase(admin_event.uniq_id, write=True) as event_database):
+        with (EventDatabase(web_context.admin_event.uniq_id, write=True) as event_database):
             match action:
                 case 'update':
                     stored_screen_set: StoredScreenSet = self._admin_validate_screen_set_update_data(
-                        admin_screen, admin_screen_set, data)
+                        web_context.admin_screen, web_context.admin_screen_set, data)
                     if stored_screen_set.errors:
                         return self._admin_screen_render_sets_modal(
-                            admin_event, admin_screen, admin_screen_set, data, stored_screen_set.errors)
+                            web_context.admin_event, web_context.admin_screen, web_context.admin_screen_set, data,
+                            stored_screen_set.errors)
                     event_database.update_stored_screen_set(stored_screen_set)
                 case 'delete':
-                    event_database.delete_stored_screen_set(admin_screen_set.id, admin_screen.id)
+                    event_database.delete_stored_screen_set(
+                        web_context.admin_screen_set.id, web_context.admin_screen.id)
                 case 'clone':
-                    stored_screen_set = event_database.clone_stored_screen_set(admin_screen_set.id, admin_screen.id)
+                    stored_screen_set = event_database.clone_stored_screen_set(
+                        web_context.admin_screen_set.id, web_context.admin_screen.id)
                     next_screen_set_id = stored_screen_set.id
                 case 'add':
                     stored_screen_set = event_database.add_stored_screen_set(
-                        admin_screen.id, list(admin_event.tournaments_by_id.keys())[0])
+                        web_context.admin_screen.id, list(web_context.admin_event.tournaments_by_id.keys())[0])
                     next_screen_set_id = stored_screen_set.id
                 case 'reorder':
-                    event_database.reorder_stored_screen_sets(admin_screen.id, data['item'])
+                    event_database.reorder_stored_screen_sets(web_context.admin_screen.id, data['item'])
                 case 'cancel':
                     pass
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.reload_event(admin_event.uniq_id)
-        admin_screen = admin_event.basic_screens_by_id[admin_screen.id]
-        admin_screen_set: NewScreenSet
+        admin_event = event_loader.reload_event(web_context.admin_event.uniq_id)
+        admin_screen = admin_event.basic_screens_by_id[web_context.admin_screen.id]
+        admin_screen_set: NewScreenSet | None = None
         if next_screen_set_id:
             admin_screen_set = admin_screen.screen_sets_by_id[next_screen_set_id]
-        else:
-            admin_screen_set = None
         return self._admin_screen_render_sets_modal(admin_event, admin_screen, admin_screen_set)

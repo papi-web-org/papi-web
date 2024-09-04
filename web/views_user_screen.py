@@ -21,7 +21,7 @@ from data.tournament import NewTournament
 from data.util import ScreenType
 from web.messages import Message
 from web.session import SessionHandler
-from web.views import WebContext
+from web.views import WebContext, AController
 from web.views_user import AUserController, ScreenUserWebContext, BasicScreenOrFamilyUserWebContext, \
     EventUserWebContext, RotatorUserWebContext
 
@@ -95,20 +95,20 @@ class UserScreenController(AUserController):
         web_context: EventUserWebContext = EventUserWebContext(request, data, True)
         if web_context.error:
             return web_context.error
-        if data['password'] == web_context.event.update_password:
+        if data['password'] == web_context.user_event.update_password:
             Message.success(request, 'Authentification réussie !')
-            SessionHandler.store_password(request, web_context.event, data['password'])
+            SessionHandler.store_password(request, web_context.user_event, data['password'])
             web_context: ScreenUserWebContext = ScreenUserWebContext(request, data, False)
             if web_context.error:
                 return web_context.error
-            user_event_selector: str = self._form_data_to_str_or_none(data, 'user_event_selector')
             return self._user_render_screen(
-                request, web_context.event, user_event_selector, screen=web_context.screen, rotator=web_context.rotator)
+                request, web_context.user_event, web_context.user_event_selector, screen=web_context.screen,
+                rotator=web_context.rotator)
         if data['password'] == '':
             Message.warning(request, 'Veuillez indiquer le code d\'accès.')
         else:
             Message.error(request, 'Code d\'accès incorrect.')
-            SessionHandler.store_password(request, web_context.event, None)
+            SessionHandler.store_password(request, web_context.user_event, None)
         return self._render_messages(request)
 
     @post(
@@ -123,7 +123,7 @@ class UserScreenController(AUserController):
         if web_context.error:
             return web_context.error
         return self._user_render_screen(
-            request, web_context.event, web_context.user_event_selector, screen=web_context.screen,
+            request, web_context.user_event, web_context.user_event_selector, screen=web_context.screen,
             rotator=web_context.rotator, rotator_screen_index=web_context.rotator_screen_index)
 
     @staticmethod
@@ -162,7 +162,7 @@ class UserScreenController(AUserController):
     async def htmx_user_screen_render_if_updated(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> Template | Reswap:
+    ) -> Template | Reswap | Redirect:
         web_context: BasicScreenOrFamilyUserWebContext = BasicScreenOrFamilyUserWebContext(
             request, data, True)
         if web_context.error:
@@ -170,8 +170,7 @@ class UserScreenController(AUserController):
         try:
             date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
-            Message.error(request, str(ve))
-            return self._render_messages(request)
+            return AController.redirect_error(request, str(ve))
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if self._user_screen_page_update_needed(web_context.screen, web_context.family, date):
@@ -179,7 +178,7 @@ class UserScreenController(AUserController):
             if web_context.error:
                 return web_context.error
             return self._user_render_screen(
-                request, web_context.event, web_context.user_event_selector, screen=web_context.screen,
+                request, web_context.user_event, web_context.user_event_selector, screen=web_context.screen,
                 rotator=web_context.rotator, rotator_screen_index=web_context.rotator_screen_index)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
@@ -196,5 +195,5 @@ class UserScreenController(AUserController):
         if web_context.error:
             return web_context.error
         return self._user_render_screen(
-            request, web_context.event, web_context.user_event_selector, rotator=web_context.rotator,
+            request, web_context.user_event, web_context.user_event_selector, rotator=web_context.rotator,
             rotator_screen_index=web_context.rotator_screen_index % len(web_context.rotator.rotating_screens))

@@ -8,7 +8,6 @@ from litestar.response import Template
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 
-from common.exception import PapiWebException
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.family import NewFamily
@@ -18,15 +17,43 @@ from data.util import ScreenType
 from database.sqlite import EventDatabase
 from database.store import StoredFamily
 from web.messages import Message
+from web.views import WebContext
 from web.views_admin import AAdminController
+from web.views_admin_event import EventAdminWebContext
 
 logger: Logger = get_logger()
 
 
+class FamilyAdminWebContext(EventAdminWebContext):
+    def __init__(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            lazy_load: bool,
+            family_needed: bool,
+    ):
+        super().__init__(request, data, lazy_load, True)
+        self.admin_family: NewFamily | None = None
+        field: str = 'admin_family_id'
+        if field in self.data:
+            try:
+                admin_family_id: int | None = self._form_data_to_int(field, minimum=1)
+            except ValueError as ve:
+                self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
+                return
+            try:
+                self.admin_family = self.admin_event.tournaments_by_id[admin_family_id]
+            except KeyError:
+                self._redirect_error(f'La famille [{admin_family_id}] n\'existe pas')
+                return
+        if family_needed and not self.admin_family:
+            self._redirect_error(f'La famille n\'est pas spécifiée')
+            return
+
+
 class AdminFamilyController(AAdminController):
 
+    @staticmethod
     def _admin_validate_family_update_data(
-            self,
             action: str,
             admin_event: NewEvent,
             admin_family: NewFamily,
@@ -39,7 +66,7 @@ class AdminFamilyController(AAdminController):
         field: str = 'type'
         match action:
             case 'create':
-                type = self._form_data_to_str_or_none(data, field)
+                type = WebContext.form_data_to_str(data, field)
                 match type:
                     case 'boards' | 'input' | 'players':
                         pass
@@ -52,7 +79,7 @@ class AdminFamilyController(AAdminController):
             case _:
                 raise ValueError(f'action=[{action}]')
         field = 'uniq_id'
-        uniq_id: str = self._form_data_to_str_or_none(data, field)
+        uniq_id: str = WebContext.form_data_to_str(data, field)
         name: str | None = None
         public: bool | None = None
         if action == 'delete':
@@ -70,8 +97,8 @@ class AdminFamilyController(AAdminController):
                             errors[field] = f'La famille [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')
-            name = self._form_data_to_str_or_none(data, 'name')
-            public: bool = self._form_data_to_bool_or_none(data, 'public')
+            name = WebContext.form_data_to_str(data, 'name')
+            public: bool = WebContext.form_data_to_bool(data, 'public')
         menu: str | None = None
         menu_text: str | None = None
         columns: int | None = None
@@ -90,9 +117,9 @@ class AdminFamilyController(AAdminController):
                 try:
                     if len(admin_event.tournaments_by_id) == 1:
                         tournament_id = list(admin_event.tournaments_by_id.keys())[0]
-                        data[field] = self._value_to_form_data(tournament_id)
+                        data[field] = WebContext.value_to_form_data(tournament_id)
                     else:
-                        tournament_id = self._form_data_to_int_or_none(data, field)
+                        tournament_id = WebContext.form_data_to_int(data, field)
                         if not tournament_id:
                             errors[field] = f'Veuillez indiquer le tournoi.'
                         elif tournament_id not in admin_event.tournaments_by_id:
@@ -107,14 +134,14 @@ class AdminFamilyController(AAdminController):
             case 'update':
                 field = 'columns'
                 try:
-                    columns = self._form_data_to_int_or_none(data, field, minimum=1)
+                    columns = WebContext.form_data_to_int(data, field, minimum=1)
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
-                menu_text = self._form_data_to_str_or_none(data, 'menu_text')
-                menu = self._form_data_to_str_or_none(data, 'menu')
+                menu_text = WebContext.form_data_to_str(data, 'menu_text')
+                menu = WebContext.form_data_to_str(data, 'menu')
                 field = 'timer_id'
                 try:
-                    timer_id = self._form_data_to_int_or_none(data, field)
+                    timer_id = WebContext.form_data_to_int(data, field)
                     if timer_id and timer_id not in admin_event.timers_by_id:
                         errors[field] = f'Le chronomètre [{timer_id}] n\'existe pas.'
                 except ValueError:
@@ -123,12 +150,12 @@ class AdminFamilyController(AAdminController):
                     case 'boards' | 'input':
                         field: str = 'first'
                         try:
-                            first = self._form_data_to_int_or_none(data, field, minimum=1)
+                            first = WebContext.form_data_to_int(data, field, minimum=1)
                         except ValueError:
                             errors[field] = 'Un entier positif est attendu.'
                         field: str = 'last'
                         try:
-                            last = self._form_data_to_int_or_none(data, field, minimum=1)
+                            last = WebContext.form_data_to_int(data, field, minimum=1)
                         except ValueError:
                             errors[field] = 'Un entier positif est attendu.'
                         if first and last and first > last:
@@ -136,12 +163,12 @@ class AdminFamilyController(AAdminController):
                             errors['first'] = error
                             errors['last'] = error
                     case 'players':
-                        players_show_unpaired = self._form_data_to_bool_or_none(data, 'players_show_unpaired')
+                        players_show_unpaired = WebContext.form_data_to_bool(data, 'players_show_unpaired')
                     case _:
                         raise ValueError(f'type=[{type}]')
                 field: str = 'tournament_id'
                 try:
-                    tournament_id = self._form_data_to_int_or_none(data, field)
+                    tournament_id = WebContext.form_data_to_int(data, field)
                     if not tournament_id:
                         errors[field] = f'Veuillez indiquer le tournoi.'
                     elif tournament_id not in admin_event.tournaments_by_id:
@@ -150,12 +177,12 @@ class AdminFamilyController(AAdminController):
                     errors[field] = 'Un entier positif est attendu.'
                 field: str = 'parts'
                 try:
-                    parts = self._form_data_to_int_or_none(data, field, minimum=1)
+                    parts = WebContext.form_data_to_int(data, field, minimum=1)
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
                 field: str = 'number'
                 try:
-                    number = self._form_data_to_int_or_none(data, field, minimum=1)
+                    number = WebContext.form_data_to_int(data, field, minimum=1)
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
                 if parts and number:
@@ -203,7 +230,7 @@ class AdminFamilyController(AAdminController):
             data: dict[str, str] = {}
             match action:
                 case 'update':
-                    data['uniq_id'] = self._value_to_form_data(admin_family.stored_family.uniq_id)
+                    data['uniq_id'] = WebContext.value_to_form_data(admin_family.stored_family.uniq_id)
                 case 'create' | 'clone':
                     data['uniq_id'] = ''
                 case 'delete':
@@ -212,30 +239,30 @@ class AdminFamilyController(AAdminController):
                     raise ValueError(f'action=[{action}]')
             match action:
                 case 'update':
-                    data['public'] = self._value_to_form_data(admin_family.stored_family.public)
-                    data['name'] = self._value_to_form_data(admin_family.stored_family.name)
-                    data['tournament_id'] = self._value_to_form_data(admin_family.stored_family.tournament_id)
-                    data['columns'] = self._value_to_form_data(admin_family.stored_family.columns)
-                    data['menu_text'] = self._value_to_form_data(admin_family.stored_family.menu_text)
-                    data['menu'] = self._value_to_form_data(admin_family.stored_family.menu)
-                    data['timer_id'] = self._value_to_form_data(admin_family.stored_family.timer_id)
+                    data['public'] = WebContext.value_to_form_data(admin_family.stored_family.public)
+                    data['name'] = WebContext.value_to_form_data(admin_family.stored_family.name)
+                    data['tournament_id'] = WebContext.value_to_form_data(admin_family.stored_family.tournament_id)
+                    data['columns'] = WebContext.value_to_form_data(admin_family.stored_family.columns)
+                    data['menu_text'] = WebContext.value_to_form_data(admin_family.stored_family.menu_text)
+                    data['menu'] = WebContext.value_to_form_data(admin_family.stored_family.menu)
+                    data['timer_id'] = WebContext.value_to_form_data(admin_family.stored_family.timer_id)
                     match admin_family.type:
                         case ScreenType.Boards | ScreenType.Input:
-                            data['first'] = self._value_to_form_data(admin_family.stored_family.first)
-                            data['last'] = self._value_to_form_data(admin_family.stored_family.last)
+                            data['first'] = WebContext.value_to_form_data(admin_family.stored_family.first)
+                            data['last'] = WebContext.value_to_form_data(admin_family.stored_family.last)
                         case ScreenType.Players:
-                            data['players_show_unpaired'] = self._value_to_form_data(
+                            data['players_show_unpaired'] = WebContext.value_to_form_data(
                                 admin_family.stored_family.players_show_unpaired)
                         case _:
                             raise ValueError(f'type=[{admin_family.type}]')
-                    data['parts'] = self._value_to_form_data(admin_family.stored_family.parts)
-                    data['number'] = self._value_to_form_data(admin_family.stored_family.number)
+                    data['parts'] = WebContext.value_to_form_data(admin_family.stored_family.parts)
+                    data['number'] = WebContext.value_to_form_data(admin_family.stored_family.number)
                 case 'create':
                     data['type'] = ''
-                    data['public'] = self._value_to_form_data(True)
+                    data['public'] = WebContext.value_to_form_data(True)
                     data['uniq_id'] = ''
                     data['name'] = ''
-                    data['tournament_id'] = self._value_to_form_data(list(admin_event.tournaments_by_id.keys())[0])
+                    data['tournament_id'] = WebContext.value_to_form_data(list(admin_event.tournaments_by_id.keys())[0])
                 case 'delete':
                     pass
                 case _:
@@ -270,27 +297,16 @@ class AdminFamilyController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        action: str = self._form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
-        try:
-            admin_event: NewEvent = EventLoader.get(request=request, lazy_load=True).load_event(admin_event_uniq_id)
-        except PapiWebException as pwe:
-            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
-            return self._render_messages(request)
-        admin_family: NewFamily | None = None
+        action: str = WebContext.form_data_to_str(data, 'action')
+        web_context: FamilyAdminWebContext
         match action:
             case 'update' | 'delete':
-                admin_family_id: int = self._form_data_to_int_or_none(data, 'admin_family_id')
-                try:
-                    admin_family = admin_event.families_by_id[admin_family_id]
-                except KeyError:
-                    Message.error(request, f'La famille [{admin_family_id}] est introuvable.')
-                    return self._render_messages(request)
+                web_context = FamilyAdminWebContext(request, data, True, True)
             case 'create':
-                pass
+                web_context = FamilyAdminWebContext(request, data, True, False)
             case _:
                 raise ValueError(f'action=[{action}]')
-        return self._admin_family_render_edit_modal(action, admin_event, admin_family)
+        return self._admin_family_render_edit_modal(action, web_context.admin_event, web_context.admin_family)
 
     @post(
         path='/admin-family-update',
@@ -301,34 +317,30 @@ class AdminFamilyController(AAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
-        action: str = self._form_data_to_str_or_none(data, 'action')
-        admin_event_uniq_id: str = self._form_data_to_str_or_none(data, 'admin_event_uniq_id')
-        try:
-            admin_event: NewEvent = event_loader.load_event(admin_event_uniq_id)
-        except PapiWebException as pwe:
-            Message.error(request, f'L\'évènement [{admin_event_uniq_id}] est introuvable : [{pwe}].')
-            return self._render_messages(request)
+        action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
-            return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='@families')
-        admin_family: NewFamily | None = None
+            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
+            if web_context.error:
+                return web_context.error
+            return self._admin_render_index(
+                request, admin_event=web_context.admin_event, admin_event_selector='@families')
         match action:
             case 'update' | 'delete':
-                admin_screen_id: int = self._form_data_to_int_or_none(data, 'admin_family_id')
-                try:
-                    admin_family = admin_event.families_by_id[admin_screen_id]
-                except KeyError:
-                    Message.error(request, f'La famille [{admin_screen_id}] est introuvable.')
-                    return self._render_messages(request)
+                web_context: FamilyAdminWebContext = FamilyAdminWebContext(request, data, True, True)
             case 'create':
-                pass
+                web_context: FamilyAdminWebContext = FamilyAdminWebContext(request, data, True, False)
             case _:
                 raise ValueError(f'action=[{action}]')
-        stored_family: StoredFamily = self._admin_validate_family_update_data(action, admin_event, admin_family, data)
+        if web_context.error:
+            return web_context.error
+        stored_family: StoredFamily = self._admin_validate_family_update_data(
+            action, web_context.admin_event, web_context.admin_family, data)
         if stored_family.errors:
-            return self._admin_family_render_edit_modal(action, admin_event, admin_family, data, stored_family.errors)
+            return self._admin_family_render_edit_modal(
+                action, web_context.admin_event, web_context.admin_family, data, stored_family.errors)
         next_family_id: int | None = None
         next_action: str | None = None
-        with (EventDatabase(admin_event.uniq_id, write=True) as event_database):
+        with (EventDatabase(web_context.admin_event.uniq_id, write=True) as event_database):
             match action:
                 case 'update':
                     stored_family = event_database.update_stored_family(stored_family)
@@ -339,12 +351,12 @@ class AdminFamilyController(AAdminController):
                     next_family_id = stored_family.id
                     next_action = 'update'
                 case 'delete':
-                    event_database.delete_stored_family(admin_family.id)
-                    Message.success(request, f'La famille [{admin_family.uniq_id}] a été supprimée.')
+                    event_database.delete_stored_family(web_context.admin_family.id)
+                    Message.success(request, f'La famille [{web_context.admin_family.uniq_id}] a été supprimée.')
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.reload_event(admin_event.uniq_id)
+        admin_event = event_loader.reload_event(web_context.admin_event.uniq_id)
         if next_family_id:
             admin_family = admin_event.families_by_id[next_family_id]
             return self._admin_family_render_edit_modal(next_action, admin_event, admin_family)

@@ -97,58 +97,8 @@ class WebContext:
     def _form_data_to_rgb(self, field: str, empty_value: RGB | None = None) -> str | None:
         return self.form_data_to_rgb(self.data, field, empty_value)
 
-    def _redirect_to_index(self, errors: str | list[str]):
-        Message.error(self.request, errors)
-        self.error = Redirect(path=index_url(self.request))
-
-
-class AController(Controller):
-
     @staticmethod
-    def _form_data_to_str_or_none(
-            data: dict[str, str], field: str, empty_value: str | None = None
-    ) -> str | None:
-        data[field] = data.get(field, '')
-        if data[field] is not None:
-            data[field] = data[field].strip()
-        if not data[field]:
-            return empty_value
-        return data[field]
-
-    @staticmethod
-    def _form_data_to_int_or_none(
-            data: dict[str, str], field: str, empty_value: int | None = None, minimum: int = None
-    ) -> int | None:
-        data[field] = data.get(field, '')
-        if data[field] is not None:
-            data[field] = data[field].strip()
-        if not data[field]:
-            return empty_value
-        int_val = int(data[field])
-        if minimum is not None and int_val < minimum:
-            raise ValueError(f'{int_val} < {minimum}')
-        return int_val
-
-    @staticmethod
-    def _form_data_to_bool_or_none(data: dict[str, str], field: str, empty_value: bool | None = None) -> bool | None:
-        data[field] = data.get(field, '')
-        if data[field] is not None:
-            data[field] = data[field].strip().lower()
-        if not data[field]:
-            return empty_value
-        return data[field] in ['true', 'on', ]
-
-    @staticmethod
-    def _form_data_to_rgb_or_none(data: dict[str, str], field: str, empty_value: RGB | None = None) -> str | None:
-        data[field] = data.get(field, '')
-        if data[field] is not None:
-            data[field] = data[field].strip().lower()
-        if not data[field]:
-            return empty_value
-        return check_rgb_str(data[field])
-
-    @staticmethod
-    def _value_to_form_data(value: str | int | bool | Path | None) -> str | None:
+    def value_to_form_data(value: str | int | bool | Path | None) -> str | None:
         if value is None:
             return ''
         if isinstance(value, str):
@@ -162,16 +112,27 @@ class AController(Controller):
         raise ValueError
 
     @staticmethod
-    def _value_to_datetime_form_data(value: float | None) -> str | None:
+    def value_to_datetime_form_data(value: float | None) -> str | None:
         if value is None:
             return ''
         return datetime.strftime(datetime.fromtimestamp(value), '%Y-%m-%dT%H:%M')
+
+    def _redirect_error(self, errors: str | list[str]):
+        self.error = AController.redirect_error(self.request, errors)
+
+
+class AController(Controller):
 
     @staticmethod
     def admin_auth(request: HTMXRequest) -> bool:
         if request.client.host == '127.0.0.1':
             return True
         return False
+
+    @staticmethod
+    def redirect_error(request: HTMXRequest, errors: str | list[str]) -> Redirect:
+        Message.error(request, errors)
+        return Redirect(path=index_url(request))
 
     @staticmethod
     def _render_messages(request: HTMXRequest) -> Template:

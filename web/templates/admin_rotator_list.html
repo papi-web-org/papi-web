@@ -53,10 +53,16 @@
 
 {% block cards_container_cards %}
     <div class="row">
-        {% for rotator in admin_event.rotators_by_uniq_id.values() %}
-            {% with card_class='bg-info-subtle' %}
-                {% include 'admin_rotator_card.html' %}
-            {% endwith %}
-        {% endfor %}
+        {% if admin_event.rotators_by_uniq_id %}
+            {% for rotator in admin_event.rotators_by_uniq_id.values() %}
+                {% with card_class='bg-info-subtle' %}
+                    {% include 'admin_rotator_card.html' %}
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            <div class="col-12 mb-3">
+                Aucune famille d'écrans.
+            </div>
+        {% endif %}
     </div>
 {% endblock %}

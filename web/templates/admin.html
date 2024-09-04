@@ -16,7 +16,7 @@
                                 hx-target="body"
                             {% else %}
                                 hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "@events"}'
+                                hx-vals='{}'
                                 hx-swap="multi:#admin-header,#admin-content"
                                 hx-indicator="#please-wait"
                                 hx-trigger="click, keyup[key=='Escape'] from:body"

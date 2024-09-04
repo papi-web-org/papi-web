@@ -36,11 +36,17 @@
 
 {% block cards_container_cards %}
     <div class="row">
-        {% for chessevent in admin_event.chessevents_by_uniq_id.values() %}
-            {% with card_class='bg-info-subtle' %}
-                {% include 'admin_chessevent_card.html' %}
-            {% endwith %}
-        {% endfor %}
+        {% if admin_event.chessevents_by_uniq_id %}
+            {% for chessevent in admin_event.chessevents_by_uniq_id.values() %}
+                {% with card_class='bg-info-subtle' %}
+                    {% include 'admin_chessevent_card.html' %}
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            <div class="col-12 mb-3">
+                Aucune famille d'écrans.
+            </div>
+        {% endif %}
     </div>
 {% endblock %}
 
