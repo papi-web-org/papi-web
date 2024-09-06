@@ -120,14 +120,14 @@ class WebContext:
     def _redirect_error(self, errors: str | list[str]):
         self.error = AController.redirect_error(self.request, errors)
 
-
-class AController(Controller):
-
-    @staticmethod
-    def admin_auth(request: HTMXRequest) -> bool:
-        if request.client.host == '127.0.0.1':
+    @property
+    def admin_auth(self) -> bool:
+        if self.request.client.host == '127.0.0.1':
             return True
         return False
+
+
+class AController(Controller):
 
     @staticmethod
     def redirect_error(request: HTMXRequest, errors: str | list[str]) -> Redirect:
@@ -152,10 +152,11 @@ class IndexController(AController):
         name='index'
     )
     async def index(self, request: HTMXRequest, ) -> Template:
+        web_context: WebContext = WebContext(request, {})
         return HTMXTemplate(
             template_name="index.html",
             context={
                 'papi_web_config': PapiWebConfig(),
                 'messages': Message.messages(request),
-                'admin_auth': self.admin_auth(request),
+                'admin_auth': web_context.admin_auth,
             })

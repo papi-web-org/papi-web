@@ -56,6 +56,9 @@ class ScreenOrRotatorUserWebContext(EventUserWebContext):
             except ValueError as ve:
                 self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
                 return
+            if not self.rotator.public and not self.admin_auth:
+                self._redirect_error(f'L\'écran rotatif [{self.rotator.uniq_id}] est réservé aux arbitres.')
+                return
             self.rotator_screen_index = self.rotator_screen_index % len(self.rotator.rotating_screens)
             self.screen = self.rotator.rotating_screens[self.rotator_screen_index]
         else:
@@ -65,6 +68,9 @@ class ScreenOrRotatorUserWebContext(EventUserWebContext):
                 self.screen = self.user_event.screens_by_uniq_id[screen_uniq_id]
             except KeyError:
                 self._redirect_error(f'L\'écran [{data.get(field, None)}] n\'existe pas.')
+                return
+            if not self.screen.public and not self.admin_auth:
+                self._redirect_error(f'L\'écran [{self.screen.uniq_id}] est réservé aux arbitres.')
                 return
 
 
