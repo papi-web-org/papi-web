@@ -10,7 +10,7 @@ from litestar.contrib.htmx.response import HTMXTemplate
 
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.chessevent import NewChessEvent
+from data.chessevent import ChessEvent
 from data.loader import EventLoader
 from database.sqlite import EventDatabase
 from database.store import StoredChessEvent
@@ -30,7 +30,7 @@ class ChessEventAdminWebContext(EventAdminWebContext):
             chessevent_needed: bool,
     ):
         super().__init__(request, data, lazy_load, True)
-        self.admin_chessevent: NewChessEvent | None = None
+        self.admin_chessevent: ChessEvent | None = None
         field: str = 'admin_chessevent_id'
         if field in self.data:
             try:

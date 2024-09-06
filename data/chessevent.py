@@ -3,18 +3,18 @@ from logging import Logger
 from common.logger import get_logger
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from data.event import NewEvent
-    from data.event import NewTournament
+    from data.event import Event
+    from data.event import Tournament
 from database.store import StoredChessEvent
 
 logger: Logger = get_logger()
 
 
-class NewChessEvent:
-    def __init__(self, event: 'NewEvent', stored_chessevent: StoredChessEvent, ):
+class ChessEvent:
+    def __init__(self, event: 'Event', stored_chessevent: StoredChessEvent, ):
         self.stored_chessevent: StoredChessEvent = stored_chessevent
-        self.event: 'NewEvent' = event
-        self._dependent_tournaments: list['NewTournament'] | None = None
+        self.event: 'Event' = event
+        self._dependent_tournaments: list['Tournament'] | None = None
 
     @property
     def id(self) -> int:
@@ -44,7 +44,7 @@ class NewChessEvent:
         return self.stored_chessevent.event_id
 
     @property
-    def dependent_tournaments(self) -> list['NewTournament']:
+    def dependent_tournaments(self) -> list['Tournament']:
         if self._dependent_tournaments is None:
             self._dependent_tournaments = [
                 tournament

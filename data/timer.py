@@ -11,7 +11,7 @@ from common.papi_web_config import PapiWebConfig
 from database.store import StoredTimerHour, StoredTimer
 
 if TYPE_CHECKING:
-    from data.event import NewEvent
+    from data.event import Event
 
 from common.logger import get_logger
 
@@ -19,8 +19,8 @@ logger: Logger = get_logger()
 
 
 @dataclass
-class NewTimerHour:
-    timer: 'NewTimer'
+class TimerHour:
+    timer: 'Timer'
     stored_timer_hour: StoredTimerHour
     timestamp: int | None = field(init=False, default=None)
     _round: int | None = field(init=False, default=None)
@@ -125,13 +125,13 @@ class NewTimerHour:
                 f'datetime={self.datetime_str} texts=[{self.text_before}]/[{self.text_after}])')
 
 
-class NewTimer:
-    def __init__(self, event: 'NewEvent', stored_timer: StoredTimer):
-        self.event: 'NewEvent' = event
+class Timer:
+    def __init__(self, event: 'Event', stored_timer: StoredTimer):
+        self.event: 'Event' = event
         self.stored_timer: StoredTimer = stored_timer
-        self.timer_hours_by_id: dict[int, NewTimerHour] = {}
+        self.timer_hours_by_id: dict[int, TimerHour] = {}
         self._timer_hour_uniq_ids: list[str] | None = None
-        self._timer_hours_sorted_by_order: list[NewTimerHour] | None = None
+        self._timer_hours_sorted_by_order: list[TimerHour] | None = None
         self._colors: dict[int, str] | None = None
         self._delays: dict[int, int] | None = None
         self.valid: bool = True
@@ -149,7 +149,7 @@ class NewTimer:
         return self._timer_hour_uniq_ids
 
     @property
-    def timer_hours_sorted_by_order(self) -> list[NewTimerHour]:
+    def timer_hours_sorted_by_order(self) -> list[TimerHour]:
         if self._timer_hours_sorted_by_order is None:
             self._timer_hours_sorted_by_order = sorted(
                 self.timer_hours_by_id.values(), key=lambda timer_hour: timer_hour.order)
@@ -160,9 +160,9 @@ class NewTimer:
         return self.stored_timer.uniq_id if self.stored_timer else None
 
     def _build_timer_hours(self):
-        previous_valid_timer_hour: NewTimerHour | None = None
+        previous_valid_timer_hour: TimerHour | None = None
         for stored_timer_hour in self.stored_timer.stored_timer_hours:
-            timer_hour: NewTimerHour = NewTimerHour(self, stored_timer_hour)
+            timer_hour: TimerHour = TimerHour(self, stored_timer_hour)
             self.timer_hours_by_id[timer_hour.id] = timer_hour
             if not stored_timer_hour.time_str:
                 timer_hour.error = f'L\'heure n\'est pas définie.'
@@ -236,8 +236,8 @@ class NewTimer:
              }
         return self._delays
 
-    def get_previous_timer_hour(self, timer_hour: NewTimerHour) -> NewTimerHour | None:
-        previous_timer_hour: NewTimerHour | None = None
+    def get_previous_timer_hour(self, timer_hour: TimerHour) -> TimerHour | None:
+        previous_timer_hour: TimerHour | None = None
         for th in self.timer_hours_by_id.values():
             if th.id == timer_hour.id:
                 return previous_timer_hour

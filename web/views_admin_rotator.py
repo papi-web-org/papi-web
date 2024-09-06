@@ -11,7 +11,7 @@ from litestar.contrib.htmx.response import HTMXTemplate
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.loader import EventLoader
-from data.rotator import NewRotator
+from data.rotator import Rotator
 from database.sqlite import EventDatabase
 from database.store import StoredRotator
 from web.messages import Message
@@ -30,7 +30,7 @@ class RotatorAdminWebContext(EventAdminWebContext):
             rotator_needed: bool,
     ):
         super().__init__(request, data, lazy_load, True)
-        self.admin_rotator: NewRotator | None = None
+        self.admin_rotator: Rotator | None = None
         field: str = 'admin_rotator_id'
         if field in self.data:
             try:

@@ -11,7 +11,7 @@ from requests.exceptions import ConnectionError, Timeout, RequestException
 from logging import Logger
 
 from common.config_reader import TMP_DIR
-from data.tournament import NewTournament
+from data.tournament import Tournament
 from common.logger import get_logger
 from database.papi import PapiDatabase
 from database.sqlite import EventDatabase
@@ -37,9 +37,9 @@ FEES_DIR: Path = Path('fees')
 
 
 class FFESession(Session):
-    def __init__(self, tournament: NewTournament):
+    def __init__(self, tournament: Tournament):
         super().__init__()
-        self.__tournament: NewTournament = tournament
+        self.__tournament: Tournament = tournament
         self.__init_vars: dict[str, str] | None = None
         self.__auth_vars: dict[str, str] | None = None
         self.__tournament_ffe_url: str | None = None

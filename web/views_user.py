@@ -14,12 +14,12 @@ from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 from common.exception import PapiWebException
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.event import NewEvent
-from data.family import NewFamily
+from data.event import Event
+from data.family import Family
 from data.loader import EventLoader
-from data.rotator import NewRotator
-from data.screen import NewScreen
-from data.tournament import NewTournament
+from data.rotator import Rotator
+from data.screen import Screen
+from data.tournament import Tournament
 from web.messages import Message
 from web.session import SessionHandler
 from web.views import AController, WebContext
@@ -37,7 +37,7 @@ class UserWebContext(WebContext):
         super().__init__(request, data)
         self.user_main_selector: str = ''
         self.user_event_selector: str = ''
-        self.user_event: NewEvent | None = None
+        self.user_event: Event | None = None
         if self.error:
             return
         self.user_main_selector: str = self._form_data_to_str('user_main_selector')

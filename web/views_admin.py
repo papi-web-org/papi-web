@@ -11,7 +11,7 @@ from litestar.contrib.htmx.request import HTMXRequest
 from common.exception import PapiWebException
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.event import NewEvent
+from data.event import Event
 from data.loader import EventLoader
 from database.access import access_driver, odbc_drivers
 from web.messages import Message
@@ -30,7 +30,7 @@ class AdminWebContext(WebContext):
         super().__init__(request, data)
         self._admin_main_selector: str = ''
         self.admin_event_selector: str = ''
-        self._admin_event: NewEvent | None = None
+        self._admin_event: Event | None = None
         if self.error:
             return
         self._admin_main_selector: str = self._form_data_to_str('admin_main_selector', '')
@@ -53,10 +53,10 @@ class AdminWebContext(WebContext):
         return self._admin_main_selector
 
     @property
-    def admin_event(self) -> NewEvent | None:
+    def admin_event(self) -> Event | None:
         return self._admin_event
 
-    def set_admin_event(self, event: NewEvent | None):
+    def set_admin_event(self, event: Event | None):
         self._admin_event = event
         self._admin_main_selector = event.uniq_id if event else ''
 
@@ -99,7 +99,7 @@ class AAdminController(AController):
         return options
 
     @staticmethod
-    def _get_timer_options(event: NewEvent) -> dict[str, str]:
+    def _get_timer_options(event: Event) -> dict[str, str]:
         options: dict[str, str] = {
             '': 'Pas de chronomètre',
         }

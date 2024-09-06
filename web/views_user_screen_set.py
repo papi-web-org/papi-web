@@ -14,9 +14,9 @@ from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.family import NewFamily
-from data.screen_set import NewScreenSet
-from data.tournament import NewTournament
+from data.family import Family
+from data.screen_set import ScreenSet
+from data.tournament import Tournament
 from data.util import ScreenType
 from web.session import SessionHandler
 from web.views import WebContext, AController
@@ -33,7 +33,7 @@ class ScreenSetOrFamilyUserWebContext(BasicScreenOrFamilyUserWebContext):
             lazy_load: bool,
     ):
         super().__init__(request, data, lazy_load)
-        self.screen_set: NewScreenSet | None = None
+        self.screen_set: ScreenSet | None = None
         if self.error:
             return
         if self.screen:
@@ -51,11 +51,11 @@ class UserScreenSetController(AUserController):
 
     @staticmethod
     def _user_screen_set_div_update_needed(
-            screen_set: NewScreenSet,
-            family: NewFamily,
+            screen_set: ScreenSet,
+            family: Family,
             date: float,
     ) -> bool:
-        tournament: NewTournament = screen_set.tournament if screen_set else family.tournament
+        tournament: Tournament = screen_set.tournament if screen_set else family.tournament
         if tournament.last_update > date:
             if tournament.last_update > date:
                 return True

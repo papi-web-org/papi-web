@@ -9,13 +9,13 @@ from common import format_timestamp_date_time
 from common.papi_web_config import PapiWebConfig
 
 if TYPE_CHECKING:
-    from data.event import NewEvent
-    from data.screen import NewScreen
-    from data.family import NewFamily
+    from data.event import Event
+    from data.screen import Screen
+    from data.family import Family
 
 from common.logger import get_logger
 from data.board import Board
-from data.chessevent import NewChessEvent
+from data.chessevent import ChessEvent
 from data.chessevent_tournament import ChessEventTournament
 from data.player import Player
 from data.util import Color, NeedsUpload, TournamentRating
@@ -27,9 +27,9 @@ from database.store import StoredTournament
 logger: Logger = get_logger()
 
 
-class NewTournament:
-    def __init__(self, event: 'NewEvent', stored_tournament: StoredTournament, ):
-        self.event: 'NewEvent' = event
+class Tournament:
+    def __init__(self, event: 'Event', stored_tournament: StoredTournament, ):
+        self.event: 'Event' = event
         self.stored_tournament: StoredTournament = stored_tournament
         if not stored_tournament.path:
             self.event.add_debug(
@@ -67,8 +67,8 @@ class NewTournament:
         self._unpaired_players: list[Player] | None = None
         self._papi_read = False
         self._players_by_name: list[Player] | None = None
-        self._dependent_families: list['NewFamily'] | None = None
-        self._dependent_screens: list['NewScreen'] | None = None
+        self._dependent_families: list['Family'] | None = None
+        self._dependent_screens: list['Screen'] | None = None
 
     @property
     def id(self) -> int:
@@ -135,7 +135,7 @@ class NewTournament:
         return self.stored_tournament.time_control_handicap_min_time
 
     @property
-    def chessevent(self) -> NewChessEvent | None:
+    def chessevent(self) -> ChessEvent | None:
         if self.stored_tournament.chessevent_id is None:
             return None
         return self.event.chessevents_by_id[self.stored_tournament.chessevent_id]
@@ -268,7 +268,7 @@ class NewTournament:
         return self._unpaired_players
 
     @property
-    def dependent_families(self) -> list['NewFamily']:
+    def dependent_families(self) -> list['Family']:
         if self._dependent_families is None:
             self._dependent_families = [
                 family
@@ -278,7 +278,7 @@ class NewTournament:
         return self._dependent_families
 
     @property
-    def dependent_screens(self) -> list['NewScreen']:
+    def dependent_screens(self) -> list['Screen']:
         if self._dependent_screens is None:
             self._dependent_screens = []
             for screen in self.event.basic_screens_by_id.values():

@@ -4,9 +4,9 @@ from logging import Logger
 from common.logger import get_logger, print_interactive, input_interactive
 from common.papi_web_config import PapiWebConfig
 from common.singleton import singleton
-from data.event import NewEvent
+from data.event import Event
 from data.loader import EventLoader
-from data.tournament import NewTournament
+from data.tournament import Tournament
 from data.util import NeedsUpload
 from ffe.ffe_session import FFESession
 
@@ -17,10 +17,10 @@ logger: Logger = get_logger()
 class ActionSelector:
 
     @classmethod
-    def __get_qualified_tournaments(cls, event: NewEvent) -> list[NewTournament]:
+    def __get_qualified_tournaments(cls, event: Event) -> list[Tournament]:
         if not event.tournaments_by_id:
             return []
-        tournaments: list[NewTournament] = []
+        tournaments: list[Tournament] = []
         for tournament in event.tournaments_by_id.values():
             if not tournament.ffe_id or not tournament.ffe_password:
                 logger.warning('Identifiants de connexion FFE non définis pour le tournoi [%s]', tournament.uniq_id)
@@ -29,10 +29,10 @@ class ActionSelector:
         return tournaments
 
     @classmethod
-    def __get_qualified_tournaments_with_existing_file(cls, event: NewEvent) -> list[NewTournament]:
+    def __get_qualified_tournaments_with_existing_file(cls, event: Event) -> list[Tournament]:
         if not event.tournaments_by_id:
             return []
-        tournaments: list[NewTournament] = []
+        tournaments: list[Tournament] = []
         for tournament in event.tournaments_by_id.values():
             if not tournament.ffe_id or not tournament.ffe_password:
                 logger.warning('Identifiants de connexion non définis pour le tournoi [%s]', tournament.uniq_id)
@@ -46,7 +46,7 @@ class ActionSelector:
 
     def run(self, event_uniq_id: str) -> bool:
         event_loader: EventLoader = EventLoader.get(request=None, lazy_load=True)
-        event: NewEvent = event_loader.reload_event(event_uniq_id)
+        event: Event = event_loader.reload_event(event_uniq_id)
         logger.info('Évènement : %s', event.name)
         tournaments = self.__get_qualified_tournaments(event)
         if not tournaments:
@@ -102,7 +102,7 @@ class ActionSelector:
                     if not tournaments:
                         logger.error('Aucun tournoi éligible pour cette action')
                         return True
-                    updated_tournaments: list[NewTournament] = []
+                    updated_tournaments: list[Tournament] = []
                     recently_updated_tournaments: int = 0
                     for tournament in tournaments:
                         needs_upload: NeedsUpload = tournament.ffe_upload_needed

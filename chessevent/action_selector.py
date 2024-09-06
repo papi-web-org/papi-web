@@ -12,9 +12,9 @@ from common.config_reader import TMP_DIR
 from common.logger import get_logger, print_interactive, input_interactive
 from common.singleton import singleton
 from data.chessevent_tournament import ChessEventTournament
-from data.event import NewEvent
+from data.event import Event
 from data.loader import EventLoader
-from data.tournament import NewTournament
+from data.tournament import Tournament
 from database.papi_template import create_empty_papi_database, PAPI_VERSIONS
 from ffe.ffe_session import FFESession
 
@@ -25,10 +25,10 @@ logger: Logger = get_logger()
 class ActionSelector:
 
     @classmethod
-    def __get_chessevent_tournaments(cls, event: NewEvent) -> list[NewTournament]:
+    def __get_chessevent_tournaments(cls, event: Event) -> list[Tournament]:
         if not event.tournaments_by_id:
             return []
-        tournaments: list[NewTournament] = []
+        tournaments: list[Tournament] = []
         for tournament in event.tournaments_by_id.values():
             if not tournament.chessevent_tournament_name:
                 logger.warning('Connexion à Chess Event non définie pour le tournoi [%s]', tournament.uniq_id)
@@ -41,9 +41,9 @@ class ActionSelector:
         return tournaments
 
     def run(self, event_uniq_id: str) -> bool:
-        event: NewEvent = EventLoader.get(request=None, lazy_load=False).load_event(event_uniq_id, reload=True)
+        event: Event = EventLoader.get(request=None, lazy_load=False).load_event(event_uniq_id, reload=True)
         logger.info('Évènement : %s', event.name)
-        tournaments: list[NewTournament] = self.__get_chessevent_tournaments(event)
+        tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
         if not tournaments:
             logger.error('La création des fichiers Papi n\'est possible pour aucun tournoi')
             return False
@@ -97,7 +97,7 @@ class ActionSelector:
                     chessevent_timeout: int = chessevent_timeout_min
                     while True:
                         event = EventLoader.get(request=None, lazy_load=False).load_event(event_uniq_id, reload=True)
-                        tournaments: list[NewTournament] = self.__get_chessevent_tournaments(event)
+                        tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
                         if not tournaments:
                             logger.error('Plus aucun tournoi n\'est éligible pour la création des fichiers Papi.')
                             return False

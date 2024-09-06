@@ -3,7 +3,7 @@ import time
 from litestar.contrib.htmx.request import HTMXRequest
 
 from common.papi_web_config import PapiWebConfig
-from data.event import NewEvent
+from data.event import Event
 
 
 class SessionHandler:
@@ -11,13 +11,13 @@ class SessionHandler:
     AUTH_SESSION_KEY: str = 'auth'
 
     @staticmethod
-    def store_password(request: HTMXRequest, event: NewEvent, password: str | None):
+    def store_password(request: HTMXRequest, event: Event, password: str | None):
         if 'auth' not in request.session:
             request.session['auth']: dict[str, str] = {}
         request.session['auth'][event.uniq_id] = password
 
     @staticmethod
-    def get_stored_password(request: HTMXRequest, event: NewEvent) -> str | None:
+    def get_stored_password(request: HTMXRequest, event: Event) -> str | None:
         try:
             return request.session['auth'][event.uniq_id]
         except KeyError:

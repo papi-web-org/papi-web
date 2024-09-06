@@ -5,7 +5,7 @@ from logging import Logger
 from litestar.contrib.htmx.request import HTMXRequest
 
 from common.papi_web_config import PapiWebConfig
-from data.event import NewEvent
+from data.event import Event
 from database.sqlite import EventDatabase
 from database.store import StoredEvent
 from common.logger import get_logger
@@ -20,14 +20,14 @@ class EventLoader:
         self._loaded_stored_events_by_id: dict[str, StoredEvent | None] = {}
         self._stored_events_by_id: dict[str, StoredEvent] | None = None
         self._stored_events_sorted_by_name: list[StoredEvent] | None = None
-        self._loaded_events_by_id: dict[str, NewEvent | None] = {}
-        self._events_by_id: dict[str, NewEvent] | None = None
-        self._events_sorted_by_name: list[NewEvent] | None = None
-        self._events_with_tournaments_sorted_by_name: list[NewEvent] | None = None
-        self._public_events: list[NewEvent] | None = None
-        self._passed_public_events: list[NewEvent] | None = None
-        self._current_public_events: list[NewEvent] | None = None
-        self._coming_public_events: list[NewEvent] | None = None
+        self._loaded_events_by_id: dict[str, Event | None] = {}
+        self._events_by_id: dict[str, Event] | None = None
+        self._events_sorted_by_name: list[Event] | None = None
+        self._events_with_tournaments_sorted_by_name: list[Event] | None = None
+        self._public_events: list[Event] | None = None
+        self._passed_public_events: list[Event] | None = None
+        self._current_public_events: list[Event] | None = None
+        self._coming_public_events: list[Event] | None = None
 
     @staticmethod
     def get(request: HTMXRequest | None, lazy_load: bool):
@@ -88,39 +88,39 @@ class EventLoader:
                 self.stored_events_by_id.values(), key=lambda event: event.name)
         return self._stored_events_sorted_by_name
 
-    def _load_event(self, uniq_id: str, reload: bool) -> NewEvent:
+    def _load_event(self, uniq_id: str, reload: bool) -> Event:
         if reload:
             self.clear_cache(uniq_id)
         try:
             return self._loaded_events_by_id[uniq_id]
         except KeyError:
             stored_event: StoredEvent = self.load_stored_event(uniq_id)
-            self._loaded_events_by_id[uniq_id] = NewEvent(stored_event, lazy_load=self.lazy_load)
+            self._loaded_events_by_id[uniq_id] = Event(stored_event, lazy_load=self.lazy_load)
             return self._loaded_events_by_id[uniq_id]
 
-    def load_event(self, uniq_id: str) -> NewEvent:
+    def load_event(self, uniq_id: str) -> Event:
         return self._load_event(uniq_id, reload=False)
 
-    def reload_event(self, uniq_id: str) -> NewEvent:
+    def reload_event(self, uniq_id: str) -> Event:
         return self._load_event(uniq_id, reload=True)
 
     @property
-    def events_by_id(self) -> dict[str, NewEvent]:
+    def events_by_id(self) -> dict[str, Event]:
         if self._events_by_id is None:
-            self._events_by_id: dict[str, NewEvent] = {}
+            self._events_by_id: dict[str, Event] = {}
             for uniq_id in self.event_uniq_ids:
                 self._events_by_id[uniq_id] = self.load_event(uniq_id)
         return self._events_by_id
 
     @property
-    def events_sorted_by_name(self) -> list[NewEvent]:
+    def events_sorted_by_name(self) -> list[Event]:
         if self._events_sorted_by_name is None:
             self._events_sorted_by_name = sorted(
                 self.events_by_id.values(), key=lambda event: event.name)
         return self._events_sorted_by_name
 
     @property
-    def events_with_tournaments_sorted_by_name(self) -> list[NewEvent]:
+    def events_with_tournaments_sorted_by_name(self) -> list[Event]:
         if self._events_with_tournaments_sorted_by_name is None:
             self._events_with_tournaments_sorted_by_name = [
                 event for event in self.events_sorted_by_name if event.tournaments_by_id
@@ -128,7 +128,7 @@ class EventLoader:
         return self._events_with_tournaments_sorted_by_name
 
     @property
-    def public_events(self) -> list[NewEvent]:
+    def public_events(self) -> list[Event]:
         if self._public_events is None:
             self._public_events = sorted([
                 event for event in self.events_by_id.values()
@@ -137,7 +137,7 @@ class EventLoader:
         return self._public_events
 
     @property
-    def passed_public_events(self) -> list[NewEvent]:
+    def passed_public_events(self) -> list[Event]:
         if self._passed_public_events is None:
             self._passed_public_events = sorted([
                 event for event in self.events_by_id.values()
@@ -146,7 +146,7 @@ class EventLoader:
         return self._passed_public_events
 
     @property
-    def current_public_events(self) -> list[NewEvent]:
+    def current_public_events(self) -> list[Event]:
         if self._current_public_events is None:
             self._current_public_events = sorted([
                 event for event in self.events_by_id.values()
@@ -155,7 +155,7 @@ class EventLoader:
         return self._current_public_events
 
     @property
-    def coming_public_events(self) -> list[NewEvent]:
+    def coming_public_events(self) -> list[Event]:
         if self._coming_public_events is None:
             self._coming_public_events = sorted([
                 event for event in self.events_by_id.values()

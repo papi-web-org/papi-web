@@ -11,7 +11,7 @@ from litestar.contrib.htmx.response import Reswap
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
-from data.event import NewEvent
+from data.event import Event
 from data.util import ScreenType
 from web.views import WebContext, AController
 from web.views_user import AUserController, EventUserWebContext
@@ -22,7 +22,7 @@ logger: Logger = get_logger()
 class UserEventController(AUserController):
 
     @staticmethod
-    def _user_event_page_update_needed(event: NewEvent, date: float, ) -> bool:
+    def _user_event_page_update_needed(event: Event, date: float, ) -> bool:
         if event.last_update > date:
             return True
         for screen in event.basic_screens_by_id.values():

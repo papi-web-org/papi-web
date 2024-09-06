@@ -3,24 +3,24 @@ from typing import TYPE_CHECKING
 
 from common import format_timestamp_date_time
 from common.papi_web_config import PapiWebConfig
-from data.screen import NewScreen
-from data.tournament import Tournament, NewTournament
+from data.screen import Screen
+from data.tournament import Tournament, Tournament
 from data.util import ScreenType
 from database.store import StoredFamily
 
 if TYPE_CHECKING:
-    from data.event import NewEvent
+    from data.event import Event
 
 
-class NewFamily:
+class Family:
     def __init__(
             self,
-            event: 'NewEvent',
+            event: 'Event',
             stored_family: StoredFamily,
     ):
-        self.event: 'NewEvent' = event
+        self.event: 'Event' = event
         self.stored_family: StoredFamily = stored_family
-        self.screens_by_uniq_id: dict[str, NewScreen] = {}
+        self.screens_by_uniq_id: dict[str, Screen] = {}
         self.calculated_first: int | None = None
         self.calculated_last: int | None = None
         self.calculated_number: int | None = None
@@ -60,7 +60,7 @@ class NewFamily:
         return self.stored_family.tournament_id
 
     @property
-    def tournament(self) -> NewTournament:
+    def tournament(self) -> Tournament:
         return self.event.tournaments_by_id[self.tournament_id]
 
     @property
@@ -191,7 +191,7 @@ class NewFamily:
 
     def _build_screens(self):
         for family_index in range(1, self.calculated_parts + 1):
-            screen: NewScreen = NewScreen(self.event, family=self, family_part=family_index)
+            screen: Screen = Screen(self.event, family=self, family_part=family_index)
             self.screens_by_uniq_id[screen.uniq_id] = screen
 
     @property

@@ -3,13 +3,13 @@ from logging import Logger
 from typing import TYPE_CHECKING
 
 from common.papi_web_config import PapiWebConfig
-from data.family import NewFamily
+from data.family import Family
 
 if TYPE_CHECKING:
-    from data.event import NewEvent
+    from data.event import Event
 
 from common.logger import get_logger
-from data.screen import NewScreen
+from data.screen import Screen
 from database.store import StoredRotator
 
 logger: Logger = get_logger()
@@ -18,13 +18,13 @@ logger: Logger = get_logger()
 ROTATOR_DEFAULT_DELAY: int = 15
 
 
-class NewRotator:
-    def __init__(self, event: 'NewEvent', stored_rotator: StoredRotator, ):
-        self.event: 'NewEvent' = event
+class Rotator:
+    def __init__(self, event: 'Event', stored_rotator: StoredRotator, ):
+        self.event: 'Event' = event
         self.stored_rotator: StoredRotator = stored_rotator
-        self._families: list[NewFamily] | None = None
-        self._screens: list[NewScreen] | None = None
-        self._rotating_screens: list[NewScreen] | None = None
+        self._families: list[Family] | None = None
+        self._screens: list[Screen] | None = None
+        self._rotating_screens: list[Screen] | None = None
 
     @property
     def id(self) -> int:
@@ -49,7 +49,7 @@ class NewRotator:
             else PapiWebConfig().default_rotator_show_menus
 
     @property
-    def screens(self) -> list[NewScreen]:
+    def screens(self) -> list[Screen]:
         if self._screens is None:
             self._screens = []
             if self.stored_rotator.screen_ids:
@@ -59,7 +59,7 @@ class NewRotator:
         return self._screens
 
     @property
-    def families(self) -> list[NewFamily]:
+    def families(self) -> list[Family]:
         if self._families is None:
             self._families = []
             if self.stored_rotator.family_ids:
@@ -69,7 +69,7 @@ class NewRotator:
         return self._families
 
     @property
-    def rotating_screens(self) -> list[NewScreen]:
+    def rotating_screens(self) -> list[Screen]:
         if self._rotating_screens is None:
             self._rotating_screens = [screen for screen in self.screens]
             for family in self.families:

@@ -7,12 +7,12 @@ from pathlib import Path
 from common import format_timestamp_date_time, format_timestamp_date, format_timestamp_time
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.chessevent import NewChessEvent
-from data.family import NewFamily
-from data.rotator import NewRotator
-from data.screen import NewScreen
-from data.timer import NewTimer
-from data.tournament import NewTournament
+from data.chessevent import ChessEvent
+from data.family import Family
+from data.rotator import Rotator
+from data.screen import Screen
+from data.timer import Timer
+from data.tournament import Tournament
 from data.util import ScreenType
 from database.store import StoredEvent
 
@@ -23,31 +23,31 @@ silent_event_uniq_ids: list[str] = []
 
 
 @total_ordering
-class NewEvent:
+class Event:
     def __init__(self, stored_event: StoredEvent, lazy_load: bool):
         self.stored_event: StoredEvent = stored_event
         self.lazy_load = lazy_load
-        self.chessevents_by_id: dict[int, NewChessEvent] = {}
-        self.chessevents_by_uniq_id: dict[str, NewChessEvent] = {}
-        self.tournaments_by_id: dict[int, NewTournament] = {}
-        self.tournaments_by_uniq_id: dict[str, NewTournament] = {}
-        self._tournaments_sorted_by_uniq_id: list[NewTournament] | None = None
-        self.screens_by_uniq_id: dict[str, NewScreen] = {}
-        self._screens_sorted_by_uniq_id: list[NewScreen] | None = None
-        self._screens_of_type_sorted_by_uniq_id: dict[ScreenType, list[NewScreen]] | None = None
-        self._public_screens_sorted_by_uniq_id: list[NewScreen] | None = None
-        self._public_screens_of_type_sorted_by_uniq_id: dict[ScreenType, list[NewScreen]] | None = None
-        self.basic_screens_by_id: dict[int, NewScreen] = {}
-        self.basic_screens_by_uniq_id: dict[str, NewScreen] = {}
-        self.families_by_id: dict[int, NewFamily] = {}
-        self.families_by_uniq_id: dict[str, NewFamily] = {}
-        self.family_screens_by_uniq_id: dict[str, NewScreen] = {}
-        self.rotators_by_id: dict[int, NewRotator] = {}
-        self.rotators_by_uniq_id: dict[str, NewRotator] = {}
-        self._rotators_sorted_by_uniq_id: list[NewRotator] | None = None
-        self._publics_rotators_sorted_by_uniq_id: list[NewRotator] | None = None
-        self.timers_by_id: dict[int, NewTimer] = {}
-        self.timers_by_uniq_id: dict[str, NewTimer] = {}
+        self.chessevents_by_id: dict[int, ChessEvent] = {}
+        self.chessevents_by_uniq_id: dict[str, ChessEvent] = {}
+        self.tournaments_by_id: dict[int, Tournament] = {}
+        self.tournaments_by_uniq_id: dict[str, Tournament] = {}
+        self._tournaments_sorted_by_uniq_id: list[Tournament] | None = None
+        self.screens_by_uniq_id: dict[str, Screen] = {}
+        self._screens_sorted_by_uniq_id: list[Screen] | None = None
+        self._screens_of_type_sorted_by_uniq_id: dict[ScreenType, list[Screen]] | None = None
+        self._public_screens_sorted_by_uniq_id: list[Screen] | None = None
+        self._public_screens_of_type_sorted_by_uniq_id: dict[ScreenType, list[Screen]] | None = None
+        self.basic_screens_by_id: dict[int, Screen] = {}
+        self.basic_screens_by_uniq_id: dict[str, Screen] = {}
+        self.families_by_id: dict[int, Family] = {}
+        self.families_by_uniq_id: dict[str, Family] = {}
+        self.family_screens_by_uniq_id: dict[str, Screen] = {}
+        self.rotators_by_id: dict[int, Rotator] = {}
+        self.rotators_by_uniq_id: dict[str, Rotator] = {}
+        self._rotators_sorted_by_uniq_id: list[Rotator] | None = None
+        self._publics_rotators_sorted_by_uniq_id: list[Rotator] | None = None
+        self.timers_by_id: dict[int, Timer] = {}
+        self.timers_by_uniq_id: dict[str, Timer] = {}
         self._timer_colors: dict[int, str] | None = None
         self._timer_delays: dict[int, int] | None = None
         self._infos: list[str] = []
@@ -196,21 +196,21 @@ class NewEvent:
         return self.stored_event.public
 
     @property
-    def tournaments_sorted_by_uniq_id(self) -> list[NewTournament]:
+    def tournaments_sorted_by_uniq_id(self) -> list[Tournament]:
         if self._tournaments_sorted_by_uniq_id is None:
             self._tournaments_sorted_by_uniq_id = sorted(
                 self.tournaments_by_id.values(), key=lambda tournament: tournament.uniq_id)
         return self._tournaments_sorted_by_uniq_id
 
     @property
-    def screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+    def screens_sorted_by_uniq_id(self) -> list[Screen]:
         if self._screens_sorted_by_uniq_id is None:
             self._screens_sorted_by_uniq_id = sorted(
                 self.screens_by_uniq_id.values(), key=lambda screen: screen.uniq_id)
         return self._screens_sorted_by_uniq_id
 
     @property
-    def screens_of_type_sorted_by_uniq_id(self) -> dict[ScreenType, list[NewScreen]]:
+    def screens_of_type_sorted_by_uniq_id(self) -> dict[ScreenType, list[Screen]]:
         if self._screens_of_type_sorted_by_uniq_id is None:
             self._screens_of_type_sorted_by_uniq_id = {}
             for screen in self.screens_sorted_by_uniq_id:
@@ -220,23 +220,23 @@ class NewEvent:
         return self._screens_of_type_sorted_by_uniq_id
 
     @property
-    def input_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+    def input_screens_sorted_by_uniq_id(self) -> list[Screen]:
         return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Input, [])
 
     @property
-    def boards_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+    def boards_screens_sorted_by_uniq_id(self) -> list[Screen]:
         return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Boards, [])
 
     @property
-    def players_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+    def players_screens_sorted_by_uniq_id(self) -> list[Screen]:
         return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Players, [])
 
     @property
-    def results_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+    def results_screens_sorted_by_uniq_id(self) -> list[Screen]:
         return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Results, [])
 
     @property
-    def public_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+    def public_screens_sorted_by_uniq_id(self) -> list[Screen]:
         if self._public_screens_sorted_by_uniq_id is None:
             self._public_screens_sorted_by_uniq_id = [
                 screen for screen in self.screens_by_uniq_id.values() if screen.public
@@ -244,7 +244,7 @@ class NewEvent:
         return self._public_screens_sorted_by_uniq_id
 
     @property
-    def public_screens_of_type_sorted_by_uniq_id(self) -> dict[ScreenType, list[NewScreen]]:
+    def public_screens_of_type_sorted_by_uniq_id(self) -> dict[ScreenType, list[Screen]]:
         if self._public_screens_of_type_sorted_by_uniq_id is None:
             self._public_screens_of_type_sorted_by_uniq_id = {}
             for screen in self.public_screens_sorted_by_uniq_id:
@@ -254,30 +254,30 @@ class NewEvent:
         return self._public_screens_of_type_sorted_by_uniq_id
 
     @property
-    def public_input_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+    def public_input_screens_sorted_by_uniq_id(self) -> list[Screen]:
         return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Input, [])
 
     @property
-    def public_boards_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+    def public_boards_screens_sorted_by_uniq_id(self) -> list[Screen]:
         return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Boards, [])
 
     @property
-    def public_players_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+    def public_players_screens_sorted_by_uniq_id(self) -> list[Screen]:
         return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Players, [])
 
     @property
-    def public_results_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+    def public_results_screens_sorted_by_uniq_id(self) -> list[Screen]:
         return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Results, [])
 
     @property
-    def rotators_sorted_by_uniq_id(self) -> list[NewRotator]:
+    def rotators_sorted_by_uniq_id(self) -> list[Rotator]:
         if self._rotators_sorted_by_uniq_id is None:
             self._rotators_sorted_by_uniq_id = sorted(
                 self.rotators_by_id.values(), key=lambda rotator: rotator.uniq_id)
         return self._rotators_sorted_by_uniq_id
 
     @property
-    def public_rotators_sorted_by_uniq_id(self) -> list[NewRotator]:
+    def public_rotators_sorted_by_uniq_id(self) -> list[Rotator]:
         if self._publics_rotators_sorted_by_uniq_id is None:
             self._publics_rotators_sorted_by_uniq_id = sorted(
                 [rotator for rotator in self.rotators_by_id.values() if rotator.public],
@@ -314,32 +314,32 @@ class NewEvent:
 
     def _build_chessevents(self):
         for stored_chessevent in self.stored_event.stored_chessevents:
-            chessevent: NewChessEvent = NewChessEvent(self, stored_chessevent)
+            chessevent: ChessEvent = ChessEvent(self, stored_chessevent)
             self.chessevents_by_id[chessevent.id] = chessevent
             self.chessevents_by_uniq_id[chessevent.uniq_id] = chessevent
 
     def _build_timers(self):
         for stored_timer in self.stored_event.stored_timers:
-            timer: NewTimer = NewTimer(self, stored_timer)
+            timer: Timer = Timer(self, stored_timer)
             self.timers_by_id[timer.id] = timer
             self.timers_by_uniq_id[timer.uniq_id] = timer
 
     def _build_tournaments(self):
         for stored_tournament in self.stored_event.stored_tournaments:
-            tournament: NewTournament = NewTournament(self, stored_tournament)
+            tournament: Tournament = Tournament(self, stored_tournament)
             self.tournaments_by_id[tournament.id] = tournament
             self.tournaments_by_uniq_id[tournament.uniq_id] = tournament
 
     def _build_screens(self):
         for stored_screen in self.stored_event.stored_screens:
-            screen: NewScreen = NewScreen(self, stored_screen=stored_screen)
+            screen: Screen = Screen(self, stored_screen=stored_screen)
             self.basic_screens_by_id[screen.id] = screen
             self.basic_screens_by_uniq_id[screen.uniq_id] = screen
             self.screens_by_uniq_id[screen.uniq_id] = screen
 
     def _build_families(self):
         for stored_family in self.stored_event.stored_families:
-            family: NewFamily = NewFamily(self, stored_family)
+            family: Family = Family(self, stored_family)
             self.families_by_uniq_id[stored_family.uniq_id] = family
             self.families_by_id[stored_family.id] = family
             for screen in family.screens_by_uniq_id.values():
@@ -348,14 +348,14 @@ class NewEvent:
 
     def _build_rotators(self):
         for stored_rotator in self.stored_event.stored_rotators:
-            rotator: NewRotator = NewRotator(self, stored_rotator)
+            rotator: Rotator = Rotator(self, stored_rotator)
             self.rotators_by_uniq_id[stored_rotator.uniq_id] = rotator
             self.rotators_by_id[stored_rotator.id] = rotator
 
     def _set_screen_menus(self):
-        boards_menu_screens: list[NewScreen] = []
-        input_menu_screens: list[NewScreen] = []
-        players_menu_screens: list[NewScreen] = []
+        boards_menu_screens: list[Screen] = []
+        input_menu_screens: list[Screen] = []
+        players_menu_screens: list[Screen] = []
         for screen in self.screens_by_uniq_id.values():
             if screen.menu_label:
                 match screen.type:
@@ -496,12 +496,12 @@ class NewEvent:
                 return True
         return False
 
-    def __lt__(self, other: 'NewEvent'):
+    def __lt__(self, other: 'Event'):
         # p1 < p2 calls p1.__lt__(p2)
         return self.uniq_id > other.uniq_id
 
-    def __eq__(self, other: 'NewEvent'):
+    def __eq__(self, other: 'Event'):
         # p1 == p2 calls p1.__eq__(p2)
-        if not isinstance(self, NewEvent):
+        if not isinstance(self, Event):
             return NotImplemented
         return self.uniq_id == other.uniq_id

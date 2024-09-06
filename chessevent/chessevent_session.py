@@ -4,7 +4,7 @@ from logging import Logger
 from requests import Session, Response
 from requests.exceptions import ConnectionError, Timeout, RequestException  # pylint: disable=redefined-builtin
 
-from data.tournament import NewTournament
+from data.tournament import Tournament
 from common.logger import get_logger
 
 logger: Logger = get_logger()
@@ -13,9 +13,9 @@ CHESSEVENT_URL: str = 'https://chessevent.echecs-bretagne.fr/download'
 
 
 class ChessEventSession(Session):
-    def __init__(self, tournament: NewTournament):
+    def __init__(self, tournament: Tournament):
         super().__init__()
-        self._tournament: NewTournament = tournament
+        self._tournament: Tournament = tournament
 
     def read_data(self) -> str | None:
         url: str = CHESSEVENT_URL

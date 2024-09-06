@@ -13,7 +13,7 @@ from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.timer import NewTimer, NewTimerHour
+from data.timer import Timer, TimerHour
 from data.loader import EventLoader
 from database.sqlite import EventDatabase
 from database.store import StoredTimer, StoredTimerHour
@@ -34,8 +34,8 @@ class TimerAdminWebContext(EventAdminWebContext):
             timer_hour_needed: bool,
     ):
         super().__init__(request, data, lazy_load, True)
-        self.admin_timer: NewTimer | None = None
-        self.admin_timer_hour: NewTimerHour | None = None
+        self.admin_timer: Timer | None = None
+        self.admin_timer_hour: TimerHour | None = None
         field: str = 'admin_timer_id'
         if field in self.data:
             try:
@@ -293,7 +293,7 @@ class AdminTimerController(AAdminController):
     @staticmethod
     def _admin_validate_timer_hour_update_data(
             web_context: TimerAdminWebContext,
-            previous_valid_timer_hour: NewTimerHour | None,
+            previous_valid_timer_hour: TimerHour | None,
             data: dict[str, str] | None = None,
     ) -> StoredTimerHour:
         errors: dict[str, str] = {}

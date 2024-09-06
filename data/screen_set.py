@@ -1,33 +1,28 @@
-import json
 import math
-from pathlib import Path
-from logging import Logger
-from dataclasses import dataclass, field
-from itertools import chain, islice
 from collections.abc import Iterable
-
+from itertools import chain
+from logging import Logger
 from typing import Any, TYPE_CHECKING
 
 from common import format_timestamp_date_time
-from common.config_reader import ConfigReader, TMP_DIR
 from common.logger import get_logger
 from data.board import Board
 from data.player import Player
-from data.tournament import Tournament, NewTournament
-from data.util import ScreenType, batched
+from data.tournament import Tournament
+from data.util import ScreenType
 from database.store import StoredScreenSet
 
 if TYPE_CHECKING:
-    from data.event import NewEvent
-    from data.screen import NewScreen
+    from data.event import Event
+    from data.screen import Screen
 
 logger: Logger = get_logger()
 
 
-class NewScreenSet:
+class ScreenSet:
     def __init__(
             self,
-            screen: 'NewScreen',
+            screen: 'Screen',
             stored_screen_set: StoredScreenSet | None = None,
             family: 'NewFamily | None' = None,
             family_part: int | None = None,
@@ -38,7 +33,7 @@ class NewScreenSet:
         else:
             assert family is None and family_part is None, \
                    f'screen_set={stored_screen_set}, family={family}, family_part={family_part}'
-        self.screen: 'NewScreen' = screen
+        self.screen: 'Screen' = screen
         self.stored_screen_set: StoredScreenSet | None = stored_screen_set
         self.family: 'NewFamily | None' = family
         self.family_part: int | None = family_part
@@ -95,7 +90,7 @@ class NewScreenSet:
         return self.stored_screen_set.order if self.stored_screen_set else None
 
     @property
-    def event(self) -> 'NewEvent':
+    def event(self) -> 'Event':
         return self.screen.event
 
     @property
@@ -103,7 +98,7 @@ class NewScreenSet:
         return self.stored_screen_set.tournament_id if self.stored_screen_set else self.family.tournament_id
 
     @property
-    def tournament(self) -> NewTournament:
+    def tournament(self) -> Tournament:
         return self.event.tournaments_by_id[self.tournament_id]
 
     @property

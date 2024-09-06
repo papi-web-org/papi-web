@@ -10,9 +10,9 @@ from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.screen import NewScreen
-from data.screen_set import NewScreenSet
-from data.event import NewEvent
+from data.screen import Screen
+from data.screen_set import ScreenSet
+from data.event import Event
 from data.loader import EventLoader
 from data.util import ScreenType
 from database.sqlite import EventDatabase
@@ -34,8 +34,8 @@ class ScreenAdminWebContext(EventAdminWebContext):
             screen_set_needed: bool,
     ):
         super().__init__(request, data, lazy_load, True)
-        self.admin_screen: NewScreen | None = None
-        self.admin_screen_set: NewScreenSet | None = None
+        self.admin_screen: Screen | None = None
+        self.admin_screen_set: ScreenSet | None = None
         field: str = 'admin_screen_id'
         if field in self.data:
             try:
@@ -401,7 +401,7 @@ class AdminScreenController(AAdminController):
         )
 
     @staticmethod
-    def _get_tournament_options(admin_event: NewEvent) -> dict[str, str]:
+    def _get_tournament_options(admin_event: Event) -> dict[str, str]:
         options: dict[str, str] = {}
         for tournament in admin_event.tournaments_by_id.values():
             options[str(tournament.id)] = f'{tournament.name} ({tournament.filename})'

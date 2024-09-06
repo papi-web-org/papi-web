@@ -7,24 +7,24 @@ from common import format_timestamp_date_time
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.result import Result
-from data.screen_set import NewScreenSet
-from data.timer import NewTimer
+from data.screen_set import ScreenSet
+from data.timer import Timer
 from data.util import ScreenType
 from database.sqlite import EventDatabase
 from database.store import StoredScreen
 
 if TYPE_CHECKING:
-    from data.event import NewEvent
+    from data.event import Event
 
 logger: Logger = get_logger()
 
 DEFAULT_SHOW_UNPAIRED: bool = False
 
 
-class NewScreen:
+class Screen:
     def __init__(
             self,
-            event: 'NewEvent',
+            event: 'Event',
             stored_screen: StoredScreen | None = None,
             family: 'NewFamily | None' = None,
             family_part: int | None = None,
@@ -35,14 +35,14 @@ class NewScreen:
         else:
             assert family is None and family_part is None, \
                    f'screen={stored_screen}, family={family}, family_part={family_part}'
-        self.event: 'NewEvent' = event
+        self.event: 'Event' = event
         self.stored_screen: StoredScreen | None = stored_screen
         self.menu_screens: list[Self] = []
         self.family: 'NewFamily | None' = family
         self.family_part: int | None = family_part
-        self.screen_sets_by_id: dict[int, NewScreenSet] = {}
-        self._screen_sets_by_uniq_id: dict[int, NewScreenSet] | None = None
-        self._screen_sets_sorted_by_order: list[NewScreenSet] | None = None
+        self.screen_sets_by_id: dict[int, ScreenSet] = {}
+        self._screen_sets_by_uniq_id: dict[int, ScreenSet] | None = None
+        self._screen_sets_sorted_by_order: list[ScreenSet] | None = None
         self._results_limit: int | None = None
         self._results_tournament_ids: list[int] | None = None
         self._results: list[Result] | None = None
@@ -53,10 +53,10 @@ class NewScreen:
             case ScreenType.Boards | ScreenType.Input | ScreenType.Players:
                 if self.stored_screen:
                     for stored_screen_set in self.stored_screen.stored_screen_sets:
-                        screen_set: NewScreenSet = NewScreenSet(self, stored_screen_set=stored_screen_set)
+                        screen_set: ScreenSet = ScreenSet(self, stored_screen_set=stored_screen_set)
                         self.screen_sets_by_id[screen_set.id] = screen_set
                 else:
-                    screen_set: NewScreenSet = NewScreenSet(self, family=self.family, family_part=self.family_part)
+                    screen_set: ScreenSet = ScreenSet(self, family=self.family, family_part=self.family_part)
                     self.screen_sets_by_id[screen_set.id] = screen_set
             case ScreenType.Results:
                 pass
@@ -115,7 +115,7 @@ class NewScreen:
                 menu_text: str = self.stored_screen.menu_text if self.stored_screen else self.family.menu_text
                 if menu_text is None:
                     return None
-                screen_set: NewScreenSet = self.screen_sets_sorted_by_order[0]
+                screen_set: ScreenSet = self.screen_sets_sorted_by_order[0]
                 text: str = menu_text.replace('%t', screen_set.tournament.name)
                 if screen_set.tournament.current_round:
                     if '%f' in text:
@@ -134,7 +134,7 @@ class NewScreen:
                 menu_text: str = self.stored_screen.menu_text if self.stored_screen else self.family.menu_text
                 if menu_text is None:
                     return None
-                screen_set: NewScreenSet = self.screen_sets_sorted_by_order[0]
+                screen_set: ScreenSet = self.screen_sets_sorted_by_order[0]
                 text: str = menu_text.replace('%t', screen_set.tournament.name)
                 if screen_set.first_player_by_name:
                     text = text.replace(
@@ -153,12 +153,12 @@ class NewScreen:
         return self.stored_screen.menu if self.stored_screen else self.family.menu
 
     @property
-    def timer(self) -> NewTimer | None:
+    def timer(self) -> Timer | None:
         timer_id: int | None = self.stored_screen.timer_id if self.stored_screen else self.family.timer_id
         return self.event.timers_by_id[timer_id] if timer_id else None
 
     @property
-    def screen_sets_by_uniq_id(self) -> dict[str, NewScreenSet]:
+    def screen_sets_by_uniq_id(self) -> dict[str, ScreenSet]:
         if self._screen_sets_by_uniq_id is None:
             self._screen_sets_by_uniq_id = {
                 screen_set.uniq_id: screen_set for screen_set in self.screen_sets_by_id.values()
@@ -166,7 +166,7 @@ class NewScreen:
         return self._screen_sets_by_uniq_id
 
     @property
-    def screen_sets_sorted_by_order(self) -> list[NewScreenSet]:
+    def screen_sets_sorted_by_order(self) -> list[ScreenSet]:
         if self._screen_sets_sorted_by_order is None:
             self._screen_sets_sorted_by_order = sorted(
                 self.screen_sets_by_id.values(), key=lambda screen_set: screen_set.order)

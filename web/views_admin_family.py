@@ -10,8 +10,8 @@ from litestar.contrib.htmx.response import HTMXTemplate
 
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.family import NewFamily
-from data.event import NewEvent
+from data.family import Family
+from data.event import Event
 from data.loader import EventLoader
 from data.util import ScreenType
 from database.sqlite import EventDatabase
@@ -32,7 +32,7 @@ class FamilyAdminWebContext(EventAdminWebContext):
             family_needed: bool,
     ):
         super().__init__(request, data, lazy_load, True)
-        self.admin_family: NewFamily | None = None
+        self.admin_family: Family | None = None
         field: str = 'admin_family_id'
         if field in self.data:
             try:
@@ -212,7 +212,7 @@ class AdminFamilyController(AAdminController):
         )
 
     @staticmethod
-    def _get_tournament_options(admin_event: NewEvent) -> dict[str, str]:
+    def _get_tournament_options(admin_event: Event) -> dict[str, str]:
         options: dict[str, str] = {
         }
         for tournament in admin_event.tournaments_by_id.values():

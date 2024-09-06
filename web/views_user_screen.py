@@ -13,10 +13,10 @@ from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.family import NewFamily
-from data.rotator import NewRotator
-from data.screen import NewScreen
-from data.tournament import NewTournament
+from data.family import Family
+from data.rotator import Rotator
+from data.screen import Screen
+from data.tournament import Tournament
 from data.util import ScreenType
 from web.messages import Message
 from web.session import SessionHandler
@@ -34,8 +34,8 @@ class ScreenOrRotatorUserWebContext(EventUserWebContext):
             load_rotator: bool,
     ):
         super().__init__(request, data, lazy_load)
-        self.screen: NewScreen | None = None
-        self.rotator: NewRotator | None = None
+        self.screen: Screen | None = None
+        self.rotator: Rotator | None = None
         self.rotator_screen_index: int = 0
         if self.error:
             return
@@ -93,7 +93,7 @@ class BasicScreenOrFamilyUserWebContext(ScreenUserWebContext):
             lazy_load: bool,
     ):
         super().__init__(request, data, lazy_load)
-        self.family: NewFamily | None = None
+        self.family: Family | None = None
         if self.error:
             return
         if ':' in self.screen.uniq_id:
@@ -211,7 +211,7 @@ class UserScreenController(AUserController):
                         else web_context.screen.event.tournaments_by_id.keys()
                     for tournament_id in results_tournament_ids:
                         with suppress(KeyError):
-                            tournament: NewTournament = web_context.screen.event.tournaments_by_id[tournament_id]
+                            tournament: Tournament = web_context.screen.event.tournaments_by_id[tournament_id]
                             if tournament.last_update > date:
                                 return True
                             if tournament.last_result_update > date:

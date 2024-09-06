@@ -11,8 +11,8 @@ from litestar.contrib.htmx.response import HTMXTemplate
 
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.tournament import NewTournament
-from data.event import NewEvent
+from data.tournament import Tournament
+from data.event import Event
 from data.loader import EventLoader
 from database.sqlite import EventDatabase
 from database.store import StoredTournament
@@ -32,7 +32,7 @@ class TournamentAdminWebContext(EventAdminWebContext):
             tournament_needed: bool,
     ):
         super().__init__(request, data, lazy_load, True)
-        self.admin_tournament: NewTournament | None = None
+        self.admin_tournament: Tournament | None = None
         field: str = 'admin_tournament_id'
         if field in self.data:
             try:
@@ -152,7 +152,7 @@ class AdminTournamentController(AAdminController):
         )
 
     @staticmethod
-    def _get_chessevent_options(admin_event: NewEvent) -> dict[str, str]:
+    def _get_chessevent_options(admin_event: Event) -> dict[str, str]:
         options: dict[str, str] = {
             '': 'Pas de connexion à ChessEvent',
         }

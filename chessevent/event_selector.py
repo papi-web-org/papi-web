@@ -4,7 +4,7 @@ from logging import Logger
 from chessevent.action_selector import ActionSelector
 from common.singleton import singleton
 from common.logger import get_logger, print_interactive, input_interactive
-from data.event import NewEvent
+from data.event import Event
 from data.loader import EventLoader
 
 logger: Logger = get_logger()
@@ -17,7 +17,7 @@ class EventSelector:
 
     @staticmethod
     def run() -> bool:
-        events: List[NewEvent] = EventLoader.get(request=None, lazy_load=True).events_sorted_by_name
+        events: List[Event] = EventLoader.get(request=None, lazy_load=True).events_sorted_by_name
         if not events:
             logger.error('Aucun évènement trouvé')
             return False
@@ -30,7 +30,7 @@ class EventSelector:
             print_interactive('Veuillez entrer le numéro de votre évènement :')
             event_range = range(1, len(events) + 1)
             for num in event_range:
-                event: NewEvent = events[num - 1]
+                event: Event = events[num - 1]
                 print_interactive(f'  - [{num}] {event.name} ({event.uniq_id}.ini)')
             print_interactive('  - [Q] Quitter')
             while event_num is None:
@@ -43,7 +43,7 @@ class EventSelector:
                         event_num = None
                 except ValueError:
                     pass
-        event: NewEvent = events[event_num - 1]
+        event: Event = events[event_num - 1]
         while ActionSelector().run(event.uniq_id):
             pass
         return True

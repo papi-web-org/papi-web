@@ -19,7 +19,7 @@ from common.logger import get_logger
 from data.board import Board
 from data.loader import EventLoader
 from data.player import Player
-from data.tournament import NewTournament
+from data.tournament import Tournament
 from data.util import Result
 from web.messages import Message
 from web.session import SessionHandler
@@ -37,7 +37,7 @@ class TournamentUserWebContext(ScreenUserWebContext):
             tournament_started: bool | None,
     ):
         super().__init__(request, data, tournament_started is None)
-        self.tournament: NewTournament | None = None
+        self.tournament: Tournament | None = None
         if self.error:
             return
         field: str = 'tournament_id'
@@ -47,7 +47,7 @@ class TournamentUserWebContext(ScreenUserWebContext):
             self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
             return
         try:
-            self.tournament: NewTournament = self.user_event.tournaments_by_id[tournament_id]
+            self.tournament: Tournament = self.user_event.tournaments_by_id[tournament_id]
         except KeyError:
             self._redirect_error(f'Le tournoi [{tournament_id}] n\'existe pas.')
             return
