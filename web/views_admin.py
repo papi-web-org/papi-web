@@ -1,12 +1,12 @@
 from logging import Logger
 from typing import Annotated
 
-from litestar import post, get
+from litestar import post
+from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
-from litestar.contrib.htmx.request import HTMXRequest
 
 from common.exception import PapiWebException
 from common.logger import get_logger

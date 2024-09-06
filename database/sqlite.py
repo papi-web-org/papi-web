@@ -14,13 +14,13 @@ from typing import Self, Any
 import yaml
 from packaging.version import Version
 
-from common import format_timestamp_date, format_timestamp_date_time, format_timestamp_time
+from common import format_timestamp_date, format_timestamp_time
 from common.exception import PapiWebException
-from data.util import Result as UtilResult
-from data.result import Result as DataResult
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.board import Board
+from data.result import Result as DataResult
+from data.util import Result as UtilResult
 from database.store import StoredTournament, StoredEvent, StoredChessEvent, StoredTimer, StoredTimerHour, \
     StoredFamily, StoredIllegalMove, StoredResult, StoredRotator, StoredScreenSet, StoredScreen, StoredSkippedRound
 

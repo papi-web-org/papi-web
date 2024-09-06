@@ -1,25 +1,20 @@
 import time
-
 from logging import Logger
 from typing import Annotated
 
-from litestar import get, post
+from litestar import post
+from litestar.contrib.htmx.request import HTMXRequest
+from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
-from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 
 from common.exception import PapiWebException
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.event import Event
-from data.family import Family
 from data.loader import EventLoader
-from data.rotator import Rotator
-from data.screen import Screen
-from data.tournament import Tournament
 from web.messages import Message
 from web.session import SessionHandler
 from web.views import AController, WebContext
@@ -214,7 +209,7 @@ class UserIndexController(AUserController):
     )
     async def htmx_user_render_index(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED),],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         web_context: UserWebContext = UserWebContext(request, data, True, False)
         return self._user_render_index(web_context)

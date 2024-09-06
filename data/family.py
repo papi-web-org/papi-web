@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from common import format_timestamp_date_time
 from common.papi_web_config import PapiWebConfig
 from data.screen import Screen
-from data.tournament import Tournament, Tournament
+from data.tournament import Tournament
 from data.util import ScreenType
 from database.store import StoredFamily
 
