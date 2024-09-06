@@ -1,200 +1,50 @@
-<div class="row">
-    <div class="col">
-        <h1>
-            Évènements
-        </h1>
+{% extends 'cards_container.html' %}
+{% from 'macros.j2' import tooltip_attributes %}
+
+{% block cards_container_title %}
+    <i class="{{ nav_tab.icon_class }}"></i> {{ nav_tab.title }}
+{% endblock %}
+
+{% block cards_container_right_buttons %}
+    <button
+            class="btn btn-primary text-nowrap"
+            hx-post="{{ url_for('admin-update-header') }}"
+            hx-vals='{}'
+            hx-swap="multi:#admin-header,#admin-content"
+            hx-indicator="#please-wait"
+    >
+        <i class="bi-arrow-clockwise"></i>
+    </button>
+    <button
+            class="btn btn-primary text-nowrap"
+            hx-post="{{ url_for('admin-event-render-edit-modal') }}"
+            hx-vals='{"action": "create"}'
+            hx-target="#admin-modal-container"
+            hx-swap="innerHTML"
+            data-bs-toggle="modal"
+            data-bs-target="#admin-modal-container"
+            hx-indicator="#please-wait">
+        <i class="bi-plus-square-fill"></i> Créer un évènement
+    </button>
+{% endblock %}
+
+{% block cards_container_cards %}
+    <div class="row">
+        {% if nav_tab.events %}
+            {% for event in nav_tab.events %}
+                {% with
+                    card_url=url_for('admin-render'),
+                    card_payload='{"admin_main_selector": "' ~ event.uniq_id ~ '"}',
+                    card_class=nav_tab.class
+                %}
+                    {% include 'admin_event_card.html' %}
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            <div class="col-12 mb-3">
+                {{ nav_tab.empty_str }}
+            </div>
+        {% endif %}
     </div>
-    <div class="col-1 d-flex justify-content-end text-nowrap">
-        <h1>
-            <button
-                    class="btn btn-primary text-nowrap"
-                    hx-post="{{ url_for('admin-update-header') }}"
-                    hx-vals='{}'
-                    hx-swap="multi:#admin-header,#admin-content"
-                    hx-indicator="#please-wait"
-            >
-                <i class="bi-arrow-clockwise"></i>
-            </button>
-            <button
-                    class="btn btn-primary text-nowrap"
-                    hx-post="{{ url_for('admin-event-render-edit-modal') }}"
-                    hx-vals='{"action": "create"}'
-                    hx-target="#admin-modal-container"
-                    hx-swap="innerHTML"
-                    data-bs-toggle="modal"
-                    data-bs-target="#admin-modal-container"
-                    hx-indicator="#please-wait">
-                <i class="bi-plus-square-fill"></i> Créer un évènement
-            </button>
-        </h1>
-    </div>
-</div>
-<table class="table table-striped table-sm table-hover border-black bg-light">
-    <thead class="table-dark position-sticky top-0 z-2">
-        <tr>
-            <th scope="col" colspan="2" class="text-nowrap">[Id] / Nom</th>
-            <th scope="col" colspan="3" class="text-nowrap">Évènement</th>
-            <th scope="col" colspan="3" class="text-nowrap">Affichage</th>
-            <th scope="col" colspan="3" class="text-nowrap"><i class="bi-chat-fill" ></i>&nbsp;Messages</th>
-            <th scope="col" class="">&nbsp;</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% with events=event_loader.events_sorted_by_name %}
-            {% if events|length > 0 %}
-                {% for event in events %}
-                    <tr>
-                        <td
-                                class=""
-                                role="button"
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
-                                hx-swap="multi:#admin-header,#admin-content"
-                                hx-indicator="#please-wait">
-                            <div class="fw-bold">
-                                {% if event.public %}
-                                    <span class="text-success">
-                                        <i class="bi-unlock-fill fs-3"></i>
-                                    </span>
-                                {% else %}
-                                    <span class="text-danger">
-                                        <i class="bi-lock-fill fs-3"></i>
-                                    </span>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td
-                                class="w-25"
-                                role="button"
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
-                                hx-swap="multi:#admin-header,#admin-content"
-                                hx-indicator="#please-wait">
-                            <div class="fw-bold">
-                                <span class="text-nowrap">[{{ event.uniq_id }}]</span>
-                                <span class="text-nowrap fw-bold">
-                                    {{ event.name }}
-                                </span>
-                            </div>
-                        </td>
-                        <td
-                                class="text-nowrap"
-                                role="button"
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
-                                hx-swap="multi:#admin-header,#admin-content"
-                                hx-indicator="#please-wait">
-                            <div>
-                                <i class="bi-people-fill" ></i>
-                                {{ event.tournaments_by_id|length }} tournoi{% if event.tournaments_by_id|length > 1 %}s{% endif %}
-                            </div>
-                        </td>
-                        <td
-                                class="text-nowrap"
-                                role="button"
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
-                                hx-swap="multi:#admin-header,#admin-content"
-                                hx-indicator="#please-wait">
-                            <div>
-                                <i class="bi-download" ></i>
-                                {{ event.chessevents_by_id|length }} connexion{% if event.chessevents_by_id|length > 1 %}s{% endif %} ChessEvent
-                            </div>
-                        </td>
-                        <td
-                                class="text-nowrap w-25"
-                                role="button"
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
-                                hx-swap="multi:#admin-header,#admin-content"
-                                hx-indicator="#please-wait">
-                            <div>
-                                <i class="bi-clock-fill" ></i>
-                                {{ event.timers_by_id|length }} chronomètre{% if event.timers_by_id|length > 1 %}s{% endif %}
-                            </div>
-                        </td>
-                        <td
-                                class="text-nowrap"
-                                role="button"
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
-                                hx-swap="multi:#admin-header,#admin-content"
-                                hx-indicator="#please-wait">
-                            <div>
-                                <i class="bi-fullscreen" ></i>
-                                {{ event.basic_screens_by_id|length }} écran{% if event.basic_screens_by_id|length > 1 %}s{% endif %}
-                            </div>
-                        </td>
-                        <td
-                                class="text-nowrap"
-                                role="button"
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
-                                hx-swap="multi:#admin-header,#admin-content"
-                                hx-indicator="#please-wait">
-                            <div>
-                                <i class="bi-arrows-fullscreen" ></i>
-                                {{ event.families_by_id|length }} famille{% if event.families_by_id|length > 1 %}s{% endif %}
-                            </div>
-                        </td>
-                        <td
-                                class="text-nowrap w-25"
-                                role="button"
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
-                                hx-swap="multi:#admin-header,#admin-content"
-                                hx-indicator="#please-wait">
-                            <div>
-                                <i class="bi-repeat" ></i>
-                                {{ event.rotators_by_id|length }} écran{% if event.rotators_by_id|length > 1 %}s{% endif %} rotatif{% if event.rotators_by_id|length > 1 %}s{% endif %}
-                            </div>
-                        </td>
-                        <td
-                                class="text-nowrap"
-                                role="button"
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
-                                hx-swap="multi:#admin-header,#admin-content"
-                                hx-indicator="#please-wait">
-                            <div>
-                                <i class="bi-bug" ></i>&nbsp;{{ event.errors|length }} erreur{% if event.errors|length > 1 %}s{% endif %}
-                            </div>
-                        </td>
-                        <td
-                                class="text-nowrap"
-                                role="button"
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
-                                hx-swap="multi:#admin-header,#admin-content"
-                                hx-indicator="#please-wait">
-                            <div>
-                                <i class="bi-exclamation-triangle" ></i>&nbsp;{{ event.warnings|length }} avertissement{% if event.warnings|length > 1 %}s{% endif %}
-                            </div>
-                        </td>
-                        <td
-                                class="text-nowrap w-25"
-                                role="button"
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ event.uniq_id }}"}'
-                                hx-swap="multi:#admin-header,#admin-content"
-                                hx-indicator="#please-wait">
-                            <div>
-                                <i class="bi-info-circle" ></i>&nbsp;{{ event.infos|length }} information{% if event.infos|length > 1 %}s{% endif %}
-                            </div>
-                        </td>
-                        <td class="text-nowrap text-end w-25">
-                        </td>
-                    </tr>
-                {% endfor %}
-            {% else %}
-                <tr>
-                    <td
-                            colspan="12"
-                            class="text-nowrap fst-italic" >
-                        Aucun évènement trouvé.
-                    </td>
-                </tr>
-            {% endif %}
-        {% endwith %}
-    </tbody>
-</table>
+{% endblock %}
+

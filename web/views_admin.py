@@ -60,6 +60,10 @@ class AdminWebContext(WebContext):
         self._admin_event = event
         self._admin_main_selector = event.uniq_id if event else ''
 
+    def set_admin_main_selector(self, admin_main_selector: str):
+        self._admin_event = None
+        self._admin_main_selector = admin_main_selector
+
 
 class AAdminController(AController):
 
@@ -121,6 +125,7 @@ class AAdminController(AController):
     def _admin_render_index(
             web_context: AdminWebContext,
     ) -> Template:
+        event_loader: EventLoader = EventLoader.get(request=web_context.request, lazy_load=True)
         nav_tabs: dict[str, dict[str]]
         if web_context.admin_event:
             nav_tabs = {
@@ -155,24 +160,51 @@ class AAdminController(AController):
             }
         else:
             nav_tabs = {
-                '': {
-                    'title': 'Évènements',
-                    'template': 'admin_event_list.html',
+                '@current_events': {
+                    'title': f'Évènements en cours ({len(event_loader.current_events) or "-"})',
+                    'events': event_loader.current_events,
+                    'disabled': not event_loader.current_events,
+                    'empty_str': 'Aucun évènement en cours.',
+                    'class': 'bg-primary-subtle',
+                    'icon_class': 'bi-calendar',
+                },
+                '@coming_events': {
+                    'title': f'Évènements à venir ({len(event_loader.coming_events) or "-"})',
+                    'events': event_loader.coming_events,
+                    'disabled': not event_loader.coming_events,
+                    'empty_str': 'Aucun évènement à venir.',
+                    'class': 'bg-info-subtle',
+                    'icon_class': 'bi-calendar-check',
+                },
+                '@passed_events': {
+                    'title': f'Évènements passés ({len(event_loader.passed_events) or "-"})',
+                    'events': event_loader.passed_events,
+                    'disabled': not event_loader.passed_events,
+                    'empty_str': 'Aucun évènement passé.',
+                    'class': 'bg-secondary-subtle',
+                    'icon_class': 'bi-calendar-minus',
                 },
                 '@config': {
                     'title': 'Configuration Papi-web',
                     'template': 'admin_config.html',
+                    'disabled': False,
                 },
             }
+            if not web_context.admin_main_selector or nav_tabs[web_context.admin_main_selector]['disabled']:
+                web_context.set_admin_main_selector(list(nav_tabs.keys())[0])
+            for nav_index in range(len(nav_tabs)):
+                if web_context.admin_main_selector == list(nav_tabs.keys())[nav_index] \
+                        and nav_tabs[web_context.admin_main_selector]['disabled']:
+                    web_context.set_admin_main_selector(list(nav_tabs.keys())[(nav_index + 1) % len(nav_tabs)])
         return HTMXTemplate(
             template_name="admin.html",
             context={
                 'papi_web_config': PapiWebConfig(),
                 'odbc_drivers': odbc_drivers(),
                 'access_driver': access_driver(),
-                'event_loader': EventLoader.get(request=web_context.request, lazy_load=True),
                 'messages': Message.messages(web_context.request),
                 'nav_tabs': nav_tabs,
+                'event_loader': event_loader,
                 'admin_main_selector': web_context.admin_main_selector,
                 'admin_event': web_context.admin_event,
                 'admin_event_selector': web_context.admin_event_selector,
@@ -191,7 +223,7 @@ class AAdminController(AController):
 
 
 class AdminIndexController(AAdminController):
-    @get(
+    @post(
         path='/admin-render',
         name='admin-render'
     )

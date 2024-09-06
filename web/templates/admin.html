@@ -46,6 +46,9 @@
                                     aria-controls="nav-{{ nav_id }}"
                                     aria-selected="true"
                                     hx-indicator="#please-wait"
+                                    {% if nav_tab.disabled %}
+                                        disabled
+                                    {% endif %}
                             >{{ nav_tab.title }}</button>
                         {% endwith %}
                     {% endfor %}
@@ -72,7 +75,11 @@
                         tabindex="0"
                 >
                     {% if active %}
-                        {% include nav_tab.template %}
+                        {% if nav_tab.template %}
+                            {% include nav_tab.template %}
+                        {% else %}
+                            {% include 'admin_event_list.html' %}
+                        {% endif %}
                     {% endif %}
                 </div>
             {% endwith %}

@@ -1,5 +1,11 @@
 <div class="col-lg-{{ 12 // admin_columns }} mb-3 d-flex align-items-stretch">
-    <div class="card {{ card_class }} p-1 w-100" >
+    <div
+            class="card btn p-1 w-100 {{ card_class }}"
+            hx-post="{{ card_url }}"
+            hx-vals="{{ card_payload }}"
+            hx-target="body"
+            hx-indicator="#please-wait"
+    >
         <div class="card-header fw-bold text-center">
             {% block card_header %}
                 CARD_HEADER

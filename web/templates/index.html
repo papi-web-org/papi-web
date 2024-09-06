@@ -37,7 +37,8 @@
                     </tbody>
                 </table>
                 <button
-                        hx-get="{{ url_for('user-render') }}"
+                        hx-post="{{ url_for('user-render') }}"
+                        hx-vals="{}"
                         hx-target="body"
                         hx-indicator="#please-wait"
                         class="btn btn-primary btn-lg p-4 w-100"
@@ -56,7 +57,8 @@
                         {% endif %}
                 >
                     <button
-                            hx-get="{{ url_for('admin-render') }}"
+                            hx-post="{{ url_for('admin-render') }}"
+                            hx-vals="{}"
                             hx-target="body"
                             hx-indicator="#please-wait"
                             class="btn btn-danger btn-lg p-1 w-100"

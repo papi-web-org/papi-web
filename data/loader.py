@@ -25,6 +25,9 @@ class EventLoader:
         self._events_sorted_by_name: list[Event] | None = None
         self._events_with_tournaments_sorted_by_name: list[Event] | None = None
         self._public_events: list[Event] | None = None
+        self._passed_events: list[Event] | None = None
+        self._current_events: list[Event] | None = None
+        self._coming_events: list[Event] | None = None
         self._passed_public_events: list[Event] | None = None
         self._current_public_events: list[Event] | None = None
         self._coming_public_events: list[Event] | None = None
@@ -126,6 +129,33 @@ class EventLoader:
                 event for event in self.events_sorted_by_name if event.tournaments_by_id
             ]
         return self._events_with_tournaments_sorted_by_name
+
+    @property
+    def passed_events(self) -> list[Event]:
+        if self._passed_events is None:
+            self._passed_events = sorted([
+                event for event in self.events_by_id.values()
+                if event.stop < time.time()
+            ], key=lambda event: (-event.stop, -event.start, event.name))
+        return self._passed_events
+
+    @property
+    def current_events(self) -> list[Event]:
+        if self._current_events is None:
+            self._current_events = sorted([
+                event for event in self.events_by_id.values()
+                if event.start < time.time() < event.stop
+            ], key=lambda event: (-event.stop, -event.start, event.name))
+        return self._current_events
+
+    @property
+    def coming_events(self) -> list[Event]:
+        if self._coming_events is None:
+            self._coming_events = sorted([
+                event for event in self.events_by_id.values()
+                if event.public and time.time() < event.start
+            ], key=lambda event: (-event.stop, -event.start, event.name))
+        return self._coming_events
 
     @property
     def public_events(self) -> list[Event]:

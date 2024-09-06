@@ -208,12 +208,15 @@ class UserIndexController(AUserController):
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
 
-    @get(
+    @post(
         path='/user-render',
         name='user-render',
     )
-    async def htmx_user_render_index(self, request: HTMXRequest) -> Template:
-        web_context: UserWebContext = UserWebContext(request, {}, True, False)
+    async def htmx_user_render_index(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED),],
+    ) -> Template:
+        web_context: UserWebContext = UserWebContext(request, data, True, False)
         return self._user_render_index(web_context)
 
     @post(
