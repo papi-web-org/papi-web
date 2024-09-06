@@ -157,6 +157,13 @@ class IndexController(AController):
             template_name="index.html",
             context={
                 'papi_web_config': PapiWebConfig(),
-                'messages': Message.messages(request),
                 'admin_auth': web_context.admin_auth,
+                'messages': Message.messages(request),
             })
+
+    @get(
+        path='/favicon.ico',
+        name='favicon'
+    )
+    async def favicon(self, request: HTMXRequest, ) -> Redirect:
+        return Redirect(request.app.route_reverse('static', file_path='/images/papi-web.ico'))

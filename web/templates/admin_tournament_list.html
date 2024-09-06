@@ -38,7 +38,7 @@
     <div class="row">
         {% if admin_event.tournaments_by_uniq_id %}
             {% for tournament in admin_event.tournaments_by_uniq_id.values() %}
-                {% with card_class='bg-info-subtle' %}
+                {% with card_class='bg-light' %}
                     {% include 'admin_tournament_card.html' %}
                 {% endwith %}
             {% endfor %}

@@ -180,6 +180,7 @@ class AdminTimerController(AAdminController):
             re_target='#admin-modal-container',
             context={
                 'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'action': action,
                 'admin_main_selector': web_context.admin_main_selector,
                 'admin_event_selector': web_context.admin_event_selector,
@@ -390,6 +391,7 @@ class AdminTimerController(AAdminController):
             re_target='#admin-modal-container',
             context={
                 'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'admin_main_selector': web_context.admin_main_selector,
                 'admin_event_selector': web_context.admin_event_selector,
                 'admin_event': web_context.admin_event,

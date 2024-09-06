@@ -144,6 +144,7 @@ class UserScreenController(AUserController):
             template_name="user_screen.html",
             context={
                 'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'user_main_selector': web_context.user_main_selector,
                 'user_event_selector': web_context.user_event_selector,
                 'user_event': web_context.user_event,
@@ -209,7 +210,7 @@ class UserScreenController(AUserController):
             if web_context.screen.last_update > date:
                 return True
             match web_context.screen.type:
-                case ScreenType.Boards | ScreenType.Input | ScreenType.Players:
+                case ScreenType.Boards | ScreenType.Input | ScreenType.Players | ScreenType.Image:
                     pass
                 case ScreenType.Results:
                     results_tournament_ids: list[int] = web_context.screen.results_tournament_ids \

@@ -332,8 +332,8 @@ class EventDatabase(SQLiteDatabase):
                                 yml_file, f'/screens/{screen_uniq_id}', screen_dict,
                                 mandatory_fields=['type', ],
                                 optional_fields=['public', 'timer_uniq_id', 'players_show_unpaired',
-                                                 'results_limit', 'results_tournament_uniq_ids', 'name', 'columns',
-                                                 'menu_text', 'menu', 'sets'])
+                                                 'results_limit', 'results_tournament_uniq_ids', 'image', 'name',
+                                                 'columns', 'menu_text', 'menu', 'sets'])
                             assert screen_dict, f'{yml_file.name}: dictionary screens.{screen_uniq_id} is empty'
                             timer_uniq_id: str | None = screen_dict.get('timer_uniq_id', None)
                             timer_id: int = timer_ids_by_uniq_id[timer_uniq_id] if timer_uniq_id else None
@@ -341,6 +341,7 @@ class EventDatabase(SQLiteDatabase):
                             players_show_unpaired: bool | None = None
                             results_limit: int | None = None
                             results_tournament_ids: list[int] | None = None
+                            image: str | None = None
                             match type:
                                 case 'boards' | 'input':
                                     pass
@@ -358,6 +359,8 @@ class EventDatabase(SQLiteDatabase):
                                         ]
                                     else:
                                         results_tournament_ids = []
+                                case 'image':
+                                    image: str = screen_dict.get('image', None)
                                 case _:
                                     raise ValueError
                             stored_screen: StoredScreen = event_database.add_stored_screen(StoredScreen(
@@ -373,6 +376,7 @@ class EventDatabase(SQLiteDatabase):
                                 players_show_unpaired=players_show_unpaired,
                                 results_limit=results_limit,
                                 results_tournament_ids=results_tournament_ids,
+                                image=image,
                             ))
                             screen_ids_by_uniq_id[screen_uniq_id] = stored_screen.id
                             if 'sets' in screen_dict:
@@ -418,10 +422,8 @@ class EventDatabase(SQLiteDatabase):
                                     pass
                                 case 'players':
                                     players_show_unpaired = family_dict.get('players_show_unpaired', False)
-                                case 'results':
-                                    pass
                                 case _:
-                                    raise ValueError
+                                    raise ValueError(f'type={type}')
                             stored_family: StoredFamily = event_database.add_stored_family(StoredFamily(
                                 id=None,
                                 uniq_id=family_uniq_id,
@@ -1520,6 +1522,7 @@ class EventDatabase(SQLiteDatabase):
             players_show_unpaired=cls.load_bool_from_database_field(row['players_show_unpaired']),
             results_limit=row['results_limit'],
             results_tournament_ids=cls.load_json_from_database_field(row['results_tournament_ids']),
+            image=row['image'],
             last_update=row['last_update'],
         )
 
@@ -1559,8 +1562,8 @@ class EventDatabase(SQLiteDatabase):
             self, stored_screen: StoredScreen,
     ) -> StoredScreen:
         fields: list[str] = [
-            'uniq_id', 'name', 'type', 'public', 'players_show_unpaired', 'columns', 'menu_text', 'menu',
-            'timer_id', 'results_limit', 'results_tournament_ids', 'last_update',
+            'uniq_id', 'name', 'type', 'public', 'players_show_unpaired', 'columns', 'menu_text', 'menu', 'timer_id',
+            'results_limit', 'results_tournament_ids', 'image', 'last_update',
         ]
         params: list = [
             stored_screen.uniq_id, stored_screen.name, stored_screen.type,
@@ -1568,7 +1571,9 @@ class EventDatabase(SQLiteDatabase):
             stored_screen.columns, stored_screen.menu_text, stored_screen.menu, stored_screen.timer_id,
             stored_screen.results_limit if stored_screen.type == 'results' else None,
             self.dump_to_json_database_field(stored_screen.results_tournament_ids, [])
-            if stored_screen.type == 'results' else None, time.time(),
+            if stored_screen.type == 'results' else None,
+            stored_screen.image if stored_screen.type == 'image' else None,
+            time.time(),
         ]
         if stored_screen.id is None:
             protected_fields = [f"`{f}`" for f in fields]

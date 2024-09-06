@@ -1,12 +1,16 @@
 {% extends 'user_card.html' %}
-{% from 'macros.j2' import tooltip_attributes, screen_visibility_icon, rotator_icon %}
+{% from 'macros.j2' import tooltip_attributes, rotator_visibility_icon, rotator_icon %}
 
 {% block card_header %}
+    {% if admin_auth %}
+        {{ rotator_visibility_icon(rotator) }}
+    {% endif %}
     {{ rotator.uniq_id }}
 {% endblock %}
 
 {% block card_title %}
-    {{ rotator_icon() }} {{ rotator.uniq_id }}
+    {{ rotator_icon() }}
+    {{ rotator.uniq_id }}
 {% endblock %}
 
 {% block card_text %}
@@ -27,7 +31,7 @@
                 Écrans :
                 {% for screen in rotator.screens %}
                     <div>
-                        {{ screen_visibility_icon(screen, '') }} {{ screen_type_icon(screen.type) }} {{ screen.name }}
+                        {# screen_visibility_icon(screen, '') #} {{ screen_type_icon(screen.type) }} {{ screen.name }}
                     </div>
                 {% endfor %}
             {% endif %}
@@ -38,7 +42,7 @@
                 Familles :
                 {% for family in rotator.families %}
                     <div>
-                        {{ family_visibility_icon(family, '') }} {{ screen_type_icon(family.type) }} {{ family.name }} ({{ family.screens_by_uniq_id|length }} écrans)
+                        {# family_visibility_icon(family, '') #} {{ screen_type_icon(family.type) }} {{ family.name }} ({{ family.screens_by_uniq_id|length }} écrans)
                     </div>
                 {% endfor %}
             {% endif %}

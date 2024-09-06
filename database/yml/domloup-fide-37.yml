@@ -90,6 +90,10 @@ tournaments:
     chessevent_uniq_id: "domloup-fide-37"
     chessevent_tournament_name: "Tournois par niveaux"
 screens:
+  affiche:
+    name: "Affiche"
+    type: "image"
+    image: "https://domloup.echecs35.fr/sites/domloup.echecs35.fr/files/domloup-fide-37-affiche.jpg"
   saisie-A:
     name: "Tournoi A"
     type: "input"

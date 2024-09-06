@@ -91,15 +91,16 @@ class AAdminController(AController):
         }
 
     @staticmethod
-    def _get_screen_type_options(results_screen_allowed: bool) -> dict[str, str]:
+    def _get_screen_type_options(family_screens_only: bool) -> dict[str, str]:
         options: dict[str, str] = {
             '': '-',
             'boards': 'Affichage des échiquiers',
             'input': 'Saisie des résultats',
             'players': 'Appariements par ordre alphabétique',
         }
-        if results_screen_allowed:
+        if not family_screens_only:
             options['results'] = 'Derniers résultats'
+            options['image'] = 'Image'
         return options
 
     @staticmethod
@@ -200,6 +201,7 @@ class AAdminController(AController):
             template_name="admin.html",
             context={
                 'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'odbc_drivers': odbc_drivers(),
                 'access_driver': access_driver(),
                 'messages': Message.messages(web_context.request),
@@ -228,9 +230,10 @@ class AdminIndexController(AAdminController):
         name='admin-render'
     )
     async def htmx_admin_render_index(
-            self, request: HTMXRequest
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        web_context: AdminWebContext = AdminWebContext(request, {}, True)
+        web_context: AdminWebContext = AdminWebContext(request, data, True)
         return self._admin_render_index(web_context)
 
     @post(
@@ -269,6 +272,7 @@ class AdminIndexController(AAdminController):
             'show_input_screens_on_screen_list': 'input',
             'show_players_screens_on_screen_list': 'players',
             'show_results_screens_on_screen_list': 'results',
+            'show_image_screens_on_screen_list': 'image',
         }.items():
             if field in data:
                 if WebContext.form_data_to_bool(data, field):

@@ -279,6 +279,7 @@ class AdminFamilyController(AAdminController):
             re_target='#admin-modal-container',
             context={
                 'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'action': action,
                 'admin_main_selector': web_context.admin_main_selector,
                 'admin_event_selector': web_context.admin_event_selector,
@@ -286,7 +287,7 @@ class AdminFamilyController(AAdminController):
                 'admin_family': web_context.admin_family,
                 'data': data,
                 'tournament_options': self._get_tournament_options(web_context.admin_event),
-                'screen_type_options': self._get_screen_type_options(results_screen_allowed=False),
+                'screen_type_options': self._get_screen_type_options(family_screens_only=True),
                 'timer_options': self._get_timer_options(web_context.admin_event),
                 'players_show_unpaired_options': self._get_players_show_unpaired_options(),
                 'errors': errors,

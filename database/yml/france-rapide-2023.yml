@@ -45,6 +45,10 @@ screens:
     type: "results"
     timer_uniq_id: "chronometre"
     results_limit: 30
+  affiche:
+    type: "image"
+    name: "Affiche"
+    image: "http://asnieres2023.ffechecs.org/wp-content/uploads/sites/58/2023/02/affiche_2023_A4-pdf.jpg"
 families:
   alpha:
     type: "players"

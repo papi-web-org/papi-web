@@ -1,6 +1,8 @@
 from logging import Logger
 from typing import Annotated
 
+import requests
+import validators
 from litestar import post
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
@@ -87,7 +89,7 @@ class AdminScreenController(AAdminController):
             case 'create':
                 type = WebContext.form_data_to_str(data, field)
                 match type:
-                    case 'boards' | 'input' | 'players' | 'results':
+                    case 'boards' | 'input' | 'players' | 'results' | 'image':
                         pass
                     case None:
                         errors[field] = 'Veuillez choisir le type d\'écran.'
@@ -128,6 +130,7 @@ class AdminScreenController(AAdminController):
         players_show_unpaired: bool | None = None
         results_limit: int | None = None
         results_tournament_ids: list[int] | None = None
+        image: str | None = None
         match action:
             case 'create' | 'delete' | 'clone':
                 pass
@@ -162,6 +165,20 @@ class AdminScreenController(AAdminController):
                             field = f'results_tournament_{tournament_id}'
                             if WebContext.form_data_to_bool(data, field):
                                 results_tournament_ids.append(tournament_id)
+                    case ScreenType.Image:
+                        field = 'image'
+                        image = WebContext.form_data_to_str(data, field, '')
+                        if not image:
+                            errors[field] = f'Veuillez préciser l\'URL de l\'image.'
+                        elif not validators.url(image):
+                            errors[field] = f'L\'URL [{image}] n\'est pas valide.'
+                        else:
+                            try:
+                                response = requests.get(image)
+                                if response.status_code != 200:
+                                    errors[field] = f'L\'URL [{image}] est en erreur (code [{response.status_code}]).'
+                            except requests.ConnectionError as ce:
+                                errors[field] = f'L\'URL [{image}] est en erreur ([{ce}]).'
                     case _:
                         raise ValueError(f'type=[{web_context.admin_screen.type}]')
             case _:
@@ -179,6 +196,7 @@ class AdminScreenController(AAdminController):
             players_show_unpaired=players_show_unpaired,
             results_limit=results_limit,
             results_tournament_ids=results_tournament_ids,
+            image=image,
             errors=errors,
         )
 
@@ -219,6 +237,9 @@ class AdminScreenController(AAdminController):
                             for tournament_id in web_context.admin_event.tournaments_by_id:
                                 data[f'results_tournament_{tournament_id}'] = WebContext.value_to_form_data(
                                     tournament_id in web_context.admin_screen.stored_screen.results_tournament_ids)
+                        case ScreenType.Image:
+                            data['image'] = WebContext.value_to_form_data(
+                                web_context.admin_screen.stored_screen.image)
                         case _:
                             raise ValueError(f'action={action}')
                 case 'create':
@@ -240,13 +261,14 @@ class AdminScreenController(AAdminController):
             re_target='#admin-modal-container',
             context={
                 'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'action': action,
                 'admin_main_selector': web_context.admin_main_selector,
                 'admin_event_selector': web_context.admin_event_selector,
                 'admin_event': web_context.admin_event,
                 'admin_screen': web_context.admin_screen,
                 'data': data,
-                'screen_type_options': self._get_screen_type_options(results_screen_allowed=True),
+                'screen_type_options': self._get_screen_type_options(family_screens_only=False),
                 'timer_options': self._get_timer_options(web_context.admin_event),
                 'players_show_unpaired_options': self._get_players_show_unpaired_options(),
                 'errors': errors,
@@ -439,6 +461,7 @@ class AdminScreenController(AAdminController):
             re_target='#admin-modal-container',
             context={
                 'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'admin_main_selector': web_context.admin_main_selector,
                 'admin_event_selector': web_context.admin_event_selector,
                 'admin_event': web_context.admin_event,

@@ -95,7 +95,8 @@ class StoredScreen:
     menu: str | None
     timer_id: int | None
     players_show_unpaired: bool | None
-    results_limit: int | None | None
+    results_limit: int | None
+    image: str | None
     results_tournament_ids: list[int] = field(default_factory=list[int])
     stored_screen_sets: list[StoredScreenSet] = field(default_factory=list[StoredScreenSet])
     last_update: float = field(default=0.0)

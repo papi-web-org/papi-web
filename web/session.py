@@ -116,7 +116,7 @@ class SessionHandler:
     @classmethod
     def get_session_screen_types_on_screen_list(cls, request: HTMXRequest) -> list[str]:
         return request.session.get(
-            cls.SCREEN_TYPES_ON_SCREEN_LIST_SESSION_KEY, ['boards', 'input', 'players', 'results'])
+            cls.SCREEN_TYPES_ON_SCREEN_LIST_SESSION_KEY, ['boards', 'input', 'players', 'results', 'image'])
 
     ADMIN_COLUMNS_SESSION_KEY: str = 'admin_columns'
 

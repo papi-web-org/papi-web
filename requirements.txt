@@ -23,3 +23,4 @@ Jinja2~=3.1.4
 # cryptography is required by Litestar
 cryptography~=42.0.8
 packaging~=24.0
+validators~=0.34.0

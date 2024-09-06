@@ -4,8 +4,19 @@
     <div id="user-screen-header" class="header user-header user-screen-header">
         <div
                 hx-trigger="click, keyup[key=='Escape'] from:body"
-                hx-post="{{ url_for('user-event-render') }}"
-                hx-vals='{"user_main_selector": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}"}'
+                {% if user_event %}
+                    hx-post="{{ url_for('user-event-render') }}"
+                    hx-vals='{
+                        "user_main_selector": "{{ user_event.uniq_id }}",
+                        "user_event_selector": "{{ user_event_selector }}"
+                    }'
+                {% else %}
+                    hx-post="{{ url_for('admin-render') }}"
+                    hx-vals='{
+                        "admin_main_selector": "{{ admin_event.uniq_id }}",
+                        "admin_event_selector": "{{ admin_event_selector }}"
+                    }'
+                {% endif %}
                 hx-target="body"
                 hx-indicator="#please-wait">
         </div>
@@ -69,26 +80,28 @@
                     {% include 'user_boards_screen_set.html' %}
                 {% endfor %}
             </div>
-        {% endif %}
-        {% if screen.type == 'input' %}
+        {% elif screen.type == 'input' %}
             <div class="screen input-screen">
                 {% include 'user_login_modal.html' %}
                 {% for screen_set in screen.screen_sets_sorted_by_order %}
                     {% include 'user_boards_screen_set.html' %}
                 {% endfor %}
             </div>
-        {% endif %}
-        {% if screen.type == 'players' %}
+        {% elif screen.type == 'players' %}
             <div class="screen players-screen">
                 {% for screen_set in screen.screen_sets_sorted_by_order %}
                     {% include 'user_players_screen_set.html' %}
                 {% endfor %}
             </div>
-        {% endif %}
-        {% if screen.type == 'results' %}
+        {% elif screen.type == 'results' %}
             <div class="screen results-screen">
                 {% include 'user_results_screen.html' %}
             </div>
+        {% elif screen.type == 'image' %}
+            <div
+                    class="screen image-screen position-absolute top-0 bottom-0 start-0 end-0 border border-black"
+                    style="background-image: url('{{ screen.image }}');"
+            ></div>
         {% endif %}
     </div>
     <script>

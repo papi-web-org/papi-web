@@ -103,6 +103,7 @@ class UserScreenSetController(AUserController):
             template_name='user_boards_screen_set.html',
             context={
                 'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'user_event': web_context.user_event,
                 'screen': web_context.screen,
                 'rotator': web_context.rotator,
@@ -137,6 +138,8 @@ class UserScreenSetController(AUserController):
         return HTMXTemplate(
             template_name='user_players_screen_set.html',
             context={
+                'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'user_event': web_context.user_event,
                 'user_event_selector': web_context.user_event_selector,
                 'screen': web_context.screen,

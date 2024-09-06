@@ -130,6 +130,7 @@ CREATE TABLE `screen` (
     `players_show_unpaired` INTEGER,
     `results_limit` INTEGER,
     `results_tournament_ids` TEXT,
+    `image` TEXT,
     `last_update` FLOAT NOT NULL,
     PRIMARY KEY(`id` AUTOINCREMENT),
     UNIQUE(`uniq_id`),

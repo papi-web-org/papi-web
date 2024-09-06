@@ -38,7 +38,7 @@
     <div class="row">
         {% if admin_event.timers_by_uniq_id %}
             {% for timer in admin_event.timers_by_uniq_id.values() %}
-                {% with card_class='bg-info-subtle' %}
+                {% with card_class='bg-light' %}
                     {% include 'admin_timer_card.html' %}
                 {% endwith %}
             {% endfor %}

@@ -16,6 +16,7 @@ from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.status_codes import HTTP_200_OK
 
 from common.logger import get_logger
+from common.papi_web_config import PapiWebConfig
 from data.board import Board
 from data.loader import EventLoader
 from data.player import Player
@@ -123,6 +124,8 @@ class AUserInputController(AUserController):
         return HTMXTemplate(
             template_name='user_boards_screen_board_row.html',
             context={
+                'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'user_event': web_context.user_event,
                 'user_event_selector': web_context.user_event_selector,
                 'tournament': web_context.tournament,
@@ -159,6 +162,8 @@ class UserCheckInController(AUserInputController):
         return HTMXTemplate(
             template_name='user_boards_screen_player_row_player_cell.html',
             context={
+                'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'user_event': web_context.user_event,
                 'user_event_selector': web_context.user_event_selector,
                 'tournament': web_context.tournament,
@@ -236,6 +241,8 @@ class UserResultController(AUserInputController):
         return HTMXTemplate(
             template_name="user_input_screen_board_result_modal.html",
             context={
+                'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'user_event': web_context.user_event,
                 'user_event_selector': web_context.user_event_selector,
                 'tournament': web_context.tournament,

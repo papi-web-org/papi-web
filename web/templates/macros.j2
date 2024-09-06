@@ -46,16 +46,16 @@
     {{ visibility_icon('event', event.public, '', '', class) }}
 {% endmacro %}
 
-{% macro screen_visibility_icon(event, class) %}
-    {{ visibility_icon('screen', event.public, '', '', class) }}
+{% macro screen_visibility_icon(screen, class) %}
+    {{ visibility_icon('screen', screen.public, '', '', class) }}
 {% endmacro %}
 
-{% macro family_visibility_icon(event, class) %}
-    {{ visibility_icon('family', event.public, '', '', class) }}
+{% macro family_visibility_icon(family, class) %}
+    {{ visibility_icon('family', family.public, '', '', class) }}
 {% endmacro %}
 
-{% macro rotator_visibility_icon(event, class) %}
-    {{ visibility_icon('rotator', event.public, '', '', class) }}
+{% macro rotator_visibility_icon(rotator, class) %}
+    {{ visibility_icon('rotator', rotator.public, '', '', class) }}
 {% endmacro %}
 
 {% macro tournament_status_icon(tournament, class) %}
@@ -93,6 +93,9 @@
     {% elif screen_type == 'results' %}
         {% set _icon_class='bi-trophy-fill' %}
         {% set _tooltip_text='Les écrans de résultats affichent les derniers résultats saisis par ordre anti-chronologique (le plus récent d\'abord).' %}
+    {% elif screen_type == 'image' %}
+        {% set _icon_class='bi-image' %}
+        {% set _tooltip_text='Les écrans d\'image affichent un image du serveur.' %}
     {% else %}
         {% set _icon_class='bi-question' %}
         {% set _tooltip_text='' %}

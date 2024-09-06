@@ -15,6 +15,8 @@ from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.event import Event
 from data.loader import EventLoader
+from data.rotator import Rotator
+from data.screen import Screen
 from web.messages import Message
 from web.session import SessionHandler
 from web.views import AController, WebContext
@@ -78,36 +80,56 @@ class AUserController(AController):
             web_context: UserWebContext,
     ) -> Template:
         if web_context.user_event:
+            input_screens: list[Screen]
+            boards_screens: list[Screen]
+            players_screens: list[Screen]
+            results_screens: list[Screen]
+            image_screens: list[Screen]
+            rotators: list[Rotator]
+            if web_context.admin_auth:
+                input_screens = web_context.user_event.input_screens_sorted_by_uniq_id
+                boards_screens = web_context.user_event.boards_screens_sorted_by_uniq_id
+                players_screens = web_context.user_event.players_screens_sorted_by_uniq_id
+                results_screens = web_context.user_event.results_screens_sorted_by_uniq_id
+                image_screens = web_context.user_event.image_screens_sorted_by_uniq_id
+                rotators = web_context.user_event.rotators_sorted_by_uniq_id
+            else:
+                input_screens = web_context.user_event.public_input_screens_sorted_by_uniq_id
+                boards_screens = web_context.user_event.public_boards_screens_sorted_by_uniq_id
+                players_screens = web_context.user_event.public_players_screens_sorted_by_uniq_id
+                results_screens = web_context.user_event.public_results_screens_sorted_by_uniq_id
+                image_screens = web_context.user_event.public_image_screens_sorted_by_uniq_id
+                rotators = web_context.user_event.public_rotators_sorted_by_uniq_id
             nav_tabs: dict[str, dict] = {
                 'input': {
-                    'title': f'Saisie des résultats '
-                             f'({len(web_context.user_event.public_input_screens_sorted_by_uniq_id) or "-"})',
-                    'screens': web_context.user_event.public_input_screens_sorted_by_uniq_id,
-                    'disabled': not web_context.user_event.public_input_screens_sorted_by_uniq_id,
+                    'title': f'Saisie des résultats ({len(input_screens) or "-"})',
+                    'screens': input_screens,
+                    'disabled': not input_screens,
                 },
                 'boards': {
-                    'title': f'Affichage des échiquiers '
-                             f'({len(web_context.user_event.public_boards_screens_sorted_by_uniq_id) or "-"})',
-                    'screens': web_context.user_event.public_boards_screens_sorted_by_uniq_id,
-                    'disabled': not web_context.user_event.public_boards_screens_sorted_by_uniq_id,
+                    'title': f'Affichage des échiquiers ({len(boards_screens) or "-"})',
+                    'screens': boards_screens,
+                    'disabled': not boards_screens,
                 },
                 'players': {
-                    'title': f'Affichage des appariements par ordre alphabétique '
-                             f'({len(web_context.user_event.public_players_screens_sorted_by_uniq_id) or "-"})',
-                    'screens': web_context.user_event.public_players_screens_sorted_by_uniq_id,
-                    'disabled': not web_context.user_event.public_players_screens_sorted_by_uniq_id,
+                    'title': f'Affichage des appariements par ordre alphabétique ({len(players_screens) or "-"})',
+                    'screens': players_screens,
+                    'disabled': not players_screens,
                 },
                 'results': {
-                    'title': f'Affichage des résultats '
-                             f'({len(web_context.user_event.public_results_screens_sorted_by_uniq_id) or "-"})',
-                    'screens': web_context.user_event.public_results_screens_sorted_by_uniq_id,
-                    'disabled': not web_context.user_event.public_results_screens_sorted_by_uniq_id,
+                    'title': f'Affichage des résultats ({len(results_screens) or "-"})',
+                    'screens': results_screens,
+                    'disabled': not results_screens,
+                },
+                'image': {
+                    'title': f'Image ({len(image_screens) or "-"})',
+                    'screens': image_screens,
+                    'disabled': not image_screens,
                 },
                 'rotators': {
-                    'title': f'Écrans rotatifs '
-                             f'({len(web_context.user_event.public_rotators_sorted_by_uniq_id) or "-"})',
-                    'rotators': web_context.user_event.public_rotators_sorted_by_uniq_id,
-                    'disabled': not web_context.user_event.public_rotators_sorted_by_uniq_id,
+                    'title': f'Écrans rotatifs ({len(rotators) or "-"})',
+                    'rotators': rotators,
+                    'disabled': not rotators,
                 },
             }
             if not web_context.user_event_selector or nav_tabs[web_context.user_event_selector]['disabled']:
@@ -154,6 +176,7 @@ class AUserController(AController):
             template_name="user.html",
             context={
                 'papi_web_config': PapiWebConfig(),
+                'admin_auth': web_context.admin_auth,
                 'user_main_selector': web_context.user_main_selector,
                 'user_event_selector': web_context.user_event_selector,
                 'user_event': web_context.user_event,

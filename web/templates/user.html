@@ -34,6 +34,7 @@
                             name="date"
                             value="{{ now }}"
                             hx-post="{{ url_for('user-render-if-updated') }}"
+                            hx-vals='{"user_main_selector": "{{ user_main_selector }}", "user_event_selector": "{{ user_event_selector }}"}'
                             hx-include="this"
                             hx-target="body"
                             hx-trigger="every {{ papi_web_config.user_index_update_delay }}s queue:none"
@@ -114,14 +115,14 @@
                                                     {% with
                                                         card_url=url_for('user-rotator-render'),
                                                         card_payload='{"user_main_selector": "' ~ user_event.uniq_id ~ '", "user_event_selector": "' ~ user_event_selector ~ '", "rotator_id": "' ~ rotator.id ~ '"}',
-                                                        card_class='bg-info-subtle'
+                                                        card_class=('bg-light' if rotator.public else 'bg-danger-subtle') if admin_auth else 'bg-light'
                                                     %}
-                                                        {% include 'user_event_rotator_card.html' %}
+                                                        {% include 'user_rotator_card.html' %}
                                                     {% endwith %}
                                                 {% endfor %}
                                             {% else %}
                                                 <div class="col-12 mb-3">
-                                                    Aucun écran de ce type.
+                                                    Aucun écran rotatif.
                                                 </div>
                                             {% endif %}
                                         {% else %}
@@ -130,9 +131,10 @@
                                                     {% with
                                                         card_url=url_for('user-screen-render'),
                                                         card_payload='{"user_main_selector": "' ~ user_event.uniq_id ~ '", "user_event_selector": "' ~ user_event_selector ~ '", "screen_uniq_id": "' ~ screen.uniq_id ~ '"}',
-                                                        card_class='bg-info-subtle'
+                                                        card_class=('bg-light' if screen.public else 'bg-danger-subtle') if admin_auth else 'bg-light',
+                                                        card_image=screen.image
                                                     %}
-                                                        {% include 'user_event_screen_card.html' %}
+                                                        {% include 'user_screen_card.html' %}
                                                     {% endwith %}
                                                 {% endfor %}
                                             {% else %}

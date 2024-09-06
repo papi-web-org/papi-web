@@ -38,7 +38,7 @@
     <div class="row">
         {% if admin_event.chessevents_by_uniq_id %}
             {% for chessevent in admin_event.chessevents_by_uniq_id.values() %}
-                {% with card_class='bg-info-subtle' %}
+                {% with card_class='bg-light' %}
                     {% include 'admin_chessevent_card.html' %}
                 {% endwith %}
             {% endfor %}
@@ -49,70 +49,3 @@
         {% endif %}
     </div>
 {% endblock %}
-
-<table class="table border-black bg-light">
-    <thead class="table-dark position-sticky top-0">
-        <tr>
-            <th scope="col" class="text-nowrap">Id</th>
-            <th scope="col" class="text-nowrap">Utilisateur</th>
-            <th scope="col" class="text-nowrap">Mot de passe</th>
-            <th scope="col" class="text-nowrap">Évènement</th>
-            <th scope="col" class="w-100"></th>
-            <th scope="col" class="">&nbsp;</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% if admin_event.chessevents_by_id| length > 0 %}
-            {% for chessevent in admin_event.chessevents_by_id.values() %}
-                <tr>
-                    <th scope="row" class="text-nowrap">{{ chessevent.uniq_id }}</th>
-                    <td class="text-nowrap">{{ chessevent.user_id }}</td>
-                    <td class="text-nowrap">{{ chessevent.password }}</td>
-                    <td>{{ chessevent.event_id }}</td>
-                    <td class="text-nowrap">
-                        <button
-                                class="btn btn-sm btn-primary p-1"
-                                hx-post="{{ url_for('admin-chessevent-render-edit-modal') }}"
-                                hx-vals='{"action": "update", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_chessevent_id": "{{ chessevent.id }}"}'
-                                hx-target="#admin-modal-container"
-                                hx-swap="innerHTML"
-                                data-bs-toggle="modal"
-                                data-bs-target="#admin-modal-container"
-                                hx-indicator="#please-wait" >
-                            <i class="bi-pencil-fill"></i> Éditer
-                        </button>
-                    </td>
-                    <td class="text-nowrap">
-                        <button
-                                hx-post="{{ url_for('admin-chessevent-update') }}"
-                                hx-vals='{"action": "clone", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_chessevent_id": "{{ chessevent.id }}"}'
-                                hx-swap="multi:#messages,#admin-header,#admin-content"
-                                class="btn btn-sm btn-primary p-1"
-                                hx-indicator="#please-wait" >
-                            <i class="bi-copy"></i> Dupliquer
-                        </button>
-                        <button
-                                class="btn btn-sm btn-danger p-1"
-                                hx-post="{{ url_for('admin-chessevent-render-edit-modal') }}"
-                                hx-vals='{"action": "delete", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_chessevent_id": "{{ chessevent.id }}"}'
-                                hx-target="#admin-modal-container"
-                                hx-swap="innerHTML"
-                                data-bs-toggle="modal"
-                                data-bs-target="#admin-modal-container"
-                                hx-indicator="#please-wait" >
-                            <i class="bi-trash-fill"></i> Supprimer
-                        </button>
-                    </td>
-                </tr>
-            {% endfor %}
-        {% else %}
-            <tr>
-                <td
-                        colspan="6"
-                        class="text-nowrap" >
-                    <span class="fst-italic">Aucune connexion à ChessEvent trouvée.</span>
-                </td>
-            </tr>
-        {% endif %}
-    </tbody>
-</table>

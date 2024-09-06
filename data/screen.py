@@ -58,7 +58,7 @@ class Screen:
                 else:
                     screen_set: ScreenSet = ScreenSet(self, family=self.family, family_part=self.family_part)
                     self.screen_sets_by_id[screen_set.id] = screen_set
-            case ScreenType.Results:
+            case ScreenType.Results | ScreenType.Image:
                 pass
             case _:
                 raise ValueError(f'type=[{self.type}]')
@@ -95,6 +95,8 @@ class Screen:
                 return self.screen_sets_sorted_by_order[0].name_for_players
             case ScreenType.Results:
                 return 'Derniers résultats'
+            case ScreenType.Image:
+                return 'Image'
             case _:
                 raise ValueError(f'type=[{self.type}]')
 
@@ -145,6 +147,8 @@ class Screen:
                 return text
             case ScreenType.Results:
                 return self.stored_screen.menu_text if self.stored_screen.menu_text else 'Derniers résultats'
+            case ScreenType.Image:
+                return None
             case _:
                 raise ValueError(f'type=[{self.type}]')
 
@@ -252,6 +256,10 @@ class Screen:
     @property
     def last_update(self) -> float:
         return self.stored_screen.last_update if self.stored_screen else self.family.last_update
+
+    @property
+    def image(self) -> str:
+        return self.stored_screen.image
 
     @property
     def last_update_str(self) -> str | None:

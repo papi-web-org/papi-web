@@ -236,6 +236,10 @@ class Event:
         return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Results, [])
 
     @property
+    def image_screens_sorted_by_uniq_id(self) -> list[Screen]:
+        return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Image, [])
+
+    @property
     def public_screens_sorted_by_uniq_id(self) -> list[Screen]:
         if self._public_screens_sorted_by_uniq_id is None:
             self._public_screens_sorted_by_uniq_id = [
@@ -268,6 +272,10 @@ class Event:
     @property
     def public_results_screens_sorted_by_uniq_id(self) -> list[Screen]:
         return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Results, [])
+
+    @property
+    def public_image_screens_sorted_by_uniq_id(self) -> list[Screen]:
+        return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Image, [])
 
     @property
     def rotators_sorted_by_uniq_id(self) -> list[Rotator]:
@@ -356,6 +364,8 @@ class Event:
         boards_menu_screens: list[Screen] = []
         input_menu_screens: list[Screen] = []
         players_menu_screens: list[Screen] = []
+        results_menu_screens: list[Screen] = []
+        image_menu_screens: list[Screen] = []
         for screen in self.screens_by_uniq_id.values():
             if screen.menu_label:
                 match screen.type:
@@ -366,7 +376,9 @@ class Event:
                     case ScreenType.Players:
                         players_menu_screens.append(screen)
                     case ScreenType.Results:
-                        boards_menu_screens.append(screen)
+                        results_menu_screens.append(screen)
+                    case ScreenType.Image:
+                        pass
                     case _:
                         raise ValueError(f'type={screen.type}')
         for screen in self.screens_by_uniq_id.values():
@@ -384,6 +396,12 @@ class Event:
                     continue
                 if menu_part == '@players':
                     screen.menu_screens += players_menu_screens
+                    continue
+                if menu_part == '@results':
+                    screen.menu_screens += results_menu_screens
+                    continue
+                if menu_part == '@image':
+                    screen.menu_screens += results_menu_screens
                     continue
                 if menu_part == '@family':
                     assert screen.family_id is not None

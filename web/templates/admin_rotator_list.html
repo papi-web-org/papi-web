@@ -58,7 +58,7 @@
     <div class="row">
         {% if admin_event.rotators_by_uniq_id %}
             {% for rotator in admin_event.rotators_by_uniq_id.values() %}
-                {% with card_class='bg-info-subtle' %}
+                {% with card_class='bg-light' %}
                     {% include 'admin_rotator_card.html' %}
                 {% endwith %}
             {% endfor %}

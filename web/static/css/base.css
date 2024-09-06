@@ -51,3 +51,8 @@ body {
 .papi-web-tooltip-error {
   --bs-tooltip-color: #900000;
 }
+.image-screen, .card-body {
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-size: contain;
+}

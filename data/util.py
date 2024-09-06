@@ -740,6 +740,7 @@ class ScreenType(StrEnum):
     Input = auto()
     Players = auto()
     Results = auto()
+    Image = auto()
 
     def __str__(self) -> str:
         match self:
@@ -751,6 +752,8 @@ class ScreenType(StrEnum):
                 return "Appariements"
             case ScreenType.Results:
                 return "Résultats"
+            case ScreenType.Image:
+                return "Image"
             case _:
                 raise ValueError(f'Invalid screen type: {self}')
 
@@ -765,6 +768,8 @@ class ScreenType(StrEnum):
                 return cls.Players
             case 'results':
                 return cls.Results
+            case 'image':
+                return cls.Image
             case _:
                 raise ValueError(f'Invalid screen type: {value}')
 
@@ -778,6 +783,8 @@ class ScreenType(StrEnum):
                 return 'players'
             case self.Results:
                 return 'results'
+            case self.Image:
+                return 'image'
             case _:
                 raise ValueError(f'Invalid screen type: {self}')
 
@@ -792,6 +799,8 @@ class ScreenType(StrEnum):
                 return 'bi-people-fill'
             case self.Results:
                 return 'bi-trophy-fill'
+            case self.Results:
+                return 'bi-image'
             case _:
                 raise ValueError(f'Invalid screen type: {self}')
 

@@ -94,6 +94,11 @@
                 'checkbox_tooltip_text': 'Cacher ou montrer les écrans d\'affichage des résultats.',
                 'icon_class': 'bi-trophy-fill',
             },
+            'image': {
+                'title': 'Image',
+                'checkbox_tooltip_text': 'Cacher ou montrer les écrans d\'image.',
+                'icon_class': 'bi-image',
+            },
         }.items() %}
             <div class="row">
                 <div class="col-12 mt-3 fs-4 fw-bold text-nowrap {% if not screen_type in screen_types_on_screen_list %}text-secondary{% endif %}">
@@ -126,7 +131,10 @@
                     {% for screen in screens %}
                         {% if screen.type == screen_type %}
                             {% set ns.screen_found=true %}
-                            {% with card_class='bg-info-subtle' if not screen.family else 'bg-secondary-subtle text-secondary' %}
+                            {% with
+                                card_class='bg-light' if not screen.family else 'bg-secondary-subtle text-secondary',
+                                card_image=screen.image
+                            %}
                                 {% include 'admin_screen_card.html' %}
                             {% endwith %}
                         {% endif %}
