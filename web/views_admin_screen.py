@@ -31,9 +31,11 @@ class ScreenAdminWebContext(EventAdminWebContext):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             lazy_load: bool,
             screen_needed: bool,
+            screen_set_needed: bool,
     ):
         super().__init__(request, data, lazy_load, True)
         self.admin_screen: NewScreen | None = None
+        self.admin_screen_set: NewScreenSet | None = None
         field: str = 'admin_screen_id'
         if field in self.data:
             try:
@@ -49,17 +51,6 @@ class ScreenAdminWebContext(EventAdminWebContext):
         if screen_needed and not self.admin_screen:
             self._redirect_error(f'L\'écran n\'est pas spécifié')
             return
-
-
-class ScreenSetAdminWebContext(ScreenAdminWebContext):
-    def __init__(
-            self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
-            screen_set_needed: bool,
-    ):
-        super().__init__(request, data, lazy_load, True)
-        self.admin_screen_set: NewScreenSet | None = None
         field: str = 'admin_screen_set_id'
         if field in self.data:
             try:
@@ -84,8 +75,7 @@ class AdminScreenController(AAdminController):
     @staticmethod
     def _admin_validate_screen_update_data(
             action: str,
-            admin_event: NewEvent,
-            admin_screen: NewScreen,
+            web_context: ScreenAdminWebContext,
             data: dict[str, str] | None = None,
     ) -> StoredScreen:
         errors: dict[str, str] = {}
@@ -104,7 +94,7 @@ class AdminScreenController(AAdminController):
                     case _:
                         raise ValueError(f'type=[{type}]')
             case 'update' | 'clone' | 'delete':
-                type = admin_screen.stored_screen.type
+                type = web_context.admin_screen.stored_screen.type
             case _:
                 raise ValueError(f'action=[{action}]')
         field = 'uniq_id'
@@ -121,10 +111,11 @@ class AdminScreenController(AAdminController):
             else:
                 match action:
                     case 'create' | 'clone':
-                        if uniq_id in admin_event.screens_by_uniq_id:
+                        if uniq_id in web_context.admin_event.screens_by_uniq_id:
                             errors[field] = f'L\'écran [{uniq_id}] existe déjà.'
                     case 'update':
-                        if uniq_id != admin_screen.uniq_id and uniq_id in admin_event.screens_by_uniq_id:
+                        if uniq_id != web_context.admin_screen.uniq_id \
+                                and uniq_id in web_context.admin_event.screens_by_uniq_id:
                             errors[field] = f'L\'écran [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')
@@ -151,11 +142,11 @@ class AdminScreenController(AAdminController):
                 field = 'timer_id'
                 try:
                     timer_id = WebContext.form_data_to_int(data, field)
-                    if timer_id and timer_id not in admin_event.timers_by_id:
+                    if timer_id and timer_id not in web_context.admin_event.timers_by_id:
                         errors[field] = f'Le chronomètre [{timer_id}] n\'existe pas.'
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
-                match admin_screen.type:
+                match web_context.admin_screen.type:
                     case ScreenType.Boards | ScreenType.Input:
                         pass
                     case ScreenType.Players:
@@ -167,16 +158,16 @@ class AdminScreenController(AAdminController):
                         except ValueError:
                             errors[field] = 'Un entier positif est attendu.'
                         results_tournament_ids = []
-                        for tournament_id in admin_event.tournaments_by_id:
+                        for tournament_id in web_context.admin_event.tournaments_by_id:
                             field = f'results_tournament_{tournament_id}'
                             if WebContext.form_data_to_bool(data, field):
                                 results_tournament_ids.append(tournament_id)
                     case _:
-                        raise ValueError(f'type=[{admin_screen.type}]')
+                        raise ValueError(f'type=[{web_context.admin_screen.type}]')
             case _:
                 raise ValueError(f'action=[{action}]')
         return StoredScreen(
-            id=admin_screen.id if action != 'create' else None,
+            id=web_context.admin_screen.id if action != 'create' else None,
             uniq_id=uniq_id,
             type=type,
             public=public,
@@ -193,8 +184,7 @@ class AdminScreenController(AAdminController):
 
     def _admin_screen_render_edit_modal(
             self, action: str,
-            admin_event: NewEvent,
-            admin_screen: NewScreen | None,
+            web_context: ScreenAdminWebContext,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
@@ -202,7 +192,7 @@ class AdminScreenController(AAdminController):
             data: dict[str, str] = {}
             match action:
                 case 'update':
-                    data['uniq_id'] = WebContext.value_to_form_data(admin_screen.stored_screen.uniq_id)
+                    data['uniq_id'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.uniq_id)
                 case 'create' | 'clone':
                     data['uniq_id'] = ''
                 case 'delete':
@@ -211,24 +201,24 @@ class AdminScreenController(AAdminController):
                     raise ValueError(f'action=[{action}]')
             match action:
                 case 'update' | 'clone':
-                    data['public'] = WebContext.value_to_form_data(admin_screen.stored_screen.public)
-                    data['name'] = WebContext.value_to_form_data(admin_screen.stored_screen.name)
-                    data['columns'] = WebContext.value_to_form_data(admin_screen.stored_screen.columns)
-                    data['menu_text'] = WebContext.value_to_form_data(admin_screen.stored_screen.menu_text)
-                    data['menu'] = WebContext.value_to_form_data(admin_screen.stored_screen.menu)
-                    data['timer_id'] = WebContext.value_to_form_data(admin_screen.stored_screen.timer_id)
-                    match admin_screen.type:
+                    data['public'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.public)
+                    data['name'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.name)
+                    data['columns'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.columns)
+                    data['menu_text'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.menu_text)
+                    data['menu'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.menu)
+                    data['timer_id'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.timer_id)
+                    match web_context.admin_screen.type:
                         case ScreenType.Boards | ScreenType.Input:
                             pass
                         case ScreenType.Players:
                             data['players_show_unpaired'] = WebContext.value_to_form_data(
-                                admin_screen.stored_screen.players_show_unpaired)
+                                web_context.admin_screen.stored_screen.players_show_unpaired)
                         case ScreenType.Results:
                             data['results_limit'] = WebContext.value_to_form_data(
-                                admin_screen.stored_screen.results_limit)
-                            for tournament_id in admin_event.tournaments_by_id:
+                                web_context.admin_screen.stored_screen.results_limit)
+                            for tournament_id in web_context.admin_event.tournaments_by_id:
                                 data[f'results_tournament_{tournament_id}'] = WebContext.value_to_form_data(
-                                    tournament_id in admin_screen.stored_screen.results_tournament_ids)
+                                    tournament_id in web_context.admin_screen.stored_screen.results_tournament_ids)
                         case _:
                             raise ValueError(f'action={action}')
                 case 'create':
@@ -240,8 +230,7 @@ class AdminScreenController(AAdminController):
                     pass
                 case _:
                     raise ValueError(f'action=[{action}]')
-            stored_screen: StoredScreen = self._admin_validate_screen_update_data(
-                action, admin_event, admin_screen, data)
+            stored_screen: StoredScreen = self._admin_validate_screen_update_data(action, web_context, data)
             errors = stored_screen.errors
         if errors is None:
             errors = {}
@@ -252,11 +241,13 @@ class AdminScreenController(AAdminController):
             context={
                 'papi_web_config': PapiWebConfig(),
                 'action': action,
-                'admin_event': admin_event,
-                'admin_screen': admin_screen,
+                'admin_main_selector': web_context.admin_main_selector,
+                'admin_event_selector': web_context.admin_event_selector,
+                'admin_event': web_context.admin_event,
+                'admin_screen': web_context.admin_screen,
                 'data': data,
                 'screen_type_options': self._get_screen_type_options(results_screen_allowed=True),
-                'timer_options': self._get_timer_options(admin_event),
+                'timer_options': self._get_timer_options(web_context.admin_event),
                 'players_show_unpaired_options': self._get_players_show_unpaired_options(),
                 'errors': errors,
             })
@@ -273,12 +264,14 @@ class AdminScreenController(AAdminController):
         web_context: ScreenAdminWebContext
         match action:
             case 'update' | 'delete' | 'clone':
-                web_context = ScreenAdminWebContext(request, data, True, True)
+                web_context = ScreenAdminWebContext(request, data, True, True, False)
             case 'create':
-                web_context = ScreenAdminWebContext(request, data, True, False)
+                web_context = ScreenAdminWebContext(request, data, True, False, False)
             case _:
                 raise ValueError(f'action=[{action}]')
-        return self._admin_screen_render_edit_modal(action, web_context.admin_event, web_context.admin_screen)
+        if web_context.error:
+            return web_context.error
+        return self._admin_screen_render_edit_modal(action, web_context)
 
     @post(
         path='/admin-screen-update',
@@ -294,26 +287,21 @@ class AdminScreenController(AAdminController):
             web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
             if web_context.error:
                 return web_context.error
-            return self._admin_render_index(
-                request, admin_event=web_context.admin_event,
-                admin_event_selector=web_context.admin_event_selector)
+            return self._admin_render_index(web_context)
         match action:
             case 'update' | 'delete' | 'clone':
-                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True)
+                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True, False)
             case 'create':
-                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True)
+                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, False, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
             return web_context.error
-        stored_screen: StoredScreen | None = self._admin_validate_screen_update_data(
-            action, web_context.admin_event, web_context.admin_screen, data)
+        stored_screen: StoredScreen | None = self._admin_validate_screen_update_data(action, web_context, data)
         if stored_screen.errors:
-            return self._admin_screen_render_edit_modal(
-                action, web_context.admin_event, web_context.admin_screen, data, stored_screen.errors)
+            return self._admin_screen_render_edit_modal(action, web_context, data, stored_screen.errors)
         next_action: str | None = None
         next_screen_id: int | None = None
-        next_screen_set_id: int | None = None
         with EventDatabase(web_context.admin_event.uniq_id, write=True) as event_database:
             match action:
                 case 'update':
@@ -341,22 +329,16 @@ class AdminScreenController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.reload_event(web_context.admin_event.uniq_id)
+        web_context.set_admin_event(event_loader.reload_event(web_context.admin_event.uniq_id))
         if next_screen_id:
-            admin_screen = admin_event.basic_screens_by_id[next_screen_id]
-            if next_screen_set_id:
-                admin_screen_set = admin_screen.screen_sets_by_id[next_screen_set_id]
-                return self._admin_screen_render_sets_modal(admin_event, admin_screen, admin_screen_set)
-            else:
-                return self._admin_screen_render_edit_modal(next_action, admin_event, admin_screen=admin_screen)
+            web_context.admin_screen = web_context.admin_event.basic_screens_by_id[next_screen_id]
+            return self._admin_screen_render_edit_modal(next_action, web_context)
         else:
-            return self._admin_render_index(
-                request, admin_event=admin_event, admin_event_selector=web_context.admin_event_selector)
+            return self._admin_render_index(web_context)
 
     @staticmethod
     def _admin_validate_screen_set_update_data(
-            admin_screen: NewScreen,
-            admin_screen_set: NewScreenSet,
+            web_context: ScreenAdminWebContext,
             data: dict[str, str] | None = None,
     ) -> StoredScreenSet:
         errors: dict[str, str] = {}
@@ -370,14 +352,14 @@ class AdminScreenController(AAdminController):
         name = WebContext.form_data_to_str(data, field)
         field: str = 'tournament_id'
         try:
-            if len(admin_screen.event.tournaments_by_id) == 1:
-                tournament_id = list(admin_screen.event.tournaments_by_id.keys())[0]
+            if len(web_context.admin_screen.event.tournaments_by_id) == 1:
+                tournament_id = list(web_context.admin_screen.event.tournaments_by_id.keys())[0]
                 data[field] = WebContext.value_to_form_data(tournament_id)
             else:
                 tournament_id = WebContext.form_data_to_int(data, field)
                 if not tournament_id:
                     errors[field] = f'Veuillez indiquer le tournoi.'
-                elif tournament_id not in admin_screen.event.tournaments_by_id:
+                elif tournament_id not in web_context.admin_screen.event.tournaments_by_id:
                     errors[field] = f'Le tournoi [{tournament_id}] n\'existe pas.'
         except ValueError:
             errors[field] = 'Un entier positif est attendu.'
@@ -396,7 +378,7 @@ class AdminScreenController(AAdminController):
             errors['first'] = error
             errors['last'] = error
         fixed_boards_str: str | None = None
-        if admin_screen.type in [ScreenType.Boards, ScreenType.Input]:
+        if web_context.admin_screen.type in [ScreenType.Boards, ScreenType.Input]:
             fixed_boards_str = WebContext.form_data_to_str(data, 'fixed_boards_str')
             if fixed_boards_str:
                 for fixed_board_str in list(map(str.strip, fixed_boards_str.split(','))):
@@ -407,11 +389,11 @@ class AdminScreenController(AAdminController):
                             errors['fixed_boards_str'] = f'Le numéro d\'échiquier {fixed_board_str} n\'est pas valide.'
                             break
         return StoredScreenSet(
-            id=admin_screen_set.id,
-            screen_id=admin_screen.id,
+            id=web_context.admin_screen_set.id,
+            screen_id=web_context.admin_screen.id,
             name=name,
             tournament_id=tournament_id,
-            order=admin_screen_set.order,
+            order=web_context.admin_screen_set.order,
             fixed_boards_str=fixed_boards_str,
             first=first,
             last=last,
@@ -420,34 +402,32 @@ class AdminScreenController(AAdminController):
 
     @staticmethod
     def _get_tournament_options(admin_event: NewEvent) -> dict[str, str]:
-        options: dict[str, str] = {
-        }
+        options: dict[str, str] = {}
         for tournament in admin_event.tournaments_by_id.values():
             options[str(tournament.id)] = f'{tournament.name} ({tournament.filename})'
         return options
 
     def _admin_screen_render_sets_modal(
             self,
-            admin_event: NewEvent,
-            admin_screen: NewScreen | None,
-            admin_screen_set: NewScreenSet | None,
+            web_context: ScreenAdminWebContext,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
         if data is None:
-            if admin_screen_set:
+            if web_context.admin_screen_set:
                 data = {
-                    'tournament_id': WebContext.value_to_form_data(admin_screen_set.stored_screen_set.tournament_id),
+                    'tournament_id': WebContext.value_to_form_data(
+                        web_context.admin_screen_set.stored_screen_set.tournament_id),
                     'fixed_boards_str': WebContext.value_to_form_data(
-                        admin_screen_set.stored_screen_set.fixed_boards_str),
-                    'name': WebContext.value_to_form_data(admin_screen_set.stored_screen_set.name),
-                    'first': WebContext.value_to_form_data(admin_screen_set.stored_screen_set.first),
-                    'last': WebContext.value_to_form_data(admin_screen_set.stored_screen_set.last),
+                        web_context.admin_screen_set.stored_screen_set.fixed_boards_str),
+                    'name': WebContext.value_to_form_data(web_context.admin_screen_set.stored_screen_set.name),
+                    'first': WebContext.value_to_form_data(web_context.admin_screen_set.stored_screen_set.first),
+                    'last': WebContext.value_to_form_data(web_context.admin_screen_set.stored_screen_set.last),
                 }
-                if admin_screen.type in [ScreenType.Boards, ScreenType.Input]:
+                if web_context.admin_screen.type in [ScreenType.Boards, ScreenType.Input]:
                     data['fixed_boards_str'] = WebContext.value_to_form_data(
-                        admin_screen_set.stored_screen_set.fixed_boards_str)
-                stored_screen_set = self._admin_validate_screen_set_update_data(admin_screen, admin_screen_set, data)
+                        web_context.admin_screen_set.stored_screen_set.fixed_boards_str)
+                stored_screen_set = self._admin_validate_screen_set_update_data(web_context, data)
                 errors = stored_screen_set.errors
             else:
                 data = {}
@@ -459,10 +439,12 @@ class AdminScreenController(AAdminController):
             re_target='#admin-modal-container',
             context={
                 'papi_web_config': PapiWebConfig(),
-                'admin_event': admin_event,
-                'admin_screen': admin_screen,
-                'admin_screen_set': admin_screen_set,
-                'tournament_options': self._get_tournament_options(admin_event),
+                'admin_main_selector': web_context.admin_main_selector,
+                'admin_event_selector': web_context.admin_event_selector,
+                'admin_event': web_context.admin_event,
+                'admin_screen': web_context.admin_screen,
+                'admin_screen_set': web_context.admin_screen_set,
+                'tournament_options': self._get_tournament_options(web_context.admin_event),
                 'data': data,
                 'errors': errors,
             })
@@ -475,9 +457,10 @@ class AdminScreenController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        web_context: ScreenSetAdminWebContext = ScreenSetAdminWebContext(request, data, True, True)
-        return self._admin_screen_render_sets_modal(
-            web_context.admin_event, web_context.admin_screen, web_context.admin_screen_set)
+        web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True, True)
+        if web_context.error:
+            return web_context.error
+        return self._admin_screen_render_sets_modal(web_context)
 
     @post(
         path='/admin-screen-sets-update',
@@ -493,13 +476,12 @@ class AdminScreenController(AAdminController):
             web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
             if web_context.error:
                 return web_context.error
-            return self._admin_render_index(
-                request, admin_event=web_context.admin_event, admin_event_selector=web_context.admin_event_selector)
+            return self._admin_render_index(web_context)
         match action:
             case 'delete' | 'clone' | 'update':
-                web_context: ScreenSetAdminWebContext = ScreenSetAdminWebContext(request, data, True, True)
+                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True, True)
             case 'add' | 'reorder' | 'cancel':
-                web_context: ScreenSetAdminWebContext = ScreenSetAdminWebContext(request, data, True, False)
+                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
@@ -507,7 +489,8 @@ class AdminScreenController(AAdminController):
         match action:
             case 'delete':
                 if len(web_context.admin_screen.screen_sets_sorted_by_order) <= 1:
-                    return AController.redirect_error(request, f'Le dernier ensemble d\'un écran ne peut être supprimé.')
+                    return AController.redirect_error(
+                        request, f'Le dernier ensemble d\'un écran ne peut être supprimé.')
             case 'update' | 'clone' | 'add' | 'reorder' | 'cancel':
                 pass
             case _:
@@ -516,12 +499,9 @@ class AdminScreenController(AAdminController):
         with (EventDatabase(web_context.admin_event.uniq_id, write=True) as event_database):
             match action:
                 case 'update':
-                    stored_screen_set: StoredScreenSet = self._admin_validate_screen_set_update_data(
-                        web_context.admin_screen, web_context.admin_screen_set, data)
+                    stored_screen_set: StoredScreenSet = self._admin_validate_screen_set_update_data(web_context, data)
                     if stored_screen_set.errors:
-                        return self._admin_screen_render_sets_modal(
-                            web_context.admin_event, web_context.admin_screen, web_context.admin_screen_set, data,
-                            stored_screen_set.errors)
+                        return self._admin_screen_render_sets_modal(web_context, data, stored_screen_set.errors)
                     event_database.update_stored_screen_set(stored_screen_set)
                 case 'delete':
                     event_database.delete_stored_screen_set(
@@ -541,9 +521,9 @@ class AdminScreenController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.reload_event(web_context.admin_event.uniq_id)
-        admin_screen = admin_event.basic_screens_by_id[web_context.admin_screen.id]
-        admin_screen_set: NewScreenSet | None = None
+        web_context.set_admin_event(event_loader.reload_event(web_context.admin_event.uniq_id))
+        web_context.admin_screen = web_context.admin_event.basic_screens_by_id[web_context.admin_screen.id]
+        web_context.admin_screen_set = None
         if next_screen_set_id:
-            admin_screen_set = admin_screen.screen_sets_by_id[next_screen_set_id]
-        return self._admin_screen_render_sets_modal(admin_event, admin_screen, admin_screen_set)
+            web_context.admin_screen_set = web_context.admin_screen.screen_sets_by_id[next_screen_set_id]
+        return self._admin_screen_render_sets_modal(web_context)

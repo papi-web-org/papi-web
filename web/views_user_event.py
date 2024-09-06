@@ -1,4 +1,3 @@
-import time
 from contextlib import suppress
 from logging import Logger
 from typing import Annotated
@@ -8,15 +7,12 @@ from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import Reswap, HTMXTemplate
+from litestar.contrib.htmx.response import Reswap
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
-from common.papi_web_config import PapiWebConfig
 from data.event import NewEvent
 from data.util import ScreenType
-from web.messages import Message
-from web.session import SessionHandler
 from web.views import WebContext, AController
 from web.views_user import AUserController, EventUserWebContext
 
@@ -24,46 +20,6 @@ logger: Logger = get_logger()
 
 
 class UserEventController(AUserController):
-
-    @classmethod
-    def _user_render_event(
-            cls,
-            request: HTMXRequest,
-            event: NewEvent,
-            user_event_selector: str | None,
-    ) -> Template | Redirect:
-        return HTMXTemplate(
-            template_name="user_event.html",
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'user_event': event,
-                'user_event_selector': user_event_selector or 'input',
-                'messages': Message.messages(request),
-                'now': time.time(),
-                'user_columns': SessionHandler.get_session_user_columns(request),
-                'nav_tabs': {
-                    'input': {
-                        'title': 'Saisie des résultats',
-                        'screens': event.input_screens_sorted_by_uniq_id,
-                    },
-                    'boards': {
-                        'title': 'Affichage des échiquiers',
-                        'screens': event.boards_screens_sorted_by_uniq_id,
-                    },
-                    'players': {
-                        'title': 'Affichage des appariements par ordre alphabétique',
-                        'screens': event.players_screens_sorted_by_uniq_id,
-                    },
-                    'results': {
-                        'title': 'Affichage des résultats',
-                        'screens': event.results_screens_sorted_by_uniq_id,
-                    },
-                    'rotators': {
-                        'title': 'Écrans rotatifs',
-                        'rotators': event.rotators_sorted_by_uniq_id,
-                    },
-                }
-            })
 
     @staticmethod
     def _user_event_page_update_needed(event: NewEvent, date: float, ) -> bool:
@@ -134,7 +90,7 @@ class UserEventController(AUserController):
             web_context: EventUserWebContext = EventUserWebContext(request, data, False)
             if web_context.error:
                 return web_context.error
-            return self._user_render_event(request, web_context.user_event, web_context.user_event_selector)
+            return self._user_render_index(web_context)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
 
@@ -149,20 +105,4 @@ class UserEventController(AUserController):
         web_context: EventUserWebContext = EventUserWebContext(request, data, False)
         if web_context.error:
             return web_context.error
-        return self._user_render_event(request, web_context.user_event, web_context.user_event_selector)
-
-    @post(
-        path='/user-update-header',
-        name='user-update-header'
-    )
-    async def htmx_user_event_update_header(
-            self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> Template:
-        web_context: EventUserWebContext = EventUserWebContext(request, data, False)
-        if web_context.error:
-            return web_context.error
-        field: str = f'user_columns'
-        if field in data:
-            SessionHandler.set_session_user_columns(request, WebContext.form_data_to_int(data, field))
-        return self._user_render_event(request, web_context.user_event, web_context.user_event_selector)
+        return self._user_render_index(web_context)

@@ -323,6 +323,8 @@ class NewEvent:
         self.screens_by_uniq_id: dict[str, NewScreen] = {}
         self._screens_sorted_by_uniq_id: list[NewScreen] | None = None
         self._screens_of_type_sorted_by_uniq_id: dict[ScreenType, list[NewScreen]] | None = None
+        self._public_screens_sorted_by_uniq_id: list[NewScreen] | None = None
+        self._public_screens_of_type_sorted_by_uniq_id: dict[ScreenType, list[NewScreen]] | None = None
         self.basic_screens_by_id: dict[int, NewScreen] = {}
         self.basic_screens_by_uniq_id: dict[str, NewScreen] = {}
         self.families_by_id: dict[int, NewFamily] = {}
@@ -331,6 +333,7 @@ class NewEvent:
         self.rotators_by_id: dict[int, NewRotator] = {}
         self.rotators_by_uniq_id: dict[str, NewRotator] = {}
         self._rotators_sorted_by_uniq_id: list[NewRotator] | None = None
+        self._publics_rotators_sorted_by_uniq_id: list[NewRotator] | None = None
         self.timers_by_id: dict[int, NewTimer] = {}
         self.timers_by_uniq_id: dict[str, NewTimer] = {}
         self._timer_colors: dict[int, str] | None = None
@@ -521,11 +524,53 @@ class NewEvent:
         return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Results, [])
 
     @property
+    def public_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+        if self._public_screens_sorted_by_uniq_id is None:
+            self._public_screens_sorted_by_uniq_id = [
+                screen for screen in self.screens_by_uniq_id.values() if screen.public
+            ]
+        return self._public_screens_sorted_by_uniq_id
+
+    @property
+    def public_screens_of_type_sorted_by_uniq_id(self) -> dict[ScreenType, list[NewScreen]]:
+        if self._public_screens_of_type_sorted_by_uniq_id is None:
+            self._public_screens_of_type_sorted_by_uniq_id = {}
+            for screen in self.public_screens_sorted_by_uniq_id:
+                if screen.type not in self._public_screens_of_type_sorted_by_uniq_id:
+                    self._public_screens_of_type_sorted_by_uniq_id[screen.type] = []
+                self._public_screens_of_type_sorted_by_uniq_id[screen.type].append(screen)
+        return self._public_screens_of_type_sorted_by_uniq_id
+
+    @property
+    def public_input_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+        return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Input, [])
+
+    @property
+    def public_boards_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+        return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Boards, [])
+
+    @property
+    def public_players_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+        return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Players, [])
+
+    @property
+    def public_results_screens_sorted_by_uniq_id(self) -> list[NewScreen]:
+        return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Results, [])
+
+    @property
     def rotators_sorted_by_uniq_id(self) -> list[NewRotator]:
         if self._rotators_sorted_by_uniq_id is None:
             self._rotators_sorted_by_uniq_id = sorted(
                 self.rotators_by_id.values(), key=lambda rotator: rotator.uniq_id)
         return self._rotators_sorted_by_uniq_id
+
+    @property
+    def public_rotators_sorted_by_uniq_id(self) -> list[NewRotator]:
+        if self._publics_rotators_sorted_by_uniq_id is None:
+            self._publics_rotators_sorted_by_uniq_id = sorted(
+                [rotator for rotator in self.rotators_by_id.values() if rotator.public],
+                key=lambda rotator: rotator.uniq_id)
+        return self._publics_rotators_sorted_by_uniq_id
 
     @property
     def last_update(self) -> float | None:

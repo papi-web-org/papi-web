@@ -1,4 +1,4 @@
-{% extends 'admin_cards_container.html' %}
+{% extends 'cards_container.html' %}
 {% from 'macros.j2' import tooltip_attributes, event_visibility_icon, screen_type_icon %}
 
 {% block cards_container_title %}
@@ -15,7 +15,7 @@
             <input
                     name="{{ name }}"
                     hx-post="{{ url_for('admin-update-header') }}"
-                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "{{ admin_event_selector }}", "{{ name }}": "{% if show_details_on_family_list %}off{% else %}on{% endif %}"}'
+                    hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "{{ name }}": "{% if show_details_on_family_list %}off{% else %}on{% endif %}"}'
                     hx-swap="multi:#admin-header,#admin-content"
                     hx-indicator="#please-wait"
                     class="form-check-input"
@@ -28,7 +28,7 @@
         <button
                 class="btn btn-primary text-nowrap me-2"
                 hx-post="{{ url_for('admin-update-header') }}"
-                hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "{{ admin_event_selector }}"}'
+                hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}"}'
                 hx-swap="multi:#admin-header,#admin-content"
                 hx-indicator="#please-wait"
         >
@@ -39,7 +39,7 @@
         <button
                 class="btn btn-primary text-nowrap"
                 hx-post="{{ url_for('admin-family-render-edit-modal') }}"
-                hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                hx-vals='{"action": "create", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}"}'
                 hx-target="#admin-modal-container"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal"

@@ -15,7 +15,7 @@
                 <form
                         class="sortable"
                         hx-post="{{ url_for('admin-timer-hours-update') }}"
-                        hx-vals='{"action": "reorder", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}" }'
+                        hx-vals='{"action": "reorder", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_timer_id": "{{ admin_timer.id }}" }'
                         hx-target="#admin-timer-hours-modal"
                         hx-swap="innerHTML"
                         hx-trigger="end"
@@ -38,7 +38,7 @@
                     <button
                             class="btn btn-primary text-nowrap"
                             hx-post="{{ url_for('admin-timer-hours-update') }}"
-                            hx-vals='{"action": "add", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}" }'
+                            hx-vals='{"action": "add", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_timer_id": "{{ admin_timer.id }}" }'
                             {% if admin_timer_hour %}disabled{% endif %}
                             hx-target="#admin-timer-hours-modal"
                             hx-swap="innerHTML"
@@ -50,7 +50,7 @@
                     <button
                             class="btn btn-secondary text-nowrap"
                             hx-post="{{ url_for('admin-timer-hours-update') }}"
-                            hx-vals='{"action": "close", "admin_event_uniq_id": "{{ admin_event.uniq_id }}" }'
+                            hx-vals='{"action": "close", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}" }'
                             {% if admin_timer_hour %}disabled{% endif %}
                             hx-swap="multi:#messages,#admin-header,#admin-content"
                             hx-indicator="#please-wait"

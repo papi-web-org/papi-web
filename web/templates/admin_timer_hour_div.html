@@ -3,7 +3,7 @@
     {% if admin_timer_hour.id == timer_hour.id %}
         <form
                 hx-post="{{ url_for('admin-timer-hours-update') }}"
-                hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
+                hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
                 hx-target="closest .admin-timer-hours-modal-timer-hour-div"
                 hx-swap="innerHTML"
                 hx-trigger="end"
@@ -78,7 +78,7 @@
                         <button
                                 class="btn btn-sm btn-primary text-nowrap mb-1"
                                 hx-post="{{ url_for('admin-timer-hours-update') }}"
-                                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
+                                hx-vals='{"action": "update", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
                                 hx-target="#admin-modal-container"
                                 hx-swap="innerHTML"
                                 hx-indicator="#please-wait">
@@ -87,7 +87,7 @@
                         <button
                                 class="btn btn-sm btn-secondary text-nowrap mb-1"
                                 hx-post="{{ url_for('admin-timer-hours-update') }}"
-                                hx-vals='{"action": "cancel", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
+                                hx-vals='{"action": "cancel", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
                                 hx-target="#admin-modal-container"
                                 hx-swap="innerHTML"
                                 hx-indicator="#please-wait">
@@ -158,7 +158,7 @@
                         <button
                                 class="btn btn-sm btn-primary text-nowrap"
                                 hx-post="{{ url_for('admin-timer-render-hours-modal') }}"
-                                hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
+                                hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
                                 hx-target="#admin-modal-container"
                                 hx-swap="innerHTML"
                                 hx-indicator="#please-wait">
@@ -167,7 +167,7 @@
                         <button
                                 class="btn btn-sm btn-primary text-nowrap"
                                 hx-post="{{ url_for('admin-timer-hours-update') }}"
-                                hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
+                                hx-vals='{"action": "clone", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
                                 hx-target="#admin-modal-container"
                                 hx-swap="innerHTML"
                                 hx-indicator="#please-wait">
@@ -176,7 +176,7 @@
                         <button
                                 class="btn btn-sm btn-danger text-nowrap"
                                 hx-post="{{ url_for('admin-timer-hours-update') }}"
-                                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
+                                hx-vals='{"action": "delete", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
                                 hx-target="#admin-timer-hours-modal"
                                 hx-swap="innerHTML"
                                 hx-indicator="#please-wait">

@@ -9,7 +9,7 @@
                     name="date"
                     value="{{ now }}"
                     hx-post="{{ url_for('user-players-screen-set-render-if-updated') }}"
-                    hx-vals='{"user_event_uniq_id": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "screen_set_uniq_id": "{{ screen_set.uniq_id }}"}'
+                    hx-vals='{"user_main_selector": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "screen_set_uniq_id": "{{ screen_set.uniq_id }}"}'
                     hx-include="this"
                     hx-target="closest .players-screen-set"
                     hx-swap="outerHTML"
@@ -24,9 +24,9 @@
                     <table class="table table-striped table-sm bg-light">
                         <thead class="table-dark">
                             <tr>
-                                <th scope="col" class="player w-50 text-nowrap">Joueur.euse Elo{% if tournament.current_round %} [Pts]{% endif %}</th>
-                                <th scope="col" class="pairing">Table & Couleur</th>
-                                <th scope="col" class="opponent w-50 text-nowrap">Adversaire Elo{% if tournament.current_round %} [Pts]{% endif %}</th>
+                                <th scope="col" class="player w-50 text-nowrap text-center">Joueur.euse Elo{% if tournament.current_round %} [Pts]{% endif %}</th>
+                                <th scope="col" class="pairing text-nowrap text-center">Table & Couleur</th>
+                                <th scope="col" class="opponent w-50 text-nowrap text-center">Adversaire Elo{% if tournament.current_round %} [Pts]{% endif %}</th>
                             </tr>
                         </thead>
                         <tbody>

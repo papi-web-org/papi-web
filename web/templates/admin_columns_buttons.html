@@ -8,7 +8,7 @@
                     class="btn {% if c == admin_columns %}btn-primary{% else %}btn-secondary{% endif %} text-nowrap py-0 px-1"
                     {% if c != admin_columns %}
                         hx-post="{{ url_for('admin-update-header') }}"
-                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_columns": "{{ c }}"}'
+                        hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_columns": "{{ c }}"}'
                         hx-swap="multi:#admin-header,#admin-content"
                         hx-indicator="#please-wait"
                     {% else %}

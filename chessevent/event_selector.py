@@ -15,7 +15,8 @@ class EventSelector:
     def __init__(self):
         self.__silent: bool = False
 
-    def run(self) -> bool:
+    @staticmethod
+    def run() -> bool:
         events: List[NewEvent] = EventLoader.get(request=None, lazy_load=True).events_sorted_by_name
         if not events:
             logger.error('Aucun évènement trouvé')

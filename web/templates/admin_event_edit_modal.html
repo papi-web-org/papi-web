@@ -1,7 +1,7 @@
 <div class="modal-dialog modal-dialog-centered admin-event-edit-modal d-block w-80 mw-100">
     <form
             hx-post="{{ url_for('admin-event-update') }}"
-            hx-vals='{"action": "{{ action }}" {% if admin_event %}, "admin_event_uniq_id": "{{ admin_event.uniq_id }}"{% endif %} }'
+            hx-vals='{"action": "{{ action }}", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}" }'
             hx-swap="multi:#messages,#admin-header,#admin-content"
             hx-indicator="#please-wait">
         <div class="modal-content">
@@ -320,7 +320,7 @@
                         <button
                                 class="btn btn-secondary text-nowrap"
                                 hx-post="{{ url_for('admin-event-update') }}"
-                                hx-vals='{"action": "close" }'
+                                hx-vals='{"action": "close", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}" }'
                                 hx-swap="multi:#messages,#admin-header,#admin-content"
                                 hx-indicator="#please-wait"
                                 data-bs-dismiss="modal">

@@ -13,7 +13,6 @@ from litestar.contrib.htmx.response import HTMXTemplate
 from common import format_timestamp_date
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from data.event import NewEvent
 from data.loader import EventLoader
 from database.sqlite import EventDatabase
 from database.store import StoredEvent
@@ -32,6 +31,8 @@ class EventAdminWebContext(AdminWebContext):
             event_needed: bool,
     ):
         super().__init__(request, data, lazy_load)
+        if self.error:
+            return
         if event_needed and not self.admin_event:
             self._redirect_error(f'L\'évènement n\'est pas spécifie')
             return
@@ -41,7 +42,8 @@ class AdminEventController(AAdminController):
 
     @staticmethod
     def _admin_validate_event_update_data(
-            request: HTMXRequest, action: str, admin_event: NewEvent | None,
+            action: str,
+            web_context: EventAdminWebContext,
             data: dict[str, str] | None = None,
     ) -> StoredEvent:
         if data is None:
@@ -51,7 +53,7 @@ class AdminEventController(AAdminController):
         if action == 'delete':
             if not uniq_id:
                 errors['uniq_id'] = 'Veuillez entrer l\'identifiant de l\'évènement.'
-            elif uniq_id != admin_event.uniq_id:
+            elif uniq_id != web_context.admin_event.uniq_id:
                 errors['uniq_id'] = f'L\'identifiant entré n\'est pas valide.'
         else:
             if not uniq_id:
@@ -59,13 +61,13 @@ class AdminEventController(AAdminController):
             elif uniq_id.find('/') != -1:
                 errors['uniq_id'] = "le caractère « / » n\'est pas autorisé"
             else:
-                event_uniq_ids: list[str] = EventLoader.get(request=request, lazy_load=True).event_uniq_ids
+                event_uniq_ids: list[str] = EventLoader.get(request=web_context.request, lazy_load=True).event_uniq_ids
                 match action:
                     case 'create' | 'clone':
                         if uniq_id in event_uniq_ids:
                             errors['uniq_id'] = f'L\'évènement [{uniq_id}] existe déjà.'
                     case 'update':
-                        if uniq_id != admin_event.uniq_id and uniq_id in event_uniq_ids:
+                        if uniq_id != web_context.admin_event.uniq_id and uniq_id in event_uniq_ids:
                             errors['uniq_id'] = f'L\'évènement [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')
@@ -145,9 +147,8 @@ class AdminEventController(AAdminController):
 
     def _admin_event_render_edit_modal(
             self,
-            request: HTMXRequest,
             action: str,
-            admin_event: NewEvent | None,
+            web_context: EventAdminWebContext | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
@@ -155,7 +156,7 @@ class AdminEventController(AAdminController):
             data: dict[str, str] = {}
             match action:
                 case 'update':
-                    data['uniq_id'] = WebContext.value_to_form_data(admin_event.stored_event.uniq_id)
+                    data['uniq_id'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.uniq_id)
                 case 'create' | 'clone':
                     data['uniq_id'] = ''
                 case 'delete':
@@ -165,23 +166,25 @@ class AdminEventController(AAdminController):
             match action:
                 case 'update':
                     data['uniq_id'] = '' if action == 'clone' else WebContext.value_to_form_data(
-                        admin_event.stored_event.uniq_id)
-                    data['name'] = WebContext.value_to_form_data(admin_event.stored_event.name)
-                    data['public'] = WebContext.value_to_form_data(admin_event.stored_event.public)
-                    data['start'] = WebContext.value_to_datetime_form_data(admin_event.stored_event.start)
-                    data['stop'] = WebContext.value_to_datetime_form_data(admin_event.stored_event.stop)
-                    data['css'] = WebContext.value_to_form_data(admin_event.stored_event.css)
-                    data['path'] = WebContext.value_to_form_data(admin_event.stored_event.path)
-                    data['update_password'] = WebContext.value_to_form_data(admin_event.stored_event.update_password)
+                        web_context.admin_event.stored_event.uniq_id)
+                    data['name'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.name)
+                    data['public'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.public)
+                    data['start'] = WebContext.value_to_datetime_form_data(web_context.admin_event.stored_event.start)
+                    data['stop'] = WebContext.value_to_datetime_form_data(web_context.admin_event.stored_event.stop)
+                    data['css'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.css)
+                    data['path'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.path)
+                    data['update_password'] = WebContext.value_to_form_data(
+                        web_context.admin_event.stored_event.update_password)
                     data['record_illegal_moves'] = WebContext.value_to_form_data(
-                        admin_event.stored_event.record_illegal_moves)
+                        web_context.admin_event.stored_event.record_illegal_moves)
                     data['allow_results_deletion'] = WebContext.value_to_form_data(
-                        admin_event.stored_event.allow_results_deletion_on_input_screens)
+                        web_context.admin_event.stored_event.allow_results_deletion_on_input_screens)
                     for i in range(1, 4):
-                        data[f'color_{i}'] = WebContext.value_to_form_data(admin_event.timer_colors[i])
+                        data[f'color_{i}'] = WebContext.value_to_form_data(web_context.admin_event.timer_colors[i])
                         data[f'color_{i}_checkbox'] = WebContext.value_to_form_data(
-                            admin_event.stored_event.timer_colors[i] is None)
-                        data[f'delay_{i}'] = WebContext.value_to_form_data(admin_event.stored_event.timer_delays[i])
+                            web_context.admin_event.stored_event.timer_colors[i] is None)
+                        data[f'delay_{i}'] = WebContext.value_to_form_data(
+                            web_context.admin_event.stored_event.timer_delays[i])
                 case 'create':
                     data['public'] = WebContext.value_to_form_data(False)
                     today_str: str = format_timestamp_date()
@@ -195,7 +198,7 @@ class AdminEventController(AAdminController):
                     pass
                 case _:
                     raise ValueError(f'action=[{action}]')
-            stored_event: StoredEvent = self._admin_validate_event_update_data(request, action, admin_event, data)
+            stored_event: StoredEvent = self._admin_validate_event_update_data(action, web_context, data)
             errors = stored_event.errors
         if errors is None:
             errors = {}
@@ -214,7 +217,9 @@ class AdminEventController(AAdminController):
             context={
                 'papi_web_config': PapiWebConfig(),
                 'action': action,
-                'admin_event': admin_event,
+                'admin_main_selector': web_context.admin_main_selector,
+                'admin_event_selector': web_context.admin_event_selector,
+                'admin_event': web_context.admin_event,
                 'data': data,
                 'errors': errors,
                 'record_illegal_moves_options': self._get_record_illegal_moves_options(
@@ -240,7 +245,9 @@ class AdminEventController(AAdminController):
                 web_context = EventAdminWebContext(request, data, True, False)
             case _:
                 raise ValueError(f'action=[{action}]')
-        return self._admin_event_render_edit_modal(request, action, web_context.admin_event, )
+        if web_context.error:
+            return web_context.error
+        return self._admin_event_render_edit_modal(action, web_context, )
 
     @post(
         path='/admin-event-update',
@@ -256,7 +263,7 @@ class AdminEventController(AAdminController):
             web_context: AdminWebContext = AdminWebContext(request, data, True)
             if web_context.error:
                 return web_context.error
-            return self._admin_render_index(request)
+            return self._admin_render_index(web_context)
         match action:
             case 'create':
                 web_context = EventAdminWebContext(request, data, True, False)
@@ -264,11 +271,11 @@ class AdminEventController(AAdminController):
                 web_context = EventAdminWebContext(request, data, True, True)
             case _:
                 raise ValueError(f'action=[{action}]')
-        stored_event: StoredEvent = self._admin_validate_event_update_data(
-            request, action, web_context.admin_event, data)
+        if web_context.error:
+            return web_context.error
+        stored_event: StoredEvent = self._admin_validate_event_update_data(action, web_context, data)
         if stored_event.errors:
-            return self._admin_event_render_edit_modal(
-                request, action, web_context.admin_event, data, stored_event.errors)
+            return self._admin_event_render_edit_modal(action, web_context, data, stored_event.errors)
         uniq_id: str = stored_event.uniq_id
         event_loader = EventLoader.get(request, lazy_load=True)
         match action:
@@ -278,8 +285,8 @@ class AdminEventController(AAdminController):
                     event_database.update_stored_event(stored_event)
                     event_database.commit()
                 Message.success(request, f'L\'évènement [{uniq_id}] a été créé.')
-                admin_event = event_loader.reload_event(uniq_id)
-                return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='')
+                web_context.set_admin_event(event_loader.load_event(uniq_id))
+                return self._admin_render_index(web_context)
             case 'update':
                 rename: bool = uniq_id != web_context.admin_event.uniq_id
                 if rename:
@@ -298,8 +305,8 @@ class AdminEventController(AAdminController):
                         f'L\'évènement [{web_context.admin_event.uniq_id}] a été renommé ([{uniq_id}) et modifié.')
                 else:
                     Message.success(request, f'L\'évènement [{uniq_id}] a été modifié.')
-                admin_event = event_loader.reload_event(uniq_id)
-                return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='')
+                web_context.set_admin_event(event_loader.reload_event(uniq_id))
+                return self._admin_render_index(web_context)
             case 'clone':
                 EventDatabase(web_context.admin_event.uniq_id).clone(new_uniq_id=uniq_id)
                 with EventDatabase(uniq_id, write=True) as event_database:
@@ -307,14 +314,15 @@ class AdminEventController(AAdminController):
                     event_database.commit()
                 Message.success(
                     request, f'L\'évènement [{web_context.admin_event.uniq_id}] a été dupliqué ([{uniq_id}]).')
-                admin_event = event_loader.load_event(uniq_id)
-                return self._admin_render_index(request, admin_event=admin_event, admin_event_selector='')
+                web_context.set_admin_event(event_loader.load_event(uniq_id))
+                return self._admin_render_index(web_context)
             case 'delete':
                 arch = EventDatabase(web_context.admin_event.uniq_id).delete()
                 event_loader.clear_cache(web_context.admin_event.uniq_id)
                 Message.success(
                     request, f'L\'évènement [{web_context.admin_event.uniq_id}] a été supprimé, la base '
                              f'de données a été archivée ({arch}).')
-                return self._admin_render_index(request, admin_main_selector=web_context.admin_main_selector)
+                web_context.set_admin_event(None)
+                return self._admin_render_index(web_context)
             case _:
                 raise ValueError(f'action=[{action}]')

@@ -1,4 +1,4 @@
-{% extends 'admin_cards_container.html' %}
+{% extends 'cards_container.html' %}
 {% from 'macros.j2' import tooltip_attributes, event_visibility_icon %}
 
 {% block cards_container_title %}
@@ -11,7 +11,7 @@
         <button
                 class="btn btn-primary text-nowrap ms-1"
                 hx-post="{{ url_for('admin-update-header') }}"
-                hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "{{ admin_event_selector }}"}'
+                hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}"}'
                 hx-swap="multi:#admin-header,#admin-content"
                 hx-indicator="#please-wait"
         >
@@ -22,7 +22,7 @@
         <button
                 class="btn btn-primary text-nowrap ms-1"
                 hx-post="{{ url_for('admin-tournament-render-edit-modal') }}"
-                hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                hx-vals='{"action": "create", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}"}'
                 hx-target="#admin-modal-container"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal"

@@ -18,9 +18,9 @@ from web.views_admin_tournament import AdminTournamentController
 from web.views_admin_screen import AdminScreenController
 from web.views_admin_family import AdminFamilyController
 from web.views_admin_rotator import AdminRotatorController
-from web.views_user_download import UserDownloadController
 from web.views_user_event import UserEventController
-from web.views_user_input import UserCheckInController, UserIllegalMoveController, UserResultController
+from web.views_user_tournament import UserCheckInController, UserIllegalMoveController, UserResultController, \
+    UserDownloadController
 from web.views_user import UserIndexController
 from web.views_user_screen import UserScreenController
 from web.views_user_screen_set import UserScreenSetController

@@ -14,7 +14,6 @@ from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.timer import NewTimer, NewTimerHour
-from data.event import NewEvent
 from data.loader import EventLoader
 from database.sqlite import EventDatabase
 from database.store import StoredTimer, StoredTimerHour
@@ -32,9 +31,11 @@ class TimerAdminWebContext(EventAdminWebContext):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             lazy_load: bool,
             timer_needed: bool,
+            timer_hour_needed: bool,
     ):
         super().__init__(request, data, lazy_load, True)
         self.admin_timer: NewTimer | None = None
+        self.admin_timer_hour: NewTimerHour | None = None
         field: str = 'admin_timer_id'
         if field in self.data:
             try:
@@ -50,17 +51,6 @@ class TimerAdminWebContext(EventAdminWebContext):
         if timer_needed and not self.admin_timer:
             self._redirect_error(f'Le chronomètre n\'est pas spécifié')
             return
-
-
-class TimerHourAdminWebContext(TimerAdminWebContext):
-    def __init__(
-            self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
-            timer_hour_needed: bool,
-    ):
-        super().__init__(request, data, lazy_load, True)
-        self.admin_timer_hour: NewTimerHour | None = None
         field: str = 'admin_timer_hour_id'
         if field in self.data:
             try:
@@ -85,8 +75,7 @@ class AdminTimerController(AAdminController):
     @staticmethod
     def _admin_validate_timer_update_data(
             action: str,
-            admin_event: NewEvent,
-            admin_timer: NewTimer,
+            web_context: TimerAdminWebContext,
             data: dict[str, str] | None = None,
     ) -> StoredTimer | None:
         errors: dict[str, str] = {}
@@ -107,10 +96,10 @@ class AdminTimerController(AAdminController):
                 raise ValueError(f'action=[{action}]')
         match action:
             case 'create' | 'clone':
-                if uniq_id in admin_event.timers_by_uniq_id:
+                if uniq_id in web_context.admin_event.timers_by_uniq_id:
                     errors['uniq_id'] = f'Le chronomètre [{uniq_id}] existe déjà.'
             case 'update':
-                if uniq_id != admin_timer.uniq_id and uniq_id in admin_event.timers_by_uniq_id:
+                if uniq_id != web_context.admin_timer.uniq_id and uniq_id in web_context.admin_event.timers_by_uniq_id:
                     errors['uniq_id'] = f'Le chronomètre [{uniq_id}] existe déjà.'
             case 'delete':
                 pass
@@ -139,7 +128,7 @@ class AdminTimerController(AAdminController):
             case _:
                 raise ValueError(f'action=[{action}]')
         return StoredTimer(
-            id=admin_timer.id if action != 'create' else None,
+            id=web_context.admin_timer.id if action != 'create' else None,
             uniq_id=uniq_id,
             colors=colors,
             delays=delays,
@@ -148,8 +137,7 @@ class AdminTimerController(AAdminController):
 
     def _admin_timer_render_edit_modal(
             self, action: str,
-            admin_event: NewEvent,
-            admin_timer: NewTimer | None,
+            web_context: TimerAdminWebContext,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
@@ -157,7 +145,7 @@ class AdminTimerController(AAdminController):
             data = {}
             match action:
                 case 'update':
-                    data['uniq_id'] = WebContext.value_to_form_data(admin_timer.stored_timer.uniq_id)
+                    data['uniq_id'] = WebContext.value_to_form_data(web_context.admin_timer.stored_timer.uniq_id)
                 case 'create' | 'clone':
                     data['uniq_id'] = ''
                 case 'delete':
@@ -167,10 +155,11 @@ class AdminTimerController(AAdminController):
             match action:
                 case 'update' | 'clone':
                     for i in range(1, 4):
-                        data[f'color_{i}'] = WebContext.value_to_form_data(admin_timer.colors[i])
+                        data[f'color_{i}'] = WebContext.value_to_form_data(web_context.admin_timer.colors[i])
                         data[f'color_{i}_checkbox'] = WebContext.value_to_form_data(
-                            admin_timer.stored_timer.colors[i] is None)
-                        data[f'delay_{i}'] = WebContext.value_to_form_data(admin_timer.stored_timer.delays[i])
+                            web_context.admin_timer.stored_timer.colors[i] is None)
+                        data[f'delay_{i}'] = WebContext.value_to_form_data(
+                            web_context.admin_timer.stored_timer.delays[i])
                 case 'create':
                     for i in range(1, 4):
                         data[f'color_{i}'] = ''
@@ -181,7 +170,7 @@ class AdminTimerController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             stored_timer: StoredTimer = self._admin_validate_timer_update_data(
-                action, admin_event, admin_timer, data)
+                action, web_context, data)
             errors = stored_timer.errors
         if errors is None:
             errors = {}
@@ -192,10 +181,12 @@ class AdminTimerController(AAdminController):
             context={
                 'papi_web_config': PapiWebConfig(),
                 'action': action,
-                'admin_event': admin_event,
-                'admin_timer': admin_timer,
+                'admin_main_selector': web_context.admin_main_selector,
+                'admin_event_selector': web_context.admin_event_selector,
+                'admin_event': web_context.admin_event,
+                'admin_timer': web_context.admin_timer,
                 'data': data,
-                'timer_color_texts': self._get_timer_color_texts(admin_event.timer_delays),
+                'timer_color_texts': self._get_timer_color_texts(web_context.admin_event.timer_delays),
                 'errors': errors,
             })
 
@@ -211,12 +202,14 @@ class AdminTimerController(AAdminController):
         web_context: TimerAdminWebContext
         match action:
             case 'update' | 'delete' | 'clone':
-                web_context = TimerAdminWebContext(request, data, True, True)
+                web_context = TimerAdminWebContext(request, data, True, True, False)
             case 'create':
-                web_context = TimerAdminWebContext(request, data, True, False)
+                web_context = TimerAdminWebContext(request, data, True, True, False)
             case _:
                 raise ValueError(f'action=[{action}]')
-        return self._admin_timer_render_edit_modal(action, web_context.admin_event, web_context.admin_timer)
+        if web_context.error:
+            return web_context.error
+        return self._admin_timer_render_edit_modal(action, web_context)
 
     @post(
         path='/admin-timer-update',
@@ -224,10 +217,7 @@ class AdminTimerController(AAdminController):
     )
     async def htmx_admin_timer_update(
             self, request: HTMXRequest,
-            data: Annotated[
-                dict[str, str],
-                Body(media_type=RequestEncodingType.URL_ENCODED),
-            ],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = WebContext.form_data_to_str(data, 'action')
@@ -235,22 +225,19 @@ class AdminTimerController(AAdminController):
             web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
             if web_context.error:
                 return web_context.error
-            return self._admin_render_index(
-                request, admin_event=web_context.admin_event, admin_event_selector=web_context.admin_event_selector)
+            return self._admin_render_index(web_context)
         match action:
             case 'update' | 'delete' | 'clone':
-                web_context: TimerAdminWebContext = TimerAdminWebContext(request, data, True, True)
+                web_context: TimerAdminWebContext = TimerAdminWebContext(request, data, True, True, False)
             case 'create':
-                web_context: TimerAdminWebContext = TimerAdminWebContext(request, data, True, False)
+                web_context: TimerAdminWebContext = TimerAdminWebContext(request, data, True, False, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
             return web_context.error
-        stored_timer: StoredTimer | None = self._admin_validate_timer_update_data(
-            action, web_context.admin_event, web_context.admin_timer, data)
+        stored_timer: StoredTimer | None = self._admin_validate_timer_update_data(action, web_context, data)
         if stored_timer.errors:
-            return self._admin_timer_render_edit_modal(
-                action, web_context.admin_event, web_context.admin_timer, data, stored_timer.errors)
+            return self._admin_timer_render_edit_modal(action, web_context, data, stored_timer.errors)
         next_action: str | None = None
         next_timer_id: int | None = None
         next_timer_hour_id: int | None = None
@@ -289,22 +276,23 @@ class AdminTimerController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.reload_event(web_context.admin_event.uniq_id)
+        web_context.set_admin_event(event_loader.reload_event(web_context.admin_event.uniq_id))
         if next_timer_id:
-            admin_timer = admin_event.timers_by_id[next_timer_id]
+            web_context.admin_timer = web_context.admin_event.timers_by_id[next_timer_id]
             if next_timer_hour_id:
-                admin_timer_hour = admin_timer.timer_hours_by_id[next_timer_hour_id]
-                return self._admin_timer_render_hours_modal(admin_event, admin_timer, admin_timer_hour)
+                web_context.admin_timer_hour = web_context.admin_timer.timer_hours_by_id[next_timer_hour_id]
+                return self._admin_timer_render_hours_modal(web_context)
             else:
-                return self._admin_timer_render_edit_modal(next_action, admin_event, admin_timer, )
+                web_context.admin_timer_hour = None
+                return self._admin_timer_render_edit_modal(next_action, web_context, )
         else:
-            return self._admin_render_index(
-                request, admin_event=admin_event, admin_event_selector=web_context.admin_event_selector)
+            web_context.admin_timer = None
+            web_context.admin_timer_hour = None
+            return self._admin_render_index(web_context)
 
     @staticmethod
     def _admin_validate_timer_hour_update_data(
-            admin_timer: NewTimer,
-            admin_timer_hour: NewTimerHour,
+            web_context: TimerAdminWebContext,
             previous_valid_timer_hour: NewTimerHour | None,
             data: dict[str, str] | None = None,
     ) -> StoredTimerHour:
@@ -345,7 +333,7 @@ class AdminTimerController(AAdminController):
                 errors['time_str'] = f'Veuillez entrer une date et une heure valides.'
                 if date_str:
                     errors['date_str'] = errors['time_str']
-        if uniq_id != admin_timer_hour.uniq_id and uniq_id in admin_timer.timer_hour_uniq_ids:
+        if uniq_id != web_context.admin_timer_hour.uniq_id and uniq_id in web_context.admin_timer.timer_hour_uniq_ids:
             errors['uniq_id'] = f'L\'horaire [{uniq_id}] existe déjà.'
         text_before: str = WebContext.form_data_to_str(data, 'text_before')
         text_after: str = WebContext.form_data_to_str(data, 'text_after')
@@ -361,9 +349,9 @@ class AdminTimerController(AAdminController):
                 errors['text_after'] = \
                     'Veuillez entrer le texte après l\'horaire (obligatoire sauf pour les débuts de ronde).'
         return StoredTimerHour(
-            id=admin_timer_hour.id,
-            order=admin_timer_hour.order,
-            timer_id=admin_timer.id,
+            id=web_context.admin_timer_hour.id,
+            order=web_context.admin_timer_hour.order,
+            timer_id=web_context.admin_timer.id,
             uniq_id=uniq_id,
             date_str=date_str,
             time_str=time_str,
@@ -374,23 +362,23 @@ class AdminTimerController(AAdminController):
 
     def _admin_timer_render_hours_modal(
             self,
-            admin_event: NewEvent,
-            admin_timer: NewTimer | None,
-            admin_timer_hour: NewTimerHour | None,
+            web_context: TimerAdminWebContext,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
         if data is None:
-            if admin_timer_hour:
+            if web_context.admin_timer_hour:
                 data = {
-                    'uniq_id': WebContext.value_to_form_data(admin_timer_hour.stored_timer_hour.uniq_id),
-                    'date_str': WebContext.value_to_form_data(admin_timer_hour.stored_timer_hour.date_str),
-                    'time_str': WebContext.value_to_form_data(admin_timer_hour.stored_timer_hour.time_str),
-                    'text_before': WebContext.value_to_form_data(admin_timer_hour.stored_timer_hour.text_before),
-                    'text_after': WebContext.value_to_form_data(admin_timer_hour.stored_timer_hour.text_after),
+                    'uniq_id': WebContext.value_to_form_data(web_context.admin_timer_hour.stored_timer_hour.uniq_id),
+                    'date_str': WebContext.value_to_form_data(web_context.admin_timer_hour.stored_timer_hour.date_str),
+                    'time_str': WebContext.value_to_form_data(web_context.admin_timer_hour.stored_timer_hour.time_str),
+                    'text_before': WebContext.value_to_form_data(
+                        web_context.admin_timer_hour.stored_timer_hour.text_before),
+                    'text_after': WebContext.value_to_form_data(
+                        web_context.admin_timer_hour.stored_timer_hour.text_after),
                 }
                 stored_timer_hour = self._admin_validate_timer_hour_update_data(
-                    admin_timer, admin_timer_hour, admin_timer.get_previous_timer_hour(admin_timer_hour), data)
+                    web_context, web_context.admin_timer.get_previous_timer_hour(web_context.admin_timer_hour), data)
                 errors = stored_timer_hour.errors
             else:
                 data = {}
@@ -402,9 +390,11 @@ class AdminTimerController(AAdminController):
             re_target='#admin-modal-container',
             context={
                 'papi_web_config': PapiWebConfig(),
-                'admin_event': admin_event,
-                'admin_timer': admin_timer,
-                'admin_timer_hour': admin_timer_hour,
+                'admin_main_selector': web_context.admin_main_selector,
+                'admin_event_selector': web_context.admin_event_selector,
+                'admin_event': web_context.admin_event,
+                'admin_timer': web_context.admin_timer,
+                'admin_timer_hour': web_context.admin_timer_hour,
                 'data': data,
                 'errors': errors,
             })
@@ -417,9 +407,10 @@ class AdminTimerController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        web_context: TimerHourAdminWebContext = TimerHourAdminWebContext(request, data, True, True)
-        return self._admin_timer_render_hours_modal(
-            web_context.admin_event, web_context.admin_timer, web_context.admin_timer_hour)
+        web_context: TimerAdminWebContext = TimerAdminWebContext(request, data, True, True, False)
+        if web_context.error:
+            return web_context.error
+        return self._admin_timer_render_hours_modal(web_context)
 
     @post(
         path='/admin-timer-hours-update',
@@ -427,10 +418,7 @@ class AdminTimerController(AAdminController):
     )
     async def htmx_admin_timer_hours_update(
             self, request: HTMXRequest,
-            data: Annotated[
-                dict[str, str | list[int]],
-                Body(media_type=RequestEncodingType.URL_ENCODED),
-            ],
+            data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Reswap:
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = WebContext.form_data_to_str(data, 'action')
@@ -438,13 +426,12 @@ class AdminTimerController(AAdminController):
             web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
             if web_context.error:
                 return web_context.error
-            return self._admin_render_index(
-                request, admin_event=web_context.admin_event, admin_event_selector=web_context.admin_event_selector)
+            return self._admin_render_index(web_context)
         match action:
             case 'delete' | 'clone' | 'update':
-                web_context: TimerHourAdminWebContext = TimerHourAdminWebContext(request, data, True, True)
+                web_context: TimerAdminWebContext = TimerAdminWebContext(request, data, True, True, True)
             case 'add' | 'reorder' | 'cancel':
-                web_context: TimerHourAdminWebContext = TimerHourAdminWebContext(request, data, True, False)
+                web_context: TimerAdminWebContext = TimerAdminWebContext(request, data, True, True, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
@@ -454,12 +441,10 @@ class AdminTimerController(AAdminController):
             match action:
                 case 'update':
                     stored_timer_hour: StoredTimerHour = self._admin_validate_timer_hour_update_data(
-                        web_context.admin_timer, web_context.admin_timer_hour,
-                        web_context.admin_timer.get_previous_timer_hour(web_context.admin_timer_hour), data)
+                        web_context, web_context.admin_timer.get_previous_timer_hour(web_context.admin_timer_hour),
+                        data)
                     if stored_timer_hour.errors:
-                        return self._admin_timer_render_hours_modal(
-                            web_context.admin_event, web_context.admin_timer, web_context.admin_timer_hour,
-                            data, stored_timer_hour.errors)
+                        return self._admin_timer_render_hours_modal(web_context, data, stored_timer_hour.errors)
                     event_database.update_stored_timer_hour(stored_timer_hour)
                 case 'delete':
                     event_database.delete_stored_timer_hour(web_context.admin_timer_hour.id, web_context.admin_timer.id)
@@ -476,9 +461,9 @@ class AdminTimerController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.reload_event(web_context.admin_event.uniq_id)
-        admin_timer = admin_event.timers_by_id[web_context.admin_timer.id]
-        admin_timer_hour: NewTimerHour | None = None
+        web_context.set_admin_event(event_loader.reload_event(web_context.admin_event.uniq_id))
+        web_context.admin_timer = web_context.admin_event.timers_by_id[web_context.admin_timer.id]
+        web_context.admin_timer_hour = None
         if next_timer_hour_id:
-            admin_timer_hour = admin_timer.timer_hours_by_id[next_timer_hour_id]
-        return self._admin_timer_render_hours_modal(admin_event, admin_timer, admin_timer_hour)
+            web_context.admin_timer_hour = web_context.admin_timer.timer_hours_by_id[next_timer_hour_id]
+        return self._admin_timer_render_hours_modal(web_context)

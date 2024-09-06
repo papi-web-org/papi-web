@@ -1,13 +1,16 @@
 import time
 from contextlib import suppress
+from io import BytesIO
 
 from logging import Logger
+from pathlib import Path
 from typing import Annotated
+from zipfile import ZipInfo, ZipFile
 
-from litestar import patch, delete, put, post
+from litestar import patch, delete, put, post, Response
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template, Redirect
+from litestar.response import Template, Redirect, File
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.status_codes import HTTP_200_OK
@@ -16,13 +19,47 @@ from common.logger import get_logger
 from data.board import Board
 from data.loader import EventLoader
 from data.player import Player
+from data.tournament import NewTournament
 from data.util import Result
 from web.messages import Message
 from web.session import SessionHandler
 from web.views import WebContext, AController
-from web.views_user import AUserController, TournamentUserWebContext
+from web.views_user import AUserController, EventUserWebContext
+from web.views_user_screen import ScreenUserWebContext
 
 logger: Logger = get_logger()
+
+
+class TournamentUserWebContext(ScreenUserWebContext):
+    def __init__(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            tournament_started: bool | None,
+    ):
+        super().__init__(request, data, tournament_started is None)
+        self.tournament: NewTournament | None = None
+        if self.error:
+            return
+        field: str = 'tournament_id'
+        try:
+            tournament_id: int | None = self._form_data_to_int(field)
+        except ValueError as ve:
+            self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
+            return
+        try:
+            self.tournament: NewTournament = self.user_event.tournaments_by_id[tournament_id]
+        except KeyError:
+            self._redirect_error(f'Le tournoi [{tournament_id}] n\'existe pas.')
+            return
+        if tournament_started is not None:
+            if tournament_started:
+                if not self.tournament.current_round:
+                    self._redirect_error(f'Le tournoi [{self.tournament.uniq_id}] n\'est pas commencé.')
+                    return
+            else:
+                if self.tournament.current_round:
+                    self._redirect_error(f'Le tournoi [{self.tournament.uniq_id}] est commencé.')
+                    return
 
 
 class BoardUserWebContext(TournamentUserWebContext):
@@ -256,3 +293,49 @@ class UserResultController(AUserInputController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         return self._user_input_screen_update_result(request, data)
+
+
+class UserDownloadController(AUserController):
+    @post(
+        path='/user-download-event-tournaments',
+        name='user-download-event-tournaments'
+    )
+    async def htmx_user_download_event_tournaments(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+    ) -> Response[bytes] | Template:
+        web_context: EventUserWebContext = EventUserWebContext(request, data, False)
+        if web_context.error:
+            return web_context.error
+        tournament_files: list[Path] = [
+            tournament.file
+            for tournament in web_context.user_event.tournaments_by_id.values()
+            if tournament.file_exists
+        ]
+        if not tournament_files:
+            return AController.redirect_error(
+                request, f'Aucun fichier de tournoi pour l\'évènement [{web_context.user_event.uniq_id}].')
+        archive = BytesIO()
+        with ZipFile(archive, 'w') as zip_archive:
+            for tournament_file in tournament_files:
+                zip_entry: ZipInfo = ZipInfo(tournament_file.name)
+                with open(tournament_file, 'rb') as tournament_handler:
+                    zip_archive.writestr(
+                        zip_entry, tournament_handler.read())
+        return Response(content=bytes(archive.getbuffer()), media_type='application/zip')
+
+    @post(
+        path='/user-download-tournament',
+        name='user-download-tournament'
+    )
+    async def htmx_user_download_tournament(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+    ) -> File | Template | Redirect:
+        web_context: TournamentUserWebContext = TournamentUserWebContext(request, data, None)
+        if web_context.error:
+            return web_context.error
+        if not web_context.tournament.file_exists:
+            return AController.redirect_error(
+                request, f'Le fichier [{web_context.tournament.file}] n\'existe pas.')
+        return File(path=web_context.tournament.file, filename=web_context.tournament.file.name)

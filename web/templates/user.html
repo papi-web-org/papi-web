@@ -1,0 +1,187 @@
+{% from 'macros.j2' import tooltip_attributes, screen_type_icon, rotator_icon %}
+
+{% extends 'base.html' %}
+
+{% block header %}
+    <div id="user-header" class="header user-header user-home-header position-sticky top-0 mx-2 border-bottom border-dark">
+        <div hx-ext="bs-tabs" class="bs-tabs">
+            <nav>
+                <div class="nav nav-tabs mt-1" id="nav-tab" role="tablist">
+                    <button
+                            class="btn btn-link link-dark fs-5 fw-bold px-1 py-0"
+                            {% if user_event %}
+                                hx-post="{{ url_for('user-update-header') }}"
+                                hx-vals='{}'
+                                hx-swap="multi:#user-header,#user-content"
+                                hx-indicator="#please-wait"
+                            {% else %}
+                                hx-get="{{ url_for('index') }}"
+                                hx-target="body"
+                            {% endif %}
+                            hx-trigger="click, keyup[key=='Escape'] from:body"
+                            hx-indicator="#please-wait"
+                    >
+                        <i class="
+                            {% if user_event %}
+                                bi-arrow-left-circle-fill
+                            {% else %}
+                                bi-house-fill
+                            {% endif %}"></i>
+                    </button>
+                    <input
+                            class="updater user-updater"
+                            type="hidden"
+                            name="date"
+                            value="{{ now }}"
+                            hx-post="{{ url_for('user-render-if-updated') }}"
+                            hx-include="this"
+                            hx-target="body"
+                            hx-trigger="every {{ papi_web_config.user_index_update_delay }}s queue:none"
+                            hx-indicator="#please-wait"
+                    />
+                    {% for nav_id, nav_tab in nav_tabs.items() %}
+                        {% with
+                            vals='{"user_main_selector": "' ~ user_main_selector ~ '", "user_event_selector": "' ~ nav_id ~ '"}' if user_event else '{"user_main_selector": "' ~ nav_id ~ '"}',
+                            active=(user_event_selector == nav_id) if user_event else (user_main_selector == nav_id)
+                        %}
+                            <button
+                                    class="nav-link {% if nav_tab.disabled %}link-secondary{% else %}link-dark{% endif %} border-dark {%if active %}active{%else%}bg-body-secondary{% endif %} fw-bold px-2 py-0 ms-1"
+                                    id="nav-{{ nav_id }}-tab"
+                                    hx-post="{{ url_for('user-update-header') }}"
+                                    hx-vals='{{ vals }}'
+                                    hx-swap="multi:#user-header,#user-content"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#nav-{{ nav_tab.name }}"
+                                    type="button"
+                                    role="tab"
+                                    aria-controls="nav-{{ nav_id }}"
+                                    aria-selected="true"
+                                    hx-indicator="#please-wait"
+                                    {% if nav_tab.disabled %}
+                                        disabled
+                                    {% endif %}
+                            >
+                                {% if nav_id in ['@current_events', '@coming_events', '@passed_events'] %}
+                                    <i class="{{ nav_tab.icon_class }}"></i>
+                                {% elif nav_id == 'rotators' %}
+                                    {{ rotator_icon('') }}
+                                {% else %}
+                                    {{ screen_type_icon(nav_id) }}
+                                {% endif %}
+                                {{ nav_tab.title }}
+                            </button>
+                        {% endwith %}
+                    {% endfor %}
+                    {% include 'user_columns_buttons.html' %}
+                </div>
+            </nav>
+        </div>
+        <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-tooltips.js') }}"></script>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div id="user-content" class="content user-content user-home-content tab-content border border-dark mx-2 p-3">
+        {% for nav_id, nav_tab in nav_tabs.items() %}
+            {% with
+                vals='{"user_main_selector": "{{ user_main_selector }}", "user_event_selector": "{{ nav_id }}"}' if user_event else '{"user_main_selector": "{{ nav_id }}"}',
+                active=(user_event_selector == nav_id) if user_event else (user_main_selector == nav_id)
+            %}
+                <div
+                        class="tab-pane fade {% if active %}show active{% endif %}"
+                        id="nav-{{ nav_id }}"
+                        role="tabpanel"
+                        aria-labelledby="nav-{{ nav_id }}-tab"
+                        tabindex="0"
+                >
+                    {% if active %}
+                        {% if user_event %}
+                            <section class="pt-1 pb-1 shadow-sm">
+                                <div class="container-fluid">
+                                    <div class="row">
+                                        <div class="col-12 fs-3 fw-bold text-nowrap mb-2">
+                                            {% if user_event_selector == 'rotators' %}
+                                                {{ rotator_icon() }} {{ user_event.name }} - {{ nav_tab.title }}
+                                            {% else %}
+                                                {{ screen_type_icon(nav_id) }} {{ user_event.name }} - {{ nav_tab.title }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        {% if user_event_selector == 'rotators' %}
+                                            {% if nav_tab.rotators %}
+                                                {% for rotator in nav_tab.rotators %}
+                                                    {% with
+                                                        card_url=url_for('user-rotator-render'),
+                                                        card_payload='{"user_main_selector": "' ~ user_event.uniq_id ~ '", "user_event_selector": "' ~ user_event_selector ~ '", "rotator_id": "' ~ rotator.id ~ '"}',
+                                                        card_class='bg-info-subtle'
+                                                    %}
+                                                        {% include 'user_event_rotator_card.html' %}
+                                                    {% endwith %}
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="col-12 mb-3">
+                                                    Aucun écran de ce type.
+                                                </div>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if nav_tab.screens %}
+                                                {% for screen in nav_tab.screens %}
+                                                    {% with
+                                                        card_url=url_for('user-screen-render'),
+                                                        card_payload='{"user_main_selector": "' ~ user_event.uniq_id ~ '", "user_event_selector": "' ~ user_event_selector ~ '", "screen_uniq_id": "' ~ screen.uniq_id ~ '"}',
+                                                        card_class='bg-info-subtle'
+                                                    %}
+                                                        {% include 'user_event_screen_card.html' %}
+                                                    {% endwith %}
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="col-12 mb-3">
+                                                    Aucun écran de ce type.
+                                                </div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </section>
+                        {% else %}
+                            {% with
+                                title=nav_tab.title,
+                                events=nav_tab.events,
+                                empty_str=nav_tab.empty_str,
+                                event_class=nav_tab.class,
+                                event_icon_class=nav_tab.icon_class
+                            %}
+                                {% include 'user_event_list.html' %}
+                            {% endwith %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endwith %}
+        {% endfor %}
+        <div id="user-modal-container"
+            class="modal modal-blur overflow-auto"
+            style="display: none"
+            aria-hidden="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false"
+            tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered d-block w-80 mw-100" role="document">
+                <div class="modal-content"></div>
+            </div>
+        </div>
+        <script>
+            {# manually remove the modal backdrop when reloading #admin-content (too many modal-backdrop divs are created by Bootstrap when opening modals) #}
+            $(document).ready(function(){
+                $('body .modal-backdrop').remove();
+            });
+            {# manually remove the tooltips when reloading #admin-content (tooltip elements are created by Bootstrap when tooltips but sometimes not removed) #}
+            $(document).ready(function(){
+                $('body .tooltip').remove();
+                $('body .tooltip-inner').remove();
+                $('body .tooltip-arrow').remove();
+            });
+        </script>
+        <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-tooltips.js') }}"></script>
+    </div>
+{% endblock content %}

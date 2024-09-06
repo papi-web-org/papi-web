@@ -18,10 +18,10 @@ from data.family import NewFamily
 from data.screen_set import NewScreenSet
 from data.tournament import NewTournament
 from data.util import ScreenType
-from web.messages import Message
 from web.session import SessionHandler
 from web.views import WebContext, AController
-from web.views_user import AUserController, BasicScreenOrFamilyUserWebContext
+from web.views_user import AUserController
+from web.views_user_screen import BasicScreenOrFamilyUserWebContext
 
 logger: Logger = get_logger()
 
@@ -50,7 +50,11 @@ class ScreenSetOrFamilyUserWebContext(BasicScreenOrFamilyUserWebContext):
 class UserScreenSetController(AUserController):
 
     @staticmethod
-    def _user_screen_set_div_update_needed(screen_set: NewScreenSet, family: NewFamily, date: float, ) -> bool:
+    def _user_screen_set_div_update_needed(
+            screen_set: NewScreenSet,
+            family: NewFamily,
+            date: float,
+    ) -> bool:
         tournament: NewTournament = screen_set.tournament if screen_set else family.tournament
         if tournament.last_update > date:
             if tournament.last_update > date:

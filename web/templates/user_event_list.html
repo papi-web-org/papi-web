@@ -1,0 +1,29 @@
+{% extends 'cards_container.html' %}
+{% from 'macros.j2' import tooltip_attributes %}
+
+{% block cards_container_title %}
+    <i class="{{ event_icon_class }}"></i> {{ title }}
+{% endblock %}
+
+{% block cards_container_right_buttons %}
+{% endblock %}
+
+{% block cards_container_cards %}
+    <div class="row">
+        {% if events %}
+            {% for event in events %}
+                {% with
+                    card_url=url_for('user-event-render'),
+                    card_payload='{"user_main_selector": "' ~ event.uniq_id ~ '"}',
+                    card_class=event_class
+                %}
+                    {% include 'user_event_card.html' %}
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            <div class="col-12 mb-3">
+                {{ empty_str }}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

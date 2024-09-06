@@ -3,7 +3,7 @@
     {% if admin_screen_set.id == screen_set.id %}
         <form
                 hx-post="{{ url_for('admin-screen-sets-update') }}"
-                hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
+                hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
                 hx-target="closest .admin-screen-sets-modal-screen-set-div"
                 hx-swap="innerHTML"
                 hx-trigger="end"
@@ -65,7 +65,7 @@
                         <button
                                 class="btn btn-sm btn-primary text-nowrap mb-1"
                                 hx-post="{{ url_for('admin-screen-sets-update') }}"
-                                hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
+                                hx-vals='{"action": "update", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
                                 hx-target="#admin-modal-container"
                                 hx-swap="innerHTML"
                                 hx-indicator="#please-wait">
@@ -74,7 +74,7 @@
                         <button
                                 class="btn btn-sm btn-secondary text-nowrap mb-1"
                                 hx-post="{{ url_for('admin-screen-sets-update') }}"
-                                hx-vals='{"action": "cancel", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
+                                hx-vals='{"action": "cancel", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
                                 hx-target="#admin-modal-container"
                                 hx-swap="innerHTML"
                                 hx-indicator="#please-wait">
@@ -211,7 +211,7 @@
                         <button
                                 class="btn btn-sm btn-primary text-nowrap"
                                 hx-post="{{ url_for('admin-screen-render-sets-modal') }}"
-                                hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
+                                hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
                                 hx-target="#admin-modal-container"
                                 hx-swap="innerHTML"
                                 hx-indicator="#please-wait">
@@ -220,7 +220,7 @@
                         <button
                                 class="btn btn-sm btn-primary text-nowrap"
                                 hx-post="{{ url_for('admin-screen-sets-update') }}"
-                                hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
+                                hx-vals='{"action": "clone", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
                                 hx-target="#admin-modal-container"
                                 hx-swap="innerHTML"
                                 hx-indicator="#please-wait">
@@ -229,7 +229,7 @@
                         <button
                                 class="btn btn-sm btn-danger text-nowrap"
                                 hx-post="{{ url_for('admin-screen-sets-update') }}"
-                                hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
+                                hx-vals='{"action": "delete", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ admin_screen.id }}", "admin_screen_set_id": "{{ screen_set.id }}" }'
                                 hx-target="#admin-screen-sets-modal"
                                 hx-swap="innerHTML"
                                 hx-indicator="#please-wait"

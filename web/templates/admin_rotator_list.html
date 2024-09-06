@@ -1,4 +1,4 @@
-{% extends 'admin_cards_container.html' %}
+{% extends 'cards_container.html' %}
 {% from 'macros.j2' import tooltip_attributes, event_visibility_icon %}
 
 {% block cards_container_title %}
@@ -15,7 +15,7 @@
             <input
                     name="{{ name }}"
                     hx-post="{{ url_for('admin-update-header') }}"
-                    hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "{{ admin_event_selector }}s", "{{ name }}": "{% if show_details_on_rotator_list %}off{% else %}on{% endif %}"}'
+                    hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "{{ name }}": "{% if show_details_on_rotator_list %}off{% else %}on{% endif %}"}'
                     hx-swap="multi:#admin-header,#admin-content"
                     hx-indicator="#please-wait"
                     class="form-check-input"
@@ -28,23 +28,26 @@
         <button
                 class="btn btn-primary text-nowrap ms-1"
                 hx-post="{{ url_for('admin-update-header') }}"
-                hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "{{ admin_event_selector }}"}'
+                hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}"}'
                 hx-swap="multi:#admin-header,#admin-content"
                 hx-indicator="#please-wait"
         >
             <i class="bi-arrow-clockwise"></i>
         </button>
     </span>
-    <span {{ tooltip_attributes('info', 'Ajouter un nouvel écran rotatif à l\'évènement.', 'top') }}>
+    <span {{ tooltip_attributes('info', 'Ajouter un nouvel écran rotatif à l\'évènement.' if admin_event.screens_by_uniq_id else 'Vous devez créer un écran ou une famille d\'écrans avant de pouvoir créer des écrans rotatifs', 'top') }}>
         <button
                 class="btn btn-primary text-nowrap ms-1"
                 hx-post="{{ url_for('admin-rotator-render-edit-modal') }}"
-                hx-vals='{"action": "create", "admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
+                hx-vals='{"action": "create", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}"}'
                 hx-target="#admin-modal-container"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal"
                 data-bs-target="#admin-modal-container"
                 hx-indicator="#please-wait"
+                {% if not admin_event.screens_by_uniq_id %}
+                    disabled
+                {% endif %}
         >
             <i class="bi-plus-square-fill"></i> Créer un écran rotatif
         </button>

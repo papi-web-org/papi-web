@@ -55,8 +55,7 @@ class AdminTournamentController(AAdminController):
     @staticmethod
     def _admin_validate_tournament_update_data(
             action: str,
-            admin_event: NewEvent,
-            admin_tournament: NewTournament | None,
+            web_context: TournamentAdminWebContext,
             data: dict[str, str] | None = None,
     ) -> StoredTournament:
         errors: dict[str, str] = {}
@@ -66,7 +65,7 @@ class AdminTournamentController(AAdminController):
         if action == 'delete':
             if not uniq_id:
                 errors['uniq_id'] = 'Veuillez entrer l\'identifiant du tournoi.'
-            elif uniq_id != admin_tournament.uniq_id:
+            elif uniq_id != web_context.admin_tournament.uniq_id:
                 errors['uniq_id'] = f'L\'identifiant entré n\'est pas valide.'
         else:
             if not uniq_id:
@@ -76,10 +75,11 @@ class AdminTournamentController(AAdminController):
             else:
                 match action:
                     case 'create' | 'clone':
-                        if uniq_id in admin_event.tournaments_by_uniq_id:
+                        if uniq_id in web_context.admin_event.tournaments_by_uniq_id:
                             errors['uniq_id'] = f'Le tournoi [{uniq_id}] existe déjà.'
                     case 'update':
-                        if uniq_id != admin_tournament.uniq_id and uniq_id in admin_event.tournaments_by_uniq_id:
+                        if uniq_id != web_context.admin_tournament.uniq_id \
+                                and uniq_id in web_context.admin_event.tournaments_by_uniq_id:
                             errors['uniq_id'] = f'Le tournoi [{uniq_id}] existe déjà.'
                     case _:
                         raise ValueError(f'action=[{action}]')
@@ -133,7 +133,7 @@ class AdminTournamentController(AAdminController):
             case _:
                 raise ValueError(f'action=[{action}]')
         return StoredTournament(
-            id=admin_tournament.id if action != 'create' else None,
+            id=web_context.admin_tournament.id if action != 'create' else None,
             uniq_id=uniq_id,
             name=name,
             path=path,
@@ -164,8 +164,7 @@ class AdminTournamentController(AAdminController):
     def _admin_tournament_render_edit_modal(
             self,
             action: str,
-            admin_event: NewEvent,
-            admin_tournament: NewTournament | None,
+            web_context: TournamentAdminWebContext,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
@@ -173,7 +172,8 @@ class AdminTournamentController(AAdminController):
             data = {}
             match action:
                 case 'update':
-                    data['uniq_id'] = WebContext.value_to_form_data(admin_tournament.stored_tournament.uniq_id)
+                    data['uniq_id'] = WebContext.value_to_form_data(
+                        web_context.admin_tournament.stored_tournament.uniq_id)
                 case 'create' | 'clone':
                     data['uniq_id'] = ''
                 case 'delete':
@@ -182,12 +182,14 @@ class AdminTournamentController(AAdminController):
                     raise ValueError(f'action=[{action}]')
             match action:
                 case 'update' | 'clone':
-                    data['name'] = WebContext.value_to_form_data(admin_tournament.stored_tournament.name)
-                    data['path'] = WebContext.value_to_form_data(admin_tournament.stored_tournament.path)
-                    data['filename'] = WebContext.value_to_form_data(admin_tournament.stored_tournament.filename)
-                    data['ffe_id'] = WebContext.value_to_form_data(admin_tournament.stored_tournament.ffe_id)
+                    data['name'] = WebContext.value_to_form_data(web_context.admin_tournament.stored_tournament.name)
+                    data['path'] = WebContext.value_to_form_data(web_context.admin_tournament.stored_tournament.path)
+                    data['filename'] = WebContext.value_to_form_data(
+                        web_context.admin_tournament.stored_tournament.filename)
+                    data['ffe_id'] = WebContext.value_to_form_data(
+                        web_context.admin_tournament.stored_tournament.ffe_id)
                     data['ffe_password'] = WebContext.value_to_form_data(
-                        admin_tournament.stored_tournament.ffe_password)
+                        web_context.admin_tournament.stored_tournament.ffe_password)
                 case 'create':
                     data['name'] = ''
                     data['path'] = ''
@@ -201,27 +203,27 @@ class AdminTournamentController(AAdminController):
             match action:
                 case 'update':
                     data['time_control_initial_time'] = WebContext.value_to_form_data(
-                        admin_tournament.stored_tournament.time_control_initial_time)
+                        web_context.admin_tournament.stored_tournament.time_control_initial_time)
                     data['time_control_increment'] = WebContext.value_to_form_data(
-                        admin_tournament.stored_tournament.time_control_increment)
+                        web_context.admin_tournament.stored_tournament.time_control_increment)
                     data['time_control_handicap_penalty_value'] = WebContext.value_to_form_data(
-                        admin_tournament.stored_tournament.time_control_handicap_penalty_value)
+                        web_context.admin_tournament.stored_tournament.time_control_handicap_penalty_value)
                     data['time_control_handicap_penalty_step'] = WebContext.value_to_form_data(
-                        admin_tournament.stored_tournament.time_control_handicap_penalty_step)
+                        web_context.admin_tournament.stored_tournament.time_control_handicap_penalty_step)
                     data['time_control_handicap_min_time'] = WebContext.value_to_form_data(
-                        admin_tournament.stored_tournament.time_control_handicap_min_time)
+                        web_context.admin_tournament.stored_tournament.time_control_handicap_min_time)
                     data['chessevent_id'] = WebContext.value_to_form_data(
-                        admin_tournament.stored_tournament.chessevent_id)
+                        web_context.admin_tournament.stored_tournament.chessevent_id)
                     data['chessevent_tournament_name'] = WebContext.value_to_form_data(
-                        admin_tournament.stored_tournament.chessevent_tournament_name)
+                        web_context.admin_tournament.stored_tournament.chessevent_tournament_name)
                     data['record_illegal_moves'] = WebContext.value_to_form_data(
-                        admin_tournament.stored_tournament.record_illegal_moves)
+                        web_context.admin_tournament.stored_tournament.record_illegal_moves)
                 case 'delete' | 'clone' | 'create':
                     pass
                 case _:
                     raise ValueError(f'action=[{action}]')
             stored_tournament: StoredTournament = self._admin_validate_tournament_update_data(
-                action, admin_event, admin_tournament, data)
+                action, web_context, data)
             errors = stored_tournament.errors
         if errors is None:
             errors = {}
@@ -232,12 +234,14 @@ class AdminTournamentController(AAdminController):
             context={
                 'papi_web_config': PapiWebConfig(),
                 'action': action,
-                'admin_event': admin_event,
-                'admin_tournament': admin_tournament,
-                'chessevent_options': self._get_chessevent_options(admin_event),
+                'admin_main_selector': web_context.admin_main_selector,
+                'admin_event_selector': web_context.admin_event_selector,
+                'admin_event': web_context.admin_event,
+                'admin_tournament': web_context.admin_tournament,
+                'chessevent_options': self._get_chessevent_options(web_context.admin_event),
                 'data': data,
                 'record_illegal_moves_options': self._get_record_illegal_moves_options(
-                    admin_event.record_illegal_moves),
+                    web_context.admin_event.record_illegal_moves),
                 'errors': errors,
             })
 
@@ -247,10 +251,7 @@ class AdminTournamentController(AAdminController):
     )
     async def htmx_admin_tournament_render_edit_modal(
             self, request: HTMXRequest,
-            data: Annotated[
-                dict[str, str],
-                Body(media_type=RequestEncodingType.URL_ENCODED),
-            ],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         action: str = WebContext.form_data_to_str(data, 'action')
         web_context: TournamentAdminWebContext
@@ -261,7 +262,9 @@ class AdminTournamentController(AAdminController):
                 web_context = TournamentAdminWebContext(request, data, True, False)
             case _:
                 raise ValueError(f'action=[{action}]')
-        return self._admin_tournament_render_edit_modal(action, web_context.admin_event, web_context.admin_tournament)
+        if web_context.error:
+            return web_context.error
+        return self._admin_tournament_render_edit_modal(action, web_context)
 
     @post(
         path='/admin-tournament-update',
@@ -269,10 +272,7 @@ class AdminTournamentController(AAdminController):
     )
     async def htmx_admin_tournament_update(
             self, request: HTMXRequest,
-            data: Annotated[
-                dict[str, str],
-                Body(media_type=RequestEncodingType.URL_ENCODED),
-            ],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = WebContext.form_data_to_str(data, 'action')
@@ -280,8 +280,7 @@ class AdminTournamentController(AAdminController):
             web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
             if web_context.error:
                 return web_context.error
-            return self._admin_render_index(
-                request, admin_event=web_context.admin_event, admin_event_selector=web_context.admin_event_selector)
+            return self._admin_render_index(web_context)
         match action:
             case 'update' | 'delete' | 'clone':
                 web_context: TournamentAdminWebContext = TournamentAdminWebContext(request, data, True, True)
@@ -292,10 +291,9 @@ class AdminTournamentController(AAdminController):
         if web_context.error:
             return web_context.error
         stored_tournament: StoredTournament | None = self._admin_validate_tournament_update_data(
-            action, web_context.admin_event, web_context.admin_tournament, data)
+            action, web_context, data)
         if stored_tournament.errors:
-            return self._admin_tournament_render_edit_modal(
-                action, web_context.admin_event, web_context.admin_tournament, data, stored_tournament.errors)
+            return self._admin_tournament_render_edit_modal(action, web_context, data, stored_tournament.errors)
         with (EventDatabase(web_context.admin_event.uniq_id, write=True) as event_database):
             match action:
                 case 'update':
@@ -320,10 +318,9 @@ class AdminTournamentController(AAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        admin_event = event_loader.reload_event(web_context.admin_event.uniq_id)
+        web_context.set_admin_event(event_loader.reload_event(web_context.admin_event.uniq_id))
         if stored_tournament:
-            admin_tournament = admin_event.tournaments_by_id[stored_tournament.id]
-            return self._admin_tournament_render_edit_modal('update', admin_event, admin_tournament)
+            web_context.admin_tournament = web_context.admin_event.tournaments_by_id[stored_tournament.id]
+            return self._admin_tournament_render_edit_modal('update', web_context)
         else:
-            return self._admin_render_index(
-                request, admin_event=admin_event, admin_event_selector=web_context.admin_event_selector)
+            return self._admin_render_index(web_context)

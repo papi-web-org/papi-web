@@ -62,7 +62,7 @@
             <button
                     class="btn btn-sm btn-primary p-1"
                     hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
-                    hx-vals='{"action": "update", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
+                    hx-vals='{"action": "update", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ screen.id }}"}'
                     hx-target="#admin-modal-container"
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"
@@ -77,7 +77,7 @@
             <button
                     class="btn btn-sm btn-primary p-1"
                     hx-post="{{ url_for('admin-screen-render-sets-modal') }}"
-                    hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
+                    hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ screen.id }}"}'
                     hx-target="#admin-modal-container"
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"
@@ -100,7 +100,7 @@
             <button
                     class="btn btn-sm btn-primary p-1"
                     hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
-                    hx-vals='{"action": "clone", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
+                    hx-vals='{"action": "clone", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ screen.id }}"}'
                     hx-target="#admin-modal-container"
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"
@@ -113,7 +113,7 @@
             <button
                     class="btn btn-sm btn-danger p-1"
                     hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
-                    hx-vals='{"action": "delete", "admin_event_uniq_id": "{{ admin_event.uniq_id }}", "admin_screen_id": "{{ screen.id }}"}'
+                    hx-vals='{"action": "delete", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ screen.id }}"}'
                     hx-target="#admin-modal-container"
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"

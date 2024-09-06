@@ -28,23 +28,37 @@ class AdminWebContext(WebContext):
             lazy_load: bool,
     ):
         super().__init__(request, data)
-        self.admin_main_selector: str = ''
+        self._admin_main_selector: str = ''
         self.admin_event_selector: str = ''
-        self.admin_event: NewEvent | None = None
-        self.admin_main_selector: str = self._form_data_to_str('admin_main_selector', '')
+        self._admin_event: NewEvent | None = None
+        if self.error:
+            return
+        self._admin_main_selector: str = self._form_data_to_str('admin_main_selector', '')
         if not self.admin_main_selector:
             pass
-        elif self.admin_main_selector == '@config':
+        elif self.admin_main_selector.startswith('@'):
             pass
         else:
             try:
-                self.admin_event = EventLoader.get(request=self.request, lazy_load=lazy_load).load_event(
-                    self.admin_main_selector)
+                self.set_admin_event(EventLoader.get(request=self.request, lazy_load=lazy_load).load_event(
+                    self.admin_main_selector))
             except PapiWebException as pwe:
                 self._redirect_error(f'L\'évènement [{self.admin_main_selector}] est introuvable : {pwe}')
-                self.admin_main_selector = ''
+                self.set_admin_event(None)
                 return
         self.admin_event_selector: str = self._form_data_to_str('admin_event_selector', '')
+
+    @property
+    def admin_main_selector(self) -> str:
+        return self._admin_main_selector
+
+    @property
+    def admin_event(self) -> NewEvent | None:
+        return self._admin_event
+
+    def set_admin_event(self, event: NewEvent | None):
+        self._admin_event = event
+        self._admin_main_selector = event.uniq_id if event else ''
 
 
 class AAdminController(AController):
@@ -105,50 +119,42 @@ class AAdminController(AController):
 
     @staticmethod
     def _admin_render_index(
-        request: HTMXRequest,
-        admin_main_selector: str = '',
-        admin_event: NewEvent = None,
-        admin_event_selector: str = '',
+            web_context: AdminWebContext,
     ) -> Template:
-        event_nav_tabs: dict[str, dict[str]] | None = None
-        if admin_event:
-            event_nav_tabs: dict[str, dict[str]] = {
+        nav_tabs: dict[str, dict[str]]
+        if web_context.admin_event:
+            nav_tabs = {
                 '': {
-                    'title': admin_event.uniq_id,
+                    'title': web_context.admin_event.uniq_id,
                     'template': 'admin_event_config.html',
                 },
                 '@tournaments': {
-                    'title': f'Tournois ({len(admin_event.tournaments_by_id) or "-"})',
+                    'title': f'Tournois ({len(web_context.admin_event.tournaments_by_id) or "-"})',
                     'template': 'admin_tournament_list.html',
                 },
                 '@screens': {
-                    'title': f'Écrans ({len(admin_event.basic_screens_by_id) or "-"})',
+                    'title': f'Écrans ({len(web_context.admin_event.basic_screens_by_id) or "-"})',
                     'template': 'admin_screen_list.html',
                 },
                 '@families': {
-                    'title': f'Familles ({len(admin_event.families_by_id) or  "-"})',
+                    'title': f'Familles ({len(web_context.admin_event.families_by_id) or  "-"})',
                     'template': 'admin_family_list.html',
                 },
                 '@rotators': {
-                    'title': f'Écrans rotatifs ({len(admin_event.rotators_by_id) or "-"})',
+                    'title': f'Écrans rotatifs ({len(web_context.admin_event.rotators_by_id) or "-"})',
                     'template': 'admin_rotator_list.html',
                 },
                 '@timers': {
-                    'title': f'Chronomètres ({len(admin_event.timers_by_id) or "-"})',
+                    'title': f'Chronomètres ({len(web_context.admin_event.timers_by_id) or "-"})',
                     'template': 'admin_timer_list.html',
                 },
                 '@chessevents': {
-                    'title': f'ChessEvent ({len(admin_event.chessevents_by_id) or "-"})',
+                    'title': f'ChessEvent ({len(web_context.admin_event.chessevents_by_id) or "-"})',
                     'template': 'admin_chessevent_list.html',
                 },
             }
-        context: dict = {
-            'papi_web_config': PapiWebConfig(),
-            'odbc_drivers': odbc_drivers(),
-            'access_driver': access_driver(),
-            'event_loader': EventLoader.get(request=request, lazy_load=True),
-            'messages': Message.messages(request),
-            'main_nav_tabs': {
+        else:
+            nav_tabs = {
                 '': {
                     'title': 'Évènements',
                     'template': 'admin_event_list.html',
@@ -157,22 +163,31 @@ class AAdminController(AController):
                     'title': 'Configuration Papi-web',
                     'template': 'admin_config.html',
                 },
-            },
-            'event_nav_tabs': event_nav_tabs,
-            'admin_main_selector': admin_event.uniq_id if admin_event else admin_main_selector,
-            'admin_event': admin_event,
-            'admin_event_selector': admin_event_selector,
-            'admin_columns': SessionHandler.get_session_admin_columns(request),
-            'show_family_screens_on_screen_list': SessionHandler.get_session_show_family_screens_on_screen_list(
-                request),
-            'show_details_on_screen_list': SessionHandler.get_session_show_details_on_screen_list(request),
-            'show_details_on_family_list': SessionHandler.get_session_show_details_on_family_list(request),
-            'show_details_on_rotator_list': SessionHandler.get_session_show_details_on_rotator_list(request),
-            'screen_types_on_screen_list': SessionHandler.get_session_screen_types_on_screen_list(request),
-        }
+            }
         return HTMXTemplate(
             template_name="admin.html",
-            context=context)
+            context={
+                'papi_web_config': PapiWebConfig(),
+                'odbc_drivers': odbc_drivers(),
+                'access_driver': access_driver(),
+                'event_loader': EventLoader.get(request=web_context.request, lazy_load=True),
+                'messages': Message.messages(web_context.request),
+                'nav_tabs': nav_tabs,
+                'admin_main_selector': web_context.admin_main_selector,
+                'admin_event': web_context.admin_event,
+                'admin_event_selector': web_context.admin_event_selector,
+                'admin_columns': SessionHandler.get_session_admin_columns(web_context.request),
+                'show_family_screens_on_screen_list': SessionHandler.get_session_show_family_screens_on_screen_list(
+                    web_context.request),
+                'show_details_on_screen_list': SessionHandler.get_session_show_details_on_screen_list(
+                    web_context.request),
+                'show_details_on_family_list': SessionHandler.get_session_show_details_on_family_list(
+                    web_context.request),
+                'show_details_on_rotator_list': SessionHandler.get_session_show_details_on_rotator_list(
+                    web_context.request),
+                'screen_types_on_screen_list': SessionHandler.get_session_screen_types_on_screen_list(
+                    web_context.request),
+            })
 
 
 class AdminIndexController(AAdminController):
@@ -180,8 +195,11 @@ class AdminIndexController(AAdminController):
         path='/admin-render',
         name='admin-render'
     )
-    async def htmx_admin_render_index(self, request: HTMXRequest) -> Template:
-        return self._admin_render_index(request)
+    async def htmx_admin_render_index(
+            self, request: HTMXRequest
+    ) -> Template:
+        web_context: AdminWebContext = AdminWebContext(request, {}, True)
+        return self._admin_render_index(web_context)
 
     @post(
         path='/admin-update-header',
@@ -192,6 +210,8 @@ class AdminIndexController(AAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
         web_context: AdminWebContext = AdminWebContext(request, data, True)
+        if web_context.error:
+            return web_context.error
         field: str = f'admin_columns'
         if field in data:
             SessionHandler.set_session_admin_columns(request, WebContext.form_data_to_int(data, field))
@@ -225,6 +245,4 @@ class AdminIndexController(AAdminController):
                     screen_types.remove(screen_type)
                 SessionHandler.set_session_screen_types_on_screen_list(request, screen_types)
                 continue
-        return self._admin_render_index(
-            request, admin_main_selector=web_context.admin_main_selector, admin_event=web_context.admin_event,
-            admin_event_selector=web_context.admin_event_selector)
+        return self._admin_render_index(web_context)
