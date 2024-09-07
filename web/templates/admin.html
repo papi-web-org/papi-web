@@ -49,7 +49,12 @@
                                     {% if nav_tab.disabled %}
                                         disabled
                                     {% endif %}
-                            >{{ nav_tab.title }}</button>
+                            >
+                                {% if nav_tab.icon_class %}
+                                    <i class="{{ nav_tab.icon_class }}"></i>
+                                {% endif %}
+                                {{ nav_tab.title }}
+                            </button>
                         {% endwith %}
                     {% endfor %}
                     {% include 'admin_columns_buttons.html' %}

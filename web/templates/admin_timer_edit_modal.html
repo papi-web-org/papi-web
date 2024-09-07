@@ -54,10 +54,10 @@
                             Couleurs et délais
                         </h3>
                         {% with default_colors=admin_event.timer_colors %}
-                            {% include 'admin_edit_timer_colors.html' %}
+                            {% include 'admin_timer_edit_colors.html' %}
                         {% endwith %}
                         {% with default_delays=admin_event.timer_delays %}
-                            {% include 'admin_edit_timer_delays.html' %}
+                            {% include 'admin_timer_edit_delays.html' %}
                         {% endwith %}
                     {% endif %}
                 {% endif %}

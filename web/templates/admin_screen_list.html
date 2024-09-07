@@ -133,7 +133,8 @@
                             {% set ns.screen_found=true %}
                             {% with
                                 card_class='bg-light' if not screen.family else 'bg-secondary-subtle text-secondary',
-                                card_image=screen.image
+                                card_image=screen.image,
+                                card_color=screen.color
                             %}
                                 {% include 'admin_screen_card.html' %}
                             {% endwith %}

@@ -35,7 +35,7 @@
                 {% with
                     card_url=url_for('admin-render'),
                     card_payload='{"admin_main_selector": "' ~ event.uniq_id ~ '"}',
-                    card_class=nav_tab.class
+                    card_class=('bg-light' if event.public else 'bg-danger-subtle') if admin_auth else 'bg-light'
                 %}
                     {% include 'admin_event_card.html' %}
                 {% endwith %}

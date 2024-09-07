@@ -327,3 +327,7 @@ class PapiWebConfig:
     @property
     def default_columns(self) -> int:
         return 4
+
+    @property
+    def default_image_screen_color(self) -> str:
+        return '#FFFFFF'

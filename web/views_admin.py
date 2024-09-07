@@ -133,6 +133,7 @@ class AAdminController(AController):
                 '': {
                     'title': web_context.admin_event.uniq_id,
                     'template': 'admin_event_config.html',
+                    'icon_class': 'bi-gear-fill',
                 },
                 '@tournaments': {
                     'title': f'Tournois ({len(web_context.admin_event.tournaments_by_id) or "-"})',
@@ -166,7 +167,6 @@ class AAdminController(AController):
                     'events': event_loader.current_events,
                     'disabled': not event_loader.current_events,
                     'empty_str': 'Aucun évènement en cours.',
-                    'class': 'bg-primary-subtle',
                     'icon_class': 'bi-calendar',
                 },
                 '@coming_events': {
@@ -174,7 +174,6 @@ class AAdminController(AController):
                     'events': event_loader.coming_events,
                     'disabled': not event_loader.coming_events,
                     'empty_str': 'Aucun évènement à venir.',
-                    'class': 'bg-info-subtle',
                     'icon_class': 'bi-calendar-check',
                 },
                 '@passed_events': {
@@ -182,12 +181,12 @@ class AAdminController(AController):
                     'events': event_loader.passed_events,
                     'disabled': not event_loader.passed_events,
                     'empty_str': 'Aucun évènement passé.',
-                    'class': 'bg-secondary-subtle',
                     'icon_class': 'bi-calendar-minus',
                 },
                 '@config': {
                     'title': 'Configuration Papi-web',
                     'template': 'admin_config.html',
+                    'icon_class': 'bi-gear-fill',
                     'disabled': False,
                 },
             }

@@ -337,6 +337,46 @@
                                         {% endif %}
                                     {% endwith %}
                                 </div>
+                                <div class="col-6">
+                                    {% with
+                                        id='color',
+                                        name='color',
+                                        checkbox_id='color-checkbox',
+                                        checkbox_name='color_checkbox'
+                                    %}
+                                        <label for="{{ id }}" class="form-label">Couleur de fond :</label>
+                                        <input
+                                                name="{{ checkbox_name }}"
+                                                type="checkbox" id="{{ checkbox_id }}"
+                                                aria-describedby="{{ id }}-help {{ id }}-error"
+                                                {% if data[checkbox_name] %}checked{% endif %} /> aucune
+                                        <script>
+                                            $('#{{ checkbox_id }}').click(function() {
+                                                if ($(this).is(':checked')) {
+                                                    $('#{{ id }}').val('');
+                                                    $('#{{ id }}').prop('disabled', true);
+                                                } else {
+                                                    $('#{{ id }}').prop('disabled', false);
+                                                }
+                                            });
+                                        </script>
+                                        <input
+                                                name="{{ name }}"
+                                                type="color" id="{{ id }}"
+                                                class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                                aria-describedby="{{ id }}-help {{ id }}-error"
+                                                value="{{ data[name] }}"
+                                                {% if data[checkbox_name] %}disabled{% endif %}/>
+                                        <div id="{{ id }}-help" class="form-text">
+                                            La couleur de fond est utilisée lorsque l'image ne remplit pas complètement l'écran.
+                                        </div>
+                                        {% if name in errors %}
+                                            <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                                {{ errors[name] }}
+                                            </div>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
                             </div>
                         {% endif %}
                     {% endif %}

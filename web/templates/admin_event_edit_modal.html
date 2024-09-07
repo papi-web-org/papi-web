@@ -95,7 +95,7 @@
                                             for="{{ id }}"
                                             class="form-check-label"
                                     >
-                                        Visibilité ({{ data[name] }}) :
+                                        Visibilité :
                                     </label>
                                 </div>
                                 <div class="form-check form-switch d-inline-block pe-3">
@@ -288,10 +288,10 @@
                             Chronomètres
                         </h3>
                         {% with default_colors=papi_web_config.default_timer_colors %}
-                            {% include 'admin_edit_timer_colors.html' %}
+                            {% include 'admin_timer_edit_colors.html' %}
                         {% endwith %}
                         {% with default_delays=papi_web_config.default_timer_delays %}
-                            {% include 'admin_edit_timer_delays.html' %}
+                            {% include 'admin_timer_edit_delays.html' %}
                         {% endwith %}
                     {% endif %}
                 {% endif %}

@@ -2,15 +2,20 @@
 {% from 'macros.j2' import tooltip_attributes, event_visibility_icon %}
 
 {% block card_header %}
-    <i class="{{ icon_class }}"></i>
-    {{ event.uniq_id }}
+    {{ event_visibility_icon(event) }}
+    {% if event.formatted_start_date == event.formatted_stop_date %}
+         <span class="fw-bold">{{ event.formatted_start_date }}</span> {{ event.formatted_start_time }}-{{ event.formatted_stop_time }}
+    {% else %}
+         <span class="fw-bold">{{ event.formatted_start_date }} - {{ event.formatted_stop_date }}</span>
+    {% endif %}
 {% endblock %}
 
 {% block card_title %}
-    {{ event_visibility_icon(event) }} {{ event.name }}
+    {{ event.name }}
 {% endblock %}
 
 {% block card_text %}
+    <div><i class="bi-question-circle-fill" ></i> Identifiant unique : {{ event.uniq_id }}</div>
     <div><i class="bi-people-fill" ></i> Tournois : {{ event.tournaments_by_id|length }}</div>
     <div><i class="bi-download" ></i> Connexions à ChessEvent : {{ event.chessevents_by_id|length }}</div>
     <div><i class="bi-clock-fill" ></i> Chronomètres : {{ event.timers_by_id|length }}</div>

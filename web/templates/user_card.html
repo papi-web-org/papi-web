@@ -15,9 +15,14 @@
         </div>
         <div
                 class="card-body p-2 d-flex flex-column"
-                {% if card_image %}
-                    style="background-image: url('{{ card_image }}'); background-color: '{{ card_color }}';"
-                {% endif %}
+                style="
+                    {% if card_image %}
+                        background-image: url('{{ card_image }}');
+                        {% if card_color %}
+                            background-color: {{ card_color }};
+                        {% endif %}
+                    {% endif %}
+                    "
         >
             <div class="card-title text-start fs-4 fw-bold">
                 {% block card_title %}

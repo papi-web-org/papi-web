@@ -46,7 +46,7 @@ class UserWebContext(WebContext):
             try:
                 self.user_event = EventLoader.get(request=self.request, lazy_load=lazy_load).load_event(
                     self.user_main_selector)
-                if not self.user_event.public:
+                if not self.user_event.public and not self.admin_auth:
                     self._redirect_error(f'L\'évènement [{self.user_event.uniq_id}] est privé.')
                     self.user_main_selector = ''
                     self.user_event = None
@@ -140,30 +140,41 @@ class AUserController(AController):
                     web_context.user_event_selector = list(nav_tabs.keys())[(nav_index + 1) % len(nav_tabs)]
         else:
             event_loader: EventLoader = EventLoader.get(request=web_context.request, lazy_load=True)
+            current_events: list[Event]
+            coming_events: list[Event]
+            passed_events: list[Event]
+            if web_context.admin_auth:
+                current_events = event_loader.current_events
+                coming_events = event_loader.coming_events
+                passed_events = event_loader.passed_events
+            else:
+                current_events = event_loader.current_public_events
+                coming_events = event_loader.coming_public_events
+                passed_events = event_loader.passed_public_events
             nav_tabs: dict[str, dict] = {
                 '@current_events': {
-                    'title': f'Évènements en cours ({len(event_loader.current_public_events) or "-"})',
-                    'events': event_loader.current_public_events,
+                    'title': f'Évènements en cours ({len(current_events) or "-"})',
+                    'events': current_events,
                     'empty_str': 'Aucun évènement en cours.',
                     'class': 'bg-primary-subtle',
                     'icon_class': 'bi-calendar',
-                    'disabled': not event_loader.current_public_events,
+                    'disabled': not current_events,
                 },
                 '@coming_events': {
-                    'title': f'Évènements à venir ({len(event_loader.coming_public_events) or "-"})',
-                    'events': event_loader.coming_public_events,
+                    'title': f'Évènements à venir ({len(coming_events) or "-"})',
+                    'events': coming_events,
                     'empty_str': 'Aucun évènement à venir.',
                     'class': 'bg-info-subtle',
                     'icon_class': 'bi-calendar-check',
-                    'disabled': not event_loader.coming_public_events,
+                    'disabled': not coming_events,
                 },
                 '@passed_events': {
-                    'title': f'Évènements passés ({len(event_loader.passed_public_events) or "-"})',
-                    'events': event_loader.passed_public_events,
+                    'title': f'Évènements passés ({len(passed_events) or "-"})',
+                    'events': passed_events,
                     'empty_str': 'Aucun évènement passé.',
                     'class': 'bg-secondary-subtle',
                     'icon_class': 'bi-calendar-minus',
-                    'disabled': not event_loader.passed_public_events,
+                    'disabled': not passed_events,
                 },
             }
             if not web_context.user_main_selector or nav_tabs[web_context.user_main_selector]['disabled']:

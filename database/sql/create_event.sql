@@ -131,6 +131,7 @@ CREATE TABLE `screen` (
     `results_limit` INTEGER,
     `results_tournament_ids` TEXT,
     `image` TEXT,
+    `color` TEXT,
     `last_update` FLOAT NOT NULL,
     PRIMARY KEY(`id` AUTOINCREMENT),
     UNIQUE(`uniq_id`),

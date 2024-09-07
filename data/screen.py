@@ -262,5 +262,9 @@ class Screen:
         return self.stored_screen.image
 
     @property
+    def color(self) -> str:
+        return self.stored_screen.color if self.stored_screen.color else PapiWebConfig().default_image_screen_color
+
+    @property
     def last_update_str(self) -> str | None:
         return format_timestamp_date_time(self.last_update)

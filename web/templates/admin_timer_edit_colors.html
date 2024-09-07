@@ -1,6 +1,12 @@
 <div class="row">
     {% for num in [1, 2, 3] %}
-        {% with color_text=timer_color_texts[num], id='color-'~num, name='color_'~num, checkbox_id='color-'~num~'-checkbox', checkbox_name='color_'~num~'_checkbox' %}
+        {% with
+            color_text=timer_color_texts[num],
+            id='color-'~num,
+            name='color_'~num,
+            checkbox_id='color-'~num~'-checkbox',
+            checkbox_name='color_'~num~'_checkbox'
+        %}
             <div class="col-4">
                 <label for="{{ id }}" class="form-label">Couleur n°{{ num }} :</label>
                 <input
