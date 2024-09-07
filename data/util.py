@@ -804,11 +804,6 @@ class ScreenType(StrEnum):
             case _:
                 raise ValueError(f'Invalid screen type: {self}')
 
-    # TODO remove this unused method
-    @classmethod
-    def names(cls) -> list[str]:
-        return [member.value for member in iter(cls)]
-
 
 class NeedsUpload(Enum):
     YES = 0

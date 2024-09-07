@@ -20,16 +20,6 @@
             {# https://github.com/SortableJS/Sortable #}
             <script src="{{ url_for('static', file_path='/lib/sortable/sortable-1.15.2/Sortable.min.js') }}"></script>
             <script src="{{ url_for('static', file_path='/lib/htmx/htmx-sortable.js') }}"></script>
-            {# TODO this was really nicer than the HTMX code in messages.html
-            <script>
-                $(document).ready(function(){
-                    setTimeout(function(){
-                        $('#messages .alert-info').hide()
-                        $('#messages .alert-success').hide()
-                    }, 10000)
-                });
-            </script>
-            #}
             {% block head %}
             {% endblock %}
         {% endif %}
