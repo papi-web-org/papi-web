@@ -365,7 +365,6 @@ class Event:
         input_menu_screens: list[Screen] = []
         players_menu_screens: list[Screen] = []
         results_menu_screens: list[Screen] = []
-        image_menu_screens: list[Screen] = []
         for screen in self.screens_by_uniq_id.values():
             if screen.menu_label:
                 match screen.type:
@@ -398,9 +397,6 @@ class Event:
                     screen.menu_screens += players_menu_screens
                     continue
                 if menu_part == '@results':
-                    screen.menu_screens += results_menu_screens
-                    continue
-                if menu_part == '@image':
                     screen.menu_screens += results_menu_screens
                     continue
                 if menu_part == '@family':

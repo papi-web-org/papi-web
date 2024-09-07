@@ -11,40 +11,27 @@ from common.logger import get_logger
 
 logger: Logger = get_logger()
 
-TMP_DIR: Path = Path('tmp')
-
 
 # https://docs.python.org/3/library/configparser.html
 class ConfigReader(ConfigParser):
 
-    def __init__(self, ini_file: Path, ini_marker_file: Path, silent: bool):
+    def __init__(self, ini_file: Path):
         super().__init__(interpolation=None, empty_lines_in_values=False)
         self.__ini_file: Path = ini_file
         self.__infos: list[str] = []
         self.__warnings: list[str] = []
         self.__errors: list[str] = []
-        self.__silent: bool = False
         if not self.ini_file.exists():
             self.add_error('fichier non trouvé')
             return
         if not self.ini_file.is_file():
             self.add_error(f'{self.ini_file} n\'est pas un fichier')
             return
-        if silent:
-            try:
-                if ini_marker_file.lstat().st_mtime > self.ini_file.lstat().st_mtime:
-                    self.__silent = True
-                else:
-                    logger.info('le fichier de configuration [%s] a été modifié, rechargement...',
-                                self.ini_file)
-            except FileNotFoundError:
-                logger.info('nouveau fichier de configuration [%s], chargement...', self.ini_file)
         try:
             files_read: list[str] = []
             encoding: str = 'utf-8-sig'
             try:
-                if not self.__silent:
-                    logger.debug('lecture de %s en %s...', self.ini_file, encoding)
+                logger.debug('lecture de %s en %s...', self.ini_file, encoding)
                 files_read = self.read(self.__ini_file, encoding=encoding)
             except UnicodeDecodeError:
                 logger.debug('la lecture de %s en %s a échoué, recherche de l\'encodage...',
@@ -59,26 +46,19 @@ class ConfigReader(ConfigParser):
             if str(self.__ini_file) not in files_read:
                 self.add_error(f'impossible de lire {self.__ini_file}')
                 return
-            ini_marker_file.parents[0].mkdir(parents=True, exist_ok=True)
-            ini_marker_file.touch()
         except DuplicateSectionError as dse:
-            self.__silent = False
             self.add_error(f'rubrique dupliquée à la ligne {dse.lineno}', dse.section)
             return
         except DuplicateOptionError as doe:
-            self.__silent = False
             self.add_error(f'option dupliquée à la ligne {doe.lineno}', doe.section, doe.option)
             return
         except MissingSectionHeaderError as mshe:
-            self.__silent = False
             self.add_error(f'la première rubrique manque à la ligne {mshe.lineno} : [{bytes(mshe.line, "utf-8")}]')
             return
         except ParsingError as pe:
-            self.__silent = False
             self.add_error(f'erreur de parsing: {pe.message}')
             return
         except Error as e:
-            self.__silent = False
             self.add_error(f'erreur: {e.message}')
             return
 
@@ -97,8 +77,7 @@ class ConfigReader(ConfigParser):
     def add_debug(self, text: str, section_key: str | None = None, key: str | None = None):
         """Adds a debug-level message and logs it"""
         message = self.__format_message(text, section_key, key)
-        if not self.__silent:
-            logger.debug(message)
+        logger.debug(message)
 
     @property
     def infos(self) -> list[str]:
@@ -107,8 +86,7 @@ class ConfigReader(ConfigParser):
     def add_info(self, text: str, section_key: str | None = None, key: str | None = None):
         """Adds an info-level message and logs it"""
         message = self.__format_message(text, section_key, key)
-        if not self.__silent:
-            logger.info(message)
+        logger.info(message)
         self.__infos.append(message)
 
     @property
@@ -118,8 +96,7 @@ class ConfigReader(ConfigParser):
     def add_warning(self, text: str, section_key: str | None = None, key: str | None = None):
         """Adds a warning-level message and logs it"""
         message = self.__format_message(text, section_key, key)
-        if not self.__silent:
-            logger.warning(message)
+        logger.warning(message)
         self.__warnings.append(message)
 
     @property
@@ -129,8 +106,7 @@ class ConfigReader(ConfigParser):
     def add_error(self, text: str, section_key: str | None = None, key: str | None = None):
         """Adds an error-level message and logs it"""
         message = self.__format_message(text, section_key, key)
-        if not self.__silent:
-            logger.error(message)
+        logger.error(message)
         self.__errors.append(message)
 
     def getint_safe(self, section_key: str, key: str, minimum: int = None, maximum: int = None) -> int | None:

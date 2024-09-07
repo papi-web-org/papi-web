@@ -10,8 +10,7 @@ from packaging.version import Version
 from requests import Response, get
 from requests.exceptions import ConnectionError, Timeout, RequestException, \
     HTTPError  # pylint: disable=redefined-builtin
-from common.config_reader import TMP_DIR
-from common.papi_web_config import PapiWebConfig
+from common.papi_web_config import PapiWebConfig, TMP_DIR
 from common.logger import get_logger, configure_logger
 from data.loader import EventLoader
 from database.sqlite import EventDatabase

@@ -8,8 +8,8 @@ from pathlib import Path
 import chardet
 
 from chessevent.chessevent_session import ChessEventSession
-from common.config_reader import TMP_DIR
 from common.logger import get_logger, print_interactive, input_interactive
+from common.papi_web_config import TMP_DIR
 from common.singleton import singleton
 from data.chessevent_tournament import ChessEventTournament
 from data.event import Event

@@ -1,9 +1,8 @@
 import logging
-import os
 import re
 import socket
-from pathlib import Path
 from logging import Logger
+from pathlib import Path
 
 import jinja2
 import litestar
@@ -11,11 +10,13 @@ import pyodbc
 import uvicorn
 from packaging.version import Version
 
-from common.singleton import singleton
-from common.config_reader import ConfigReader, TMP_DIR
+from common.config_reader import ConfigReader
 from common.logger import get_logger, configure_logger
+from common.singleton import singleton
 
 logger: Logger = get_logger()
+
+TMP_DIR: Path = Path('tmp')
 
 CONFIG_FILE: Path = Path('papi-web.ini')
 
@@ -30,7 +31,7 @@ MIN_FFE_UPLOAD_DELAY: int = 60
 @singleton
 class PapiWebConfig:
     def __init__(self):
-        self.reader = ConfigReader(CONFIG_FILE, TMP_DIR / 'config' / f'papi-web.ini.{os.getpid()}.read', silent=False)
+        self.reader = ConfigReader(CONFIG_FILE)
         self.__log_level: int | None = None
         self.__web_host: str | None = None
         self.__web_port: int | None = None

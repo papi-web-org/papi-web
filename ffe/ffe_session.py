@@ -10,7 +10,7 @@ from requests import Session, Response
 from requests.exceptions import ConnectionError, Timeout, RequestException
 from logging import Logger
 
-from common.config_reader import TMP_DIR
+from common.papi_web_config import TMP_DIR
 from data.tournament import Tournament
 from common.logger import get_logger
 from database.papi import PapiDatabase
