@@ -491,7 +491,7 @@ class AdminScreenController(AAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True, True)
+        web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True, False)
         if web_context.error:
             return web_context.error
         return self._admin_screen_render_sets_modal(web_context)
