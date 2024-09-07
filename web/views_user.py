@@ -107,17 +107,17 @@ class AUserController(AController):
                     'disabled': not input_screens,
                 },
                 'boards': {
-                    'title': f'Affichage des échiquiers ({len(boards_screens) or "-"})',
+                    'title': f'Appariements par échiquier ({len(boards_screens) or "-"})',
                     'screens': boards_screens,
                     'disabled': not boards_screens,
                 },
                 'players': {
-                    'title': f'Affichage des appariements par ordre alphabétique ({len(players_screens) or "-"})',
+                    'title': f'Appariements par ordre alphabétique ({len(players_screens) or "-"})',
                     'screens': players_screens,
                     'disabled': not players_screens,
                 },
                 'results': {
-                    'title': f'Affichage des résultats ({len(results_screens) or "-"})',
+                    'title': f'Derniers résultats ({len(results_screens) or "-"})',
                     'screens': results_screens,
                     'disabled': not results_screens,
                 },

@@ -94,7 +94,7 @@ class AAdminController(AController):
     def _get_screen_type_options(family_screens_only: bool) -> dict[str, str]:
         options: dict[str, str] = {
             '': '-',
-            'boards': 'Affichage des échiquiers',
+            'boards': 'Appariements par échiquier',
             'input': 'Saisie des résultats',
             'players': 'Appariements par ordre alphabétique',
         }
