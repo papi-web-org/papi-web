@@ -48,7 +48,7 @@ screens:
   affiche:
     type: "image"
     name: "Affiche"
-    image: "http://asnieres2023.ffechecs.org/wp-content/uploads/sites/58/2023/02/affiche_2023_A4-pdf.jpg"
+    image_url: "http://asnieres2023.ffechecs.org/wp-content/uploads/sites/58/2023/02/affiche_2023_A4-pdf.jpg"
 families:
   alpha:
     type: "players"

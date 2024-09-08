@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS `skipped_round`;
 
 CREATE TABLE `info` (
     `version` TEXT NOT NULL,
-    `name` TEXT NOT NULL DEFAULT 'Évènement',
+    `name` TEXT NOT NULL DEFAULT '?',
     `start` FLOAT NOT NULL,
     `stop` FLOAT NOT NULL,
     `public` INTEGER,
@@ -130,8 +130,8 @@ CREATE TABLE `screen` (
     `players_show_unpaired` INTEGER,
     `results_limit` INTEGER,
     `results_tournament_ids` TEXT,
-    `image` TEXT,
-    `color` TEXT,
+    `image_url` TEXT,
+    `image_color` TEXT,
     `last_update` FLOAT NOT NULL,
     PRIMARY KEY(`id` AUTOINCREMENT),
     UNIQUE(`uniq_id`),

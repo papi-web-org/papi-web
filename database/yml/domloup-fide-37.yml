@@ -93,7 +93,8 @@ screens:
   affiche:
     name: "Affiche"
     type: "image"
-    image: "https://domloup.echecs35.fr/sites/domloup.echecs35.fr/files/domloup-fide-37-affiche.jpg"
+    image_url: "https://domloup.echecs35.fr/sites/domloup.echecs35.fr/files/domloup-fide-37-affiche.jpg"
+    image_color: "#ffffff"
   saisie-A:
     name: "Tournoi A"
     type: "input"

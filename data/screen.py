@@ -259,11 +259,11 @@ class Screen:
 
     @property
     def image(self) -> str:
-        return self.stored_screen.image
+        return self.stored_screen.image_url
 
     @property
     def color(self) -> str:
-        return self.stored_screen.color if self.stored_screen.color else PapiWebConfig().default_image_screen_color
+        return self.stored_screen.image_color if self.stored_screen.image_color else PapiWebConfig().default_image_screen_color
 
     @property
     def last_update_str(self) -> str | None:

@@ -130,8 +130,8 @@ class AdminScreenController(AAdminController):
         players_show_unpaired: bool | None = None
         results_limit: int | None = None
         results_tournament_ids: list[int] | None = None
-        image: str | None = None
-        color: str | None = None
+        image_url: str | None = None
+        image_color: str | None = None
         match action:
             case 'create' | 'delete' | 'clone':
                 pass
@@ -167,24 +167,24 @@ class AdminScreenController(AAdminController):
                             if WebContext.form_data_to_bool(data, field):
                                 results_tournament_ids.append(tournament_id)
                     case ScreenType.Image:
-                        field = 'image'
-                        image = WebContext.form_data_to_str(data, field, '')
-                        if not image:
+                        field = 'image_url'
+                        image_url = WebContext.form_data_to_str(data, field, '')
+                        if not image_url:
                             errors[field] = f'Veuillez préciser l\'URL de l\'image.'
-                        elif not validators.url(image):
-                            errors[field] = f'L\'URL [{image}] n\'est pas valide.'
+                        elif not validators.url(image_url):
+                            errors[field] = f'L\'URL [{image_url}] n\'est pas valide.'
                         else:
                             try:
-                                response = requests.get(image)
+                                response = requests.get(image_url)
                                 if response.status_code != 200:
-                                    errors[field] = f'L\'URL [{image}] est en erreur (code [{response.status_code}]).'
+                                    errors[field] = f'L\'URL [{image_url}] est en erreur (code [{response.status_code}]).'
                             except requests.ConnectionError as ce:
-                                errors[field] = f'L\'URL [{image}] est en erreur ([{ce}]).'
-                        field: str = 'color'
+                                errors[field] = f'L\'URL [{image_url}] est en erreur ([{ce}]).'
+                        field: str = 'image_color'
                         color_checkbox = WebContext.form_data_to_bool(data, field + '_checkbox')
                         if not color_checkbox:
                             try:
-                                color = WebContext.form_data_to_rgb(data, field)
+                                image_color = WebContext.form_data_to_rgb(data, field)
                             except ValueError:
                                 errors[field] = f'La couleur n\'est pas valide [{data[field]}] (attendu [#HHHHHH]).'
                     case _:
@@ -204,8 +204,8 @@ class AdminScreenController(AAdminController):
             players_show_unpaired=players_show_unpaired,
             results_limit=results_limit,
             results_tournament_ids=results_tournament_ids,
-            image=image,
-            color=color,
+            image_url=image_url,
+            image_color=image_color,
             errors=errors,
         )
 
@@ -247,10 +247,10 @@ class AdminScreenController(AAdminController):
                                 data[f'results_tournament_{tournament_id}'] = WebContext.value_to_form_data(
                                     tournament_id in web_context.admin_screen.stored_screen.results_tournament_ids)
                         case ScreenType.Image:
-                            data['image'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.image)
-                            data['color'] = WebContext.value_to_form_data(web_context.admin_screen.color)
-                            data['color_checkbox'] = WebContext.value_to_form_data(
-                                web_context.admin_screen.stored_screen.color is None)
+                            data['image_url'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.image_url)
+                            data['image_color'] = WebContext.value_to_form_data(web_context.admin_screen.color)
+                            data['image_color_checkbox'] = WebContext.value_to_form_data(
+                                web_context.admin_screen.stored_screen.image_color is None)
                         case _:
                             raise ValueError(f'action={action}')
                 case 'create':

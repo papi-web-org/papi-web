@@ -318,7 +318,7 @@
                             </h3>
                             <div class="row">
                                 <div class="col-6">
-                                    {% with id='image', name='image' %}
+                                    {% with id='image-url', name='image_url' %}
                                         <label for="{{ id }}" class="form-label">Image :</label>
                                         <input
                                                 name="{{ name }}"
@@ -339,10 +339,10 @@
                                 </div>
                                 <div class="col-6">
                                     {% with
-                                        id='color',
-                                        name='color',
-                                        checkbox_id='color-checkbox',
-                                        checkbox_name='color_checkbox'
+                                        id='image-color',
+                                        name='image_color',
+                                        checkbox_id='image-color-checkbox',
+                                        checkbox_name='image_color_checkbox'
                                     %}
                                         <label for="{{ id }}" class="form-label">Couleur de fond :</label>
                                         <input
