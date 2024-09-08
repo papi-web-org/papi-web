@@ -1068,17 +1068,6 @@ class EventDatabase(SQLiteDatabase):
             return self._row_to_stored_tournament(row)
         return None
 
-    def get_stored_tournament_with_uniq_id(self, tournament_uniq_id: str) -> StoredTournament | None:
-        # TODO Remove this method
-        self._execute(
-            'SELECT * FROM `tournament` WHERE `uniq_id` = ?',
-            (tournament_uniq_id,),
-        )
-        row: dict[str, Any]
-        if row := self._fetchone():
-            return self._row_to_stored_tournament(row)
-        return None
-
     def load_stored_tournaments(self) -> list[StoredTournament]:
         self._execute(
             'SELECT * FROM `tournament` ORDER BY `uniq_id`',
@@ -1234,11 +1223,6 @@ class EventDatabase(SQLiteDatabase):
             illegal_moves[int(row['player_id'])] += 1
         return illegal_moves
 
-    def get_stored_illegal_moves_with_tournament_uniq_id(self, tournament_uniq_id: str, round: int) -> Counter[int]:
-        # TODO Remove this method
-        stored_tournament: StoredTournament = self.get_stored_tournament_with_uniq_id(tournament_uniq_id)
-        return self.get_stored_illegal_moves(stored_tournament.id, round) if stored_tournament else Counter[int]()
-
     def add_stored_illegal_move(self, tournament_id: int, round: int, player_id: int) -> StoredIllegalMove:
         self._set_tournament_last_illegal_move_update(tournament_id)
         fields: list[str] = ['tournament_id', 'round', 'player_id', 'date', ]
@@ -1248,15 +1232,6 @@ class EventDatabase(SQLiteDatabase):
             f'INSERT INTO `illegal_move`({", ".join(protected_fields)}) VALUES ({", ".join(["?"] * len(fields))})',
             tuple(params))
         return self._get_stored_illegal_move(self._last_inserted_id())
-
-    def add_stored_illegal_move_with_tournament_uniq_id(
-            self, tournament_uniq_id: str, round: int, player_id: int
-    ) -> StoredIllegalMove:
-        # TODO Remove this method
-        stored_tournament: StoredTournament = self.get_stored_tournament_with_uniq_id(tournament_uniq_id)
-        if not stored_tournament:
-            raise PapiWebException(f'Le tournoi [{tournament_uniq_id}] est introuvable.')
-        return self.add_stored_illegal_move(stored_tournament.id, round, player_id)
 
     def delete_stored_illegal_move(self, tournament_id: int, round: int, player_id: int) -> bool:
         self._set_tournament_last_illegal_move_update(tournament_id)
@@ -1273,15 +1248,6 @@ class EventDatabase(SQLiteDatabase):
         )
         return True
 
-    def delete_stored_illegal_move_with_tournament_uniq_id(
-            self, tournament_uniq_id: str, round: int, player_id: int
-    ) -> bool:
-        # TODO Remove this method
-        stored_tournament: StoredTournament = self.get_stored_tournament_with_uniq_id(tournament_uniq_id)
-        if not stored_tournament:
-            raise PapiWebException(f'Le tournoi [{tournament_uniq_id}] est introuvable.')
-        return self.delete_stored_illegal_move(stored_tournament.id, round, player_id)
-
     def _delete_tournament_stored_illegal_moves(self, tournament_id: int, round: int = 0):
         self._set_tournament_last_illegal_move_update(tournament_id)
         if round:
@@ -1294,13 +1260,6 @@ class EventDatabase(SQLiteDatabase):
                 'DELETE FROM `illegal_move` WHERE `tournament_id` = ?',
                 (tournament_id, ),
             )
-
-    def delete_stored_illegal_moves_with_tournament_uniq_id(self, tournament_uniq_id: str, round: int):
-        # TODO Remove this method
-        stored_tournament: StoredTournament = self.get_stored_tournament_with_uniq_id(tournament_uniq_id)
-        if not stored_tournament:
-            raise PapiWebException(f'Le tournoi [{tournament_uniq_id}] est introuvable.')
-        return self._delete_tournament_stored_illegal_moves(stored_tournament.id, round)
 
     """ 
     ---------------------------------------------------------------------------------
@@ -1349,30 +1308,12 @@ class EventDatabase(SQLiteDatabase):
             ),
         )
 
-    def add_stored_result_with_tournament_uniq_id(
-            self, tournament_uniq_id: str,
-            round: int,
-            board: Board,
-            result: UtilResult):
-        # TODO Remove this method
-        stored_tournament: StoredTournament = self.get_stored_tournament_with_uniq_id(tournament_uniq_id)
-        if not stored_tournament:
-            PapiWebException(f'Le tournoi [{tournament_uniq_id}] est introuvable.')
-        return self.add_stored_result(stored_tournament.id, round, board, result)
-
     def delete_stored_result(self, tournament_id: int, round: int, board_id: int):
         self._set_tournament_last_result_update(tournament_id)
         self._execute(
             'DELETE FROM `result` WHERE `tournament_id` = ? AND `round` = ? AND `board_id` = ?',
             (tournament_id, round, board_id),
         )
-
-    def delete_stored_result_with_tournament_uniq_id(self, tournament_uniq_id: str, round: int, board_id: int):
-        # TODO Remove this method
-        stored_tournament: StoredTournament = self.get_stored_tournament_with_uniq_id(tournament_uniq_id)
-        if not stored_tournament:
-            raise PapiWebException(f'Le tournoi [{tournament_uniq_id}] est introuvable.')
-        return self.delete_stored_result(stored_tournament.id, round, board_id)
 
     def _delete_tournament_stored_results(self, tournament_id: int):
         self._execute(

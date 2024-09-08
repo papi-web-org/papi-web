@@ -529,8 +529,7 @@ class Tournament:
             papi_database.add_board_result(board.black_player.id, self._current_round, black_result)
             papi_database.commit()
         with EventDatabase(self.event.uniq_id, write=True) as event_database:
-            event_database.add_stored_result_with_tournament_uniq_id(
-                self.uniq_id, self.current_round, board, white_result)
+            event_database.add_stored_result(self.id, self.current_round, board, white_result)
             event_database.commit()
         logger.info('Added result: %s %s %d.%d %s %s %d %s %s %s %d',
                     self.event.uniq_id, self.uniq_id, self._current_round, board.id, board.white_player.last_name,
@@ -544,7 +543,7 @@ class Tournament:
             papi_database.remove_board_result(board.black_player.id, self._current_round)
             papi_database.commit()
         with EventDatabase(self.event.uniq_id, write=True) as event_database:
-            event_database.delete_stored_result_with_tournament_uniq_id(self.uniq_id, self.current_round, board.id)
+            event_database.delete_stored_result(self.id, self.current_round, board.id)
             event_database.commit()
         logger.info('Removed result: %s %s %d.%d',
                     self.event.uniq_id, self.uniq_id, self._current_round, board.id)
