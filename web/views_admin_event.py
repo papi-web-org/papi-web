@@ -1,8 +1,11 @@
 import time
 from datetime import datetime
 from logging import Logger
+from pathlib import Path
 from typing import Annotated
 
+import requests
+import validators
 from litestar import post
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
@@ -94,7 +97,8 @@ class AdminEventController(AAdminController):
                 raise ValueError(f'action=[{action}]')
         public: bool | None = WebContext.form_data_to_bool(data, 'public')
         path: str | None = WebContext.form_data_to_str(data, 'path')
-        css: str | None = WebContext.form_data_to_str(data, 'css')
+        image_url: str | None = None
+        image_color: str | None = None
         update_password: str | None = WebContext.form_data_to_str(data, 'update_password')
         record_illegal_moves: int | None = None
         allow_results_deletion: bool | None = None
@@ -103,15 +107,36 @@ class AdminEventController(AAdminController):
         timer_delays: dict[int, int | None] = {i: None for i in range(1, 4)}
         match action:
             case 'update':
+                field = 'image_url'
+                if image_url := WebContext.form_data_to_str(data, field, ''):
+                    if validators.url(image_url):
+                        try:
+                            response = requests.get(image_url)
+                            if response.status_code != 200:
+                                errors[field] = f'L\'URL [{image_url}] est en erreur (code [{response.status_code}]).'
+                        except requests.ConnectionError as ce:
+                            errors[field] = f'L\'URL [{image_url}] est en erreur ([{ce}]).'
+                    else:
+                        file: Path = PapiWebConfig().custom_path / image_url
+                        if not file.exists():
+                            # TODO blocking on this may prevent the users from changing the other properties
+                            errors[field] = f'Le fichier [{image_url}] est introuvable.'
+                field: str = 'image_color'
+                color_checkbox = WebContext.form_data_to_bool(data, field + '_checkbox')
+                if not color_checkbox:
+                    try:
+                        image_color = WebContext.form_data_to_rgb(data, field)
+                    except ValueError:
+                        errors[field] = f'La couleur [{data[field]}] n\'est pas valide (attendu [#RRGGBB]).'
                 try:
                     record_illegal_moves = WebContext.form_data_to_int(data, 'record_illegal_moves')
                     assert record_illegal_moves is None or 0 <= record_illegal_moves <= 3
                 except (ValueError, AssertionError):
-                    errors['record_illegal_moves'] = 'La valeur entrée n\'est pas valide.'
+                    errors['record_illegal_moves'] = f'La valeur entrée [{data[field]}] n\'est pas valide.'
                 try:
                     allow_results_deletion = WebContext.form_data_to_bool(data, 'allow_results_deletion')
                 except ValueError:
-                    errors['allow_results_deletion'] = 'La valeur entrée n\'est pas valide.'
+                    errors['allow_results_deletion'] = f'La valeur entrée [{data[field]}] n\'est pas valide.'
                 for i in range(1, 4):
                     field: str = f'color_{i}'
                     timer_color_checkboxes[i] = WebContext.form_data_to_bool(data, field + '_checkbox')
@@ -119,7 +144,7 @@ class AdminEventController(AAdminController):
                         try:
                             timer_colors[i] = WebContext.form_data_to_rgb(data, field)
                         except ValueError:
-                            errors[field] = f'La couleur n\'est pas valide [{data[field]}] (attendu [#HHHHHH]).'
+                            errors[field] = f'La couleur [{data[field]}] n\'est pas valide (attendu [#HHHHHH]).'
                     field: str = f'delay_{i}'
                     try:
                         timer_delays[i] = WebContext.form_data_to_int(data, field, minimum=1)
@@ -136,7 +161,8 @@ class AdminEventController(AAdminController):
             stop=stop,
             public=public,
             path=path,
-            css=css,
+            image_url=image_url,
+            image_color=image_color,
             update_password=update_password,
             record_illegal_moves=record_illegal_moves,
             allow_results_deletion_on_input_screens=allow_results_deletion,
@@ -171,7 +197,11 @@ class AdminEventController(AAdminController):
                     data['public'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.public)
                     data['start'] = WebContext.value_to_datetime_form_data(web_context.admin_event.stored_event.start)
                     data['stop'] = WebContext.value_to_datetime_form_data(web_context.admin_event.stored_event.stop)
-                    data['css'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.css)
+                    data['image_url'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.image_url)
+                    data['image_color'] = WebContext.value_to_form_data(
+                        web_context.admin_event.stored_event.image_color)
+                    data['image_color_checkbox'] = WebContext.value_to_form_data(
+                        web_context.admin_event.stored_event.image_color is None)
                     data['path'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.path)
                     data['update_password'] = WebContext.value_to_form_data(
                         web_context.admin_event.stored_event.update_password)

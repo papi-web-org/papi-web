@@ -189,25 +189,67 @@
                         <h3>
                             Affichage
                         </h3>
-                        <div>
-                            {% with id='css', name='css' %}
-                                <label for="{{ id }}" class="form-label">Personnalisation CSS :</label>
-                                <input
-                                        name="{{ name }}"
-                                        type="text" id="{{ id }}"
-                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                        aria-describedby="{{ id }}-help {{ id }}-error"
-                                        placeholder="Exemple : club/F35043/F35043.css"
-                                        value="{{ data[name] }}" />
-                                <div id="{{ id }}-help" class="form-text">
-                                  Le lien vers la feuille de style, lien relatif ou URL (facultatif).
-                                </div>
-                                {% if name in errors %}
-                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
-                                        {{ errors[name] }}
+                        <div class="row">
+                            <div class="col-6">
+                                {% with id='image-url', name='image_url' %}
+                                    <label for="{{ id }}" class="form-label">Image :</label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="text" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : https://mon.club.fr/logo.png"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                      L'URL ou le chemin de l'image à afficher.
                                     </div>
-                                {% endif %}
-                            {% endwith %}
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div class="col-6">
+                                {% with
+                                    id='image-color',
+                                    name='image_color',
+                                    checkbox_id='image-color-checkbox',
+                                    checkbox_name='image_color_checkbox'
+                                %}
+                                    <label for="{{ id }}" class="form-label">Couleur de fond :</label>
+                                    <input
+                                            name="{{ checkbox_name }}"
+                                            type="checkbox" id="{{ checkbox_id }}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            {% if data[checkbox_name] %}checked{% endif %} /> aucune
+                                    <script>
+                                        $('#{{ checkbox_id }}').click(function() {
+                                            if ($(this).is(':checked')) {
+                                                $('#{{ id }}').val('');
+                                                $('#{{ id }}').prop('disabled', true);
+                                            } else {
+                                                $('#{{ id }}').prop('disabled', false);
+                                            }
+                                        });
+                                    </script>
+                                    <input
+                                            name="{{ name }}"
+                                            type="color" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            value="{{ data[name] }}"
+                                            {% if data[checkbox_name] %}disabled{% endif %}/>
+                                    <div id="{{ id }}-help" class="form-text">
+                                        La couleur de fond est utilisée lorsque l'image ne remplit pas complètement l'écran.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
                         </div>
                         <h3>
                             Saisie des résultats

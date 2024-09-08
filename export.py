@@ -12,7 +12,6 @@ logger: Logger = get_logger()
 BUILD_DIR: Path = Path('build')
 DIST_DIR: Path = Path('dist')
 DATA_DIR: Path = Path('export-data')
-CUSTOM_DIR: Path = Path('custom')
 basename: str = f'papi-web-{PapiWebConfig().version}'
 EXPORT_DIR: Path = Path('..') / 'export'
 PROJECT_DIR: Path = EXPORT_DIR / basename
@@ -113,9 +112,10 @@ def create_project():
     bin_dir: Path = PROJECT_DIR / 'bin'
     bin_dir.mkdir(exist_ok=True)
     shutil.move(dist_exe_file, bin_dir)
-    target_dir: Path = PROJECT_DIR / CUSTOM_DIR
-    logger.info(f'Copying {CUSTOM_DIR} to {target_dir}...')
-    shutil.copytree(CUSTOM_DIR, target_dir)
+    custom_path: Path = PapiWebConfig().custom_path
+    target_dir: Path = PROJECT_DIR / custom_path.name
+    logger.info(f'Copying {custom_path} to {target_dir}...')
+    shutil.copytree(custom_path, target_dir)
     target_file: Path = PROJECT_DIR / 'server.bat'
     logger.info(f'Creating batch file {target_file}...')
     with open(target_file, 'wt') as f:

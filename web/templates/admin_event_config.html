@@ -78,8 +78,13 @@
             <td></td>
         </tr>
         <tr>
-            <th scope="row" class="text-nowrap">Personnalisation CSS</th>
-            <td class="text-nowrap">{% if admin_event.css %}{{ admin_event.css }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}</td>
+            <th scope="row" class="text-nowrap">Image de fond</th>
+            <td class="text-nowrap">{% if admin_event.image_url %}{{ admin_event.image_url }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Couleur de fond des écrans</th>
+            <td class="text-nowrap">{% if admin_event.image_color %}{{ admin_event.image_color }}{% else %}<span class="fst-italic">Aucune</span>{% endif %}</td>
             <td></td>
         </tr>
         <tr>

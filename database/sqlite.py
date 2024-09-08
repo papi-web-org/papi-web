@@ -189,10 +189,10 @@ class EventDatabase(SQLiteDatabase):
                     self._check_populate_dict(
                         yml_file, '', event_dict,
                         mandatory_fields=['name', ],
-                        optional_fields=['start', 'stop', 'path', 'css', 'public', 'update_password',
-                                         'record_illegal_moves', 'allow_results_deletion_on_input_screens',
-                                         'chessevents', 'tournaments', 'timers', 'screens', 'families', 'rotators',
-                                         'timer_colors', 'timer_delays', ],
+                        optional_fields=['start', 'stop', 'path', 'image_url', 'image_color', 'public',
+                                         'update_password', 'record_illegal_moves',
+                                         'allow_results_deletion_on_input_screens', 'chessevents', 'tournaments',
+                                         'timers', 'screens', 'families', 'rotators', 'timer_colors', 'timer_delays', ],
                         empty_allowed=False)
                     timer_delays: dict[int, int] | None = None
                     if 'timer_delays' in event_dict:
@@ -220,7 +220,8 @@ class EventDatabase(SQLiteDatabase):
                         start=event_start,
                         stop=event_stop,
                         path=event_dict.get('path', None),
-                        css=event_dict.get('css', None),
+                        image_url=event_dict.get('image_color', None),
+                        image_color=event_dict.get('image_color', None),
                         update_password=event_dict.get('update_password', None),
                         record_illegal_moves=event_dict.get('record_illegal_moves', None),
                         allow_results_deletion_on_input_screens=event_dict.get(
@@ -545,7 +546,8 @@ class EventDatabase(SQLiteDatabase):
             stop=row['stop'],
             public=self.load_bool_from_database_field(row['public']),
             path=row['path'],
-            css=row['css'],
+            image_url=row['image_url'],
+            image_color=row['image_color'],
             update_password=row['update_password'],
             record_illegal_moves=row['record_illegal_moves'],
             allow_results_deletion_on_input_screens=self.load_bool_from_database_field(
@@ -610,13 +612,14 @@ class EventDatabase(SQLiteDatabase):
             self, stored_event: StoredEvent
     ) -> StoredEvent:
         fields: list[str] = [
-            'name', 'start', 'stop', 'public', 'path', 'css', 'update_password', 'record_illegal_moves',
-            'allow_results_deletion_on_input_screens', 'timer_colors', 'timer_delays', 'last_update',
+            'name', 'start', 'stop', 'public', 'path', 'image_url', 'image_color', 'update_password',
+            'record_illegal_moves', 'allow_results_deletion_on_input_screens', 'timer_colors', 'timer_delays',
+            'last_update',
         ]
         params: list = [
             stored_event.name, stored_event.start, stored_event.stop, stored_event.public, stored_event.path,
-            stored_event.css, stored_event.update_password, stored_event.record_illegal_moves,
-            stored_event.allow_results_deletion_on_input_screens,
+            stored_event.image_url, stored_event.image_color, stored_event.update_password,
+            stored_event.record_illegal_moves, stored_event.allow_results_deletion_on_input_screens,
             self.dump_to_json_database_timer_colors(stored_event.timer_colors),
             self.dump_to_json_database_timer_delays(stored_event.timer_delays),
             time.time(),

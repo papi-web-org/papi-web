@@ -151,8 +151,12 @@ class Event:
         return Path(self.stored_event.path) if self.stored_event.path else PapiWebConfig().default_papi_path
 
     @property
-    def css(self) -> str:
-        return self.stored_event.css
+    def image_url(self) -> str:
+        return self.stored_event.image_url
+
+    @property
+    def image_color(self) -> str:
+        return self.stored_event.image_color
 
     @property
     def update_password(self) -> str:
@@ -309,8 +313,10 @@ class Event:
             self.add_warning(f'le répertoire [{self.path}] n\'existe pas')
         elif not self.path.is_dir():
             self.add_warning(f'[{self.path}] n\'est pas un répertoire')
-        if not self.stored_event.css:
-            self.add_debug('pas de feuille de style CCS définie')
+        if not self.stored_event.image_url:
+            self.add_debug('pas d\'image définie')
+        if not self.stored_event.image_color:
+            self.add_debug('pas de couleur d\'image définie')
         if not self.stored_event.update_password:
             self.add_debug('pas de mot de passe défini pour les écrans de saisie')
         if self.stored_event.record_illegal_moves is None:

@@ -166,15 +166,19 @@ class PapiWebConfig:
 
     @property
     def event_path(self) -> Path:
-        return Path('.') / 'events'
+        return Path() / 'events'
 
     @property
     def event_ext(self) -> str:
         return 'db'
 
     @property
+    def custom_path(self) -> Path:
+        return Path().absolute() / 'custom'
+
+    @property
     def default_papi_path(self) -> Path:
-        return Path('.') / 'papi'
+        return Path() / 'papi'
 
     @property
     def papi_ext(self) -> str:

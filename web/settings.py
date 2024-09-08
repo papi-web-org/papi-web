@@ -9,6 +9,7 @@ from litestar.static_files import create_static_files_router
 from litestar.template import TemplateConfig
 from litestar.types import ControllerRouterHandler, Middleware
 
+from common.papi_web_config import PapiWebConfig
 from web.views import IndexController
 from web.views_admin import AdminIndexController
 from web.views_admin_chessevent import AdminChessEventController
@@ -29,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 static_files_folders = [
     BASE_DIR / 'web' / 'static',
-    Path().absolute() / 'custom',
+    PapiWebConfig().custom_path,
 ]
 
 static_files_router: Router = create_static_files_router(

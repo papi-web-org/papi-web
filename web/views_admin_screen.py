@@ -186,7 +186,7 @@ class AdminScreenController(AAdminController):
                             try:
                                 image_color = WebContext.form_data_to_rgb(data, field)
                             except ValueError:
-                                errors[field] = f'La couleur n\'est pas valide [{data[field]}] (attendu [#HHHHHH]).'
+                                errors[field] = f'La couleur [{data[field]}] n\'est pas valide (attendu [#RRGGBB]).'
                     case _:
                         raise ValueError(f'type=[{web_context.admin_screen.type}]')
             case _:
