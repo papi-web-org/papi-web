@@ -117,10 +117,14 @@ class AdminEventController(AAdminController):
                         except requests.ConnectionError as ce:
                             errors[field] = f'L\'URL [{image_url}] est en erreur ([{ce}]).'
                     else:
-                        file: Path = PapiWebConfig().custom_path / image_url
-                        if not file.exists():
-                            # TODO blocking on this may prevent the users from changing the other properties
-                            errors[field] = f'Le fichier [{image_url}] est introuvable.'
+                        image_url = image_url.strip('/')
+                        if image_url.find('..') != -1:
+                            errors[field] = f'Le chemin [{image_url}] est incorrect.'
+                            data[field] = ''
+                        else:
+                            file: Path = PapiWebConfig().custom_path / image_url
+                            if not file.exists():
+                                errors[field] = f'Le fichier [{image_url}] est introuvable.'
                 field: str = 'image_color'
                 color_checkbox = WebContext.form_data_to_bool(data, field + '_checkbox')
                 if not color_checkbox:
