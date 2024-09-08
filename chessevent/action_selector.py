@@ -41,7 +41,7 @@ class ActionSelector:
         return tournaments
 
     def run(self, event_uniq_id: str) -> bool:
-        event: Event = EventLoader.get(request=None, lazy_load=False).load_event(event_uniq_id, reload=True)
+        event: Event = EventLoader.get(request=None, lazy_load=False).reload_event(event_uniq_id)
         logger.info('Évènement : %s', event.name)
         tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
         if not tournaments:
