@@ -1,4 +1,4 @@
-{% from 'macros.j2' import tooltip_attributes %}
+{% from 'macros.j2' import tooltip_attributes, modal_script, tooltip_script, background_script %}
 
 {% extends 'base.html' %}
 
@@ -100,18 +100,8 @@
                 <div class="modal-content"></div>
             </div>
         </div>
-        <script>
-            {# manually remove the modal backdrop when reloading #admin-content (too many modal-backdrop divs are created by Bootstrap when opening modals) #}
-            $(document).ready(function(){
-                $('body .modal-backdrop').remove();
-            });
-            {# manually remove the tooltips when reloading #admin-content (tooltip elements are created by Bootstrap when tooltips but sometimes not removed) #}
-            $(document).ready(function(){
-                $('body .tooltip').remove();
-                $('body .tooltip-inner').remove();
-                $('body .tooltip-arrow').remove();
-            });
-        </script>
-        <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-tooltips.js') }}"></script>
+        {{ modal_script() }}
+        {{ tooltip_script() }}
+        {{ background_script(background_info) }}
     </div>
 {% endblock content %}

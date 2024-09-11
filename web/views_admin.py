@@ -64,6 +64,16 @@ class AdminWebContext(WebContext):
         self._admin_event = None
         self._admin_main_selector = admin_main_selector
 
+    @property
+    def _background_url(self) -> str:
+        if self.admin_event and self.admin_event.stored_event.background_url:
+            return self.admin_event.stored_event.background_url
+        return super()._background_url
+
+    @property
+    def _background_color(self) -> str:
+        return PapiWebConfig().default_admin_background_color
+
 
 class AAdminController(AController):
 
@@ -220,6 +230,7 @@ class AAdminController(AController):
                     web_context.request),
                 'screen_types_on_screen_list': SessionHandler.get_session_screen_types_on_screen_list(
                     web_context.request),
+                'background_info': web_context.background_info,
             })
 
 

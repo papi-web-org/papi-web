@@ -258,12 +258,18 @@ class Screen:
         return self.stored_screen.last_update if self.stored_screen else self.family.last_update
 
     @property
-    def image(self) -> str:
-        return self.stored_screen.image_url
+    def background_url(self) -> str:
+        if self.stored_screen.background_url:
+            return self.stored_screen.background_url
+        else:
+            return PapiWebConfig().default_user_image_screen_url
 
     @property
-    def color(self) -> str:
-        return self.stored_screen.image_color if self.stored_screen.image_color else PapiWebConfig().default_image_screen_color
+    def background_color(self) -> str:
+        if self.stored_screen.background_color:
+            return self.stored_screen.background_color
+        else:
+            return PapiWebConfig().default_user_image_screen_color
 
     @property
     def last_update_str(self) -> str | None:

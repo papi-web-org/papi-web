@@ -96,8 +96,8 @@ class StoredScreen:
     timer_id: int | None
     players_show_unpaired: bool | None
     results_limit: int | None
-    image_url: str | None
-    image_color: str | None
+    background_url: str | None
+    background_color: str | None
     results_tournament_ids: list[int] = field(default_factory=list[int])
     stored_screen_sets: list[StoredScreenSet] = field(default_factory=list[StoredScreenSet])
     last_update: float = field(default=0.0)
@@ -146,8 +146,8 @@ class StoredEvent:
     stop: float
     public: bool = field(default=False)
     path: str | None = field(default=None)
-    image_url: str | None = field(default=None)
-    image_color: str | None = field(default=None)
+    background_url: str | None = field(default=None)
+    background_color: str | None = field(default=None)
     update_password: str | None = field(default=None)
     record_illegal_moves: int | None = field(default=None)
     allow_results_deletion_on_input_screens: bool | None = field(default=None)

@@ -189,7 +189,7 @@ class EventDatabase(SQLiteDatabase):
                     self._check_populate_dict(
                         yml_file, '', event_dict,
                         mandatory_fields=['name', ],
-                        optional_fields=['start', 'stop', 'path', 'image_url', 'image_color', 'public',
+                        optional_fields=['start', 'stop', 'path', 'background_url', 'background_color', 'public',
                                          'update_password', 'record_illegal_moves',
                                          'allow_results_deletion_on_input_screens', 'chessevents', 'tournaments',
                                          'timers', 'screens', 'families', 'rotators', 'timer_colors', 'timer_delays', ],
@@ -220,8 +220,8 @@ class EventDatabase(SQLiteDatabase):
                         start=event_start,
                         stop=event_stop,
                         path=event_dict.get('path', None),
-                        image_url=event_dict.get('image_color', None),
-                        image_color=event_dict.get('image_color', None),
+                        background_url=event_dict.get('background_url', None),
+                        background_color=event_dict.get('background_color', None),
                         update_password=event_dict.get('update_password', None),
                         record_illegal_moves=event_dict.get('record_illegal_moves', None),
                         allow_results_deletion_on_input_screens=event_dict.get(
@@ -333,8 +333,8 @@ class EventDatabase(SQLiteDatabase):
                                 yml_file, f'/screens/{screen_uniq_id}', screen_dict,
                                 mandatory_fields=['type', ],
                                 optional_fields=['public', 'timer_uniq_id', 'players_show_unpaired',
-                                                 'results_limit', 'results_tournament_uniq_ids', 'image_url',
-                                                 'image_color', 'name', 'columns', 'menu_text', 'menu', 'sets'])
+                                                 'results_limit', 'results_tournament_uniq_ids', 'background_url',
+                                                 'background_color', 'name', 'columns', 'menu_text', 'menu', 'sets'])
                             assert screen_dict, f'{yml_file.name}: dictionary screens.{screen_uniq_id} is empty'
                             timer_uniq_id: str | None = screen_dict.get('timer_uniq_id', None)
                             timer_id: int = timer_ids_by_uniq_id[timer_uniq_id] if timer_uniq_id else None
@@ -342,8 +342,8 @@ class EventDatabase(SQLiteDatabase):
                             players_show_unpaired: bool | None = None
                             results_limit: int | None = None
                             results_tournament_ids: list[int] | None = None
-                            image_url: str | None = None
-                            image_color: str | None = None
+                            background_url: str | None = None
+                            background_color: str | None = None
                             match type:
                                 case 'boards' | 'input':
                                     pass
@@ -362,8 +362,8 @@ class EventDatabase(SQLiteDatabase):
                                     else:
                                         results_tournament_ids = []
                                 case 'image':
-                                    image_url: str = screen_dict.get('image_url', None)
-                                    image_color: str = screen_dict.get('image_color', None)
+                                    background_url: str = screen_dict.get('background_url', None)
+                                    background_color: str = screen_dict.get('background_color', None)
                                 case _:
                                     raise ValueError
                             stored_screen: StoredScreen = event_database.add_stored_screen(StoredScreen(
@@ -379,8 +379,8 @@ class EventDatabase(SQLiteDatabase):
                                 players_show_unpaired=players_show_unpaired,
                                 results_limit=results_limit,
                                 results_tournament_ids=results_tournament_ids,
-                                image_url=image_url,
-                                image_color=image_color,
+                                background_url=background_url,
+                                background_color=background_color,
                             ))
                             screen_ids_by_uniq_id[screen_uniq_id] = stored_screen.id
                             if 'sets' in screen_dict:
@@ -546,8 +546,8 @@ class EventDatabase(SQLiteDatabase):
             stop=row['stop'],
             public=self.load_bool_from_database_field(row['public']),
             path=row['path'],
-            image_url=row['image_url'],
-            image_color=row['image_color'],
+            background_url=row['background_url'],
+            background_color=row['background_color'],
             update_password=row['update_password'],
             record_illegal_moves=row['record_illegal_moves'],
             allow_results_deletion_on_input_screens=self.load_bool_from_database_field(
@@ -612,13 +612,13 @@ class EventDatabase(SQLiteDatabase):
             self, stored_event: StoredEvent
     ) -> StoredEvent:
         fields: list[str] = [
-            'name', 'start', 'stop', 'public', 'path', 'image_url', 'image_color', 'update_password',
+            'name', 'start', 'stop', 'public', 'path', 'background_url', 'background_color', 'update_password',
             'record_illegal_moves', 'allow_results_deletion_on_input_screens', 'timer_colors', 'timer_delays',
             'last_update',
         ]
         params: list = [
             stored_event.name, stored_event.start, stored_event.stop, stored_event.public, stored_event.path,
-            stored_event.image_url, stored_event.image_color, stored_event.update_password,
+            stored_event.background_url, stored_event.background_color, stored_event.update_password,
             stored_event.record_illegal_moves, stored_event.allow_results_deletion_on_input_screens,
             self.dump_to_json_database_timer_colors(stored_event.timer_colors),
             self.dump_to_json_database_timer_delays(stored_event.timer_delays),
@@ -1469,8 +1469,8 @@ class EventDatabase(SQLiteDatabase):
             players_show_unpaired=cls.load_bool_from_database_field(row['players_show_unpaired']),
             results_limit=row['results_limit'],
             results_tournament_ids=cls.load_json_from_database_field(row['results_tournament_ids']),
-            image_url=row['image_url'],
-            image_color=row['image_color'],
+            background_url=row['background_url'],
+            background_color=row['background_color'],
             last_update=row['last_update'],
         )
 
@@ -1511,7 +1511,7 @@ class EventDatabase(SQLiteDatabase):
     ) -> StoredScreen:
         fields: list[str] = [
             'uniq_id', 'name', 'type', 'public', 'players_show_unpaired', 'columns', 'menu_text', 'menu', 'timer_id',
-            'results_limit', 'results_tournament_ids', 'image_url', 'image_color', 'last_update',
+            'results_limit', 'results_tournament_ids', 'background_url', 'background_color', 'last_update',
         ]
         params: list = [
             stored_screen.uniq_id, stored_screen.name, stored_screen.type,
@@ -1520,8 +1520,8 @@ class EventDatabase(SQLiteDatabase):
             stored_screen.results_limit if stored_screen.type == 'results' else None,
             self.dump_to_json_database_field(stored_screen.results_tournament_ids, [])
             if stored_screen.type == 'results' else None,
-            stored_screen.image_url if stored_screen.type == 'image' else None,
-            stored_screen.image_color if stored_screen.type == 'image' else None,
+            stored_screen.background_url if stored_screen.type == 'image' else None,
+            stored_screen.background_color if stored_screen.type == 'image' else None,
             time.time(),
         ]
         if stored_screen.id is None:

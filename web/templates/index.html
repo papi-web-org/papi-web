@@ -1,6 +1,6 @@
-{% extends 'base.html' %}
+{% from 'macros.j2' import tooltip_attributes, event_visibility_icon, screen_type_icon, rotator_icon, modal_script, tooltip_script, background_script %}
 
-{% from 'macros.j2' import tooltip_attributes, event_visibility_icon, screen_type_icon, rotator_icon %}
+{% extends 'base.html' %}
 
 {% block content %}
     <div id="home-content" class="content home-content">
@@ -71,5 +71,6 @@
                 </div>
             </div>
         </div>
+        {{ background_script(background_info) }}
     </div>
 {% endblock content %}

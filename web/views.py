@@ -1,15 +1,14 @@
 from datetime import datetime
 from logging import Logger
-
 from pathlib import Path
 from typing import Annotated
 
 from litestar import get, Controller
+from litestar.contrib.htmx.request import HTMXRequest
+from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect
-from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
 
 from common import RGB, check_rgb_str
 from common.logger import get_logger
@@ -28,6 +27,21 @@ class WebContext:
         self.request = request
         self.data = data
         self.error: Redirect | Template | None = None
+
+    @property
+    def _background_url(self) -> str:
+        return PapiWebConfig().default_background_url
+
+    @property
+    def _background_color(self) -> str:
+        return PapiWebConfig().default_background_color
+
+    @property
+    def background_info(self) -> dict[str, str]:
+        return {
+            'url': self._background_url,
+            'color': self._background_color,
+        }
 
     @staticmethod
     def form_data_to_str(data: dict[str, str], field: str, empty_value: str | None = None) -> str | None:
@@ -159,6 +173,7 @@ class IndexController(AController):
                 'papi_web_config': PapiWebConfig(),
                 'admin_auth': web_context.admin_auth,
                 'messages': Message.messages(request),
+                'background_info': web_context.background_info,
             })
 
     @get(

@@ -1,3 +1,5 @@
+{% from 'macros.j2' import modal_script, tooltip_script, background_script %}
+
 {% extends 'base.html' %}
 
 {% block header %}
@@ -103,17 +105,8 @@
                     style="background-image: url('{{ screen.image }}');"
             ></div>
         {% endif %}
+        {{ modal_script() }}
+        {{ tooltip_script() }}
+        {{ background_script(background_info) }}
     </div>
-    <script>
-        {# manually remove the modal backdrop when reloading #user-screen-content (too many modal-backdrop divs are created by Bootstrap when opening modals) #}
-        $(document).ready(function(){
-            $('body .modal-backdrop').remove();
-        });
-        {# manually remove the tooltips when reloading #user-screen-content (tooltip elements are created by Bootstrap when tooltips but sometimes not removed) #}
-        $(document).ready(function(){
-            $('body .tooltip').remove();
-            $('body .tooltip-inner').remove();
-            $('body .tooltip-arrow').remove();
-        });
-    </script>
 {% endblock content %}

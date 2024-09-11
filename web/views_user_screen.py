@@ -73,6 +73,18 @@ class ScreenOrRotatorUserWebContext(EventUserWebContext):
                 self._redirect_error(f'L\'écran [{self.screen.uniq_id}] est réservé aux arbitres.')
                 return
 
+    @property
+    def _background_url(self) -> str:
+        if self.screen and self.screen.type == ScreenType.Image and self.screen.background_url:
+            return self.screen.background_url
+        return super()._background_url
+
+    @property
+    def _background_color(self) -> str:
+        if self.screen and self.screen.type == ScreenType.Image and self.screen.background_color:
+            return self.screen.background_color
+        return super()._background_color
+
 
 class ScreenUserWebContext(ScreenOrRotatorUserWebContext):
     def __init__(
@@ -157,6 +169,7 @@ class UserScreenController(AUserController):
                 'last_illegal_move_updated': SessionHandler.get_session_last_illegal_move_updated(web_context.request),
                 'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(web_context.request),
                 'messages': Message.messages(web_context.request),
+                'background_info': web_context.background_info,
             },
         )
 

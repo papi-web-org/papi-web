@@ -15,6 +15,7 @@ from data.timer import Timer
 from data.tournament import Tournament
 from data.util import ScreenType
 from database.store import StoredEvent
+from web.views_background import BackgroundWebContext
 
 logger: Logger = get_logger()
 
@@ -50,6 +51,7 @@ class Event:
         self.timers_by_uniq_id: dict[str, Timer] = {}
         self._timer_colors: dict[int, str] | None = None
         self._timer_delays: dict[int, int] | None = None
+        self._background_url: str | None = None
         self._infos: list[str] = []
         self._warnings: list[str] = []
         self._errors: list[str] = []
@@ -151,12 +153,14 @@ class Event:
         return Path(self.stored_event.path) if self.stored_event.path else PapiWebConfig().default_papi_path
 
     @property
-    def image_url(self) -> str:
-        return self.stored_event.image_url
+    def background_url(self) -> str:
+        if self._background_url is None:
+            self._background_url = BackgroundWebContext.inline_image_url(self.stored_event.background_url)
+        return self._background_url
 
     @property
-    def image_color(self) -> str:
-        return self.stored_event.image_color
+    def background_color(self) -> str:
+        return self.stored_event.background_color or PapiWebConfig.default_background_color
 
     @property
     def update_password(self) -> str:
@@ -313,9 +317,9 @@ class Event:
             self.add_warning(f'le répertoire [{self.path}] n\'existe pas')
         elif not self.path.is_dir():
             self.add_warning(f'[{self.path}] n\'est pas un répertoire')
-        if not self.stored_event.image_url:
+        if not self.stored_event.background_url:
             self.add_debug('pas d\'image définie')
-        if not self.stored_event.image_color:
+        if not self.stored_event.background_color:
             self.add_debug('pas de couleur d\'image définie')
         if not self.stored_event.update_password:
             self.add_debug('pas de mot de passe défini pour les écrans de saisie')

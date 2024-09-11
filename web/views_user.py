@@ -61,6 +61,18 @@ class UserWebContext(WebContext):
             return
         self.user_event_selector: str = self._form_data_to_str('user_event_selector')
 
+    @property
+    def _background_url(self) -> str:
+        if self.user_event and self.user_event.stored_event.background_url:
+            return self.user_event.stored_event.background_url
+        return super()._background_url
+
+    @property
+    def _background_color(self) -> str:
+        if self.user_event and self.user_event.stored_event.background_color:
+            return self.user_event.stored_event.background_color
+        return PapiWebConfig().default_user_background_color
+
 
 class EventUserWebContext(UserWebContext):
     def __init__(
@@ -195,6 +207,7 @@ class AUserController(AController):
                 'now': time.time(),
                 'user_columns': SessionHandler.get_session_user_columns(web_context.request),
                 'nav_tabs': nav_tabs,
+                'background_info': web_context.background_info,
             })
 
 

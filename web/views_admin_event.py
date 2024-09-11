@@ -97,8 +97,8 @@ class AdminEventController(AAdminController):
                 raise ValueError(f'action=[{action}]')
         public: bool | None = WebContext.form_data_to_bool(data, 'public')
         path: str | None = WebContext.form_data_to_str(data, 'path')
-        image_url: str | None = None
-        image_color: str | None = None
+        background_url: str | None = None
+        background_color: str | None = None
         update_password: str | None = WebContext.form_data_to_str(data, 'update_password')
         record_illegal_moves: int | None = None
         allow_results_deletion: bool | None = None
@@ -107,29 +107,30 @@ class AdminEventController(AAdminController):
         timer_delays: dict[int, int | None] = {i: None for i in range(1, 4)}
         match action:
             case 'update':
-                field = 'image_url'
-                if image_url := WebContext.form_data_to_str(data, field, ''):
-                    if validators.url(image_url):
+                field = 'background_url'
+                if background_url := WebContext.form_data_to_str(data, field, ''):
+                    if validators.url(background_url):
                         try:
-                            response = requests.get(image_url)
+                            response = requests.get(background_url)
                             if response.status_code != 200:
-                                errors[field] = f'L\'URL [{image_url}] est en erreur (code [{response.status_code}]).'
+                                errors[field] = \
+                                    f'L\'URL [{background_url}] est en erreur (code [{response.status_code}]).'
                         except requests.ConnectionError as ce:
-                            errors[field] = f'L\'URL [{image_url}] est en erreur ([{ce}]).'
+                            errors[field] = f'L\'URL [{background_url}] est en erreur ([{ce}]).'
                     else:
-                        image_url = image_url.strip('/')
-                        if image_url.find('..') != -1:
-                            errors[field] = f'Le chemin [{image_url}] est incorrect.'
+                        background_url = background_url.strip('/')
+                        if background_url.find('..') != -1:
+                            errors[field] = f'Le chemin [{background_url}] est incorrect.'
                             data[field] = ''
                         else:
-                            file: Path = PapiWebConfig().custom_path / image_url
+                            file: Path = PapiWebConfig().custom_path / background_url
                             if not file.exists():
-                                errors[field] = f'Le fichier [{image_url}] est introuvable.'
-                field: str = 'image_color'
+                                errors[field] = f'Le fichier [{background_url}] est introuvable.'
+                field: str = 'background_color'
                 color_checkbox = WebContext.form_data_to_bool(data, field + '_checkbox')
                 if not color_checkbox:
                     try:
-                        image_color = WebContext.form_data_to_rgb(data, field)
+                        background_color = WebContext.form_data_to_rgb(data, field)
                     except ValueError:
                         errors[field] = f'La couleur [{data[field]}] n\'est pas valide (attendu [#RRGGBB]).'
                 try:
@@ -165,8 +166,8 @@ class AdminEventController(AAdminController):
             stop=stop,
             public=public,
             path=path,
-            image_url=image_url,
-            image_color=image_color,
+            background_url=background_url,
+            background_color=background_color,
             update_password=update_password,
             record_illegal_moves=record_illegal_moves,
             allow_results_deletion_on_input_screens=allow_results_deletion,
@@ -201,11 +202,12 @@ class AdminEventController(AAdminController):
                     data['public'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.public)
                     data['start'] = WebContext.value_to_datetime_form_data(web_context.admin_event.stored_event.start)
                     data['stop'] = WebContext.value_to_datetime_form_data(web_context.admin_event.stored_event.stop)
-                    data['image_url'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.image_url)
-                    data['image_color'] = WebContext.value_to_form_data(
-                        web_context.admin_event.stored_event.image_color)
-                    data['image_color_checkbox'] = WebContext.value_to_form_data(
-                        web_context.admin_event.stored_event.image_color is None)
+                    data['background_url'] = WebContext.value_to_form_data(
+                        web_context.admin_event.stored_event.background_url)
+                    data['background_color'] = WebContext.value_to_form_data(
+                        web_context.admin_event.stored_event.background_color)
+                    data['background_color_checkbox'] = WebContext.value_to_form_data(
+                        web_context.admin_event.stored_event.background_color is None)
                     data['path'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.path)
                     data['update_password'] = WebContext.value_to_form_data(
                         web_context.admin_event.stored_event.update_password)
