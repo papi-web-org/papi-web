@@ -65,14 +65,14 @@ class AdminWebContext(WebContext):
         self._admin_main_selector = admin_main_selector
 
     @property
-    def _background_url(self) -> str:
-        if self.admin_event and self.admin_event.stored_event.background_url:
-            return self.admin_event.stored_event.background_url
-        return super()._background_url
+    def background_image(self) -> str:
+        if self.admin_event and self.admin_event.stored_event.background_image:
+            return self.admin_event.stored_event.background_image
+        return super().background_image
 
     @property
-    def _background_color(self) -> str:
-        return PapiWebConfig().default_admin_background_color
+    def background_color(self) -> str:
+        return PapiWebConfig().admin_background_color
 
     @property
     def template_context(self) -> dict[str, Any]:

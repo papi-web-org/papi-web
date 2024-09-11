@@ -62,16 +62,14 @@ class UserWebContext(WebContext):
         self.user_event_selector: str = self._form_data_to_str('user_event_selector')
 
     @property
-    def _background_url(self) -> str:
-        if self.user_event and self.user_event.stored_event.background_url:
-            return self.user_event.stored_event.background_url
-        return super()._background_url
+    def background_image(self) -> str:
+        if self.user_event and self.user_event.background_image:
+            return self.user_event.stored_event.background_image
+        return super().background_image
 
     @property
-    def _background_color(self) -> str:
-        if self.user_event and self.user_event.stored_event.background_color:
-            return self.user_event.stored_event.background_color
-        return PapiWebConfig().default_user_background_color
+    def background_color(self) -> str:
+        return super().background_color
 
     @property
     def template_context(self) -> dict[str, Any]:

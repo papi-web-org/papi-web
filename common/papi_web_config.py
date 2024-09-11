@@ -334,11 +334,11 @@ class PapiWebConfig:
         return 4
 
     @property
-    def default_background_url(self) -> str:
+    def default_background_image(self) -> str:
         return '/static/images/papi-web-background.png'
 
     @property
-    def error_background_url(self) -> str:
+    def error_background_image(self) -> str:
         return '/static/images/papi-web-error.png'
 
     @property
@@ -350,17 +350,9 @@ class PapiWebConfig:
         return '#ff0000'
 
     @property
-    def default_admin_background_color(self) -> str:
+    def admin_background_color(self) -> str:
         return '#dbcdff'
 
     @property
-    def default_user_background_color(self) -> str:
+    def user_background_color(self) -> str:
         return self.default_background_color
-
-    @property
-    def default_user_image_screen_url(self) -> str:
-        return self.default_background_url
-
-    @property
-    def default_user_image_screen_color(self) -> str:
-        return '#ffffff'

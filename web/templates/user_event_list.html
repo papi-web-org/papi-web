@@ -15,7 +15,9 @@
                 {% with
                     card_url=url_for('user-render'),
                     card_payload='{"user_main_selector": "' ~ event.uniq_id ~ '"}',
-                    card_class=('bg-light' if event.public else 'bg-danger-subtle') if admin_auth else 'bg-light'
+                    card_class=('bg-light' if event.public else 'bg-danger-subtle') if admin_auth else 'bg-light',
+                    card_background_url=event.background_url,
+                    card_background_color=event.background_color
                 %}
                     {% include 'user_event_card.html' %}
                 {% endwith %}

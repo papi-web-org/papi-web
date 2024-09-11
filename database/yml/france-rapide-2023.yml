@@ -1,7 +1,7 @@
 name: "Championnat de France rapide 2023"
 start: "2023-06-25 00:00"
 stop: "2023-06-25 23:59"
-background_url: "FRA/FRA.png"
+background_image: "FRA/FRA.png"
 update_password: "mot_de_passe"
 record_illegal_moves: 0
 allow_results_deletion_on_input_screens: true
@@ -49,7 +49,7 @@ screens:
   affiche:
     type: "image"
     name: "Affiche"
-    background_url: "http://asnieres2023.ffechecs.org/wp-content/uploads/sites/58/2023/02/affiche_2023_A4-pdf.jpg"
+    background_image: "http://asnieres2023.ffechecs.org/wp-content/uploads/sites/58/2023/02/affiche_2023_A4-pdf.jpg"
 families:
   alpha:
     type: "players"

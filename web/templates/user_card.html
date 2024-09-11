@@ -16,11 +16,11 @@
         <div
                 class="card-body p-2 d-flex flex-column"
                 style="
-                    {% if card_image %}
-                        background-image: url('{{ card_image }}');
-                        {% if card_color %}
-                            background-color: {{ card_color }};
-                        {% endif %}
+                    {% if card_background_url %}
+                        background-image: url('{{ card_background_url }}');
+                    {% endif %}
+                    {% if card_background_color %}
+                        background-color: {{ card_background_color }};
                     {% endif %}
                     "
         >

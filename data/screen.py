@@ -12,6 +12,7 @@ from data.timer import Timer
 from data.util import ScreenType
 from database.sqlite import EventDatabase
 from database.store import StoredScreen
+from web.views_background import BackgroundWebContext
 
 if TYPE_CHECKING:
     from data.event import Event
@@ -46,6 +47,7 @@ class Screen:
         self._results_limit: int | None = None
         self._results_tournament_ids: list[int] | None = None
         self._results: list[Result] | None = None
+        self._background_url: str | None = None
         self._build_screen_sets()
 
     def _build_screen_sets(self):
@@ -258,18 +260,24 @@ class Screen:
         return self.stored_screen.last_update if self.stored_screen else self.family.last_update
 
     @property
-    def background_url(self) -> str:
-        if self.stored_screen.background_url:
-            return self.stored_screen.background_url
+    def background_image(self) -> str:
+        if self.stored_screen and self.stored_screen.background_image:
+            return self.stored_screen.background_image
         else:
-            return PapiWebConfig().default_user_image_screen_url
+            return self.event.background_image
+
+    @property
+    def background_url(self) -> str:
+        if self._background_url is None:
+            self._background_url = BackgroundWebContext.inline_image_url(self.background_image)
+        return self._background_url
 
     @property
     def background_color(self) -> str:
-        if self.stored_screen.background_color:
+        if self.stored_screen and self.stored_screen.background_color:
             return self.stored_screen.background_color
         else:
-            return PapiWebConfig().default_user_image_screen_color
+            return self.event.background_color
 
     @property
     def last_update_str(self) -> str | None:

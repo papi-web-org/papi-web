@@ -136,7 +136,7 @@ class AdminScreenController(AAdminController):
         players_show_unpaired: bool | None = None
         results_limit: int | None = None
         results_tournament_ids: list[int] | None = None
-        background_url: str | None = None
+        background_image: str | None = None
         background_color: str | None = None
         match action:
             case 'create' | 'delete' | 'clone':
@@ -173,20 +173,20 @@ class AdminScreenController(AAdminController):
                             if WebContext.form_data_to_bool(data, field):
                                 results_tournament_ids.append(tournament_id)
                     case ScreenType.Image:
-                        field = 'background_url'
-                        background_url = WebContext.form_data_to_str(data, field, '')
-                        if not background_url:
+                        field = 'background_image'
+                        background_image = WebContext.form_data_to_str(data, field, '')
+                        if not background_image:
                             errors[field] = f'Veuillez préciser l\'URL de l\'image.'
-                        elif not validators.url(background_url):
-                            errors[field] = f'L\'URL [{background_url}] n\'est pas valide.'
+                        elif not validators.url(background_image):
+                            errors[field] = f'L\'URL [{background_image}] n\'est pas valide.'
                         else:
                             try:
-                                response = requests.get(background_url)
+                                response = requests.get(background_image)
                                 if response.status_code != 200:
                                     errors[field] = \
-                                        f'L\'URL [{background_url}] est en erreur (code [{response.status_code}]).'
+                                        f'L\'URL [{background_image}] est en erreur (code [{response.status_code}]).'
                             except requests.ConnectionError as ce:
-                                errors[field] = f'L\'URL [{background_url}] est en erreur ([{ce}]).'
+                                errors[field] = f'L\'URL [{background_image}] est en erreur ([{ce}]).'
                         field: str = 'background_color'
                         color_checkbox = WebContext.form_data_to_bool(data, field + '_checkbox')
                         if not color_checkbox:
@@ -211,7 +211,7 @@ class AdminScreenController(AAdminController):
             players_show_unpaired=players_show_unpaired,
             results_limit=results_limit,
             results_tournament_ids=results_tournament_ids,
-            background_url=background_url,
+            background_image=background_image,
             background_color=background_color,
             errors=errors,
         )
@@ -254,8 +254,8 @@ class AdminScreenController(AAdminController):
                                 data[f'results_tournament_{tournament_id}'] = WebContext.value_to_form_data(
                                     tournament_id in web_context.admin_screen.stored_screen.results_tournament_ids)
                         case ScreenType.Image:
-                            data['background_url'] = WebContext.value_to_form_data(
-                                web_context.admin_screen.stored_screen.background_url)
+                            data['background_image'] = WebContext.value_to_form_data(
+                                web_context.admin_screen.stored_screen.background_image)
                             data['background_color'] = WebContext.value_to_form_data(
                                 web_context.admin_screen.background_color)
                             data['background_color_checkbox'] = WebContext.value_to_form_data(

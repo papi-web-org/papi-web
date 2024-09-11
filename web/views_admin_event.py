@@ -97,7 +97,7 @@ class AdminEventController(AAdminController):
                 raise ValueError(f'action=[{action}]')
         public: bool | None = WebContext.form_data_to_bool(data, 'public')
         path: str | None = WebContext.form_data_to_str(data, 'path')
-        background_url: str | None = None
+        background_image: str | None = None
         background_color: str | None = None
         update_password: str | None = WebContext.form_data_to_str(data, 'update_password')
         record_illegal_moves: int | None = None
@@ -107,25 +107,25 @@ class AdminEventController(AAdminController):
         timer_delays: dict[int, int | None] = {i: None for i in range(1, 4)}
         match action:
             case 'update':
-                field = 'background_url'
-                if background_url := WebContext.form_data_to_str(data, field, ''):
-                    if validators.url(background_url):
+                field = 'background_image'
+                if background_image := WebContext.form_data_to_str(data, field, ''):
+                    if validators.url(background_image):
                         try:
-                            response = requests.get(background_url)
+                            response = requests.get(background_image)
                             if response.status_code != 200:
                                 errors[field] = \
-                                    f'L\'URL [{background_url}] est en erreur (code [{response.status_code}]).'
+                                    f'L\'URL [{background_image}] est en erreur (code [{response.status_code}]).'
                         except requests.ConnectionError as ce:
-                            errors[field] = f'L\'URL [{background_url}] est en erreur ([{ce}]).'
+                            errors[field] = f'L\'URL [{background_image}] est en erreur ([{ce}]).'
                     else:
-                        background_url = background_url.strip('/')
-                        if background_url.find('..') != -1:
-                            errors[field] = f'Le chemin [{background_url}] est incorrect.'
+                        background_image = background_image.strip('/')
+                        if background_image.find('..') != -1:
+                            errors[field] = f'Le chemin [{background_image}] est incorrect.'
                             data[field] = ''
                         else:
-                            file: Path = PapiWebConfig().custom_path / background_url
+                            file: Path = PapiWebConfig().custom_path / background_image
                             if not file.exists():
-                                errors[field] = f'Le fichier [{background_url}] est introuvable.'
+                                errors[field] = f'Le fichier [{background_image}] est introuvable.'
                 field: str = 'background_color'
                 color_checkbox = WebContext.form_data_to_bool(data, field + '_checkbox')
                 if not color_checkbox:
@@ -166,7 +166,7 @@ class AdminEventController(AAdminController):
             stop=stop,
             public=public,
             path=path,
-            background_url=background_url,
+            background_image=background_image,
             background_color=background_color,
             update_password=update_password,
             record_illegal_moves=record_illegal_moves,
@@ -202,8 +202,8 @@ class AdminEventController(AAdminController):
                     data['public'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.public)
                     data['start'] = WebContext.value_to_datetime_form_data(web_context.admin_event.stored_event.start)
                     data['stop'] = WebContext.value_to_datetime_form_data(web_context.admin_event.stored_event.stop)
-                    data['background_url'] = WebContext.value_to_form_data(
-                        web_context.admin_event.stored_event.background_url)
+                    data['background_image'] = WebContext.value_to_form_data(
+                        web_context.admin_event.stored_event.background_image)
                     data['background_color'] = WebContext.value_to_form_data(
                         web_context.admin_event.stored_event.background_color)
                     data['background_color_checkbox'] = WebContext.value_to_form_data(

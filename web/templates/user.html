@@ -114,7 +114,9 @@
                                                     {% with
                                                         card_url=url_for('user-rotator-render'),
                                                         card_payload='{"user_main_selector": "' ~ user_event.uniq_id ~ '", "user_event_selector": "' ~ user_event_selector ~ '", "rotator_id": "' ~ rotator.id ~ '"}',
-                                                        card_class=('bg-light' if rotator.public else 'bg-danger-subtle') if admin_auth else 'bg-light'
+                                                        card_class=('bg-light' if rotator.public else 'bg-danger-subtle') if admin_auth else 'bg-light',
+                                                        card_background_url=rotator.event.background_url,
+                                                        card_background_color=rotator.event.background_color
                                                     %}
                                                         {% include 'user_rotator_card.html' %}
                                                     {% endwith %}
@@ -131,8 +133,8 @@
                                                         card_url=url_for('user-screen-render'),
                                                         card_payload='{"user_main_selector": "' ~ user_event.uniq_id ~ '", "user_event_selector": "' ~ user_event_selector ~ '", "screen_uniq_id": "' ~ screen.uniq_id ~ '"}',
                                                         card_class=('bg-light' if screen.public else 'bg-danger-subtle') if admin_auth else 'bg-light',
-                                                        card_image=screen.image,
-                                                        card_color=screen.color
+                                                        card_background_url=screen.background_url,
+                                                        card_background_color=screen.background_color
                                                     %}
                                                         {% include 'user_screen_card.html' %}
                                                     {% endwith %}

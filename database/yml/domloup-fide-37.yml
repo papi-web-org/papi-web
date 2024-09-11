@@ -1,7 +1,7 @@
 name: "37e open Fide de Domloup"
 start: "2024-08-24 00:00"
 stop: "2024-08-25 23:59"
-background_url: "FRA/BRE/35/F35043.png"
+background_image: "FRA/BRE/35/F35043.png"
 background_color: "#e0ffe0"
 update_password: "mot_de_passe"
 record_illegal_moves: 0
@@ -94,7 +94,7 @@ screens:
   affiche:
     name: "Affiche"
     type: "image"
-    background_url: "https://domloup.echecs35.fr/sites/domloup.echecs35.fr/files/domloup-fide-37-affiche.jpg"
+    background_image: "https://domloup.echecs35.fr/sites/domloup.echecs35.fr/files/domloup-fide-37-affiche.jpg"
     background_color: "#ffffff"
   saisie-A:
     name: "Tournoi A"

@@ -1,7 +1,7 @@
 name: "Championnat de Bretagne jeunes 2024"
 start: "2024-03-07 00:00"
 stop: "2024-03-10 23:59"
-background_url: "FRA/BRE/BRE.png"
+background_image: "FRA/BRE/BRE.png"
 chessevents:
   bre-jeunes-2024:
     user_id: lbe

@@ -153,14 +153,18 @@ class Event:
         return Path(self.stored_event.path) if self.stored_event.path else PapiWebConfig().default_papi_path
 
     @property
+    def background_image(self) -> str:
+        return self.stored_event.background_image or PapiWebConfig().default_background_image
+
+    @property
     def background_url(self) -> str:
         if self._background_url is None:
-            self._background_url = BackgroundWebContext.inline_image_url(self.stored_event.background_url)
+            self._background_url = BackgroundWebContext.inline_image_url(self.background_image)
         return self._background_url
 
     @property
     def background_color(self) -> str:
-        return self.stored_event.background_color or PapiWebConfig.default_background_color
+        return self.stored_event.background_color or PapiWebConfig().default_background_color
 
     @property
     def update_password(self) -> str:
@@ -317,7 +321,7 @@ class Event:
             self.add_warning(f'le répertoire [{self.path}] n\'existe pas')
         elif not self.path.is_dir():
             self.add_warning(f'[{self.path}] n\'est pas un répertoire')
-        if not self.stored_event.background_url:
+        if not self.stored_event.background_image:
             self.add_debug('pas d\'image définie')
         if not self.stored_event.background_color:
             self.add_debug('pas de couleur d\'image définie')

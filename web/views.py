@@ -30,18 +30,18 @@ class WebContext:
         self.error: Redirect | Template | None = None
 
     @property
-    def _background_url(self) -> str:
-        return PapiWebConfig().default_background_url
+    def background_image(self) -> str:
+        return PapiWebConfig().default_background_image
 
     @property
-    def _background_color(self) -> str:
+    def background_color(self) -> str:
         return PapiWebConfig().default_background_color
 
     @property
     def background_info(self) -> dict[str, str]:
         return {
-            'url': self._background_url,
-            'color': self._background_color,
+            'image': self.background_image,
+            'color': self.background_color,
         }
 
     @staticmethod

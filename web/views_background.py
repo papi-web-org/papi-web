@@ -22,30 +22,33 @@ class BackgroundWebContext(WebContext):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ):
         super().__init__(request, data)
-        field: str = 'url'
-        url: str = self._form_data_to_str(field, '')
-        if not url:
+        field: str = 'image'
+        image: str = self._form_data_to_str(field, '')
+        if not image:
             logger.warning(f'Parameter [{field}] not found (data=[{data}]).')
-            url = PapiWebConfig().error_background_url
+            image = PapiWebConfig().error_background_image
         field: str = 'color'
         color: str = self._form_data_to_str(field, '')
         if not color:
             logger.warning(f'Parameter [{field}] not found (data=[{data}]).')
             color = PapiWebConfig().error_background_color
-        if not (url.startswith('/') or validators.url(url)):
-            url = self.inline_image_url(url)
+        url: str
+        if image.startswith('/') or validators.url(image):
+            url = image
+        else:
+            url = self.inline_image_url(image)
         self.background: dict[str, str] = {
             'url': f'url({url})',
             'color': color,
         }
 
     @staticmethod
-    def inline_image_url(url: str, ):
-        if not url:
-            return PapiWebConfig().default_background_url
-        if url.startswith('/') or validators.url(url):
-            return url
-        file: Path = PapiWebConfig().custom_path / url
+    def inline_image_url(image: str, ):
+        if not image:
+            return PapiWebConfig().default_background_image
+        if image.startswith('/') or validators.url(image):
+            return image
+        file: Path = PapiWebConfig().custom_path / image
         try:
             with open(file, 'rb') as f:
                 data: bytes = f.read()
@@ -53,7 +56,7 @@ class BackgroundWebContext(WebContext):
             return f'data:image/{file.suffix};base64,{encoded_data}'
         except FileNotFoundError:
             logger.warning(f'Le fichier [{file}] n\'existe pas.')
-            return PapiWebConfig().error_background_url
+            return PapiWebConfig().error_background_image
 
 
 class BackgroundController(AController):
