@@ -67,7 +67,7 @@
         </div>
         {% if not request.htmx %}
             <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js') }}"></script>
-            <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-tooltips.js') }}"></script>
+            {{ tooltip_script() }}
             <script src="{{ url_for('static', file_path='/lib/htmx/htmx-bootstrap-tabs.js') }}"></script>
         {% endif %}
     </body>

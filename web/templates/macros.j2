@@ -125,7 +125,7 @@
     </span>
 {% endmacro %}
 
-{% macro modal_script(url, data, fingerprint) %}
+{% macro modal_script() %}
     <!-- tooltip_script() -->
     <script>
         {# manually remove the modal backdrop when reloading #admin-content (too many modal-backdrop divs are created by Bootstrap when opening modals) #}
@@ -135,7 +135,7 @@
     </script>
 {% endmacro %}
 
-{% macro tooltip_script(url, data, fingerprint) %}
+{% macro tooltip_script() %}
     <!-- tooltip_script() -->
     <script>
         {# manually remove the tooltips when reloading #admin-content (tooltip elements are created by Bootstrap when tooltips are shown but sometimes not removed) #}
