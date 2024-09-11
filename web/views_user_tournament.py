@@ -1,22 +1,19 @@
-import time
 from contextlib import suppress
 from io import BytesIO
-
 from logging import Logger
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 from zipfile import ZipInfo, ZipFile
 
 from litestar import patch, delete, put, post, Response
+from litestar.contrib.htmx.request import HTMXRequest
+from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect, File
-from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.status_codes import HTTP_200_OK
 
 from common.logger import get_logger
-from common.papi_web_config import PapiWebConfig
 from data.board import Board
 from data.loader import EventLoader
 from data.player import Player
@@ -62,6 +59,12 @@ class TournamentUserWebContext(ScreenUserWebContext):
                     self._redirect_error(f'Le tournoi [{self.tournament.uniq_id}] est commencé.')
                     return
 
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'tournament': self.tournament,
+        }
+
 
 class BoardUserWebContext(TournamentUserWebContext):
     def __init__(
@@ -84,6 +87,12 @@ class BoardUserWebContext(TournamentUserWebContext):
         except KeyError:
             self._redirect_error(f'L\'échiquier [{board_id}] n\'existe pas.')
             return
+
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'board': self.board,
+        }
 
 
 class PlayerUserWebContext(TournamentUserWebContext):
@@ -110,6 +119,13 @@ class PlayerUserWebContext(TournamentUserWebContext):
             return
         self.board = self.tournament.boards[self.player.board_id - 1] if self.player.board_id else None
 
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'player': self.player,
+            'board': self.board,
+        }
+
 
 class AUserInputController(AUserController):
     @classmethod
@@ -123,17 +139,7 @@ class AUserInputController(AUserController):
             return web_context.error
         return HTMXTemplate(
             template_name='user_boards_screen_board_row.html',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
-                'user_event': web_context.user_event,
-                'user_event_selector': web_context.user_event_selector,
-                'tournament': web_context.tournament,
-                'board': web_context.board,
-                'screen': web_context.screen,
-                'rotator': web_context.rotator,
-                'rotator_screen_index': web_context.rotator_screen_index if web_context.rotator else 0,
-                'now': time.time(),
+            context=web_context.template_context | {
                 'last_result_updated': SessionHandler.get_session_last_result_updated(request),
                 'last_illegal_move_updated': SessionHandler.get_session_last_illegal_move_updated(request),
                 'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(request),
@@ -161,17 +167,7 @@ class UserCheckInController(AUserInputController):
             return web_context.error
         return HTMXTemplate(
             template_name='user_boards_screen_player_row_player_cell.html',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
-                'user_event': web_context.user_event,
-                'user_event_selector': web_context.user_event_selector,
-                'tournament': web_context.tournament,
-                'player': web_context.player,
-                'screen': web_context.screen,
-                'rotator': web_context.rotator,
-                'rotator_screen_index': web_context.rotator_screen_index,
-                'now': time.time(),
+            context=web_context.template_context | {
                 'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(request),
             })
 
@@ -240,14 +236,7 @@ class UserResultController(AUserInputController):
             return web_context.error
         return HTMXTemplate(
             template_name="user_input_screen_board_result_modal.html",
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
-                'user_event': web_context.user_event,
-                'user_event_selector': web_context.user_event_selector,
-                'tournament': web_context.tournament,
-                'board': web_context.board,
-                'screen': web_context.screen,
+            context=web_context.template_context | {
             })
 
     def _user_input_screen_update_result(

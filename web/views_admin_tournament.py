@@ -1,19 +1,18 @@
 import re
 from logging import Logger
-from typing import Annotated
+from typing import Annotated, Any
 
 from litestar import post
+from litestar.contrib.htmx.request import HTMXRequest
+from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
-from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
 
 from common.logger import get_logger
-from common.papi_web_config import PapiWebConfig
-from data.tournament import Tournament
 from data.event import Event
 from data.loader import EventLoader
+from data.tournament import Tournament
 from database.sqlite import EventDatabase
 from database.store import StoredTournament
 from web.messages import Message
@@ -48,6 +47,12 @@ class TournamentAdminWebContext(EventAdminWebContext):
         if tournament_needed and not self.admin_tournament:
             self._redirect_error(f'Le tournoi n\'est pas spécifié')
             return
+
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'admin_tournament': self.admin_tournament,
+        }
 
 
 class AdminTournamentController(AAdminController):
@@ -231,14 +236,8 @@ class AdminTournamentController(AAdminController):
             template_name='admin_tournament_edit_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
+            context=web_context.template_context | {
                 'action': action,
-                'admin_main_selector': web_context.admin_main_selector,
-                'admin_event_selector': web_context.admin_event_selector,
-                'admin_event': web_context.admin_event,
-                'admin_tournament': web_context.admin_tournament,
                 'chessevent_options': self._get_chessevent_options(web_context.admin_event),
                 'data': data,
                 'record_illegal_moves_options': self._get_record_illegal_moves_options(

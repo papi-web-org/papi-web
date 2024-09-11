@@ -1,15 +1,14 @@
 from logging import Logger
-from typing import Annotated
+from typing import Annotated, Any
 
 from litestar import post
+from litestar.contrib.htmx.request import HTMXRequest
+from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
-from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
 
 from common.logger import get_logger
-from common.papi_web_config import PapiWebConfig
 from data.chessevent import ChessEvent
 from data.loader import EventLoader
 from database.sqlite import EventDatabase
@@ -46,6 +45,12 @@ class ChessEventAdminWebContext(EventAdminWebContext):
         if chessevent_needed and not self.admin_chessevent:
             self._redirect_error(f'La connexion à ChessEvent n\'est pas spécifié')
             return
+
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'admin_chessevent': self.admin_chessevent,
+        }
 
 
 class AdminChessEventController(AAdminController):
@@ -147,14 +152,8 @@ class AdminChessEventController(AAdminController):
             template_name='admin_chessevent_edit_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
+            context=web_context.template_context | {
                 'action': action,
-                'admin_main_selector': web_context.admin_main_selector,
-                'admin_event_selector': web_context.admin_event_selector,
-                'admin_event': web_context.admin_event,
-                'admin_chessevent': web_context.admin_chessevent,
                 'data': data,
                 'errors': errors,
             })

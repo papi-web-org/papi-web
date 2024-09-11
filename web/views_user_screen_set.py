@@ -1,19 +1,16 @@
-import time
 from contextlib import suppress
-
 from logging import Logger
-from typing import Annotated
+from typing import Annotated, Any
 
 from litestar import post
+from litestar.contrib.htmx.request import HTMXRequest
+from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect
-from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
-from common.papi_web_config import PapiWebConfig
 from data.family import Family
 from data.screen_set import ScreenSet
 from data.tournament import Tournament
@@ -45,6 +42,12 @@ class ScreenSetOrFamilyUserWebContext(BasicScreenOrFamilyUserWebContext):
                 self._redirect_error(
                     f'L\'ensemble [{screen_set_uniq_id}] de l\'écran [{self.screen.uniq_id}] est introuvable.')
                 return
+
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'screen_set': self.screen_set,
+        }
 
 
 class UserScreenSetController(AUserController):
@@ -101,15 +104,7 @@ class UserScreenSetController(AUserController):
             return web_context.error
         return HTMXTemplate(
             template_name='user_boards_screen_set.html',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
-                'user_event': web_context.user_event,
-                'screen': web_context.screen,
-                'rotator': web_context.rotator,
-                'rotator_screen_index': web_context.rotator_screen_index,
-                'screen_set': web_context.screen_set,
-                'now': time.time(),
+            context=web_context.template_context | {
                 'last_result_updated': SessionHandler.get_session_last_result_updated(request),
                 'last_illegal_move_updated': SessionHandler.get_session_last_illegal_move_updated(request),
                 'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(request),
@@ -137,15 +132,6 @@ class UserScreenSetController(AUserController):
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
         return HTMXTemplate(
             template_name='user_players_screen_set.html',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
-                'user_event': web_context.user_event,
-                'user_event_selector': web_context.user_event_selector,
-                'screen': web_context.screen,
-                'rotator': web_context.rotator,
-                'rotator_screen_index': web_context.rotator_screen_index,
-                'screen_set': web_context.screen_set,
-                'now': time.time(),
+            context=web_context.template_context | {
             },
         )

@@ -1,21 +1,20 @@
 from logging import Logger
-from typing import Annotated
+from typing import Annotated, Any
 
 import requests
 import validators
 from litestar import post
+from litestar.contrib.htmx.request import HTMXRequest
+from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect
-from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 
 from common.logger import get_logger
-from common.papi_web_config import PapiWebConfig
-from data.screen import Screen
-from data.screen_set import ScreenSet
 from data.event import Event
 from data.loader import EventLoader
+from data.screen import Screen
+from data.screen_set import ScreenSet
 from data.util import ScreenType
 from database.sqlite import EventDatabase
 from database.store import StoredScreen, StoredScreenSet
@@ -70,6 +69,13 @@ class ScreenAdminWebContext(EventAdminWebContext):
         if screen_set_needed and not self.admin_screen_set:
             self._redirect_error(f'L\'ensemble d\'écran n\'est pas spécifié')
             return
+
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'admin_screen': self.admin_screen,
+            'admin_screen_set': self.admin_screen,
+        }
 
 
 class AdminScreenController(AAdminController):
@@ -273,14 +279,8 @@ class AdminScreenController(AAdminController):
             template_name='admin_screen_edit_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
+            context=web_context.template_context | {
                 'action': action,
-                'admin_main_selector': web_context.admin_main_selector,
-                'admin_event_selector': web_context.admin_event_selector,
-                'admin_event': web_context.admin_event,
-                'admin_screen': web_context.admin_screen,
                 'data': data,
                 'screen_type_options': self._get_screen_type_options(family_screens_only=False),
                 'timer_options': self._get_timer_options(web_context.admin_event),
@@ -473,14 +473,7 @@ class AdminScreenController(AAdminController):
             template_name='admin_screen_sets_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
-                'admin_main_selector': web_context.admin_main_selector,
-                'admin_event_selector': web_context.admin_event_selector,
-                'admin_event': web_context.admin_event,
-                'admin_screen': web_context.admin_screen,
-                'admin_screen_set': web_context.admin_screen_set,
+            context=web_context.template_context | {
                 'tournament_options': self._get_tournament_options(web_context.admin_event),
                 'data': data,
                 'errors': errors,

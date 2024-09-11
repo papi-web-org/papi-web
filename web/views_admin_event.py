@@ -7,11 +7,11 @@ from typing import Annotated
 import requests
 import validators
 from litestar import post
+from litestar.contrib.htmx.request import HTMXRequest
+from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect
-from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
 
 from common import format_timestamp_date
 from common.logger import get_logger
@@ -250,13 +250,8 @@ class AdminEventController(AAdminController):
             template_name='admin_event_edit_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
+            context=web_context.template_context | {
                 'action': action,
-                'admin_main_selector': web_context.admin_main_selector,
-                'admin_event_selector': web_context.admin_event_selector,
-                'admin_event': web_context.admin_event,
                 'data': data,
                 'errors': errors,
                 'record_illegal_moves_options': self._get_record_illegal_moves_options(

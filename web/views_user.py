@@ -1,6 +1,6 @@
 import time
 from logging import Logger
-from typing import Annotated
+from typing import Annotated, Any
 
 from litestar import post
 from litestar.contrib.htmx.request import HTMXRequest
@@ -72,6 +72,14 @@ class UserWebContext(WebContext):
         if self.user_event and self.user_event.stored_event.background_color:
             return self.user_event.stored_event.background_color
         return PapiWebConfig().default_user_background_color
+
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'user_main_selector': self.user_main_selector,
+            'user_event_selector': self.user_event_selector,
+            'user_event': self.user_event,
+        }
 
 
 class EventUserWebContext(UserWebContext):
@@ -197,17 +205,10 @@ class AUserController(AController):
                     web_context.user_main_selector = list(nav_tabs.keys())[(nav_index + 1) % len(nav_tabs)]
         return HTMXTemplate(
             template_name="user.html",
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
-                'user_main_selector': web_context.user_main_selector,
-                'user_event_selector': web_context.user_event_selector,
-                'user_event': web_context.user_event,
+            context=web_context.template_context | {
                 'messages': Message.messages(web_context.request),
-                'now': time.time(),
                 'user_columns': SessionHandler.get_session_user_columns(web_context.request),
                 'nav_tabs': nav_tabs,
-                'background_info': web_context.background_info,
             })
 
 

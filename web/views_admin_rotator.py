@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Annotated
+from typing import Annotated, Any
 
 from litestar import post
 from litestar.enums import RequestEncodingType
@@ -46,6 +46,12 @@ class RotatorAdminWebContext(EventAdminWebContext):
         if rotator_needed and not self.admin_rotator:
             self._redirect_error(f'L\'écran rotatif n\'est pas spécifié')
             return
+
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'admin_rotator': self.admin_rotator,
+        }
 
 
 class AdminRotatorController(AAdminController):
@@ -165,14 +171,8 @@ class AdminRotatorController(AAdminController):
             template_name='admin_rotator_edit_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
+            context=web_context.template_context | {
                 'action': action,
-                'admin_main_selector': web_context.admin_main_selector,
-                'admin_event_selector': web_context.admin_event_selector,
-                'admin_event': web_context.admin_event,
-                'admin_rotator': web_context.admin_rotator,
                 'show_menus_options': self._get_show_menus_options(),
                 'data': data,
                 'errors': errors,

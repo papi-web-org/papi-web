@@ -1,18 +1,16 @@
-import time
 from contextlib import suppress
 from logging import Logger
-from typing import Annotated
+from typing import Annotated, Any
 
 from litestar import post
+from litestar.contrib.htmx.request import HTMXRequest
+from litestar.contrib.htmx.response import Reswap, HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect
-from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import Reswap, HTMXTemplate
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
-from common.papi_web_config import PapiWebConfig
 from data.family import Family
 from data.rotator import Rotator
 from data.screen import Screen
@@ -51,6 +49,7 @@ class ScreenOrRotatorUserWebContext(EventUserWebContext):
             except KeyError:
                 self._redirect_error(f'L\'écran rotatif [{rotator_id}] n\'existe pas.')
                 return
+            field: str = 'rotator_screen_index'
             try:
                 self.rotator_screen_index = self._form_data_to_int(field, 0)
             except ValueError as ve:
@@ -74,6 +73,27 @@ class ScreenOrRotatorUserWebContext(EventUserWebContext):
                 return
 
     @property
+    def login_needed(self) -> bool:
+        if self.screen is not None:
+            if self.screen.type != ScreenType.Input:
+                return False
+        if not self.user_event.update_password:
+            return False
+        session_password: str | None = SessionHandler.get_stored_password(self.request, self.user_event)
+        logger.debug('session_password=%s', "*" * (8 if session_password else 0))
+        if session_password is None:
+            Message.error(
+                self.request,
+                f'Veuillez vous identifier pour accéder aux écrans de saisie de l\'évènement '
+                f'[{self.user_event.uniq_id}].')
+            return True
+        if session_password != self.user_event.update_password:
+            Message.error(self.request, 'Code d\'accès incorrect.')
+            SessionHandler.store_password(self.request, self.user_event, None)
+            return True
+        return False
+
+    @property
     def _background_url(self) -> str:
         if self.screen and self.screen.type == ScreenType.Image and self.screen.background_url:
             return self.screen.background_url
@@ -84,6 +104,15 @@ class ScreenOrRotatorUserWebContext(EventUserWebContext):
         if self.screen and self.screen.type == ScreenType.Image and self.screen.background_color:
             return self.screen.background_color
         return super()._background_color
+
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'rotator': self.rotator,
+            'rotator_screen_index': self.rotator_screen_index,
+            'screen': self.screen,
+            'login_needed': self.login_needed,
+        }
 
 
 class ScreenUserWebContext(ScreenOrRotatorUserWebContext):
@@ -123,29 +152,14 @@ class BasicScreenOrFamilyUserWebContext(ScreenUserWebContext):
                 self._redirect_error(f'La famille [{family_uniq_id}] n\'existe pas.')
                 return
 
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'family': self.family,
+        }
+
 
 class UserScreenController(AUserController):
-
-    @staticmethod
-    def _event_login_needed(
-            web_context: ScreenOrRotatorUserWebContext
-    ) -> bool:
-        if web_context.screen is not None:
-            if web_context.screen.type != ScreenType.Input:
-                return False
-        if not web_context.user_event.update_password:
-            return False
-        session_password: str | None = SessionHandler.get_stored_password(web_context.request, web_context.user_event)
-        logger.debug('session_password=%s', "*" * (8 if session_password else 0))
-        if session_password is None:
-            Message.error(web_context.request, f'Veuillez vous identifier pour accéder aux écrans de '
-                                               f'saisie de l\'évènement [{web_context.user_event.uniq_id}].')
-            return True
-        if session_password != web_context.user_event.update_password:
-            Message.error(web_context.request, 'Code d\'accès incorrect.')
-            SessionHandler.store_password(web_context.request, web_context.user_event, None)
-            return True
-        return False
 
     @classmethod
     def _user_render_screen(
@@ -154,22 +168,11 @@ class UserScreenController(AUserController):
     ) -> Template:
         return HTMXTemplate(
             template_name="user_screen.html",
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
-                'user_main_selector': web_context.user_main_selector,
-                'user_event_selector': web_context.user_event_selector,
-                'user_event': web_context.user_event,
-                'screen': web_context.screen,
-                'rotator': web_context.rotator,
-                'rotator_screen_index': web_context.rotator_screen_index,
-                'now': time.time(),
-                'login_needed': cls._event_login_needed(web_context),
+            context=web_context.template_context | {
                 'last_result_updated': SessionHandler.get_session_last_result_updated(web_context.request),
                 'last_illegal_move_updated': SessionHandler.get_session_last_illegal_move_updated(web_context.request),
                 'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(web_context.request),
                 'messages': Message.messages(web_context.request),
-                'background_info': web_context.background_info,
             },
         )
 

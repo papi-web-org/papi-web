@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Annotated
+from typing import Annotated, Any
 
 from litestar import post
 from litestar.contrib.htmx.request import HTMXRequest
@@ -73,6 +73,14 @@ class AdminWebContext(WebContext):
     @property
     def _background_color(self) -> str:
         return PapiWebConfig().default_admin_background_color
+
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'admin_main_selector': self.admin_main_selector,
+            'admin_event_selector': self.admin_event_selector,
+            'admin_event': self.admin_event,
+        }
 
 
 class AAdminController(AController):
@@ -208,17 +216,12 @@ class AAdminController(AController):
                     web_context.set_admin_main_selector(list(nav_tabs.keys())[(nav_index + 1) % len(nav_tabs)])
         return HTMXTemplate(
             template_name="admin.html",
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
+            context=web_context.template_context | {
                 'odbc_drivers': odbc_drivers(),
                 'access_driver': access_driver(),
                 'messages': Message.messages(web_context.request),
                 'nav_tabs': nav_tabs,
                 'event_loader': event_loader,
-                'admin_main_selector': web_context.admin_main_selector,
-                'admin_event': web_context.admin_event,
-                'admin_event_selector': web_context.admin_event_selector,
                 'admin_columns': SessionHandler.get_session_admin_columns(web_context.request),
                 'show_family_screens_on_screen_list': SessionHandler.get_session_show_family_screens_on_screen_list(
                     web_context.request),
@@ -230,7 +233,6 @@ class AAdminController(AController):
                     web_context.request),
                 'screen_types_on_screen_list': SessionHandler.get_session_screen_types_on_screen_list(
                     web_context.request),
-                'background_info': web_context.background_info,
             })
 
 

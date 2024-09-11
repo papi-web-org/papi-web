@@ -1,7 +1,8 @@
+import time
 from datetime import datetime
 from logging import Logger
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 from litestar import get, Controller
 from litestar.contrib.htmx.request import HTMXRequest
@@ -140,6 +141,15 @@ class WebContext:
             return True
         return False
 
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return {
+            'now': time.time(),
+            'papi_web_config': PapiWebConfig(),
+            'admin_auth': self.admin_auth,
+            'background_info': self.background_info,
+        }
+
 
 class AController(Controller):
 
@@ -169,11 +179,8 @@ class IndexController(AController):
         web_context: WebContext = WebContext(request, {})
         return HTMXTemplate(
             template_name="index.html",
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
+            context=web_context.template_context | {
                 'messages': Message.messages(request),
-                'background_info': web_context.background_info,
             })
 
     @get(

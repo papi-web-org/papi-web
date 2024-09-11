@@ -1,17 +1,16 @@
 from logging import Logger
-from typing import Annotated
+from typing import Annotated, Any
 
 from litestar import post
+from litestar.contrib.htmx.request import HTMXRequest
+from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
-from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
 
 from common.logger import get_logger
-from common.papi_web_config import PapiWebConfig
-from data.family import Family
 from data.event import Event
+from data.family import Family
 from data.loader import EventLoader
 from data.util import ScreenType
 from database.sqlite import EventDatabase
@@ -48,6 +47,12 @@ class FamilyAdminWebContext(EventAdminWebContext):
         if family_needed and not self.admin_family:
             self._redirect_error(f'La famille n\'est pas spécifiée')
             return
+
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'admin_family': self.admin_family,
+        }
 
 
 class AdminFamilyController(AAdminController):
@@ -277,14 +282,8 @@ class AdminFamilyController(AAdminController):
             template_name='admin_family_edit_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
+            context=web_context.template_context | {
                 'action': action,
-                'admin_main_selector': web_context.admin_main_selector,
-                'admin_event_selector': web_context.admin_event_selector,
-                'admin_event': web_context.admin_event,
-                'admin_family': web_context.admin_family,
                 'data': data,
                 'tournament_options': self._get_tournament_options(web_context.admin_event),
                 'screen_type_options': self._get_screen_type_options(family_screens_only=True),

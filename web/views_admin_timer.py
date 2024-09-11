@@ -2,7 +2,7 @@ from datetime import datetime
 import re
 import time
 from logging import Logger
-from typing import Annotated
+from typing import Annotated, Any
 
 from litestar import post
 from litestar.enums import RequestEncodingType
@@ -68,6 +68,13 @@ class TimerAdminWebContext(EventAdminWebContext):
         if timer_hour_needed and not self.admin_timer_hour:
             self._redirect_error(f'L\'horaire n\'est pas spécifié')
             return
+
+    @property
+    def template_context(self) -> dict[str, Any]:
+        return super().template_context | {
+            'admin_timer': self.admin_timer,
+            'admin_timer_hour': self.admin_timer_hour,
+        }
 
 
 class AdminTimerController(AAdminController):
@@ -178,14 +185,8 @@ class AdminTimerController(AAdminController):
             template_name='admin_timer_edit_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
+            context=web_context.template_context | {
                 'action': action,
-                'admin_main_selector': web_context.admin_main_selector,
-                'admin_event_selector': web_context.admin_event_selector,
-                'admin_event': web_context.admin_event,
-                'admin_timer': web_context.admin_timer,
                 'data': data,
                 'timer_color_texts': self._get_timer_color_texts(web_context.admin_event.timer_delays),
                 'errors': errors,
@@ -389,14 +390,7 @@ class AdminTimerController(AAdminController):
             template_name='admin_timer_hours_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
-            context={
-                'papi_web_config': PapiWebConfig(),
-                'admin_auth': web_context.admin_auth,
-                'admin_main_selector': web_context.admin_main_selector,
-                'admin_event_selector': web_context.admin_event_selector,
-                'admin_event': web_context.admin_event,
-                'admin_timer': web_context.admin_timer,
-                'admin_timer_hour': web_context.admin_timer_hour,
+            context=web_context.template_context | {
                 'data': data,
                 'errors': errors,
             })
