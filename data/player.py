@@ -30,9 +30,9 @@ class Player:
     board_number: int | None = field(default=None, init=False)
     color: Color | None = field(default=None, init=False)
     illegal_moves: int = 0
-    handicap_initial_time: int | None = field(default=None, init=False)
-    handicap_increment: int | None = field(default=None, init=False)
-    handicap_time_modified: bool | None = field(default=None, init=False)
+    time_control_initial_time: int | None = field(default=None, init=False)
+    time_control_increment: int | None = field(default=None, init=False)
+    time_control_modified: bool | None = field(default=None, init=False)
 
     @property
     def id(self) -> int:
@@ -121,29 +121,29 @@ class Player:
             return str(self.color)
 
     @property
-    def handicap_initial_time_minutes(self) -> int | None:
+    def time_control_initial_time_minutes(self) -> int | None:
         with suppress(TypeError):
-            return self.handicap_initial_time // 60
+            return self.time_control_initial_time // 60
 
     @property
-    def handicap_initial_time_seconds(self) -> int | None:
+    def time_control_initial_time_seconds(self) -> int | None:
         with suppress(TypeError):
-            return self.handicap_initial_time % 60
+            return self.time_control_initial_time % 60
 
     @property
     def handicap_str(self) -> str | None:
-        if self.handicap_initial_time is None:
+        if self.time_control_initial_time is None:
             return None
-        (minutes, seconds) = divmod(self.handicap_initial_time, 60)
+        (minutes, seconds) = divmod(self.time_control_initial_time, 60)
         minutes_str: str = f'{minutes}\'' if minutes > 0 else ''
         seconds_str: str = f'{seconds}"' if seconds > 0 else ''
-        class_str: str = 'modified-time' if self.handicap_time_modified else 'base-time'
-        return f'<span class="{class_str}">{minutes_str}{seconds_str}</span> + {self.handicap_increment}"/cp'
+        class_str: str = 'modified-time' if self.time_control_modified else 'base-time'
+        return f'<span class="{class_str}">{minutes_str}{seconds_str}</span> + {self.time_control_increment}"/cp'
 
-    def set_handicap(self, initial_time: int, increment: int, time_modified: bool):
-        self.handicap_initial_time = initial_time
-        self.handicap_increment = increment
-        self.handicap_time_modified = time_modified
+    def set_time_control(self, initial_time: int, increment: int, modified: bool):
+        self.time_control_initial_time = initial_time
+        self.time_control_increment = increment
+        self.time_control_modified = modified
 
     def __le__(self, other):
         # p1 <= p2 calls p1.__le__(p2)

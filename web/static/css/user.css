@@ -43,8 +43,8 @@
 .input-screen .board-row.result-set:hover {
     background-color: #ffffcc;
 }
-.handicap-modified-time .minutes,
-.handicap-modified-time .seconds {
+.time-control-modified .minutes,
+.time-control-modified .seconds {
     color: red;
 }
 .player-cell.last_check_in_updated, .player-cell.last_illegal_move_updated,

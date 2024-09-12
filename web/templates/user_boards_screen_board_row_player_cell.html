@@ -17,6 +17,6 @@
     {% if player.id == 1 %}
         <span class="fst-italic">EXEMPT</span>
     {% else %}{% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}
-    {% if tournament.handicap and opponent.id != 1 %}(<span class="{%if player.handicap_time_modified %}handicap-modified-time{% else %}base-time{% endif %}">{%if player.handicap_initial_time_minutes %}<span class="minutes">{{ player.handicap_initial_time_minutes }}'</span>{% endif %}{%if player.handicap_initial_time_seconds %}<span class="seconds">{{ player.handicap_initial_time_seconds }}"</span>{% endif -%}
-    {% if tournament.handicap_increment %} + {{ tournament.handicap_increment }}"/cp{% endif %}</span>){% endif %}{% endif %}
+    {% if tournament.handicap and opponent.id != 1 %}(<span class="{%if player.time_control_modified %}time-control-modified{% else %}time-control-unchanged{% endif %}">{%if player.time_control_initial_time_minutes %}<span class="minutes">{{ player.time_control_initial_time_minutes }}'</span>{% endif %}{%if player.time_control_initial_time_seconds %}<span class="seconds">{{ player.time_control_initial_time_seconds }}"</span>{% endif -%}
+    {% if tournament.time_control_increment %} + {{ tournament.time_control_increment }}"/cp{% endif %}</span>){% endif %}{% endif %}
 </td>

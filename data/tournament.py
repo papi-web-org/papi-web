@@ -505,9 +505,9 @@ class Tournament:
                     weak_time - penalties * self.time_control_handicap_penalty_value,
                     self.time_control_handicap_min_time
                 )
-                strong_player.set_handicap(
+                strong_player.set_time_control(
                     strong_time, self.time_control_increment, penalties > 0)
-                weak_player.set_handicap(weak_time, self.time_control_increment, False)
+                weak_player.set_time_control(weak_time, self.time_control_increment, False)
 
     @property
     def ffe_upload_needed(self) -> NeedsUpload:
