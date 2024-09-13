@@ -128,10 +128,11 @@
 {% macro modal_script() %}
     <!-- tooltip_script() -->
     <script>
-        {# manually remove the modal backdrop when reloading #admin-content (too many modal-backdrop divs are created by Bootstrap when opening modals) #}
+        {# manually remove the modal backdrop when reloading .content div (too many modal-backdrop divs are created by Bootstrap when opening modals) #}
         $(document).ready(function(){
             $('body .modal-backdrop').remove();
         });
+        $('body').css('padding-right', '0');
     </script>
 {% endmacro %}
 
