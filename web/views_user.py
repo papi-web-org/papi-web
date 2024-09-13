@@ -1,4 +1,3 @@
-import time
 from logging import Logger
 from typing import Annotated, Any
 
@@ -12,7 +11,6 @@ from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.exception import PapiWebException
 from common.logger import get_logger
-from common.papi_web_config import PapiWebConfig
 from data.event import Event
 from data.loader import EventLoader
 from data.rotator import Rotator
@@ -63,8 +61,8 @@ class UserWebContext(WebContext):
 
     @property
     def background_image(self) -> str:
-        if self.user_event and self.user_event.background_image:
-            return self.user_event.stored_event.background_image
+        if self.user_event:
+            return self.user_event.background_image
         return super().background_image
 
     @property
