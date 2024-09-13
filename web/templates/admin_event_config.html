@@ -97,12 +97,12 @@
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Nombre maximum de coups illégaux enregistrés</th>
-            <td class="text-nowrap">{% if admin_event.record_illegal_moves %}{{ admin_event.record_illegal_moves }}{% else %}Aucun{% endif %}{% if admin_event.stored_event.record_illegal_moves is none %} (par défaut){% endif %}</td>
+            <td class="text-nowrap">{% if admin_event.record_illegal_moves %}{{ admin_event.record_illegal_moves }}{% else %}Aucun{% endif %}{% if admin_event.stored_event.record_illegal_moves is none %}<span class="fst-italic"> (par défaut)</span>{% endif %}</td>
             <td></td>
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Suppression des résultats entrés sur les écrans de saisie</th>
-            <td class="text-nowrap">{% if admin_event.allow_results_deletion_on_input_screens %}Autorisée{% else %}Non autorisée{% endif %}{% if admin_event.stored_event.allow_results_deletion_on_input_screens is none %} (par défaut){% endif %}</td>
+            <td class="text-nowrap">{% if admin_event.allow_results_deletion_on_input_screens %}Autorisée{% else %}Non autorisée{% endif %}{% if admin_event.stored_event.allow_results_deletion_on_input_screens is none %}<span class="fst-italic"> (par défaut)</span>{% endif %}</td>
             <td></td>
         </tr>
         <tr>
