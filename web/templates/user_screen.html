@@ -4,8 +4,9 @@
 
 {% block header %}
     <div id="user-screen-header" class="header user-header user-screen-header">
-        <div
-                hx-trigger="click, keyup[key=='Escape'] from:body"
+        <button
+                id="user-screen-exit-button"
+                class="btn btn-secondary position-fixed bottom-0 end-0 me-2 mb-2"
                 {% if user_event %}
                     hx-post="{{ url_for('user-event-render') }}"
                     hx-vals='{
@@ -21,7 +22,8 @@
                 {% endif %}
                 hx-target="body"
                 hx-indicator="#please-wait">
-        </div>
+            <i class="bi-x-circle-fill"></i>
+        </button>
         <script>
             {% if screen.timer %}
                 {% if not screen.timer.error %}
