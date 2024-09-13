@@ -40,7 +40,10 @@
         {% endif %}
         {% if screen.type == 'image' %}
             <div>
-            Image : {% if screen.image %}{{ screen.image }}{% else %}<span class="fst-italic text-danger">non spécifiée</span>{% endif %}
+                Image : {% if screen.stored_screen.background_image %}{{ screen.stored_screen.background_image }}{% else %}<span class="fst-italic text-danger">par défaut</span>{% endif %}
+            </div>
+            <div>
+                Couleur de fond : {% if screen.stored_screen.background_color %}{{ screen.stored_screen.background_color }}{% else %}<span class="fst-italic text-danger">par défaut</span>{% endif %}
             </div>
         {% endif %}
         <hr/>

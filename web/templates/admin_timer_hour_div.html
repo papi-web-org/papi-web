@@ -90,6 +90,7 @@
                                 hx-vals='{"action": "cancel", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_timer_id": "{{ admin_timer.id }}", "admin_timer_hour_id": "{{ timer_hour.id }}" }'
                                 hx-target="#admin-modal-container"
                                 hx-swap="innerHTML"
+                                hx-trigger="click, keyup[key=='Escape'] from:body"
                                 hx-indicator="#please-wait">
                             <i class="bi-x-circle-fill"></i> Annuler
                         </button>
