@@ -12,10 +12,10 @@
 {% block card_text %}
     {% if show_details_on_rotator_list %}
         <div>
-            Délai de rotation : {{ rotator.delay }} sec.
+            Délai de rotation : {{ rotator.delay }} sec.{%if rotator.stored_rotator.delay is none %}<span class="fst-italic"> (par défaut)</span>{%endif %}
         </div>
         <div>
-            Menus des écrans : {% if rotator.show_menus %}Affichés{% else %}Cachés{% endif %}
+            Menus des écrans : {% if rotator.show_menus %}Affichés{% else %}Cachés{% endif %}{%if rotator.stored_rotator.show_menus is none %}<span class="fst-italic"> (par défaut)</span>{%endif %}
         </div>
     {% endif %}
     <div class="mb-2">
