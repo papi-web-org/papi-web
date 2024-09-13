@@ -83,7 +83,7 @@ class Screen:
 
     @property
     def uniq_id(self) -> str:
-        return self.stored_screen.uniq_id if self.stored_screen else f'{self.family.uniq_id}:{self.family_part}'
+        return self.stored_screen.uniq_id if self.stored_screen else f'{self.family.uniq_id}:{self.family_part:03}'
 
     @property
     def name(self) -> str:
