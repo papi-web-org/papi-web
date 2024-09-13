@@ -58,7 +58,11 @@
     <div class="row">
         {% if admin_event.families_by_id %}
             {% for family in admin_event.families_by_id.values() %}
-                {% with card_class='bg-light' %}
+                {% with
+                    card_class='bg-light',
+                    card_background_url=family.event.background_url,
+                    card_background_color=family.event.background_color
+                %}
                     {% include 'admin_family_card.html' %}
                 {% endwith %}
             {% endfor %}
