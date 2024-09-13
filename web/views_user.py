@@ -11,6 +11,7 @@ from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.exception import PapiWebException
 from common.logger import get_logger
+from common.papi_web_config import PapiWebConfig
 from data.event import Event
 from data.loader import EventLoader
 from data.rotator import Rotator
@@ -60,16 +61,6 @@ class UserWebContext(WebContext):
         self.user_event_selector: str = self._form_data_to_str('user_event_selector')
 
     @property
-    def background_image(self) -> str:
-        if self.user_event:
-            return self.user_event.background_image
-        return super().background_image
-
-    @property
-    def background_color(self) -> str:
-        return super().background_color
-
-    @property
     def template_context(self) -> dict[str, Any]:
         return super().template_context | {
             'user_main_selector': self.user_main_selector,
@@ -87,6 +78,14 @@ class EventUserWebContext(UserWebContext):
         super().__init__(request, data, lazy_load, True)
         if self.error:
             return
+
+    @property
+    def background_image(self) -> str:
+        return ''
+
+    @property
+    def background_color(self) -> str:
+        return PapiWebConfig().default_background_color
 
 
 class AUserController(AController):

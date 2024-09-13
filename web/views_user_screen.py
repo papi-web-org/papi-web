@@ -95,17 +95,11 @@ class ScreenOrRotatorUserWebContext(EventUserWebContext):
 
     @property
     def background_image(self) -> str:
-        if self.screen:
-            return self.screen.background_image
-        else:
-            return super().background_image
+        return self.screen.background_image
 
     @property
     def background_color(self) -> str:
-        if self.screen:
-            return self.screen.background_color
-        else:
-            return super().background_color
+        return self.screen.background_color
 
     @property
     def template_context(self) -> dict[str, Any]:

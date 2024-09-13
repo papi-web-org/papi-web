@@ -24,23 +24,20 @@ class BackgroundWebContext(WebContext):
         super().__init__(request, data)
         field: str = 'image'
         image: str = self._form_data_to_str(field, '')
-        if not image:
-            logger.warning(f'Parameter [{field}] not found (data=[{data}]).')
-            image = PapiWebConfig().error_background_image
         field: str = 'color'
         color: str = self._form_data_to_str(field, '')
         if not color:
             logger.warning(f'Parameter [{field}] not found (data=[{data}]).')
             color = PapiWebConfig().error_background_color
-        url: str
-        if image.startswith('/') or validators.url(image):
-            url = image
-        else:
-            url = self.inline_image_url(image)
         self.background: dict[str, str] = {
-            'url': f'url({url})',
             'color': color,
         }
+        if not image:
+            self.background['url'] = ''
+        elif image.startswith('/') or validators.url(image):
+            self.background['url'] = f'url({image})'
+        else:
+            self.background['url'] = f'url({self.inline_image_url(image)})'
 
     @staticmethod
     def inline_image_url(image: str, ):

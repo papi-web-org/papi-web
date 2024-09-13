@@ -66,9 +66,13 @@ class AdminWebContext(WebContext):
 
     @property
     def background_image(self) -> str:
-        if self.admin_event and self.admin_event.stored_event.background_image:
-            return self.admin_event.stored_event.background_image
-        return super().background_image
+        if self.admin_event:
+            return self.admin_event.background_image
+        else:
+            if self.admin_main_selector == '@config':
+                return PapiWebConfig().default_background_image
+            else:
+                return ''
 
     @property
     def background_color(self) -> str:
