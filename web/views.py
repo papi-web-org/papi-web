@@ -119,7 +119,7 @@ class WebContext:
         if isinstance(value, str):
             return value.strip()
         if isinstance(value, bool):
-            return 'on' if value else ''
+            return 'on' if value else 'off'
         if isinstance(value, int):
             return str(value)
         if isinstance(value, Path):

@@ -101,7 +101,7 @@ class AdminEventController(AAdminController):
         background_color: str | None = None
         update_password: str | None = WebContext.form_data_to_str(data, 'update_password')
         record_illegal_moves: int | None = None
-        allow_results_deletion: bool | None = None
+        allow_results_deletion_on_input_screens: bool | None = None
         timer_colors: dict[int, str | None] = {i: None for i in range(1, 4)}
         timer_color_checkboxes: dict[int, bool | None] = {i: None for i in range(1, 4)}
         timer_delays: dict[int, int | None] = {i: None for i in range(1, 4)}
@@ -139,9 +139,11 @@ class AdminEventController(AAdminController):
                 except (ValueError, AssertionError):
                     errors['record_illegal_moves'] = f'La valeur entrée [{data[field]}] n\'est pas valide.'
                 try:
-                    allow_results_deletion = WebContext.form_data_to_bool(data, 'allow_results_deletion')
+                    allow_results_deletion_on_input_screens = WebContext.form_data_to_bool(
+                        data, 'allow_results_deletion_on_input_screens')
                 except ValueError:
-                    errors['allow_results_deletion'] = f'La valeur entrée [{data[field]}] n\'est pas valide.'
+                    errors['allow_results_deletion_on_input_screens'] = \
+                        f'La valeur entrée [{data[field]}] n\'est pas valide.'
                 for i in range(1, 4):
                     field: str = f'color_{i}'
                     timer_color_checkboxes[i] = WebContext.form_data_to_bool(data, field + '_checkbox')
@@ -170,7 +172,7 @@ class AdminEventController(AAdminController):
             background_color=background_color,
             update_password=update_password,
             record_illegal_moves=record_illegal_moves,
-            allow_results_deletion_on_input_screens=allow_results_deletion,
+            allow_results_deletion_on_input_screens=allow_results_deletion_on_input_screens,
             timer_colors=timer_colors,
             timer_delays=timer_delays,
             errors=errors,
@@ -213,7 +215,7 @@ class AdminEventController(AAdminController):
                         web_context.admin_event.stored_event.update_password)
                     data['record_illegal_moves'] = WebContext.value_to_form_data(
                         web_context.admin_event.stored_event.record_illegal_moves)
-                    data['allow_results_deletion'] = WebContext.value_to_form_data(
+                    data['allow_results_deletion_on_input_screens'] = WebContext.value_to_form_data(
                         web_context.admin_event.stored_event.allow_results_deletion_on_input_screens)
                     for i in range(1, 4):
                         data[f'color_{i}'] = WebContext.value_to_form_data(web_context.admin_event.timer_colors[i])
@@ -238,14 +240,15 @@ class AdminEventController(AAdminController):
             errors = stored_event.errors
         if errors is None:
             errors = {}
-        allow_results_deletion_options: dict[str, str] = {
+        allow_results_deletion_on_input_screens_options: dict[str, str] = {
             '': '',
-            '0': 'Non autorisée',
-            '1': 'Autorisée',
+            'off': 'Non autorisée',
+            'on': 'Autorisée',
         }
         default_allow_results_deletion_option = PapiWebConfig().default_allow_results_deletion_on_input_screens
-        allow_results_deletion_options[''] = \
-            f'Par défaut ({allow_results_deletion_options[str(int(default_allow_results_deletion_option))]})'
+        allow_results_deletion_on_input_screens_options[''] = \
+            (f'Par défaut '
+             f'({allow_results_deletion_on_input_screens_options["on" if default_allow_results_deletion_option else "off"]})')
         return HTMXTemplate(
             template_name='admin_event_edit_modal.html',
             re_swap='innerHTML',
@@ -256,7 +259,7 @@ class AdminEventController(AAdminController):
                 'errors': errors,
                 'record_illegal_moves_options': self._get_record_illegal_moves_options(
                     PapiWebConfig().default_record_illegal_moves_number),
-                'allow_results_deletion_options': allow_results_deletion_options,
+                'allow_results_deletion_on_input_screens_options': allow_results_deletion_on_input_screens_options,
                 'timer_color_texts': self._get_timer_color_texts(PapiWebConfig().default_timer_delays),
             })
 

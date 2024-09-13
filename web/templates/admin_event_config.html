@@ -102,7 +102,7 @@
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Suppression des résultats entrés sur les écrans de saisie</th>
-            <td class="text-nowrap">{% if admin_event.allow_results_deletion %}Autorisée{% else %}Non autorisée{% endif %}{% if admin_event.stored_event.allow_results_deletion is none %} (par défaut){% endif %}</td>
+            <td class="text-nowrap">{% if admin_event.allow_results_deletion_on_input_screens %}Autorisée{% else %}Non autorisée{% endif %}{% if admin_event.stored_event.allow_results_deletion_on_input_screens is none %} (par défaut){% endif %}</td>
             <td></td>
         </tr>
         <tr>

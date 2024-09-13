@@ -134,10 +134,10 @@ class AAdminController(AController):
     def _get_players_show_unpaired_options() -> dict[str, str]:
         options: dict[str, str] = {
             '': '-',
-            '0': 'Affichage seulement des joueur·euses apparié·es',
-            '1': 'Affichage de tou·tes les joueur·euses, apparié·es ou non',
+            'off': 'Affichage seulement des joueur·euses apparié·es',
+            'on': 'Affichage de tou·tes les joueur·euses, apparié·es ou non',
         }
-        options[''] = f'Par défaut ({options["1" if PapiWebConfig().default_players_show_unpaired else "0"]})'
+        options[''] = f'Par défaut ({options["on" if PapiWebConfig().default_players_show_unpaired else "off"]})'
         return options
 
     @staticmethod

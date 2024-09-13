@@ -311,7 +311,7 @@
                                             id="{{ id }}"
                                             class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
                                             aria-describedby="{{ id }}-help {{ id }}-error" >
-                                        {% for value, text in allow_results_deletion_options.items() %}
+                                        {% for value, text in allow_results_deletion_on_input_screens_options.items() %}
                                             <option value="{{ value }}" {% if value == data[name] %}selected{%endif %}>{{ text }}</option>
                                         {% endfor %}
                                     </select>
