@@ -74,7 +74,7 @@ class ScreenAdminWebContext(EventAdminWebContext):
     def template_context(self) -> dict[str, Any]:
         return super().template_context | {
             'admin_screen': self.admin_screen,
-            'admin_screen_set': self.admin_screen,
+            'admin_screen_set': self.admin_screen_set,
         }
 
 
