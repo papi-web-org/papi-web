@@ -133,7 +133,8 @@
                         (<i class="bi-card-list"></i>&nbsp;échiquiers,
                         <i class="bi-pencil-fill"></i>&nbsp;saisie,
                         <i class="bi-people-fill"></i>&nbsp;appariements,
-                        <i class="bi-trophy-fill"></i>&nbsp;résultats)
+                        <i class="bi-trophy-fill"></i>&nbsp;résultats,
+                        <i class="bi-image"></i>&nbsp;image)
                     </h3>
                     <div class="row">
                         <div class="col-6">
@@ -153,7 +154,7 @@
                                                                         name="{{ name }}"
                                                                         type="checkbox" id="{{ id }}"
                                                                         class=""
-                                                                        {% if data[name] %}checked{% endif %} />
+                                                                        {% if data[name] == 'on' %}checked{% endif %} />
                                                                 <label for="{{ id }}" class="form-label {% if not first %}fst-italic{%endif %}">
                                                                     <i class="{{ screen.icon_str }}"></i>
                                                                     {{ screen.name }}

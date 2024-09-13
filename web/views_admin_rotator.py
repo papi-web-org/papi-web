@@ -126,10 +126,10 @@ class AdminRotatorController(AAdminController):
     def _get_show_menus_options() -> dict[str, str]:
         options: dict[str, str] = {
             '': '-',
-            '0': 'Pas d\'affichage des menus des écrans',
-            '1': 'Affichage des menus des écrans',
+            'off': 'Pas d\'affichage des menus des écrans',
+            'on': 'Affichage des menus des écrans',
         }
-        options[''] = f'Par défaut ({options["1" if PapiWebConfig().default_rotator_show_menus else "0"]})'
+        options[''] = f'Par défaut ({options["on" if PapiWebConfig().default_rotator_show_menus else "off"]})'
         return options
 
     def _admin_rotator_render_edit_modal(
