@@ -799,7 +799,7 @@ class ScreenType(StrEnum):
                 return 'bi-people-fill'
             case self.Results:
                 return 'bi-trophy-fill'
-            case self.Results:
+            case self.Image:
                 return 'bi-image'
             case _:
                 raise ValueError(f'Invalid screen type: {self}')
