@@ -71,4 +71,9 @@
             <script src="{{ url_for('static', file_path='/lib/htmx/htmx-bootstrap-tabs.js') }}"></script>
         {% endif %}
     </body>
+    <script>
+        $(window).bind('beforeunload', function(){
+            return 'Voulez-vous redémarrer l\'application Papi-web ?';
+        });
+    </script>
 </html>
