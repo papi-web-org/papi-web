@@ -129,8 +129,9 @@ class AdminScreenController(AAdminController):
                         raise ValueError(f'action=[{action}]')
             name = WebContext.form_data_to_str(data, 'name')
             public = WebContext.form_data_to_bool(data, 'public')
-        menu: str | None = None
+        menu_link: bool | None = None
         menu_text: str | None = None
+        menu: str | None = None
         columns: int | None = None
         timer_id: int | None = None
         players_show_unpaired: bool | None = None
@@ -139,7 +140,13 @@ class AdminScreenController(AAdminController):
         background_image: str | None = None
         background_color: str | None = None
         match action:
-            case 'create' | 'delete' | 'clone':
+            case 'create':
+                if type != ScreenType.Image:
+                    menu_link = True
+                    menu_text = ''
+                    menu = ''
+                pass
+            case 'delete' | 'clone':
                 pass
             case 'update':
                 field = 'columns'
@@ -147,8 +154,10 @@ class AdminScreenController(AAdminController):
                     columns = WebContext.form_data_to_int(data, field, minimum=1)
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
-                menu_text = WebContext.form_data_to_str(data, 'menu_text')
-                menu = WebContext.form_data_to_str(data, 'menu')
+                if type != ScreenType.Image:
+                    menu_link = WebContext.form_data_to_bool(data, 'menu_link', False)
+                    menu_text = WebContext.form_data_to_str(data, 'menu_text', '')
+                    menu = WebContext.form_data_to_str(data, 'menu', '')
                 field = 'timer_id'
                 try:
                     timer_id = WebContext.form_data_to_int(data, field)
@@ -205,6 +214,7 @@ class AdminScreenController(AAdminController):
             public=public,
             name=name,
             columns=columns,
+            menu_link=menu_link,
             menu_text=menu_text,
             menu=menu,
             timer_id=timer_id,
@@ -238,8 +248,12 @@ class AdminScreenController(AAdminController):
                     data['public'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.public)
                     data['name'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.name)
                     data['columns'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.columns)
-                    data['menu_text'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.menu_text)
-                    data['menu'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.menu)
+                    if web_context.admin_screen.type != ScreenType.Image:
+                        data['menu_link'] = WebContext.value_to_form_data(
+                            web_context.admin_screen.stored_screen.menu_link)
+                        data['menu_text'] = WebContext.value_to_form_data(
+                            web_context.admin_screen.stored_screen.menu_text)
+                        data['menu'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.menu)
                     data['timer_id'] = WebContext.value_to_form_data(web_context.admin_screen.stored_screen.timer_id)
                     match web_context.admin_screen.type:
                         case ScreenType.Boards | ScreenType.Input:

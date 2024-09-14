@@ -328,18 +328,55 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-6">
+                            <div class="col-2">
+                                {% with id='menu-link', name='menu_link' %}
+                                    <div>
+                                        <label for="{{ id }}" class="form-label">Liens vers les écrans :</label>
+                                    </div>
+                                    <div>
+                                        <input
+                                                name="{{ name }}"
+                                                type="checkbox" id="{{ id }}"
+                                                aria-describedby="{{ id }}-help {{ id }}-error"
+                                                {% if data[name] == 'on' %}checked{% endif %} /> Autoriser
+                                        <script>
+                                            $('#{{ id }}').click(function() {
+                                                if ($(this).is(':checked')) {
+                                                    $('#menu-text').prop('disabled', false);
+                                                } else {
+                                                    $('#menu-text').val('');
+                                                    $('#menu-text').prop('disabled', true);
+                                                }
+                                            });
+                                        </script>
+                                        <div id="{{ id }}-help" class="form-text">
+                                          Cochez la case pour autoriser les autres écrans à afficher un lien vers les écrans de cette famille.
+                                        </div>
+                                        {% if name in errors %}
+                                            <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                                {{ errors[name] }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endwith %}
+                            </div>
+                            <div class="col-5">
                                 {% with id='menu-text', name='menu_text' %}
-                                    <label for="{{ id }}" class="form-label">Étiquette de menu :</label>
+                                    <label for="{{ id }}" class="form-label">Étiquette de menu :</label> (data[menu_link]={{data['menu_link']}})
                                     <input
                                             name="{{ name }}"
                                             type="text" id="{{ id }}"
                                             class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
                                             aria-describedby="{{ id }}-help {{ id }}-error"
                                             placeholder="Exemple : Mon écran"
-                                            value="{{ data[name] }}" />
+                                            value="{{ data[name] }}"
+                                            {% if data['menu_link'] != 'on' %}
+                                                disabled
+                                            {% endif %}
+                                    />
                                     <div id="{{ id }}-help" class="form-text">
                                       Ce texte sera utilisé pour le lien permettant d'accéder aux écrans depuis un autre écran.
+                                      Si ce champ est laissé vide, un nom par défaut sera utilisé.
                                     </div>
                                     {% if name in errors %}
                                         <div id="{{ id }}-error" class="form-text invalid-feedback">
@@ -348,7 +385,7 @@
                                     {% endif %}
                                 {% endwith %}
                             </div>
-                            <div class="col-6">
+                            <div class="col-5">
                                 {% with id='menu', name='menu' %}
                                     <label for="{{ id }}" class="form-label">Menu :</label>
                                     <input

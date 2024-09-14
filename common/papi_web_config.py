@@ -356,3 +356,33 @@ class PapiWebConfig:
     @property
     def user_background_color(self) -> str:
         return self.default_background_color
+
+    @staticmethod
+    def default_boards_screen_menu_text(single_tournament: bool, first_last: bool) -> str:
+        if single_tournament:
+            if first_last:
+                return 'Éch. %f-%l'
+            else:
+                return 'Par échiquier'
+        else:
+            if first_last:
+                return '%t [Éch. %f-%l]'
+            else:
+                return '%t (par échiquier)'
+
+    @staticmethod
+    def default_players_screen_menu_text(single_tournament: bool, first_last: bool) -> str:
+        if single_tournament:
+            if first_last:
+                return '%f-%l'
+            else:
+                return 'Par ordre alpha.'
+        else:
+            if first_last:
+                return '%t [Éch. %f-%l]'
+            else:
+                return '%t (par ordre alpha.)'
+
+    @property
+    def default_results_screen_menu_text(self) -> str:
+        return 'Derniers résultats'

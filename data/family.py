@@ -70,11 +70,31 @@ class Family:
         return 1
 
     @property
-    def menu_text(self) -> str | None:
+    def menu_link(self) -> bool:
+        return self.stored_family.menu_link
+
+    @property
+    def menu_text(self) -> str:
         return self.stored_family.menu_text
 
     @property
-    def menu(self) -> str | None:
+    def menu_label(self) -> str | None:
+        if not self.menu_link:
+            return None
+        if self.menu_text:
+            return self.menu_text
+        single_tournament: bool = len(self.event.tournaments_by_id) == 1
+        text: str
+        if self.type == ScreenType.Players or not self.tournament.current_round:
+            text = PapiWebConfig().default_players_screen_menu_text(
+                single_tournament=single_tournament, first_last=True)
+        else:
+            text = PapiWebConfig().default_boards_screen_menu_text(
+                single_tournament=single_tournament, first_last=True)
+        return text.replace('%t', self.tournament.name)
+
+    @property
+    def menu(self) -> str:
         return self.stored_family.menu
 
     @property

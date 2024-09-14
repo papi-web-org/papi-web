@@ -104,8 +104,9 @@ class AdminFamilyController(AAdminController):
                         raise ValueError(f'action=[{action}]')
             name = WebContext.form_data_to_str(data, 'name')
             public: bool = WebContext.form_data_to_bool(data, 'public')
-        menu: str | None = None
+        menu_link: bool | None = None
         menu_text: str | None = None
+        menu: str | None = None
         columns: int | None = None
         timer_id: int | None = None
         players_show_unpaired: bool | None = None
@@ -134,7 +135,11 @@ class AdminFamilyController(AAdminController):
             case _:
                 raise ValueError(f'action=[{action}]')
         match action:
-            case 'create' | 'delete':
+            case 'create':
+                menu_link = True
+                menu_text = ''
+                menu = ''
+            case 'delete':
                 pass
             case 'update':
                 field = 'columns'
@@ -142,8 +147,9 @@ class AdminFamilyController(AAdminController):
                     columns = WebContext.form_data_to_int(data, field, minimum=1)
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
-                menu_text = WebContext.form_data_to_str(data, 'menu_text')
-                menu = WebContext.form_data_to_str(data, 'menu')
+                menu_link = WebContext.form_data_to_bool(data, 'menu_link', False)
+                menu_text = WebContext.form_data_to_str(data, 'menu_text', '')
+                menu = WebContext.form_data_to_str(data, 'menu', '')
                 field = 'timer_id'
                 try:
                     timer_id = WebContext.form_data_to_int(data, field)
@@ -205,6 +211,7 @@ class AdminFamilyController(AAdminController):
             tournament_id=tournament_id,
             name=name,
             columns=columns,
+            menu_link=menu_link,
             menu_text=menu_text,
             menu=menu,
             timer_id=timer_id,
@@ -248,6 +255,7 @@ class AdminFamilyController(AAdminController):
                     data['tournament_id'] = WebContext.value_to_form_data(
                         web_context.admin_family.stored_family.tournament_id)
                     data['columns'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.columns)
+                    data['menu_link'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.menu_link)
                     data['menu_text'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.menu_text)
                     data['menu'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.menu)
                     data['timer_id'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.timer_id)

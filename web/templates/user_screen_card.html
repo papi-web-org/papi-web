@@ -18,11 +18,11 @@
         <div>
             Colonnes : {% for i in range(screen.columns) %}<i class="bi-square-fill"></i> {% endfor %}
         </div>
-        <div class="{% if not screen.menu_label %}text-secondary{% endif %}">
-            Étiquette de menu : {% if screen.menu_label %}{{ screen.menu_label }}{% else %}-{% endif %}
+        <div class="{% if not screen.menu_link %}text-secondary{% endif %}">
+            Étiquette de menu : {% if screen.menu_link %}{{ screen.menu_label }}{% else %}<span class="fst-italic">aucune</span>{% endif %}
         </div>
         <div class="{% if not screen.menu %}text-secondary{% endif %}">
-            Menu : {% if screen.menu %}{{ screen.menu }}{% else %}-{% endif %}
+            Menu : {% if screen.menu %}{{ screen.menu }}{% else %}<span class="fst-italic">aucun</span>{% endif %}
         </div>
         <div class="{% if not screen.timer %}text-secondary{% endif %}">
             Chronomètre : {% if screen.timer %}<i class="bi-clock-fill"></i> {% if user_event.timers_by_id|length > 1 %}{{ screen.timer.uniq_id }}{% else %}Oui{% endif %}{% else %}Non{% endif %}
@@ -43,7 +43,7 @@
             Image : {% if screen.stored_screen.background_image %}{{ screen.stored_screen.background_image }}{% else %}<span class="fst-italic text-danger">non spécifiée</span>{% endif %}
         </div>
         <div>
-            Couleur de fond : {% if screen.stored_screen.background_color %}{{ screen.stored_screen.background_color }}{% else %}<span class="fst-italic text-danger">non spécifiée</span>{% endif %}
+            Couleur de fond : {% if screen.stored_screen.background_color %}{{ screen.stored_screen.background_color }}{% else %}<span class="fst-italic">non spécifiée</span>{% endif %}
         </div>
     {% endif %}
     <div class="mb-2">

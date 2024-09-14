@@ -18,10 +18,18 @@
             Colonnes : {% for i in range(family.columns) %}<i class="bi-square-fill"></i> {% endfor %}
         </div>
         <div class="{% if not family.menu_label %}text-secondary{% endif %}">
-            Étiquette de menu : {% if family.menu_label %}{{ family.menu_label }}{% else %}-{% endif %}
+            Étiquette de menu :
+            {% if family.menu_link %}
+                {{ family.menu_label }}
+                {% if not family.menu_text %}
+                    <span class="fst-italic">(par défaut)</span>
+                {% endif %}
+            {% else %}
+                <span class="fst-italic">aucune</span>
+            {% endif %}
         </div>
         <div class="{% if not family.menu %}text-secondary{% endif %}">
-            Menu : {% if family.menu %}{{ family.menu }}{% else %}-{% endif %}
+            Menu : {% if family.menu %}{{ family.menu }}{% else %}<span class="fst-italic">aucun</span>{% endif %}
         </div>
         <div class="{% if not family.timer %}text-secondary{% endif %}">
             Chronomètre : {% if family.timer %}<i class="bi-clock-fill"></i> {% if admin_event.timers_by_id|length > 1 %}{{ family.timer.uniq_id }}{% else %}Oui{% endif %}{% else %}Non{% endif %}

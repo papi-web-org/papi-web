@@ -113,44 +113,45 @@ class Screen:
             return self.family.columns
 
     @property
+    def menu_link(self) -> str | None:
+        return self.stored_screen.menu_link if self.stored_screen else self.family.menu_link
+
+    @property
+    def menu_text(self) -> str | None:
+        return self.stored_screen.menu_text if self.stored_screen else self.family.menu_text
+
+    @property
     def menu_label(self) -> str | None:
+        if not self.menu_link:
+            return None
         match self.type:
-            case ScreenType.Boards | ScreenType.Input:
-                menu_text: str = self.stored_screen.menu_text if self.stored_screen else self.family.menu_text
-                if menu_text is None:
-                    return None
+            case ScreenType.Boards | ScreenType.Input | ScreenType.Players:
+                single_tournament = len(self.event.tournaments_by_id) == 1
                 screen_set: ScreenSet = self.screen_sets_sorted_by_order[0]
-                text: str = menu_text.replace('%t', screen_set.tournament.name)
-                if screen_set.tournament.current_round:
-                    if '%f' in text:
-                        text = text.replace('%f', str(screen_set.first_board.id))
-                    if '%l' in text:
-                        text = text.replace('%l', str(screen_set.last_board.id))
+                first_last = screen_set.first is not None or screen_set.last is not None
+                text: str
+                if self.type == ScreenType.Players or not screen_set.tournament.current_round:
+                    text = self.menu_text or PapiWebConfig().default_players_screen_menu_text(
+                        single_tournament=single_tournament, first_last=first_last)
                 else:
+                    text = self.menu_text or PapiWebConfig().default_boards_screen_menu_text(
+                        single_tournament=single_tournament, first_last=first_last)
+                text = text.replace('%t', screen_set.tournament.name)
+                if self.type == ScreenType.Players or not screen_set.tournament.current_round:
                     if screen_set.first_player_by_name:
                         text = text.replace(
                             '%f', str(screen_set.first_player_by_name.last_name[:3]).upper())
                     if screen_set.last_player_by_name:
                         text = text.replace(
                             '%l', str(screen_set.last_player_by_name.last_name[:3]).upper())
-                return text
-            case ScreenType.Players:
-                menu_text: str = self.stored_screen.menu_text if self.stored_screen else self.family.menu_text
-                if menu_text is None:
-                    return None
-                screen_set: ScreenSet = self.screen_sets_sorted_by_order[0]
-                text: str = menu_text.replace('%t', screen_set.tournament.name)
-                if screen_set.first_player_by_name:
-                    text = text.replace(
-                        '%f', str(screen_set.first_player_by_name.last_name)[:3].upper())
-                if screen_set.last_player_by_name:
-                    text = text.replace(
-                        '%l', str(screen_set.last_player_by_name.last_name)[:3].upper())
+                else:
+                    if '%f' in text:
+                        text = text.replace('%f', str(screen_set.first_board.id))
+                    if '%l' in text:
+                        text = text.replace('%l', str(screen_set.last_board.id))
                 return text
             case ScreenType.Results:
-                return self.stored_screen.menu_text if self.stored_screen.menu_text else 'Derniers résultats'
-            case ScreenType.Image:
-                return None
+                return self.stored_screen.menu_text or PapiWebConfig().default_results_screen_menu_text
             case _:
                 raise ValueError(f'type=[{self.type}]')
 
