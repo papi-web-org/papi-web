@@ -6,11 +6,13 @@
             <th scope="col" class="text-nowrap text-end">
                 {% for logging_level_id, logging_level in logging_levels.items() %}
                     <button
-                            class="btn text-nowrap {% if logging_level_id >= min_logging_level %}{{ logging_level.class }}{% else %}text-white border border-white{% endif %} px-1 py-0"
-                            hx-post="{{ url_for('admin-update-header') }}"
-                            hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "min_logging_level": "{{ logging_level_id }}"}'
-                            hx-swap="multi:#admin-header,#admin-content"
-                            hx-indicator="#please-wait"
+                            class="btn text-nowrap {% if logging_level_id == min_logging_level %}pe-none fw-bold{% endif %} {% if logging_level_id >= min_logging_level %}{{ logging_level.class }}{% else %}text-white border border-white{% endif %} px-1 py-0"
+                            {% if logging_level_id != min_logging_level %}
+                                hx-post="{{ url_for('admin-update-header') }}"
+                                hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "min_logging_level": "{{ logging_level_id }}"}'
+                                hx-swap="multi:#admin-header,#admin-content"
+                                hx-indicator="#please-wait"
+                            {% endif %}
                     >
                         <i class="{{ logging_level.icon_class }}"></i>
                         {{ logging_level.name }}
