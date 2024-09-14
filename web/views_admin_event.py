@@ -245,10 +245,10 @@ class AdminEventController(AAdminController):
             'off': 'Non autorisée',
             'on': 'Autorisée',
         }
-        default_allow_results_deletion_option = PapiWebConfig().default_allow_results_deletion_on_input_screens
+        default_option = PapiWebConfig().default_allow_results_deletion_on_input_screens
         allow_results_deletion_on_input_screens_options[''] = \
             (f'Par défaut '
-             f'({allow_results_deletion_on_input_screens_options["on" if default_allow_results_deletion_option else "off"]})')
+             f'({allow_results_deletion_on_input_screens_options["on" if default_option else "off"]})')
         return HTMXTemplate(
             template_name='admin_event_edit_modal.html',
             re_swap='innerHTML',
