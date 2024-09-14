@@ -521,9 +521,18 @@ class EventDatabase(SQLiteDatabase):
 
     def delete(self) -> Path:
         file: Path = EventDatabase(self.uniq_id).file
-        arch: Path = file.parent / f'{file.stem}_{datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S")}.arch'
-        file.rename(arch)
-        return arch
+        index: int = 0
+        date_str: str = datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M")
+        arch: Path = file.parent / f'{file.stem}_{date_str}.arch'
+        while True:
+            try:
+                file.rename(arch)
+                logger.info(f'La base données a été archivée ({arch}).')
+                return arch
+            except FileExistsError:
+                logger.warning(f'Impossible de renommer la base données, le fichier [{arch}] existe déjà.')
+                index += 1
+                arch = file.parent / f'{file.stem}_{date_str}-{index}.arch'
 
     def set_last_update(self):
         self._execute('UPDATE `info` SET `last_update` = ?', (time.time(),))
