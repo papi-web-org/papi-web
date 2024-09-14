@@ -175,7 +175,7 @@ screens:
         tournament_uniq_id: "U16"
   affichage-grands-open-a:
     type: "boards"
-    menu: "affichage-petits-*"
+    menu: "affichage-grands-*"
     menu_text: "Open A"
     timer_uniq_id: "grands"
     sets:
@@ -233,11 +233,11 @@ screens:
   saisie-petits-open-b:
     type: "input"
     menu: "saisie-petits-*"
-    menu_text: "Open A"
+    menu_text: "Open B"
     timer_uniq_id: "petits"
     sets:
       -
-        tournament_uniq_id: "Open_A"
+        tournament_uniq_id: "Open_B"
   saisie-grands-u12:
     type: "input"
     menu: "saisie-grands-*"
@@ -264,7 +264,7 @@ screens:
         tournament_uniq_id: "U16"
   saisie-grands-open-a:
     type: "input"
-    menu: "saisie-petits-*"
+    menu: "saisie-grands-*"
     menu_text: "Open A"
     timer_uniq_id: "grands"
     sets:
