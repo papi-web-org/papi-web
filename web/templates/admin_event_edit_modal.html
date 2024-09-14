@@ -208,6 +208,28 @@
                                             {{ errors[name] }}
                                         </div>
                                     {% endif %}
+                                    <div id="background-image-picker"></div>
+                                    <script>
+                                        $('#background-image-picker')
+                                        .on('changed.jstree', function (e, data) {
+                                            var i, j, r = [];
+                                            for(i = 0, j = data.selected.length; i < j; i++) {
+                                            r.push(data.instance.get_node(data.selected[i]).text);
+                                            }
+                                            $('#event_result').html('Selected: ' + r.join(', '));
+                                        })
+                                        .jstree(
+                                            {
+                                                'core' : {
+                                                    'multiple': false,
+                                                    'data' : {{ background_images_jstree_data | tojson }}
+                                                }
+                                            }
+                                        );
+                                        $('#background-image-picker').on("changed.jstree", function (e, data) {
+                                            console.log(data.selected);
+                                        });
+                                    </script>
                                 {% endwith %}
                             </div>
                             <div class="col-6">

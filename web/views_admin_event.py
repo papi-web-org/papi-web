@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 from logging import Logger
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import requests
 import validators
@@ -178,6 +178,30 @@ class AdminEventController(AAdminController):
             errors=errors,
         )
 
+    @staticmethod
+    def background_images_jstree_data(background_image: str) -> list[dict[str, Any]]:
+        custom_path: Path = PapiWebConfig().custom_path
+        nodes: list[dict[str, str]] = []
+        for item in custom_path.rglob('*'):
+            item_str = str(item).replace(str(custom_path), '').replace('\\', '/').lstrip('/')
+            node: dict[str, Any] = {
+                'id': item_str or '#',
+                'parent': '/'.join(item_str.split('/')[:-1]) or '#',
+                'text': item_str.split('/')[-1],
+                'state': {},
+            }
+            if item.is_dir():
+                node['icon'] = 'bi-folder'
+            else:
+                node['icon'] = 'bi-card-image'
+                if background_image == item_str:
+                    node['state']['selected'] = True
+                node['a_attr'] = {
+                    'onclick': f'$("#background-image").val("{item_str}");',
+                }
+            nodes.append(node)
+        return nodes
+
     def _admin_event_render_edit_modal(
             self,
             action: str,
@@ -261,6 +285,8 @@ class AdminEventController(AAdminController):
                     PapiWebConfig().default_record_illegal_moves_number),
                 'allow_results_deletion_on_input_screens_options': allow_results_deletion_on_input_screens_options,
                 'timer_color_texts': self._get_timer_color_texts(PapiWebConfig().default_timer_delays),
+                'background_images_jstree_data': self.background_images_jstree_data(
+                    data['background_image']) if action == 'update' else {}
             })
 
     @post(

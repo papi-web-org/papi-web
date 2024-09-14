@@ -20,6 +20,9 @@
             {# https://github.com/SortableJS/Sortable #}
             <script src="{{ url_for('static', file_path='/lib/sortable/sortable-1.15.2/Sortable.min.js') }}"></script>
             <script src="{{ url_for('static', file_path='/lib/htmx/htmx-sortable.js') }}"></script>
+            {# https://github.com/vakata/jstree #}
+            <link rel="stylesheet" href="{{ url_for('static', file_path='/lib/jstree/jstree-3.3.17-dist/themes/default/style.min.css') }}" type="text/css" />
+            <script src="{{ url_for('static', file_path='/lib/jstree/jstree-3.3.17-dist/jstree.min.js') }}"></script>
             {% block head %}
             {% endblock %}
         {% endif %}
