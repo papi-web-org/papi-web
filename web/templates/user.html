@@ -7,11 +7,20 @@
         <div hx-ext="bs-tabs" class="bs-tabs">
             <nav>
                 <div class="nav nav-tabs mt-1" id="nav-tab" role="tablist">
+                    {% if user_event %}
+                        {% if user_event.start > now %}
+                            {% set target_main_selector = '@coming_events' %}
+                        {% elif user_event.stop < now %}
+                            {% set target_main_selector = '@passed_events' %}
+                        {% else %}
+                            {% set target_main_selector = '@current_events' %}
+                        {% endif %}
+                    {% endif %}
                     <button
                             class="btn btn-link link-dark fs-5 fw-bold px-1 py-0"
                             {% if user_event %}
                                 hx-post="{{ url_for('user-update-header') }}"
-                                hx-vals='{}'
+                                hx-vals='{"user_main_selector": "{{ target_main_selector }}"}'
                                 hx-swap="multi:#user-header,#user-content"
                                 hx-indicator="#please-wait"
                             {% else %}
