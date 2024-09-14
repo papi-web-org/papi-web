@@ -346,10 +346,6 @@ class PapiWebConfig:
         return '#e9ecef'
 
     @property
-    def error_background_color(self) -> str:
-        return '#ff0000'
-
-    @property
     def admin_background_color(self) -> str:
         return '#dbcdff'
 

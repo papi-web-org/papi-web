@@ -28,7 +28,7 @@ class BackgroundWebContext(WebContext):
         color: str = self._form_data_to_str(field, '')
         if not color:
             logger.warning(f'Parameter [{field}] not found (data=[{data}]).')
-            color = PapiWebConfig().error_background_color
+            color = PapiWebConfig().default_background_color
         self.background: dict[str, str] = {
             'color': color,
         }

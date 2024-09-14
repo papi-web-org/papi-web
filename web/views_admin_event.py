@@ -181,13 +181,14 @@ class AdminEventController(AAdminController):
     @staticmethod
     def background_images_jstree_data(background_image: str) -> list[dict[str, Any]]:
         custom_path: Path = PapiWebConfig().custom_path
-        nodes: list[dict[str, str]] = []
+        dir_nodes: list[dict[str, str]] = []
+        file_nodes: list[dict[str, str]] = []
         for item in custom_path.rglob('*'):
             item_str = str(item).replace(str(custom_path), '').replace('\\', '/').lstrip('/')
             node: dict[str, Any] = {
                 'id': item_str or '#',
                 'parent': '/'.join(item_str.split('/')[:-1]) or '#',
-                'text': item_str.split('/')[-1],
+                'text': f'{" " if item.is_dir() else ""}{item_str.split("/")[-1]}',
                 'state': {},
             }
             if item.is_dir():
@@ -197,10 +198,28 @@ class AdminEventController(AAdminController):
                 if background_image == item_str:
                     node['state']['selected'] = True
                 node['a_attr'] = {
-                    'onclick': f'$("#background-image").val("{item_str}");',
+                    'onclick': f'$("#background-image").val("{item_str}"); '
+                               f'$.ajax({{'
+                               f'    url: "/background",'
+                               f'    type: "POST",'
+                               f'    data: {{ "image": "{item_str}", "color": $("#background-color").val() }},'
+                               f'    success: function(data) {{'
+                               f'        $("#background-image-test").css("background-image", data["url"]);'
+                               f'        $("#background-image-test").css("background-color", data["color"]);'
+                               f'    }},'
+                               f'    error: function(jqXHR, exception) {{'
+                               f'        console.log('
+                               f'            "Changing background failed: status_code=" + jqXHR.status '
+                               f'            + ", exception=" + exception + ", response=" + jqXHR.responseText'
+                               f'        );'
+                               f'    }},'
+                               f'}});',
                 }
-            nodes.append(node)
-        return nodes
+            if item.is_dir():
+                dir_nodes.append(node)
+            else:
+                file_nodes.append(node)
+        return file_nodes + dir_nodes
 
     def _admin_event_render_edit_modal(
             self,

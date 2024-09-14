@@ -208,31 +208,7 @@
                                             {{ errors[name] }}
                                         </div>
                                     {% endif %}
-                                    <div id="background-image-picker"></div>
-                                    <script>
-                                        $('#background-image-picker')
-                                        .on('changed.jstree', function (e, data) {
-                                            var i, j, r = [];
-                                            for(i = 0, j = data.selected.length; i < j; i++) {
-                                            r.push(data.instance.get_node(data.selected[i]).text);
-                                            }
-                                            $('#event_result').html('Selected: ' + r.join(', '));
-                                        })
-                                        .jstree(
-                                            {
-                                                'core' : {
-                                                    'multiple': false,
-                                                    'data' : {{ background_images_jstree_data | tojson }}
-                                                }
-                                            }
-                                        );
-                                        $('#background-image-picker').on("changed.jstree", function (e, data) {
-                                            console.log(data.selected);
-                                        });
-                                    </script>
                                 {% endwith %}
-                            </div>
-                            <div class="col-6">
                                 {% with
                                     id='background-color',
                                     name='background_color',
@@ -248,7 +224,7 @@
                                     <script>
                                         $('#{{ checkbox_id }}').click(function() {
                                             if ($(this).is(':checked')) {
-                                                $('#{{ id }}').val('');
+                                                $('#{{ id }}').val('{{ papi_web_config.default_background_color }}');
                                                 $('#{{ id }}').prop('disabled', true);
                                             } else {
                                                 $('#{{ id }}').prop('disabled', false);
@@ -260,8 +236,13 @@
                                             type="color" id="{{ id }}"
                                             class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
                                             aria-describedby="{{ id }}-help {{ id }}-error"
-                                            value="{{ data[name] }}"
+                                            value="{{ papi_web_config.default_background_color if data[checkbox_name] == 'on' else data[name] }}"
                                             {% if data[checkbox_name] == 'on' %}disabled{% endif %}/>
+                                    <script>
+                                        $('#{{ id }}').change(function() {
+                                            $('#background-image-test').css('background-color', $(this).val());
+                                        });
+                                    </script>
                                     <div id="{{ id }}-help" class="form-text">
                                         La couleur de fond est utilisée lorsque l'image ne remplit pas complètement l'écran.
                                     </div>
@@ -271,6 +252,34 @@
                                         </div>
                                     {% endif %}
                                 {% endwith %}
+                                <div id="background-image-test" style="
+                                        width: 320px;
+                                        height: 180px;
+                                        background-image: url('{{ admin_event.background_url }}');
+                                        background-color: {{ admin_event.background_color }};
+                                        background-repeat: no-repeat;
+                                        background-size: contain;
+                                        background-position: center center;"
+                                >
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                    <div id="background-image-picker">
+                                    </div>
+                                    <script>
+                                        $('#background-image-picker')
+                                        .jstree(
+                                            {
+                                                'core' : {
+                                                    'multiple': false,
+                                                    'data' : {{ background_images_jstree_data | tojson }}
+                                                }
+                                            }
+                                        );
+                                        $('#background-image-picker').on("changed.jstree", function (e, data) {
+                                            console.log(data.selected);
+                                        });
+                                    </script>
                             </div>
                         </div>
                         <h3>
