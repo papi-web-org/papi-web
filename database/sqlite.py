@@ -521,7 +521,7 @@ class EventDatabase(SQLiteDatabase):
 
     def delete(self) -> Path:
         file: Path = EventDatabase(self.uniq_id).file
-        arch: Path = file.parent / f'{file.stem}_{datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M")}.arch'
+        arch: Path = file.parent / f'{file.stem}_{datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M-%S")}.arch'
         file.rename(arch)
         return arch
 
