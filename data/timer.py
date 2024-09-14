@@ -166,18 +166,22 @@ class Timer:
             self.timer_hours_by_id[timer_hour.id] = timer_hour
             if not stored_timer_hour.time_str:
                 timer_hour.error = f'L\'heure n\'est pas définie.'
+                self.event.add_warning(timer_hour.error, timer_hour=timer_hour)
             else:
                 matches = re.match('^(?P<hour>[0-9]{1,2}):(?P<minute>[0-9]{1,2})$', stored_timer_hour.time_str)
                 if not matches:
                     timer_hour.error = f'L\'heure [{stored_timer_hour.time_str}]n\'est pas valide.'
+                    self.event.add_warning(timer_hour.error, timer_hour=timer_hour)
                 elif previous_valid_timer_hour is None and not stored_timer_hour.date_str:
                     timer_hour.error = f'La date du premier horaire n\'est pas définie (obligatoire).'
+                    self.event.add_warning(timer_hour.error, timer_hour=timer_hour)
                 else:
                     datetime_str: str
                     if stored_timer_hour.date_str and not re.match(
                             '^#?(?P<year>[0-9]{4})-(?P<month>[0-9]{1,2})-(?P<day>[0-9]{1,2})$',
                             stored_timer_hour.date_str):
                         timer_hour.error = f'La date [{stored_timer_hour.date_str}] n\'est pas valide.'
+                        self.event.add_warning(timer_hour.error, timer_hour=timer_hour)
                     else:
                         if stored_timer_hour.date_str:
                             datetime_str = f'{stored_timer_hour.date_str} {stored_timer_hour.time_str}'
@@ -191,8 +195,10 @@ class Timer:
                                 timer_hour.error = (
                                     f'L\'horaire [{timer_hour.datetime_str}] arrive avant l\'horaire précédent '
                                     f'[{previous_valid_timer_hour.datetime_str}], horaire non valide')
+                                self.event.add_warning(timer_hour.error, timer_hour=timer_hour)
                         except ValueError:
                             timer_hour.error = f'La date et l\'heure [{datetime_str}] ne sont pas valides.'
+                            self.event.add_warning(timer_hour.error, timer_hour=timer_hour)
             if not timer_hour.error:
                 previous_valid_timer_hour = timer_hour
         if previous_valid_timer_hour:
@@ -202,7 +208,7 @@ class Timer:
                     break
         else:
             self.error = 'Aucun horaire valide défini.'
-            self.event.add_warning(self.error, timer_uniq_id=self.uniq_id)
+            self.event.add_warning(self.error, timer=self)
 
     @property
     def colors(self) -> dict[int, str]:

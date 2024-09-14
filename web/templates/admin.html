@@ -42,7 +42,7 @@
                             active=(admin_event_selector == nav_id) if admin_event else (admin_main_selector == nav_id)
                         %}
                             <button
-                                    class="nav-link {% if nav_tab.disabled %}link-secondary{% else %}link-dark{% endif %} border-dark {%if active %}active{%else%}bg-body-secondary{% endif %} fw-bold px-2 py-0 ms-1"
+                                    class="nav-link {{ nav_tab.class }} {% if nav_tab.disabled %}link-secondary{% else %}link-dark{% endif %} border-dark {%if active %}active{%else%}bg-body-secondary{% endif %} fw-bold px-2 py-0 ms-1"
                                     id="nav-{{ nav_id }}-tab"
                                     hx-post="{{ url_for('admin-update-header') }}"
                                     hx-vals='{{ vals }}'

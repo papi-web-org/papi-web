@@ -1,3 +1,4 @@
+import logging
 import time
 
 from litestar.contrib.htmx.request import HTMXRequest
@@ -139,3 +140,13 @@ class SessionHandler:
     @classmethod
     def get_session_user_columns(cls, request: HTMXRequest) -> int:
         return request.session.get(cls.USER_COLUMNS_SESSION_KEY, PapiWebConfig().default_columns)
+
+    ADMIN_MIN_LOGGING_LEVEL_SESSION_KEY: str = 'admin_min_logging_level'
+
+    @classmethod
+    def set_session_min_logging_level(cls, request: HTMXRequest, min_log_level: int):
+        request.session[cls.ADMIN_MIN_LOGGING_LEVEL_SESSION_KEY]: int = min_log_level
+
+    @classmethod
+    def get_session_min_logging_level(cls, request: HTMXRequest) -> int:
+        return request.session.get(cls.ADMIN_MIN_LOGGING_LEVEL_SESSION_KEY, logging.INFO)

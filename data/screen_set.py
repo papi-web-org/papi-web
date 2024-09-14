@@ -56,7 +56,9 @@ class ScreenSet:
                             try:
                                 self.fixed_board_numbers.append(int(fixed_board_str))
                             except ValueError:
-                                logger.warning(f'le numéro d\'échiquier [{fixed_board_str}] n\'est pas valide.')
+                                self.event.add_warning(
+                                    f'le numéro d\'échiquier [{fixed_board_str}] n\'est pas valide.',
+                                    screen_set=self)
                 else:
                     self.fixed_board_numbers = [
                         player.fixed for player in self.tournament.players_by_id.values() if player.fixed
@@ -71,8 +73,9 @@ class ScreenSet:
                 self.family.calculated_last,
                 self.family.calculated_first + self.family_part * self.family.calculated_number - 1)
         if self.first and self.last and self.first > self.last:
-            logger.warning(
-                f'Les nombres {self.first} et {self.last} ne sont pas compatibles ({self.first} > {self.last}).')
+            self.event.add_warning(
+                f'Les nombres {self.first} et {self.last} ne sont pas compatibles ({self.first} > {self.last}).',
+                screen_set=self)
         self.first_item: Any | None = None  # change this to Board | Player | None ?
         self.last_item: Any | None = None  # change this to Board | Player | None ?
         self.items_lists: list[list[Any]] | None = None  # change this to Board | Player | None ?

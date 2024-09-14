@@ -147,7 +147,7 @@ class Family:
         assert self.parts is None or self.number is None  # already checked on family creation
         if not self.tournament.rounds:
             self.error = f'Le tournoi [{self.tournament.uniq_id}] ne peut être lu, famille ignorée.'
-            self.event.add_warning(self.error, family_uniq_id=self.uniq_id)
+            self.event.add_warning(self.error, family=self)
             return False
         first_item_number: int
         match ScreenType.from_str(self.type):
@@ -158,7 +158,7 @@ class Family:
                         if self.first > total_items_number:
                             self.error = f'Le tournoi ne comporte que [{total_items_number}] échiquiers, ' \
                                          f'famille ignorée.'
-                            self.event.add_warning(self.error, family_uniq_id=self.uniq_id)
+                            self.event.add_warning(self.error, family=self)
                             return False
                         self.calculated_first = self.first
                     else:
@@ -189,7 +189,7 @@ class Family:
         if not cut_items_number:
             self.error = \
                 f'Il n\'y a aucun élément à afficher pour le tournoi [{self.tournament.uniq_id}], famille ignorée.'
-            self.event.add_warning(self.error, family_uniq_id=self.uniq_id)
+            self.event.add_warning(self.error, family=self)
             return False
         # OK now we know the number of items and the number of the first item to take
         # Let's go for the number of items by part and the number of parts

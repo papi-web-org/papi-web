@@ -1,5 +1,7 @@
 import fnmatch
+import logging
 import time
+from dataclasses import dataclass
 from functools import total_ordering
 from logging import Logger
 from pathlib import Path
@@ -11,7 +13,8 @@ from data.chessevent import ChessEvent
 from data.family import Family
 from data.rotator import Rotator
 from data.screen import Screen
-from data.timer import Timer
+from data.screen_set import ScreenSet
+from data.timer import Timer, TimerHour
 from data.tournament import Tournament
 from data.util import ScreenType
 from database.store import StoredEvent
@@ -21,6 +24,44 @@ logger: Logger = get_logger()
 
 event_last_load_date_by_uniq_id: dict[str, float] = {}
 silent_event_uniq_ids: list[str] = []
+
+
+@dataclass
+class EventMessage:
+    level: int
+    text: str
+    chessevent: ChessEvent | None
+    tournament: Tournament | None
+    family: Family | None
+    timer: Timer | None
+    timer_hour: TimerHour | None
+    screen: Screen | None
+    screen_set: ScreenSet | None
+    rotator: Rotator | None
+
+    def __post_init__(self):
+        assert self.level in [logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL]
+
+    @property
+    def formatted_text(self) -> str:
+        if self.tournament:
+            return f'tournoi [{self.tournament.uniq_id}] : {self.text}'
+        if self.chessevent:
+            return f'connexion à ChessEvent [{self.chessevent.uniq_id}] : {self.text}'
+        elif self.family:
+            return f'famille [{self.family.uniq_id}] : {self.text}'
+        elif self.timer_hour:
+            return f'chronomètre [{self.timer_hour.timer.uniq_id}], horaire n°{self.timer_hour.order} : {self.text}'
+        elif self.timer:
+            return f'chronomètre [{self.timer.uniq_id}] : {self.text}'
+        elif self.screen_set:
+            return f'écran [{self.screen.uniq_id}], horaire n°{self.screen_set.order} : {self.text}'
+        elif self.screen:
+            return f'écran [{self.screen.uniq_id}] : {self.text}'
+        elif self.rotator:
+            return f'écran rotatif [{self.rotator.uniq_id}] : {self.text}'
+        else:
+            return f'{self.text}'
 
 
 @total_ordering
@@ -52,9 +93,7 @@ class Event:
         self._timer_colors: dict[int, str] | None = None
         self._timer_delays: dict[int, int] | None = None
         self._background_url: str | None = None
-        self._infos: list[str] = []
-        self._warnings: list[str] = []
-        self._errors: list[str] = []
+        self.messages: list[EventMessage] = []
         last_load_date: float = event_last_load_date_by_uniq_id.get(self.uniq_id, None)
         self._silent = last_load_date is not None and last_load_date > self.stored_event.last_update
         self.build()
@@ -324,7 +363,7 @@ class Event:
         if not self.stored_event.background_image:
             self.add_debug('pas d\'image définie')
         if not self.stored_event.background_color:
-            self.add_debug('pas de couleur d\'image définie')
+            self.add_debug('pas de couleur de fond définie')
         if not self.stored_event.update_password:
             self.add_debug('pas de mot de passe défini pour les écrans de saisie')
         if self.stored_event.record_illegal_moves is None:
@@ -420,8 +459,7 @@ class Event:
                 if '*' in menu_part:
                     menu_part_screen_uniq_ids: list[str] = fnmatch.filter(self.screens_by_uniq_id.keys(), menu_part)
                     if not menu_part_screen_uniq_ids:
-                        self.add_warning(
-                            f'Le motif [{menu_part}] ne correspond à aucun écran', screen_uniq_id=screen.uniq_id)
+                        self.add_warning(f'Le motif [{menu_part}] ne correspond à aucun écran', screen=screen)
                     else:
                         screen.menu_screens += [
                             self.screens_by_uniq_id[screen_uniq_id] for screen_uniq_id in menu_part_screen_uniq_ids
@@ -430,92 +468,88 @@ class Event:
                 if menu_part in self.screens_by_uniq_id:
                     screen.menu_screens.append(self.screens_by_uniq_id[menu_part])
                 else:
-                    self.add_warning(f'L\'écran [{menu_part}] n\'existe pas', screen_uniq_id=screen.uniq_id)
+                    self.add_warning(f'L\'écran [{menu_part}] n\'existe pas', screen=screen)
 
-    def __format_message(
-            self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
-            family_uniq_id: str = None, timer_uniq_id: str = None, screen_uniq_id: str = None,
-            rotator_uniq_id: str = None,
+    def _add_message(
+            self, level: int, text: str, tournament: Tournament | None = None, chessevent: ChessEvent | None = None,
+            family: Family | None = None, timer: Timer | None = None, timer_hour: TimerHour | None = None,
+            screen: Screen | None = None, screen_set: ScreenSet | None = None, rotator: Rotator | None = None,
     ):
-        if tournament_uniq_id:
-            return f'Évènement [{self.uniq_id}], tournoi [{tournament_uniq_id}] : {text}'
-        elif chessevent_uniq_id:
-            return f'Évènement [{self.uniq_id}], connexion à ChessEvent [{chessevent_uniq_id}] : {text}'
-        elif family_uniq_id:
-            return f'Évènement [{self.uniq_id}], famille [{family_uniq_id}] : {text}'
-        elif timer_uniq_id:
-            return f'Évènement [{self.uniq_id}], chronomètre [{timer_uniq_id}] : {text}'
-        elif screen_uniq_id:
-            return f'Évènement [{self.uniq_id}], écran [{screen_uniq_id}] : {text}'
-        elif rotator_uniq_id:
-            return f'Évènement [{self.uniq_id}], écran rotatif [{rotator_uniq_id}] : {text}'
-        else:
-            return f'Évènement [{self.uniq_id}] : {text}'
+        self.messages.append(EventMessage(
+            level, text, tournament=tournament, chessevent=chessevent, family=family, timer=timer,
+            timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator))
 
     def add_debug(
-            self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
-            family_uniq_id: str = None, timer_uniq_id: str = None, screen_uniq_id: str = None,
-            rotator_uniq_id: str = None,
+            self, text: str, tournament: Tournament | None = None, chessevent: ChessEvent | None = None,
+            family: Family | None = None, timer: Timer | None = None, timer_hour: TimerHour | None = None,
+            screen: Screen | None = None, screen_set: ScreenSet | None = None, rotator: Rotator | None = None,
     ):
-        """Adds a debug-level message and logs it"""
-        message = self.__format_message(
-            text, tournament_uniq_id=tournament_uniq_id, chessevent_uniq_id=chessevent_uniq_id,
-            family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
-            rotator_uniq_id=rotator_uniq_id)
+        self._add_message(
+            logging.DEBUG, text, tournament=tournament, chessevent=chessevent, family=family, timer=timer,
+            timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator)
         if not self._silent:
-            logger.debug(message)
+            logger.debug(text)
 
     @property
     def infos(self) -> list[str]:
-        return self._infos
+        return [message.text for message in self.messages if message.level == logging.INFO]
 
     def add_info(
-            self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
-            family_uniq_id: str = None, timer_uniq_id: str = None, screen_uniq_id: str = None,
-            rotator_uniq_id: str = None,
+            self, text: str, tournament: Tournament | None = None, chessevent: ChessEvent | None = None,
+            family: Family | None = None, timer: Timer | None = None, timer_hour: TimerHour | None = None,
+            screen: Screen | None = None, screen_set: ScreenSet | None = None, rotator: Rotator | None = None,
     ):
-        """Adds an info-level message and logs it"""
-        message = self.__format_message(
-            text, tournament_uniq_id=tournament_uniq_id, chessevent_uniq_id=chessevent_uniq_id,
-            family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
-            rotator_uniq_id=rotator_uniq_id)
+        self._add_message(
+            logging.INFO, text, tournament=tournament, chessevent=chessevent, family=family, timer=timer,
+            timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator)
         if not self._silent:
-            logger.info(message)
-        self._infos.append(message)
+            logger.info(text)
 
     @property
     def warnings(self) -> list[str]:
-        return self._warnings
+        return [message.text for message in self.messages if message.level == logging.WARNING]
 
     def add_warning(
-            self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
-            family_uniq_id: str = None, timer_uniq_id: str = None, screen_uniq_id: str = None,
-            rotator_uniq_id: str = None,
+            self, text: str, tournament: Tournament | None = None, chessevent: ChessEvent | None = None,
+            family: Family | None = None, timer: Timer | None = None, timer_hour: TimerHour | None = None,
+            screen: Screen | None = None, screen_set: ScreenSet | None = None, rotator: Rotator | None = None,
     ):
-        """Adds a warning-level message and logs it"""
-        message = self.__format_message(
-            text, tournament_uniq_id=tournament_uniq_id, chessevent_uniq_id=chessevent_uniq_id,
-            family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
-            rotator_uniq_id=rotator_uniq_id)
-        logger.warning(message)
-        self._warnings.append(message)
+        self._add_message(
+            logging.WARNING, text, tournament=tournament, chessevent=chessevent, family=family, timer=timer,
+            timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator)
+        if not self._silent:
+            logger.info(text)
 
     @property
     def errors(self) -> list[str]:
-        return self._errors
+        return [message.text for message in self.messages if message.level == logging.ERROR]
 
     def add_error(
-            self, text: str, tournament_uniq_id: str = None, chessevent_uniq_id: str = None,
-            family_uniq_id: str = None, timer_uniq_id: str = None, screen_uniq_id: str = None,
-            rotator_uniq_id: str = None,
+            self, text: str, tournament: Tournament | None = None, chessevent: ChessEvent | None = None,
+            family: Family | None = None, timer: Timer | None = None, timer_hour: TimerHour | None = None,
+            screen: Screen | None = None, screen_set: ScreenSet | None = None, rotator: Rotator | None = None,
     ):
-        """Adds an error-level message and logs it"""
-        message = self.__format_message(
-            text, tournament_uniq_id=tournament_uniq_id, chessevent_uniq_id=chessevent_uniq_id,
-            family_uniq_id=family_uniq_id, timer_uniq_id=timer_uniq_id, screen_uniq_id=screen_uniq_id,
-            rotator_uniq_id=rotator_uniq_id)
-        logger.error(message)
-        self._errors.append(message)
+        self._add_message(
+            logging.ERROR, text, tournament=tournament, chessevent=chessevent, family=family, timer=timer,
+            timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator)
+        if not self._silent:
+            logger.info(text)
+
+    @property
+    def criticals(self) -> list[str]:
+        return [message.text for message in self.messages if message.level == logging.CRITICAL]
+
+    def add_critical(
+            self, text: str, tournament: Tournament | None = None, chessevent: ChessEvent | None = None,
+            family: Family | None = None, timer: Timer | None = None, timer_hour: TimerHour | None = None,
+            screen: Screen | None = None, screen_set: ScreenSet | None = None, rotator: Rotator | None = None,
+    ):
+        """Adds a debug-level message and logs it"""
+        self._add_message(
+            logging.CRITICAL, text, tournament=tournament, chessevent=chessevent, family=family, timer=timer,
+            timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator)
+        if not self._silent:
+            logger.info(text)
 
     @property
     def download_allowed(self) -> bool:

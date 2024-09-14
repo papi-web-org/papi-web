@@ -214,8 +214,8 @@ class Screen:
                     elif self.stored_screen.results_limit and self.stored_screen.results_limit % self.columns > 0:
                         self._results_limit = self.columns * (self.stored_screen.results_limit // self.columns + 1)
                         self.event.add_info(
-                            f'positionné à [{self._results_limit}] pour tenir sur {self.columns} colonnes',
-                            screen_uniq_id=self.uniq_id)
+                            f'limite positionnée à [{self._results_limit}] pour tenir sur {self.columns} colonnes',
+                            screen=self)
                     else:
                         self._results_limit = self.stored_screen.results_limit
                 return self._results_limit

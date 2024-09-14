@@ -33,28 +33,26 @@ class Tournament:
         self.stored_tournament: StoredTournament = stored_tournament
         if not stored_tournament.path:
             self.event.add_debug(
-                f'pas de répertoire défini pour le fichier Papi, par défaut [{self.path}]',
-                tournament_uniq_id=self.uniq_id)
+                f'pas de répertoire défini pour le fichier Papi, par défaut [{self.path}]', tournament=self)
         if not self.path.exists():
-            self.event.add_warning(f'le répertoire [{self.path}] n\'existe pas', tournament_uniq_id=self.uniq_id)
+            self.event.add_warning(f'le répertoire [{self.path}] n\'existe pas', tournament=self)
         elif not self.path.is_dir():
-            self.event.add_error(f'[{self.path}] n\'est pas un répertoire', tournament_uniq_id=self.uniq_id)
+            self.event.add_error(f'[{self.path}] n\'est pas un répertoire', tournament=self)
         if not self.stored_tournament.filename:
             self.event.add_info(
-                f'le nom du fichier Papi n\'est pas défini, par défaut [{self.filename}]',
-                tournament_uniq_id=self.uniq_id)
+                f'le nom du fichier Papi n\'est pas défini, par défaut [{self.filename}]', tournament=self)
         if not self.stored_tournament.ffe_id or not self.stored_tournament.ffe_password:
             self.event.add_info(
                 f'le numéro d\'homologation et le mot de passe de connexion au site fédéral sont nécessaires '
                 f'pour les opérations sur le site fédéral, elles ne seront pas disponibles',
-                tournament_uniq_id=self.uniq_id)
+                tournament=self)
         if not self.chessevent:
             self.event.add_info(
-                f'la connexion à la plateforme ChessEvent n\'est pas définie', tournament_uniq_id=self.uniq_id)
+                f'la connexion à la plateforme ChessEvent n\'est pas définie', tournament=self)
         if self.chessevent and not self.stored_tournament.chessevent_tournament_name:
             self.event.add_warning(
                 f'le nom du tournoi [{self.uniq_id}] n\'est pas renseigné, la connexion à la plateforme '
-                f'ChessEvent ne sera pas fonctionnelle', tournament_uniq_id=self.uniq_id)
+                f'ChessEvent ne sera pas fonctionnelle', tournament=self)
         self._rounds: int = 0
         self._pairing: TournamentPairing | None = None
         self._rating: TournamentRating | None = None

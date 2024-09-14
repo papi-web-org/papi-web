@@ -1,3 +1,4 @@
+import logging
 from logging import Logger
 from typing import Annotated, Any
 
@@ -6,7 +7,7 @@ from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template
+from litestar.response import Template, Redirect
 
 from common.exception import PapiWebException
 from common.logger import get_logger
@@ -149,6 +150,33 @@ class AAdminController(AController):
             web_context: AdminWebContext,
     ) -> Template:
         event_loader: EventLoader = EventLoader.get(request=web_context.request, lazy_load=True)
+        logging_levels: dict[int, dict[str, str]] = {
+            logging.DEBUG: {
+                'name': 'DEBUG',
+                'class': 'bg-secondary-subtle text-secondary-emphasis',
+                'icon_class': 'bi-search',
+            },
+            logging.INFO: {
+                'name': 'INFO',
+                'class': 'bg-info-subtle text-info-emphasis',
+                'icon_class': 'bi-info-circle',
+            },
+            logging.WARNING: {
+                'name': 'WARNING',
+                'class': 'bg-warning-subtle text-warning-emphasis',
+                'icon_class': 'bi-exclamation-triangle',
+            },
+            logging.ERROR: {
+                'name': 'ERROR',
+                'class': 'bg-danger-subtle text-danger-emphasis',
+                'icon_class': 'bi-bug-fill',
+            },
+            logging.CRITICAL: {
+                'name': 'CRITICAL',
+                'class': 'bg-danger text-white',
+                'icon_class': 'bi-sign-stop-fill',
+            },
+        }
         nav_tabs: dict[str, dict[str]]
         if web_context.admin_event:
             nav_tabs = {
@@ -181,7 +209,21 @@ class AAdminController(AController):
                     'title': f'ChessEvent ({len(web_context.admin_event.chessevents_by_id) or "-"})',
                     'template': 'admin_chessevent_list.html',
                 },
+                '@message': {
+                    'title': f'Messages ({len(web_context.admin_event.messages) or "-"})',
+                    'template': 'admin_message_list.html',
+                },
             }
+            messages_tab_class: str = ''
+            if web_context.admin_event.criticals:
+                nav_tabs['@message']['class'] = logging_levels[logging.CRITICAL]['class']
+                nav_tabs['@message']['icon_class'] = logging_levels[logging.CRITICAL]['icon_class']
+            elif web_context.admin_event.errors:
+                nav_tabs['@message']['class'] = logging_levels[logging.ERROR]['class']
+                nav_tabs['@message']['icon_class'] = logging_levels[logging.ERROR]['icon_class']
+            elif web_context.admin_event.warnings:
+                nav_tabs['@message']['class'] = logging_levels[logging.WARNING]['class']
+                nav_tabs['@message']['icon_class'] = logging_levels[logging.WARNING]['icon_class']
         else:
             nav_tabs = {
                 '@current_events': {
@@ -224,6 +266,7 @@ class AAdminController(AController):
                 'odbc_drivers': odbc_drivers(),
                 'access_driver': access_driver(),
                 'messages': Message.messages(web_context.request),
+                'logging_levels': logging_levels,
                 'nav_tabs': nav_tabs,
                 'event_loader': event_loader,
                 'admin_columns': SessionHandler.get_session_admin_columns(web_context.request),
@@ -237,6 +280,7 @@ class AAdminController(AController):
                     web_context.request),
                 'screen_types_on_screen_list': SessionHandler.get_session_screen_types_on_screen_list(
                     web_context.request),
+                'min_logging_level': SessionHandler.get_session_min_logging_level(web_context.request),
             })
 
 
@@ -259,7 +303,7 @@ class AdminIndexController(AAdminController):
     async def htmx_admin_update_header(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> Template:
+    ) -> Template | Redirect:
         web_context: AdminWebContext = AdminWebContext(request, data, True)
         if web_context.error:
             return web_context.error
@@ -297,4 +341,10 @@ class AdminIndexController(AAdminController):
                     screen_types.remove(screen_type)
                 SessionHandler.set_session_screen_types_on_screen_list(request, screen_types)
                 continue
+        field: str = 'min_logging_level'
+        if field in data:
+            try:
+                SessionHandler.set_session_min_logging_level(request, WebContext.form_data_to_int(data, field))
+            except ValueError:
+                return AController.redirect_error(request, f'Le niveau de log [{data[field]}] est incorrect.')
         return self._admin_render_index(web_context)
