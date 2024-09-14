@@ -222,7 +222,7 @@
                                             name="{{ checkbox_name }}"
                                             type="checkbox" id="{{ checkbox_id }}"
                                             aria-describedby="{{ id }}-help {{ id }}-error"
-                                            {% if data[checkbox_name] %}checked{% endif %} /> aucune
+                                            {% if data[checkbox_name] == 'on' %}checked{% endif %} /> par défaut
                                     <script>
                                         $('#{{ checkbox_id }}').click(function() {
                                             if ($(this).is(':checked')) {
@@ -239,7 +239,7 @@
                                             class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
                                             aria-describedby="{{ id }}-help {{ id }}-error"
                                             value="{{ data[name] }}"
-                                            {% if data[checkbox_name] %}disabled{% endif %}/>
+                                            {% if data[checkbox_name] == 'on' %}disabled{% endif %}/>
                                     <div id="{{ id }}-help" class="form-text">
                                         La couleur de fond est utilisée lorsque l'image ne remplit pas complètement l'écran.
                                     </div>
