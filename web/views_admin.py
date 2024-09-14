@@ -214,7 +214,6 @@ class AAdminController(AController):
                     'template': 'admin_message_list.html',
                 },
             }
-            messages_tab_class: str = ''
             if web_context.admin_event.criticals:
                 nav_tabs['@message']['class'] = logging_levels[logging.CRITICAL]['class']
                 nav_tabs['@message']['icon_class'] = logging_levels[logging.CRITICAL]['icon_class']
