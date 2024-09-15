@@ -2,7 +2,7 @@ name: "Évènement avec tournoi à handicap"
 public: true
 tournaments:
   T:
-    filename: "handicap"
+    filename: "bretagne-jeunes-2024-blitz"
     name: "Tournoi à handicap"
     time_control_initial_time: 300
     time_control_increment: 2

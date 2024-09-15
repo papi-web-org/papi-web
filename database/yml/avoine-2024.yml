@@ -4,6 +4,8 @@ stop: "2024-07-28 23:59"
 update_password: "mot_de_passe"
 record_illegal_moves: 0
 allow_results_deletion_on_input_screens: true
+background_image: "FRA/CVL/37/G37011.png"
+background_color: "#fcffe5"
 timers:
   chronometre:
     hours:
