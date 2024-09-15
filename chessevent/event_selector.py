@@ -1,4 +1,3 @@
-from typing import List
 from logging import Logger
 
 from chessevent.action_selector import ActionSelector
@@ -17,7 +16,7 @@ class EventSelector:
 
     @staticmethod
     def run() -> bool:
-        events: List[Event] = EventLoader.get(request=None, lazy_load=True).events_sorted_by_name
+        events: list[Event] = EventLoader.get(request=None, lazy_load=True).events_sorted_by_name
         if not events:
             logger.error('Aucun évènement trouvé')
             return False
