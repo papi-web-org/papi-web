@@ -61,6 +61,10 @@ class UserWebContext(WebContext):
         self.user_event_selector: str = self._form_data_to_str('user_event_selector')
 
     @property
+    def background_color(self) -> str:
+        return PapiWebConfig().user_background_color
+
+    @property
     def template_context(self) -> dict[str, Any]:
         return super().template_context | {
             'user_main_selector': self.user_main_selector,
