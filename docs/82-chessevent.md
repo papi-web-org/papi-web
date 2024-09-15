@@ -8,53 +8,41 @@ La configuration de Papi-web pour l'accès à la plateforme Chess Event est déc
 
 Cette page en décrit les aspects techniques.
 
-### Authentification
+## Authentification
 
 Le téléchargement se fait sur authentification pour limiter la diffusion des coordonnées des joueur·euses (adresses mél et numéros de téléphone).
 
 Les identifiants utilisés pour l'authentification sont ceux de la plateforme Chess Event (administrateur, utilisateur ou gestionnaire d'évènement).
 
-| Option     | Description                                                                                              |
-|------------|----------------------------------------------------------------------------------------------------------|
-| `user_id`  | L'identifiant FFE de l'utilisateur·trice sur la plateforme Chess Event (de la forme XNNNNN, facultatif). |
-| `password` | Le mot de passe l'utilisateur·trice sur la plateforme Chess Event (facultatif).                          |
+Une connexion à la plateforme ChessEvent est définie par les informations suivantes :
 
-Ces valeurs sont utilisées pour tous les tournois de l'évènement Papi-web.
+- l'identifiant FFE de l'utilisateur·trice sur la plateforme Chess Event (de la forme XNNNNN, facultatif) ;
+- le mot de passe l'utilisateur·trice sur la plateforme Chess Event (facultatif) ;
+- l'identifiant de l'évènement sur la plateforme Chess Event.
 
-### Désignation d'un évènement sur la plateforme Chess Event
+## Connexion d'un tournoi
 
-L'identifiant de l'évènement sur la plateforme Chess Event est également indiqué dans la rubrique `[chessevent]` :
+Un tournoi est connecté à un tournoi de la plateforme Chess Event avec les informations suivantes :
 
-| Option      | Description                                                 |
-|-------------|-------------------------------------------------------------|
-| `event_id`  | L'identifiant de l'évènement sur la plateforme Chess Event. |
-
-Cette valeur est utilisée pour tous les tournois de l'évènement Papi-web.
-
-### Désignation d'un tournoi Chess Event
-
-Le nom du tournoi sur la plateforme Chess Event est indiqué dans la déclaration du tournoi (rubrique `[tournament.<tournament_id>]` ou `[tournament]` s'il n'y a qu'un seul tournoi) :
-
-| Option                       | Description                                                   |
-|------------------------------|---------------------------------------------------------------|
-| `chessevent_tournament_name` | Le nom du tournoi sur la plateforme Chess Event (facultatif). |
+- une connexion à la plateforme ChessEvent (ci-dessus) ;
+- le nom du tournoi sur la plateforme Chess Event.
 
 ## Requêtes de téléchargement
 
 ### URL
 
-L'URL de la requête sera https://services.breizh-chess-online.fr/chessevent/download.
+L'URL de la requête est https://services.breizh-chess-online.fr/chessevent/download.
 
 ### Paramètres
 
 Tous les paramètres seront passés en clair dans le corps de la requête HTTPS sous la forme de paramètres (méthode POST).
 
-| Paramètre         | Description                                                                      |
-|-------------------|----------------------------------------------------------------------------------|
-| `user_id`         | L'identifiant FFE de l'utilisateur·trice (de la forme XNNNNN, obligatoire).      |
-| `password`        | Le mot de passe l'utilisateur·trice sur la plateforme Chess Event (obligatoire). |
-| `event_id`        | L'identifiant de l'évènement sur la plateforme Chess Event.                      |
-| `tournament_name` | Le nom du tournoi sur la plateforme Chess Event.                                 |
+| Paramètre         | Description                                                        |
+|-------------------|--------------------------------------------------------------------|
+| `user_id`         | L'identifiant FFE de l'utilisateur·trice (de la forme XNNNNN).     |
+| `password`        | Le mot de passe l'utilisateur·trice sur la plateforme Chess Event. |
+| `event_id`        | L'identifiant de l'évènement sur la plateforme Chess Event.        |
+| `tournament_name` | Le nom du tournoi sur la plateforme Chess Event.                   |
 
 Exemple de paramètres :
 ```

@@ -2,6 +2,9 @@
 
 # Papi-web - Annexe technique : URLs utilisées par le serveur web
 
+> [!CAUTION]
+> Cette page décrivant les URLs utilisées par l'application est obsolète.
+
 Cette page décrit les URLs utilisées par Papi-web.
 
 | URI                                                                               | Description                                                                   |

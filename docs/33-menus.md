@@ -2,6 +2,9 @@
 
 # Papi-web - Configuration des menus des écrans
 
+> [!CAUTION]
+> Cette page décrivant la configuration au format INI des menus des écrans est obsolète et sera prochainement remplacée par un tutoriel.
+
 Lorsque l'on utilise plusieurs écrans, les menus permettent de passer facilement d'un menu à un autre.
 
 Dans la rubrique `[screen.<screen_id>]` d'un écran, deux options servent à gérer les menus :
