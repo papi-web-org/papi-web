@@ -6,11 +6,11 @@ class StoredTimerHour:
     id: int | None
     uniq_id: str
     timer_id: int
-    order: int | None = field(default=None)
-    date_str: str | None = field(default=None)
-    time_str: str | None = field(default=None)
-    text_before: str | None = field(default=None)
-    text_after: str | None = field(default=None)
+    order: int | None = None
+    date_str: str | None = None
+    time_str: str | None = None
+    text_before: str | None = None
+    text_after: str | None = None
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
