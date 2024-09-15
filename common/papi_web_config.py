@@ -152,93 +152,49 @@ class PapiWebConfig:
     def ffe_upload_delay(self) -> int:
         return self.__ffe_upload_delay
 
-    @property
-    def version(self) -> Version:
-        return Version('2.4rc4')
+    version: Version = Version('2.4rc4')
 
-    @property
-    def url(self) -> str:
-        return 'https://github.com/papi-web-org/papi-web'
+    url: str = 'https://github.com/papi-web-org/papi-web'
 
-    @property
-    def copyright(self) -> str:
-        return '© Pascal AUBRY 2013-2024'
+    copyright: str = '© Pascal AUBRY 2013-2024'
 
-    @property
-    def event_path(self) -> Path:
-        return Path() / 'events'
+    event_path: Path = Path() / 'events'
 
-    @property
-    def event_ext(self) -> str:
-        return 'db'
+    event_ext: str = 'db'
 
-    @property
-    def custom_path(self) -> Path:
-        return Path().absolute() / 'custom'
+    custom_path: Path = Path().absolute() / 'custom'
 
-    @property
-    def default_papi_path(self) -> Path:
-        return Path() / 'papi'
+    default_papi_path: Path = Path() / 'papi'
 
-    @property
-    def papi_ext(self) -> str:
-        return 'papi'
+    papi_ext: str = 'papi'
 
-    @property
-    def _database_path(self) -> Path:
-        return Path(__file__).resolve().parent / '..' / 'database'
+    _database_path: Path = Path(__file__).resolve().parent / '..' / 'database'
 
-    @property
-    def database_sql_path(self) -> Path:
-        return self._database_path / 'sql'
+    database_sql_path: Path = _database_path / 'sql'
 
-    @property
-    def database_yml_path(self) -> Path:
-        return self._database_path / 'yml'
+    database_yml_path: Path = _database_path / 'yml'
 
-    @property
-    def yml_ext(self) -> str:
-        return 'yml'
+    yml_ext: str = 'yml'
 
-    @property
-    def litestar_version(self) -> Version:
-        return litestar.__version__.formatted(short=True)
+    litestar_version: Version = litestar.__version__.formatted(short=True)
 
-    @property
-    def jinja2_version(self) -> Version:
-        return jinja2.__version__
+    jinja2_version: Version = jinja2.__version__
 
-    @property
-    def uvicorn_version(self) -> Version:
-        return uvicorn.__version__
+    uvicorn_version: Version = uvicorn.__version__
 
-    @property
-    def pyodbc_version(self) -> Version:
-        return Version(pyodbc.version)
+    pyodbc_version: Version = Version(pyodbc.version)
 
-    @property
-    def bootstrap_version(self) -> Version:
-        return Version('5.3.3')
+    bootstrap_version: Version = Version('5.3.3')
 
-    @property
-    def bootstrap_icons_version(self) -> Version:
-        return Version('1.11.3')
+    bootstrap_icons_version: Version = Version('1.11.3')
 
-    @property
-    def htmx_version(self) -> Version:
-        return Version('1.9.12')
+    htmx_version: Version = Version('1.9.12')
 
-    @property
-    def jquery_version(self) -> Version:
-        return Version('3.7.1')
+    jquery_version: Version = Version('3.7.1')
 
-    @property
-    def sortable_version(self) -> Version:
-        return Version('1.15.2')
+    sortable_version: Version = Version('1.15.2')
 
-    @property
-    def jstree_version(self) -> Version:
-        return Version('3.3.17')
+    jstree_version: Version = Version('3.3.17')
 
     def __url(self, ip: str | None) -> str | None:
         if ip is None:
@@ -273,93 +229,53 @@ class PapiWebConfig:
     def local_url(self) -> str:
         return self.__url(self.local_ip)
 
-    @property
-    def default_record_illegal_moves_number(self) -> int:
-        return 0
+    default_record_illegal_moves_number: int = 0
 
-    @property
-    def default_allow_results_deletion_on_input_screens(self) -> bool:
-        return False
+    default_allow_results_deletion_on_input_screens: bool = False
 
-    @property
-    def default_timer_colors(self) -> dict[int, str]:
-        return {
+    default_timer_colors: dict[int, str] = {
             1: '#00FF00',
             2: '#FF7700',
             3: '#FF0000',
         }
 
-    @property
-    def default_timer_delays(self) -> dict[int, int]:
-        return {
+    default_timer_delays: dict[int, int] = {
             1: 15,
             2: 5,
             3: 10,
         }
 
-    @property
-    def default_players_show_unpaired(self) -> bool:
-        return True
+    default_players_show_unpaired: bool = True
 
-    @property
-    def default_rotator_delay(self) -> int:
-        return 15
+    default_rotator_delay: int = 15
 
-    @property
-    def default_rotator_show_menus(self) -> bool:
-        return False
+    default_rotator_show_menus: bool = False
 
-    @property
-    def default_timer_round_text_before(self) -> str:
-        return 'Début de la ronde {} dans %s'
+    default_timer_round_text_before: str = 'Début de la ronde {} dans %s'
 
-    @property
-    def default_timer_round_text_after(self) -> str:
-        return 'Ronde {} commencée depuis %s'
+    default_timer_round_text_after: str = 'Ronde {} commencée depuis %s'
 
-    @property
-    def user_index_update_delay(self) -> int:
-        return 10
+    user_index_update_delay: int = 10
 
-    @property
-    def user_event_update_delay(self) -> int:
-        return 10
+    user_event_update_delay: int = 10
 
-    @property
-    def user_screen_update_delay(self) -> int:
-        return 10
+    user_screen_update_delay: int = 10
 
-    @property
-    def user_screen_set_update_delay(self) -> int:
-        return 10
+    user_screen_set_update_delay: int = 10
 
-    @property
-    def allowed_columns(self) -> list[int]:
-        return [1, 2, 3, 4, 6]
+    allowed_columns: list[int] = [1, 2, 3, 4, 6]
 
-    @property
-    def default_columns(self) -> int:
-        return 4
+    default_columns: int = 4
 
-    @property
-    def default_background_image(self) -> str:
-        return '/static/images/papi-web-background.png'
+    default_background_image: str = '/static/images/papi-web-background.png'
 
-    @property
-    def error_background_image(self) -> str:
-        return '/static/images/papi-web-error.png'
+    error_background_image: str = '/static/images/papi-web-error.png'
 
-    @property
-    def default_background_color(self) -> str:
-        return '#e9ecef'
+    default_background_color: str = '#e9ecef'
 
-    @property
-    def admin_background_color(self) -> str:
-        return '#dbcdff'
+    admin_background_color: str = '#dbcdff'
 
-    @property
-    def user_background_color(self) -> str:
-        return self.default_background_color
+    user_background_color: str = default_background_color
 
     @staticmethod
     def default_boards_screen_menu_text(single_tournament: bool, first_last: bool) -> str:
@@ -387,6 +303,4 @@ class PapiWebConfig:
             else:
                 return '%t (par ordre alpha.)'
 
-    @property
-    def default_results_screen_menu_text(self) -> str:
-        return 'Derniers résultats'
+    default_results_screen_menu_text: str = 'Derniers résultats'
