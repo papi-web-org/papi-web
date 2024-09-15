@@ -14,7 +14,7 @@ logger: Logger = get_logger()
 def check_rgb_str(color: str) -> str:
     rgb: RGB = hexa_to_rgb(color)
     if rgb:
-        return rgb_to_hexa(hexa_to_rgb(color))
+        return rgb_to_hexa(rgb)
     raise ValueError(f'check_rgb_str(color={color})')
 
 
@@ -33,11 +33,11 @@ def rgb_to_hexa(rgb: RGB) -> str:
     return '#' + ''.join(f'{max(0, min(255, i)):02X}' for i in rgb)
 
 
-def format_timestamp_date_time(ts: float = None) -> str:
+def format_timestamp_date_time(ts: float | None = None) -> str:
     return datetime.strftime(datetime.fromtimestamp(ts if ts is not None else time.time()), '%Y-%m-%d %H:%M')
 
 
-def format_timestamp_date(ts: float = None) -> str:
+def format_timestamp_date(ts: float | None = None) -> str:
     return datetime.strftime(datetime.fromtimestamp(ts if ts is not None else time.time()), '%Y-%m-%d')
 
 
