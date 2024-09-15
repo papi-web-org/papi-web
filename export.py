@@ -85,6 +85,18 @@ def build_exe():
         file for file in htmx_dir.glob('**/*')
         if file.is_file()
     ]
+    sortable_dir = lib_dir / 'sortable' / f'sortable-{PapiWebConfig().sortable_version}'
+    files += [
+        file for file in sortable_dir.glob('**/*')
+        if file.is_file()
+    ]
+    htmx_sortable_file = lib_dir / 'htmx' / f'htmx-sortable.js'
+    files += [htmx_sortable_file, ]
+    jstree_dir = lib_dir / 'jstree' / f'jstree-{PapiWebConfig().jstree_version}-dist'
+    files += [
+        file for file in jstree_dir.glob('**/*')
+        if file.is_file()
+    ]
     sql_dir: Path = Path('.') / 'database' / 'sql'
     files += [sql_dir / 'create_event.sql', ]
     yml_dir: Path = Path('.') / 'database' / 'yml'
