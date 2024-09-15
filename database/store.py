@@ -123,8 +123,8 @@ class StoredFamily:
     last: int | None
     parts: int | None
     number: int | None
-    public: bool = field(default=True)
-    last_update: float = field(default=0.0)
+    public: bool = True
+    last_update: float = 0.0
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
