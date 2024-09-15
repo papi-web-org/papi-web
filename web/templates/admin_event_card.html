@@ -22,9 +22,9 @@
     <div><i class="bi-fullscreen" ></i> Écrans : {{ event.basic_screens_by_id|length }}</div>
     <div><i class="bi-arrows-fullscreen" ></i> Familles : {{ event.families_by_id|length }}</div>
     <div><i class="bi-repeat" ></i> Écrans rotatifs : {{ event.rotators_by_id|length }}</div>
-    <div><i class="bi-bug" ></i> Erreurs : {{ event.rotators_by_id|length }}</div>
-    <div><i class="bi-exclamation-triangle" ></i> Avertissements : {{ event.rotators_by_id|length }}</div>
-    <div><i class="bi-info-circle" ></i> Informations : {{ event.rotators_by_id|length }}</div>
+    <div><i class="bi-bug" ></i> Erreurs : {{ event.errors|length + event.criticals|length }}</div>
+    <div><i class="bi-exclamation-triangle" ></i> Avertissements : {{ event.warnings|length }}</div>
+    <div><i class="bi-info-circle" ></i> Informations : {{ event.infos|length }}</div>
 {% endblock %}
 
 {% block card_buttons_left %}
