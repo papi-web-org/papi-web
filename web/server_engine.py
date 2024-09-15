@@ -1,3 +1,4 @@
+from collections import defaultdict
 from threading import Thread
 from time import sleep
 
@@ -62,12 +63,10 @@ class ServerEngine(Engine):
             middleware=middlewares,
         )
         # This code is intended to check the uniformity of the paths and names used for the application URLs
-        url_map: dict[str, list[str]] = {}
+        url_map: defaultdict[str, list[str]] = defaultdict(list[str])
         for route in app.routes:
             for handler in route.route_handlers:
                 if handler.name:
-                    if handler.name not in url_map:
-                        url_map[handler.name] = []
                     url_map[handler.name].append(route.path)
         for name in sorted(url_map.keys()):
             logger.debug(f'{name}: {url_map[name]}')
