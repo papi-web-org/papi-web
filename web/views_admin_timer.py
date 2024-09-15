@@ -1,20 +1,19 @@
-from datetime import datetime
 import re
 import time
+from datetime import datetime
 from logging import Logger
 from typing import Annotated, Any
 
 from litestar import post
+from litestar.contrib.htmx.request import HTMXRequest
+from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
-from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 
 from common.logger import get_logger
-from common.papi_web_config import PapiWebConfig
-from data.timer import Timer, TimerHour
 from data.loader import EventLoader
+from data.timer import Timer, TimerHour
 from database.sqlite import EventDatabase
 from database.store import StoredTimer, StoredTimerHour
 from web.messages import Message
@@ -206,7 +205,7 @@ class AdminTimerController(AAdminController):
             case 'update' | 'delete' | 'clone':
                 web_context = TimerAdminWebContext(request, data, True, True, False)
             case 'create':
-                web_context = TimerAdminWebContext(request, data, True, True, False)
+                web_context = TimerAdminWebContext(request, data, True, False, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
