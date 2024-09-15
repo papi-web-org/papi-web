@@ -43,7 +43,7 @@ class EventLoader:
         request.state['event_loader'] = event_loader
         return event_loader
 
-    def clear_cache(self, event_uniq_id: str = None):
+    def clear_cache(self, event_uniq_id: str | None = None):
         self._event_uniq_ids = None
         if event_uniq_id:
             with suppress(KeyError):
