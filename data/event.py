@@ -185,7 +185,7 @@ class Event:
 
     @property
     def players_number(self) -> int:
-        return sum([len(tournament.players_by_name_with_unpaired) for tournament in self.tournaments_by_id.values()])
+        return sum((len(tournament.players_by_name_with_unpaired) for tournament in self.tournaments_by_id.values()))
 
     @property
     def path(self) -> Path:
