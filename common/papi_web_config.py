@@ -154,7 +154,7 @@ class PapiWebConfig:
 
     @property
     def version(self) -> Version:
-        return Version('2.4rc3')
+        return Version('2.4rc4')
 
     @property
     def url(self) -> str:
@@ -231,6 +231,14 @@ class PapiWebConfig:
     @property
     def jquery_version(self) -> Version:
         return Version('3.7.1')
+
+    @property
+    def sortable_version(self) -> Version:
+        return Version('1.15.2')
+
+    @property
+    def jstree_version(self) -> Version:
+        return Version('3.3.17')
 
     def __url(self, ip: str | None) -> str | None:
         if ip is None:
