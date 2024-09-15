@@ -1,6 +1,7 @@
 import time
 from contextlib import suppress
 from logging import Logger
+from operator import attrgetter
 
 from litestar.contrib.htmx.request import HTMXRequest
 
@@ -118,8 +119,7 @@ class EventLoader:
     @property
     def events_sorted_by_name(self) -> list[Event]:
         if self._events_sorted_by_name is None:
-            self._events_sorted_by_name = sorted(
-                self.events_by_id.values(), key=lambda event: event.name)
+            self._events_sorted_by_name = sorted(self.events_by_id.values(), key=lambda event: event.name)
         return self._events_sorted_by_name
 
     @property
@@ -160,10 +160,8 @@ class EventLoader:
     @property
     def public_events(self) -> list[Event]:
         if self._public_events is None:
-            self._public_events = sorted([
-                event for event in self.events_by_id.values()
-                if event.public
-            ], key=lambda event: event.name)
+            self._public_events = sorted(
+                filter(attrgetter('public'), self.events_by_id.values()), key=attrgetter('name'))
         return self._public_events
 
     @property
