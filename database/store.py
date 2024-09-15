@@ -146,17 +146,17 @@ class StoredEvent:
     name: str
     start: float
     stop: float
-    public: bool = field(default=False)
-    path: str | None = field(default=None)
-    background_image: str | None = field(default=None)
-    background_color: str | None = field(default=None)
-    update_password: str | None = field(default=None)
-    record_illegal_moves: int | None = field(default=None)
-    allow_results_deletion_on_input_screens: bool | None = field(default=None)
-    version: str | None = field(default=None)
-    timer_colors: dict[int, str | None] = field(default=None)
-    timer_delays: dict[int, int | None] = field(default=None)
-    last_update: float = field(default=0.0)
+    public: bool = False
+    path: str | None = None
+    background_image: str | None = None
+    background_color: str | None = None
+    update_password: str | None = None
+    record_illegal_moves: int | None = None
+    allow_results_deletion_on_input_screens: bool | None = None
+    version: str | None = None
+    timer_colors: dict[int, str | None] = None
+    timer_delays: dict[int, int | None] = None
+    last_update: float = 0.0
     stored_chessevents: list[StoredChessEvent] = field(default_factory=list[StoredChessEvent])
     stored_timers: list[StoredTimer] = field(default_factory=list[StoredTimer])
     stored_tournaments: list[StoredTournament] = field(default_factory=list[StoredTournament])
