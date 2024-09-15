@@ -31,11 +31,11 @@ class WebContext:
 
     @property
     def background_image(self) -> str:
-        return PapiWebConfig().default_background_image
+        return PapiWebConfig.default_background_image
 
     @property
     def background_color(self) -> str:
-        return PapiWebConfig().default_background_color
+        return PapiWebConfig.default_background_color
 
     @property
     def background_info(self) -> dict[str, str]:

@@ -14,7 +14,7 @@ from common.logger import get_logger
 try:
     logger: Logger = get_logger()
 
-    logger.info(f'Papi-web {PapiWebConfig().version} Copyright {PapiWebConfig().copyright}')
+    logger.info(f'Papi-web {PapiWebConfig.version} Copyright {PapiWebConfig.copyright}')
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--server', help='start the web server', action='store_true')
     parser.add_argument('-f', '--ffe', help='run the FFE utilities', action='store_true')

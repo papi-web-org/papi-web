@@ -111,8 +111,7 @@ class EventDatabase(SQLiteDatabase):
 
     @staticmethod
     def event_database_path(uniq_id: str) -> Path:
-        papi_web_config: PapiWebConfig = PapiWebConfig()
-        return papi_web_config.event_path / f'{uniq_id}.{papi_web_config.event_ext}'
+        return PapiWebConfig.event_path / f'{uniq_id}.{PapiWebConfig.event_ext}'
 
     def exists(self) -> bool:
         return self.file.exists()
@@ -175,8 +174,8 @@ class EventDatabase(SQLiteDatabase):
             today_str: str = format_timestamp_date()
             event_start = time.mktime(datetime.strptime(f'{today_str} 00:00', '%Y-%m-%d %H:%M').timetuple())
             event_stop = time.mktime(datetime.strptime(f'{today_str} 23:59', '%Y-%m-%d %H:%M').timetuple())
-            with open(papi_web_config.database_sql_path / 'create_event.sql', encoding='utf-8') as f:
-                papi_web_version: Version = papi_web_config.version
+            with open(PapiWebConfig.database_sql_path / 'create_event.sql', encoding='utf-8') as f:
+                papi_web_version: Version = PapiWebConfig.version
                 cursor.executescript(f.read().format(
                     version=f'{papi_web_version.major}.{papi_web_version.minor}.{papi_web_version.micro}',
                     name=self.uniq_id, start=event_start, stop=event_stop, now=time.time()))
@@ -184,7 +183,7 @@ class EventDatabase(SQLiteDatabase):
             logger.info('La base de données [%s] a été créée', self.file)
             if populate:
                 with (EventDatabase(self.uniq_id, write=True) as event_database):
-                    yml_file = papi_web_config.database_yml_path / f'{self.uniq_id}.yml'
+                    yml_file = PapiWebConfig.database_yml_path / f'{self.uniq_id}.yml'
                     event_dict = yaml.safe_load(yml_file.read_text(encoding='utf-8'))
                     self._check_populate_dict(
                         yml_file, '', event_dict,
@@ -554,7 +553,7 @@ class EventDatabase(SQLiteDatabase):
             raise FileNotFoundError(
                 f'La base de données ne peut être ouverte car le fichier [{self.file.resolve()}] n\'existe pas.')
         super().__enter__()
-        papi_web_version: Version = PapiWebConfig().version
+        papi_web_version: Version = PapiWebConfig.version
         if self.version != Version(f'{papi_web_version.major}.{papi_web_version.minor}.{papi_web_version.micro}'):
             if self.write:
                 self.upgrade()
@@ -630,7 +629,7 @@ class EventDatabase(SQLiteDatabase):
         logger.info(f'La base de données {self.file.name} a été mise à jour en version {version}.')
 
     def upgrade(self):
-        papi_web_version: Version = PapiWebConfig().version
+        papi_web_version: Version = PapiWebConfig.version
         if self.version > papi_web_version:
             raise PapiWebException(
                 f'Votre version de Papi-web ({papi_web_version}) '

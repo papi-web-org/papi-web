@@ -129,7 +129,7 @@ class AdminRotatorController(AAdminController):
             'off': 'Pas d\'affichage des menus des écrans',
             'on': 'Affichage des menus des écrans',
         }
-        options[''] = f'Par défaut ({options["on" if PapiWebConfig().default_rotator_show_menus else "off"]})'
+        options[''] = f'Par défaut ({options["on" if PapiWebConfig.default_rotator_show_menus else "off"]})'
         return options
 
     def _admin_rotator_render_edit_modal(

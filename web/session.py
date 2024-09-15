@@ -123,23 +123,23 @@ class SessionHandler:
 
     @classmethod
     def set_session_admin_columns(cls, request: HTMXRequest, columns: int):
-        assert columns in PapiWebConfig().allowed_columns
+        assert columns in PapiWebConfig.allowed_columns
         request.session[cls.ADMIN_COLUMNS_SESSION_KEY]: int = columns
 
     @classmethod
     def get_session_admin_columns(cls, request: HTMXRequest) -> int:
-        return request.session.get(cls.ADMIN_COLUMNS_SESSION_KEY, PapiWebConfig().default_columns)
+        return request.session.get(cls.ADMIN_COLUMNS_SESSION_KEY, PapiWebConfig.default_columns)
 
     USER_COLUMNS_SESSION_KEY: str = 'user_columns'
 
     @classmethod
     def set_session_user_columns(cls, request: HTMXRequest, columns: int):
-        assert columns in PapiWebConfig().allowed_columns
+        assert columns in PapiWebConfig.allowed_columns
         request.session[cls.USER_COLUMNS_SESSION_KEY]: int = columns
 
     @classmethod
     def get_session_user_columns(cls, request: HTMXRequest) -> int:
-        return request.session.get(cls.USER_COLUMNS_SESSION_KEY, PapiWebConfig().default_columns)
+        return request.session.get(cls.USER_COLUMNS_SESSION_KEY, PapiWebConfig.default_columns)
 
     ADMIN_MIN_LOGGING_LEVEL_SESSION_KEY: str = 'admin_min_logging_level'
 

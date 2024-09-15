@@ -28,11 +28,10 @@ class Engine:
             raise pe
         logger.info('Reading configuration file...')
         self._check_version()
-        papi_web_config: PapiWebConfig = PapiWebConfig()
         if not EventLoader.get(request=None, lazy_load=True).event_uniq_ids:
             logger.info('Aucune base de données trouvée, création des bases de données d\'exemple')
             for event_id in [
-                file.stem for file in papi_web_config.database_yml_path.glob(f'*.{papi_web_config.yml_ext}')
+                file.stem for file in PapiWebConfig.database_yml_path.glob(f'*.{PapiWebConfig.yml_ext}')
             ]:
                 EventDatabase(event_id).create(populate=True)
 
@@ -41,21 +40,21 @@ class Engine:
         if not last_stable_version:
             logger.warning('La vérification de la version a échoué')
             return
-        if last_stable_version == PapiWebConfig().version:
+        if last_stable_version == PapiWebConfig.version:
             logger.info('Votre version de Papi-web est à jour')
             return
         last_stable_matches = re.match(
             r'^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$', str(last_stable_version))
-        if re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$', str(PapiWebConfig().version)):
-            if last_stable_version > PapiWebConfig().version:
+        if re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$', str(PapiWebConfig.version)):
+            if last_stable_version > PapiWebConfig.version:
                 logger.warning('Une version plus récente que la vôtre est disponible (%s)',
                                last_stable_version)
             else:
                 logger.warning('Vous utilisez une version plus récente que la dernière version stable disponible, '
                                'vous ne seriez pas développeur des fois ?')
             return
-        if not (matches := re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)rc(?P<rc>\d+)$', str(PapiWebConfig().version))):
-            raise ValueError(f'Version de Papi-web invalide [{str(PapiWebConfig().version)}]')
+        if not (matches := re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)rc(?P<rc>\d+)$', str(PapiWebConfig.version))):
+            raise ValueError(f'Version de Papi-web invalide [{str(PapiWebConfig.version)}]')
         if last_stable_matches.group('major') > matches.group('major'):
             logger.warning('Une version majeure plus récente que la vôtre est disponible (%s)',
                            last_stable_version)

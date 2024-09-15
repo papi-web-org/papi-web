@@ -41,12 +41,12 @@ class Rotator:
     @property
     def delay(self) -> int:
         return self.stored_rotator.delay if self.stored_rotator.delay is not None \
-            else PapiWebConfig().default_rotator_delay
+            else PapiWebConfig.default_rotator_delay
 
     @property
     def show_menus(self) -> bool:
         return self.stored_rotator.show_menus if self.stored_rotator.show_menus is not None \
-            else PapiWebConfig().default_rotator_show_menus
+            else PapiWebConfig.default_rotator_show_menus
 
     @property
     def screens(self) -> list[Screen]:

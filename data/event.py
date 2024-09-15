@@ -189,11 +189,11 @@ class Event:
 
     @property
     def path(self) -> Path:
-        return Path(self.stored_event.path) if self.stored_event.path else PapiWebConfig().default_papi_path
+        return Path(self.stored_event.path) if self.stored_event.path else PapiWebConfig.default_papi_path
 
     @property
     def background_image(self) -> str:
-        return self.stored_event.background_image or PapiWebConfig().default_background_image
+        return self.stored_event.background_image or PapiWebConfig.default_background_image
 
     @property
     def background_url(self) -> str:
@@ -203,7 +203,7 @@ class Event:
 
     @property
     def background_color(self) -> str:
-        return self.stored_event.background_color or PapiWebConfig().default_background_color
+        return self.stored_event.background_color or PapiWebConfig.default_background_color
 
     @property
     def update_password(self) -> str:
@@ -212,13 +212,13 @@ class Event:
     @property
     def record_illegal_moves(self) -> int:
         if self.stored_event.record_illegal_moves is None:
-            return PapiWebConfig().default_record_illegal_moves_number
+            return PapiWebConfig.default_record_illegal_moves_number
         return self.stored_event.record_illegal_moves
 
     @property
     def allow_results_deletion_on_input_screens(self) -> int:
         if self.stored_event.allow_results_deletion_on_input_screens is None:
-            return PapiWebConfig().default_allow_results_deletion_on_input_screens
+            return PapiWebConfig.default_allow_results_deletion_on_input_screens
         else:
             return self.stored_event.allow_results_deletion_on_input_screens
 
@@ -228,7 +228,7 @@ class Event:
             self._timer_colors = {
                 i: self.stored_event.timer_colors[i]
                 if i in self.stored_event.timer_colors and self.stored_event.timer_colors[i]
-                else PapiWebConfig().default_timer_colors[i]
+                else PapiWebConfig.default_timer_colors[i]
                 for i in range(1, 4)}
         return self._timer_colors
 
@@ -238,7 +238,7 @@ class Event:
             self._timer_delays = {
                 i: self.stored_event.timer_delays[i]
                 if i in self.stored_event.timer_delays and self.stored_event.timer_delays[i]
-                else PapiWebConfig().default_timer_delays[i]
+                else PapiWebConfig.default_timer_delays[i]
                 for i in range(1, 4)}
         return self._timer_delays
 

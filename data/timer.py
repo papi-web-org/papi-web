@@ -74,18 +74,16 @@ class TimerHour:
 
     @property
     def text_before(self) -> str:
-        papi_web_config: PapiWebConfig = PapiWebConfig()
         if self._text_before is None:
             self._text_before = self._format_stored_text(
-                self.stored_timer_hour.text_before, papi_web_config.default_timer_round_text_before)
+                self.stored_timer_hour.text_before, PapiWebConfig.default_timer_round_text_before)
         return self._text_before
 
     @property
     def text_after(self) -> str:
-        papi_web_config: PapiWebConfig = PapiWebConfig()
         if self._text_after is None:
             self._text_after = self._format_stored_text(
-                self.stored_timer_hour.text_after, papi_web_config.default_timer_round_text_after)
+                self.stored_timer_hour.text_after, PapiWebConfig.default_timer_round_text_after)
         return self._text_after
 
     @property

@@ -151,7 +151,7 @@ class Screen:
                         text = text.replace('%l', str(screen_set.last_board.id))
                 return text
             case ScreenType.Results:
-                return self.stored_screen.menu_text or PapiWebConfig().default_results_screen_menu_text
+                return self.stored_screen.menu_text or PapiWebConfig.default_results_screen_menu_text
             case _:
                 raise ValueError(f'type=[{self.type}]')
 
@@ -190,7 +190,7 @@ class Screen:
                     if self.stored_screen.players_show_unpaired is not None:
                         return self.stored_screen.players_show_unpaired
                     else:
-                        return PapiWebConfig().default_players_show_unpaired
+                        return PapiWebConfig.default_players_show_unpaired
                 else:
                     return self.family.players_show_unpaired
             case _:

@@ -108,7 +108,7 @@ class Family:
     @property
     def players_show_unpaired(self) -> bool:
         if self.stored_family.players_show_unpaired is None:
-            return PapiWebConfig().default_players_show_unpaired
+            return PapiWebConfig.default_players_show_unpaired
         return self.stored_family.players_show_unpaired
 
     @property
@@ -175,7 +175,7 @@ class Family:
             case ScreenType.Players:
                 players_show_unpaired: bool
                 if self.players_show_unpaired is None:
-                    players_show_unpaired = PapiWebConfig().default_players_show_unpaired
+                    players_show_unpaired = PapiWebConfig.default_players_show_unpaired
                 else:
                     players_show_unpaired = self.players_show_unpaired
                 if players_show_unpaired:

@@ -94,7 +94,7 @@ class Tournament:
 
     @property
     def file(self) -> Path:
-        return self.path / f'{self.filename}.{PapiWebConfig().papi_ext}'
+        return self.path / f'{self.filename}.{PapiWebConfig.papi_ext}'
 
     @property
     def file_exists(self) -> bool:

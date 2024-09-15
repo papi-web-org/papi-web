@@ -71,13 +71,13 @@ class AdminWebContext(WebContext):
             return self.admin_event.background_image
         else:
             if self.admin_main_selector == '@config':
-                return PapiWebConfig().default_background_image
+                return PapiWebConfig.default_background_image
             else:
                 return ''
 
     @property
     def background_color(self) -> str:
-        return PapiWebConfig().admin_background_color
+        return PapiWebConfig.admin_background_color
 
     @property
     def template_context(self) -> dict[str, Any]:
@@ -142,7 +142,7 @@ class AAdminController(AController):
             'off': 'Affichage seulement des joueur·euses apparié·es',
             'on': 'Affichage de tou·tes les joueur·euses, apparié·es ou non',
         }
-        options[''] = f'Par défaut ({options["on" if PapiWebConfig().default_players_show_unpaired else "off"]})'
+        options[''] = f'Par défaut ({options["on" if PapiWebConfig.default_players_show_unpaired else "off"]})'
         return options
 
     @staticmethod

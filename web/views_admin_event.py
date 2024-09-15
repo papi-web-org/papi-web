@@ -123,7 +123,7 @@ class AdminEventController(AAdminController):
                             errors[field] = f'Le chemin [{background_image}] est incorrect.'
                             data[field] = ''
                         else:
-                            file: Path = PapiWebConfig().custom_path / background_image
+                            file: Path = PapiWebConfig.custom_path / background_image
                             if not file.exists():
                                 errors[field] = f'Le fichier [{background_image}] est introuvable.'
                 field: str = 'background_color'
@@ -180,7 +180,7 @@ class AdminEventController(AAdminController):
 
     @staticmethod
     def background_images_jstree_data(background_image: str) -> list[dict[str, Any]]:
-        custom_path: Path = PapiWebConfig().custom_path
+        custom_path: Path = PapiWebConfig.custom_path
         dir_nodes: list[dict[str, str]] = []
         file_nodes: list[dict[str, str]] = []
         for item in custom_path.rglob('*'):
@@ -288,7 +288,7 @@ class AdminEventController(AAdminController):
             'off': 'Non autorisée',
             'on': 'Autorisée',
         }
-        default_option = PapiWebConfig().default_allow_results_deletion_on_input_screens
+        default_option = PapiWebConfig.default_allow_results_deletion_on_input_screens
         allow_results_deletion_on_input_screens_options[''] = \
             (f'Par défaut '
              f'({allow_results_deletion_on_input_screens_options["on" if default_option else "off"]})')
@@ -301,9 +301,9 @@ class AdminEventController(AAdminController):
                 'data': data,
                 'errors': errors,
                 'record_illegal_moves_options': self._get_record_illegal_moves_options(
-                    PapiWebConfig().default_record_illegal_moves_number),
+                    PapiWebConfig.default_record_illegal_moves_number),
                 'allow_results_deletion_on_input_screens_options': allow_results_deletion_on_input_screens_options,
-                'timer_color_texts': self._get_timer_color_texts(PapiWebConfig().default_timer_delays),
+                'timer_color_texts': self._get_timer_color_texts(PapiWebConfig.default_timer_delays),
                 'background_images_jstree_data': self.background_images_jstree_data(
                     data['background_image']) if action == 'update' else {}
             })

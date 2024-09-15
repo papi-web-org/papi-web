@@ -31,7 +31,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 static_files_folders = [
     BASE_DIR / 'web' / 'static',
-    PapiWebConfig().custom_path,
+    PapiWebConfig.custom_path,
 ]
 
 static_files_router: Router = create_static_files_router(

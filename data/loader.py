@@ -73,7 +73,7 @@ class EventLoader:
     def event_uniq_ids(self) -> list[str]:
         if self._event_uniq_ids is None:
             self._event_uniq_ids = [
-                file.stem for file in PapiWebConfig().event_path.glob(f'*.{PapiWebConfig().event_ext}')
+                file.stem for file in PapiWebConfig.event_path.glob(f'*.{PapiWebConfig.event_ext}')
             ]
         return self._event_uniq_ids
 

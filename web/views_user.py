@@ -62,7 +62,7 @@ class UserWebContext(WebContext):
 
     @property
     def background_color(self) -> str:
-        return PapiWebConfig().user_background_color
+        return PapiWebConfig.user_background_color
 
     @property
     def template_context(self) -> dict[str, Any]:
@@ -89,7 +89,7 @@ class EventUserWebContext(UserWebContext):
 
     @property
     def background_color(self) -> str:
-        return PapiWebConfig().default_background_color
+        return PapiWebConfig.default_background_color
 
 
 class AUserController(AController):
