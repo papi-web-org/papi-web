@@ -32,14 +32,14 @@ class EventLoader:
         self._current_public_events: list[Event] | None = None
         self._coming_public_events: list[Event] | None = None
 
-    @staticmethod
-    def get(request: HTMXRequest | None, lazy_load: bool):
+    @classmethod
+    def get(cls, request: HTMXRequest | None, lazy_load: bool):
         if not request:
-            return EventLoader(lazy_load=lazy_load)
+            return cls(lazy_load=lazy_load)
         event_loader: EventLoader = request.state.get('event_loader')
         if event_loader and lazy_load:
             return event_loader
-        event_loader = EventLoader(lazy_load=False)
+        event_loader = cls(lazy_load=False)
         request.state['event_loader'] = event_loader
         return event_loader
 
