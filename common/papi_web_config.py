@@ -12,7 +12,7 @@ from packaging.version import Version
 
 from common.config_reader import ConfigReader
 from common.logger import get_logger, configure_logger
-from common.singleton import singleton
+from common.singleton import Singleton
 
 logger: Logger = get_logger()
 
@@ -28,8 +28,7 @@ DEFAULT_FFE_UPLOAD_DELAY: int = 180
 MIN_FFE_UPLOAD_DELAY: int = 60
 
 
-@singleton
-class PapiWebConfig:
+class PapiWebConfig(metaclass=Singleton):
     def __init__(self):
         self.reader = ConfigReader(CONFIG_FILE)
         self.__log_level: int | None = None
