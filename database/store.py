@@ -101,8 +101,8 @@ class StoredScreen:
     background_color: str | None
     results_tournament_ids: list[int] = field(default_factory=list[int])
     stored_screen_sets: list[StoredScreenSet] = field(default_factory=list[StoredScreenSet])
-    last_update: float = field(default=0.0)
-    public: bool = field(default=True)
+    last_update: float = 0.0
+    public: bool = True
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
