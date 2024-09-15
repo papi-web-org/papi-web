@@ -6,11 +6,11 @@ class StoredTimerHour:
     id: int | None
     uniq_id: str
     timer_id: int
-    order: int | None = field(default=None)
-    date_str: str | None = field(default=None)
-    time_str: str | None = field(default=None)
-    text_before: str | None = field(default=None)
-    text_after: str | None = field(default=None)
+    order: int | None = None
+    date_str: str | None = None
+    time_str: str | None = None
+    text_before: str | None = None
+    text_after: str | None = None
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
@@ -80,7 +80,7 @@ class StoredScreenSet:
     fixed_boards_str: str | None
     first: int | None
     last: int | None
-    last_update: float = field(default=0.0)
+    last_update: float = 0.0
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
@@ -101,8 +101,8 @@ class StoredScreen:
     background_color: str | None
     results_tournament_ids: list[int] = field(default_factory=list[int])
     stored_screen_sets: list[StoredScreenSet] = field(default_factory=list[StoredScreenSet])
-    last_update: float = field(default=0.0)
-    public: bool = field(default=True)
+    last_update: float = 0.0
+    public: bool = True
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
@@ -123,8 +123,8 @@ class StoredFamily:
     last: int | None
     parts: int | None
     number: int | None
-    public: bool = field(default=True)
-    last_update: float = field(default=0.0)
+    public: bool = True
+    last_update: float = 0.0
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 
@@ -136,7 +136,7 @@ class StoredRotator:
     screen_ids: list[int] | None
     delay: int | None
     show_menus: bool | None
-    public: bool = field(default=True)
+    public: bool = True
     errors: dict[str, str] = field(default_factory=dict[str, str])
 
 

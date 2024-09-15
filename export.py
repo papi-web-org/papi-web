@@ -100,9 +100,7 @@ def build_exe():
     sql_dir: Path = Path('.') / 'database' / 'sql'
     files += [sql_dir / 'create_event.sql', ]
     yml_dir: Path = Path('.') / 'database' / 'yml'
-    files += [
-        file for file in yml_dir.glob('*.yml')
-    ]
+    files += list(yml_dir.glob('*.yml'))
     for file in files:
         pyinstaller_params.append(f'--add-data={file};{file.parent}')
     files: list[Path] = []

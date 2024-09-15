@@ -21,7 +21,7 @@ Papi-web est configuré à l'aide d'un fichier très simple au format INI ()
 
 La configuration des évènements a été réalisée à l'aide de code PHP en version 1.x, puis à l'aide d'un fichier de configuration de la version 2.0 à la version 2.3.
 
-- À partir de la version 2.4, la configuration des évènements est réalisée à l'aide d'une interface web qui ne nécessite aucune compétence informatique.
+À partir de la version 2.4, la configuration des évènements est réalisée à l'aide d'une interface web qui ne nécessite aucune compétence informatique avancée.
 
 À voir :
 - [Configuration et utilisation](06-use.md)
