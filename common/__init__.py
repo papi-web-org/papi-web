@@ -41,5 +41,5 @@ def format_timestamp_date(ts: float | None = None) -> str:
     return datetime.strftime(datetime.fromtimestamp(ts if ts is not None else time.time()), '%Y-%m-%d')
 
 
-def format_timestamp_time(ts: float) -> str:
+def format_timestamp_time(ts: float | None = None) -> str:
     return datetime.strftime(datetime.fromtimestamp(ts if ts is not None else time.time()), '%H:%M')
