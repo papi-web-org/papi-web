@@ -3,7 +3,7 @@ from logging import Logger
 
 from common.logger import get_logger, print_interactive, input_interactive
 from common.papi_web_config import PapiWebConfig
-from common.singleton import singleton
+from common.singleton import Singleton
 from data.event import Event
 from data.loader import EventLoader
 from data.tournament import Tournament
@@ -13,8 +13,7 @@ from ffe.ffe_session import FFESession
 logger: Logger = get_logger()
 
 
-@singleton
-class ActionSelector:
+class ActionSelector(metaclass=Singleton):
 
     @classmethod
     def __get_qualified_tournaments(cls, event: Event) -> list[Tournament]:

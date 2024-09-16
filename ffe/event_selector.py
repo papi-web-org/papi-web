@@ -1,6 +1,6 @@
 from logging import Logger
 
-from common.singleton import singleton
+from common.singleton import Singleton
 from common.logger import get_logger, print_interactive, input_interactive
 from data.event import Event
 from data.loader import EventLoader
@@ -9,8 +9,7 @@ from ffe.action_selector import ActionSelector
 logger: Logger = get_logger()
 
 
-@singleton
-class EventSelector:
+class EventSelector(metaclass=Singleton):
     def __init__(self):
         self.__silent: bool = False
 
