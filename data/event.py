@@ -1,8 +1,9 @@
 import fnmatch
 import logging
 import time
+from collections import defaultdict
 from dataclasses import dataclass
-from functools import total_ordering
+from functools import total_ordering, cached_property
 from logging import Logger
 from pathlib import Path
 
@@ -73,12 +74,7 @@ class Event:
         self.chessevents_by_uniq_id: dict[str, ChessEvent] = {}
         self.tournaments_by_id: dict[int, Tournament] = {}
         self.tournaments_by_uniq_id: dict[str, Tournament] = {}
-        self._tournaments_sorted_by_uniq_id: list[Tournament] | None = None
         self.screens_by_uniq_id: dict[str, Screen] = {}
-        self._screens_sorted_by_uniq_id: list[Screen] | None = None
-        self._screens_of_type_sorted_by_uniq_id: dict[ScreenType, list[Screen]] | None = None
-        self._public_screens_sorted_by_uniq_id: list[Screen] | None = None
-        self._public_screens_of_type_sorted_by_uniq_id: dict[ScreenType, list[Screen]] | None = None
         self.basic_screens_by_id: dict[int, Screen] = {}
         self.basic_screens_by_uniq_id: dict[str, Screen] = {}
         self.families_by_id: dict[int, Family] = {}
@@ -86,13 +82,8 @@ class Event:
         self.family_screens_by_uniq_id: dict[str, Screen] = {}
         self.rotators_by_id: dict[int, Rotator] = {}
         self.rotators_by_uniq_id: dict[str, Rotator] = {}
-        self._rotators_sorted_by_uniq_id: list[Rotator] | None = None
-        self._publics_rotators_sorted_by_uniq_id: list[Rotator] | None = None
         self.timers_by_id: dict[int, Timer] = {}
         self.timers_by_uniq_id: dict[str, Timer] = {}
-        self._timer_colors: dict[int, str] | None = None
-        self._timer_delays: dict[int, int] | None = None
-        self._background_url: str | None = None
         self.messages: list[EventMessage] = []
         last_load_date: float = event_last_load_date_by_uniq_id.get(self.uniq_id, None)
         self._silent = last_load_date is not None and last_load_date > self.stored_event.last_update
@@ -195,13 +186,11 @@ class Event:
     def background_image(self) -> str:
         return self.stored_event.background_image or PapiWebConfig.default_background_image
 
-    @property
+    @cached_property
     def background_url(self) -> str:
-        if self._background_url is None:
-            self._background_url = BackgroundWebContext.inline_image_url(self.background_image)
-        return self._background_url
+        return BackgroundWebContext.inline_image_url(self.background_image)
 
-    @property
+    @cached_property
     def background_color(self) -> str:
         return self.stored_event.background_color or PapiWebConfig.default_background_color
 
@@ -222,126 +211,103 @@ class Event:
         else:
             return self.stored_event.allow_results_deletion_on_input_screens
 
-    @property
+    @cached_property
     def timer_colors(self) -> dict[int, str]:
-        if self._timer_colors is None:
-            self._timer_colors = {
-                i: self.stored_event.timer_colors[i]
-                if i in self.stored_event.timer_colors and self.stored_event.timer_colors[i]
-                else PapiWebConfig.default_timer_colors[i]
-                for i in range(1, 4)}
-        return self._timer_colors
+        return {
+            i: self.stored_event.timer_colors[i]
+            if i in self.stored_event.timer_colors and self.stored_event.timer_colors[i]
+            else PapiWebConfig.default_timer_colors[i]
+            for i in range(1, 4)
+        }
 
-    @property
+    @cached_property
     def timer_delays(self) -> dict[int, int]:
-        if self._timer_delays is None:
-            self._timer_delays = {
-                i: self.stored_event.timer_delays[i]
-                if i in self.stored_event.timer_delays and self.stored_event.timer_delays[i]
-                else PapiWebConfig.default_timer_delays[i]
-                for i in range(1, 4)}
-        return self._timer_delays
+        return {
+            i: self.stored_event.timer_delays[i]
+            if i in self.stored_event.timer_delays and self.stored_event.timer_delays[i]
+            else PapiWebConfig.default_timer_delays[i]
+            for i in range(1, 4)
+        }
 
     @property
     def public(self) -> bool:
         return self.stored_event.public
 
-    @property
+    @cached_property
     def tournaments_sorted_by_uniq_id(self) -> list[Tournament]:
-        if self._tournaments_sorted_by_uniq_id is None:
-            self._tournaments_sorted_by_uniq_id = sorted(
-                self.tournaments_by_id.values(), key=lambda tournament: tournament.uniq_id)
-        return self._tournaments_sorted_by_uniq_id
+        return sorted(self.tournaments_by_id.values(), key=lambda tournament: tournament.uniq_id)
 
-    @property
+    @cached_property
     def screens_sorted_by_uniq_id(self) -> list[Screen]:
-        if self._screens_sorted_by_uniq_id is None:
-            self._screens_sorted_by_uniq_id = sorted(
-                self.screens_by_uniq_id.values(), key=lambda screen: screen.uniq_id)
-        return self._screens_sorted_by_uniq_id
+        return sorted(self.screens_by_uniq_id.values(), key=lambda screen: screen.uniq_id)
 
-    @property
-    def screens_of_type_sorted_by_uniq_id(self) -> dict[ScreenType, list[Screen]]:
-        if self._screens_of_type_sorted_by_uniq_id is None:
-            self._screens_of_type_sorted_by_uniq_id = {}
-            for screen in self.screens_sorted_by_uniq_id:
-                if screen.type not in self._screens_of_type_sorted_by_uniq_id:
-                    self._screens_of_type_sorted_by_uniq_id[screen.type] = []
-                self._screens_of_type_sorted_by_uniq_id[screen.type].append(screen)
-        return self._screens_of_type_sorted_by_uniq_id
+    @cached_property
+    def screens_of_type_sorted_by_uniq_id(self) -> defaultdict[ScreenType, list[Screen]]:
+        screens_of_type_sorted_by_uniq_id: defaultdict[ScreenType, list[Screen]] = defaultdict(list[Screen])
+        for screen in self.screens_sorted_by_uniq_id:
+            screens_of_type_sorted_by_uniq_id[screen.type].append(screen)
+        return screens_of_type_sorted_by_uniq_id
 
     @property
     def input_screens_sorted_by_uniq_id(self) -> list[Screen]:
-        return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Input, [])
+        return self.screens_of_type_sorted_by_uniq_id[ScreenType.Input]
 
     @property
     def boards_screens_sorted_by_uniq_id(self) -> list[Screen]:
-        return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Boards, [])
+        return self.screens_of_type_sorted_by_uniq_id[ScreenType.Boards]
 
     @property
     def players_screens_sorted_by_uniq_id(self) -> list[Screen]:
-        return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Players, [])
+        return self.screens_of_type_sorted_by_uniq_id[ScreenType.Players]
 
     @property
     def results_screens_sorted_by_uniq_id(self) -> list[Screen]:
-        return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Results, [])
+        return self.screens_of_type_sorted_by_uniq_id[ScreenType.Results]
 
     @property
     def image_screens_sorted_by_uniq_id(self) -> list[Screen]:
-        return self.screens_of_type_sorted_by_uniq_id.get(ScreenType.Image, [])
+        return self.screens_of_type_sorted_by_uniq_id[ScreenType.Image]
 
-    @property
+    @cached_property
     def public_screens_sorted_by_uniq_id(self) -> list[Screen]:
-        if self._public_screens_sorted_by_uniq_id is None:
-            self._public_screens_sorted_by_uniq_id = [
-                screen for screen in self.screens_by_uniq_id.values() if screen.public
-            ]
-        return self._public_screens_sorted_by_uniq_id
+        return [screen for screen in self.screens_by_uniq_id.values() if screen.public]
 
-    @property
-    def public_screens_of_type_sorted_by_uniq_id(self) -> dict[ScreenType, list[Screen]]:
-        if self._public_screens_of_type_sorted_by_uniq_id is None:
-            self._public_screens_of_type_sorted_by_uniq_id = {}
-            for screen in self.public_screens_sorted_by_uniq_id:
-                if screen.type not in self._public_screens_of_type_sorted_by_uniq_id:
-                    self._public_screens_of_type_sorted_by_uniq_id[screen.type] = []
-                self._public_screens_of_type_sorted_by_uniq_id[screen.type].append(screen)
-        return self._public_screens_of_type_sorted_by_uniq_id
+    @cached_property
+    def public_screens_of_type_sorted_by_uniq_id(self) -> defaultdict[ScreenType, list[Screen]]:
+        public_screens_of_type_sorted_by_uniq_id: defaultdict[ScreenType, list[Screen]] = defaultdict(list[Screen])
+        for screen in self.public_screens_sorted_by_uniq_id:
+            public_screens_of_type_sorted_by_uniq_id[screen.type].append(screen)
+        return public_screens_of_type_sorted_by_uniq_id
 
     @property
     def public_input_screens_sorted_by_uniq_id(self) -> list[Screen]:
-        return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Input, [])
+        return self.public_screens_of_type_sorted_by_uniq_id[ScreenType.Input]
 
     @property
     def public_boards_screens_sorted_by_uniq_id(self) -> list[Screen]:
-        return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Boards, [])
+        return self.public_screens_of_type_sorted_by_uniq_id[ScreenType.Boards]
 
     @property
     def public_players_screens_sorted_by_uniq_id(self) -> list[Screen]:
-        return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Players, [])
+        return self.public_screens_of_type_sorted_by_uniq_id[ScreenType.Players]
 
     @property
     def public_results_screens_sorted_by_uniq_id(self) -> list[Screen]:
-        return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Results, [])
+        return self.public_screens_of_type_sorted_by_uniq_id[ScreenType.Results]
 
     @property
     def public_image_screens_sorted_by_uniq_id(self) -> list[Screen]:
-        return self.public_screens_of_type_sorted_by_uniq_id.get(ScreenType.Image, [])
+        return self.public_screens_of_type_sorted_by_uniq_id[ScreenType.Image]
 
-    @property
+    @cached_property
     def rotators_sorted_by_uniq_id(self) -> list[Rotator]:
-        if self._rotators_sorted_by_uniq_id is None:
-            self._rotators_sorted_by_uniq_id = sorted(
-                self.rotators_by_id.values(), key=lambda rotator: rotator.uniq_id)
-        return self._rotators_sorted_by_uniq_id
+        return sorted(self.rotators_by_id.values(), key=lambda rotator: rotator.uniq_id)
 
-    @property
+    @cached_property
     def public_rotators_sorted_by_uniq_id(self) -> list[Rotator]:
-        if self._publics_rotators_sorted_by_uniq_id is None:
-            self._publics_rotators_sorted_by_uniq_id = sorted(
+        return sorted(
                 [rotator for rotator in self.rotators_by_id.values() if rotator.public],
                 key=lambda rotator: rotator.uniq_id)
-        return self._publics_rotators_sorted_by_uniq_id
 
     @property
     def last_update(self) -> float | None:

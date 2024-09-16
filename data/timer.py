@@ -2,6 +2,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
+from functools import cached_property
 from logging import Logger
 from typing import TYPE_CHECKING
 
@@ -23,9 +24,6 @@ class TimerHour:
     timer: 'Timer'
     stored_timer_hour: StoredTimerHour
     timestamp: int | None = field(init=False, default=None)
-    _round: int | None = field(init=False, default=None)
-    _text_before: str | None = field(default=None)
-    _text_after: str | None = field(default=None)
     last_valid: bool = field(init=False, default=None)
     error: str | None = field(default=None)
 
@@ -57,14 +55,12 @@ class TimerHour:
     def order(self) -> int | None:
         return self.stored_timer_hour.order if self.stored_timer_hour else None
 
-    @property
+    @cached_property
     def round(self) -> int:
-        if self._round is None:
-            try:
-                self._round = max(int(self.uniq_id), 0)
-            except ValueError:
-                self._round = 0
-        return self._round
+        try:
+            return max(int(self.uniq_id), 0)
+        except ValueError:
+            return 0
 
     def _format_stored_text(self, text, round_default_text) -> str:
         if self.round:
@@ -72,19 +68,15 @@ class TimerHour:
         else:
             return text if text else ''
 
-    @property
+    @cached_property
     def text_before(self) -> str:
-        if self._text_before is None:
-            self._text_before = self._format_stored_text(
-                self.stored_timer_hour.text_before, PapiWebConfig.default_timer_round_text_before)
-        return self._text_before
+        return self._format_stored_text(
+            self.stored_timer_hour.text_before, PapiWebConfig.default_timer_round_text_before)
 
-    @property
+    @cached_property
     def text_after(self) -> str:
-        if self._text_after is None:
-            self._text_after = self._format_stored_text(
+        return self._format_stored_text(
                 self.stored_timer_hour.text_after, PapiWebConfig.default_timer_round_text_after)
-        return self._text_after
 
     @property
     def timestamp_1(self) -> int:
@@ -128,10 +120,6 @@ class Timer:
         self.event: 'Event' = event
         self.stored_timer: StoredTimer = stored_timer
         self.timer_hours_by_id: dict[int, TimerHour] = {}
-        self._timer_hour_uniq_ids: list[str] | None = None
-        self._timer_hours_sorted_by_order: list[TimerHour] | None = None
-        self._colors: dict[int, str] | None = None
-        self._delays: dict[int, int] | None = None
         self.valid: bool = True
         self.error: str | None = None
         self._build_timer_hours()
@@ -140,18 +128,13 @@ class Timer:
     def id(self) -> int:
         return self.stored_timer.id if self.stored_timer else None
 
-    @property
+    @cached_property
     def timer_hour_uniq_ids(self) -> list[str]:
-        if self._timer_hour_uniq_ids is None:
-            self._timer_hour_uniq_ids = [timer_hour.uniq_id for timer_hour in self.timer_hours_by_id.values()]
-        return self._timer_hour_uniq_ids
+        return [timer_hour.uniq_id for timer_hour in self.timer_hours_by_id.values()]
 
-    @property
+    @cached_property
     def timer_hours_sorted_by_order(self) -> list[TimerHour]:
-        if self._timer_hours_sorted_by_order is None:
-            self._timer_hours_sorted_by_order = sorted(
-                self.timer_hours_by_id.values(), key=lambda timer_hour: timer_hour.order)
-        return self._timer_hours_sorted_by_order
+        return sorted(self.timer_hours_by_id.values(), key=lambda timer_hour: timer_hour.order)
 
     @property
     def uniq_id(self) -> str:
@@ -208,15 +191,12 @@ class Timer:
             self.error = 'Aucun horaire valide défini.'
             self.event.add_warning(self.error, timer=self)
 
-    @property
+    @cached_property
     def colors(self) -> dict[int, str]:
-        if self._colors is None:
-            self._colors = {
-                1: self.stored_timer.colors[1] if self.stored_timer.colors[1] else self.event.timer_colors[1],
-                2: self.stored_timer.colors[2] if self.stored_timer.colors[2] else self.event.timer_colors[2],
-                3: self.stored_timer.colors[3] if self.stored_timer.colors[3] else self.event.timer_colors[3],
-             }
-        return self._colors
+        return {
+            i: self.stored_timer.colors[i] if self.stored_timer.colors[i] else self.event.timer_colors[i]
+            for i in range(1, 4)
+         }
 
     @property
     def color_1_rgb(self) -> RGB:
@@ -230,15 +210,12 @@ class Timer:
     def color_3_rgb(self) -> RGB:
         return hexa_to_rgb(self.colors[3])
 
-    @property
+    @cached_property
     def delays(self) -> dict[int, int]:
-        if self._delays is None:
-            self._delays = {
-                1: self.stored_timer.delays[1] if self.stored_timer.delays[1] else self.event.timer_delays[1],
-                2: self.stored_timer.delays[2] if self.stored_timer.delays[2] else self.event.timer_delays[2],
-                3: self.stored_timer.delays[3] if self.stored_timer.delays[3] else self.event.timer_delays[3],
-             }
-        return self._delays
+        return {
+            i: self.stored_timer.delays[i] if self.stored_timer.delays[i] else self.event.timer_delays[i]
+            for i in range(1, 4)
+        }
 
     def get_previous_timer_hour(self, timer_hour: TimerHour) -> TimerHour | None:
         previous_timer_hour: TimerHour | None = None

@@ -1,4 +1,5 @@
 from contextlib import suppress
+from functools import cached_property
 from logging import Logger
 from typing import TYPE_CHECKING
 
@@ -22,9 +23,6 @@ class Rotator:
     def __init__(self, event: 'Event', stored_rotator: StoredRotator, ):
         self.event: 'Event' = event
         self.stored_rotator: StoredRotator = stored_rotator
-        self._families: list[Family] | None = None
-        self._screens: list[Screen] | None = None
-        self._rotating_screens: list[Screen] | None = None
 
     @property
     def id(self) -> int:
@@ -48,30 +46,27 @@ class Rotator:
         return self.stored_rotator.show_menus if self.stored_rotator.show_menus is not None \
             else PapiWebConfig.default_rotator_show_menus
 
-    @property
+    @cached_property
     def screens(self) -> list[Screen]:
-        if self._screens is None:
-            self._screens = []
-            if self.stored_rotator.screen_ids:
-                for screen_id in self.stored_rotator.screen_ids:
-                    with suppress(KeyError):
-                        self._screens.append(self.event.basic_screens_by_id[screen_id])
-        return self._screens
+        screens: list[Screen] = []
+        if self.stored_rotator.screen_ids:
+            for screen_id in self.stored_rotator.screen_ids:
+                with suppress(KeyError):
+                    screens.append(self.event.basic_screens_by_id[screen_id])
+        return screens
 
-    @property
+    @cached_property
     def families(self) -> list[Family]:
-        if self._families is None:
-            self._families = []
-            if self.stored_rotator.family_ids:
-                for family_id in self.stored_rotator.family_ids:
-                    with suppress(KeyError):
-                        self._families.append(self.event.families_by_id[family_id])
-        return self._families
+        families: list[Family] = []
+        if self.stored_rotator.family_ids:
+            for family_id in self.stored_rotator.family_ids:
+                with suppress(KeyError):
+                    families.append(self.event.families_by_id[family_id])
+        return families
 
-    @property
+    @cached_property
     def rotating_screens(self) -> list[Screen]:
-        if self._rotating_screens is None:
-            self._rotating_screens = [screen for screen in self.screens]
-            for family in self.families:
-                self._rotating_screens += [screen for screen in family.screens_by_uniq_id.values()]
-        return self._rotating_screens
+        rotating_screens: list[Screen] = [screen for screen in self.screens]
+        for family in self.families:
+            rotating_screens += [screen for screen in family.screens_by_uniq_id.values()]
+        return rotating_screens

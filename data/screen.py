@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from functools import cached_property
 from logging import Logger
 from typing import Self
 from typing import TYPE_CHECKING
@@ -42,12 +43,6 @@ class Screen:
         self.family: 'NewFamily | None' = family
         self.family_part: int | None = family_part
         self.screen_sets_by_id: dict[int, ScreenSet] = {}
-        self._screen_sets_by_uniq_id: dict[int, ScreenSet] | None = None
-        self._screen_sets_sorted_by_order: list[ScreenSet] | None = None
-        self._results_limit: int | None = None
-        self._results_tournament_ids: list[int] | None = None
-        self._results: list[Result] | None = None
-        self._background_url: str | None = None
         self._build_screen_sets()
 
     def _build_screen_sets(self):
@@ -164,20 +159,13 @@ class Screen:
         timer_id: int | None = self.stored_screen.timer_id if self.stored_screen else self.family.timer_id
         return self.event.timers_by_id[timer_id] if timer_id else None
 
-    @property
+    @cached_property
     def screen_sets_by_uniq_id(self) -> dict[str, ScreenSet]:
-        if self._screen_sets_by_uniq_id is None:
-            self._screen_sets_by_uniq_id = {
-                screen_set.uniq_id: screen_set for screen_set in self.screen_sets_by_id.values()
-            }
-        return self._screen_sets_by_uniq_id
+        return {screen_set.uniq_id: screen_set for screen_set in self.screen_sets_by_id.values()}
 
-    @property
+    @cached_property
     def screen_sets_sorted_by_order(self) -> list[ScreenSet]:
-        if self._screen_sets_sorted_by_order is None:
-            self._screen_sets_sorted_by_order = sorted(
-                self.screen_sets_by_id.values(), key=lambda screen_set: screen_set.order)
-        return self._screen_sets_sorted_by_order
+        return sorted(self.screen_sets_by_id.values(), key=lambda screen_set: screen_set.order)
 
     @property
     def players_show_unpaired(self) -> bool:
@@ -204,54 +192,50 @@ class Screen:
     def type_str(self) -> str:
         return str(self.type)
 
-    @property
+    @cached_property
     def results_limit(self) -> int:
         match self.type:
             case ScreenType.Results:
-                if self._results_limit is None:
-                    if not self.stored_screen.results_limit:
-                        self._results_limit = 0
-                    elif self.stored_screen.results_limit and self.stored_screen.results_limit % self.columns > 0:
-                        self._results_limit = self.columns * (self.stored_screen.results_limit // self.columns + 1)
-                        self.event.add_info(
-                            f'limite positionnée à [{self._results_limit}] pour tenir sur {self.columns} colonnes',
-                            screen=self)
-                    else:
-                        self._results_limit = self.stored_screen.results_limit
-                return self._results_limit
+                if not self.stored_screen.results_limit:
+                    return 0
+                elif self.stored_screen.results_limit and self.stored_screen.results_limit % self.columns > 0:
+                    results_limit: int = self.columns * (self.stored_screen.results_limit // self.columns + 1)
+                    self.event.add_info(
+                        f'limite positionnée à [{results_limit}] pour tenir sur {self.columns} colonnes',
+                        screen=self)
+                    return results_limit
+                else:
+                    return self.stored_screen.results_limit
             case _:
                 raise ValueError(f'type=[{self.type}]')
 
-    @property
+    @cached_property
     def results_tournament_ids(self) -> list[int]:
         match self.type:
             case ScreenType.Results:
-                if self._results_tournament_ids is None:
-                    self._results_tournament_ids = []
-                    for tournament_id in self.stored_screen.results_tournament_ids:
-                        if tournament_id in self.event.tournaments_by_id:
-                            self._results_tournament_ids.append(tournament_id)
-                return self._results_tournament_ids
+                return [
+                    tournament_id
+                    for tournament_id in self.stored_screen.results_tournament_ids
+                    if tournament_id in self.event.tournaments_by_id
+                ]
             case _:
                 raise ValueError(f'type=[{self.type}]')
 
-    @property
+    @cached_property
     def results_tournament_names(self) -> str:
-        match self.type:
-            case ScreenType.Results:
-                return ', '.join([
-                    self.event.tournaments_by_id[results_tournament_id].name
-                    for results_tournament_id
-                    in self.results_tournament_ids
-                ])
-            case _:
-                raise ValueError(f'type=[{self.type}]')
+        return ', '.join([
+            self.event.tournaments_by_id[results_tournament_id].name
+            for results_tournament_id
+            in self.results_tournament_ids
+        ])
+
+    @cached_property
+    def _results(self) -> list[Result]:
+        with EventDatabase(self.event.uniq_id) as event_database:
+            return event_database.get_stored_results(self.results_limit, self.results_tournament_ids)
 
     @property
     def results_lists(self) -> Iterator[list[Result]]:
-        if self._results is None:
-            with EventDatabase(self.event.uniq_id) as event_database:
-                self._results = event_database.get_stored_results(self.results_limit, self._results_tournament_ids)
         column_size: int = (self.results_limit if self.results_limit else len(self._results)) // self.columns
         for i in range(self.columns):
             yield self._results[i * column_size:(i + 1) * column_size]
@@ -267,11 +251,9 @@ class Screen:
         else:
             return self.event.background_image
 
-    @property
+    @cached_property
     def background_url(self) -> str:
-        if self._background_url is None:
-            self._background_url = BackgroundWebContext.inline_image_url(self.background_image)
-        return self._background_url
+        return BackgroundWebContext.inline_image_url(self.background_image)
 
     @property
     def background_color(self) -> str:

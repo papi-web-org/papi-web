@@ -1,5 +1,6 @@
 import time
 from collections import Counter
+from functools import cached_property
 from logging import Logger
 from operator import attrgetter
 from pathlib import Path
@@ -65,8 +66,6 @@ class Tournament:
         self._unpaired_players: list[Player] | None = None
         self._papi_read = False
         self._players_by_name: list[Player] | None = None
-        self._dependent_families: list['Family'] | None = None
-        self._dependent_screens: list['Screen'] | None = None
 
     @property
     def id(self) -> int:
@@ -226,23 +225,20 @@ class Tournament:
         self.read_papi()
         return self._players_by_id
 
-    @property
+    @cached_property
     def players_by_name_with_unpaired(self) -> list[Player]:
         if self._players_by_name is None:
-            players: list[Player] = list(self.players_by_id.values())[1:]
             self._players_by_name = sorted(
-                players, key=lambda player: (player.last_name, player.first_name))
+                list(self.players_by_id.values())[1:], key=lambda player: (player.last_name, player.first_name))
         return self._players_by_name
 
-    @property
+    @cached_property
     def players_by_name_without_unpaired(self) -> list[Player]:
         if self._players_by_name is None:
-            players: list[Player] = []
-            for player in list(self.players_by_id.values())[1:]:
-                if not self.current_round or player.board_id:
-                    players.append(player)
-            self._players_by_name = sorted(
-                players, key=lambda p: (p.last_name, p.first_name))
+            self._players_by_name = sorted([
+                player for player in list(self.players_by_id.values())[1:]
+                if not self.current_round or player.board_id
+            ], key=lambda p: (p.last_name, p.first_name))
         return self._players_by_name
 
     @property
@@ -265,25 +261,18 @@ class Tournament:
         self.read_papi()
         return self._unpaired_players
 
-    @property
+    @cached_property
     def dependent_families(self) -> list['Family']:
-        if self._dependent_families is None:
-            self._dependent_families = [
-                family
-                for family in self.event.families_by_id.values()
-                if family.tournament.id == self.id
-            ]
-        return self._dependent_families
+        return [family for family in self.event.families_by_id.values() if family.tournament.id == self.id]
 
-    @property
+    @cached_property
     def dependent_screens(self) -> list['Screen']:
-        if self._dependent_screens is None:
-            self._dependent_screens = []
-            for screen in self.event.basic_screens_by_id.values():
-                for screen_set in screen.screen_sets_sorted_by_order:
-                    if screen_set.tournament.id == self.id:
-                        self.dependent_screens.append(screen)
-        return self._dependent_screens
+        dependent_screens = []
+        for screen in self.event.basic_screens_by_id.values():
+            for screen_set in screen.screen_sets_sorted_by_order:
+                if screen_set.tournament.id == self.id:
+                    dependent_screens.append(screen)
+        return dependent_screens
 
     @property
     def print_real_points(self) -> bool:

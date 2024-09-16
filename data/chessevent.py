@@ -1,3 +1,4 @@
+from functools import cached_property
 from logging import Logger
 
 from common.logger import get_logger
@@ -14,7 +15,6 @@ class ChessEvent:
     def __init__(self, event: 'Event', stored_chessevent: StoredChessEvent, ):
         self.stored_chessevent: StoredChessEvent = stored_chessevent
         self.event: 'Event' = event
-        self._dependent_tournaments: list['Tournament'] | None = None
 
     @property
     def id(self) -> int:
@@ -43,12 +43,10 @@ class ChessEvent:
     def event_id(self) -> str:
         return self.stored_chessevent.event_id
 
-    @property
+    @cached_property
     def dependent_tournaments(self) -> list['Tournament']:
-        if self._dependent_tournaments is None:
-            self._dependent_tournaments = [
-                tournament
-                for tournament in self.event.tournaments_by_id.values()
-                if tournament.chessevent and tournament.chessevent.id == self.id
-            ]
-        return self._dependent_tournaments
+        return [
+            tournament
+            for tournament in self.event.tournaments_by_id.values()
+            if tournament.chessevent and tournament.chessevent.id == self.id
+        ]

@@ -1,3 +1,4 @@
+from functools import cached_property
 from math import ceil
 from typing import TYPE_CHECKING
 
@@ -77,7 +78,7 @@ class Family:
     def menu_text(self) -> str:
         return self.stored_family.menu_text
 
-    @property
+    @cached_property
     def menu_label(self) -> str | None:
         if not self.menu_link:
             return None
