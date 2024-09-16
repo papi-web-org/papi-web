@@ -5,6 +5,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from functools import total_ordering, cached_property
 from logging import Logger
+from operator import attrgetter
 from pathlib import Path
 
 from common import format_timestamp_date_time, format_timestamp_date, format_timestamp_time
@@ -305,9 +306,7 @@ class Event:
 
     @cached_property
     def public_rotators_sorted_by_uniq_id(self) -> list[Rotator]:
-        return sorted(
-                [rotator for rotator in self.rotators_by_id.values() if rotator.public],
-                key=lambda rotator: rotator.uniq_id)
+        return sorted(filter(attrgetter('public'), self.rotators_by_id.values()), key=attrgetter('uniq_id'))
 
     @property
     def last_update(self) -> float | None:
