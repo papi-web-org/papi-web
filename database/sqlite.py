@@ -444,9 +444,9 @@ class EventDatabase(SQLiteDatabase):
                                     raise ValueError(f'type={type}')
                             match type:
                                 case 'boards' | 'input' | 'players':
-                                    menu_link: bool = screen_dict.get('menu_link', True)
-                                    menu_text: str = screen_dict.get('menu_text', '')
-                                    menu: str = screen_dict.get('menu', '')
+                                    menu_link: bool = family_dict.get('menu_link', True)
+                                    menu_text: str = family_dict.get('menu_text', '')
+                                    menu: str = family_dict.get('menu', '')
                                 case _:
                                     raise ValueError(f'type={type}')
                             stored_family: StoredFamily = event_database.add_stored_family(StoredFamily(
@@ -455,7 +455,7 @@ class EventDatabase(SQLiteDatabase):
                                 name=family_dict.get('name', None),
                                 tournament_id=tournament_id,
                                 type=type,
-                                public=screen_dict.get('public', True),
+                                public=family_dict.get('public', True),
                                 columns=family_dict.get('columns', None),
                                 menu_link=menu_link,
                                 menu_text=menu_text,
