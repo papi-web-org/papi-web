@@ -86,7 +86,7 @@
     </span>
 {% endmacro %}
 
-{% macro screen_type_icon(screen_type, class) %}
+{% macro screen_type_icon(screen_type, tooltip) %}
     <!-- screen_type_icon() -->
     {% if screen_type == 'boards' %}
         {% set _icon_class='bi-card-list' %}
@@ -108,17 +108,17 @@
         {% set _tooltip_text='' %}
     {% endif %}
     <span
-            class="fw-bold {{ class }}"
-            {% if _tooltip_text %}{{ tooltip_attributes('info', _tooltip_text, 'top') }}{% endif %}
+            class="fw-bold"
+            {% if tooltip and _tooltip_text %}{{ tooltip_attributes('info', _tooltip_text, 'top') }}{% endif %}
         >
         <i class="{{ _icon_class }}"></i>
     </span>
 {% endmacro %}
 
-{% macro rotator_icon(class) %}
+{% macro rotator_icon() %}
     <!-- rotator_icon() -->
     <span
-            class="fw-bold {{ class }}"
+            class="fw-bold"
             {{ tooltip_attributes('info', 'Les écrans rotatifs permettent de faire défiler automatiquement plusieurs écrans.', 'top') }}
         >
         <i class="bi-repeat"></i>

@@ -6,13 +6,13 @@
 {% endblock %}
 
 {% block card_title %}
-    {{ screen_type_icon(family.type) }} {{ family.name }}
+    {{ screen_type_icon(family.type, true) }} {{ family.name }}
 {% endblock %}
 
 {% block card_text %}
     {% if show_details_on_family_list %}
         <div>
-            Type : {{ screen_type_icon(family.type) }} {{ family.type_str }}
+            Type : {{ screen_type_icon(family.type, true) }} {{ family.type_str }}
         </div>
         <div>
             Colonnes : {% for i in range(family.columns) %}<i class="bi-square-fill"></i> {% endfor %}

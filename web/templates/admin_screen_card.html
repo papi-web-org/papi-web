@@ -6,14 +6,14 @@
 {% endblock %}
 
 {% block card_title %}
-    {{ screen_type_icon(screen.type) }} {{ screen.name }}
+    {{ screen_type_icon(screen.type, true) }} {{ screen.name }}
 {% endblock %}
 
 {% block card_text %}
     {% if show_details_on_screen_list %}
         {% if screen.type in ['input', 'boards', 'players', 'results'] %}
             <div>
-                Type : {{ screen_type_icon(screen.type) }} {{ screen.type_str }}
+                Type : {{ screen_type_icon(screen.type, true) }} {{ screen.type_str }}
             </div>
             <div>
                 Colonnes : {% for i in range(screen.columns) %}<i class="bi-square-fill"></i> {% endfor %}

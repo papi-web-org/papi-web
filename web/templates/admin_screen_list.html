@@ -118,7 +118,7 @@
                                     id="{{ id }}"
                                     {% if screen_type in screen_types_on_screen_list %}checked{% endif %} />
                             <label for="{{ id }}" class="form-check-label">
-                                {{ screen_type_icon(screen_type) }}
+                                {{ screen_type_icon(screen_type, false) }}
                                 {{ screen_data.title }}
                             </label>
                         </div>

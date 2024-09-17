@@ -74,9 +74,9 @@
                                 {% if nav_id in ['@current_events', '@coming_events', '@passed_events'] %}
                                     <i class="{{ nav_tab.icon_class }}"></i>
                                 {% elif nav_id == 'rotators' %}
-                                    {{ rotator_icon('') }}
+                                    {{ rotator_icon() }}
                                 {% else %}
-                                    {{ screen_type_icon(nav_id) }}
+                                    {{ screen_type_icon(nav_id, true) }}
                                 {% endif %}
                                 {{ nav_tab.title }}
                             </button>
@@ -112,7 +112,7 @@
                                             {% if user_event_selector == 'rotators' %}
                                                 {{ rotator_icon() }} {{ user_event.name }} - {{ nav_tab.title }}
                                             {% else %}
-                                                {{ screen_type_icon(nav_id) }} {{ user_event.name }} - {{ nav_tab.title }}
+                                                {{ screen_type_icon(nav_id, true) }} {{ user_event.name }} - {{ nav_tab.title }}
                                             {% endif %}
                                         </div>
                                     </div>
