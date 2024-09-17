@@ -13,7 +13,7 @@ from data.timer import Timer
 from data.util import ScreenType
 from database.sqlite import EventDatabase
 from database.store import StoredScreen
-from web.views_background import BackgroundWebContext
+from web.controllers.background_controller import BackgroundWebContext
 
 if TYPE_CHECKING:
     from data.event import Event

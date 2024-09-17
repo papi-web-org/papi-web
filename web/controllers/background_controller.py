@@ -11,7 +11,7 @@ from litestar.params import Body
 
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
-from web.views import WebContext, AController
+from web.controllers.index_controller import WebContext, AbstractController
 
 logger: Logger = get_logger()
 
@@ -56,7 +56,7 @@ class BackgroundWebContext(WebContext):
             return PapiWebConfig.error_background_image
 
 
-class BackgroundController(AController):
+class BackgroundController(AbstractController):
 
     @post(
         path='/background',

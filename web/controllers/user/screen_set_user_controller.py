@@ -16,9 +16,9 @@ from data.screen_set import ScreenSet
 from data.tournament import Tournament
 from data.util import ScreenType
 from web.session import SessionHandler
-from web.views import WebContext, AController
-from web.views_user import AUserController
-from web.views_user_screen import BasicScreenOrFamilyUserWebContext
+from web.controllers.index_controller import WebContext, AbstractController
+from web.controllers.user.index_user_controller import AbstractUserController
+from web.controllers.user.screen_user_controller import BasicScreenOrFamilyUserWebContext
 
 logger: Logger = get_logger()
 
@@ -50,7 +50,7 @@ class ScreenSetOrFamilyUserWebContext(BasicScreenOrFamilyUserWebContext):
         }
 
 
-class UserScreenSetController(AUserController):
+class ScreenSetUserController(AbstractUserController):
 
     @staticmethod
     def _user_screen_set_div_update_needed(
@@ -94,7 +94,7 @@ class UserScreenSetController(AUserController):
         try:
             date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
-            return AController.redirect_error(request, str(ve))
+            return AbstractController.redirect_error(request, str(ve))
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if not self._user_screen_set_div_update_needed(web_context.screen_set, web_context.family, date):
@@ -125,7 +125,7 @@ class UserScreenSetController(AUserController):
         try:
             date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
-            return AController.redirect_error(request, str(ve))
+            return AbstractController.redirect_error(request, str(ve))
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if not self._user_screen_set_div_update_needed(web_context.screen_set, web_context.family, date):

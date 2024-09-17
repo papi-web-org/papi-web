@@ -20,8 +20,8 @@ from data.loader import EventLoader
 from database.sqlite import EventDatabase
 from database.store import StoredEvent
 from web.messages import Message
-from web.views import WebContext, AController
-from web.views_admin import AAdminController, AdminWebContext
+from web.controllers.index_controller import WebContext, AbstractController
+from web.controllers.admin.index_admin_controller import AbstractAdminController, AdminWebContext
 
 logger: Logger = get_logger()
 
@@ -41,7 +41,7 @@ class EventAdminWebContext(AdminWebContext):
             return
 
 
-class AdminEventController(AAdminController):
+class EventAdminController(AbstractAdminController):
 
     @staticmethod
     def _admin_validate_event_update_data(
@@ -374,7 +374,7 @@ class AdminEventController(AAdminController):
                     try:
                         EventDatabase(web_context.admin_event.uniq_id).rename(new_uniq_id=uniq_id)
                     except PermissionError as pe:
-                        return AController.redirect_error(
+                        return AbstractController.redirect_error(
                             request, f'Le renommage de la base de données a échoué : {pe}')
                 with EventDatabase(uniq_id, write=True) as event_database:
                     event_database.update_stored_event(stored_event)

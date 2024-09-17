@@ -18,7 +18,7 @@ from data.rotator import Rotator
 from data.screen import Screen
 from web.messages import Message
 from web.session import SessionHandler
-from web.views import AController, WebContext
+from web.controllers.index_controller import AbstractController, WebContext
 
 logger: Logger = get_logger()
 
@@ -92,7 +92,7 @@ class EventUserWebContext(UserWebContext):
         return PapiWebConfig.default_background_color
 
 
-class AUserController(AController):
+class AbstractUserController(AbstractController):
 
     @staticmethod
     def _user_render_index(
@@ -211,7 +211,7 @@ class AUserController(AController):
             })
 
 
-class UserIndexController(AUserController):
+class IndexUserController(AbstractUserController):
 
     @staticmethod
     def _user_index_update_needed(
@@ -241,7 +241,7 @@ class UserIndexController(AUserController):
         try:
             date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
-            return AController.redirect_error(request, str(ve))
+            return AbstractController.redirect_error(request, str(ve))
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if self._user_index_update_needed(request, date):

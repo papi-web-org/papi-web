@@ -18,8 +18,8 @@ from data.tournament import Tournament
 from data.util import ScreenType
 from web.messages import Message
 from web.session import SessionHandler
-from web.views import WebContext, AController
-from web.views_user import AUserController, EventUserWebContext
+from web.controllers.index_controller import WebContext, AbstractController
+from web.controllers.user.index_user_controller import AbstractUserController, EventUserWebContext
 
 logger: Logger = get_logger()
 
@@ -155,7 +155,7 @@ class BasicScreenOrFamilyUserWebContext(ScreenUserWebContext):
         }
 
 
-class UserScreenController(AUserController):
+class ScreenUserController(AbstractUserController):
 
     @classmethod
     def _user_render_screen(
@@ -259,7 +259,7 @@ class UserScreenController(AUserController):
         try:
             date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
-            return AController.redirect_error(request, str(ve))
+            return AbstractController.redirect_error(request, str(ve))
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if self._user_screen_page_update_needed(web_context, date):

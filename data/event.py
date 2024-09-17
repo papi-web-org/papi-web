@@ -20,7 +20,7 @@ from data.timer import Timer, TimerHour
 from data.tournament import Tournament
 from data.util import ScreenType
 from database.store import StoredEvent
-from web.views_background import BackgroundWebContext
+from web.controllers.background_controller import BackgroundWebContext
 
 logger: Logger = get_logger()
 

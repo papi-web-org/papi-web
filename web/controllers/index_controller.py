@@ -133,7 +133,7 @@ class WebContext:
         return datetime.strftime(datetime.fromtimestamp(value), '%Y-%m-%dT%H:%M')
 
     def _redirect_error(self, errors: str | list[str]):
-        self.error = AController.redirect_error(self.request, errors)
+        self.error = AbstractController.redirect_error(self.request, errors)
 
     @property
     def admin_auth(self) -> bool:
@@ -151,7 +151,7 @@ class WebContext:
         }
 
 
-class AController(Controller):
+class AbstractController(Controller):
 
     @staticmethod
     def redirect_error(request: HTMXRequest, errors: str | list[str]) -> Redirect:
@@ -169,7 +169,7 @@ class AController(Controller):
             })
 
 
-class IndexController(AController):
+class IndexController(AbstractController):
 
     @get(
         path='/',

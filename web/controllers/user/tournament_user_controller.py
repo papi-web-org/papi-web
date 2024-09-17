@@ -21,9 +21,9 @@ from data.tournament import Tournament
 from data.util import Result
 from web.messages import Message
 from web.session import SessionHandler
-from web.views import WebContext, AController
-from web.views_user import AUserController, EventUserWebContext
-from web.views_user_screen import ScreenUserWebContext
+from web.controllers.index_controller import WebContext, AbstractController
+from web.controllers.user.index_user_controller import AbstractUserController, EventUserWebContext
+from web.controllers.user.screen_user_controller import ScreenUserWebContext
 
 logger: Logger = get_logger()
 
@@ -127,7 +127,7 @@ class PlayerUserWebContext(TournamentUserWebContext):
         }
 
 
-class AUserInputController(AUserController):
+class AbstractUserInputController(AbstractUserController):
     @classmethod
     def _render_input_screen_board_row(
             cls,
@@ -146,7 +146,7 @@ class AUserInputController(AUserController):
             })
 
 
-class UserCheckInController(AUserInputController):
+class CheckInUserController(AbstractUserInputController):
 
     @patch(
         path='/user-input-screen-toggle-check-in',
@@ -172,7 +172,7 @@ class UserCheckInController(AUserInputController):
             })
 
 
-class UserIllegalMoveController(AUserInputController):
+class IllegalMoveUserController(AbstractUserInputController):
     @classmethod
     def _delete_or_add_illegal_move(
             cls, request: HTMXRequest,
@@ -220,7 +220,7 @@ class UserIllegalMoveController(AUserInputController):
         return self._delete_or_add_illegal_move(request, data, add=False)
 
 
-class UserResultController(AUserInputController):
+class ResultUserController(AbstractUserInputController):
 
     @post(
         path='/user-input-screen-render-result-modal',
@@ -250,20 +250,20 @@ class UserResultController(AUserInputController):
         try:
             round: int | None = WebContext.form_data_to_int(data, field)
         except ValueError as ve:
-            return AController.redirect_error(
+            return AbstractController.redirect_error(
                 request, f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
         field: str = 'result'
         try:
             result: int | None = WebContext.form_data_to_int(data, field)
         except ValueError as ve:
-            return AController.redirect_error(
+            return AbstractController.redirect_error(
                 request, f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
         if result is None:
             with suppress(ValueError):
                 web_context.tournament.delete_result(web_context.board)
         else:
             if result not in Result.imputable_results():
-                return AController.redirect_error(request, f'Le résultat [{result}] est invalide.')
+                return AbstractController.redirect_error(request, f'Le résultat [{result}] est invalide.')
             web_context.tournament.add_result(web_context.board, Result.from_papi_value(result))
         SessionHandler.set_session_last_result_updated(request, web_context.tournament.id, round, web_context.board.id)
         EventLoader.get(request=request, lazy_load=False).clear_cache(web_context.user_event.uniq_id)
@@ -291,7 +291,7 @@ class UserResultController(AUserInputController):
         return self._user_input_screen_update_result(request, data)
 
 
-class UserDownloadController(AUserController):
+class DownloadUserController(AbstractUserController):
     @post(
         path='/user-download-event-tournaments',
         name='user-download-event-tournaments'
@@ -309,7 +309,7 @@ class UserDownloadController(AUserController):
             if tournament.file_exists
         ]
         if not tournament_files:
-            return AController.redirect_error(
+            return AbstractController.redirect_error(
                 request, f'Aucun fichier de tournoi pour l\'évènement [{web_context.user_event.uniq_id}].')
         archive = BytesIO()
         with ZipFile(archive, 'w') as zip_archive:
@@ -332,6 +332,6 @@ class UserDownloadController(AUserController):
         if web_context.error:
             return web_context.error
         if not web_context.tournament.file_exists:
-            return AController.redirect_error(
+            return AbstractController.redirect_error(
                 request, f'Le fichier [{web_context.tournament.file}] n\'existe pas.')
         return File(path=web_context.tournament.file, filename=web_context.tournament.file.name)

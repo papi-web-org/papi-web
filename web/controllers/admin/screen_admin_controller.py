@@ -19,9 +19,9 @@ from data.util import ScreenType
 from database.sqlite import EventDatabase
 from database.store import StoredScreen, StoredScreenSet
 from web.messages import Message
-from web.views import WebContext, AController
-from web.views_admin import AAdminController
-from web.views_admin_event import EventAdminWebContext
+from web.controllers.index_controller import WebContext, AbstractController
+from web.controllers.admin.index_admin_controller import AbstractAdminController
+from web.controllers.admin.event_admin_controller import EventAdminWebContext
 
 logger: Logger = get_logger()
 
@@ -78,7 +78,7 @@ class ScreenAdminWebContext(EventAdminWebContext):
         }
 
 
-class AdminScreenController(AAdminController):
+class ScreenAdminController(AbstractAdminController):
 
     @staticmethod
     def _admin_validate_screen_update_data(
@@ -533,7 +533,7 @@ class AdminScreenController(AAdminController):
         match action:
             case 'delete':
                 if len(web_context.admin_screen.screen_sets_sorted_by_order) <= 1:
-                    return AController.redirect_error(
+                    return AbstractController.redirect_error(
                         request, f'Le dernier ensemble d\'un écran ne peut être supprimé.')
             case 'update' | 'clone' | 'add' | 'reorder' | 'cancel':
                 pass

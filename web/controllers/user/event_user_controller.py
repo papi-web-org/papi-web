@@ -13,13 +13,13 @@ from litestar.status_codes import HTTP_304_NOT_MODIFIED
 from common.logger import get_logger
 from data.event import Event
 from data.util import ScreenType
-from web.views import WebContext, AController
-from web.views_user import AUserController, EventUserWebContext
+from web.controllers.index_controller import WebContext, AbstractController
+from web.controllers.user.index_user_controller import AbstractUserController, EventUserWebContext
 
 logger: Logger = get_logger()
 
 
-class UserEventController(AUserController):
+class EventUserController(AbstractUserController):
 
     @staticmethod
     def _user_event_page_update_needed(event: Event, date: float, ) -> bool:
@@ -83,7 +83,7 @@ class UserEventController(AUserController):
         try:
             date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
-            return AController.redirect_error(request, str(ve))
+            return AbstractController.redirect_error(request, str(ve))
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if self._user_event_page_update_needed(web_context.user_event, date):

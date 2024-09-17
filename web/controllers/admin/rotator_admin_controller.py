@@ -15,9 +15,9 @@ from data.rotator import Rotator
 from database.sqlite import EventDatabase
 from database.store import StoredRotator
 from web.messages import Message
-from web.views import WebContext
-from web.views_admin import AAdminController
-from web.views_admin_event import EventAdminWebContext
+from web.controllers.index_controller import WebContext
+from web.controllers.admin.index_admin_controller import AbstractAdminController
+from web.controllers.admin.event_admin_controller import EventAdminWebContext
 
 logger: Logger = get_logger()
 
@@ -54,7 +54,7 @@ class RotatorAdminWebContext(EventAdminWebContext):
         }
 
 
-class AdminRotatorController(AAdminController):
+class RotatorAdminController(AbstractAdminController):
 
     @staticmethod
     def _admin_validate_rotator_update_data(

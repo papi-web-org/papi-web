@@ -17,7 +17,7 @@ from data.loader import EventLoader
 from database.access import access_driver, odbc_drivers
 from web.messages import Message
 from web.session import SessionHandler
-from web.views import AController, WebContext
+from web.controllers.index_controller import AbstractController, WebContext
 
 logger: Logger = get_logger()
 
@@ -88,7 +88,7 @@ class AdminWebContext(WebContext):
         }
 
 
-class AAdminController(AController):
+class AbstractAdminController(AbstractController):
 
     @staticmethod
     def _get_record_illegal_moves_options(default: int | None, ) -> dict[str, str]:
@@ -283,7 +283,7 @@ class AAdminController(AController):
             })
 
 
-class AdminIndexController(AAdminController):
+class IndexAdminController(AbstractAdminController):
     @post(
         path='/admin-render',
         name='admin-render'
@@ -345,5 +345,5 @@ class AdminIndexController(AAdminController):
             try:
                 SessionHandler.set_session_min_logging_level(request, WebContext.form_data_to_int(data, field))
             except ValueError:
-                return AController.redirect_error(request, f'Le niveau de log [{data[field]}] est incorrect.')
+                return AbstractController.redirect_error(request, f'Le niveau de log [{data[field]}] est incorrect.')
         return self._admin_render_index(web_context)

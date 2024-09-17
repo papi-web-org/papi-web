@@ -17,9 +17,9 @@ from data.timer import Timer, TimerHour
 from database.sqlite import EventDatabase
 from database.store import StoredTimer, StoredTimerHour
 from web.messages import Message
-from web.views import WebContext
-from web.views_admin import AAdminController
-from web.views_admin_event import EventAdminWebContext
+from web.controllers.index_controller import WebContext
+from web.controllers.admin.index_admin_controller import AbstractAdminController
+from web.controllers.admin.event_admin_controller import EventAdminWebContext
 
 logger: Logger = get_logger()
 
@@ -76,7 +76,7 @@ class TimerAdminWebContext(EventAdminWebContext):
         }
 
 
-class AdminTimerController(AAdminController):
+class TimerAdminController(AbstractAdminController):
 
     @staticmethod
     def _admin_validate_timer_update_data(
