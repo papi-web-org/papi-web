@@ -1,6 +1,4 @@
-import base64
 from logging import Logger
-from pathlib import Path
 from typing import Annotated
 
 import validators
@@ -9,6 +7,7 @@ from litestar.contrib.htmx.request import HTMXRequest
 from litestar.enums import RequestEncodingType, MediaType
 from litestar.params import Body
 
+from common.background import BackgroundUtils
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from web.controllers.index_controller import WebContext, AbstractController
@@ -37,23 +36,7 @@ class BackgroundWebContext(WebContext):
         elif image.startswith('/') or validators.url(image):
             self.background['url'] = f'url({image})'
         else:
-            self.background['url'] = f'url({self.inline_image_url(image)})'
-
-    @staticmethod
-    def inline_image_url(image: str, ):
-        if not image:
-            return PapiWebConfig.default_background_image
-        if image.startswith('/') or validators.url(image):
-            return image
-        file: Path = PapiWebConfig.custom_path / image
-        try:
-            with open(file, 'rb') as f:
-                data: bytes = f.read()
-            encoded_data: str = base64.b64encode(data).decode('utf-8')
-            return f'data:image/{file.suffix};base64,{encoded_data}'
-        except FileNotFoundError:
-            logger.warning(f'Le fichier [{file}] n\'existe pas.')
-            return PapiWebConfig.error_background_image
+            self.background['url'] = f'url({BackgroundUtils.inline_image_url(image)})'
 
 
 class BackgroundController(AbstractController):
