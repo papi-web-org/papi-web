@@ -99,6 +99,7 @@ screens:
   saisie-A:
     name: "Tournoi A"
     type: "input"
+    menu_text: "Tournoi A"
     menu: "@input"
     timer_uniq_id: "chronometre"
     sets:
@@ -107,6 +108,7 @@ screens:
   saisie-B:
     name: "Tournoi B"
     type: "input"
+    menu_text: "Tournoi B"
     menu: "@input"
     timer_uniq_id: "chronometre"
     sets:
@@ -115,6 +117,7 @@ screens:
   saisie-C:
     name: "Tournoi C"
     type: "input"
+    menu_text: "Tournoi C"
     menu: "@input"
     timer_uniq_id: "chronometre"
     sets:
@@ -123,6 +126,7 @@ screens:
   saisie-D:
     name: "Tournoi D"
     type: "input"
+    menu_text: "Tournoi D"
     menu: "@input"
     timer_uniq_id: "chronometre"
     sets:
@@ -131,6 +135,7 @@ screens:
   saisie-E:
     name: "Tournoi E"
     type: "input"
+    menu_text: "Tournoi E"
     menu: "@input"
     timer_uniq_id: "chronometre"
     sets:
@@ -139,6 +144,7 @@ screens:
   saisie-F:
     name: "Tournoi F"
     type: "input"
+    menu_text: "Tournoi F"
     menu: "@input"
     timer_uniq_id: "chronometre"
     sets:
@@ -147,6 +153,7 @@ screens:
   affichage-2-AB:
     name: "Tournois A et B"
     type: "boards"
+    menu_link: false
     menu:
     timer_uniq_id: "chronometre"
     sets:
@@ -157,6 +164,7 @@ screens:
   affichage-2-CD:
     name: "Tournois C et D"
     type: "boards"
+    menu_link: false
     menu:
     timer_uniq_id: "chronometre"
     sets:
@@ -167,6 +175,7 @@ screens:
   affichage-2-EF:
     name: "Tournois E et F"
     type: "boards"
+    menu_link: false
     menu:
     timer_uniq_id: "chronometre"
     sets:
@@ -177,6 +186,7 @@ screens:
   affichage-3-ABC:
     name: "Tournois A, B et C"
     type: "boards"
+    menu_link: false
     menu:
     timer_uniq_id: "chronometre"
     sets:
@@ -189,6 +199,7 @@ screens:
   affichage-3-DEF:
     name: "Tournois D, E et F"
     type: "boards"
+    menu_link: false
     menu:
     timer_uniq_id: "chronometre"
     sets:
@@ -201,6 +212,7 @@ screens:
   joueurs-A:
     name: "Tournoi A"
     type: "players"
+    menu_link: false
     menu:
     timer_uniq_id: "chronometre"
     players_show_unpaired: true
@@ -210,6 +222,7 @@ screens:
   joueurs-B:
     name: "Tournoi B"
     type: "players"
+    menu_link: false
     menu:
     timer_uniq_id: "chronometre"
     players_show_unpaired: true
@@ -219,6 +232,7 @@ screens:
   joueurs-C:
     name: "Tournoi C"
     type: "players"
+    menu_link: false
     menu:
     timer_uniq_id: "chronometre"
     players_show_unpaired: true
@@ -228,6 +242,7 @@ screens:
   joueurs-D:
     name: "Tournoi D"
     type: "players"
+    menu_link: false
     menu:
     timer_uniq_id: "chronometre"
     players_show_unpaired: true
@@ -237,6 +252,7 @@ screens:
   joueurs-E:
     name: "Tournoi E"
     type: "players"
+    menu_link: false
     menu:
     timer_uniq_id: "chronometre"
     players_show_unpaired: true
@@ -246,6 +262,7 @@ screens:
   joueurs-F:
     name: "Tournoi F"
     type: "players"
+    menu_link: false
     menu:
     timer_uniq_id: "chronometre"
     players_show_unpaired: true
