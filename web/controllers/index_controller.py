@@ -21,6 +21,11 @@ logger: Logger = get_logger()
 
 
 class WebContext:
+    """
+    The basic web context, inherited by all the web contexts of the application.
+    Web contexts are used by controllers to get the context of the request based on the payload data received.
+    """
+
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
@@ -31,14 +36,29 @@ class WebContext:
 
     @property
     def background_image(self) -> str:
+        """
+        Override this method to make the background image different from the default.
+        :return:
+        """
         return PapiWebConfig.default_background_image
 
     @property
     def background_color(self) -> str:
+        """
+        Override this method to make the background color different from the default.
+        :return:
+        """
         return PapiWebConfig.default_background_color
 
     @property
     def background_info(self) -> dict[str, str]:
+        """
+        The information return by this method is passed to the template engine to make the client call the /background
+        URL if the image and colors are not already loaded on the page.
+        This way image URLs are computed only when needed.
+        This method should not be overridden (instead override background_image() and background_color()).
+        :return: a dict with an image (a relative or absolute URL, or a path of a file located in /custom) and a color.
+        """
         return {
             'image': self.background_image,
             'color': self.background_color,
@@ -137,12 +157,23 @@ class WebContext:
 
     @property
     def admin_auth(self) -> bool:
+        """
+        A method that tell if the client is authorized to view admin pages.
+        At this time, local requests (from the server) are allowed, adding an auth mechanism to allow access from other
+        clients is planned.
+        :return: True if the client is allowed to view admin pages.
+        """
         if self.request.client.host == '127.0.0.1':
             return True
         return False
 
     @property
     def template_context(self) -> dict[str, Any]:
+        """
+        This method is used by all controllers to get the parameters to pass the template for rendering.
+        Override this method to pass more parameters to the template engine.
+        :return: a dict containing named parameters.
+        """
         return {
             'now': time.time(),
             'papi_web_config': PapiWebConfig(),
@@ -152,6 +183,10 @@ class WebContext:
 
 
 class AbstractController(Controller):
+    """
+    The basic controller, inherited by all the controllers of the application.
+    Controllers are used to handle web requests and respond to clients.
+    """
 
     @staticmethod
     def redirect_error(request: HTMXRequest, errors: str | list[str]) -> Redirect:

@@ -24,6 +24,11 @@ logger: Logger = get_logger()
 
 
 class UserWebContext(WebContext):
+    """
+    The basic user web context, where parameters user_main_selector and user_event_selector are expected and passed
+    to the template engine to propagate the context.
+    """
+
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],

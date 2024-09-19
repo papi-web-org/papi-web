@@ -40,6 +40,11 @@ class BackgroundWebContext(WebContext):
 
 
 class BackgroundController(AbstractController):
+    """
+    The /background URL is called with an image and a color parameter.
+    The JSON response contains a color and a url parameter where url is generated from the image (inline data when a
+    file in /custom is sent).
+    """
 
     @post(
         path='/background',

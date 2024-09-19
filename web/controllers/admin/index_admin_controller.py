@@ -23,6 +23,11 @@ logger: Logger = get_logger()
 
 
 class AdminWebContext(WebContext):
+    """
+    The basic admin web context, where parameters admin_main_selector and admin_event_selector are expected and passed
+    to the template engine to propagate the context.
+    """
+
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
