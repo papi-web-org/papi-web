@@ -105,8 +105,8 @@ class ActionSelector(metaclass=Singleton):
                     chessevent_timeout_max: int = 180
                     chessevent_timeout: int = chessevent_timeout_min
                     while True:
-                        event = EventLoader.get(request=None, lazy_load=False).load_event(event_uniq_id, reload=True)
-                        tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
+                        event = EventLoader.get(request=None, lazy_load=False).reload_event(event_uniq_id)
+                        tournaments: list[Tournament] = list(self.__get_chessevent_tournaments(event))
                         if not tournaments:
                             logger.error('Plus aucun tournoi n\'est éligible pour la création des fichiers Papi.')
                             return False
