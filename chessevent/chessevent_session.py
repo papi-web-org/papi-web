@@ -23,7 +23,7 @@ class ChessEventSession(Session):
         If the data could be successfully retrieved and decode, returns
         it encoded as a JSON string.
         If an error occurred, logs ir and returns None"""
-        url: str = PapiWebConfig().chessevent_download_url
+        url: str = PapiWebConfig.chessevent_download_url
         try:
             post: dict[str, str] = {
                 'user_id': self._tournament.chessevent.user_id,
