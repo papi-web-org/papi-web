@@ -8,6 +8,7 @@ logger: Logger = get_logger()
 
 
 class ChessEventEngine(Engine):
+    """The ChessEvent Engine."""
     def __init__(self):
         try:
             super().__init__()

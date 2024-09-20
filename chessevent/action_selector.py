@@ -4,6 +4,7 @@ import time
 from json import JSONDecodeError
 from logging import Logger
 from pathlib import Path
+from collections import Iterator
 
 import chardet
 
@@ -22,12 +23,16 @@ logger: Logger = get_logger()
 
 
 class ActionSelector(metaclass=Singleton):
+    """The CLI interface for ChessEvent."""
 
     @classmethod
-    def __get_chessevent_tournaments(cls, event: Event) -> list[Tournament]:
+    def __get_chessevent_tournaments(cls, event: Event) -> Iterator[Tournament]:
+        """Retrieves all the tournaments of given *event* and returns an
+        iterator of all the ones with a valid setup for ChessEvent.
+        Namely: a tournament that has a chessevent tournament name, a defined
+        file and is not started is valid."""
         if not event.tournaments_by_id:
-            return []
-        tournaments: list[Tournament] = []
+            yield from ()
         for tournament in event.tournaments_by_id.values():
             if not tournament.chessevent_tournament_name:
                 logger.warning('Connexion à Chess Event non définie pour le tournoi [%s]', tournament.uniq_id)
@@ -36,15 +41,20 @@ class ActionSelector(metaclass=Singleton):
             elif tournament.current_round:
                 logger.warning('Le tournoi [%s] est déjà commencé', tournament.uniq_id)
             else:
-                tournaments.append(tournament)
-        return tournaments
+                yield tournament
 
     def run(self, event_uniq_id: str) -> bool:
+        """The CLI interface function.
+        Gets user input to retrieve the tournament data from chess event, and
+        possibly upload the tournament to the FFE website, corresponding to the
+        event with unique id *event_uniq_id*.
+        Returns False if an error occurred or if it was interrupted.
+        Returns True when the one-shot creation (and possibly upload) was okay"""
         event: Event = EventLoader.get(request=None, lazy_load=False).reload_event(event_uniq_id)
         logger.info('Évènement : %s', event.name)
-        tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
+        tournaments: list[Tournament] = list(self.__get_chessevent_tournaments(event))
         if not tournaments:
-            logger.error('La création des fichiers Papi n\'est possible pour aucun tournoi')
+            logger.error("La création des fichiers Papi n'est possible pour aucun tournoi")
             return False
         logger.info('Tournois : %s', ", ".join(map(lambda t: str(t.name), tournaments)))
         print_interactive('Actions :')

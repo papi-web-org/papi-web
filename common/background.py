@@ -10,6 +10,9 @@ from common.papi_web_config import PapiWebConfig
 logger: Logger = get_logger()
 
 
+# NOTE(Amaras): I don't think the class namespace is needed, we already
+# have the module namespace: common.background.inline_image_url should
+# work, unless we have a good reason
 class BackgroundUtils:
 
     @staticmethod

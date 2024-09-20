@@ -20,6 +20,8 @@ configure_logger(logging.INFO)
 
 
 class Engine:
+    """Base class for both ChessEvent and FFE engines."""
+
     def __init__(self):
         try:
             TMP_DIR.mkdir(parents=True, exist_ok=True)
@@ -30,12 +32,15 @@ class Engine:
         self._check_version()
         if not EventLoader.get(request=None, lazy_load=True).event_uniq_ids:
             logger.info('Aucune base de données trouvée, création des bases de données d\'exemple')
-            for event_id in [
+            for event_id in (
                 file.stem for file in PapiWebConfig.database_yml_path.glob(f'*.{PapiWebConfig.yml_ext}')
-            ]:
+            ):
                 EventDatabase(event_id).create(populate=True)
 
     def _check_version(self):
+        """Compares the current version with the last available stable version
+        on the Papi-web GitHub repository.
+        If a new stable version is available, inform the user."""
         last_stable_version: Version | None = self._get_last_stable_version()
         if not last_stable_version:
             logger.warning('La vérification de la version a échoué')
@@ -68,6 +73,10 @@ class Engine:
 
     @staticmethod
     def _get_last_stable_version() -> Version | None:
+        """Retrieves the avaialable versions from the Papi-web GitHub
+        repository.
+        If an error occurred, returns None.
+        Otherwise, the last stable version is returned."""
         url: str = 'https://api.github.com/repos/papi-web-org/papi-web/releases'
         try:
             logger.debug('Recherche d\'une version plus récente sur GitHub (%s)...', url)

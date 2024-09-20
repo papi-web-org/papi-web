@@ -29,6 +29,14 @@ MIN_FFE_UPLOAD_DELAY: int = 60
 
 
 class PapiWebConfig(metaclass=Singleton):
+    """The configuration for the application.
+    Only 5 properties can be configured:
+        1. The logging level
+        2. The web host IP
+        3. The web port
+        4. Whether a browser window opens
+        5. The delay between FFE uploads."""
+
     def __init__(self):
         self.reader = ConfigReader(CONFIG_FILE)
         self.__log_level: int | None = None

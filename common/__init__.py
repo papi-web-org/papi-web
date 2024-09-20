@@ -12,6 +12,8 @@ logger: Logger = get_logger()
 
 
 def check_rgb_str(color: str) -> str:
+    """Checks if a string is in #rrggbb format
+    returns it back if it is, raises ValueError otherwise."""
     rgb: RGB = hexa_to_rgb(color)
     if rgb:
         return rgb_to_hexa(rgb)
@@ -19,6 +21,7 @@ def check_rgb_str(color: str) -> str:
 
 
 def hexa_to_rgb(color: str) -> RGB | None:
+    """Converts a string from #rrggbb to RGB(red, green, blue) format."""
     hex_pattern = re.compile('^#?(?P<R>[0-9a-f]{2})(?P<G>[0-9a-f]{2})(?P<B>[0-9a-f]{2})$')
     if matches := hex_pattern.match(color.strip().lower()):
         return (
@@ -30,16 +33,20 @@ def hexa_to_rgb(color: str) -> RGB | None:
 
 
 def rgb_to_hexa(rgb: RGB) -> str:
+    """Converts a color in RGB(red, green, blue) format to #rrggbb format."""
     return '#' + ''.join(f'{max(0, min(255, i)):02X}' for i in rgb)
 
 
 def format_timestamp_date_time(ts: float | None = None) -> str:
+    """Formats the given timestamp (now if None) to YYYY-mm-dd HH:MM format."""
     return datetime.strftime(datetime.fromtimestamp(ts if ts is not None else time.time()), '%Y-%m-%d %H:%M')
 
 
 def format_timestamp_date(ts: float | None = None) -> str:
+    """Formats the given timestamp (now if None) to YYYY-mm-dd format."""
     return datetime.strftime(datetime.fromtimestamp(ts if ts is not None else time.time()), '%Y-%m-%d')
 
 
 def format_timestamp_time(ts: float | None = None) -> str:
+    """Formats the given timestamp (now if None) to HH:MM format."""
     return datetime.strftime(datetime.fromtimestamp(ts if ts is not None else time.time()), '%H:%M')

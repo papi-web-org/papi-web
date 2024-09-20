@@ -9,15 +9,22 @@ from common.logger import get_logger
 
 logger: Logger = get_logger()
 
+# NOTE(Amaras): Maybe this should be in PapiWebConfig, instead of here?
 CHESSEVENT_URL: str = 'https://chessevent.echecs-bretagne.fr/download'
 
 
 class ChessEventSession(Session):
+    """A Requests session specialised for communication with
+    the ChessEvent platform."""
     def __init__(self, tournament: Tournament):
         super().__init__()
         self._tournament: Tournament = tournament
 
     def read_data(self) -> str | None:
+        """Reads the data of the tournament from ChessEvent.
+        If the data could be successfully retrieved and decode, returns
+        it encoded as a JSON string.
+        If an error occurred, logs ir and returns None"""
         url: str = CHESSEVENT_URL
         try:
             post: dict[str, str] = {
