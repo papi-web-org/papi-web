@@ -1,10 +1,11 @@
 import hashlib
 import json
 import time
+from collections.abc import Iterator
 from json import JSONDecodeError
 from logging import Logger
 from pathlib import Path
-from collections import Iterator
+
 
 import chardet
 
