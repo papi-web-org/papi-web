@@ -9,7 +9,7 @@ from operator import attrgetter
 from pathlib import Path
 
 from common import format_timestamp_date_time, format_timestamp_date, format_timestamp_time
-from common.background import BackgroundUtils
+from common.background import inline_image_url
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.chessevent import ChessEvent
@@ -189,7 +189,7 @@ class Event:
 
     @cached_property
     def background_url(self) -> str:
-        return BackgroundUtils.inline_image_url(self.background_image)
+        return inline_image_url(self.background_image)
 
     @cached_property
     def background_color(self) -> str:

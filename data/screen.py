@@ -5,7 +5,7 @@ from typing import Self
 from typing import TYPE_CHECKING
 
 from common import format_timestamp_date_time
-from common.background import BackgroundUtils
+from common.background import inline_image_url
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.result import Result
@@ -253,7 +253,7 @@ class Screen:
 
     @cached_property
     def background_url(self) -> str:
-        return BackgroundUtils.inline_image_url(self.background_image)
+        return inline_image_url(self.background_image)
 
     @property
     def background_color(self) -> str:

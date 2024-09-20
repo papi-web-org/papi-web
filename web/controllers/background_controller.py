@@ -7,7 +7,7 @@ from litestar.contrib.htmx.request import HTMXRequest
 from litestar.enums import RequestEncodingType, MediaType
 from litestar.params import Body
 
-from common.background import BackgroundUtils
+from common.background import inline_image_url
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from web.controllers.index_controller import WebContext, AbstractController
@@ -36,7 +36,7 @@ class BackgroundWebContext(WebContext):
         elif image.startswith('/') or validators.url(image):
             self.background['url'] = f'url({image})'
         else:
-            self.background['url'] = f'url({BackgroundUtils.inline_image_url(image)})'
+            self.background['url'] = f'url({inline_image_url(image)})'
 
 
 class BackgroundController(AbstractController):
