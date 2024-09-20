@@ -29,11 +29,10 @@ logger: Logger = get_logger()
 
 @dataclass
 class SQLiteDatabase:
-    """A database using SQLite.
-
-    This is a rework of the papi database, and stores slightly more information than
-    the papi database.
     """
+    The base generic class for SQLite databases.
+    """
+
     file: Path
     write: bool = field(default=False)
     database: Connection | None = field(init=False, default=None)
@@ -104,6 +103,10 @@ class SQLiteDatabase:
 
 
 class EventDatabase(SQLiteDatabase):
+    """
+    The SQLite database class for Papi-web events.
+    """
+
     def __init__(self, uniq_id: str, write: bool = False):
         self.uniq_id = uniq_id
         self._version: Version | None = None
@@ -161,6 +164,11 @@ class EventDatabase(SQLiteDatabase):
             assert supposed_list, f'{yml_file.name}: list {list_path} is empty'
 
     def create(self, populate: bool = False):
+        """
+        Create an event database, based on /database/sql/create-event.sql.
+        :param populate: if True, the corresponding file in /database/yml is used to populate the database (this way
+        example databases are created when no event database is found).
+        """
         if self.exists():
             raise PapiWebException(
                 f'La base de données ne peut être créée car le fichier [{self.file.resolve()}] existe déjà.')

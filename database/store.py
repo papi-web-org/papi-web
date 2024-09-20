@@ -1,5 +1,9 @@
 from dataclasses import dataclass, field
 
+"""
+All the classes of this module are basic data classed stored into event databases.
+"""
+
 
 @dataclass
 class StoredTimerHour:
