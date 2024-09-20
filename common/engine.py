@@ -20,7 +20,7 @@ configure_logger(logging.INFO)
 
 
 class Engine:
-    """Base class for both ChessEvent and FFE engines."""
+    """Base class for both ChessEvent, FFE and web server engines."""
 
     def __init__(self):
         try:
@@ -73,7 +73,7 @@ class Engine:
 
     @staticmethod
     def _get_last_stable_version() -> Version | None:
-        """Retrieves the avaialable versions from the Papi-web GitHub
+        """Retrieves the available versions from the Papi-web GitHub
         repository.
         If an error occurred, returns None.
         Otherwise, the last stable version is returned."""
