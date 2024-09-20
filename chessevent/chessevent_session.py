@@ -4,13 +4,11 @@ from logging import Logger
 from requests import Session, Response
 from requests.exceptions import ConnectionError, Timeout, RequestException  # pylint: disable=redefined-builtin
 
+from common.papi_web_config import PapiWebConfig
 from data.tournament import Tournament
 from common.logger import get_logger
 
 logger: Logger = get_logger()
-
-# NOTE(Amaras): Maybe this should be in PapiWebConfig, instead of here?
-CHESSEVENT_URL: str = 'https://chessevent.echecs-bretagne.fr/download'
 
 
 class ChessEventSession(Session):
@@ -25,7 +23,7 @@ class ChessEventSession(Session):
         If the data could be successfully retrieved and decode, returns
         it encoded as a JSON string.
         If an error occurred, logs ir and returns None"""
-        url: str = CHESSEVENT_URL
+        url: str = PapiWebConfig().chessevent_download_url
         try:
             post: dict[str, str] = {
                 'user_id': self._tournament.chessevent.user_id,

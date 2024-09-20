@@ -311,3 +311,5 @@ class PapiWebConfig(metaclass=Singleton):
                 return '%t (par ordre alpha.)'
 
     default_results_screen_menu_text: str = 'Derniers résultats'
+
+    chessevent_download_url: str = 'https://chessevent.echecs-bretagne.fr/download'
