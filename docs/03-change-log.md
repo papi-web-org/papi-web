@@ -17,6 +17,7 @@
 - Ajout de la possibilité de restreindre la visibilité de certains évènements, certains écrans, certaines familles d'écrans, certains écrans rotatifs
 - Ajout d'écrans fixes permettant d'insérer des images dans les écrans rotatifs
 - Suppression de la personnalisation CSS et remplacement par une image et une couleur de fond
+- Contournement d'un bug du site fédéral sur l'affichage des classements (suppression des forfaits en l'absence d'appariement)
 
 ## Version 2.3.2 - 15 avril 2024
 - Correction d'un problème d'affichage des appariements par ordre alphabétique
