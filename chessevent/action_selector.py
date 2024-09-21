@@ -148,11 +148,11 @@ class ActionSelector(metaclass=Singleton):
                                 continue
                             chessevent_timeout = chessevent_timeout_min
                             tournament.file.unlink(missing_ok=True)
-                            create_empty_papi_database(tournament.file, papi_version)
-                            players_number: int = tournament.write_chessevent_info_to_database(
-                                chessevent_tournament, data_md5)
-                            logger.info('Le fichier %s a été créé (%s joueur·euses).',
-                                        tournament.file, players_number)
+                            if create_empty_papi_database(tournament.file, papi_version):
+                                players_number: int = tournament.write_chessevent_info_to_database(
+                                    chessevent_tournament, data_md5)
+                                logger.info('Le fichier %s a été créé (%s joueur·euses).',
+                                            tournament.file, players_number)
                             if action_choice == 'U':
                                 if not tournament.ffe_id or not tournament.ffe_password:
                                     logger.warning('Identifiants de connexion au site fédéral non définis pour le '

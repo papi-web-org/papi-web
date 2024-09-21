@@ -11,7 +11,13 @@ with open('papi_template.py', 'wt', encoding='utf-8') as output_file:
         f'############################################################################\n'
         f'import bz2\n'
         f'import base64\n'
+        f'from logging import Logger\n'
         f'from pathlib import Path\n'
+        f'\n'
+        f'from common.logger import get_logger\n'
+        f'\n'
+        f'\n'
+        f'logger: Logger = get_logger()\n'
         f'\n'
         f'\n'
         f'PAPI_VERSIONS: list[str] = [\n')
@@ -22,7 +28,7 @@ with open('papi_template.py', 'wt', encoding='utf-8') as output_file:
         ']\n'
         '\n'
         '\n'
-        'def create_empty_papi_database(file: Path, papi_version: str):\n'
+        'def create_empty_papi_database(file: Path, papi_version: str) -> bool:\n'
         '    match papi_version:\n')
     for papi_version in papi_versions:
         with open(f'template-{papi_version}.papi', 'rb') as input_file:
@@ -40,6 +46,12 @@ with open('papi_template.py', 'wt', encoding='utf-8') as output_file:
         '        case _:\n'
         '            raise ValueError()\n')
     output_file.write(
+        '    if not file.parents[0].is_dir():\n'
+        '        logger.warning(\n'
+        '            f\'Le répertoire [{file.parents[0]}] n\\\'existe pas, la génération du fichier Papi à partir \'\n'
+        '            f\'de la plateforme ChessEvent est impossible.\'\n'
+        '        )\n'
+        '        return False\n'
         '    with open(file, \'wb\') as f:\n'
         '        f.write(\n'
         '            bz2.decompress(\n'
@@ -47,4 +59,5 @@ with open('papi_template.py', 'wt', encoding='utf-8') as output_file:
         '                    b64\n'
         '                )\n'
         '            )\n'
-        '        )\n')
+        '        )\n'
+        '    return True\n')
