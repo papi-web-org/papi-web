@@ -386,7 +386,7 @@
                                                 name="{{ checkbox_name }}"
                                                 type="checkbox" id="{{ checkbox_id }}"
                                                 aria-describedby="{{ id }}-help {{ id }}-error"
-                                                {% if data[checkbox_name] %}checked{% endif %} /> aucune
+                                                {% if data[checkbox_name] %}checked{% endif %} /> par défaut
                                         <script>
                                             $('#{{ checkbox_id }}').click(function() {
                                                 if ($(this).is(':checked')) {
