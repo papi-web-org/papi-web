@@ -189,7 +189,7 @@
                                                                         name="{{ name }}"
                                                                         type="checkbox" id="{{ id }}"
                                                                         class=""
-                                                                        {% if data[name] %}checked{% endif %} />
+                                                                        {% if data[name] == "on" %}checked{% endif %} />
                                                                 <label for="{{ id }}" class="form-label {% if not first %}fst-italic{%endif %}">
                                                                     <i class="{{ family.icon_str }}"></i>
                                                                     {{ family.name }}
