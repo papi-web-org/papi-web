@@ -162,57 +162,63 @@
                         </div>
                     </div>
                     {% if action == 'update' %}
-                        {% if admin_family.type in ['boards', 'input'] %}
-                            <h3>
-                                Sélection des échiquiers (par ordre croissant)
-                            </h3>
-                            <div class="row">
-                                <div class="col-6">
-                                    {% with id='first', name='first' %}
-                                        <label for="{{ id }}" class="form-label">
-                                            Premier échiquier :
-                                        </label>
-                                        <input
-                                                name="{{ name }}"
-                                                type="number" id="{{ id }}" min="1"
-                                                class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                                aria-describedby="{{ id }}-help {{ id }}-error"
-                                                placeholder="Exemple : 15"
-                                                value="{{ data[name] }}" />
-                                        <div id="{{ id }}-help" class="form-text">
+                        <h3>
+                            {% if admin_family.type in ['boards', 'input'] %}
+                                    Sélection des échiquiers (par ordre croissant)
+                            {% else %}
+                                    Sélection des joueur·euses (par ordre alphabétique)
+                            {% endif %}
+                        </h3>
+                        <div class="row">
+                            <div class="col-6">
+                                {% with id='first', name='first' %}
+                                    <label for="{{ id }}" class="form-label">
+                                        Premier échiquier :
+                                    </label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="number" id="{{ id }}" min="1"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : 15"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                        {% if admin_family.type in ['boards', 'input'] %}
                                             Le numéro du premier échiquier à prendre en compte, facultatif (par défaut le premier échiquier).
-                                        </div>
-                                        {% if name in errors %}
-                                            <div id="{{ id }}-error" class="form-text invalid-feedback">
-                                                {{ errors[name] }}
-                                            </div>
+                                        {% else %}
+                                            Le numéro du·de la premier·e joueur·euse à prendre en compte, facultatif (par défaut le·la premier·e joueur·euse).
                                         {% endif %}
-                                    {% endwith %}
-                                </div>
-                                <div class="col-6">
-                                    {% with id='last', name='last' %}
-                                        <label for="{{ id }}" class="form-label">
-                                            Dernier échiquier :
-                                        </label>
-                                        <input
-                                                name="{{ name }}"
-                                                type="number" id="{{ id }}" min="1"
-                                                class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
-                                                aria-describedby="{{ id }}-help {{ id }}-error"
-                                                placeholder="Exemple : 40"
-                                                value="{{ data[name] }}" />
-                                        <div id="{{ id }}-help" class="form-text">
-                                            Le numéro du dernier échiquier à prendre en compte, facultatif (par défaut le premier échiquier).
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
                                         </div>
-                                        {% if name in errors %}
-                                            <div id="{{ id }}-error" class="form-text invalid-feedback">
-                                                {{ errors[name] }}
-                                            </div>
-                                        {% endif %}
-                                    {% endwith %}
-                                </div>
+                                    {% endif %}
+                                {% endwith %}
                             </div>
-                        {% endif %}
+                            <div class="col-6">
+                                {% with id='last', name='last' %}
+                                    <label for="{{ id }}" class="form-label">
+                                        Dernier échiquier :
+                                    </label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="number" id="{{ id }}" min="1"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : 40"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                        Le numéro du dernier échiquier à prendre en compte, facultatif (par défaut le premier échiquier).
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
                         <h3>
                             {% if admin_family.type in ['boards', 'input'] %}
                                 Répartition des échiquiers

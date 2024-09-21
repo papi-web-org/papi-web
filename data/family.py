@@ -150,10 +150,11 @@ class Family:
             self.error = f'Le tournoi [{self.tournament.uniq_id}] ne peut être lu, famille ignorée.'
             self.event.add_warning(self.error, family=self)
             return False
-        first_item_number: int
+        players_instead_of_boards: bool
         match ScreenType.from_str(self.type):
             case ScreenType.Boards | ScreenType.Input:
                 if self.tournament.current_round:
+                    players_instead_of_boards = False
                     total_items_number: int = len(self.tournament.boards)
                     if self.first:
                         if self.first > total_items_number:
@@ -170,21 +171,37 @@ class Family:
                         self.calculated_last = total_items_number
                     cut_items_number = self.calculated_last - self.calculated_first + 1
                 else:
+                    players_instead_of_boards = True
                     cut_items_number = len(self.tournament.players_by_name_with_unpaired)
                     self.calculated_first = 1
                     self.calculated_last = cut_items_number
             case ScreenType.Players:
-                players_show_unpaired: bool
-                if self.players_show_unpaired is None:
-                    players_show_unpaired = PapiWebConfig.default_players_show_unpaired
+                players_instead_of_boards = False
+                if self.tournament.current_round:
+                    players_show_unpaired: bool
+                    if self.players_show_unpaired is None:
+                        players_show_unpaired = PapiWebConfig.default_players_show_unpaired
+                    else:
+                        players_show_unpaired = self.players_show_unpaired
+                    if players_show_unpaired:
+                        total_items_number = len(self.tournament.players_by_name_with_unpaired)
+                    else:
+                        total_items_number = len(self.tournament.players_by_name_without_unpaired)
                 else:
-                    players_show_unpaired = self.players_show_unpaired
-                if players_show_unpaired:
-                    cut_items_number = len(self.tournament.players_by_name_with_unpaired)
+                    total_items_number = len(self.tournament.players_by_name_with_unpaired)
+                if self.first:
+                    if self.first > total_items_number:
+                        self.error = f'Le tournoi ne comporte que [{total_items_number}] joueur·euses, famille ignorée.'
+                        self.event.add_warning(self.error, family=self)
+                        return False
+                    self.calculated_first = self.first
                 else:
-                    cut_items_number = len(self.tournament.players_by_name_without_unpaired)
-                self.calculated_first = 1
-                self.calculated_last = cut_items_number
+                    self.calculated_first = 1
+                if self.last:
+                    self.calculated_last = min(self.last, total_items_number)
+                else:
+                    self.calculated_last = total_items_number
+                cut_items_number = self.calculated_last - self.calculated_first + 1
             case _:
                 raise ValueError(f'type={self.type}')
         if not cut_items_number:
@@ -195,7 +212,10 @@ class Family:
         # OK now we know the number of items and the number of the first item to take
         # Let's go for the number of items by part and the number of parts
         if self.number:
-            self.calculated_number = self.number
+            if players_instead_of_boards:
+                self.calculated_number = self.number * 2
+            else:
+                self.calculated_number = self.number
         elif self.parts:
             self.calculated_number = ceil(cut_items_number / self.parts)
         else:

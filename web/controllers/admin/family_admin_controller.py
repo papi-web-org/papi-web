@@ -78,7 +78,7 @@ class FamilyAdminController(AbstractAdminController):
                         errors[field] = 'Veuillez choisir le type de famille.'
                     case _:
                         raise ValueError(f'type=[{type}]')
-            case 'update' | 'delete':
+            case 'update' | 'delete' | 'clone':
                 type = web_context.admin_family.stored_family.type
             case _:
                 raise ValueError(f'action=[{action}]')
@@ -86,7 +86,7 @@ class FamilyAdminController(AbstractAdminController):
         uniq_id: str = WebContext.form_data_to_str(data, field)
         name: str | None = None
         public: bool | None = None
-        if action == 'delete':
+        if action in ['delete', 'clone', ]:
             pass
         else:
             if not uniq_id:
@@ -116,7 +116,7 @@ class FamilyAdminController(AbstractAdminController):
         parts: int | None = None
         number: int | None = None
         match action:
-            case 'delete':
+            case 'delete' | 'clone':
                 pass
             case 'create' | 'update':
                 field: str = 'tournament_id'
@@ -139,7 +139,7 @@ class FamilyAdminController(AbstractAdminController):
                 menu_link = True
                 menu_text = ''
                 menu = ''
-            case 'delete':
+            case 'delete' | 'clone':
                 pass
             case 'update':
                 field = 'columns'
@@ -157,22 +157,23 @@ class FamilyAdminController(AbstractAdminController):
                         errors[field] = f'Le chronomètre [{timer_id}] n\'existe pas.'
                 except ValueError:
                     errors[field] = 'Un entier positif est attendu.'
+                field: str = 'first'
+                try:
+                    first = WebContext.form_data_to_int(data, field, minimum=1)
+                except ValueError:
+                    errors[field] = 'Un entier positif est attendu.'
+                field: str = 'last'
+                try:
+                    last = WebContext.form_data_to_int(data, field, minimum=1)
+                except ValueError:
+                    errors[field] = 'Un entier positif est attendu.'
+                if first and last and first > last:
+                    error: str = f'Les nombres {first} et {last} ne sont pas compatibles ({first} > {last}).'
+                    errors['first'] = error
+                    errors['last'] = error
                 match type:
                     case 'boards' | 'input':
-                        field: str = 'first'
-                        try:
-                            first = WebContext.form_data_to_int(data, field, minimum=1)
-                        except ValueError:
-                            errors[field] = 'Un entier positif est attendu.'
-                        field: str = 'last'
-                        try:
-                            last = WebContext.form_data_to_int(data, field, minimum=1)
-                        except ValueError:
-                            errors[field] = 'Un entier positif est attendu.'
-                        if first and last and first > last:
-                            error: str = f'Les nombres {first} et {last} ne sont pas compatibles ({first} > {last}).'
-                            errors['first'] = error
-                            errors['last'] = error
+                        pass
                     case 'players':
                         players_show_unpaired = WebContext.form_data_to_bool(data, 'players_show_unpaired')
                     case _:
@@ -259,10 +260,11 @@ class FamilyAdminController(AbstractAdminController):
                     data['menu_text'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.menu_text)
                     data['menu'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.menu)
                     data['timer_id'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.timer_id)
+                    data['first'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.first)
+                    data['last'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.last)
                     match web_context.admin_family.type:
                         case ScreenType.Boards | ScreenType.Input:
-                            data['first'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.first)
-                            data['last'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.last)
+                            pass
                         case ScreenType.Players:
                             data['players_show_unpaired'] = WebContext.value_to_form_data(
                                 web_context.admin_family.stored_family.players_show_unpaired)
@@ -337,7 +339,7 @@ class FamilyAdminController(AbstractAdminController):
                 return web_context.error
             return self._admin_render_index(web_context)
         match action:
-            case 'update' | 'delete':
+            case 'update' | 'delete' | 'clone':
                 web_context: FamilyAdminWebContext = FamilyAdminWebContext(request, data, True, True)
             case 'create':
                 web_context: FamilyAdminWebContext = FamilyAdminWebContext(request, data, True, False)
@@ -363,6 +365,14 @@ class FamilyAdminController(AbstractAdminController):
                 case 'delete':
                     event_database.delete_stored_family(web_context.admin_family.id)
                     Message.success(request, f'La famille [{web_context.admin_family.uniq_id}] a été supprimée.')
+                case 'clone':
+                    stored_family = event_database.clone_stored_family(web_context.admin_family.id)
+                    Message.success(
+                        request,
+                        f'La famille [{web_context.admin_family.uniq_id}] a été dupliquée '
+                        f'([{stored_family.uniq_id}]).')
+                    next_family_id = stored_family.id
+                    next_action = 'update'
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
