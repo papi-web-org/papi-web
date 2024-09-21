@@ -439,21 +439,23 @@ class Event:
             self, level: int, text: str, tournament: Tournament | None = None, chessevent: ChessEvent | None = None,
             family: Family | None = None, timer: Timer | None = None, timer_hour: TimerHour | None = None,
             screen: Screen | None = None, screen_set: ScreenSet | None = None, rotator: Rotator | None = None,
-    ):
-        self.messages.append(EventMessage(
+    ) -> EventMessage:
+        event_message: EventMessage = EventMessage(
             level, text, tournament=tournament, chessevent=chessevent, family=family, timer=timer,
-            timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator))
+            timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator)
+        self.messages.append(event_message)
+        return event_message
 
     def add_debug(
             self, text: str, tournament: Tournament | None = None, chessevent: ChessEvent | None = None,
             family: Family | None = None, timer: Timer | None = None, timer_hour: TimerHour | None = None,
             screen: Screen | None = None, screen_set: ScreenSet | None = None, rotator: Rotator | None = None,
     ):
-        self._add_message(
+        event_message: EventMessage = self._add_message(
             logging.DEBUG, text, tournament=tournament, chessevent=chessevent, family=family, timer=timer,
             timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator)
         if not self._silent:
-            logger.debug(text)
+            logger.debug(event_message.formatted_text)
 
     @property
     def infos(self) -> list[str]:
@@ -464,11 +466,11 @@ class Event:
             family: Family | None = None, timer: Timer | None = None, timer_hour: TimerHour | None = None,
             screen: Screen | None = None, screen_set: ScreenSet | None = None, rotator: Rotator | None = None,
     ):
-        self._add_message(
+        event_message: EventMessage = self._add_message(
             logging.INFO, text, tournament=tournament, chessevent=chessevent, family=family, timer=timer,
             timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator)
         if not self._silent:
-            logger.info(text)
+            logger.info(event_message.formatted_text)
 
     @property
     def warnings(self) -> list[str]:
@@ -479,11 +481,11 @@ class Event:
             family: Family | None = None, timer: Timer | None = None, timer_hour: TimerHour | None = None,
             screen: Screen | None = None, screen_set: ScreenSet | None = None, rotator: Rotator | None = None,
     ):
-        self._add_message(
+        event_message: EventMessage = self._add_message(
             logging.WARNING, text, tournament=tournament, chessevent=chessevent, family=family, timer=timer,
             timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator)
         if not self._silent:
-            logger.info(text)
+            logger.info(event_message.formatted_text)
 
     @property
     def errors(self) -> list[str]:
@@ -494,11 +496,11 @@ class Event:
             family: Family | None = None, timer: Timer | None = None, timer_hour: TimerHour | None = None,
             screen: Screen | None = None, screen_set: ScreenSet | None = None, rotator: Rotator | None = None,
     ):
-        self._add_message(
+        event_message: EventMessage = self._add_message(
             logging.ERROR, text, tournament=tournament, chessevent=chessevent, family=family, timer=timer,
             timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator)
         if not self._silent:
-            logger.info(text)
+            logger.info(event_message.formatted_text)
 
     @property
     def criticals(self) -> list[str]:
@@ -510,11 +512,11 @@ class Event:
             screen: Screen | None = None, screen_set: ScreenSet | None = None, rotator: Rotator | None = None,
     ):
         """Adds a debug-level message and logs it"""
-        self._add_message(
+        event_message: EventMessage = self._add_message(
             logging.CRITICAL, text, tournament=tournament, chessevent=chessevent, family=family, timer=timer,
             timer_hour=timer_hour, screen=screen, screen_set=screen_set, rotator=rotator)
         if not self._silent:
-            logger.info(text)
+            logger.info(event_message.formatted_text)
 
     @property
     def download_allowed(self) -> bool:
