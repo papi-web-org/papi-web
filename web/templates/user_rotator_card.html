@@ -42,7 +42,7 @@
                 Familles :
                 {% for family in rotator.families %}
                     <div>
-                        {# family_visibility_icon(family, '') #} {{ screen_type_icon(family.type, true) }} {{ family.name }} ({{ family.screens_by_uniq_id|length }} écrans)
+                        {# family_visibility_icon(family, '') #} {{ screen_type_icon(family.type, true) }} {{ family.uniq_id }} {{ family.name }} ({{ family.screens_by_uniq_id|length }} écrans)
                     </div>
                 {% endfor %}
             {% endif %}

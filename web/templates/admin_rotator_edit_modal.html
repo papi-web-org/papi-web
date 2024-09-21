@@ -192,7 +192,7 @@
                                                                         {% if data[name] == "on" %}checked{% endif %} />
                                                                 <label for="{{ id }}" class="form-label {% if not first %}fst-italic{%endif %}">
                                                                     <i class="{{ family.icon_str }}"></i>
-                                                                    {{ family.name }}
+                                                                    {{ family.uniq_id }} {{ family.name }}
                                                                 </label>
                                                             </span>
                                                         {% endwith %}
