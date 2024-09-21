@@ -1,4 +1,4 @@
-{% from 'macros.j2' import modal_script, tooltip_script, background_script %}
+{% from 'macros.j2' import modal_script, tooltip_script, background_script, copyright_script %}
 
 {% extends 'base.html' %}
 
@@ -73,6 +73,7 @@
                     hx-indicator="#please-wait"
             />
         {% endif %}
+        {{ copyright_script(show=screen.type != 'image') }}
     </div>
 {% endblock %}
 

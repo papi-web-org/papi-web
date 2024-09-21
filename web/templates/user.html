@@ -1,4 +1,4 @@
-{% from 'macros.j2' import tooltip_attributes, screen_type_icon, rotator_icon, modal_script, tooltip_script, background_script %}
+{% from 'macros.j2' import tooltip_attributes, screen_type_icon, rotator_icon, modal_script, tooltip_script, background_script, copyright_script %}
 
 {% extends 'base.html' %}
 
@@ -86,6 +86,7 @@
                 </div>
             </nav>
         </div>
+        {{ copyright_script(show=true) }}
     </div>
 {% endblock %}
 

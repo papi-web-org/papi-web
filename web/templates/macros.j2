@@ -178,3 +178,11 @@
         }
     </script>
 {% endmacro %}
+
+{% macro copyright_script(show) %}
+    <!-- copyright_script() -->
+    <script>
+        {# this macro allows us to show copyright on all pages but image screens #}
+        $('#copyright').css('display', '{{ "block" if show else "none" }}');
+    </script>
+{% endmacro %}
