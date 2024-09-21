@@ -141,7 +141,6 @@ class BasicScreenOrFamilyUserWebContext(ScreenUserWebContext):
             return
         if ':' in self.screen.uniq_id:
             family_uniq_id: str = self.screen.uniq_id.split(':')[0]
-            self.screen = None
             try:
                 self.family = self.user_event.families_by_uniq_id[family_uniq_id]
             except KeyError:
