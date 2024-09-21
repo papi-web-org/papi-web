@@ -98,10 +98,10 @@ class EventAdminController(AbstractAdminController):
             case _:
                 raise ValueError(f'action=[{action}]')
         public: bool | None = WebContext.form_data_to_bool(data, 'public')
-        path: str | None = WebContext.form_data_to_str(data, 'path')
+        path: str | None = None
         background_image: str | None = None
         background_color: str | None = None
-        update_password: str | None = WebContext.form_data_to_str(data, 'update_password')
+        update_password: str | None = None
         record_illegal_moves: int | None = None
         allow_results_deletion_on_input_screens: bool | None = None
         timer_colors: dict[int, str | None] = {i: None for i in range(1, 4)}
@@ -109,6 +109,8 @@ class EventAdminController(AbstractAdminController):
         timer_delays: dict[int, int | None] = {i: None for i in range(1, 4)}
         match action:
             case 'update':
+                path = WebContext.form_data_to_str(data, 'path')
+                update_password = WebContext.form_data_to_str(data, 'update_password')
                 field = 'background_image'
                 if background_image := WebContext.form_data_to_str(data, field, ''):
                     if validators.url(background_image):
@@ -160,13 +162,15 @@ class EventAdminController(AbstractAdminController):
                     except ValueError:
                         errors[field] = f'Le délai [{data[field]}] n\'est pas valide (attendu un entier positif).'
             case 'clone':
-                background_image = web_context.admin_event.background_image
-                background_color = web_context.admin_event.background_color
-                record_illegal_moves = web_context.admin_event.record_illegal_moves
+                path = web_context.admin_event.stored_event.path
+                update_password = web_context.admin_event.stored_event.update_password
+                background_image = web_context.admin_event.stored_event.background_image
+                background_color = web_context.admin_event.stored_event.background_color
+                record_illegal_moves = web_context.admin_event.stored_event.record_illegal_moves
                 allow_results_deletion_on_input_screens = \
-                    web_context.admin_event.allow_results_deletion_on_input_screens
-                timer_colors = web_context.admin_event.timer_colors
-                timer_delays = web_context.admin_event.timer_delays
+                    web_context.admin_event.stored_event.allow_results_deletion_on_input_screens
+                timer_colors = web_context.admin_event.stored_event.timer_colors
+                timer_delays = web_context.admin_event.stored_event.timer_delays
             case 'create' | 'delete':
                 pass
             case _:
