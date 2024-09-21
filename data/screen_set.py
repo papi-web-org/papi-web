@@ -37,10 +37,8 @@ class ScreenSet:
         self.stored_screen_set: StoredScreenSet | None = stored_screen_set
         self.family: 'NewFamily | None' = family
         self.family_part: int | None = family_part
-        self.uniq_id: str = f'{self.screen.uniq_id}_{self.stored_screen_set.order}' \
-            if self.stored_screen_set \
-            else f'{self.family.uniq_id}_{self.family_part}'
-        self.name: int | None = self.stored_screen_set.name if self.stored_screen_set else self.family.name
+        self.uniq_id: str = \
+            f'{self.screen.uniq_id}_{self.stored_screen_set.order if self.stored_screen_set else self.family_part}'
         fixed_boards_str: str | None = self.stored_screen_set.fixed_boards_str \
             if self.screen.type in [ScreenType.Boards, ScreenType.Input] and self.stored_screen_set \
             else None
@@ -116,14 +114,36 @@ class ScreenSet:
     def name_for_boards(self) -> str | None:
         if self.tournament.current_round:
             self._extract_boards()
+            name: str | None = self.stored_screen_set.name if self.stored_screen_set else self.family.name
+            if name is None:
+                if self.first or self.last:
+                    name = 'Ech. %f à %l'
+                else:
+                    name = '%t'
+            name = name.replace('%t', str(self.tournament.name))
+            if r'%f' in name and self.first_item is not None:
+                name = name.replace(r'%f', str(self.first_board.id))
+            if r'%l' in name and self.last_item is not None:
+                name = name.replace(r'%l', str(self.last_board.id))
+            return name
         else:
-            self._extract_players_by_name()
-        return self.name
+            return self.name_for_players
 
     @property
     def name_for_players(self) -> str | None:
         self._extract_players_by_name()
-        return self.name
+        name: str | None = self.stored_screen_set.name if self.stored_screen_set else self.family.name
+        if name is None:
+            if self.first or self.last:
+                name = '%f à %l'
+            else:
+                name = '%t'
+        name = name.replace('%t', str(self.tournament.name))
+        if self.first_item is not None:
+            name = name.replace('%f', self.first_player_by_name.last_name[:8])
+        if self.last_item is not None:
+            name = name.replace('%l', self.last_player_by_name.last_name[:8])
+        return name
 
     def _extract_data(self, items: list[Any]):
         if not items:
@@ -162,16 +182,6 @@ class ScreenSet:
     def _extract_boards(self):
         if self.items_lists is None:
             self._extract_data(self.tournament.boards)
-            if self.name is None:
-                if self.first or self.last:
-                    self.name = 'Ech. %f à %l'
-                else:
-                    self.name = '%t'
-            self.name = self.name.replace('%t', str(self.tournament.name))
-            if r'%f' in self.name and self.first_item is not None:
-                self.name = self.name.replace(r'%f', str(self.first_board.id))
-            if r'%l' in self.name and self.last_item is not None:
-                self.name = self.name.replace(r'%l', str(self.last_board.id))
 
     @property
     def boards_lists(self) -> list[list[Board]]:
@@ -205,16 +215,6 @@ class ScreenSet:
                 self._extract_data(self.tournament.players_by_name_with_unpaired)
             else:
                 self._extract_data(self.tournament.players_by_name_without_unpaired)
-            if self.name is None:
-                if self.first or self.last:
-                    self.name = '%f à %l'
-                else:
-                    self.name = '%t'
-            self.name = self.name.replace('%t', str(self.tournament.name))
-            if self.first_item is not None:
-                self.name = self.name.replace('%f', self.first_player_by_name.last_name[:8])
-            if self.last_item is not None:
-                self.name = self.name.replace('%l', self.last_player_by_name.last_name[:8])
 
     @property
     def players_by_name_lists(self) -> list[list[Player]]:
