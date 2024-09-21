@@ -206,7 +206,7 @@ class Event:
         return self.stored_event.record_illegal_moves
 
     @property
-    def allow_results_deletion_on_input_screens(self) -> int:
+    def allow_results_deletion_on_input_screens(self) -> bool:
         if self.stored_event.allow_results_deletion_on_input_screens is None:
             return PapiWebConfig.default_allow_results_deletion_on_input_screens
         else:

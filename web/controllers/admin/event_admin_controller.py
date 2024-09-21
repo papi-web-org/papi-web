@@ -91,6 +91,8 @@ class EventAdminController(AbstractAdminController):
                     errors['stop'] = 'Veuillez entrer la date de fin de l\'évènement.'
                 else:
                     stop = time.mktime(datetime.strptime(stop_str, '%Y-%m-%dT%H:%M').timetuple())
+                if 'start' not in errors and 'stop' not in errors and start > stop:
+                    errors['stop'] = 'Veuillez entrer la date postérieure à la date de début.'
             case 'delete':
                 pass
             case _:
@@ -157,7 +159,15 @@ class EventAdminController(AbstractAdminController):
                         timer_delays[i] = WebContext.form_data_to_int(data, field, minimum=1)
                     except ValueError:
                         errors[field] = f'Le délai [{data[field]}] n\'est pas valide (attendu un entier positif).'
-            case 'create' | 'clone' | 'delete':
+            case 'clone':
+                background_image = web_context.admin_event.background_image
+                background_color = web_context.admin_event.background_color
+                record_illegal_moves = web_context.admin_event.record_illegal_moves
+                allow_results_deletion_on_input_screens = \
+                    web_context.admin_event.allow_results_deletion_on_input_screens
+                timer_colors = web_context.admin_event.timer_colors
+                timer_delays = web_context.admin_event.timer_delays
+            case 'create' | 'delete':
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
@@ -240,7 +250,7 @@ class EventAdminController(AbstractAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             match action:
-                case 'update':
+                case 'update' | 'clone':
                     data['uniq_id'] = '' if action == 'clone' else WebContext.value_to_form_data(
                         web_context.admin_event.stored_event.uniq_id)
                     data['name'] = WebContext.value_to_form_data(web_context.admin_event.stored_event.name)
@@ -397,7 +407,11 @@ class EventAdminController(AbstractAdminController):
                 web_context.set_admin_event(event_loader.load_event(uniq_id))
                 return self._admin_render_index(web_context)
             case 'delete':
-                arch = EventDatabase(web_context.admin_event.uniq_id).delete()
+                try:
+                    arch = EventDatabase(web_context.admin_event.uniq_id).delete()
+                except PermissionError as pe:
+                    return AbstractController.redirect_error(
+                        request, f'La suppression de la base de données a échoué : {pe}')
                 event_loader.clear_cache(web_context.admin_event.uniq_id)
                 Message.success(
                     request, f'L\'évènement [{web_context.admin_event.uniq_id}] a été supprimé, la base '

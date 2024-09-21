@@ -189,9 +189,15 @@ class AbstractController(Controller):
     """
 
     @staticmethod
-    def redirect_error(request: HTMXRequest, errors: str | list[str]) -> Redirect:
+    def redirect_error(request: HTMXRequest, errors: str | list[str]) -> Template:
+        web_context: WebContext = WebContext(request, {})
         Message.error(request, errors)
-        return Redirect(path=index_url(request))
+        return HTMXTemplate(
+            template_name="index.html",
+            re_target="body",
+            context=web_context.template_context | {
+                'messages': Message.messages(request),
+            })
 
     @staticmethod
     def _render_messages(request: HTMXRequest) -> Template:
