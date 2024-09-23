@@ -2,6 +2,7 @@ import re
 import time
 from collections import namedtuple
 from datetime import datetime
+from functools import wraps
 from logging import Logger
 
 from common.logger import get_logger
@@ -50,3 +51,17 @@ def format_timestamp_date(ts: float | None = None) -> str:
 def format_timestamp_time(ts: float | None = None) -> str:
     """Formats the given timestamp (now if None) to HH:MM format."""
     return datetime.strftime(datetime.fromtimestamp(ts if ts is not None else time.time()), '%H:%M')
+
+
+def show_duration(func):
+    """This decorator prints the duration of methods."""
+    @wraps(func)
+    def show_duration_wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        total_time = end_time - start_time
+        # first item in the args, ie `args[0]` is `self`
+        logger.warning(f'{total_time:.4f}s {args[0].__class__.__name__}.{func.__name__}({args[1:]} {kwargs})')
+        return result
+    return show_duration_wrapper

@@ -15,7 +15,6 @@ from common import RGB, check_rgb_str
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from web.messages import Message
-from web.urls import index_url
 
 logger: Logger = get_logger()
 

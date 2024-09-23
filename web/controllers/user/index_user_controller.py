@@ -32,7 +32,6 @@ class UserWebContext(WebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
             event_needed: bool = False,
     ):
         super().__init__(request, data)
@@ -48,7 +47,7 @@ class UserWebContext(WebContext):
             pass
         else:
             try:
-                self.user_event = EventLoader.get(request=self.request, lazy_load=lazy_load).load_event(
+                self.user_event = EventLoader.get(request=self.request, lazy_load=False).load_event(
                     self.user_main_selector)
                 if not self.user_event.public and not self.admin_auth:
                     self._redirect_error(f'L\'évènement [{self.user_event.uniq_id}] est privé.')
@@ -82,9 +81,8 @@ class EventUserWebContext(UserWebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
     ):
-        super().__init__(request, data, lazy_load, True)
+        super().__init__(request, data, True)
         if self.error:
             return
 
@@ -225,7 +223,7 @@ class IndexUserController(AbstractUserController):
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         for public_event in event_loader.public_events:
             web_context: EventUserWebContext = EventUserWebContext(
-                request, {'user_main_selector': public_event.uniq_id, }, True)
+                request, {'user_main_selector': public_event.uniq_id, })
             if web_context.error:
                 return False
             if web_context.user_event.last_update > date:
@@ -250,7 +248,7 @@ class IndexUserController(AbstractUserController):
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if self._user_index_update_needed(request, date):
-            web_context: UserWebContext = UserWebContext(request, data, True, False)
+            web_context: UserWebContext = UserWebContext(request, data, False)
             return self._user_render_index(web_context)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
@@ -263,7 +261,7 @@ class IndexUserController(AbstractUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        web_context: UserWebContext = UserWebContext(request, data, True, False)
+        web_context: UserWebContext = UserWebContext(request, data, False)
         return self._user_render_index(web_context)
 
     @post(

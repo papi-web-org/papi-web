@@ -77,7 +77,7 @@ class EventUserController(AbstractUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Reswap | Redirect:
-        web_context: EventUserWebContext = EventUserWebContext(request, data, True)
+        web_context: EventUserWebContext = EventUserWebContext(request, data)
         if web_context.error:
             return web_context.error
         try:
@@ -87,7 +87,7 @@ class EventUserController(AbstractUserController):
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if self._user_event_page_update_needed(web_context.user_event, date):
-            web_context: EventUserWebContext = EventUserWebContext(request, data, False)
+            web_context: EventUserWebContext = EventUserWebContext(request, data)
             if web_context.error:
                 return web_context.error
             return self._user_render_index(web_context)
@@ -102,7 +102,7 @@ class EventUserController(AbstractUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Redirect:
-        web_context: EventUserWebContext = EventUserWebContext(request, data, False)
+        web_context: EventUserWebContext = EventUserWebContext(request, data)
         if web_context.error:
             return web_context.error
         return self._user_render_index(web_context)

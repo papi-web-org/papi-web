@@ -25,10 +25,9 @@ class ChessEventAdminWebContext(EventAdminWebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
             chessevent_needed: bool,
     ):
-        super().__init__(request, data, lazy_load, True)
+        super().__init__(request, data, True)
         self.admin_chessevent: ChessEvent | None = None
         field: str = 'admin_chessevent_id'
         if field in self.data:
@@ -170,9 +169,9 @@ class ChessEventAdminController(AbstractAdminController):
         web_context: ChessEventAdminWebContext
         match action:
             case 'update' | 'delete':
-                web_context = ChessEventAdminWebContext(request, data, True, True)
+                web_context = ChessEventAdminWebContext(request, data, True)
             case 'create':
-                web_context = ChessEventAdminWebContext(request, data, True, False)
+                web_context = ChessEventAdminWebContext(request, data, True)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
@@ -190,15 +189,15 @@ class ChessEventAdminController(AbstractAdminController):
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
-            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
+            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
             if web_context.error:
                 return web_context.error
             return self._admin_render_index(web_context)
         match action:
             case 'update' | 'delete' | 'clone':
-                web_context: ChessEventAdminWebContext = ChessEventAdminWebContext(request, data, True, True)
+                web_context: ChessEventAdminWebContext = ChessEventAdminWebContext(request, data, True)
             case 'create':
-                web_context: ChessEventAdminWebContext = ChessEventAdminWebContext(request, data, True, False)
+                web_context: ChessEventAdminWebContext = ChessEventAdminWebContext(request, data, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:

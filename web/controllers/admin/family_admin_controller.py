@@ -27,10 +27,9 @@ class FamilyAdminWebContext(EventAdminWebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
             family_needed: bool,
     ):
-        super().__init__(request, data, lazy_load, True)
+        super().__init__(request, data, True)
         self.admin_family: Family | None = None
         field: str = 'admin_family_id'
         if field in self.data:
@@ -314,9 +313,9 @@ class FamilyAdminController(AbstractAdminController):
         web_context: FamilyAdminWebContext
         match action:
             case 'update' | 'delete':
-                web_context = FamilyAdminWebContext(request, data, True, True)
+                web_context = FamilyAdminWebContext(request, data, True)
             case 'create':
-                web_context = FamilyAdminWebContext(request, data, True, False)
+                web_context = FamilyAdminWebContext(request, data, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
@@ -334,15 +333,15 @@ class FamilyAdminController(AbstractAdminController):
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
-            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
+            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
             if web_context.error:
                 return web_context.error
             return self._admin_render_index(web_context)
         match action:
             case 'update' | 'delete' | 'clone':
-                web_context: FamilyAdminWebContext = FamilyAdminWebContext(request, data, True, True)
+                web_context: FamilyAdminWebContext = FamilyAdminWebContext(request, data, True)
             case 'create':
-                web_context: FamilyAdminWebContext = FamilyAdminWebContext(request, data, True, False)
+                web_context: FamilyAdminWebContext = FamilyAdminWebContext(request, data, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:

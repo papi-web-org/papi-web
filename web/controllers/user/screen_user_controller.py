@@ -28,10 +28,9 @@ class ScreenOrRotatorUserWebContext(EventUserWebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
             load_rotator: bool,
     ):
-        super().__init__(request, data, lazy_load)
+        super().__init__(request, data)
         self.screen: Screen | None = None
         self.rotator: Rotator | None = None
         self.rotator_screen_index: int = 0
@@ -115,27 +114,24 @@ class ScreenUserWebContext(ScreenOrRotatorUserWebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
     ):
-        super().__init__(request, data, lazy_load, False)
+        super().__init__(request, data, False)
 
 
 class RotatorUserWebContext(ScreenOrRotatorUserWebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
     ):
-        super().__init__(request, data, lazy_load, True)
+        super().__init__(request, data, True)
 
 
 class BasicScreenOrFamilyUserWebContext(ScreenUserWebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
     ):
-        super().__init__(request, data, lazy_load)
+        super().__init__(request, data)
         self.family: Family | None = None
         if self.error:
             return
@@ -180,13 +176,13 @@ class ScreenUserController(AbstractUserController):
             request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        web_context: EventUserWebContext = EventUserWebContext(request, data, True)
+        web_context: EventUserWebContext = EventUserWebContext(request, data)
         if web_context.error:
             return web_context.error
         if data['password'] == web_context.user_event.update_password:
             Message.success(request, 'Authentification réussie !')
             SessionHandler.store_password(request, web_context.user_event, data['password'])
-            web_context: ScreenUserWebContext = ScreenUserWebContext(request, data, False)
+            web_context: ScreenUserWebContext = ScreenUserWebContext(request, data)
             if web_context.error:
                 return web_context.error
             return self._user_render_screen(web_context)
@@ -205,7 +201,7 @@ class ScreenUserController(AbstractUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Redirect:
-        web_context: ScreenUserWebContext = ScreenUserWebContext(request, data, False)
+        web_context: ScreenUserWebContext = ScreenUserWebContext(request, data)
         if web_context.error:
             return web_context.error
         return self._user_render_screen(web_context)
@@ -251,8 +247,7 @@ class ScreenUserController(AbstractUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Reswap | Redirect:
-        web_context: BasicScreenOrFamilyUserWebContext = BasicScreenOrFamilyUserWebContext(
-            request, data, True)
+        web_context: BasicScreenOrFamilyUserWebContext = BasicScreenOrFamilyUserWebContext(request, data)
         if web_context.error:
             return web_context.error
         try:
@@ -262,7 +257,7 @@ class ScreenUserController(AbstractUserController):
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if self._user_screen_page_update_needed(web_context, date):
-            web_context: ScreenUserWebContext = ScreenUserWebContext(request, data, False)
+            web_context: ScreenUserWebContext = ScreenUserWebContext(request, data)
             if web_context.error:
                 return web_context.error
             return self._user_render_screen(web_context)
@@ -277,7 +272,7 @@ class ScreenUserController(AbstractUserController):
         self, request: HTMXRequest,
         data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Redirect:
-        web_context: RotatorUserWebContext = RotatorUserWebContext(request, data, False)
+        web_context: RotatorUserWebContext = RotatorUserWebContext(request, data)
         if web_context.error:
             return web_context.error
         return self._user_render_screen(web_context)

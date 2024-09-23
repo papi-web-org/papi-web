@@ -34,7 +34,7 @@ class TournamentUserWebContext(ScreenUserWebContext):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             tournament_started: bool | None,
     ):
-        super().__init__(request, data, tournament_started is None)
+        super().__init__(request, data)
         self.tournament: Tournament | None = None
         if self.error:
             return
@@ -300,7 +300,7 @@ class DownloadUserController(AbstractUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Response[bytes] | Template:
-        web_context: EventUserWebContext = EventUserWebContext(request, data, False)
+        web_context: EventUserWebContext = EventUserWebContext(request, data)
         if web_context.error:
             return web_context.error
         tournament_files: list[Path] = [

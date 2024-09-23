@@ -27,9 +27,8 @@ class ScreenSetOrFamilyUserWebContext(BasicScreenOrFamilyUserWebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
     ):
-        super().__init__(request, data, lazy_load)
+        super().__init__(request, data)
         self.screen_set: ScreenSet | None = None
         if self.error:
             return
@@ -88,7 +87,7 @@ class ScreenSetUserController(AbstractUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Reswap | Redirect:
-        web_context: ScreenSetOrFamilyUserWebContext = ScreenSetOrFamilyUserWebContext(request, data, True)
+        web_context: ScreenSetOrFamilyUserWebContext = ScreenSetOrFamilyUserWebContext(request, data)
         if web_context.error:
             return web_context.error
         try:
@@ -99,7 +98,7 @@ class ScreenSetUserController(AbstractUserController):
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if not self._user_screen_set_div_update_needed(web_context.screen_set, web_context.family, date):
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
-        web_context = ScreenSetOrFamilyUserWebContext(request, data, True)
+        web_context = ScreenSetOrFamilyUserWebContext(request, data)
         if web_context.error:
             return web_context.error
         return HTMXTemplate(
@@ -119,7 +118,7 @@ class ScreenSetUserController(AbstractUserController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Reswap | Redirect:
-        web_context: ScreenSetOrFamilyUserWebContext = ScreenSetOrFamilyUserWebContext(request, data, False)
+        web_context: ScreenSetOrFamilyUserWebContext = ScreenSetOrFamilyUserWebContext(request, data)
         if web_context.error:
             return web_context.error
         try:

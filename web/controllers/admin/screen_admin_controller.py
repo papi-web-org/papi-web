@@ -30,11 +30,10 @@ class ScreenAdminWebContext(EventAdminWebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
             screen_needed: bool,
             screen_set_needed: bool,
     ):
-        super().__init__(request, data, lazy_load, True)
+        super().__init__(request, data, True)
         self.admin_screen: Screen | None = None
         self.admin_screen_set: ScreenSet | None = None
         field: str = 'admin_screen_id'
@@ -314,9 +313,9 @@ class ScreenAdminController(AbstractAdminController):
         web_context: ScreenAdminWebContext
         match action:
             case 'update' | 'delete' | 'clone':
-                web_context = ScreenAdminWebContext(request, data, True, True, False)
+                web_context = ScreenAdminWebContext(request, data, True, False)
             case 'create':
-                web_context = ScreenAdminWebContext(request, data, True, False, False)
+                web_context = ScreenAdminWebContext(request, data, False, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
@@ -334,15 +333,15 @@ class ScreenAdminController(AbstractAdminController):
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
-            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
+            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
             if web_context.error:
                 return web_context.error
             return self._admin_render_index(web_context)
         match action:
             case 'update' | 'delete' | 'clone':
-                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True, False)
+                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, False)
             case 'create':
-                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, False, False)
+                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, False, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
@@ -501,7 +500,7 @@ class ScreenAdminController(AbstractAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True, False)
+        web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, False)
         if web_context.error:
             return web_context.error
         return self._admin_screen_render_sets_modal(web_context)
@@ -517,15 +516,15 @@ class ScreenAdminController(AbstractAdminController):
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
-            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
+            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
             if web_context.error:
                 return web_context.error
             return self._admin_render_index(web_context)
         match action:
             case 'delete' | 'clone' | 'update':
-                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True, True)
+                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True)
             case 'add' | 'reorder' | 'cancel':
-                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, True, False)
+                web_context: ScreenAdminWebContext = ScreenAdminWebContext(request, data, True, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:

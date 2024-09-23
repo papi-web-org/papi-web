@@ -31,7 +31,6 @@ class AdminWebContext(WebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
     ):
         super().__init__(request, data)
         self._admin_main_selector: str = ''
@@ -46,7 +45,7 @@ class AdminWebContext(WebContext):
             pass
         else:
             try:
-                self.set_admin_event(EventLoader.get(request=self.request, lazy_load=lazy_load).load_event(
+                self.set_admin_event(EventLoader.get(request=self.request, lazy_load=False).load_event(
                     self.admin_main_selector))
             except PapiWebException as pwe:
                 self._redirect_error(f'L\'évènement [{self.admin_main_selector}] est introuvable : {pwe}')
@@ -297,7 +296,7 @@ class IndexAdminController(AbstractAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        web_context: AdminWebContext = AdminWebContext(request, data, True)
+        web_context: AdminWebContext = AdminWebContext(request, data)
         return self._admin_render_index(web_context)
 
     @post(
@@ -308,7 +307,7 @@ class IndexAdminController(AbstractAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template | Redirect:
-        web_context: AdminWebContext = AdminWebContext(request, data, True)
+        web_context: AdminWebContext = AdminWebContext(request, data)
         if web_context.error:
             return web_context.error
         field: str = f'admin_columns'

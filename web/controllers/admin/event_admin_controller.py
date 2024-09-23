@@ -30,10 +30,9 @@ class EventAdminWebContext(AdminWebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
             event_needed: bool,
     ):
-        super().__init__(request, data, lazy_load)
+        super().__init__(request, data)
         if self.error:
             return
         if event_needed and not self.admin_event:
@@ -334,9 +333,9 @@ class EventAdminController(AbstractAdminController):
         web_context: EventAdminWebContext
         match action:
             case 'clone' | 'update' | 'delete':
-                web_context = EventAdminWebContext(request, data, True, True)
+                web_context = EventAdminWebContext(request, data, True)
             case 'create':
-                web_context = EventAdminWebContext(request, data, True, False)
+                web_context = EventAdminWebContext(request, data, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
@@ -354,15 +353,15 @@ class EventAdminController(AbstractAdminController):
         web_context: EventAdminWebContext
         action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
-            web_context: AdminWebContext = AdminWebContext(request, data, True)
+            web_context: AdminWebContext = AdminWebContext(request, data)
             if web_context.error:
                 return web_context.error
             return self._admin_render_index(web_context)
         match action:
             case 'create':
-                web_context = EventAdminWebContext(request, data, True, False)
+                web_context = EventAdminWebContext(request, data, False)
             case 'clone' | 'update' | 'delete':
-                web_context = EventAdminWebContext(request, data, True, True)
+                web_context = EventAdminWebContext(request, data, True)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:

@@ -27,10 +27,9 @@ class TournamentAdminWebContext(EventAdminWebContext):
     def __init__(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            lazy_load: bool,
             tournament_needed: bool,
     ):
-        super().__init__(request, data, lazy_load, True)
+        super().__init__(request, data, True)
         self.admin_tournament: Tournament | None = None
         field: str = 'admin_tournament_id'
         if field in self.data:
@@ -257,9 +256,9 @@ class TournamentAdminController(AbstractAdminController):
         web_context: TournamentAdminWebContext
         match action:
             case 'update' | 'delete' | 'clone':
-                web_context = TournamentAdminWebContext(request, data, True, True)
+                web_context = TournamentAdminWebContext(request, data, True)
             case 'create':
-                web_context = TournamentAdminWebContext(request, data, True, False)
+                web_context = TournamentAdminWebContext(request, data, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
@@ -277,15 +276,15 @@ class TournamentAdminController(AbstractAdminController):
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
-            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True, True)
+            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
             if web_context.error:
                 return web_context.error
             return self._admin_render_index(web_context)
         match action:
             case 'update' | 'delete' | 'clone':
-                web_context: TournamentAdminWebContext = TournamentAdminWebContext(request, data, True, True)
+                web_context: TournamentAdminWebContext = TournamentAdminWebContext(request, data, True)
             case 'create':
-                web_context: TournamentAdminWebContext = TournamentAdminWebContext(request, data, True, False)
+                web_context: TournamentAdminWebContext = TournamentAdminWebContext(request, data, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:

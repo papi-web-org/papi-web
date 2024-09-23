@@ -26,11 +26,9 @@ class EventLoader:
         if not request:
             return cls(lazy_load=lazy_load)
         event_loader: EventLoader = request.state.get('event_loader')
-        if event_loader and lazy_load:
-            return event_loader
-        event_loader = cls(lazy_load=False)
-        request.state['event_loader'] = event_loader
-        return event_loader
+        if not event_loader or event_loader.lazy_load and not lazy_load:
+            request.state['event_loader'] = cls(lazy_load=lazy_load)
+        return request.state['event_loader']
 
     def clear_cache(self, event_uniq_id: str | None = None):
         with suppress(AttributeError):
