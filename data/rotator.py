@@ -20,6 +20,7 @@ ROTATOR_DEFAULT_DELAY: int = 15
 
 
 class Rotator:
+    """A data wrapper around a stored rotator."""
     def __init__(self, event: 'Event', stored_rotator: StoredRotator, ):
         self.event: 'Event' = event
         self.stored_rotator: StoredRotator = stored_rotator

@@ -57,6 +57,8 @@ class Result(IntEnum):
 
     @classmethod
     def from_papi_value(cls, value: int) -> Self:
+        """Create a `Result` instance from the stored value in the
+        Papi database."""
         match value:
             case 0:
                 return cls.NOT_PAIRED
@@ -84,6 +86,7 @@ class Result(IntEnum):
         """
         The default value in points, according to FIDE rules, with a
         full-point Pairing Allocated Bye.
+        Assumes a 0-0.5-1 scoring system.
         """
         match self:
             case Result.NOT_PAIRED | Result.LOSS | Result.FORFEIT_LOSS | Result.DOUBLE_FORFEIT:
@@ -109,6 +112,9 @@ class Result(IntEnum):
 
         >>> Result.NOT_PAIRED.opposite_result == Result.NOT_PAIRED
         True
+
+        >>> Result.DOUBLE_FORFEIT.opposite_result == Result.DOUBLE_FORFEIT
+        True
         """
         match self:
             case Result.LOSS:
@@ -130,6 +136,8 @@ class Result(IntEnum):
 
     @classmethod
     def imputable_results(cls) -> tuple[Self, Self, Self]:
+        """Imputable results are the ones that a player can
+        input by themselves, namely a win, a draw, or a loss."""
         return cls.GAIN, cls.DRAW_OR_HPB, cls.LOSS
 
 
@@ -172,6 +180,7 @@ class TournamentType(IntEnum):
 
 
 class TournamentRating(IntEnum):
+    """A wrapper around the tournament rating used stored in the papi db."""
     UNKNOWN = 0
     STANDARD = 1
     RAPID = 2
@@ -242,12 +251,7 @@ class TournamentRating(IntEnum):
 class TournamentPairing(IntEnum):
     """An enumeration representing the supported types of tournament
     pairings.
-    Currently, only Swiss Dutch, along with several accelerations, are supported.
-    A project for Berger-paired tournaments is in the TODO list."""
-    # NOTE(PA) never thought of it because Berger-paired tournaments can be managed in Papi by
-    # Berger-pairing all the rounds and setting the pairing-type back to Swiss in the end.
-    # NOTE(Amaras) Based on your remark, this sounds like a bad API design which
-    # is why I thought about doing something to make it better.
+    Swiss Dutch with acceleration and Berger-table tournaments are supported."""
     UNKNOWN = 0
     STANDARD = 1
     HALEY = 2
@@ -647,7 +651,8 @@ class PlayerRatingType(IntEnum):
 
 class PlayerTitle(IntEnum):
     """The possible FIDE titles: GM, WGM, IM, WIM, FM, WFM.
-    Also includes the "no title" case, but does not include CM nor WCM."""
+    Also includes the "no title" case, but does not include CM nor WCM.
+    This is for Papi-compatibility reasons."""
     GRANDMASTER = 6
     WOMAN_GRANDMASTER = 5
     INTERNATIONAL_MASTER = 4

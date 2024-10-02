@@ -37,6 +37,8 @@ FEES_DIR: Path = Path('fees')
 
 
 class FFESession(Session):
+    """A requests session specialized for communication with the FFE website.
+    Currently, it relies on hacks, because no API is available."""
     def __init__(self, tournament: Tournament):
         super().__init__()
         self.__tournament: Tournament = tournament
@@ -137,6 +139,7 @@ class FFESession(Session):
         return True
 
     def test(self):
+        """Try logging in to the FFE website."""
         logger.info('Tournoi [%s] :', self.__tournament.ffe_id)
         if not self.__ffe_init():
             return

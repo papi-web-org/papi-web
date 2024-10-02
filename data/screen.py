@@ -24,11 +24,12 @@ DEFAULT_SHOW_UNPAIRED: bool = False
 
 
 class Screen:
+    """A data wrapper around a stored screen."""
     def __init__(
             self,
             event: 'Event',
             stored_screen: StoredScreen | None = None,
-            family: 'NewFamily | None' = None,
+            family: 'NewFamily' | None = None,
             family_part: int | None = None,
     ):
         if stored_screen is None:
@@ -40,7 +41,7 @@ class Screen:
         self.event: 'Event' = event
         self.stored_screen: StoredScreen | None = stored_screen
         self.menu_screens: list[Self] = []
-        self.family: 'NewFamily | None' = family
+        self.family: 'NewFamily' | None = family
         self.family_part: int | None = family_part
         self.screen_sets_by_id: dict[int, ScreenSet] = {}
         self._build_screen_sets()

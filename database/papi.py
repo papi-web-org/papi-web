@@ -18,6 +18,7 @@ logger: Logger = get_logger()
 
 
 class TournamentInfo(NamedTuple):
+    """Basic tournament information tuple."""
     rounds: int
     pairing: TournamentPairing
     rating: TournamentRating
@@ -88,8 +89,9 @@ class PapiDatabase(AccessDatabase):
         """Writes the given result to the database."""
         query: str = f'UPDATE `joueur` SET `Rd{round_:0>2}Res` = ? WHERE `Ref` = ?'
         self._execute(query, (result.value, player_id, ))
-    
+
     def remove_board_result(self, player_id: int, round_: int):
+        """Writes the empty result for the given player in the database."""
         query: str = f'UPDATE `joueur` SET `Rd{round_:0>2}Res` = 0 WHERE `Ref` = ?'
         self._execute(query, (player_id, ))
 
@@ -107,7 +109,7 @@ class PapiDatabase(AccessDatabase):
         self._execute(query, (value, name, ))
 
     def write_chessevent_info(self, chessevent_tournament: ChessEventTournament):
-        """Writes vars to the database."""
+        """Creates the tournament data from the ChessEvent Tournament data."""
         default_rounds: int = 7
         if not chessevent_tournament.rounds:
             logger.warning(
@@ -141,7 +143,10 @@ class PapiDatabase(AccessDatabase):
             self._execute(query, (value, name, ))
 
     def add_chessevent_player(self, player_id: int, player: ChessEventPlayer, check_in_started: bool):
-        """Adds a player to the database."""
+        """Creates a player in the database from the given ChessEvent player.
+        If the player is not checked in when `check_in_started` is True,
+        removes the player from play for subsequent rounds which are not
+        specifically unplayed rounds."""
         data: dict[str, str | int | float | None] = {
             'Ref': player_id,
             'RefFFE': player.ffe_id,
@@ -196,12 +201,13 @@ class PapiDatabase(AccessDatabase):
         self._execute(query, params)
 
     def delete_players_personal_data(self):
-        """Delete all personal data from the database."""
+        """Delete all personal data (email and phone number) from the database."""
         query: str = 'UPDATE `joueur` SET Tel = ?, EMail = ?'
         self._execute(query, ('', '', ))
 
     def remove_forfeits_if_no_pairings(self):
-        """Delete all forfeits if no pairing is found (at round #1) to fix ranking on the FFE website."""
+        """Delete all forfeits if no pairing is found (at round #1).
+        This fixes a display issue on the FFE website."""
         query: str = 'SELECT COUNT(`Ref`) FROM `joueur` WHERE `Rd01Adv` IS NOT NULL'
         self._execute(query)
         if self._fetchval() == 0:
@@ -353,6 +359,8 @@ class PapiDatabase(AccessDatabase):
             self._execute(query, params)
 
     def check_in_player(self, player_id: int, check_in: bool, skipped_rounds_dict: dict[int, dict[int, float]]):
+        """Toggles the check in status of the player, depending o, `check_in`.
+        Takes into account the given `skipped_rounds_dict`."""
         if check_in:
             self._check_in_player(player_id, skipped_rounds_dict)
         else:

@@ -12,6 +12,7 @@ logger: Logger = get_logger()
 
 
 class ChessEvent:
+    """A data wrapper around a StoredChessEvent."""
     def __init__(self, event: 'Event', stored_chessevent: StoredChessEvent, ):
         self.stored_chessevent: StoredChessEvent = stored_chessevent
         self.event: 'Event' = event

@@ -65,6 +65,8 @@ class WebContext:
 
     @staticmethod
     def form_data_to_str(data: dict[str, str], field: str, empty_value: str | None = None) -> str | None:
+        """Transforms given `data`'s value in `field` into a stripped
+        str. If it is empty, returns `empty_value`."""
         data[field] = data.get(field, '')
         if data[field] is not None:
             data[field] = data[field].strip()
@@ -78,6 +80,12 @@ class WebContext:
     @staticmethod
     def form_data_to_int(
             data: dict[str, str], field: str, empty_value: int | None = None, minimum: int = None) -> int | None:
+        """Transforms `data`'s value in `field` into a base-10 integer.
+        If the value is empty, returns `empty_value`.
+        If it is not empty but is not in base-10 integer format, raises
+        a `ValueError.
+        If `minimum` is not `None`, and the value is not greater or equal to
+        `minimum`, raise `ValueError`."""
         data[field] = data.get(field, '')
         if data[field] is not None:
             data[field] = data[field].strip()
@@ -162,6 +170,8 @@ class WebContext:
         clients is planned.
         :return: True if the client is allowed to view admin pages.
         """
+        # NOTE(Amaras): see https://docs.litestar.dev/2/usage/security/index.html
+        # for security considerations in Litestar
         if self.request.client.host == '127.0.0.1':
             return True
         return False

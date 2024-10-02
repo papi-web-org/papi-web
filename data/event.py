@@ -68,6 +68,7 @@ class EventMessage:
 
 @total_ordering
 class Event:
+    """A data wrapper around a StoredEvent."""
     def __init__(self, stored_event: StoredEvent, lazy_load: bool):
         self.stored_event: StoredEvent = stored_event
         self.lazy_load = lazy_load

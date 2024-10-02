@@ -20,6 +20,7 @@ logger: Logger = get_logger()
 
 
 class ScreenSet:
+    """A data wrapper around a stored screen set."""
     def __init__(
             self,
             screen: 'Screen',

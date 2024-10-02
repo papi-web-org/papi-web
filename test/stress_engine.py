@@ -14,6 +14,9 @@ logger: Logger = get_logger()
 
 
 class StressEngine(Engine):
+    """Deprecated engine.
+    Previously, it as used to stress test an event, inputing results
+    as fast as possible."""
     def __init__(self, event_uniq_id: str):
         super().__init__()
         event: Event = Event(event_uniq_id, True)
@@ -59,6 +62,7 @@ class StressEngine(Engine):
 
     @staticmethod
     def result_url(event_uniq_id: str, screen_id: str, tournament_uniq_id: str, board_id: int) -> str:
+        """Deprecated because the URL changed."""
         return (f'http://localhost:{PapiWebConfig().web_port}'
                 f'/result/{event_uniq_id}/{screen_id}/{tournament_uniq_id}/{board_id}/{randrange(3) + 1}')
 
