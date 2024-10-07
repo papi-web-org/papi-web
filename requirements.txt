@@ -26,6 +26,7 @@ configparser~=7.1.0
 cryptography~=43.0.1
 # h11 is required by uvicorn
 h11~=0.14.0
+httpdate~=1.2.0
 idna~=3.10
 importlib-metadata~=8.5.0
 importlib-resources~=6.4.5

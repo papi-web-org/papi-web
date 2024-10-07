@@ -4,6 +4,7 @@ from logging import Logger
 from pathlib import Path
 from typing import Annotated, Any
 
+from httpdate import unixtime_to_httpdate, httpdate_to_unixtime
 from litestar import get, Controller
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
@@ -27,10 +28,10 @@ class WebContext:
 
     def __init__(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ] | None = None,
     ):
-        self.request = request
-        self.data = data
+        self.request: HTMXRequest = request
+        self.data: dict[str, str] = data
         self.error: Redirect | Template | None = None
 
     @property
@@ -65,6 +66,8 @@ class WebContext:
 
     @staticmethod
     def form_data_to_str(data: dict[str, str], field: str, empty_value: str | None = None) -> str | None:
+        if data is None:
+            return empty_value
         data[field] = data.get(field, '')
         if data[field] is not None:
             data[field] = data[field].strip()
@@ -78,6 +81,8 @@ class WebContext:
     @staticmethod
     def form_data_to_int(
             data: dict[str, str], field: str, empty_value: int | None = None, minimum: int = None) -> int | None:
+        if data is None:
+            return empty_value
         data[field] = data.get(field, '')
         if data[field] is not None:
             data[field] = data[field].strip()
@@ -94,6 +99,8 @@ class WebContext:
     @staticmethod
     def form_data_to_float(
             data: dict[str, str], field: str, empty_value: float | None = None, minimum: float = None) -> float | None:
+        if data is None:
+            return empty_value
         data[field] = data.get(field, '')
         if data[field] is not None:
             data[field] = data[field].strip()
@@ -109,6 +116,8 @@ class WebContext:
 
     @staticmethod
     def form_data_to_bool(data: dict[str, str], field: str, empty_value: bool | None = None) -> bool | None:
+        if data is None:
+            return empty_value
         data[field] = data.get(field, '')
         if data[field] is not None:
             data[field] = data[field].strip().lower()
@@ -121,6 +130,8 @@ class WebContext:
 
     @staticmethod
     def form_data_to_rgb(data: dict[str, str], field: str, empty_value: RGB | None = None) -> str | None:
+        if data is None:
+            return empty_value
         data[field] = data.get(field, '')
         if data[field] is not None:
             data[field] = data[field].strip().lower()
@@ -173,8 +184,10 @@ class WebContext:
         Override this method to pass more parameters to the template engine.
         :return: a dict containing named parameters.
         """
+        now: float = time.time()
         return {
-            'now': time.time(),
+            'now': now,
+            'now_http_date': unixtime_to_httpdate(int(now)),
             'papi_web_config': PapiWebConfig(),
             'admin_auth': self.admin_auth,
             'background_info': self.background_info,
@@ -188,7 +201,7 @@ class AbstractController(Controller):
     """
 
     @staticmethod
-    def redirect_error(request: HTMXRequest, errors: str | list[str]) -> Template:
+    def redirect_error(request: HTMXRequest, errors: str | list[str] | Exception) -> Template:
         web_context: WebContext = WebContext(request, {})
         Message.error(request, errors)
         return HTMXTemplate(
@@ -207,6 +220,31 @@ class AbstractController(Controller):
             context={
                 'messages': Message.messages(request),
             })
+
+    IF_MODIFIED_SINCE_HEADER: str = 'If-Modified-Since'
+
+    def get_if_modified_since(self, request: HTMXRequest) -> float:
+        """
+        Return the If-Modified-Since header value of the request.
+        If no header found or the date is invalid, raise ValueError.
+        Typical usage in a controller:
+        try:
+            if_modified_since: float = self.get_if_modified_since(request)
+        except ValueError as ve:
+            return AbstractController.redirect_error(request, ve)
+        """
+        try:
+            if_modified_since: float = httpdate_to_unixtime(request.headers[self.IF_MODIFIED_SINCE_HEADER])
+            logger.debug(
+                f'request.headers[{self.IF_MODIFIED_SINCE_HEADER}]={request.headers[self.IF_MODIFIED_SINCE_HEADER]}')
+            logger.debug(f'if_modified_since={if_modified_since}')
+            return if_modified_since
+        except KeyError as ke:
+            raise ValueError(f'Header [{self.IF_MODIFIED_SINCE_HEADER}] not found') from ke
+        except ValueError as ve:
+            raise ValueError(
+                f'Invalid [{self.IF_MODIFIED_SINCE_HEADER}] header '
+                f'[{request.headers[self.IF_MODIFIED_SINCE_HEADER]}]') from ve
 
 
 class IndexController(AbstractController):

@@ -83,7 +83,7 @@ class EventUserController(AbstractUserController):
         try:
             date: float = WebContext.form_data_to_float(data, 'date', 0.0)
         except ValueError as ve:
-            return AbstractController.redirect_error(request, str(ve))
+            return AbstractController.redirect_error(request, ve)
         if date <= 0.0:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
         if self._user_event_page_update_needed(web_context.user_event, date):
