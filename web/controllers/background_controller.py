@@ -1,11 +1,9 @@
 from logging import Logger
-from typing import Annotated
 
 import validators
-from litestar import post
+from litestar import get
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.enums import RequestEncodingType, MediaType
-from litestar.params import Body
+from litestar.enums import MediaType
 
 from common.background import inline_image_url
 from common.logger import get_logger
@@ -18,15 +16,11 @@ logger: Logger = get_logger()
 class BackgroundWebContext(WebContext):
     def __init__(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            color: str,
+            image: str,
     ):
-        super().__init__(request, data)
-        field: str = 'image'
-        image: str = self._form_data_to_str(field, '')
-        field: str = 'color'
-        color: str = self._form_data_to_str(field, '')
+        super().__init__(request)
         if not color:
-            logger.warning(f'Parameter [{field}] not found (data=[{data}]).')
             color = PapiWebConfig.default_background_color
         self.background: dict[str, str] = {
             'color': color,
@@ -46,13 +40,14 @@ class BackgroundController(AbstractController):
     file in /custom is sent).
     """
 
-    @post(
+    @get(
         path='/background',
         name='background',
         media_type=MediaType.JSON
     )
     async def background(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            color: str,
+            image: str,
     ) -> dict[str, str]:
-        return BackgroundWebContext(request, data).background
+        return BackgroundWebContext(request, color=color, image=image).background

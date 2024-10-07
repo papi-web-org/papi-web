@@ -159,9 +159,8 @@
         var body_background_fingerprint = $('body').attr('background-fingerprint');
         if (body_background_fingerprint != background_fingerprint) {
             $.ajax({
-                url: '/background',
-                type: 'POST',
-                data: background_info,
+                url: '/background?color={{ background_info.color | urlencode }}&image={{ background_info.image | replace("/", "%2f") }}',
+                type: 'GET',
                 success: function (data) {
                     $('body').css('background-image', data['url']);
                     $('body').css('background-color', data['color']);
