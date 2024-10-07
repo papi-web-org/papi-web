@@ -171,7 +171,7 @@ class ChessEventAdminController(AbstractAdminController):
             case 'update' | 'delete':
                 web_context = ChessEventAdminWebContext(request, data, True)
             case 'create':
-                web_context = ChessEventAdminWebContext(request, data, True)
+                web_context = ChessEventAdminWebContext(request, data, False)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
