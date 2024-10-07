@@ -29,6 +29,7 @@ logger: Logger = get_logger()
 
 
 class Tournament:
+    """A data wrapper around a stored tournament."""
     def __init__(self, event: 'Event', stored_tournament: StoredTournament, ):
         self.event: 'Event' = event
         self.stored_tournament: StoredTournament = stored_tournament
@@ -187,6 +188,7 @@ class Tournament:
 
     @property
     def skipped_rounds_as_dict(self) -> dict[int, dict[int, float]]:
+        """A dictionary mapping player ids to a dictionary of rounds to results."""
         # dict[papi_player_id: int, dict[round: int, score: float]]
         skipped_rounds_dict: dict[int, dict[int, float]] = {}
         for skipped_round in self.stored_tournament.stored_skipped_rounds:
@@ -287,6 +289,8 @@ class Tournament:
                 return False
 
     def read_papi(self):
+        """Fetch tournament information from the Papi database, as well
+        as the player information."""
         assert not self.event.lazy_load
         if self._papi_read:
             return
@@ -316,6 +320,9 @@ class Tournament:
         self._build_boards()
 
     def _calculate_current_round(self):
+        """Computes which round is the current round.
+        Currently, the current round is the first paired round with missing
+        results."""
         round_infos: dict[int, dict[str, bool]] = {}
         paired_rounds: list[int] = []
         for round_ in range(1, self._rounds + 1):
@@ -353,10 +360,10 @@ class Tournament:
             player.compute_points(self._current_round)
             # virtual points
             player.vpoints = 0.0
+            vpoints = 0
             if self._pairing == TournamentPairing.HALEY:
-                if self._current_round <= 2:
-                    if player.rating >= self._rating_limit1:
-                        player.add_vpoints(1.0)
+                if self._current_round <= 2 and player.rating >= self._rating_limit1:
+                    vpoints = 1
             elif self._pairing == TournamentPairing.HALEY_SOFT:
                 # Round 1: All players above rating_limit1 get 1 vpoint
                 # Round 2: All players above rating_limit1 get 1 vpoint
@@ -364,66 +371,57 @@ class Tournament:
                 # bottom of page #138 on
                 # https://dna.ffechecs.fr/wp-content/uploads/sites/2/2023/10/Livre-arbitre-octobre-2023.pdf,
                 # please remove if OK
-                if self._current_round <= 2:
-                    if player.rating >= self.rating_limit1:
-                        player.add_vpoints(1.0)
-                    else:
-                        if self._current_round == 2:
-                            player.add_vpoints(0.5)
+                if self._current_round <= 2 and player.rating >= self.rating_limit1:
+                    vpoints = 1
+                elif self._current_round == 2 and player.rating < self.rating_limit1:
+                    vpoints = 0.5
             elif self._pairing == TournamentPairing.SAD:
-                # À l'appariement de l'avant-dernière ronde, les points
-                # fictifs sont retirés et le système devient un système
-                # Suisse intégral.
+                # Before the second to last round, we we remove the virtual
+                # points, and use a simple Swiss Dutch system.
                 if self._current_round <= self._rounds - 2:
-                    # En début de tournoi, les joueurs du groupe A ont
-                    # deux points fictifs (PF = 2), ceux du groupe B un
-                    # point fictif (PF = 1), ceux du groupe C aucun point
-                    # fictif (PF = 0)
-                    if player.rating >= self._rating_limit1:
-                        player.add_vpoints(2.0)
-                    elif player.rating >= self._rating_limit2:
-                        player.add_vpoints(1.0)
-                    if player.rating < self._rating_limit1:
-                        # Lorsqu'un joueur des groupes B ou C marque
-                        # sur l'échiquier au moins 1,5 point, son capital
-                        # fictif augmente de 0,5 point.
-                        if player.points >= 1.5:
-                            player.add_vpoints(0.5)
-                        # Lorsque ce joueur marque sur l'échiquier son
-                        # troisième point, son capital fictif augmente une
-                        # nouvelle fois de 0,5 point.
-                        if player.points >= 3:
-                            player.add_vpoints(0.5)
-                        if player.rating < self._rating_limit2:
-                            # Lorsqu'un joueur du groupe C marque sur
-                            # l'échiquier au moins 4,5 points, son capital
-                            # fictif augmente pour la troisième fois de
-                            # 0,5 point.
-                            if player.points >= 4.5:
-                                player.add_vpoints(0.5)
+                    # Each 1.5 points earned, virtual points go up by 0.5
+                    # No player can have more than 2 points.
+                    # At the start, players are sorted in three groups
+                    # based on their rating.
+                    # Group A players start with 2 points
+                    # Group B players start with 1 point
+                    # Group C players start with 0 points.
+                    # If a player reaches more than half of the possible score,
+                    # their virtual points capital is raised to 2 points.
 
-                            # Lorsqu'un joueur du groupe C marque sur
-                            # l'échiquier au moins 6 points, son capital
-                            # fictif augmente pour la dernière fois de
-                            # 0,5 points (maximum de 2 points fictifs)
-                            if player.points >= 6:
-                                player.add_vpoints(0.5)
-
-                        # Le capital fictif est automatiquement porté à 2
-                        # points si le joueur a marqué la moitié des points
-                        # possibles sur l'échiquier (il est sous-évalué par
-                        # le classement ELO)
-                        if player.points * 2 >= self._rounds:
-                            player.vpoints = 2
-            player.add_vpoints(player.points)
+                    # NOTE(Amaras): // is implemented on float as well, so it's
+                    # way simpler to implement than by applying the algorithm
+                    # step by step.
+                    potential_vpoints = 0.5 * player.points // 1.5
+                    if player.rating >= self.rating_limit1:
+                        # Group A players get 2 virtual points
+                        vpoints = 2
+                    elif player.rating >= self.rating_limit2:
+                        # Group B players start with 1 point
+                        # Players cannot have more than 2 points
+                        vpoints = min(2, 1 + potential_vpoints)
+                    else:
+                        # Group C players start with 0 points
+                        # Players cannor have more than 2 points
+                        vpoints = min(2, potential_vpoints)
+                    if 2 * player.points >= self._rounds:
+                        # If a player gets at least half the possible score,
+                        # their capital is set a 2 points.
+                        # Assumes a 0-0.5-1 scoring system.
+                        vpoints = 2
+            player.vpoints = player.points + vpoints
 
     def store_illegal_move(self, player: Player):
+        """Store an illegal move for the given `player`, for the current
+        round."""
         with EventDatabase(self.event.uniq_id, write=True) as event_database:
             event_database.add_stored_illegal_move(self.id, self.current_round, player.id)
             event_database.commit()
         logger.info('le coup illégal a été enregistré')
 
     def delete_illegal_move(self, player: Player) -> bool:
+        """Deletes one illegal move for the given `player` for the current
+        round. If no illegal move was stored, don't do anything in the database."""
         with EventDatabase(self.event.uniq_id, write=True) as event_database:
             deleted: bool = event_database.delete_stored_illegal_move(self.id, self.current_round, player.id)
             event_database.commit()
@@ -434,6 +432,8 @@ class Tournament:
         return deleted
 
     def get_illegal_moves(self) -> Counter[int]:
+        """Retrieves all the illegal moves for the current round.
+        Returns a Counter, ordered by player id."""
         with EventDatabase(self.event.uniq_id) as event_database:
             return event_database.get_stored_illegal_moves(self.id, self.current_round)
 
@@ -510,6 +510,10 @@ class Tournament:
             return NeedsUpload.YES
 
     def add_result(self, board: Board, white_result: Result):
+        """Stores the given result for the given `board` in the current round.
+        Stores the `white_result` directly, and uses the opposite result
+        as the black's result.
+        Assumes that no asymetric result was entered."""
         black_result = white_result.opposite_result
         with PapiDatabase(self.file, write=True) as papi_database:
             papi_database.add_board_result(board.white_player.id, self._current_round, white_result)
@@ -525,6 +529,7 @@ class Tournament:
                     board.black_player.rating)
 
     def delete_result(self, board: Board):
+        """Deletes the result for the given `board` in the current round."""
         with PapiDatabase(self.file, write=True) as papi_database:
             papi_database.remove_board_result(board.white_player.id, self._current_round)
             papi_database.remove_board_result(board.black_player.id, self._current_round)
@@ -537,6 +542,10 @@ class Tournament:
 
     def write_chessevent_info_to_database(
             self, chessevent_tournament: ChessEventTournament, chessevent_download_md5: str) -> int:
+        """Stores the information from the given `chessevent_tournament` in
+        the event database.
+        For comparison, also store `chessevent_download_md5`, so that the 
+        tournament is not downloaded unnecessarily."""
         with PapiDatabase(self.file, write=True) as papi_database:
             with EventDatabase(self.event.uniq_id, write=True) as event_database:
                 event_database.delete_tournament_stored_skipped_rounds(self.id)
@@ -554,6 +563,8 @@ class Tournament:
         return player_id - 1
 
     def check_in_player(self, player: Player, check_in: bool):
+        """Stores the `check_in` status for the given `player`.
+        If the player has configured skipped rounds, record them as well."""
         with PapiDatabase(self.file, write=True) as papi_database:
             with EventDatabase(self.event.uniq_id, write=True) as event_database:
                 papi_database.check_in_player(player.id, check_in, self.skipped_rounds_as_dict)

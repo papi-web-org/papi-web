@@ -14,6 +14,7 @@ logger: Logger = get_logger()
 
 # https://docs.python.org/3/library/configparser.html
 class ConfigReader(ConfigParser):
+    """The custom INI configuration parser for PapiWeb."""
 
     def __init__(self, ini_file: Path):
         super().__init__(interpolation=None, empty_lines_in_values=False)

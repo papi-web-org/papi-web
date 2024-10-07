@@ -8,6 +8,7 @@ logger: Logger = get_logger()
 
 
 class ChessEventTournament:
+    """A class representing all the data of a ChessEvent tournament."""
     def __init__(
             self,
             chessevent_tournament_info: dict[

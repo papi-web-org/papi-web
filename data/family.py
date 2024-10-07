@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 
 class Family:
+    """A data wrapper around a StoredFamily."""
     def __init__(
             self,
             event: 'Event',

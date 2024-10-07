@@ -74,19 +74,27 @@ class SQLiteDatabase:
 
     @staticmethod
     def load_bool_from_database_field(data: int | None, if_none=None) -> bool:
+        """Returns True if `data` is 1, False if `data` is something else other
+        than None, and `if_none` if `data` is None."""
         return data == 1 if data is not None else if_none
 
     @staticmethod
     def load_json_from_database_field(json_data: str | None, if_none=None) -> Any:
+        """Decodes the JSON data `json_data` and returns the result.
+        If `json_data` is None, returns `if_none`."""
         return json.loads(json_data) if json_data is not None else if_none
 
     @staticmethod
-    def set_dict_int_keys(string_dict: dict[str, Any]) -> dict[int, Any]:
+    def set_dict_int_keys(string_dict: dict[str, Any] | None) -> dict[int, Any] | None:
+        """Maps the string keys to integer keys and returns the resulting dict.
+        If `string_dict` is None, returns None."""
         # This method is needed because JSON turns all keys to strings
         return None if string_dict is None else {int(k): v for k, v in string_dict.items()}
 
     @staticmethod
     def dump_to_json_database_field(obj: Any, if_none=None) -> str | None:
+        """Serilizes the given object `obj` to JSON.
+        Returns the JSON serialization of `if_none` otherwise (may be None)."""
         if obj is not None:
             return json.dumps(obj)
         if if_none is not None:
@@ -95,10 +103,14 @@ class SQLiteDatabase:
 
     @classmethod
     def dump_to_json_database_timer_colors(cls, colors) -> str | None:
+        """Serializes the timer colors into JSON.
+        By default, returns a serialization of {i: None} (i in (1, 2, 3))."""
         return cls.dump_to_json_database_field(colors, {i: None for i in range(1, 4)})
 
     @classmethod
     def dump_to_json_database_timer_delays(cls, delays) -> str | None:
+        """Seriaizes the timer delays into JSON.
+        By default, returns a serialization of {i: None} (i in (1, 2, 3))."""
         return cls.dump_to_json_database_field(delays, {i: None for i in range(1, 4)})
 
 
@@ -117,6 +129,7 @@ class EventDatabase(SQLiteDatabase):
         return PapiWebConfig.event_path / f'{uniq_id}.{PapiWebConfig.event_ext}'
 
     def exists(self) -> bool:
+        """Checks if the event database file exists."""
         return self.file.exists()
 
     @staticmethod
@@ -128,6 +141,14 @@ class EventDatabase(SQLiteDatabase):
             field_type: type = None,
             empty_allowed: bool = True,
     ):
+        """Checks that the given dictionary follows assumptions.
+        - `yml_file` is passed for AssertionError reporting only.
+        - `dict_path` is passed for AssertionError reporting only.
+        - Each field in `mandatory_fields` must appear in the `supposed_dict`
+          keys.
+        - If `field_type` is provided, all values must be of type `field_type`.
+        - If `empty_allowed` is set to False, `supposed_dict` cannot be empty.
+        """
         assert isinstance(supposed_dict, dict), f'{yml_file.name}: {dict_path}/ is no dictionary'
         fields: list[str] = []
         if mandatory_fields is not None:
@@ -153,6 +174,15 @@ class EventDatabase(SQLiteDatabase):
             items_number: int = None,
             empty_allowed: bool = True,
     ):
+        """Checks that the given list follows assumptions.
+        - `yml_file` is passed for AssertionError reporting only.
+        - If `item_path` is passed for AssertionError reporting only.
+        - If `item_type` is provided, all items in `supposed_list` must be of
+          this type.
+        - If `items_number` is passed, `supposed_list` must contain exactly
+          this number of elements.
+        - If `allowed_empty is set to Falsen `supposed_list` must not be empty.
+        """
         assert isinstance(supposed_list, list), f'{yml_file.name}: {list_path} is no list'
         if item_type is not None:
             assert all(isinstance(item, item_type) for item in supposed_list), \
@@ -166,6 +196,8 @@ class EventDatabase(SQLiteDatabase):
     def create(self, populate: bool = False):
         """
         Create an event database, based on /database/sql/create-event.sql.
+        The file associated to this database must not exist before calling
+        this method.
         :param populate: if True, the corresponding file in /database/yml is used to populate the database (this way
         example databases are created when no event database is found).
         """
@@ -527,6 +559,7 @@ class EventDatabase(SQLiteDatabase):
                 database.close()
 
     def delete(self) -> Path:
+        """Soft-deletes the event databse file by archiving it."""
         file: Path = EventDatabase(self.uniq_id).file
         index: int = 0
         date_str: str = datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M")
@@ -542,15 +575,22 @@ class EventDatabase(SQLiteDatabase):
                 arch = file.parent / f'{file.stem}_{date_str}-{index}.arch'
 
     def set_last_update(self):
+        """Store the current time as the last time the database was updated."""
+        # NOTE(Amaras): We could get in weird territory if time is not
+        # monotonic.
         self._execute('UPDATE `info` SET `last_update` = ?', (time.time(),))
 
     def rename(self, new_uniq_id: str = None):
+        """Changes the event file database to theone associated to the
+        provided `new_uniq_id`."""
         self.file.rename(EventDatabase(new_uniq_id).file)
         with EventDatabase(new_uniq_id, write=True) as event_database:
             event_database.set_last_update()
             event_database.commit()
 
     def clone(self, new_uniq_id: str):
+        """Create a copy of the event database file corresponding to an event
+        with name `new_uniq_id`."""
         shutil.copy(self.file, EventDatabase(new_uniq_id).file)
         with EventDatabase(new_uniq_id, write=True) as event_database:
             event_database.set_last_update()
@@ -577,6 +617,7 @@ class EventDatabase(SQLiteDatabase):
     """
 
     def _row_to_stored_event(self, row: dict[str, Any]) -> StoredEvent:
+        """Convert a row to a StoredEvent record."""
         return StoredEvent(
             uniq_id=self.uniq_id,
             version=row['version'],
@@ -597,6 +638,8 @@ class EventDatabase(SQLiteDatabase):
         )
 
     def _get_stored_event(self) -> StoredEvent:
+        """Gets all the information about the event in the database
+        and returns a corresponding StoredEvent record."""
         self._execute(
             'SELECT * FROM `info`',
             (),
@@ -615,11 +658,13 @@ class EventDatabase(SQLiteDatabase):
 
     @property
     def version(self) -> Version:
+        """Returns the Papi-web version which created the database."""
         if self._version is None:
             self._version = Version(self._get_stored_event().version)
         return self._version
 
     def set_version(self, version: Version):
+        """Sets the version field stored in the database to `version`."""
         self._execute(
             'UPDATE `info` SET `version` = ?, `last_update` = ?',
             (f'{version.major}.{version.minor}.{version.micro}', time.time()))
@@ -637,33 +682,38 @@ class EventDatabase(SQLiteDatabase):
         logger.info(f'La base de données {self.file.name} a été mise à jour en version {version}.')
 
     def upgrade(self):
+        """Upgrades the database version from the stored database version to
+        the current Papi-web version.
+        This may change the structure of the database."""
         papi_web_version: Version = PapiWebConfig.version
         if self.version > papi_web_version:
             raise PapiWebException(
                 f'Votre version de Papi-web ({papi_web_version}) '
                 f'ne peut pas ouvrir les bases de données en version {self.version}, '
                 f'veuillez mettre à jour votre version de Papi-web')
-        logger.info(f'Mise à jour de la base de données...')
+        logger.info('Mise à jour de la base de données...')
         if self.version < (version := Version('2.4.1')):
             self._upgrade(version)
 
     def update_stored_event(
             self, stored_event: StoredEvent
     ) -> StoredEvent:
-        fields: list[str] = [
+        """Updates the event database with the information in the provided
+        `stored_event`."""
+        fields: tuple[str] = (
             'name', 'start', 'stop', 'public', 'path', 'background_image', 'background_color', 'update_password',
             'record_illegal_moves', 'allow_results_deletion_on_input_screens', 'timer_colors', 'timer_delays',
             'last_update',
-        ]
-        params: list = [
+        )
+        params: tuple = (
             stored_event.name, stored_event.start, stored_event.stop, stored_event.public, stored_event.path,
             stored_event.background_image, stored_event.background_color, stored_event.update_password,
             stored_event.record_illegal_moves, stored_event.allow_results_deletion_on_input_screens,
             self.dump_to_json_database_timer_colors(stored_event.timer_colors),
             self.dump_to_json_database_timer_delays(stored_event.timer_delays),
             time.time(),
-        ]
-        field_sets = [f"`{f}` = ?" for f in fields]
+        )
+        field_sets = (f"`{f}` = ?" for f in fields)
         self._execute(
             f'UPDATE `info` SET {", ".join(field_sets)}',
             tuple(params))

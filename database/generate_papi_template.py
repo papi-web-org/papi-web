@@ -1,3 +1,7 @@
+"""This module is a utility script to create papi templates.
+This script re-creates the papi_template.py file on invocation including
+imports.
+"""
 import bz2
 import base64
 from pathlib import Path

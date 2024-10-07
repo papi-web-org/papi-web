@@ -21,6 +21,7 @@ logger: Logger = get_logger()
 
 @dataclass
 class TimerHour:
+    """A data wrapper around a stored timer hour."""
     timer: 'Timer'
     stored_timer_hour: StoredTimerHour
     timestamp: int | None = field(init=False, default=None)
@@ -116,6 +117,7 @@ class TimerHour:
 
 
 class Timer:
+    """A data wrapper around a stored timer."""
     def __init__(self, event: 'Event', stored_timer: StoredTimer):
         self.event: 'Event' = event
         self.stored_timer: StoredTimer = stored_timer
@@ -218,6 +220,8 @@ class Timer:
         }
 
     def get_previous_timer_hour(self, timer_hour: TimerHour) -> TimerHour | None:
+        """From the given `timer_hour`, finds the previous TimerHour object.
+        Relies on insertion order being consistent with timer ordering."""
         previous_timer_hour: TimerHour | None = None
         for th in self.timer_hours_by_id.values():
             if th.id == timer_hour.id:

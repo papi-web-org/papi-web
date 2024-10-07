@@ -14,6 +14,7 @@ logger: Logger = get_logger()
 @dataclass
 @total_ordering
 class Player:
+    """A data class representing a player in a tournament."""
     ref_id: int
     last_name: str
     first_name: str
@@ -42,7 +43,7 @@ class Player:
     def title_str(self) -> str:
         return str(self.title)
 
-    def compute_points(self, max_round):
+    def compute_points(self, max_round: int):
         """Computes and stores the points of the player,
         from round 1 to round `max_round` (returns None)"""
         # NOTE(Amaras) this does not rely on the fact that insertion order
@@ -65,10 +66,13 @@ class Player:
         return '{:.1f}'.format(points).replace('.0', '').replace('.5', '½')
 
     def set_points(self, points: float):
+        """Deprecated method, use direct assignment instead."""
         warnings.warn("Use direct assignment to points instead")
         self.points = points
 
     def add_points(self, points: float):
+        """If `self.points` is set, add `points` to it.
+        Otherwise, leave `self.points` as None."""
         with suppress(TypeError):
             self.points += points
 
@@ -77,10 +81,13 @@ class Player:
         return self._points_str(self.points)
 
     def set_vpoints(self, vpoints: float):
+        """Deprecated method, use direct assignment instead."""
         warnings.warn("Use direct assignment to vpoints instead")
         self.vpoints = vpoints
 
     def add_vpoints(self, vpoints: float):
+        """If `self.vpoints` is set, add `vpoints` to it.
+        Otherwise, leave `self.vpoints` as None."""
         with suppress(TypeError):
             self.vpoints += vpoints
 
@@ -97,14 +104,17 @@ class Player:
         return 'Exempt' + ('e' if self.gender == PlayerGender.FEMALE else '')
 
     def set_board_id(self, board_id: int):
+        """Deprecated method, use direct assignment instead."""
         warnings.warn("Use direct assignment to board_id instead")
         self.board_id = board_id
 
     def set_board_number(self, board_number: int):
+        """Deprecated method, use direct assignment instead."""
         warnings.warn("Use direct assignment to board_number instead")
         self.board_number = board_number
 
     def set_color(self, color: Color):
+        """Deprecated method, use direct assignment instead."""
         warnings.warn("Use direct assignment to color instead")
         self.color = color
 

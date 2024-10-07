@@ -12,6 +12,7 @@ logger: Logger = get_logger()
 @dataclass
 @total_ordering
 class Result:
+    """A representation of a result entered in Papi-web."""
     timestamp: float
     tournament_id: int
     round: int
