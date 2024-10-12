@@ -206,7 +206,6 @@ class RotatorAdminController(AbstractAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
             web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
@@ -252,6 +251,7 @@ class RotatorAdminController(AbstractAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         web_context.set_admin_event(event_loader.reload_event(web_context.admin_event.uniq_id))
         if next_rotator_id:
             web_context.admin_rotator = web_context.admin_event.rotators_by_id[next_rotator_id]

@@ -330,7 +330,6 @@ class ScreenAdminController(AbstractAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=False)
         action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
             web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
@@ -378,6 +377,7 @@ class ScreenAdminController(AbstractAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=False)
         web_context.set_admin_event(event_loader.reload_event(web_context.admin_event.uniq_id))
         if next_screen_id:
             web_context.admin_screen = web_context.admin_event.basic_screens_by_id[next_screen_id]
