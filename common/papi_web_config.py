@@ -159,7 +159,7 @@ class PapiWebConfig(metaclass=Singleton):
     def ffe_upload_delay(self) -> int:
         return self.__ffe_upload_delay
 
-    version: Version = Version('2.4rc9')
+    version: Version = Version('2.4rc10')
 
     url: str = 'https://github.com/papi-web-org/papi-web'
 
