@@ -330,7 +330,7 @@ class FamilyAdminController(AbstractAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
     ) -> Template:
-        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=False)
         action: str = WebContext.form_data_to_str(data, 'action')
         if action == 'close':
             web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
