@@ -2,7 +2,7 @@ from contextlib import suppress
 from logging import Logger
 from typing import Annotated, Any
 
-from litestar import post
+from litestar import post, get
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import Reswap, HTMXTemplate
 from litestar.enums import RequestEncodingType
@@ -16,10 +16,10 @@ from data.rotator import Rotator
 from data.screen import Screen
 from data.tournament import Tournament
 from data.util import ScreenType
+from web.controllers.user.event_user_controller import EventUserWebContext
+from web.controllers.user.index_user_controller import AbstractUserController
 from web.messages import Message
 from web.session import SessionHandler
-from web.controllers.index_controller import WebContext, AbstractController
-from web.controllers.user.index_user_controller import AbstractUserController, EventUserWebContext
 
 logger: Logger = get_logger()
 
@@ -27,49 +27,40 @@ logger: Logger = get_logger()
 class ScreenOrRotatorUserWebContext(EventUserWebContext):
     def __init__(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            load_rotator: bool,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ] | None,
+            event_uniq_id: str,
+            screen_uniq_id: str | None,
+            rotator_id: int | None,
+            rotator_screen_index: int | None,
     ):
-        super().__init__(request, data)
+        super().__init__(request, data=data, event_uniq_id=event_uniq_id, user_event_tab=None)
         self.screen: Screen | None = None
         self.rotator: Rotator | None = None
-        self.rotator_screen_index: int = 0
+        self.rotator_screen_index: int | None = rotator_screen_index or 0
         if self.error:
             return
-        if load_rotator:
-            field: str = 'rotator_id'
+        if screen_uniq_id:
             try:
-                rotator_id: int | None = self._form_data_to_int(field, minimum=1)
-            except ValueError as ve:
-                self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
+                self.screen = self.user_event.screens_by_uniq_id[screen_uniq_id]
+            except KeyError:
+                self._redirect_error(f'L\'écran [{screen_uniq_id}] n\'existe pas.')
                 return
+            if not self.screen.public and not self.admin_auth:
+                self._redirect_error(f'L\'écran [{self.screen.uniq_id}] est réservé aux arbitres.')
+                return
+            self.user_event_tab = self.screen.type.to_str()
+        else:
             try:
                 self.rotator = self.user_event.rotators_by_id[rotator_id]
             except KeyError:
                 self._redirect_error(f'L\'écran rotatif [{rotator_id}] n\'existe pas.')
-                return
-            field: str = 'rotator_screen_index'
-            try:
-                self.rotator_screen_index = self._form_data_to_int(field, 0)
-            except ValueError as ve:
-                self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
                 return
             if not self.rotator.public and not self.admin_auth:
                 self._redirect_error(f'L\'écran rotatif [{self.rotator.uniq_id}] est réservé aux arbitres.')
                 return
             self.rotator_screen_index = self.rotator_screen_index % len(self.rotator.rotating_screens)
             self.screen = self.rotator.rotating_screens[self.rotator_screen_index]
-        else:
-            field: str = 'screen_uniq_id'
-            screen_uniq_id: str = self._form_data_to_str(field)
-            try:
-                self.screen = self.user_event.screens_by_uniq_id[screen_uniq_id]
-            except KeyError:
-                self._redirect_error(f'L\'écran [{data.get(field, None)}] n\'existe pas.')
-                return
-            if not self.screen.public and not self.admin_auth:
-                self._redirect_error(f'L\'écran [{self.screen.uniq_id}] est réservé aux arbitres.')
-                return
+            self.user_event_tab = 'rotators'
 
     @property
     def login_needed(self) -> bool:
@@ -113,25 +104,41 @@ class ScreenOrRotatorUserWebContext(EventUserWebContext):
 class ScreenUserWebContext(ScreenOrRotatorUserWebContext):
     def __init__(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ] | None,
+            event_uniq_id: str,
+            screen_uniq_id: str | None,
+            screen_needed: bool,
     ):
-        super().__init__(request, data, False)
+        super().__init__(
+            request, data=data, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id, rotator_id=None,
+            rotator_screen_index=None)
+        if screen_needed and not self.screen:
+            self._redirect_error(f'L\'écran est obligatoire.')
+            return
 
 
 class RotatorUserWebContext(ScreenOrRotatorUserWebContext):
     def __init__(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ] | None,
+            event_uniq_id: str,
+            rotator_id: int,
+            rotator_screen_index: int,
     ):
-        super().__init__(request, data, True)
+        super().__init__(
+            request, data=data, event_uniq_id=event_uniq_id, screen_uniq_id=None, rotator_id=rotator_id,
+            rotator_screen_index=rotator_screen_index)
 
 
 class BasicScreenOrFamilyUserWebContext(ScreenUserWebContext):
     def __init__(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ] | None,
+            event_uniq_id: str,
+            screen_uniq_id: str | None,
     ):
-        super().__init__(request, data)
+        super().__init__(
+            request, data=data, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id, screen_needed=True)
         self.family: Family | None = None
         if self.error:
             return
@@ -150,10 +157,25 @@ class BasicScreenOrFamilyUserWebContext(ScreenUserWebContext):
         }
 
 
+class LoginUserWebContext(ScreenUserWebContext):
+    def __init__(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            screen_uniq_id: str | None,
+    ):
+        super().__init__(
+            request, data=data, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id, screen_needed=True)
+        field: str = 'password'
+        self.password: str = self._form_data_to_str(field, None)
+        if self.password is None:
+            self._redirect_error(f'La paramètre [{field}] est manquant.')
+
+
 class ScreenUserController(AbstractUserController):
 
     @classmethod
-    def _user_render_screen(
+    def _user_screen_render(
             cls,
             web_context: ScreenOrRotatorUserWebContext,
     ) -> Template:
@@ -168,24 +190,24 @@ class ScreenUserController(AbstractUserController):
         )
 
     @post(
-        path='/user-login',
+        path='/user/login/{event_uniq_id:str}/{screen_uniq_id:str}',
         name='user-login',
     )
-    async def htmx_login(
+    async def htmx_user_login(
             self,
             request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            screen_uniq_id: str,
     ) -> Template:
-        web_context: EventUserWebContext = EventUserWebContext(request, data)
+        web_context: LoginUserWebContext = LoginUserWebContext(
+            request, data=data, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id)
         if web_context.error:
             return web_context.error
         if data['password'] == web_context.user_event.update_password:
             Message.success(request, 'Authentification réussie !')
-            SessionHandler.store_password(request, web_context.user_event, data['password'])
-            web_context: ScreenUserWebContext = ScreenUserWebContext(request, data)
-            if web_context.error:
-                return web_context.error
-            return self._user_render_screen(web_context)
+            SessionHandler.store_password(request, web_context.user_event, web_context.password)
+            return self._user_screen_render(web_context)
         if data['password'] == '':
             Message.warning(request, 'Veuillez indiquer le code d\'accès.')
         else:
@@ -193,21 +215,8 @@ class ScreenUserController(AbstractUserController):
             SessionHandler.store_password(request, web_context.user_event, None)
         return self._render_messages(request)
 
-    @post(
-        path='/user-screen-render',
-        name='user-screen-render',
-    )
-    async def htmx_user_screen_render(
-            self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> Template | Redirect:
-        web_context: ScreenUserWebContext = ScreenUserWebContext(request, data)
-        if web_context.error:
-            return web_context.error
-        return self._user_render_screen(web_context)
-
     @staticmethod
-    def _user_screen_page_update_needed(
+    def _user_screen_refresh_needed(
             web_context: BasicScreenOrFamilyUserWebContext,
             date: float,
     ) -> bool:
@@ -239,40 +248,38 @@ class ScreenUserController(AbstractUserController):
                 return True
         return False
 
-    @post(
-        path='/user-screen-render-if-updated',
-        name='user-screen-render-if-updated',
+    @get(
+        path='/user/screen/{event_uniq_id:str}/{screen_uniq_id:str}',
+        name='user-screen',
     )
-    async def htmx_user_screen_render_if_updated(
+    async def htmx_user_screen(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            screen_uniq_id: str,
     ) -> Template | Reswap | Redirect:
-        web_context: BasicScreenOrFamilyUserWebContext = BasicScreenOrFamilyUserWebContext(request, data)
+        web_context: BasicScreenOrFamilyUserWebContext = BasicScreenOrFamilyUserWebContext(
+            request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id)
         if web_context.error:
             return web_context.error
-        try:
-            date: float = WebContext.form_data_to_float(data, 'date', 0.0)
-        except ValueError as ve:
-            return AbstractController.redirect_error(request, ve)
-        if date <= 0.0:
-            return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
-        if self._user_screen_page_update_needed(web_context, date):
-            web_context: ScreenUserWebContext = ScreenUserWebContext(request, data)
-            if web_context.error:
-                return web_context.error
-            return self._user_render_screen(web_context)
+        date: float = self.get_if_modified_since(request)
+        if date is None or self._user_screen_refresh_needed(web_context, date):
+            return self._user_screen_render(web_context)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
 
-    @post(
-        path='/user-rotator-render',
-        name='user-rotator-render'
+    @get(
+        path='/user/rotator/{event_uniq_id:str}/{rotator_id:int}/{rotator_screen_index:int}',
+        name='user-rotator'
     )
-    async def htmx_user_rotator_render_screen(
+    async def htmx_user_rotator(
         self, request: HTMXRequest,
-        data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+        event_uniq_id: str,
+        rotator_id: int,
+        rotator_screen_index: int,
     ) -> Template | Redirect:
-        web_context: RotatorUserWebContext = RotatorUserWebContext(request, data)
+        web_context: RotatorUserWebContext = RotatorUserWebContext(
+            request, data=None, event_uniq_id=event_uniq_id, rotator_id=rotator_id,
+            rotator_screen_index=rotator_screen_index)
         if web_context.error:
             return web_context.error
-        return self._user_render_screen(web_context)
+        return self._user_screen_render(web_context)

@@ -3,20 +3,33 @@
         {{ tooltip_attributes('info', 'Changer le nombre de colonnes utilisées.', 'top') }}
 >
     {% for c in papi_web_config.allowed_columns %}
-        {% with id='user-columns-'~c, name='user_columns' %}
+        {% if c == user_columns %}
             <button
                     class="btn {% if c == user_columns %}btn-primary{% else %}btn-secondary{% endif %} text-nowrap py-0 px-1"
-                    {% if c != user_columns %}
-                        hx-post="{{ url_for('user-update-header') }}"
-                        hx-vals='{"user_main_selector": "{{ user_main_selector }}", "user_event_selector": "{{ user_event_selector }}", "user_columns": "{{ c }}"}'
-                        hx-swap="multi:#user-header,#user-content"
-                        hx-indicator="#please-wait"
-                    {% else %}
-                        disabled
-                    {% endif %}
+                    disabled
             >
                 {{ c }}
             </button>
-        {% endwith %}
+        {% else %}
+            <button
+                    class="btn {% if c == user_columns %}btn-primary{% else %}btn-secondary{% endif %} text-nowrap py-0 px-1"
+                    hx-get="{{
+                        (
+                            url_for('user-event-tab', event_uniq_id=user_event.uniq_id, user_event_tab=user_event_tab)
+                            if user_event_tab else
+                            url_for('user-event', event_uniq_id=user_event.uniq_id)
+                        ) if user_event else (
+                            url_for('user-tab', user_tab=user_tab)
+                            if user_event_tab else
+                            url_for('user')
+                        )
+                    }}"
+                    hx-vals='{"user_columns": "{{ c }}"}'
+                    hx-swap="multi:#user-header,#user-content"
+                    hx-indicator="#please-wait"
+            >
+                {{ c }}
+            </button>
+        {% endif %}
     {% endfor %}
 </span>

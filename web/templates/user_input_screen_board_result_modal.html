@@ -8,21 +8,19 @@
             <div class="row d-flex align-items-center justify-content-center">
                 <button
                     class="result-button white text-black bg-white col-3 ms-auto me-auto btn fs-4 fw-bold"
-                    hx-put="{{ url_for('user-input-screen-add-result') }}"
-                    hx-vals='{"user_main_selector": "{{ user_main_selector }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "round": "{{ tournament.current_round }}", "board_id": "{{ board.id }}", "result": "3"}'
+                    hx-put="{{ url_for('user-add-result', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, round=tournament.current_round, board_id=board.id, result=3) }}"
                     hx-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-row"
                     hx-swap="outerHTML"
-                    hx-on:click="$('.updater').val(function(i, old_value) { return Math.abs(parseInt(old_value, 10)); });"
+                    hx-on:click="$('.refresher').remove();"
                     data-bs-dismiss="modal"
                     hx-indicator="#please-wait"
                 >&nbsp;<br/>GAIN BLANCS<br/>1 - 0<br/><br/>{{ wp.last_name }}<br/>{{ wp.first_name }}<br/>{{ wp.rating }}{{ wp.rating_type }}<br/>&nbsp;</button>
                 <button
                     class="result-button draw col-3 ms-auto me-auto btn fs-4 fw-bold"
-                    hx-put="{{ url_for('user-input-screen-add-result') }}"
-                    hx-vals='{"user_main_selector": "{{ user_main_selector }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "round": "{{ tournament.current_round }}", "board_id": "{{ board.id }}", "result": "2"}'
+                    hx-put="{{ url_for('user-add-result', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, round=tournament.current_round, board_id=board.id, result=2) }}"
                     hx-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-row"
                     hx-swap="outerHTML"
-                    hx-on:click="$('.updater').val(function(i, old_value) { return Math.abs(parseInt(old_value, 10)); });"
+                    hx-on:click="$('.refresher').remove();"
                     data-bs-dismiss="modal"
                     hx-indicator="#please-wait"
                 >
@@ -30,11 +28,10 @@
                 </button>
                 <button
                     class="result-button black text-white bg-black col-3 ms-auto me-auto btn fs-4 fw-bold"
-                    hx-put="{{ url_for('user-input-screen-add-result') }}"
-                    hx-vals='{"user_main_selector": "{{ user_main_selector }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "round": "{{ tournament.current_round }}", "board_id": "{{ board.id }}", "result": "1"}'
+                    hx-put="{{ url_for('user-add-result', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, round=tournament.current_round, board_id=board.id, result=1) }}"
                     hx-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-row"
                     hx-swap="outerHTML"
-                    hx-on:click="$('.updater').val(function(i, old_value) { return Math.abs(parseInt(old_value, 10)); });"
+                    hx-on:click="$('.refresher').remove();"
                     hx-indicator="#please-wait"
                     data-bs-dismiss="modal"
                 >&nbsp;<br/>GAIN NOIRS<br/>0 - 1<br/><br/>{{ bp.last_name }}<br/>{{ bp.first_name }}<br/>{{ bp.rating }}{{ bp.rating_type }}<br/>&nbsp;</button>
@@ -45,8 +42,7 @@
                     type="button"
                     hx-trigger="click, keyup[key=='Escape'] from:body"
                     class="btn btn-secondary"
-                    hx-post="{{ url_for('user-screen-render') }}"
-                    hx-vals='{"user_main_selector": "{{ user_main_selector }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}"}'
+                    hx-get="{{ url_for('user-screen', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id) }}"
                     hx-target="body"
                     hx-indicator="#please-wait"
                     data-bs-dismiss="modal"

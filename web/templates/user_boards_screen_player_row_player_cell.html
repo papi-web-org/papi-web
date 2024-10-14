@@ -10,8 +10,7 @@
         {% if screen.type == 'input' %}
             hx-target="closest td"
             hx-swap="outerHTML transition:true"
-            hx-patch="{{ url_for('user-input-screen-toggle-check-in') }}"
-            hx-vals='{"user_main_selector": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}", "tournament_id": "{{ tournament.id }}", "player_id": "{{ player.id }}"}'
+            hx-patch="{{ url_for('user-toggle-check-in', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, player_id=player.id) }}"
             hx-indicator="#please-wait"
         {% endif %}
     ></i> {% if player.title_str %}{{ player.title_str }}&nbsp;{% endif %}{{ player.last_name }} {{ player.first_name }} {{ player.rating }}{{ player.rating_type }}

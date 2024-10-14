@@ -14,12 +14,9 @@
             </div>
             <div class="modal-body">
                 <form
-                        hx-post="{{ url_for('user-login') }}"
+                        hx-post="{{ url_for('user-login', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id) }}"
                         hx-target="body"
                 >
-                    <input type="hidden" class="form-control" name="screen_uniq_id" value="{{ screen.uniq_id }}" />
-                    <input type="hidden" class="form-control" name="user_main_selector" value="{{ user_event.uniq_id }}" />
-                    <input type="hidden" class="form-control" name="user_event_selector" value="{{ user_event_selector }}" />
                     <div class="mb-3">
                         <label for="event-uniq-id" class="form-label">Évènement</label>
                         <input type="text" class="form-control" id="event-uniq-id" aria-describedby="event-uniq-id-help" value="{{ user_event.uniq_id }}" disabled />

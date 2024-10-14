@@ -37,8 +37,7 @@
                     </tbody>
                 </table>
                 <button
-                        hx-post="{{ url_for('user-render') }}"
-                        hx-vals="{}"
+                        hx-get="{{ url_for('user') }}"
                         hx-target="body"
                         hx-indicator="#please-wait"
                         class="btn btn-primary btn-lg p-4 w-100"

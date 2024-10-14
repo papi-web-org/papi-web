@@ -69,7 +69,7 @@ class ServerEngine(Engine):
                 if handler.name:
                     url_map[handler.name].append(route.path)
         for name in sorted(url_map.keys()):
-            logger.debug(f'{name}: {url_map[name]}')
+            logger.warning(f'{name}: {url_map[name]}')
         uvicorn.run(app, host=papi_web_config.web_host, port=papi_web_config.web_port, log_level='info', )
 
     @staticmethod

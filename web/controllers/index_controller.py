@@ -233,15 +233,17 @@ class AbstractController(Controller):
 
     IF_MODIFIED_SINCE_HEADER: str = 'If-Modified-Since'
 
-    def get_if_modified_since(self, request: HTMXRequest) -> float:
+    def get_if_modified_since(self, request: HTMXRequest) -> float | None:
         """
         Return the If-Modified-Since header value of the request.
-        If no header found or the date is invalid, raise ValueError.
+        If no header found return None.
+        If the date is invalid, log a warning and return None.
         Typical usage in a controller:
-        try:
-            if_modified_since: float = self.get_if_modified_since(request)
-        except ValueError as ve:
-            return AbstractController.redirect_error(request, ve)
+        if_modified_since: float | None = self.get_if_modified_since(request)
+        if date is None or page_refresh_needed(web_context, date):
+            return render(web_context)
+        else:
+            return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
         """
         try:
             if_modified_since: float = httpdate_to_unixtime(request.headers[self.IF_MODIFIED_SINCE_HEADER])
@@ -249,12 +251,12 @@ class AbstractController(Controller):
                 f'request.headers[{self.IF_MODIFIED_SINCE_HEADER}]={request.headers[self.IF_MODIFIED_SINCE_HEADER]}')
             logger.debug(f'if_modified_since={if_modified_since}')
             return if_modified_since
-        except KeyError as ke:
-            raise ValueError(f'Header [{self.IF_MODIFIED_SINCE_HEADER}] not found') from ke
-        except ValueError as ve:
-            raise ValueError(
-                f'Invalid [{self.IF_MODIFIED_SINCE_HEADER}] header '
-                f'[{request.headers[self.IF_MODIFIED_SINCE_HEADER]}]') from ve
+        except KeyError:
+            return None
+        except ValueError:
+            logger.warning(
+                f'Invalid [{self.IF_MODIFIED_SINCE_HEADER}] header [{request.headers[self.IF_MODIFIED_SINCE_HEADER]}]')
+            return None
 
 
 class IndexController(AbstractController):

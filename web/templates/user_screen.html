@@ -7,19 +7,7 @@
         <button
                 id="user-screen-exit-button"
                 class="btn btn-secondary position-fixed bottom-0 end-0 me-2 mb-2"
-                {% if user_event %}
-                    hx-post="{{ url_for('user-event-render') }}"
-                    hx-vals='{
-                        "user_main_selector": "{{ user_event.uniq_id }}",
-                        "user_event_selector": "{{ user_event_selector }}"
-                    }'
-                {% else %}
-                    hx-post="{{ url_for('admin-render') }}"
-                    hx-vals='{
-                        "admin_main_selector": "{{ admin_event.uniq_id }}",
-                        "admin_event_selector": "{{ admin_event_selector }}"
-                    }'
-                {% endif %}
+                hx-get="{{ url_for('user-event-tab', event_uniq_id=user_event.uniq_id, user_event_tab=user_event_tab) }}"
                 hx-target="body"
                 hx-indicator="#please-wait">
             <i class="bi-x-circle-fill"></i>
@@ -37,8 +25,7 @@
                     {% if entry.menu_label is not none %}
                         <a
                                 class="screen-menu-item cursor-pointer text-nowrap py-0 px-1 my-0 {% if loop.first %}ms-0{% else %}ms-1{% endif %} {% if loop.last %}me-0{% else %}me-1{% endif %} {% if screen.uniq_id == entry.uniq_id %}selected{% endif %}"
-                                hx-post="{{ url_for('user-screen-render') }}"
-                                hx-vals='{"user_main_selector": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ entry.uniq_id }}"}'
+                                hx-get="{{ url_for('user-screen', event_uniq_id=user_event.uniq_id, screen_uniq_id=entry.uniq_id) }}"
                                 hx-target="body"
                                 hx-indicator="#please-wait"
                         >{{ entry.menu_label }}</a>
@@ -52,26 +39,21 @@
         {% endif %}
         {% if rotator %}
             <div
-                    class="rotator-updater"
-                    hx-post="{{ url_for('user-rotator-render') }}"
-                    hx-vals='{"user_main_selector": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "rotator_id": "{{ rotator.id }}", "rotator_screen_index": "{{ rotator_screen_index + 1}}"}'
+                    class="rotator-refresher"
+                    hx-get="{{ url_for('user-rotator', event_uniq_id=user_event.uniq_id, rotator_id=rotator.id, rotator_screen_index=rotator_screen_index) }}"
                     hx-target="body"
                     hx-trigger="every {{ rotator.delay }}s"
                     hx-indicator="#please-wait"
             ></div>
         {% else %}
-            <input
-                    class="updater screen-updater"
-                    type="hidden"
-                    name="date"
-                    value="{{ now }}"
-                    hx-post="{{ url_for('user-screen-render-if-updated') }}"
-                    hx-vals='{"user_main_selector": "{{ user_event.uniq_id }}", "user_event_selector": "{{ user_event_selector }}", "screen_uniq_id": "{{ screen.uniq_id }}"}'
-                    hx-include="this"
+            <div
+                    class="refresher screen-refresher"
+                    hx-headers='{"If-Modified-Since": "{{ now_http_date }}"}'
+                    hx-get="{{ url_for('user-screen', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id) }}"
                     hx-target="body"
                     hx-trigger="every {{ papi_web_config.user_screen_update_delay }}s queue:none"
                     hx-indicator="#please-wait"
-            />
+            ></div>
         {% endif %}
         {{ copyright_script(show=screen.type != 'image') }}
     </div>

@@ -2,7 +2,7 @@ from contextlib import suppress
 from logging import Logger
 from typing import Annotated, Any
 
-from litestar import post
+from litestar import get
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate, Reswap
 from litestar.enums import RequestEncodingType
@@ -15,10 +15,10 @@ from data.family import Family
 from data.screen_set import ScreenSet
 from data.tournament import Tournament
 from data.util import ScreenType
-from web.session import SessionHandler
-from web.controllers.index_controller import WebContext, AbstractController
+from web.controllers.index_controller import AbstractController
 from web.controllers.user.index_user_controller import AbstractUserController
 from web.controllers.user.screen_user_controller import BasicScreenOrFamilyUserWebContext
+from web.session import SessionHandler
 
 logger: Logger = get_logger()
 
@@ -26,21 +26,21 @@ logger: Logger = get_logger()
 class ScreenSetOrFamilyUserWebContext(BasicScreenOrFamilyUserWebContext):
     def __init__(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ] | None,
+            event_uniq_id: str,
+            screen_uniq_id: str,
+            screen_set_uniq_id: str,
     ):
-        super().__init__(request, data)
+        super().__init__(request, data=data, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id)
         self.screen_set: ScreenSet | None = None
         if self.error:
             return
-        if self.screen:
-            field: str = 'screen_set_uniq_id'
-            screen_set_uniq_id: str = self._form_data_to_str(field)
-            try:
-                self.screen_set = self.screen.screen_sets_by_uniq_id[screen_set_uniq_id]
-            except KeyError:
-                self._redirect_error(
-                    f'L\'ensemble [{screen_set_uniq_id}] de l\'écran [{self.screen.uniq_id}] est introuvable.')
-                return
+        try:
+            self.screen_set = self.screen.screen_sets_by_uniq_id[screen_set_uniq_id]
+        except KeyError:
+            self._redirect_error(
+                f'L\'ensemble [{screen_set_uniq_id}] de l\'écran [{self.screen.uniq_id}] est introuvable.')
+            return
 
     @property
     def template_context(self) -> dict[str, Any]:
@@ -52,7 +52,7 @@ class ScreenSetOrFamilyUserWebContext(BasicScreenOrFamilyUserWebContext):
 class ScreenSetUserController(AbstractUserController):
 
     @staticmethod
-    def _user_screen_set_div_update_needed(
+    def _user_screen_set_refresh_needed(
             screen_set: ScreenSet,
             family: Family,
             date: float,
@@ -79,58 +79,39 @@ class ScreenSetUserController(AbstractUserController):
                 return True
         return False
 
-    @post(
-        path='/user-boards-screen-set-render-if-updated',
-        name='user-boards-screen-set-render-if-updated',
+    @get(
+        path='/user/screen-set/{event_uniq_id:str}/{screen_uniq_id:str}/{screen_set_uniq_id:str}',
+        name='user-screen-set',
     )
-    async def htmx_user_boards_screen_set_render_if_updated(
+    async def htmx_user_screen_set(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            screen_uniq_id: str,
+            screen_set_uniq_id: str,
     ) -> Template | Reswap | Redirect:
-        web_context: ScreenSetOrFamilyUserWebContext = ScreenSetOrFamilyUserWebContext(request, data)
+        web_context: ScreenSetOrFamilyUserWebContext = ScreenSetOrFamilyUserWebContext(
+            request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id,
+            screen_set_uniq_id=screen_set_uniq_id)
         if web_context.error:
             return web_context.error
-        try:
-            date: float = WebContext.form_data_to_float(data, 'date', 0.0)
-        except ValueError as ve:
-            return AbstractController.redirect_error(request, ve)
-        if date <= 0.0:
-            return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
-        if not self._user_screen_set_div_update_needed(web_context.screen_set, web_context.family, date):
+        date: float = self.get_if_modified_since(request)
+        if date is None:
+            return AbstractController.redirect_error(request, 'L\'entête If-Modified-Since est absente.')
+        if self._user_screen_set_refresh_needed(web_context.screen_set, web_context.family, date):
+            if web_context.screen.type in [ScreenType.Boards, ScreenType.Input, ]:
+                return HTMXTemplate(
+                    template_name='user_boards_screen_set.html',
+                    context=web_context.template_context | {
+                        'last_result_updated': SessionHandler.get_session_last_result_updated(request),
+                        'last_illegal_move_updated': SessionHandler.get_session_last_illegal_move_updated(request),
+                        'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(request),
+                    },
+                )
+            else:
+                return HTMXTemplate(
+                    template_name='user_players_screen_set.html',
+                    context=web_context.template_context | {
+                    },
+                )
+        else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
-        web_context = ScreenSetOrFamilyUserWebContext(request, data)
-        if web_context.error:
-            return web_context.error
-        return HTMXTemplate(
-            template_name='user_boards_screen_set.html',
-            context=web_context.template_context | {
-                'last_result_updated': SessionHandler.get_session_last_result_updated(request),
-                'last_illegal_move_updated': SessionHandler.get_session_last_illegal_move_updated(request),
-                'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(request),
-            },
-        )
-
-    @post(
-        path='/user-players-screen-set-render-if-updated',
-        name='user-players-screen-set-render-if-updated',
-    )
-    async def htmx_user_players_screen_set_render_if_updated(
-            self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> Template | Reswap | Redirect:
-        web_context: ScreenSetOrFamilyUserWebContext = ScreenSetOrFamilyUserWebContext(request, data)
-        if web_context.error:
-            return web_context.error
-        try:
-            date: float = WebContext.form_data_to_float(data, 'date', 0.0)
-        except ValueError as ve:
-            return AbstractController.redirect_error(request, ve)
-        if date <= 0.0:
-            return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)  # timer is hanged
-        if not self._user_screen_set_div_update_needed(web_context.screen_set, web_context.family, date):
-            return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
-        return HTMXTemplate(
-            template_name='user_players_screen_set.html',
-            context=web_context.template_context | {
-            },
-        )
