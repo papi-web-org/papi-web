@@ -2,6 +2,9 @@
 
 # Papi-web - Saisie des résultats
 
+> [!CAUTION]
+> Cette page décrivant la configuration au format INI des écrans de saisie des résultats est obsolète et sera prochainement remplacée par un tutoriel.
+
 La principale fonctionnalité attendue de Papi-web est celle de proposer une interface de saisie des résultats, délégable aux joueur·euses.
 
 Comme dit dans la partie [Gestion d'un petit tournoi amical](11-friendly.md), la simple déclaration d'un tournoi crée automatiquement plusieurs écrans, dont un écran de saisie des résultats. Pour personnaliser son ou ses écrans de saisie des résultats, il faut le ou les déclarer manuellement.

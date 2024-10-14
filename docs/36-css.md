@@ -2,6 +2,9 @@
 
 # Papi-web - Personnalisation du rendu des écrans (CSS)
 
+> [!CAUTION]
+> Cette page décrivant la configuration au format INI de la personnalisation des écrans est obsolète et sera prochainement remplacée par un tutoriel.
+
 Il est possible de personnaliser le rendu des écrans à l'aide de fichiers CSS (Cascading Style Sheets).
 
 Les personnalisations doivent être déposées dans le répertoire `custom/`, au format CSS. Vous pouvez également déposer dans le répertoire `custom/` des images, d'autres fichiers CSS, ...
@@ -25,7 +28,7 @@ body {
 }
 ```
 
-![Ligue de Bretagne](../custom/ligue/BRE/BRE.png)
+![Ligue de Bretagne](../custom/FRA/BRE/BRE.png)
 
 ## Modèles de personnalisation
 
@@ -33,8 +36,8 @@ Vous trouverez ci-dessous quelques personnalisations déjà existantes :
 
 - [`custom/fide`](../custom/fide) (Fédération Internationale des Échecs)
 - [`custom/ffe`](../custom/ffe) (Fédération Française des Échecs)
-- [`custom/ligue/BRE`](../custom/ligue/BRE) (Ligue de Bretagne)
-- [`custom/cdje/35`](../custom/cdje/35) (Comité Départemental d'Ille-et-Vilaine)
+- [`custom/ligue/BRE`](../custom/FRA/BRE) (Ligue de Bretagne)
+- [`custom/cdje/35`](../custom/FRA/BRE/35) (Comité Départemental d'Ille-et-Vilaine)
 - [`custom/club/F35043`](../custom/club/F35043) (Échiquier Domloupéen)
 
 Si vous souhaitez partager votre personnalisation dans de futures versions de Papi-Web, faites nous signe !

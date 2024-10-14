@@ -2,6 +2,9 @@
 
 # Papi-web - Modèles et familles d'écran
 
+> [!CAUTION]
+> Cette page décrivant la configuration au format INI des modèles et des familles d'écrans est obsolète et sera prochainement remplacée par un tutoriel.
+
 Les modèles et les familles ont été introduits dans Papi-web en version 2 pour simplifier la configuration des écrans multiples.
 
 > [!NOTE]

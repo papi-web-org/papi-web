@@ -2,6 +2,9 @@
 
 # Papi-web - Configuration d'un tournoi homologué
 
+> [!CAUTION]
+> Cette page décrivant la configuration au format INI d'un tournoi homologué est obsolète et sera prochainement remplacée par un tutoriel.
+
 Pour pouvoir utiliser les outils d'interface avec le site fédéral, il faut préciser le numéro d'homologation du tournoi et le code d'accès du tournoi sur le site fédéral de gestion des tournois.
 ```
 [tournament]

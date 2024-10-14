@@ -1,111 +1,114 @@
+{% from 'macros.j2' import tooltip_attributes, modal_script, tooltip_script, background_script %}
+
 {% extends 'base.html' %}
 
-{% block title %}
-Papi-web
-{% endblock title %}
-
-{% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', file_path='/css/admin.css') }}" type="text/css" />
-{% endblock head %}
-
 {% block header %}
-    <div id="admin-header-wrapper" class="admin-header-wrapper p-1 position-sticky top-0">
-        <form id="admin-header" class="admin row">
-            <div class="col col-md-auto">
-                <span id="admin-main-selector" class="admin">
-                    <select
-                        name="admin_main_selector"
-                        hx-post="{{ url_for('admin-update-header') }}"
-                        hx-swap="multi:#admin-header,#admin-content"
-                        class="form-select form-select-sm"
-                        hx-indicator="#please-wait">
-                        {% for option_value, option_text in admin_main_selector_options.items() %}
-                            <option value="{{ option_value }}" {% if admin_main_selector == option_value %}selected{% endif %}>{{ option_text }}</option>
-                        {% endfor %}
-                        {% for event in events %}
-                            <option value="{{ event.uniq_id }}" {% if admin_event and admin_event.uniq_id == event.uniq_id %}selected{% endif %}>{{ event.name }}</option>
-                        {% endfor %}
-                    </select>
-                </span>
-            </div>
-            <div class="col col-md-auto">
-                <span id="admin-event-selector" class="">
+    <div id="admin-header" class="header admin-header position-sticky top-0 mx-2 border-bottom border-dark">
+        <div hx-ext="bs-tabs" class="bs-tabs">
+            <nav>
+                <div class="nav nav-tabs mt-1" id="nav-tab" role="tablist">
                     {% if admin_event %}
-                        <select
-                            name="admin_event_selector"
-                            hx-post="{{ url_for('admin-update-header') }}"
-                            hx-swap="multi:#admin-header,#admin-content"
-                            class="form-select form-select-sm"
-                            hx-indicator="#please-wait">
-                            {% for option_value, option_text in admin_event_selector_options.items() %}
-                                <option value="{{ option_value }}" {% if admin_event_selector == option_value %}selected{% endif %}>{{ option_text }}</option>
-                            {% endfor %}
-                        </select>
+                        {% if admin_event.start > now %}
+                            {% set target_main_selector = '@coming_events' %}
+                        {% elif admin_event.stop < now %}
+                            {% set target_main_selector = '@passed_events' %}
+                        {% else %}
+                            {% set target_main_selector = '@current_events' %}
+                        {% endif %}
                     {% endif %}
-                </span>
-            </div>
-            <div class="col">
-            </div>
-        </form>
+                    <button
+                            class="btn btn-link link-dark fs-5 fw-bold px-1 py-0"
+                            {% if admin_event %}
+                                hx-post="{{ url_for('admin-update-header') }}"
+                                hx-vals='{"admin_main_selector": "{{ target_main_selector }}"}'
+                                hx-swap="multi:#admin-header,#admin-content"
+                                hx-indicator="#please-wait"
+                            {% else %}
+                                hx-get="{{ url_for('index') }}"
+                                hx-target="body"
+                            {% endif %}
+                            hx-indicator="#please-wait"
+                    >
+                        <i class="
+                            {% if admin_event %}
+                                bi-arrow-left-circle-fill
+                            {% else %}
+                                bi-house-fill
+                            {% endif %}"></i>
+                    </button>
+                    {% for nav_id, nav_tab in nav_tabs.items() %}
+                        {% with
+                            vals='{"admin_main_selector": "' ~ admin_main_selector ~ '", "admin_event_selector": "' ~ nav_id ~ '"}' if admin_event else '{"admin_main_selector": "' ~ nav_id ~ '"}',
+                            active=(admin_event_selector == nav_id) if admin_event else (admin_main_selector == nav_id)
+                        %}
+                            <button
+                                    class="nav-link {{ nav_tab.class }} {% if nav_tab.disabled %}link-secondary{% else %}link-dark{% endif %} border-dark {%if active %}active{%else%}bg-body-secondary{% endif %} fw-bold px-2 py-0 ms-1"
+                                    id="nav-{{ nav_id }}-tab"
+                                    hx-post="{{ url_for('admin-update-header') }}"
+                                    hx-vals='{{ vals }}'
+                                    hx-swap="multi:#admin-header,#admin-content"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#nav-{{ nav_tab.name }}"
+                                    type="button"
+                                    role="tab"
+                                    aria-controls="nav-{{ nav_id }}"
+                                    aria-selected="true"
+                                    hx-indicator="#please-wait"
+                                    {% if nav_tab.disabled %}
+                                        disabled
+                                    {% endif %}
+                            >
+                                {% if nav_tab.icon_class %}
+                                    <i class="{{ nav_tab.icon_class }}"></i>
+                                {% endif %}
+                                {{ nav_tab.title }}
+                            </button>
+                        {% endwith %}
+                    {% endfor %}
+                    {% include 'admin_columns_buttons.html' %}
+                </div>
+            </nav>
+        </div>
     </div>
 {% endblock header %}
 
 {% block content %}
-    <div id="admin-content-wrapper" class="admin-content-wrapper p-1">
-        <div id="admin-content" class="">
-            {% if admin_main_selector == '' %}
-                {% include 'admin_config.html' %}
-            {% elif admin_main_selector == '@events' %}
-                {% include 'admin_event_list.html' %}
-            {% else %}{# admin_event is not None #}
-                {% if admin_event_selector == '' %}
-                    {% include 'admin_event_config.html' %}
-                {% elif admin_event_selector == '@chessevents' %}
-                    {% include 'admin_chessevent_list.html' %}
-                {% elif admin_event_selector == '@tournaments' %}
-                    {% include 'admin_tournaments.html' %}
-                {% elif admin_event_selector == '@screens' %}
-                    {% include 'admin_screens.html' %}
-                {% elif admin_event_selector == '@families' %}
-                    {% include 'admin_families.html' %}
-                {% elif admin_event_selector == '@rotators' %}
-                    {% include 'admin_rotators.html' %}
-                {% elif admin_event_selector == '@timers' %}
-                    {% include 'admin_timers.html' %}
-                {% elif admin_event_selector == '@messages' %}
-                    {% include 'admin_messages.html' %}
-                {% elif admin_event_selector == '@players' %}
-                    {% include 'admin_players.html' %}
-                {% elif admin_event_selector == '@check_in' %}
-                    {% include 'admin_check_in.html' %}
-                {% elif admin_event_selector == '@pairings' %}
-                    {% include 'admin_pairings.html' %}
-                {% endif %}
-            {% endif %}
-            <div id="admin-modal-container"
-                class="modal modal-blur fade"
-                style="display: none"
-                aria-hidden="false"
-                data-bs-backdrop="static"
-                data-bs-keyboard="false"
-                tabindex="-1">
-                <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-                    <div class="modal-content"></div>
+    <div id="admin-content" class="content admin-content tab-content border border-dark mx-2 p-3">
+        {% for nav_id, nav_tab in nav_tabs.items() %}
+            {% with
+                vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ nav_id }}"}' if admin_event else '{"admin_main_selector": "{{ nav_id }}"}',
+                active=(admin_event_selector == nav_id) if admin_event else (admin_main_selector == nav_id)
+            %}
+                <div
+                        class="tab-pane fade {% if active %}show active{% endif %}"
+                        id="nav-{{ nav_id }}"
+                        role="tabpanel"
+                        aria-labelledby="nav-{{ nav_id }}-tab"
+                        tabindex="0"
+                >
+                    {% if active %}
+                        {% if nav_tab.template %}
+                            {% include nav_tab.template %}
+                        {% else %}
+                            {% include 'admin_event_list.html' %}
+                        {% endif %}
+                    {% endif %}
                 </div>
+            {% endwith %}
+        {% endfor %}
+        <div id="admin-modal-container"
+            class="modal modal-blur overflow-auto"
+            style="display: none"
+            aria-hidden="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false"
+            tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered d-block w-80 mw-100" role="document">
+                <div class="modal-content"></div>
             </div>
-            <script>
-                {# manually remove the modal backdrop when reloading #admin-content #}
-                $(document).ready(function(){
-                    $('body .modal-backdrop').remove();
-                });
-            </script>
         </div>
+        {{ modal_script() }}
+        {{ tooltip_script() }}
+        {{ background_script(background_info) }}
     </div>
 {% endblock content %}
-
-{% block footer %}
-    <div id="admin-footer-wrapper" class="">
-        <div id="admin-footer" class="">
-        </div>
-    </div>
-{% endblock footer %}

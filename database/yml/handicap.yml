@@ -1,0 +1,22 @@
+name: "Évènement avec tournoi à handicap"
+public: true
+tournaments:
+  T:
+    filename: "bretagne-jeunes-2024-blitz"
+    name: "Tournoi à handicap"
+    time_control_initial_time: 300
+    time_control_increment: 2
+    time_control_handicap_penalty_value: 30
+    time_control_handicap_penalty_step: 50
+    time_control_handicap_min_time: 60
+screens:
+  saisie:
+    type: "input"
+    sets:
+      -
+        tournament_uniq_id: "T"
+  affichage:
+    type: "boards"
+    sets:
+      -
+        tournament_uniq_id: "T"

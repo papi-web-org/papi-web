@@ -19,24 +19,10 @@ logger.info('Pooling ODBC : %s', f"{'des' if not pyodbc.pooling else ''}activé"
 class AccessDatabase:
     """Base class for Access-based databases."""
     file: Path
-    method: str
-    read_only: bool = field(init=False, default=True)
+    write: bool = field(default=False)
     database: pyodbc.Connection | None = field(init=False, default=None)
     cursor: pyodbc.Cursor | None = field(init=False, default=None)
 
-    def __post_init__(self):
-        match self.method:
-            case 'r':
-                self.read_only = True
-            case 'w':
-                self.read_only = False
-            case _:
-                raise ValueError
-
-    # NOTE(Amaras) This is the start of the infrastructure to build a DB as a
-    # context manager (making it possible to use it using the with statement).
-    # This function is responsible for opening the ressource and giving a way
-    # to access it.
     def __enter__(self) -> Self:
         needed_driver: str = access_driver()
         if needed_driver not in pyodbc.drivers():
@@ -54,16 +40,13 @@ class AccessDatabase:
         # Get rid of unresolved pyodbc.Error: ('HY000', 'The driver did not supply an error!')
         while self.database is None:
             try:
-                self.database = pyodbc.connect(db_url, readonly=self.read_only)
+                self.database = pyodbc.connect(db_url, readonly=not self.write)
             except pyodbc.Error as e:
                 logger.error('La connection au fichier %s a échoué: %s', self.file, e.args)
                 time.sleep(1)
         self.cursor = self.database.cursor()
         return self
 
-    # NOTE(Amaras) Context manager infrastructure: this dunder method is
-    # supposed to close the ressource and handle exceptions (by catching or
-    # passing them through, DO NOT re-raise exceptions here).
     def __exit__(self, exc_type, exc_value, tb):
         if self.database is not None:
             self.cursor.close()
@@ -74,21 +57,30 @@ class AccessDatabase:
             self.database = None
 
     def _execute(self, query: str, params: tuple = ()):
+        """Executes the prepare query with the given parameters."""
         self.cursor.execute(query, params)
 
     def _fetchall(self) -> Iterator[dict[str, Any]]:
+        """Returns an iterator of dictionaries from the last executed query.
+        Each dictionary is of the format {column_name : value, ...}."""
         columns = [column[0] for column in self.cursor.description]
         for row in self.cursor.fetchall():
             yield dict(zip(columns, row))
 
     def _fetchone(self) -> dict[str, Any]:
+        """Returns a dictionary from the last exexcuted query, in the format
+        {colum_name: value, ...}.
+        Repeated applications of this method will advance the database cursor
+        and return different row data."""
         columns = [column[0] for column in self.cursor.description]
         return dict(zip(columns, self.cursor.fetchone()))
 
     def _fetchval(self) -> Any:
+        """Returns the next database cursor value."""
         return self.cursor.fetchval()
 
     def _commit(self):
+        """Commits the pending transaction."""
         self.cursor.commit()
 
 

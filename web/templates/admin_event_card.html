@@ -1,0 +1,34 @@
+{% extends 'admin_card.html' %}
+{% from 'macros.j2' import tooltip_attributes, event_visibility_icon %}
+
+{% block card_header %}
+    {{ event_visibility_icon(event) }}
+    {% if event.formatted_start_date == event.formatted_stop_date %}
+         <span class="fw-bold">{{ event.formatted_start_date }}</span> {{ event.formatted_start_time }}-{{ event.formatted_stop_time }}
+    {% else %}
+         <span class="fw-bold">{{ event.formatted_start_date }} - {{ event.formatted_stop_date }}</span>
+    {% endif %}
+{% endblock %}
+
+{% block card_title %}
+    {{ event.name }}
+{% endblock %}
+
+{% block card_text %}
+    <div><i class="bi-question-circle-fill" ></i> Identifiant unique : {{ event.uniq_id }}</div>
+    <div><i class="bi-people-fill" ></i> Tournois : {{ event.tournaments_by_id|length }}</div>
+    <div><i class="bi-download" ></i> Connexions à ChessEvent : {{ event.chessevents_by_id|length }}</div>
+    <div><i class="bi-clock-fill" ></i> Chronomètres : {{ event.timers_by_id|length }}</div>
+    <div><i class="bi-fullscreen" ></i> Écrans : {{ event.basic_screens_by_id|length }}</div>
+    <div><i class="bi-arrows-fullscreen" ></i> Familles : {{ event.families_by_id|length }}</div>
+    <div><i class="bi-repeat" ></i> Écrans rotatifs : {{ event.rotators_by_id|length }}</div>
+    <div><i class="bi-bug" ></i> Erreurs : {{ event.errors|length + event.criticals|length }}</div>
+    <div><i class="bi-exclamation-triangle" ></i> Avertissements : {{ event.warnings|length }}</div>
+    <div><i class="bi-info-circle" ></i> Informations : {{ event.infos|length }}</div>
+{% endblock %}
+
+{% block card_buttons_left %}
+{% endblock %}
+
+{% block card_buttons_right %}
+{% endblock %}

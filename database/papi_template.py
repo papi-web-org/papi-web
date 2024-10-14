@@ -3,7 +3,13 @@
 ############################################################################
 import bz2
 import base64
+from logging import Logger
 from pathlib import Path
+
+from common.logger import get_logger
+
+
+logger: Logger = get_logger()
 
 
 PAPI_VERSIONS: list[str] = [
@@ -12,7 +18,7 @@ PAPI_VERSIONS: list[str] = [
 ]
 
 
-def create_empty_papi_database(file: Path, papi_version: str):
+def create_empty_papi_database(file: Path, papi_version: str) -> bool:
     match papi_version:
         case '3.3.6':
             b64 = (
@@ -380,6 +386,12 @@ def create_empty_papi_database(file: Path, papi_version: str):
             )
         case _:
             raise ValueError()
+    if not file.parents[0].is_dir():
+        logger.warning(
+            f'Le répertoire [{file.parents[0]}] n\'existe pas, la génération du fichier Papi à partir '
+            f'de la plateforme ChessEvent est impossible.'
+        )
+        return False
     with open(file, 'wb') as f:
         f.write(
             bz2.decompress(
@@ -388,3 +400,4 @@ def create_empty_papi_database(file: Path, papi_version: str):
                 )
             )
         )
+    return True

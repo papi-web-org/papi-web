@@ -1,3 +1,4 @@
+from collections import defaultdict
 from threading import Thread
 from time import sleep
 
@@ -14,6 +15,7 @@ from common.logger import get_logger
 from common.engine import Engine
 import platform
 
+from common.papi_web_config import PapiWebConfig
 from web.settings import route_handlers, template_config, middlewares
 
 logger: Logger = get_logger()
@@ -42,16 +44,17 @@ class ServerEngine(Engine):
         logger.debug(f' - Machine/processor: {platform.machine()}/{platform.processor()}')
         logger.debug(f' - Platform: {platform.platform()}')
         logger.debug(f' - Architecture: {" ".join(platform.architecture())}')
-        logger.info(f'log: {self._config.log_level_str}')
-        logger.info(f'port: {self._config.web_port}')
-        logger.info(f'local URL: {self._config.local_url}')
-        if self._config.lan_url:
-            logger.info(f'LAN/WAN URL: {self._config.lan_url}')
-        if self.__port_in_use(self._config.web_port):
-            logger.error(f'Port [{self._config.web_port}] already in use, can not start Papi-web server')
+        papi_web_config: PapiWebConfig = PapiWebConfig()
+        logger.info(f'log: {papi_web_config.log_level_str}')
+        logger.info(f'port: {papi_web_config.web_port}')
+        logger.info(f'local URL: {papi_web_config.local_url}')
+        if papi_web_config.lan_url:
+            logger.info(f'LAN/WAN URL: {papi_web_config.lan_url}')
+        if self.__port_in_use(papi_web_config.web_port):
+            logger.error(f'Port [{papi_web_config.web_port}] already in use, can not start Papi-web server')
             return
-        if self._config.web_launch_browser:
-            Thread(target=launch_browser, args=(self._config.local_url, )).start()
+        if papi_web_config.web_launch_browser:
+            Thread(target=launch_browser, args=(papi_web_config.local_url, )).start()
         app: Litestar = Litestar(
             debug=True,
             request_class=HTMXRequest,
@@ -59,7 +62,15 @@ class ServerEngine(Engine):
             template_config=template_config,
             middleware=middlewares,
         )
-        uvicorn.run(app, host=self._config.web_host, port=self._config.web_port, log_level='info',)
+        # This code is intended to check the uniformity of the paths and names used for the application URLs
+        url_map: defaultdict[str, list[str]] = defaultdict(list[str])
+        for route in app.routes:
+            for handler in route.route_handlers:
+                if handler.name:
+                    url_map[handler.name].append(route.path)
+        for name in sorted(url_map.keys()):
+            logger.warning(f'{name}: {url_map[name]}')
+        uvicorn.run(app, host=papi_web_config.web_host, port=papi_web_config.web_port, log_level='info', )
 
     @staticmethod
     def __port_in_use(port: int) -> bool:

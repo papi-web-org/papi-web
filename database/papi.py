@@ -1,12 +1,10 @@
-import re
 from datetime import datetime, timedelta
 from pathlib import Path
 from logging import Logger
 from itertools import product
-from typing import NamedTuple, Self
+from typing import NamedTuple
 from contextlib import suppress
 
-from common.config_reader import TMP_DIR
 from data.chessevent_player import ChessEventPlayer
 from data.chessevent_tournament import ChessEventTournament
 from database.access import AccessDatabase
@@ -20,6 +18,7 @@ logger: Logger = get_logger()
 
 
 class TournamentInfo(NamedTuple):
+    """Basic tournament information tuple."""
     rounds: int
     pairing: TournamentPairing
     rating: TournamentRating
@@ -31,18 +30,8 @@ class PapiDatabase(AccessDatabase):
     """The database class, using the Papi format of the French Chess Federation
     Tournament manager."""
 
-    def __init__(self, event_uniq_id: str, tournament_uniq_id: str, file: Path, method: str):
-        # event_uniq_id and tournament_uniq_id are needed to store/read skipped rounds
-        # as long as skipped rounds are not stored in the database but files
-        self.event_uniq_id = event_uniq_id
-        self.tournament_uniq_id = tournament_uniq_id
-        super().__init__(file, method)
-
-    def __enter__(self) -> Self:
-        return super().__enter__()
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        super().__exit__(exc_type, exc_value, traceback)
+    def __init__(self, file: Path, write: bool = False):
+        super().__init__(file, write)
 
     def commit(self):
         self._commit()
@@ -100,8 +89,9 @@ class PapiDatabase(AccessDatabase):
         """Writes the given result to the database."""
         query: str = f'UPDATE `joueur` SET `Rd{round_:0>2}Res` = ? WHERE `Ref` = ?'
         self._execute(query, (result.value, player_id, ))
-    
+
     def remove_board_result(self, player_id: int, round_: int):
+        """Writes the empty result for the given player in the database."""
         query: str = f'UPDATE `joueur` SET `Rd{round_:0>2}Res` = 0 WHERE `Ref` = ?'
         self._execute(query, (player_id, ))
 
@@ -118,52 +108,8 @@ class PapiDatabase(AccessDatabase):
         query: str = 'UPDATE `info` SET `Value` = ? WHERE `Variable` = ?'
         self._execute(query, (value, name, ))
 
-    @property
-    def skipped_rounds_dir(self) -> Path:
-        return TMP_DIR / 'events' / self.event_uniq_id / 'skipped_rounds' / self.tournament_uniq_id
-
-    def delete_skipped_rounds(self):
-        for file in self.skipped_rounds_dir.glob('*'):
-            file.unlink()
-        # self.skipped_rounds_dir.unlink(missing_ok=True)
-
-    def store_player_skipped_rounds(self, player_id: int, skipped_rounds: dict[int, float]):
-        if skipped_rounds:
-            self.skipped_rounds_dir.mkdir(parents=True, exist_ok=True)
-            for round_, result in skipped_rounds.items():
-                # add a new file
-                filename: str = f'{player_id} {round_} {result}'
-                skipped_round_file: Path = self.skipped_rounds_dir / filename
-                skipped_round_file.touch()
-                logger.info('le fichier [%s] a été créé', skipped_round_file)
-
-    def read_tournament_skipped_rounds(self) -> dict[int, dict[int, float]]:
-        tournament_skipped_rounds: dict[int, dict[int, float]] = {}
-        glob_pattern: str = '*'
-        regex = re.compile(r'(\d+) (\d+) (.*)$')
-        for file in self.skipped_rounds_dir.glob(glob_pattern):
-            if matches := regex.match(file.name):
-                player_id: int = int(matches.group(1))
-                round: int = int(matches.group(2))
-                result: float = float(matches.group(3))
-                if player_id not in tournament_skipped_rounds:
-                    tournament_skipped_rounds[player_id] = {}
-                tournament_skipped_rounds[player_id][round] = result
-        return tournament_skipped_rounds
-
-    def read_player_skipped_rounds(self, player_id: int) -> dict[int, float]:
-        player_skipped_rounds: dict[int, float] = {}
-        glob_pattern: str = f'{player_id} *'
-        regex = re.compile(r'(\d+) (\d+) (.*)$')
-        for file in self.skipped_rounds_dir.glob(glob_pattern):
-            if matches := regex.match(file.name):
-                round: int = int(matches.group(2))
-                result: float = float(matches.group(3))
-                player_skipped_rounds[round] = result
-        return player_skipped_rounds
-
     def write_chessevent_info(self, chessevent_tournament: ChessEventTournament):
-        """Writes vars to the database."""
+        """Creates the tournament data from the ChessEvent Tournament data."""
         default_rounds: int = 7
         if not chessevent_tournament.rounds:
             logger.warning(
@@ -197,7 +143,10 @@ class PapiDatabase(AccessDatabase):
             self._execute(query, (value, name, ))
 
     def add_chessevent_player(self, player_id: int, player: ChessEventPlayer, check_in_started: bool):
-        """Adds a player to the database."""
+        """Creates a player in the database from the given ChessEvent player.
+        If the player is not checked in when `check_in_started` is True,
+        removes the player from play for subsequent rounds which are not
+        specifically unplayed rounds."""
         data: dict[str, str | int | float | None] = {
             'Ref': player_id,
             'RefFFE': player.ffe_id,
@@ -252,12 +201,13 @@ class PapiDatabase(AccessDatabase):
         self._execute(query, params)
 
     def delete_players_personal_data(self):
-        """Delete all personal data from the database."""
+        """Delete all personal data (email and phone number) from the database."""
         query: str = 'UPDATE `joueur` SET Tel = ?, EMail = ?'
         self._execute(query, ('', '', ))
 
     def remove_forfeits_if_no_pairings(self):
-        """Delete all forfeits if no pairing is found (at round #1) to fix ranking on the FFE website."""
+        """Delete all forfeits if no pairing is found (at round #1).
+        This fixes a display issue on the FFE website."""
         query: str = 'SELECT COUNT(`Ref`) FROM `joueur` WHERE `Rd01Adv` IS NOT NULL'
         self._execute(query)
         if self._fetchval() == 0:
@@ -280,7 +230,7 @@ class PapiDatabase(AccessDatabase):
         self._execute(query)
         return self._fetchval()
 
-    def _check_in_player(self, player_id: int):
+    def _check_in_player(self, player_id: int, tournament_skipped_rounds_dict: dict[int, dict[int, float]]):
         logger.debug('Checking in player %d', player_id)
         checked_in_players_number: int = self.get_checked_in_players_number()
         player_skipped_rounds: dict[int, float]
@@ -297,13 +247,12 @@ class PapiDatabase(AccessDatabase):
             params = tuple(list(data.values()) + [player_id, ])
             self._execute(query, params)
             # set byes (no need for forfeits, already set)
-            tournament_skipped_rounds: dict[int, dict[int, float]] = self.read_tournament_skipped_rounds()
-            player_skipped_rounds: dict[int, float] = tournament_skipped_rounds.get(player_id, [])
-            for other_player_id in tournament_skipped_rounds:
+            player_skipped_rounds: dict[int, float] = tournament_skipped_rounds_dict.get(player_id, {})
+            for other_player_id in tournament_skipped_rounds_dict:
                 if other_player_id != player_id:
                     data: dict[str, str | int | float | None] = {
                     }
-                    for round_, result in tournament_skipped_rounds[other_player_id].items():
+                    for round_, result in tournament_skipped_rounds_dict[other_player_id].items():
                         if round_ in range(1, 25):
                             match result:
                                 case 0.0:
@@ -323,7 +272,7 @@ class PapiDatabase(AccessDatabase):
                 else:
                     logger.debug('do skipped round for player %d', other_player_id)
         else:
-            player_skipped_rounds = self.read_player_skipped_rounds(player_id)
+            player_skipped_rounds = tournament_skipped_rounds_dict.get(player_id, {})
         # Set the player checked in and unpaired for all rounds
         logger.debug('byes and forfeits for player %d: %s', player_id, player_skipped_rounds)
         logger.debug('Set player %d checked in and unpaired for all rounds', player_id)
@@ -349,7 +298,7 @@ class PapiDatabase(AccessDatabase):
         params = tuple(list(data.values()) + [player_id, ])
         self._execute(query, params)
 
-    def _check_out_player(self, player_id: int):
+    def _check_out_player(self, player_id: int, tournament_skipped_rounds_dict: dict[int, dict[int, float]]):
         logger.debug('Checking out player %s', player_id)
         checked_in_players_number: int = self.get_checked_in_players_number()
         if checked_in_players_number == 1:
@@ -366,14 +315,13 @@ class PapiDatabase(AccessDatabase):
             params = tuple(list(data.values()))
             self._execute(query, params)
             # set byes and forfeits
-            tournament_skipped_rounds: dict[int, dict[int, float]] = self.read_tournament_skipped_rounds()
-            for other_player_id, player_skipped_rounds in tournament_skipped_rounds.items():
+            for other_player_id, player_skipped_rounds in tournament_skipped_rounds_dict.items():
                 data: dict[str, str | int | float | None] = {
                 }
-                for round_, result in player_skipped_rounds.items():
+                for round_, score in player_skipped_rounds.items():
                     if round_ in range(1, 25):
                         data[f'Rd{round_:0>2}Cl'] = 'F'
-                        match result:
+                        match score:
                             case 0.0:
                                 data[f'Rd{round_:0>2}Res'] = Result.NOT_PAIRED.to_papi_value
                                 pass
@@ -388,7 +336,7 @@ class PapiDatabase(AccessDatabase):
                     self._execute(query, params)
         else:
             logger.debug('Set the player checked out and forfeit for all rounds')
-            player_skipped_rounds: dict[int, float] = self.read_player_skipped_rounds(player_id)
+            player_skipped_rounds: dict[int, float] = tournament_skipped_rounds_dict.get(player_id, {})
             data: dict[str, str | int | float | None] = {
                 'Pointe': False,
             }
@@ -410,8 +358,10 @@ class PapiDatabase(AccessDatabase):
             params = tuple(list(data.values()) + [player_id, ])
             self._execute(query, params)
 
-    def check_in_player(self, player_id: int, check_in: bool):
+    def check_in_player(self, player_id: int, check_in: bool, skipped_rounds_dict: dict[int, dict[int, float]]):
+        """Toggles the check in status of the player, depending o, `check_in`.
+        Takes into account the given `skipped_rounds_dict`."""
         if check_in:
-            self._check_in_player(player_id)
+            self._check_in_player(player_id, skipped_rounds_dict)
         else:
-            self._check_out_player(player_id)
+            self._check_out_player(player_id, skipped_rounds_dict)

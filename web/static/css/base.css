@@ -2,19 +2,13 @@
 	font-family: Arial;
 }
 body {
-	background-image: url('/static/images/papi-web-background.png');
 	background-repeat: no-repeat;
 	background-position: center center;
-}
-.copyright {
-    text-align: center;
-    font-style: italic;
+	background-size: contain;
+	background-attachment: fixed;
+	overflow: auto !important;
 }
 .please-wait {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     pointer-events: none;
     height: 80px;
     width: 80px;
@@ -25,41 +19,39 @@ body {
     background-size: 100% auto;
 }
 #messages {
-    position:fixed;
-    top: 0.5rem;
-    right: 0.5rem;
-    width: 33%;
     z-index: 1;
 }
-
-#messages .alert-danger {
-    background-color: rgba(248, 215, 218, 0.85);
+.cursor-grab {
+    cursor: grab;
 }
-#messages .alert-warning {
-    background-color: rgba(255, 243, 205, 0.85);
+.cursor-pointer {
+    cursor: pointer;
 }
-#messages .alert-info {
-    background-color: rgba(207, 244, 252, 0.85);
+.w-80 {
+    width: 80%; !important;
 }
-#messages .alert-success {
-    background-color: rgba(209, 231, 221, 0.85);
+.w-1 {
+    width: 1%; !important;
 }
-#messages .alert {
-    padding: 0.2rem 1.8rem 0.2rem 0.3rem;
+/* https://stackoverflow.com/questions/39588698/bootstrap-multiple-modals-modal-backdrop-issue */
+.modal-backdrop + .modal-backdrop {
+  display: none;
 }
-#messages .alert button {
-    padding: 0.4rem;
+.papi-web-tooltip-info, .papi-web-tooltip-warning, .papi-web-tooltip-error {
+  --bs-tooltip-bg: #d0d000;
+  --bs-tooltip-color: black;
 }
-
-.width-100 {
-    width: 100%;
+.papi-web-tooltip-info {
+  --bs-tooltip-color: #600090;
 }
-
-.modal-footer {
-    display: block;
+.papi-web-tooltip-warning {
+  --bs-tooltip-color: #900000;
 }
-
-.modal-dialog {
-    max-width: 50%;
-    display: block;
+.papi-web-tooltip-error {
+  --bs-tooltip-color: #900000;
+}
+.image-screen, .card-body {
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-size: contain;
 }

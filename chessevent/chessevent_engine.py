@@ -8,10 +8,11 @@ logger: Logger = get_logger()
 
 
 class ChessEventEngine(Engine):
+    """The ChessEvent Engine."""
     def __init__(self):
         try:
             super().__init__()
-            while EventSelector(self._config).run():
+            while EventSelector().run():
                 pass
         except KeyboardInterrupt:
             pass

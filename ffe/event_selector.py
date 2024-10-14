@@ -1,23 +1,21 @@
 from logging import Logger
 
-from common.papi_web_config import PapiWebConfig
-from common.singleton import singleton
+from common.singleton import Singleton
 from common.logger import get_logger, print_interactive, input_interactive
-from data.event import Event, get_events_sorted_by_name
+from data.event import Event
+from data.loader import EventLoader
 from ffe.action_selector import ActionSelector
 
 logger: Logger = get_logger()
 
 
-@singleton
-class EventSelector:
-    def __init__(self, config: PapiWebConfig):
+class EventSelector(metaclass=Singleton):
+    def __init__(self):
         self.__silent: bool = False
-        self.__config: PapiWebConfig = config
 
-    def run(self) -> bool:
-        events: list[Event] = get_events_sorted_by_name(False, with_tournaments_only=True)
-        self.__silent = True  # verbose on the first call only
+    @staticmethod
+    def run() -> bool:
+        events: list[Event] = EventLoader.get(request=None, lazy_load=True).events_with_tournaments_sorted_by_name
         if not events:
             logger.error('Aucun évènement trouvé')
             return False
@@ -31,7 +29,7 @@ class EventSelector:
             event_range = range(1, len(events) + 1)
             for num in event_range:
                 event: Event = events[num - 1]
-                print_interactive(f'  - [{num}] {event.name} ({event.uniq_id}.ini)')
+                print_interactive(f'  - [{num}] {event.name} ({event.uniq_id})')
             print_interactive('  - [Q] Quitter')
             while event_num is None:
                 choice: str = input_interactive('Votre choix : ')
@@ -44,6 +42,6 @@ class EventSelector:
                 except ValueError:
                     pass
         event: Event = events[event_num - 1]
-        while ActionSelector(self.__config).run(event.uniq_id):
+        while ActionSelector().run(event.uniq_id):
             pass
         return True

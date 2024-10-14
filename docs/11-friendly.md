@@ -2,6 +2,9 @@
 
 # Papi-web - Configuration d'un tournoi amical
 
+> [!CAUTION]
+> Cette page décrivant la configuration au format INI d'un petit tournoi amical est obsolète et sera prochainement remplacée par un tutoriel.
+
 Même pour un petit tournoi amical au club, l'utilisation de Papi-web pour l'entrée des résultats permet de fluidifier le déroulement de la compétition.
 On crée un fichier `amical.ini` dans le répertoire `events/` pour déclarer l'évènement.
 ```

@@ -1,21 +1,17 @@
-{#
-Context:
-- messages
-#}
 {% for message in messages %}
     <div
-        class="alert {{ message.tag }} alert-dismissible fade show"
+        class="alert {{ message.html_class }} alert-dismissible fade show p-1"
         role="alert"
         hx-ext="remove-me"
-        {% if message.tag == 'alert-info' or message.tag == 'alert-success' %}
-            remove-me="2s"
+        {% if message.auto_remove %}
+            remove-me="20s"
         {% endif %}
     >
         <button
             type="button"
-            class="btn-close"
+            class="btn-close p-2"
             data-bs-dismiss="alert"
-            aria-label="Close"
+            aria-label="Masquer"
         ></button>
         {{ message.text }}
     </div>

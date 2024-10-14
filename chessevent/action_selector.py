@@ -1,19 +1,21 @@
 import hashlib
 import json
 import time
+from collections.abc import Iterator
 from json import JSONDecodeError
 from logging import Logger
 from pathlib import Path
 
+
 import chardet
 
 from chessevent.chessevent_session import ChessEventSession
-from common.config_reader import TMP_DIR
 from common.logger import get_logger, print_interactive, input_interactive
-from common.papi_web_config import PapiWebConfig
-from common.singleton import singleton
+from common.papi_web_config import TMP_DIR
+from common.singleton import Singleton
 from data.chessevent_tournament import ChessEventTournament
 from data.event import Event
+from data.loader import EventLoader
 from data.tournament import Tournament
 from database.papi_template import create_empty_papi_database, PAPI_VERSIONS
 from ffe.ffe_session import FFESession
@@ -21,18 +23,18 @@ from ffe.ffe_session import FFESession
 logger: Logger = get_logger()
 
 
-@singleton
-class ActionSelector:
-
-    def __init__(self, config: PapiWebConfig):
-        self.__config = config
+class ActionSelector(metaclass=Singleton):
+    """The CLI interface for ChessEvent."""
 
     @classmethod
-    def __get_chessevent_tournaments(cls, event: Event) -> list[Tournament]:
-        if not event.tournaments:
-            return []
-        tournaments: list[Tournament] = []
-        for tournament in event.tournaments.values():
+    def __get_chessevent_tournaments(cls, event: Event) -> Iterator[Tournament]:
+        """Retrieves all the tournaments of given *event* and returns an
+        iterator of all the ones with a valid setup for ChessEvent.
+        Namely: a tournament that has a chessevent tournament name, a defined
+        file and is not started is valid."""
+        if not event.tournaments_by_id:
+            yield from ()
+        for tournament in event.tournaments_by_id.values():
             if not tournament.chessevent_tournament_name:
                 logger.warning('Connexion à Chess Event non définie pour le tournoi [%s]', tournament.uniq_id)
             elif not tournament.file:
@@ -40,15 +42,20 @@ class ActionSelector:
             elif tournament.current_round:
                 logger.warning('Le tournoi [%s] est déjà commencé', tournament.uniq_id)
             else:
-                tournaments.append(tournament)
-        return tournaments
+                yield tournament
 
     def run(self, event_uniq_id: str) -> bool:
-        event: Event = Event(event_uniq_id, False)
+        """The CLI interface function.
+        Gets user input to retrieve the tournament data from chess event, and
+        possibly upload the tournament to the FFE website, corresponding to the
+        event with unique id *event_uniq_id*.
+        Returns False if an error occurred or if it was interrupted.
+        Returns True when the one-shot creation (and possibly upload) was okay"""
+        event: Event = EventLoader.get(request=None, lazy_load=False).reload_event(event_uniq_id)
         logger.info('Évènement : %s', event.name)
-        tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
+        tournaments: list[Tournament] = list(self.__get_chessevent_tournaments(event))
         if not tournaments:
-            logger.error('La création des fichiers Papi n\'est possible pour aucun tournoi')
+            logger.error("La création des fichiers Papi n'est possible pour aucun tournoi")
             return False
         logger.info('Tournois : %s', ", ".join(map(lambda t: str(t.name), tournaments)))
         print_interactive('Actions :')
@@ -99,6 +106,11 @@ class ActionSelector:
                     chessevent_timeout_max: int = 180
                     chessevent_timeout: int = chessevent_timeout_min
                     while True:
+                        event = EventLoader.get(request=None, lazy_load=False).reload_event(event_uniq_id)
+                        tournaments: list[Tournament] = list(self.__get_chessevent_tournaments(event))
+                        if not tournaments:
+                            logger.error('Plus aucun tournoi n\'est éligible pour la création des fichiers Papi.')
+                            return False
                         for tournament in tournaments:
                             data: str | None = ChessEventSession(tournament).read_data()
                             if data is None:
@@ -125,31 +137,22 @@ class ActionSelector:
                                              '(erreur ligne %s, colonne %s, position %s)',
                                              encoding, error_output, jde.lineno, jde.colno, jde.pos)
                                 continue
-                            # NOTE(Amaras) we should probably use another hashing algorithm
-                            # MD5 has been proven unsecure, even for this usecase.
-                            # I recommend something like SHA-2 (not proven unsecure yet).
                             data_md5 = hashlib.md5(data.encode('utf-8')).hexdigest()
-                            try:
-                                with open(tournament.chessevent_download_marker, 'r', encoding='utf-8)') as f:
-                                    if data_md5 == f.read() and tournament.file.exists():
-                                        logger.info('Les données du tournoi [%s] sur Chess Event '
-                                                    'n\'ont pas été modifiées.',
-                                                    tournament.name)
-                                        continue
-                            except FileNotFoundError:
-                                pass
+                            if data_md5 == tournament.last_chessevent_download_md5 and tournament.file.exists():
+                                logger.info('Les données du tournoi [%s] sur Chess Event '
+                                            'n\'ont pas été modifiées.',
+                                            tournament.name)
+                                continue
                             chessevent_tournament = ChessEventTournament(chessevent_tournament_info)
                             if chessevent_tournament.error:
                                 continue
                             chessevent_timeout = chessevent_timeout_min
                             tournament.file.unlink(missing_ok=True)
-                            create_empty_papi_database(tournament.file, papi_version)
-                            players_number: int = tournament.write_chessevent_info_to_database(chessevent_tournament)
-                            logger.info('Le fichier %s a été créé (%s joueur·euses).',
-                                        tournament.file, players_number)
-                            tournament.chessevent_download_marker.parents[0].mkdir(parents=True, exist_ok=True)
-                            with open(tournament.chessevent_download_marker, 'w', encoding='utf-8') as f:
-                                f.write(data_md5)
+                            if create_empty_papi_database(tournament.file, papi_version):
+                                players_number: int = tournament.write_chessevent_info_to_database(
+                                    chessevent_tournament, data_md5)
+                                logger.info('Le fichier %s a été créé (%s joueur·euses).',
+                                            tournament.file, players_number)
                             if action_choice == 'U':
                                 if not tournament.ffe_id or not tournament.ffe_password:
                                     logger.warning('Identifiants de connexion au site fédéral non définis pour le '
@@ -162,10 +165,6 @@ class ActionSelector:
                             return True
                         time.sleep(chessevent_timeout)
                         chessevent_timeout = min(chessevent_timeout_max, int(chessevent_timeout * 1.2))
-                        tournaments: list[Tournament] = self.__get_chessevent_tournaments(event)
-                        if not tournaments:
-                            logger.error('Plus aucun tournoi n\'est éligible pour la création des fichiers Papi.')
-                            return False
                 except KeyboardInterrupt:
                     return False
         return True

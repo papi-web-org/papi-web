@@ -7,6 +7,7 @@ logger: Logger = get_logger()
 
 
 class ChessEventPlayer:
+    """A class representing a player information on ChessEvent."""
     def __init__(self, chessevent_player_info: dict[str, bool | str | int | dict[int, float] | None]):
         self.last_name: str = ''
         self.first_name: str = ''

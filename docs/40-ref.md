@@ -2,6 +2,10 @@
 
 # Papi-web - Guide de référence de la configuration des évènements
 
+> [!CAUTION]
+> À partir de la version 2.4, la configuration des évènements se fait grâce à l'interface web du serveur (il n'y a plus de fichier de configuration au format INI comme ce fut le cas de la version 2.0 à la version 2.3).
+> Ce guide de référence, qui décrivait la manière de configurer les évènements au format INI est désormais obsolète.
+
 ## Généralités (`[event]`)
 
 | Option                 | Description                                                                                                                                                                                                                                                                                                                                                                                      |
