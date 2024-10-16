@@ -3,20 +3,33 @@
         {{ tooltip_attributes('info', 'Changer le nombre de colonnes utilisées.', 'top') }}
 >
     {% for c in papi_web_config.allowed_columns %}
-        {% with id='admin-columns-'~c, name='admin_columns' %}
+        {% if c == admin_columns %}
             <button
                     class="btn {% if c == admin_columns %}btn-primary{% else %}btn-secondary{% endif %} text-nowrap py-0 px-1"
-                    {% if c != admin_columns %}
-                        hx-post="{{ url_for('admin-update-header') }}"
-                        hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_columns": "{{ c }}"}'
-                        hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait"
-                    {% else %}
-                        disabled
-                    {% endif %}
+                    disabled
             >
                 {{ c }}
             </button>
-        {% endwith %}
+        {% else %}
+            <button
+                    class="btn {% if c == admin_columns %}btn-primary{% else %}btn-secondary{% endif %} text-nowrap py-0 px-1"
+                    hx-get="{{
+                        (
+                            url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab=admin_event_tab)
+                            if admin_event_tab else
+                            url_for('admin-event', event_uniq_id=admin_event.uniq_id)
+                        ) if admin_event else (
+                            url_for('admin-tab', admin_tab=admin_tab)
+                            if admin_event_tab else
+                            url_for('admin')
+                        )
+                    }}"
+                    hx-vals='{"admin_columns": "{{ c }}"}'
+                    hx-swap="multi:#admin-header,#admin-content"
+                    hx-indicator="#please-wait"
+            >
+                {{ c }}
+            </button>
+        {% endif %}
     {% endfor %}
 </span>

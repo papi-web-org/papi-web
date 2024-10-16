@@ -1,7 +1,16 @@
 <div class="modal-dialog modal-dialog-centered admin-tournament-edit-modal d-block w-80 mw-100">
     <form
-            hx-post="{{ url_for('admin-tournament-update') }}"
-            hx-vals='{"action": "{{ action }}", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}"{% if admin_tournament %}, "admin_tournament_id": "{{ admin_tournament.id }}"{% endif %} }'
+            {% if action == 'create' %}
+                hx-post="{{ url_for('admin-tournament-' ~ action, event_uniq_id=admin_event.uniq_id) }}"
+            {% elif action == 'clone' %}
+                hx-post="{{ url_for('admin-tournament-' ~ action, event_uniq_id=admin_event.uniq_id, tournament_id=admin_tournament.id) }}"
+            {% elif action == 'delete' %}
+                hx-delete="{{ url_for('admin-tournament-' ~ action, event_uniq_id=admin_event.uniq_id, tournament_id=admin_tournament.id) }}"
+            {% elif action == 'update' %}
+                hx-patch="{{ url_for('admin-tournament-' ~ action, event_uniq_id=admin_event.uniq_id, tournament_id=admin_tournament.id) }}"
+            {% else %}
+                hx-patch="{{ url_for('error') }}"
+            {% endif %}
             hx-swap="multi:#messages,#admin-header,#admin-content"
             hx-indicator="#please-wait">
         <div class="modal-content">
@@ -9,10 +18,10 @@
                 <h2 class="modal-title">
                     {% if action == 'create' %}
                         Création d'un tournoi
-                    {% elif action == 'update' %}
-                        Modification du tournoi [{{ admin_tournament.uniq_id }}]
                     {% elif action == 'clone' %}
                         Duplication du tournoi [{{ admin_tournament.uniq_id }}]
+                    {% elif action == 'update' %}
+                        Modification du tournoi [{{ admin_tournament.uniq_id }}]
                     {% else %}
                         Suppression du tournoi [{{ admin_tournament.uniq_id }}]
                     {% endif %}
@@ -414,8 +423,7 @@
                     <div class="col col-6 text-end">
                         <button
                                 class="btn btn-secondary text-nowrap"
-                                hx-post="{{ url_for('admin-tournament-update') }}"
-                                hx-vals='{"action": "close", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}" }'
+                                hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='tournaments') }}"
                                 hx-swap="multi:#messages,#admin-header,#admin-content"
                                 hx-trigger="click, keyup[key=='Escape'] from:body"
                                 hx-indicator="#please-wait"

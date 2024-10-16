@@ -56,7 +56,7 @@
                         {% endif %}
                 >
                     <button
-                            hx-post="{{ url_for('admin-render') }}"
+                            hx-get="{{ url_for('admin') }}"
                             hx-vals="{}"
                             hx-target="body"
                             hx-indicator="#please-wait"

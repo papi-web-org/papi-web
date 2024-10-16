@@ -2,12 +2,13 @@ import re
 from logging import Logger
 from typing import Annotated, Any
 
-from litestar import post
+from litestar import post, get, delete, patch
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
+from litestar.status_codes import HTTP_200_OK
 
 from common.logger import get_logger
 from data.event import Event
@@ -15,10 +16,9 @@ from data.loader import EventLoader
 from data.tournament import Tournament
 from database.sqlite import EventDatabase
 from database.store import StoredTournament
-from web.messages import Message
+from web.controllers.admin.event_admin_controller import EventAdminWebContext, AbstractEventAdminController
 from web.controllers.index_controller import WebContext
-from web.controllers.admin.index_admin_controller import AbstractAdminController
-from web.controllers.admin.event_admin_controller import EventAdminWebContext
+from web.messages import Message
 
 logger: Logger = get_logger()
 
@@ -26,26 +26,18 @@ logger: Logger = get_logger()
 class TournamentAdminWebContext(EventAdminWebContext):
     def __init__(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            tournament_needed: bool,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ] | None,
+            event_uniq_id: str,
+            tournament_id: int | None,
     ):
-        super().__init__(request, data, True)
+        super().__init__(request, data=data, event_uniq_id=event_uniq_id, admin_event_tab=None)
         self.admin_tournament: Tournament | None = None
-        field: str = 'admin_tournament_id'
-        if field in self.data:
+        if tournament_id:
             try:
-                admin_tournament_id: int | None = self._form_data_to_int(field, minimum=1)
-            except ValueError as ve:
-                self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
-                return
-            try:
-                self.admin_tournament = self.admin_event.tournaments_by_id[admin_tournament_id]
+                self.admin_tournament = self.admin_event.tournaments_by_id[tournament_id]
             except KeyError:
-                self._redirect_error(f'Le tournoi [{admin_tournament_id}] n\'existe pas')
+                self._redirect_error(f'Le tournoi [{tournament_id}] n\'existe pas')
                 return
-        if tournament_needed and not self.admin_tournament:
-            self._redirect_error(f'Le tournoi n\'est pas spécifié')
-            return
 
     @property
     def template_context(self) -> dict[str, Any]:
@@ -54,7 +46,7 @@ class TournamentAdminWebContext(EventAdminWebContext):
         }
 
 
-class TournamentAdminController(AbstractAdminController):
+class TournamentAdminController(AbstractEventAdminController):
 
     @staticmethod
     def _admin_validate_tournament_update_data(
@@ -165,13 +157,18 @@ class TournamentAdminController(AbstractAdminController):
                                            f'/{chessevent.shadowed_password}/{chessevent.event_id})')
         return options
 
-    def _admin_tournament_render_edit_modal(
-            self,
+    def _admin_tournament_modal(
+            self, request: HTMXRequest,
             action: str,
-            web_context: TournamentAdminWebContext,
+            event_uniq_id: str,
+            tournament_id: int | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        web_context: TournamentAdminWebContext = TournamentAdminWebContext(
+            request, data=None, event_uniq_id=event_uniq_id, tournament_id=tournament_id)
+        if web_context.error:
+            return web_context.error
         if data is None:
             data = {}
             match action:
@@ -232,7 +229,7 @@ class TournamentAdminController(AbstractAdminController):
         if errors is None:
             errors = {}
         return HTMXTemplate(
-            template_name='admin_tournament_edit_modal.html',
+            template_name='admin_tournament_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
             context=web_context.template_context | {
@@ -244,46 +241,44 @@ class TournamentAdminController(AbstractAdminController):
                 'errors': errors,
             })
 
-    @post(
-        path='/admin-tournament-render-edit-modal',
-        name='admin-tournament-render-edit-modal'
+    @get(
+        path='/admin/tournament-modal/create/{event_uniq_id:str}',
+        name='admin-tournament-create-modal'
     )
-    async def htmx_admin_tournament_render_edit_modal(
+    async def htmx_admin_tournament_create_modal(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
     ) -> Template:
-        action: str = WebContext.form_data_to_str(data, 'action')
-        web_context: TournamentAdminWebContext
-        match action:
-            case 'update' | 'delete' | 'clone':
-                web_context = TournamentAdminWebContext(request, data, True)
-            case 'create':
-                web_context = TournamentAdminWebContext(request, data, False)
-            case _:
-                raise ValueError(f'action=[{action}]')
+        return self._admin_tournament_modal(request, action='create', event_uniq_id=event_uniq_id, tournament_id=None)
+
+    @get(
+        path='/admin/tournament-modal/{action:str}/{event_uniq_id:str}/{tournament_id:int}',
+        name='admin-tournament-modal'
+    )
+    async def htmx_admin_tournament_modal(
+            self, request: HTMXRequest,
+            action: str,
+            event_uniq_id: str,
+            tournament_id: int | None,
+    ) -> Template:
+        web_context: TournamentAdminWebContext = TournamentAdminWebContext(
+            request, data=None, event_uniq_id=event_uniq_id, tournament_id=tournament_id)
         if web_context.error:
             return web_context.error
-        return self._admin_tournament_render_edit_modal(action, web_context)
+        return self._admin_tournament_modal(
+            request, action=action, event_uniq_id=event_uniq_id, tournament_id=tournament_id)
 
-    @post(
-        path='/admin-tournament-update',
-        name='admin-tournament-update'
-    )
-    async def htmx_admin_tournament_update(
+    def _admin_tournament_update(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            action: str,
+            event_uniq_id: str,
+            tournament_id: int | None,
     ) -> Template:
-        action: str = WebContext.form_data_to_str(data, 'action')
-        if action == 'close':
-            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
-            if web_context.error:
-                return web_context.error
-            return self._admin_render_index(web_context)
         match action:
-            case 'update' | 'delete' | 'clone':
-                web_context: TournamentAdminWebContext = TournamentAdminWebContext(request, data, True)
-            case 'create':
-                web_context: TournamentAdminWebContext = TournamentAdminWebContext(request, data, False)
+            case 'update' | 'delete' | 'clone' | 'create':
+                web_context: TournamentAdminWebContext = TournamentAdminWebContext(
+                    request, data=data, event_uniq_id=event_uniq_id, tournament_id=tournament_id)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
@@ -291,35 +286,96 @@ class TournamentAdminController(AbstractAdminController):
         stored_tournament: StoredTournament | None = self._admin_validate_tournament_update_data(
             action, web_context, data)
         if stored_tournament.errors:
-            return self._admin_tournament_render_edit_modal(action, web_context, data, stored_tournament.errors)
+            return self._admin_tournament_modal(
+                request, action=action, event_uniq_id=event_uniq_id, tournament_id=tournament_id, data=data,
+                errors=stored_tournament.errors)
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=False)
         with (EventDatabase(web_context.admin_event.uniq_id, write=True) as event_database):
             match action:
-                case 'update':
-                    stored_tournament = event_database.update_stored_tournament(stored_tournament)
-                    Message.success(request, f'Le tournoi [{stored_tournament.uniq_id}] a été modifié.')
-                    stored_tournament = None
                 case 'create':
                     stored_tournament = event_database.add_stored_tournament(stored_tournament)
+                    event_database.commit()
                     Message.success(request, f'Le tournoi [{stored_tournament.uniq_id}] a été créé.')
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_tournament_modal(
+                        request, action='update', event_uniq_id=event_uniq_id, tournament_id=stored_tournament.id)
+                case 'update':
+                    stored_tournament = event_database.update_stored_tournament(stored_tournament)
+                    event_database.commit()
+                    Message.success(request, f'Le tournoi [{stored_tournament.uniq_id}] a été modifié.')
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_event_render(
+                        request, event_uniq_id=event_uniq_id, admin_event_tab='tournaments')
                 case 'delete':
                     event_database.delete_stored_tournament(web_context.admin_tournament.id)
+                    event_database.commit()
                     Message.success(request, f'Le tournoi [{web_context.admin_tournament.uniq_id}] a été supprimé.')
-                    stored_tournament = None
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_event_render(
+                        request, event_uniq_id=event_uniq_id, admin_event_tab='tournaments')
                 case 'clone':
                     stored_tournament = event_database.clone_stored_tournament(
                         web_context.admin_tournament.id, stored_tournament.uniq_id, stored_tournament.name,
                         stored_tournament.path, stored_tournament.filename, stored_tournament.ffe_id,
                         stored_tournament.ffe_password, )
+                    event_database.commit()
                     Message.success(
                         request, f'Le tournoi [{web_context.admin_tournament.uniq_id}] a été dupliqué '
                                  f'([{stored_tournament.uniq_id}]).')
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_tournament_modal(
+                        request, action='update', event_uniq_id=event_uniq_id, tournament_id=stored_tournament.id)
                 case _:
                     raise ValueError(f'action=[{action}]')
-            event_database.commit()
-        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=False)
-        web_context.set_admin_event(event_loader.reload_event(web_context.admin_event.uniq_id))
-        if stored_tournament:
-            web_context.admin_tournament = web_context.admin_event.tournaments_by_id[stored_tournament.id]
-            return self._admin_tournament_render_edit_modal('update', web_context)
-        else:
-            return self._admin_render_index(web_context)
+
+    @post(
+        path='/admin/tournament-create/{event_uniq_id:str}',
+        name='admin-tournament-create'
+    )
+    async def htmx_admin_tournament_create(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+    ) -> Template:
+        return self._admin_tournament_update(
+            request, data=data, action='create', event_uniq_id=event_uniq_id, tournament_id=None)
+
+    @post(
+        path='/admin/tournament-clone/{event_uniq_id:str}/{tournament_id:int}',
+        name='admin-tournament-clone'
+    )
+    async def htmx_admin_tournament_clone(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            tournament_id: int | None,
+    ) -> Template:
+        return self._admin_tournament_update(
+            request, data=data, action='clone', event_uniq_id=event_uniq_id, tournament_id=tournament_id)
+
+    @patch(
+        path='/admin/tournament-update/{event_uniq_id:str}/{tournament_id:int}',
+        name='admin-tournament-update'
+    )
+    async def htmx_admin_tournament_update(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            tournament_id: int | None,
+    ) -> Template:
+        return self._admin_tournament_update(
+            request, data=data, action='update', event_uniq_id=event_uniq_id, tournament_id=tournament_id)
+
+    @delete(
+        path='/admin/tournament-delete/{event_uniq_id:str}/{tournament_id:int}',
+        name='admin-tournament-delete',
+        status_code=HTTP_200_OK,
+    )
+    async def htmx_admin_tournament_delete(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            tournament_id: int | None,
+    ) -> Template:
+        return self._admin_tournament_update(
+            request, data=data, action='delete', event_uniq_id=event_uniq_id, tournament_id=tournament_id)

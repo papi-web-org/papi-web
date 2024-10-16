@@ -2,8 +2,7 @@
     <div
             class="card {% if card_url %}btn{% endif %} p-1 w-100 {{ card_class }}"
             {% if card_url %}
-                hx-post="{{ card_url }}"
-                hx-vals="{{ card_payload }}"
+                hx-get="{{ card_url }}"
                 hx-target="body"
                 hx-indicator="#please-wait"
             {% endif %}

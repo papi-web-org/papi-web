@@ -8,8 +8,7 @@
 {% block cards_container_right_buttons %}
     <button
             class="btn btn-primary text-nowrap"
-            hx-post="{{ url_for('admin-update-header') }}"
-            hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}"}'
+            hx-get="{{ url_for('admin', event_tab=event_tab) }}"
             hx-swap="multi:#admin-header,#admin-content"
             hx-indicator="#please-wait"
     >
@@ -17,8 +16,7 @@
     </button>
     <button
             class="btn btn-primary text-nowrap"
-            hx-post="{{ url_for('admin-event-render-edit-modal') }}"
-            hx-vals='{"action": "create", "admin_main_selector": "{{ admin_main_selector }}"}'
+            hx-get="{{ url_for('admin-event-modal-create') }}"
             hx-target="#admin-modal-container"
             hx-swap="innerHTML"
             data-bs-toggle="modal"
@@ -33,8 +31,7 @@
         {% if nav_tab.events %}
             {% for event in nav_tab.events %}
                 {% with
-                    card_url=url_for('admin-render'),
-                    card_payload='{"admin_main_selector": "' ~ event.uniq_id ~ '"}',
+                    card_url=url_for('admin-event', event_uniq_id=event.uniq_id),
                     card_class=('bg-light' if event.public else 'bg-danger-subtle') if admin_auth else 'bg-light',
                     card_background_url=event.background_url,
                     card_background_color=event.background_color

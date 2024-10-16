@@ -1,0 +1,66 @@
+{% extends 'admin_base.html' %}
+
+{% block admin_header_back_button %}
+    {% if admin_event.start > now %}
+        {% set target_tab = 'coming_events' %}
+    {% elif admin_event.stop < now %}
+        {% set target_tab = 'passed_events' %}
+    {% else %}
+        {% set target_tab = 'current_events' %}
+    {% endif %}
+    <button
+            class="btn btn-link link-dark fs-5 fw-bold px-1 py-0"
+            hx-get="{{ url_for('admin-tab', admin_tab=target_tab) }}"
+            hx-swap="multi:#admin-header,#admin-content"
+            hx-indicator="#please-wait"
+            hx-indicator="#please-wait"
+    >
+        <i class="bi-arrow-left-circle-fill"></i>
+    </button>
+{% endblock admin_header_back_button %}
+
+{% block admin_header_nav %}
+    {% for nav_id, nav_tab in nav_tabs.items() %}
+        {% with active=(admin_event_tab == nav_id) %}
+            <button
+                    class="nav-link {{ nav_tab.class }} {% if nav_tab.disabled %}link-secondary{% else %}link-dark{% endif %} border-dark {%if active %}active{%else%}bg-body-secondary{% endif %} fw-bold px-2 py-0 ms-1"
+                    id="nav-{{ nav_id }}-tab"
+                    hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab=nav_id) }}"
+                    hx-swap="multi:#admin-header,#admin-content"
+                    data-bs-toggle="tab"
+                    data-bs-target="#nav-{{ nav_tab.name }}"
+                    type="button"
+                    role="tab"
+                    aria-controls="nav-{{ nav_id }}"
+                    aria-selected="true"
+                    hx-indicator="#please-wait"
+                    {% if nav_tab.disabled %}
+                        disabled
+                    {% endif %}
+            >
+                {% if nav_tab.icon_class %}
+                    <i class="{{ nav_tab.icon_class }}"></i>
+                {% endif %}
+                {{ nav_tab.title }}
+            </button>
+        {% endwith %}
+    {% endfor %}
+{% endblock admin_header_nav %}
+
+{% block admin_content %}
+    {% for nav_id, nav_tab in nav_tabs.items() %}
+        {% with active=(admin_event_tab == nav_id) %}
+            <div
+                    class="tab-pane fade {% if active %}show active{% endif %}"
+                    id="nav-{{ nav_id }}"
+                    role="tabpanel"
+                    aria-labelledby="nav-{{ nav_id }}-tab"
+                    tabindex="0"
+            >
+                {% if active %}
+                    {% include nav_tab.template %}
+                {% endif %}
+            </div>
+        {% endwith %}
+    {% endfor %}
+{% endblock admin_content %}
