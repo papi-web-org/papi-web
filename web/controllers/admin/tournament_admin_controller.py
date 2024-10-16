@@ -261,10 +261,6 @@ class TournamentAdminController(AbstractEventAdminController):
             event_uniq_id: str,
             tournament_id: int | None,
     ) -> Template:
-        web_context: TournamentAdminWebContext = TournamentAdminWebContext(
-            request, data=None, event_uniq_id=event_uniq_id, tournament_id=tournament_id)
-        if web_context.error:
-            return web_context.error
         return self._admin_tournament_modal(
             request, action=action, event_uniq_id=event_uniq_id, tournament_id=tournament_id)
 
