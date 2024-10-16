@@ -18,7 +18,6 @@ from data.loader import EventLoader
 from data.rotator import Rotator
 from data.screen import Screen
 from data.util import ScreenType
-from web.controllers.index_controller import AbstractController
 from web.controllers.user.index_user_controller import AbstractUserController, UserWebContext
 from web.messages import Message
 from web.session import SessionHandler
@@ -52,10 +51,6 @@ class EventUserWebContext(UserWebContext):
 
     def check_user_tab(self):
         pass
-
-    def check_user_event_tab(self):
-        if self.user_event_tab not in ['', 'input', 'boards', 'players', 'results', 'image', 'rotators', ]:
-            self._redirect_error(f'Invalid value [{self.user_event_tab}] for parameter [user_event_tab]')
 
     @property
     def background_image(self) -> str:
