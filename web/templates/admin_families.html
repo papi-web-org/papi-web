@@ -14,8 +14,8 @@
         >
             <input
                     name="{{ name }}"
-                    hx-post="{{ url_for('admin-update-header') }}"
-                    hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "{{ name }}": "{% if show_details_on_family_list %}off{% else %}on{% endif %}"}'
+                    hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='families') }}"
+                    hx-vals='{"{{ name }}": "{% if show_details_on_family_list %}false{% else %}true{% endif %}"}'
                     hx-swap="multi:#admin-header,#admin-content"
                     hx-indicator="#please-wait"
                     class="form-check-input"
@@ -27,8 +27,7 @@
     <span {{ tooltip_attributes('info', 'Rafraîchir cet onglet.', 'top') }}>
         <button
                 class="btn btn-primary text-nowrap me-2"
-                hx-post="{{ url_for('admin-update-header') }}"
-                hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}"}'
+                hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='families') }}"
                 hx-swap="multi:#admin-header,#admin-content"
                 hx-indicator="#please-wait"
         >
@@ -38,8 +37,7 @@
     <span {{ tooltip_attributes('info', 'Ajouter une nouvelle famille d\'écrans à l\'évènement.' if admin_event.tournaments_by_id else 'Vous devez créer un tournoi avant de pouvoir créer des familles d\'écrans', 'top') }}>
         <button
                 class="btn btn-primary text-nowrap"
-                hx-post="{{ url_for('admin-family-render-edit-modal') }}"
-                hx-vals='{"action": "create", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}"}'
+                hx-get="{{ url_for('admin-family-create-modal', event_uniq_id=admin_event.uniq_id) }}"
                 hx-target="#admin-modal-container"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal"

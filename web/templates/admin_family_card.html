@@ -65,8 +65,7 @@
     <span {{ tooltip_attributes('info', 'Modifier les propriétés de la famille d\'écrans.', 'top') }}>
         <button
                 class="btn btn-sm btn-primary p-1"
-                hx-post="{{ url_for('admin-family-render-edit-modal') }}"
-                hx-vals='{"action": "update", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_family_id": "{{ family.id }}"}'
+                hx-get="{{ url_for('admin-family-modal', action='update', event_uniq_id=admin_event.uniq_id, family_id=family.id) }}"
                 hx-target="#admin-modal-container"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal"
@@ -81,8 +80,7 @@
     <span {{ tooltip_attributes('info', 'Dupliquer la famille d\'écrans.', 'top') }}>
         <button
                 class="btn btn-sm btn-primary p-1"
-                hx-post="{{ url_for('admin-family-update') }}"
-                hx-vals='{"action": "clone", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_family_id": "{{ family.id }}"}'
+                hx-get="{{ url_for('admin-family-modal', action='clone', event_uniq_id=admin_event.uniq_id, family_id=family.id) }}"
                 hx-swap="multi:#messages,#admin-header,#admin-content"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal"
@@ -94,8 +92,7 @@
     <span {{ tooltip_attributes('info', 'Supprimer la famille d\'écrans.', 'top') }}>
         <button
                 class="btn btn-sm btn-danger p-1"
-                hx-post="{{ url_for('admin-family-render-edit-modal') }}"
-                hx-vals='{"action": "delete", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_family_id": "{{ family.id }}"}'
+                hx-get="{{ url_for('admin-family-modal', action='delete', event_uniq_id=admin_event.uniq_id, family_id=family.id) }}"
                 hx-target="#admin-modal-container"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal"

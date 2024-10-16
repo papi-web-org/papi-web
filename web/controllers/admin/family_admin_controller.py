@@ -1,12 +1,13 @@
 from logging import Logger
 from typing import Annotated, Any
 
-from litestar import post
+from litestar import post, get, patch, delete
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
+from litestar.status_codes import HTTP_200_OK
 
 from common.logger import get_logger
 from data.event import Event
@@ -18,7 +19,7 @@ from database.store import StoredFamily
 from web.messages import Message
 from web.controllers.index_controller import WebContext
 from web.controllers.admin.index_admin_controller import AbstractAdminController
-from web.controllers.admin.event_admin_controller import EventAdminWebContext
+from web.controllers.admin.event_admin_controller import EventAdminWebContext, AbstractEventAdminController
 
 logger: Logger = get_logger()
 
@@ -26,26 +27,18 @@ logger: Logger = get_logger()
 class FamilyAdminWebContext(EventAdminWebContext):
     def __init__(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            family_needed: bool,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ] | None,
+            event_uniq_id: str,
+            family_id: int | None,
     ):
-        super().__init__(request, data, True)
+        super().__init__(request, data=data, event_uniq_id=event_uniq_id, admin_event_tab=None)
         self.admin_family: Family | None = None
-        field: str = 'admin_family_id'
-        if field in self.data:
+        if family_id:
             try:
-                admin_family_id: int | None = self._form_data_to_int(field, minimum=1)
-            except ValueError as ve:
-                self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
-                return
-            try:
-                self.admin_family = self.admin_event.families_by_id[admin_family_id]
+                self.admin_family = self.admin_event.families_by_id[family_id]
             except KeyError:
-                self._redirect_error(f'La famille [{admin_family_id}] n\'existe pas')
+                self._redirect_error(f'La famille [{family_id}] n\'existe pas')
                 return
-        if family_needed and not self.admin_family:
-            self._redirect_error(f'La famille n\'est pas spécifiée')
-            return
 
     @property
     def template_context(self) -> dict[str, Any]:
@@ -54,7 +47,7 @@ class FamilyAdminWebContext(EventAdminWebContext):
         }
 
 
-class FamilyAdminController(AbstractAdminController):
+class FamilyAdminController(AbstractEventAdminController):
 
     @staticmethod
     def _admin_validate_family_update_data(
@@ -231,12 +224,18 @@ class FamilyAdminController(AbstractAdminController):
             options[str(tournament.id)] = f'{tournament.name} ({tournament.filename})'
         return options
 
-    def _admin_family_render_edit_modal(
-            self, action: str,
-            web_context: FamilyAdminWebContext,
+    def _admin_family_modal(
+            self, request: HTMXRequest,
+            action: str,
+            event_uniq_id: str,
+            family_id: int | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        web_context: FamilyAdminWebContext = FamilyAdminWebContext(
+            request, data=None, event_uniq_id=event_uniq_id, family_id=family_id)
+        if web_context.error:
+            return web_context.error
         if data is None:
             data: dict[str, str] = {}
             match action:
@@ -249,7 +248,7 @@ class FamilyAdminController(AbstractAdminController):
                 case _:
                     raise ValueError(f'action=[{action}]')
             match action:
-                case 'update':
+                case 'update' | 'clone':
                     data['public'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.public)
                     data['name'] = WebContext.value_to_form_data(web_context.admin_family.stored_family.name)
                     data['tournament_id'] = WebContext.value_to_form_data(
@@ -288,7 +287,7 @@ class FamilyAdminController(AbstractAdminController):
         if errors is None:
             errors = {}
         return HTMXTemplate(
-            template_name='admin_family_edit_modal.html',
+            template_name='admin_family_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
             context=web_context.template_context | {
@@ -301,83 +300,134 @@ class FamilyAdminController(AbstractAdminController):
                 'errors': errors,
             })
 
-    @post(
-        path='/admin-family-render-edit-modal',
-        name='admin-family-render-edit-modal'
+    @get(
+        path='/admin/family-modal/create/{event_uniq_id:str}',
+        name='admin-family-create-modal'
     )
-    async def htmx_admin_family_render_edit_modal(
+    async def htmx_admin_family_create_modal(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
     ) -> Template:
-        action: str = WebContext.form_data_to_str(data, 'action')
-        web_context: FamilyAdminWebContext
-        match action:
-            case 'update' | 'delete':
-                web_context = FamilyAdminWebContext(request, data, True)
-            case 'create':
-                web_context = FamilyAdminWebContext(request, data, False)
-            case _:
-                raise ValueError(f'action=[{action}]')
-        if web_context.error:
-            return web_context.error
-        return self._admin_family_render_edit_modal(action, web_context)
+        return self._admin_family_modal(request, action='create', event_uniq_id=event_uniq_id, family_id=None)
 
-    @post(
-        path='/admin-family-update',
-        name='admin-family-update'
+    @get(
+        path='/admin/family-modal/{action:str}/{event_uniq_id:str}/{family_id:int}',
+        name='admin-family-modal'
     )
-    async def htmx_admin_family_update(
+    async def htmx_admin_family_modal(
+            self, request: HTMXRequest,
+            action: str,
+            event_uniq_id: str,
+            family_id: int | None,
+    ) -> Template:
+        return self._admin_family_modal(
+            request, action=action, event_uniq_id=event_uniq_id, family_id=family_id)
+
+    def _admin_family_update(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            action: str,
+            event_uniq_id: str,
+            family_id: int | None,
     ) -> Template:
-        action: str = WebContext.form_data_to_str(data, 'action')
-        if action == 'close':
-            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
-            if web_context.error:
-                return web_context.error
-            return self._admin_render_index(web_context)
         match action:
-            case 'update' | 'delete' | 'clone':
-                web_context: FamilyAdminWebContext = FamilyAdminWebContext(request, data, True)
-            case 'create':
-                web_context: FamilyAdminWebContext = FamilyAdminWebContext(request, data, False)
+            case 'update' | 'delete' | 'clone' | 'create':
+                web_context: FamilyAdminWebContext = FamilyAdminWebContext(
+                    request, data=data, event_uniq_id=event_uniq_id, family_id=family_id)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
             return web_context.error
         stored_family: StoredFamily = self._admin_validate_family_update_data(action, web_context, data)
         if stored_family.errors:
-            return self._admin_family_render_edit_modal(action, web_context, data, stored_family.errors)
-        next_family_id: int | None = None
-        next_action: str | None = None
+            return self._admin_family_modal(
+                request, action=action, event_uniq_id=event_uniq_id, family_id=family_id, data=data,
+                errors=stored_family.errors)
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=False)
         with (EventDatabase(web_context.admin_event.uniq_id, write=True) as event_database):
             match action:
-                case 'update':
-                    stored_family = event_database.update_stored_family(stored_family)
-                    Message.success(request, f'La famille [{stored_family.uniq_id}] a été modifiée.')
                 case 'create':
                     stored_family = event_database.add_stored_family(stored_family)
+                    event_database.commit()
                     Message.success(request, f'La famille [{stored_family.uniq_id}] a été créée.')
-                    next_family_id = stored_family.id
-                    next_action = 'update'
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_family_modal(
+                        request, action='update', event_uniq_id=event_uniq_id, family_id=stored_family.id)
+                case 'update':
+                    stored_family = event_database.update_stored_family(stored_family)
+                    event_database.commit()
+                    Message.success(request, f'La famille [{stored_family.uniq_id}] a été modifiée.')
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_event_render(
+                        request, event_uniq_id=event_uniq_id, admin_event_tab='families')
                 case 'delete':
                     event_database.delete_stored_family(web_context.admin_family.id)
+                    event_database.commit()
                     Message.success(request, f'La famille [{web_context.admin_family.uniq_id}] a été supprimée.')
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_event_render(
+                        request, event_uniq_id=event_uniq_id, admin_event_tab='families')
                 case 'clone':
                     stored_family = event_database.clone_stored_family(web_context.admin_family.id)
+                    event_database.commit()
                     Message.success(
                         request,
                         f'La famille [{web_context.admin_family.uniq_id}] a été dupliquée '
                         f'([{stored_family.uniq_id}]).')
-                    next_family_id = stored_family.id
-                    next_action = 'update'
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_family_modal(
+                        request, action='update', event_uniq_id=event_uniq_id, family_id=stored_family.id)
                 case _:
                     raise ValueError(f'action=[{action}]')
-            event_database.commit()
-        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=False)
-        web_context.set_admin_event(event_loader.reload_event(web_context.admin_event.uniq_id))
-        if next_family_id:
-            web_context.admin_family = web_context.admin_event.families_by_id[next_family_id]
-            return self._admin_family_render_edit_modal(next_action, web_context)
-        else:
-            return self._admin_render_index(web_context)
+
+    @post(
+        path='/admin/family-create/{event_uniq_id:str}',
+        name='admin-family-create'
+    )
+    async def htmx_admin_family_create(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+    ) -> Template:
+        return self._admin_family_update(
+            request, data=data, action='create', event_uniq_id=event_uniq_id, family_id=None)
+
+    @post(
+        path='/admin/family-clone/{event_uniq_id:str}/{family_id:int}',
+        name='admin-family-clone',
+    )
+    async def htmx_admin_family_clone(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            family_id: int | None,
+    ) -> Template:
+        return self._admin_family_update(
+            request, data=data, action='clone', event_uniq_id=event_uniq_id, family_id=family_id)
+
+    @patch(
+        path='/admin/family-update/{event_uniq_id:str}/{family_id:int}',
+        name='admin-family-update',
+    )
+    async def htmx_admin_family_update(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED),],
+            event_uniq_id: str,
+            family_id: int | None,
+    ) -> Template:
+        return self._admin_family_update(
+            request, data=data, action='update', event_uniq_id=event_uniq_id, family_id=family_id)
+
+    @delete(
+        path='/admin/family-delete/{event_uniq_id:str}/{family_id:int}',
+        name='admin-family-delete',
+        status_code=HTTP_200_OK,
+    )
+    async def htmx_admin_family_delete(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED),],
+            event_uniq_id: str,
+            family_id: int | None,
+    ) -> Template:
+        return self._admin_family_update(
+            request, data=data, action='delete', event_uniq_id=event_uniq_id, family_id=family_id)

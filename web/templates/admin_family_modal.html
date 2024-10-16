@@ -1,7 +1,16 @@
 <div class="modal-dialog modal-dialog-centered admin-family-edit-modal d-block w-80 mw-100">
     <form
-            hx-post="{{ url_for('admin-family-update') }}"
-            hx-vals='{"action": "{{ action }}", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}"{% if admin_family %}, "admin_family_id": "{{ admin_family.id }}"{% endif %} }'
+            {% if action == 'create' %}
+                hx-post="{{ url_for('admin-family-' ~ action, event_uniq_id=admin_event.uniq_id) }}"
+            {% elif action == 'clone' %}
+                hx-post="{{ url_for('admin-family-' ~ action, event_uniq_id=admin_event.uniq_id, family_id=admin_family.id) }}"
+            {% elif action == 'update' %}
+                hx-patch="{{ url_for('admin-family-' ~ action, event_uniq_id=admin_event.uniq_id, family_id=admin_family.id) }}"
+            {% elif action == 'delete' %}
+                hx-delete="{{ url_for('admin-family-' ~ action, event_uniq_id=admin_event.uniq_id, family_id=admin_family.id) }}"
+            {% else %}
+                hx-get="{{ url_for('error') }}"
+            {% endif %}
             hx-swap="multi:#messages,#admin-header,#admin-content"
             hx-indicator="#please-wait">
         <div class="modal-content">
@@ -9,10 +18,14 @@
                 <h2 class="modal-title">
                     {% if action == 'create' %}
                         Création d'une famille d'écrans
+                    {% elif action == 'clone' %}
+                        Duplication de la famille d'écrans [{{ admin_family.uniq_id }}]
                     {% elif action == 'update' %}
                         Modification de la famille d'écrans [{{ admin_family.uniq_id }}]
-                    {% else %}
+                    {% elif action == 'delete' %}
                         Suppression de la famille d'écrans [{{ admin_family.uniq_id }}]
+                    {% else %}
+                        ?
                     {% endif %}
                 </h2>
             </div>
@@ -460,18 +473,21 @@
                             <i class="bi-floppy-fill"></i>
                             {% if action == 'create' %}
                                 Créer
+                            {% elif action == 'clone' %}
+                                Dupliquer
                             {% elif action == 'update' %}
                                 Modifier
-                            {% else %}
+                            {% elif action == 'delete' %}
                                 Supprimer
+                            {% else %}
+                                ?
                             {% endif %}
                         </button>
                     </div>
                     <div class="col col-6 text-end">
                         <button
                                 class="btn btn-secondary text-nowrap"
-                                hx-post="{{ url_for('admin-family-update') }}"
-                                hx-vals='{"action": "close", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}" }'
+                                hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='families') }}"
                                 hx-swap="multi:#messages,#admin-header,#admin-content"
                                 hx-trigger="click, keyup[key=='Escape'] from:body"
                                 hx-indicator="#please-wait"
