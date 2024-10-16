@@ -13,7 +13,7 @@
                 {{ tooltip_attributes('info', 'Activer ou désactiver l\'affichage des détails sur les cartes des écrans rotatifs ci-dessous.', 'top') }}
         >
             <input
-                    hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='families') }}"
+                    hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='rotators') }}"
                     hx-vals='{"{{ name }}": "{% if show_details_on_rotator_list %}false{% else %}true{% endif %}"}'
                     hx-swap="multi:#admin-header,#admin-content"
                     hx-indicator="#please-wait"
