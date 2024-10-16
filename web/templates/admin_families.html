@@ -13,7 +13,6 @@
                 {{ tooltip_attributes('info', 'Activer ou désactiver l\'affichage des détails sur les cartes des familles d\'écrans ci-dessous.', 'top') }}
         >
             <input
-                    name="{{ name }}"
                     hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='families') }}"
                     hx-vals='{"{{ name }}": "{% if show_details_on_family_list %}false{% else %}true{% endif %}"}'
                     hx-swap="multi:#admin-header,#admin-content"
