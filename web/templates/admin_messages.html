@@ -1,25 +1,49 @@
-<h1>{{ admin_event.name }} - Messages</h1>
-{% if admin_event.errors %}
-    <div class="alert alert-danger" role="alert">
-        <div><strong><i class="bi-bug-fill"></i> Erreurs : {{ admin_event.errors|length }}</strong></div>
-        {% for error in admin_event.errors %}
-            <div><i class="bi-bug"></i> {{ error }}</div>
-        {% endfor %}
-    </div>
-{% endif %}
-{% if admin_event.warnings %}
-    <div class="alert alert-warning" role="alert">
-        <div><strong><i class="bi-exclamation-triangle-fill"></i> Avertissements : {{ admin_event.warnings|length }}</strong></div>
-        {% for warning in admin_event.warnings %}
-            <div><i class="bi-exclamation-triangle"></i> {{ warning }}</div>
-        {% endfor %}
-    </div>
-{% endif %}
-{% if admin_event.infos %}
-    <div class="alert alert-info" role="alert">
-        <div><strong><i class="bi-info-circle-fill"></i> Informations : {{ admin_event.infos|length }}</strong></div>
-        {% for info in admin_event.infos %}
-            <div><i class="bi-info-circle"></i> {{ info }}</div>
-        {% endfor %}
-    </div>
-{% endif %}
+<table class="table table-striped table-sm table-hover border-black w-auto bg-light mx-auto justify-content-center">
+    <thead class="table-dark position-sticky top-0 z-2">
+        <tr>
+            <th scope="col" colspan="2" class="text-nowrap">Niveau</th>
+            <th scope="col" class="text-nowrap">Message</th>
+            <th scope="col" class="text-nowrap text-end">
+                {% for logging_level_id, logging_level in logging_levels.items() %}
+                    <button
+                            class="btn text-nowrap {% if logging_level_id == min_logging_level %}pe-none fw-bold{% endif %} {% if logging_level_id >= min_logging_level %}{{ logging_level.class }}{% else %}text-white border border-white{% endif %} px-1 py-0"
+                            {% if logging_level_id != min_logging_level %}
+                                hx-post="{{ url_for('admin-update-header') }}"
+                                hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "min_logging_level": "{{ logging_level_id }}"}'
+                                hx-swap="multi:#admin-header,#admin-content"
+                                hx-indicator="#please-wait"
+                            {% endif %}
+                    >
+                        <i class="{{ logging_level.icon_class }}"></i>
+                        {{ logging_level.name }}
+                    </button>
+                {% endfor %}
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if admin_event.messages %}
+            {% for message in admin_event.messages %}
+                {% if message.level >= min_logging_level %}
+                    <tr>
+                        <th scope="row" class="text-nowrap {{ logging_levels[message.level].class }}">
+                            <i class="{{ logging_levels[message.level].icon_class }}"></i>
+                        </th>
+                        <td class="text-nowrap {{ logging_levels[message.level].class }}">
+                            {{ logging_levels[message.level].name }}
+                        </td>
+                        <td colspan="2" class="{{ logging_levels[message.level].class }}">
+                            {{ message.formatted_text }}
+                        </td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="4">
+                    Aucun message.
+                </td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>

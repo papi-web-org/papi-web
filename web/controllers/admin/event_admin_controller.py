@@ -119,27 +119,27 @@ class AbstractEventAdminController(AbstractIndexAdminController):
             },
             'screens': {
                 'title': f'Écrans ({len(web_context.admin_event.basic_screens_by_id) or "-"})',
-                'template': 'admin_screen_list.html',
+                'template': 'admin_screens.html',
             },
             'families': {
                 'title': f'Familles ({len(web_context.admin_event.families_by_id) or  "-"})',
-                'template': 'admin_family_list.html',
+                'template': 'admin_families.html',
             },
             'rotators': {
                 'title': f'Écrans rotatifs ({len(web_context.admin_event.rotators_by_id) or "-"})',
-                'template': 'admin_rotator_list.html',
+                'template': 'admin_rotators.html',
             },
             'timers': {
                 'title': f'Chronomètres ({len(web_context.admin_event.timers_by_id) or "-"})',
-                'template': 'admin_timer_list.html',
+                'template': 'admin_timers.html',
             },
             'chessevents': {
                 'title': f'ChessEvent ({len(web_context.admin_event.chessevents_by_id) or "-"})',
-                'template': 'admin_chessevent_list.html',
+                'template': 'admin_chessevents.html',
             },
             'messages': {
                 'title': f'Messages ({len(web_context.admin_event.messages) or "-"})',
-                'template': 'admin_message_list.html',
+                'template': 'admin_messages.html',
             },
         }
         if not web_context.admin_event_tab:
