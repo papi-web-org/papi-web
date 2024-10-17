@@ -9,7 +9,7 @@
             {% elif action == 'delete' %}
                 hx-delete="{{ url_for('admin-tournament-' ~ action, event_uniq_id=admin_event.uniq_id, tournament_id=admin_tournament.id) }}"
             {% else %}
-                hx-get="{{ url_for('error') }}"
+                hx-get="{{ url_for('unknown-action-' ~ action) }}"
             {% endif %}
             hx-swap="multi:#messages,#admin-header,#admin-content"
             hx-indicator="#please-wait">

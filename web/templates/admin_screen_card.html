@@ -80,8 +80,7 @@
         <span {{ tooltip_attributes('info', 'Modifier les propriétés de l\'écran.', 'top') }}>
             <button
                     class="btn btn-sm btn-primary p-1"
-                    hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
-                    hx-vals='{"action": "update", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ screen.id }}"}'
+                    hx-get="{{ url_for('admin-screen-modal', action='update', event_uniq_id=admin_event.uniq_id, screen_id=screen.id) }}"
                     hx-target="#admin-modal-container"
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"
@@ -95,8 +94,7 @@
         <span {{ tooltip_attributes('info', 'Modifier les ensembles d\'échiquiers affichés sur l\'écran.' if screen.type in ['boards', 'input'] else 'Modifier les ensembles de joueur·euses affiché·es sur l\'écran.', 'top') }}>
             <button
                     class="btn btn-sm btn-primary p-1"
-                    hx-post="{{ url_for('admin-screen-render-sets-modal') }}"
-                    hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ screen.id }}"}'
+                    hx-get="{{ url_for('admin-screen-sets-modal', event_uniq_id=admin_event.uniq_id, screen_id=screen.id) }}"
                     hx-target="#admin-modal-container"
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"
@@ -118,8 +116,7 @@
         <span {{ tooltip_attributes('info', 'Dupliquer l\'écran.', 'top') }}>
             <button
                     class="btn btn-sm btn-primary p-1"
-                    hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
-                    hx-vals='{"action": "clone", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ screen.id }}"}'
+                    hx-get="{{ url_for('admin-screen-modal', action='clone', event_uniq_id=admin_event.uniq_id, screen_id=screen.id) }}"
                     hx-target="#admin-modal-container"
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"
@@ -131,8 +128,7 @@
         <span {{ tooltip_attributes('info', 'Supprimer l\'écran.', 'top') }}>
             <button
                     class="btn btn-sm btn-danger p-1"
-                    hx-post="{{ url_for('admin-screen-render-edit-modal') }}"
-                    hx-vals='{"action": "delete", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ screen.id }}"}'
+                    hx-get="{{ url_for('admin-screen-modal', action='delete', event_uniq_id=admin_event.uniq_id, screen_id=screen.id) }}"
                     hx-target="#admin-modal-container"
                     hx-swap="innerHTML"
                     data-bs-toggle="modal"

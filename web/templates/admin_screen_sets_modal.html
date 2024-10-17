@@ -18,15 +18,14 @@
             {% if not admin_screen_set and admin_screen.screen_sets_sorted_by_order|length > 1 %}
                 <form
                         class="sortable"
-                        hx-post="{{ url_for('admin-screen-sets-update') }}"
-                        hx-vals='{"action": "reorder", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ admin_screen.id }}" }'
+                        hx-patch="{{ url_for('admin-screen-reorder-sets', event_uniq_id=admin_event.uniq_id, screen_id=admin_screen.id) }}"
                         hx-target="#admin-screen-sets-modal"
                         hx-swap="innerHTML"
                         hx-trigger="end"
                         hx-indicator="#please-wait">
             {% endif %}
                 {% for screen_set in admin_screen.screen_sets_sorted_by_order %}
-                    {% include 'admin_screen_set_div.html' %}
+                    {% include 'admin_screen_sets_modal_set_div.html' %}
                 {% endfor %}
             {% if not admin_screen_set and admin_screen.screen_sets_sorted_by_order|length > 1 %}
                 </form>
@@ -40,8 +39,7 @@
                             {% if admin_screen_set %}
                                 disabled
                             {% else %}
-                                hx-post="{{ url_for('admin-screen-sets-update') }}"
-                                hx-vals='{"action": "add", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_screen_id": "{{ admin_screen.id }}" }'
+                                hx-post="{{ url_for('admin-screen-set-add', event_uniq_id=admin_event.uniq_id, screen_id=admin_screen.id) }}"
                                 hx-target="#admin-screen-sets-modal"
                                 hx-swap="innerHTML"
                                 hx-indicator="#please-wait"
@@ -56,8 +54,7 @@
                             {% if admin_screen_set %}
                                 disabled
                             {% else %}
-                                hx-post="{{ url_for('admin-screen-sets-update') }}"
-                                hx-vals='{"action": "close", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}" }'
+                                hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='screens') }}"
                                 hx-swap="multi:#messages,#admin-header,#admin-content"
                                 hx-trigger="click, keyup[key=='Escape'] from:body"
                                 hx-indicator="#please-wait"

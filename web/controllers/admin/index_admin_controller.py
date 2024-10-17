@@ -100,7 +100,7 @@ class AbstractAdminController(AbstractController):
     @staticmethod
     def _get_timer_options(event: Event) -> dict[str, str]:
         options: dict[str, str] = {
-            '': 'Pas de chronomètre',
+            '': 'Pas de chronomètre' if event.timers_by_id else 'Aucun chronomètre enregistré',
         }
         for timer in event.timers_by_id.values():
             options[str(timer.id)] = f'Chronomètre [{timer.uniq_id}]'

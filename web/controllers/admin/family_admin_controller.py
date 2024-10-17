@@ -10,7 +10,6 @@ from litestar.response import Template
 from litestar.status_codes import HTTP_200_OK
 
 from common.logger import get_logger
-from data.event import Event
 from data.family import Family
 from data.loader import EventLoader
 from data.util import ScreenType
@@ -215,14 +214,6 @@ class FamilyAdminController(AbstractEventAdminController):
             errors=errors,
         )
 
-    @staticmethod
-    def _get_tournament_options(admin_event: Event) -> dict[str, str]:
-        options: dict[str, str] = {
-        }
-        for tournament in admin_event.tournaments_by_id.values():
-            options[str(tournament.id)] = f'{tournament.name} ({tournament.filename})'
-        return options
-
     def _admin_family_modal(
             self, request: HTMXRequest,
             action: str,
@@ -292,7 +283,7 @@ class FamilyAdminController(AbstractEventAdminController):
             context=web_context.template_context | {
                 'action': action,
                 'data': data,
-                'tournament_options': self._get_tournament_options(web_context.admin_event),
+                'tournament_options': web_context.get_tournament_options(),
                 'screen_type_options': self._get_screen_type_options(family_screens_only=True),
                 'timer_options': self._get_timer_options(web_context.admin_event),
                 'players_show_unpaired_options': self._get_players_show_unpaired_options(),
@@ -301,7 +292,7 @@ class FamilyAdminController(AbstractEventAdminController):
 
     @get(
         path='/admin/family-modal/create/{event_uniq_id:str}',
-        name='admin-family-create-modal'
+        name='admin-family-create-modal',
     )
     async def htmx_admin_family_create_modal(
             self, request: HTMXRequest,
@@ -311,7 +302,7 @@ class FamilyAdminController(AbstractEventAdminController):
 
     @get(
         path='/admin/family-modal/{action:str}/{event_uniq_id:str}/{family_id:int}',
-        name='admin-family-modal'
+        name='admin-family-modal',
     )
     async def htmx_admin_family_modal(
             self, request: HTMXRequest,
@@ -410,7 +401,7 @@ class FamilyAdminController(AbstractEventAdminController):
     )
     async def htmx_admin_family_update(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED),],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             family_id: int | None,
     ) -> Template:
@@ -424,7 +415,7 @@ class FamilyAdminController(AbstractEventAdminController):
     )
     async def htmx_admin_family_delete(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED),],
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             family_id: int | None,
     ) -> Template:

@@ -9,7 +9,7 @@
             {% elif action == 'update' %}
                 hx-patch="{{ url_for('admin-event-' ~ action, event_uniq_id=admin_event.uniq_id) }}"
             {% else %}
-                hx-patch="{{ url_for('error') }}"
+                hx-get="{{ url_for('unknown-action-' ~ action) }}"
             {% endif %}
             hx-swap="multi:#messages,#admin-header,#admin-content"
             hx-indicator="#please-wait">

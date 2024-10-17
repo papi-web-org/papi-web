@@ -67,6 +67,13 @@ class EventAdminWebContext(AdminWebContext):
             'admin_event': self.admin_event,
         }
 
+    def get_tournament_options(self) -> dict[str, str]:
+        options: dict[str, str] = {
+        }
+        for tournament in self.admin_event.tournaments_by_id.values():
+            options[str(tournament.id)] = f'{tournament.name} ({tournament.filename})'
+        return options
+
 
 class AbstractEventAdminController(AbstractIndexAdminController):
 
