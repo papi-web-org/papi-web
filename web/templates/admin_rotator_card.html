@@ -67,7 +67,7 @@
     <span {{ tooltip_attributes('info', 'Dupliquer l\'écran rotatif.', 'top') }}>
         <button
                 class="btn btn-sm btn-primary p-1"
-                hx-get="{{ url_for('admin-rotator-modal', action='clone', event_uniq_id=admin_event.uniq_id, rotator_id=rotator.id) }}"
+                hx-post="{{ url_for('admin-rotator-clone', event_uniq_id=admin_event.uniq_id, rotator_id=rotator.id) }}"
                 hx-target="#admin-modal-container"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal"

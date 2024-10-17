@@ -59,7 +59,7 @@ class RotatorAdminController(AbstractEventAdminController):
         field = 'uniq_id'
         uniq_id: str = WebContext.form_data_to_str(data, field)
         match action:
-            case 'create':
+            case 'create' | 'clone':
                 if not uniq_id:
                     errors[field] = 'Veuillez entrer l\'identifiant de l\'écran rotatif.'
                 elif uniq_id in web_context.admin_event.rotators_by_uniq_id:
@@ -71,7 +71,7 @@ class RotatorAdminController(AbstractEventAdminController):
                         and uniq_id in web_context.admin_event.rotators_by_uniq_id:
                     errors[field] = \
                         f'Un autre écran rotatif avec l\'identifiant [{uniq_id}] existe déjà.'
-            case 'delete' | 'clone':
+            case 'delete':
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
@@ -81,7 +81,7 @@ class RotatorAdminController(AbstractEventAdminController):
         screen_ids: list[int] | None = None
         family_ids: list[int] | None = None
         match action:
-            case 'create' | 'update':
+            case 'create' | 'update' | 'clone':
                 public: bool = WebContext.form_data_to_bool(data, 'public')
                 try:
                     delay = WebContext.form_data_to_int(data, 'delay', minimum=1)
@@ -98,7 +98,7 @@ class RotatorAdminController(AbstractEventAdminController):
                     field = f'family_{family_id}'
                     if WebContext.form_data_to_bool(data, field):
                         family_ids.append(family_id)
-            case 'delete' | 'clone':
+            case 'delete':
                 pass
             case _:
                 raise ValueError(f'action=[{action}]')
@@ -139,7 +139,7 @@ class RotatorAdminController(AbstractEventAdminController):
             data = {}
             data: dict[str, str]
             match action:
-                case 'update':
+                case 'update' | 'clone':
                     data['uniq_id'] = WebContext.value_to_form_data(web_context.admin_rotator.stored_rotator.uniq_id)
                     data['public'] = WebContext.value_to_form_data(web_context.admin_rotator.stored_rotator.public)
                     data['delay'] = WebContext.value_to_form_data(web_context.admin_rotator.stored_rotator.delay)
@@ -226,23 +226,20 @@ class RotatorAdminController(AbstractEventAdminController):
                     event_database.commit()
                     Message.success(request, f'L\'écran rotatif [{stored_rotator.uniq_id}] a été créé.')
                     event_loader.clear_cache(event_uniq_id)
-                    return self._admin_event_render(
-                        request, event_uniq_id=event_uniq_id, admin_event_tab='rotators')
+                    return self._admin_event_render(request, event_uniq_id=event_uniq_id, admin_event_tab='rotators')
                 case 'update':
                     stored_rotator = event_database.update_stored_rotator(stored_rotator)
                     event_database.commit()
                     Message.success(request, f'L\'écran rotatif [{stored_rotator.uniq_id}] a été modifié.')
                     event_loader.clear_cache(event_uniq_id)
-                    return self._admin_event_render(
-                        request, event_uniq_id=event_uniq_id, admin_event_tab='rotators')
+                    return self._admin_event_render(request, event_uniq_id=event_uniq_id, admin_event_tab='rotators')
                 case 'delete':
                     event_database.delete_stored_rotator(web_context.admin_rotator.id)
                     event_database.commit()
                     Message.success(
                         request, f'L\'écran rotatif [{web_context.admin_rotator.uniq_id}] a été supprimé.')
                     event_loader.clear_cache(event_uniq_id)
-                    return self._admin_event_render(
-                        request, event_uniq_id=event_uniq_id, admin_event_tab='rotators')
+                    return self._admin_event_render(request, event_uniq_id=event_uniq_id, admin_event_tab='rotators')
                 case 'clone':
                     stored_rotator = event_database.clone_stored_rotator(web_context.admin_rotator.id)
                     event_database.commit()
@@ -251,8 +248,7 @@ class RotatorAdminController(AbstractEventAdminController):
                         f'L\'écran rotatif [{web_context.admin_rotator.uniq_id}] a été dupliqué '
                         f'([{stored_rotator.uniq_id}]).')
                     event_loader.clear_cache(event_uniq_id)
-                    return self._admin_rotator_modal(
-                        request, action='update', event_uniq_id=event_uniq_id, rotator_id=stored_rotator.id)
+                    return self._admin_event_render(request, event_uniq_id=event_uniq_id, admin_event_tab='rotators')
                 case _:
                     raise ValueError(f'action=[{action}]')
 
