@@ -3,11 +3,11 @@
             {% if action == 'create' %}
                 hx-post="{{ url_for('admin-rotator-' ~ action, event_uniq_id=admin_event.uniq_id) }}"
             {% elif action == 'clone' %}
-                hx-post="{{ url_for('admin-rotator-' ~ action, event_uniq_id=admin_event.uniq_id, rotator_id=admin_family.id) }}"
+                hx-post="{{ url_for('admin-rotator-' ~ action, event_uniq_id=admin_event.uniq_id, rotator_id=admin_rotator.id) }}"
             {% elif action == 'update' %}
-                hx-patch="{{ url_for('admin-rotator-' ~ action, event_uniq_id=admin_event.uniq_id, rotator_id=admin_family.id) }}"
+                hx-patch="{{ url_for('admin-rotator-' ~ action, event_uniq_id=admin_event.uniq_id, rotator_id=admin_rotator.id) }}"
             {% elif action == 'delete' %}
-                hx-delete="{{ url_for('admin-rotator-' ~ action, event_uniq_id=admin_event.uniq_id, rotator_id=admin_family.id) }}"
+                hx-delete="{{ url_for('admin-rotator-' ~ action, event_uniq_id=admin_event.uniq_id, rotator_id=admin_rotator.id) }}"
             {% else %}
                 hx-get="{{ url_for('unknown-action-' ~ action) }}"
             {% endif %}

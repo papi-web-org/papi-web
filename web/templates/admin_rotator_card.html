@@ -52,7 +52,7 @@
     <span {{ tooltip_attributes('info', 'Modifier les propriétés de l\'écran rotatif.', 'top') }}>
         <button
                 class="btn btn-sm btn-primary p-1"
-                hx-get="{{ url_for('admin-family-modal', action='update', event_uniq_id=admin_event.uniq_id, rotator_id=rotator.id) }}"
+                hx-get="{{ url_for('admin-rotator-modal', action='update', event_uniq_id=admin_event.uniq_id, rotator_id=rotator.id) }}"
                 hx-target="#admin-modal-container"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal"
@@ -67,7 +67,7 @@
     <span {{ tooltip_attributes('info', 'Dupliquer l\'écran rotatif.', 'top') }}>
         <button
                 class="btn btn-sm btn-primary p-1"
-                hx-get="{{ url_for('admin-family-modal', action='clone', event_uniq_id=admin_event.uniq_id, rotator_id=rotator.id) }}"
+                hx-get="{{ url_for('admin-rotator-modal', action='clone', event_uniq_id=admin_event.uniq_id, rotator_id=rotator.id) }}"
                 hx-target="#admin-modal-container"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal"
@@ -79,7 +79,7 @@
     <span {{ tooltip_attributes('info', 'Supprimer l\'écran rotatif.', 'top') }}>
         <button
                 class="btn btn-sm btn-danger p-1"
-                hx-get="{{ url_for('admin-family-modal', action='delete', event_uniq_id=admin_event.uniq_id, rotator_id=rotator.id) }}"
+                hx-get="{{ url_for('admin-rotator-modal', action='delete', event_uniq_id=admin_event.uniq_id, rotator_id=rotator.id) }}"
                 hx-target="#admin-modal-container"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal"

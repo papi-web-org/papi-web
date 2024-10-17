@@ -36,7 +36,7 @@
     <span {{ tooltip_attributes('info', 'Ajouter un nouvel écran rotatif à l\'évènement.' if admin_event.screens_by_uniq_id else 'Vous devez créer un écran ou une famille d\'écrans avant de pouvoir créer des écrans rotatifs', 'top') }}>
         <button
                 class="btn btn-primary text-nowrap ms-1"
-                hx-get="{{ url_for('admin-family-create-modal', event_uniq_id=admin_event.uniq_id) }}"
+                hx-get="{{ url_for('admin-rotator-create-modal', event_uniq_id=admin_event.uniq_id) }}"
                 hx-target="#admin-modal-container"
                 hx-swap="innerHTML"
                 data-bs-toggle="modal"

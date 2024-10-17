@@ -226,8 +226,8 @@ class RotatorAdminController(AbstractEventAdminController):
                     event_database.commit()
                     Message.success(request, f'L\'écran rotatif [{stored_rotator.uniq_id}] a été créé.')
                     event_loader.clear_cache(event_uniq_id)
-                    return self._admin_rotator_modal(
-                        request, action='update', event_uniq_id=event_uniq_id, rotator_id=stored_rotator.id)
+                    return self._admin_event_render(
+                        request, event_uniq_id=event_uniq_id, admin_event_tab='rotators')
                 case 'update':
                     stored_rotator = event_database.update_stored_rotator(stored_rotator)
                     event_database.commit()
