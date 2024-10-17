@@ -224,11 +224,11 @@ class Screen:
 
     @cached_property
     def results_tournament_names(self) -> str:
-        return ', '.join([
+        return ', '.join(sorted([
             self.event.tournaments_by_id[results_tournament_id].name
             for results_tournament_id
             in self.results_tournament_ids
-        ])
+        ]))
 
     @cached_property
     def _results(self) -> list[Result]:
