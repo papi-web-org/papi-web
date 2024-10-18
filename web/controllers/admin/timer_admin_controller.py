@@ -4,22 +4,22 @@ from datetime import datetime
 from logging import Logger
 from typing import Annotated, Any
 
-from litestar import post
+from litestar import post, get, delete, patch
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate, Reswap
+from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template
+from litestar.response import Template, Redirect
+from litestar.status_codes import HTTP_200_OK
 
 from common.logger import get_logger
 from data.loader import EventLoader
 from data.timer import Timer, TimerHour
 from database.sqlite import EventDatabase
 from database.store import StoredTimer, StoredTimerHour
+from web.controllers.admin.event_admin_controller import EventAdminWebContext, AbstractEventAdminController
+from web.controllers.index_controller import WebContext, AbstractController
 from web.messages import Message
-from web.controllers.index_controller import WebContext
-from web.controllers.admin.index_admin_controller import AbstractAdminController
-from web.controllers.admin.event_admin_controller import EventAdminWebContext
 
 logger: Logger = get_logger()
 
@@ -27,45 +27,30 @@ logger: Logger = get_logger()
 class TimerAdminWebContext(EventAdminWebContext):
     def __init__(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            timer_needed: bool,
-            timer_hour_needed: bool,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ] | None,
+            event_uniq_id: str,
+            timer_id: int | None,
+            timer_hour_id: int | None,
     ):
-        super().__init__(request, data, True)
+        super().__init__(request, data=data, event_uniq_id=event_uniq_id, admin_event_tab=None)
         self.admin_timer: Timer | None = None
         self.admin_timer_hour: TimerHour | None = None
-        field: str = 'admin_timer_id'
-        if field in self.data:
-            try:
-                admin_timer_id: int | None = self._form_data_to_int(field, minimum=1)
-            except ValueError as ve:
-                self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
-                return
-            try:
-                self.admin_timer = self.admin_event.timers_by_id[admin_timer_id]
-            except KeyError:
-                self._redirect_error(f'Le chronomètre [{admin_timer_id}] n\'existe pas')
-                return
-        if timer_needed and not self.admin_timer:
-            self._redirect_error(f'Le chronomètre n\'est pas spécifié')
+        if self.error:
             return
-        field: str = 'admin_timer_hour_id'
-        if field in self.data:
+        if timer_id:
             try:
-                admin_timer_hour_id: int | None = self._form_data_to_int(field, minimum=1)
-            except ValueError as ve:
-                self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
+                self.admin_timer = self.admin_event.timers_by_id[timer_id]
+            except KeyError:
+                self._redirect_error(f'Le chronomètre [{timer_id}] n\'existe pas')
                 return
+        if timer_hour_id:
             try:
-                self.admin_timer_hour = self.admin_timer.timer_hours_by_id[admin_timer_hour_id]
+                self.admin_timer_hour = self.admin_timer.timer_hours_by_id[timer_hour_id]
             except KeyError:
                 self._redirect_error(
-                    f'L\'horaire [{admin_timer_hour_id}] n\'existe pas pour le chronomètre '
+                    f'L\'horaire [{timer_hour_id}] n\'existe pas pour le chronomètre '
                     f'[{self.admin_timer.uniq_id}]')
                 return
-        if timer_hour_needed and not self.admin_timer_hour:
-            self._redirect_error(f'L\'horaire n\'est pas spécifié')
-            return
 
     @property
     def template_context(self) -> dict[str, Any]:
@@ -75,7 +60,7 @@ class TimerAdminWebContext(EventAdminWebContext):
         }
 
 
-class TimerAdminController(AbstractAdminController):
+class TimerAdminController(AbstractEventAdminController):
 
     @staticmethod
     def _admin_validate_timer_update_data(
@@ -140,12 +125,16 @@ class TimerAdminController(AbstractAdminController):
             errors=errors,
         )
 
-    def _admin_timer_render_edit_modal(
-            self, action: str,
-            web_context: TimerAdminWebContext,
+    def _admin_timer_modal(
+            self, request: HTMXRequest,
+            action: str,
+            event_uniq_id: str,
+            timer_id: int | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        web_context: TimerAdminWebContext = TimerAdminWebContext(
+            request, data=None, event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=None)
         if data is None:
             data = {}
             match action:
@@ -180,7 +169,7 @@ class TimerAdminController(AbstractAdminController):
         if errors is None:
             errors = {}
         return HTMXTemplate(
-            template_name='admin_timer_edit_modal.html',
+            template_name='admin_timer_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
             context=web_context.template_context | {
@@ -190,105 +179,149 @@ class TimerAdminController(AbstractAdminController):
                 'errors': errors,
             })
 
-    @post(
-        path='/admin-timer-render-edit-modal',
-        name='admin-timer-render-edit-modal'
+    @get(
+        path='/admin/timer-modal/create/{event_uniq_id:str}',
+        name='admin-timer-create-modal'
     )
-    async def htmx_admin_timer_render_edit_modal(
+    async def htmx_admin_timer_create_modal(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
     ) -> Template:
-        action: str = WebContext.form_data_to_str(data, 'action')
-        web_context: TimerAdminWebContext
-        match action:
-            case 'update' | 'delete' | 'clone':
-                web_context = TimerAdminWebContext(request, data, True, False)
-            case 'create':
-                web_context = TimerAdminWebContext(request, data, False, False)
-            case _:
-                raise ValueError(f'action=[{action}]')
-        if web_context.error:
-            return web_context.error
-        return self._admin_timer_render_edit_modal(action, web_context)
+        return self._admin_timer_modal(request, action='create', event_uniq_id=event_uniq_id, timer_id=None)
 
-    @post(
-        path='/admin-timer-update',
-        name='admin-timer-update'
+    @get(
+        path='/admin/timer-modal/{action:str}/{event_uniq_id:str}/{timer_id:int}',
+        name='admin-timer-modal'
     )
-    async def htmx_admin_timer_update(
+    async def htmx_admin_timer_modal(
+            self, request: HTMXRequest,
+            action: str,
+            event_uniq_id: str,
+            timer_id: int | None,
+    ) -> Template:
+        return self._admin_timer_modal(request, action=action, event_uniq_id=event_uniq_id, timer_id=timer_id)
+
+    def _admin_timer_update(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            action: str,
+            event_uniq_id: str,
+            timer_id: int | None,
     ) -> Template:
-        action: str = WebContext.form_data_to_str(data, 'action')
-        if action == 'close':
-            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
-            if web_context.error:
-                return web_context.error
-            return self._admin_render_index(web_context)
         match action:
-            case 'update' | 'delete' | 'clone':
-                web_context: TimerAdminWebContext = TimerAdminWebContext(request, data, True, False)
-            case 'create':
-                web_context: TimerAdminWebContext = TimerAdminWebContext(request, data, False, False)
+            case 'update' | 'delete' | 'clone' | 'create':
+                web_context: TimerAdminWebContext = TimerAdminWebContext(
+                    request, data=data, event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=None)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
             return web_context.error
         stored_timer: StoredTimer | None = self._admin_validate_timer_update_data(action, web_context, data)
         if stored_timer.errors:
-            return self._admin_timer_render_edit_modal(action, web_context, data, stored_timer.errors)
-        next_action: str | None = None
-        next_timer_id: int | None = None
-        next_timer_hour_id: int | None = None
+            return self._admin_timer_modal(
+                request, action=action, event_uniq_id=event_uniq_id, timer_id=timer_id, data=data,
+                errors=stored_timer.errors)
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         with (EventDatabase(web_context.admin_event.uniq_id, write=True) as event_database):
             match action:
+                case 'create':
+                    stored_timer = event_database.add_stored_timer(stored_timer)
+                    event_database.commit()
+                    Message.success(request, f'Le chronomètre [{stored_timer.uniq_id}] a été créé.')
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_timer_modal(
+                        request, action='update', event_uniq_id=event_uniq_id, timer_id=stored_timer.id)
                 case 'update':
                     stored_timer = event_database.update_stored_timer(stored_timer)
                     Message.success(request, f'Le chronomètre [{stored_timer.uniq_id}] a été modifié.')
                     if not web_context.admin_timer.timer_hours_by_id:
                         stored_timer_hour: StoredTimerHour = event_database.add_stored_timer_hour(
                             web_context.admin_timer.id, set_datetime=True)
-                        next_timer_id = web_context.admin_timer.id
-                        next_timer_hour_id = stored_timer_hour.id
+                        event_database.commit()
+                        event_loader.clear_cache(event_uniq_id)
+                        return self._admin_timer_hours_modal(
+                            request, event_uniq_id=event_uniq_id, timer_id=stored_timer.id,
+                            timer_hour_id=stored_timer_hour.id)
                     else:
+                        event_database.commit()
+                        event_loader.clear_cache(event_uniq_id)
                         for timer_hour in web_context.admin_timer.timer_hours_sorted_by_order:
                             if timer_hour.error:
-                                next_timer_id = web_context.admin_timer.id
-                                next_timer_hour_id = timer_hour.id
-                                break
-                case 'create':
-                    stored_timer = event_database.add_stored_timer(stored_timer)
-                    Message.success(request, f'Le chronomètre [{stored_timer.uniq_id}] a été créé.')
-                    next_timer_id = stored_timer.id
-                    next_action = 'update'
+                                return self._admin_timer_hours_modal(
+                                    request, event_uniq_id=event_uniq_id, timer_id=stored_timer.id,
+                                    timer_hour_id=timer_hour.id)
+                        return self._admin_event_render(
+                            request, event_uniq_id=event_uniq_id, admin_event_tab='timers')
                 case 'delete':
                     event_database.delete_stored_timer(web_context.admin_timer.id)
+                    event_database.commit()
                     Message.success(request, f'Le chronomètre [{web_context.admin_timer.uniq_id}] a été supprimé.')
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_event_render(request, event_uniq_id=event_uniq_id, admin_event_tab='timers')
                 case 'clone':
                     stored_timer = event_database.clone_stored_timer(web_context.admin_timer.id, stored_timer.uniq_id, )
+                    event_database.commit()
                     Message.success(
                         request,
                         f'Le chronomètre [{web_context.admin_timer.uniq_id}] a été dupliqué '
                         f'([{stored_timer.uniq_id}]).')
-                    next_timer_id = stored_timer.id
-                    next_action = 'update'
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_timer_modal(
+                        request, action='update', event_uniq_id=event_uniq_id, timer_id=stored_timer.id)
                 case _:
                     raise ValueError(f'action=[{action}]')
-            event_database.commit()
-        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
-        web_context.set_admin_event(event_loader.reload_event(web_context.admin_event.uniq_id))
-        if next_timer_id:
-            web_context.admin_timer = web_context.admin_event.timers_by_id[next_timer_id]
-            if next_timer_hour_id:
-                web_context.admin_timer_hour = web_context.admin_timer.timer_hours_by_id[next_timer_hour_id]
-                return self._admin_timer_render_hours_modal(web_context)
-            else:
-                web_context.admin_timer_hour = None
-                return self._admin_timer_render_edit_modal(next_action, web_context, )
-        else:
-            web_context.admin_timer = None
-            web_context.admin_timer_hour = None
-            return self._admin_render_index(web_context)
+
+    @post(
+        path='/admin/timer-create/{event_uniq_id:str}',
+        name='admin-timer-create'
+    )
+    async def htmx_admin_timer_create(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+    ) -> Template:
+        return self._admin_timer_update(
+            request, data=data, action='create', event_uniq_id=event_uniq_id, timer_id=None)
+
+    @post(
+        path='/admin/timer-clone/{event_uniq_id:str}/{timer_id:int}',
+        name='admin-timer-clone',
+    )
+    async def htmx_admin_timer_clone(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            timer_id: int | None,
+    ) -> Template:
+        return self._admin_timer_update(
+            request, data=data, action='clone', event_uniq_id=event_uniq_id, timer_id=timer_id)
+
+    @patch(
+        path='/admin/timer-update/{event_uniq_id:str}/{timer_id:int}',
+        name='admin-timer-update',
+    )
+    async def htmx_admin_timer_update(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            timer_id: int | None,
+    ) -> Template:
+        return self._admin_timer_update(
+            request, data=data, action='update', event_uniq_id=event_uniq_id, timer_id=timer_id)
+
+    @delete(
+        path='/admin/timer-delete/{event_uniq_id:str}/{timer_id:int}',
+        name='admin-timer-delete',
+        status_code=HTTP_200_OK,
+    )
+    async def htmx_admin_timer_delete(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            timer_id: int | None,
+    ) -> Template:
+        return self._admin_timer_update(
+            request, data=data, action='delete', event_uniq_id=event_uniq_id, timer_id=timer_id)
 
     @staticmethod
     def _admin_validate_timer_hour_update_data(
@@ -360,12 +393,16 @@ class TimerAdminController(AbstractAdminController):
             errors=errors,
         )
 
-    def _admin_timer_render_hours_modal(
-            self,
-            web_context: TimerAdminWebContext,
+    def _admin_timer_hours_modal(
+            self, request: HTMXRequest,
+            event_uniq_id: str,
+            timer_id: int,
+            timer_hour_id: int | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        web_context: TimerAdminWebContext = TimerAdminWebContext(
+            request, data=None, event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=timer_hour_id)
         if data is None:
             if web_context.admin_timer_hour:
                 data = {
@@ -393,43 +430,57 @@ class TimerAdminController(AbstractAdminController):
                 'errors': errors,
             })
 
-    @post(
-        path='/admin-timer-render-hours-modal',
-        name='admin-timer-render-hours-modal'
+    @get(
+        path='/admin/timer-hours-modal/{event_uniq_id:str}/{timer_id:int}',
+        name='admin-timer-hours-modal'
     )
-    async def htmx_admin_timer_render_hours_modal(
+    async def htmx_admin_timer_hours_modal(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            timer_id: int,
     ) -> Template:
-        web_context: TimerAdminWebContext = TimerAdminWebContext(request, data, True, False)
-        if web_context.error:
-            return web_context.error
-        return self._admin_timer_render_hours_modal(web_context)
+        return self._admin_timer_hours_modal(
+            request, event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=None)
 
-    @post(
-        path='/admin-timer-hours-update',
-        name='admin-timer-hours-update'
+    @get(
+        path='/admin/timer-hours-hour-modal/{event_uniq_id:str}/{timer_id:int}/{timer_hour_id:int}',
+        name='admin-timer-hours-hour-modal'
     )
-    async def htmx_admin_timer_hours_update(
+    async def htmx_admin_timer_hours_hour_modal(
+            self, request: HTMXRequest,
+            event_uniq_id: str,
+            timer_id: int,
+            timer_hour_id: int,
+    ) -> Template:
+        return self._admin_timer_hours_modal(
+            request, event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=timer_hour_id)
+
+    def _admin_timer_hours_update(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> Template | Reswap:
-        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
-        action: str = WebContext.form_data_to_str(data, 'action')
-        if action == 'close':
-            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
-            if web_context.error:
-                return web_context.error
-            return self._admin_render_index(web_context)
+            action: str,
+            event_uniq_id: str,
+            timer_id: int,
+            timer_hour_id: int | None,
+    ) -> Template | Redirect:
         match action:
-            case 'delete' | 'clone' | 'update':
-                web_context: TimerAdminWebContext = TimerAdminWebContext(request, data, True, True)
-            case 'add' | 'reorder' | 'cancel':
-                web_context: TimerAdminWebContext = TimerAdminWebContext(request, data, True, False)
+            case 'delete' | 'clone' | 'update' | 'add' | 'reorder':
+                web_context: TimerAdminWebContext = TimerAdminWebContext(
+                    request, data=data, event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=timer_hour_id)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
             return web_context.error
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
+        match action:
+            case 'delete':
+                if len(web_context.admin_timer.timer_hours_by_id) <= 1:
+                    return AbstractController.redirect_error(
+                        request, f'Le dernier horaire d\'un chronomètre ne peut être supprimé.')
+            case 'update' | 'clone' | 'add' | 'reorder':
+                pass
+            case _:
+                raise ValueError(f'action=[{action}]')
         next_timer_hour_id: int | None = None
         with (EventDatabase(web_context.admin_event.uniq_id, write=True) as event_database):
             match action:
@@ -438,7 +489,9 @@ class TimerAdminController(AbstractAdminController):
                         web_context, web_context.admin_timer.get_previous_timer_hour(web_context.admin_timer_hour),
                         data)
                     if stored_timer_hour.errors:
-                        return self._admin_timer_render_hours_modal(web_context, data, stored_timer_hour.errors)
+                        return self._admin_timer_hours_modal(
+                            request, event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=timer_hour_id,
+                            data=data, errors=stored_timer_hour.errors)
                     event_database.update_stored_timer_hour(stored_timer_hour)
                 case 'delete':
                     event_database.delete_stored_timer_hour(web_context.admin_timer_hour.id, web_context.admin_timer.id)
@@ -450,14 +503,82 @@ class TimerAdminController(AbstractAdminController):
                     next_timer_hour_id = stored_timer_hour.id
                 case 'reorder':
                     event_database.reorder_stored_timer_hours(data['item'])
-                case 'cancel':
-                    pass
                 case _:
                     raise ValueError(f'action=[{action}]')
             event_database.commit()
-        web_context.set_admin_event(event_loader.reload_event(web_context.admin_event.uniq_id))
-        web_context.admin_timer = web_context.admin_event.timers_by_id[web_context.admin_timer.id]
-        web_context.admin_timer_hour = None
-        if next_timer_hour_id:
-            web_context.admin_timer_hour = web_context.admin_timer.timer_hours_by_id[next_timer_hour_id]
-        return self._admin_timer_render_hours_modal(web_context)
+        event_loader.clear_cache(event_uniq_id)
+        return self._admin_timer_hours_modal(
+            request, event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=next_timer_hour_id, data=None,
+            errors=None)
+
+    @post(
+        path='/admin/timer-hour-add/{event_uniq_id:str}/{timer_id:int}',
+        name='admin-timer-hour-add',
+    )
+    async def htmx_admin_timer_hour_add(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            timer_id: int,
+    ) -> Template:
+        return self._admin_timer_hours_update(
+            request, data=data, action='add', event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=None)
+
+    @post(
+        path='/admin/timer-hour-clone/{event_uniq_id:str}/{timer_id:int}/{timer_hour_id:int}',
+        name='admin-timer-hour-clone',
+    )
+    async def htmx_admin_timer_hour_clone(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            timer_id: int,
+            timer_hour_id: int,
+    ) -> Template:
+        return self._admin_timer_hours_update(
+            request, data=data, action='clone', event_uniq_id=event_uniq_id, timer_id=timer_id,
+            timer_hour_id=timer_hour_id)
+
+    @patch(
+        path='/admin/timer-hour-update/{event_uniq_id:str}/{timer_id:int}/{timer_hour_id:int}',
+        name='admin-timer-hour-update',
+    )
+    async def htmx_admin_timer_hour_update(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            timer_id: int,
+            timer_hour_id: int,
+    ) -> Template:
+        return self._admin_timer_hours_update(
+            request, data=data, action='update', event_uniq_id=event_uniq_id, timer_id=timer_id,
+            timer_hour_id=timer_hour_id)
+
+    @delete(
+        path='/admin/timer-hour-delete/{event_uniq_id:str}/{timer_id:int}/{timer_hour_id:int}',
+        name='admin-timer-hour-delete',
+        status_code=HTTP_200_OK,
+    )
+    async def htmx_admin_timer_hour_delete(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            timer_id: int,
+            timer_hour_id: int,
+    ) -> Template:
+        return self._admin_timer_hours_update(
+            request, data=data, action='delete', event_uniq_id=event_uniq_id, timer_id=timer_id,
+            timer_hour_id=timer_hour_id)
+
+    @patch(
+        path='/admin/timer-reorder-hours/{event_uniq_id:str}/{timer_id:int}',
+        name='admin-timer-reorder-hours',
+    )
+    async def htmx_admin_timer_reorder_hours(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            timer_id: int,
+    ) -> Template:
+        return self._admin_timer_hours_update(
+            request, data=data, action='reorder', event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=None)

@@ -36,6 +36,8 @@ class ScreenAdminWebContext(EventAdminWebContext):
         super().__init__(request, data=data, event_uniq_id=event_uniq_id, admin_event_tab=None)
         self.admin_screen: Screen | None = None
         self.admin_screen_set: ScreenSet | None = None
+        if self.error:
+            return
         if screen_id:
             try:
                 self.admin_screen = self.admin_event.basic_screens_by_id[screen_id]

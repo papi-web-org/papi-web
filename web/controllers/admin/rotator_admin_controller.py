@@ -31,6 +31,8 @@ class RotatorAdminWebContext(EventAdminWebContext):
     ):
         super().__init__(request, data=data, event_uniq_id=event_uniq_id, admin_event_tab=None)
         self.admin_rotator: Rotator | None = None
+        if self.error:
+            return
         if rotator_id:
             try:
                 self.admin_rotator = self.admin_event.rotators_by_id[rotator_id]

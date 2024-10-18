@@ -32,6 +32,8 @@ class TournamentAdminWebContext(EventAdminWebContext):
     ):
         super().__init__(request, data=data, event_uniq_id=event_uniq_id, admin_event_tab=None)
         self.admin_tournament: Tournament | None = None
+        if self.error:
+            return
         if tournament_id:
             try:
                 self.admin_tournament = self.admin_event.tournaments_by_id[tournament_id]

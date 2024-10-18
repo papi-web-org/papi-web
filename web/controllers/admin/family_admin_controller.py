@@ -31,6 +31,8 @@ class FamilyAdminWebContext(EventAdminWebContext):
     ):
         super().__init__(request, data=data, event_uniq_id=event_uniq_id, admin_event_tab=None)
         self.admin_family: Family | None = None
+        if self.error:
+            return
         if family_id:
             try:
                 self.admin_family = self.admin_event.families_by_id[family_id]
