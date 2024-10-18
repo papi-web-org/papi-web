@@ -14,8 +14,7 @@
             {% if not admin_timer_hour and admin_timer.timer_hours_sorted_by_order|length > 1 %}
                 <form
                         class="sortable"
-                        hx-post="{{ url_for('admin-timer-hours-update') }}"
-                        hx-vals='{"action": "reorder", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_timer_id": "{{ admin_timer.id }}" }'
+                        hx-patch="{{ url_for('admin-timer-reorder-hours', event_uniq_id=admin_event.uniq_id, timer_id=admin_timer.id) }}"
                         hx-target="#admin-timer-hours-modal"
                         hx-swap="innerHTML"
                         hx-trigger="end"
@@ -23,7 +22,7 @@
             {% endif %}
                 {% if admin_timer.timer_hours_sorted_by_order %}
                     {% for timer_hour in admin_timer.timer_hours_sorted_by_order %}
-                        {% include 'admin_timer_hour_div.html' %}
+                        {% include 'admin_timer_hours_modal_hour_div.html' %}
                     {% endfor %}
                 {% else %}
                         <div class="text-danger">Aucun horaire défini.</div>
@@ -40,8 +39,7 @@
                             {% if admin_timer_hour %}
                                 disabled
                             {% else %}
-                                hx-post="{{ url_for('admin-timer-hours-update') }}"
-                                hx-vals='{"action": "add", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "admin_timer_id": "{{ admin_timer.id }}" }'
+                                hx-post="{{ url_for('admin-timer-hour-add', event_uniq_id=admin_event.uniq_id, timer_id=admin_timer.id) }}"
                                 hx-target="#admin-timer-hours-modal"
                                 hx-swap="innerHTML"
                                 hx-indicator="#please-wait"
@@ -56,8 +54,7 @@
                             {% if admin_timer_hour %}
                                 disabled
                             {% else %}
-                                hx-post="{{ url_for('admin-timer-hours-update') }}"
-                                hx-vals='{"action": "close", "admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}" }'
+                                hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='timers') }}"
                                 hx-swap="multi:#messages,#admin-header,#admin-content"
                                 hx-trigger="click, keyup[key=='Escape'] from:body"
                                 hx-indicator="#please-wait"
