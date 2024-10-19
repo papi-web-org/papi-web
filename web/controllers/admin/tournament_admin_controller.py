@@ -281,7 +281,7 @@ class TournamentAdminController(AbstractEventAdminController):
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
             return web_context.error
-        stored_tournament: StoredTournament | None = self._admin_validate_tournament_update_data(
+        stored_tournament: StoredTournament = self._admin_validate_tournament_update_data(
             action, web_context, data)
         if stored_tournament.errors:
             return self._admin_tournament_modal(

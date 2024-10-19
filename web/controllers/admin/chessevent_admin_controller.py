@@ -1,22 +1,22 @@
 from logging import Logger
 from typing import Annotated, Any
 
-from litestar import post
+from litestar import get, delete, patch, post
 from litestar.contrib.htmx.request import HTMXRequest
 from litestar.contrib.htmx.response import HTMXTemplate
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
+from litestar.status_codes import HTTP_200_OK
 
 from common.logger import get_logger
 from data.chessevent import ChessEvent
 from data.loader import EventLoader
 from database.sqlite import EventDatabase
 from database.store import StoredChessEvent
-from web.messages import Message
+from web.controllers.admin.event_admin_controller import EventAdminWebContext, AbstractEventAdminController
 from web.controllers.index_controller import WebContext
-from web.controllers.admin.index_admin_controller import AbstractAdminController
-from web.controllers.admin.event_admin_controller import EventAdminWebContext
+from web.messages import Message
 
 logger: Logger = get_logger()
 
@@ -24,26 +24,18 @@ logger: Logger = get_logger()
 class ChessEventAdminWebContext(EventAdminWebContext):
     def __init__(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-            chessevent_needed: bool,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ] | None,
+            event_uniq_id: str,
+            chessevent_id: int | None,
     ):
-        super().__init__(request, data, True)
+        super().__init__(request, data=data, event_uniq_id=event_uniq_id, admin_event_tab=None)
         self.admin_chessevent: ChessEvent | None = None
-        field: str = 'admin_chessevent_id'
-        if field in self.data:
+        if chessevent_id:
             try:
-                admin_chessevent_id: int | None = self._form_data_to_int(field, minimum=1)
-            except ValueError as ve:
-                self._redirect_error(f'Valeur non valide pour [{field}]: [{data.get(field, None)}] ({ve})')
-                return
-            try:
-                self.admin_chessevent = self.admin_event.chessevents_by_id[admin_chessevent_id]
+                self.admin_chessevent = self.admin_event.chessevents_by_id[chessevent_id]
             except KeyError:
-                self._redirect_error(f'La connexion à ChessEvent [{admin_chessevent_id}] n\'existe pas')
+                self._redirect_error(f'La connexion à ChessEvent [{chessevent_id}] n\'existe pas')
                 return
-        if chessevent_needed and not self.admin_chessevent:
-            self._redirect_error(f'La connexion à ChessEvent n\'est pas spécifié')
-            return
 
     @property
     def template_context(self) -> dict[str, Any]:
@@ -52,7 +44,7 @@ class ChessEventAdminWebContext(EventAdminWebContext):
         }
 
 
-class ChessEventAdminController(AbstractAdminController):
+class ChessEventAdminController(AbstractEventAdminController):
 
     @staticmethod
     def _admin_validate_chessevent_update_data(
@@ -105,25 +97,18 @@ class ChessEventAdminController(AbstractAdminController):
             errors=errors,
         )
 
-    def _admin_chessevent_render_edit_modal(
-            self,
+    def _admin_chessevent_modal(
+            self, request: HTMXRequest,
             action: str,
-            web_context: ChessEventAdminWebContext,
+            event_uniq_id: str,
+            chessevent_id: int | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
     ) -> Template:
+        web_context: ChessEventAdminWebContext = ChessEventAdminWebContext(
+            request, data=None, event_uniq_id=event_uniq_id, chessevent_id=chessevent_id)
         if data is None:
             data: dict[str, str] = {}
-            match action:
-                case 'update':
-                    data['uniq_id'] = WebContext.value_to_form_data(
-                        web_context.admin_chessevent.stored_chessevent.uniq_id)
-                case 'create':
-                    data['uniq_id'] = ''
-                case 'delete':
-                    pass
-                case _:
-                    raise ValueError(f'action=[{action}]')
             match action:
                 case 'update':
                     data['uniq_id'] = WebContext.value_to_form_data(
@@ -135,6 +120,7 @@ class ChessEventAdminController(AbstractAdminController):
                     data['password'] = WebContext.value_to_form_data(
                         web_context.admin_chessevent.stored_chessevent.password)
                 case 'create':
+                    data['uniq_id'] = ''
                     data['uniq_id'] = ''
                     data['event_id'] = ''
                     data['user_id'] = ''
@@ -148,7 +134,7 @@ class ChessEventAdminController(AbstractAdminController):
         if errors is None:
             errors = {}
         return HTMXTemplate(
-            template_name='admin_chessevent_edit_modal.html',
+            template_name='admin_chessevent_modal.html',
             re_swap='innerHTML',
             re_target='#admin-modal-container',
             context=web_context.template_context | {
@@ -157,82 +143,136 @@ class ChessEventAdminController(AbstractAdminController):
                 'errors': errors,
             })
 
-    @post(
-        path='/admin-chessevent-render-edit-modal',
-        name='admin-chessevent-render-edit-modal'
+    @get(
+        path='/admin/chessevent-modal/create/{event_uniq_id:str}',
+        name='admin-chessevent-create-modal'
     )
-    async def htmx_admin_chessevent_render_edit_modal(
+    async def htmx_admin_chessevent_create_modal(
             self, request: HTMXRequest,
-            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
     ) -> Template:
-        action: str = WebContext.form_data_to_str(data, 'action')
-        web_context: ChessEventAdminWebContext
-        match action:
-            case 'update' | 'delete':
-                web_context = ChessEventAdminWebContext(request, data, True)
-            case 'create':
-                web_context = ChessEventAdminWebContext(request, data, False)
-            case _:
-                raise ValueError(f'action=[{action}]')
-        if web_context.error:
-            return web_context.error
-        return self._admin_chessevent_render_edit_modal(action, web_context)
+        return self._admin_chessevent_modal(
+            request, action='create', event_uniq_id=event_uniq_id, chessevent_id=None)
 
-    @post(
-        path='/admin-chessevent-update',
-        name='admin-chessevent-update'
+    @get(
+        path='/admin-chessevent-modal/{action:str}/{event_uniq_id:str}/{chessevent_id:int}',
+        name='admin-chessevent-modal'
     )
-    async def htmx_admin_chessevent_update(
+    async def htmx_admin_chessevent_modal(
+            self, request: HTMXRequest,
+            action: str,
+            event_uniq_id: str,
+            chessevent_id: int | None,
+    ) -> Template:
+        return self._admin_chessevent_modal(
+            request, action=action, event_uniq_id=event_uniq_id, chessevent_id=chessevent_id)
+
+    def _admin_chessevent_update(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            action: str,
+            event_uniq_id: str,
+            chessevent_id: int | None,
     ) -> Template:
-        action: str = WebContext.form_data_to_str(data, 'action')
-        if action == 'close':
-            web_context: EventAdminWebContext = EventAdminWebContext(request, data, True)
-            if web_context.error:
-                return web_context.error
-            return self._admin_render_index(web_context)
         match action:
-            case 'update' | 'delete' | 'clone':
-                web_context: ChessEventAdminWebContext = ChessEventAdminWebContext(request, data, True)
-            case 'create':
-                web_context: ChessEventAdminWebContext = ChessEventAdminWebContext(request, data, False)
+            case 'update' | 'delete' | 'clone' | 'create':
+                web_context: ChessEventAdminWebContext = ChessEventAdminWebContext(
+                    request, data=data, event_uniq_id=event_uniq_id, chessevent_id=chessevent_id)
             case _:
                 raise ValueError(f'action=[{action}]')
         if web_context.error:
             return web_context.error
         stored_chessevent: StoredChessEvent = self._admin_validate_chessevent_update_data(action, web_context, data)
         if stored_chessevent.errors:
-            return self._admin_chessevent_render_edit_modal(action, web_context, data, stored_chessevent.errors)
-        next_chessevent_id: int | None = None
-        next_action: str | None = None
+            return self._admin_chessevent_modal(
+                request, action=action, event_uniq_id=event_uniq_id, chessevent_id=chessevent_id, data=data,
+                errors=stored_chessevent.errors)
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         with EventDatabase(web_context.admin_event.uniq_id, write=True) as event_database:
             match action:
-                case 'update':
-                    stored_chessevent = event_database.update_stored_chessevent(stored_chessevent)
-                    Message.success(request, f'La connexion à ChessEvent [{stored_chessevent.uniq_id}] a été modifiée.')
                 case 'create':
                     stored_chessevent = event_database.add_stored_chessevent(stored_chessevent)
+                    event_database.commit()
                     Message.success(request, f'La connexion à ChessEvent [{stored_chessevent.uniq_id}] a été créée.')
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_event_render(
+                        request, event_uniq_id=event_uniq_id, admin_event_tab='chessevents')
+                case 'update':
+                    stored_chessevent = event_database.update_stored_chessevent(stored_chessevent)
+                    event_database.commit()
+                    Message.success(request, f'La connexion à ChessEvent [{stored_chessevent.uniq_id}] a été modifiée.')
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_event_render(
+                        request, event_uniq_id=event_uniq_id, admin_event_tab='chessevents')
                 case 'delete':
                     event_database.delete_stored_chessevent(web_context.admin_chessevent.id)
+                    event_database.commit()
                     Message.success(
                         request, f'La connexion à ChessEvent [{web_context.admin_chessevent.uniq_id}] a été supprimée.')
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_event_render(
+                        request, event_uniq_id=event_uniq_id, admin_event_tab='chessevents')
                 case 'clone':
                     stored_chessevent = event_database.clone_stored_chessevent(web_context.admin_chessevent.id)
+                    event_database.commit()
                     Message.success(
                         request,
                         f'La connexion à ChessEvent [{web_context.admin_chessevent.uniq_id}] a été dupliquée '
                         f'([{stored_chessevent.uniq_id}]).')
-                    next_chessevent_id = stored_chessevent.id
-                    next_action = 'update'
+                    event_loader.clear_cache(event_uniq_id)
+                    return self._admin_chessevent_modal(
+                        request, action='update', event_uniq_id=event_uniq_id, chessevent_id=stored_chessevent.id)
                 case _:
                     raise ValueError(f'action=[{action}]')
-            event_database.commit()
-        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
-        web_context.set_admin_event(event_loader.reload_event(web_context.admin_event.uniq_id))
-        if next_chessevent_id:
-            web_context.admin_chessevent = web_context.admin_event.chessevents_by_id[next_chessevent_id]
-            return self._admin_chessevent_render_edit_modal(next_action, web_context)
-        else:
-            return self._admin_render_index(web_context)
+
+    @post(
+        path='/admin/chessevent-create/{event_uniq_id:str}',
+        name='admin-chessevent-create'
+    )
+    async def htmx_admin_chessevent_create(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+    ) -> Template:
+        return self._admin_chessevent_update(
+            request, data=data, action='create', event_uniq_id=event_uniq_id, chessevent_id=None)
+
+    @post(
+        path='/admin/chessevent-clone/{event_uniq_id:str}/{chessevent_id:int}',
+        name='admin-chessevent-clone'
+    )
+    async def htmx_admin_chessevent_clone(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            chessevent_id: int | None,
+    ) -> Template:
+        return self._admin_chessevent_update(
+            request, data=data, action='clone', event_uniq_id=event_uniq_id, chessevent_id=chessevent_id)
+
+    @patch(
+        path='/admin/chessevent-update/{event_uniq_id:str}/{chessevent_id:int}',
+        name='admin-chessevent-update'
+    )
+    async def htmx_admin_chessevent_update(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            chessevent_id: int | None,
+    ) -> Template:
+        return self._admin_chessevent_update(
+            request, data=data, action='update', event_uniq_id=event_uniq_id, chessevent_id=chessevent_id)
+
+    @delete(
+        path='/admin/chessevent-delete/{event_uniq_id:str}/{chessevent_id:int}',
+        name='admin-chessevent-delete',
+        status_code=HTTP_200_OK,
+    )
+    async def htmx_admin_chessevent_delete(
+            self, request: HTMXRequest,
+            data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
+            event_uniq_id: str,
+            chessevent_id: int | None,
+    ) -> Template:
+        return self._admin_chessevent_update(
+            request, data=data, action='delete', event_uniq_id=event_uniq_id, chessevent_id=chessevent_id)
