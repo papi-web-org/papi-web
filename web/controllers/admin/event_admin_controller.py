@@ -197,7 +197,7 @@ class EventAdminController(AbstractEventAdminController):
             show_players_screens_on_screen_list: bool | None,
             show_results_screens_on_screen_list: bool | None,
             show_image_screens_on_screen_list: bool | None,
-            min_log_level: int | None,
+            min_logging_level: int | None,
     ) -> Template | Redirect:
         if admin_columns:
             SessionHandler.set_session_admin_columns(request, admin_columns)
@@ -224,12 +224,12 @@ class EventAdminController(AbstractEventAdminController):
                     screen_types.remove(screen_type)
                 SessionHandler.set_session_screen_types_on_screen_list(request, screen_types)
                 continue
-        if min_log_level is not None:
+        if min_logging_level is not None:
             try:
-                SessionHandler.set_session_min_logging_level(request, min_log_level)
+                SessionHandler.set_session_min_logging_level(request, min_logging_level)
             except ValueError:
                 return AbstractController.redirect_error(
-                    request, f'Le niveau de log [{min_log_level}] est incorrect.')
+                    request, f'Le niveau de log [{min_logging_level}] est incorrect.')
         return self._admin_event_render(request, event_uniq_id=event_uniq_id, admin_event_tab=admin_event_tab)
 
     @get(
@@ -249,7 +249,7 @@ class EventAdminController(AbstractEventAdminController):
             show_players_screens_on_screen_list: bool | None,
             show_results_screens_on_screen_list: bool | None,
             show_image_screens_on_screen_list: bool | None,
-            min_log_level: int | None,
+            min_logging_level: int | None,
     ) -> Template | Redirect:
         return self._admin_event(
             request,
@@ -265,7 +265,7 @@ class EventAdminController(AbstractEventAdminController):
             show_players_screens_on_screen_list=show_players_screens_on_screen_list,
             show_results_screens_on_screen_list=show_results_screens_on_screen_list,
             show_image_screens_on_screen_list=show_image_screens_on_screen_list,
-            min_log_level=min_log_level,
+            min_logging_level=min_logging_level,
         )
 
     @get(
@@ -286,7 +286,7 @@ class EventAdminController(AbstractEventAdminController):
             show_players_screens_on_screen_list: bool | None,
             show_results_screens_on_screen_list: bool | None,
             show_image_screens_on_screen_list: bool | None,
-            min_log_level: int | None,
+            min_logging_level: int | None,
     ) -> Template | Redirect:
         return self._admin_event(
             request,
@@ -302,7 +302,7 @@ class EventAdminController(AbstractEventAdminController):
             show_players_screens_on_screen_list=show_players_screens_on_screen_list,
             show_results_screens_on_screen_list=show_results_screens_on_screen_list,
             show_image_screens_on_screen_list=show_image_screens_on_screen_list,
-            min_log_level=min_log_level,
+            min_logging_level=min_logging_level,
         )
 
     @staticmethod

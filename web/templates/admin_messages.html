@@ -8,8 +8,8 @@
                     <button
                             class="btn text-nowrap {% if logging_level_id == min_logging_level %}pe-none fw-bold{% endif %} {% if logging_level_id >= min_logging_level %}{{ logging_level.class }}{% else %}text-white border border-white{% endif %} px-1 py-0"
                             {% if logging_level_id != min_logging_level %}
-                                hx-post="{{ url_for('admin-update-header') }}"
-                                hx-vals='{"admin_main_selector": "{{ admin_main_selector }}", "admin_event_selector": "{{ admin_event_selector }}", "min_logging_level": "{{ logging_level_id }}"}'
+                                hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='messages') }}"
+                                hx-vals='{"min_logging_level": "{{ logging_level_id }}"}'
                                 hx-swap="multi:#admin-header,#admin-content"
                                 hx-indicator="#please-wait"
                             {% endif %}

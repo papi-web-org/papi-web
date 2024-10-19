@@ -144,8 +144,8 @@ class SessionHandler:
     ADMIN_MIN_LOGGING_LEVEL_SESSION_KEY: str = 'admin_min_logging_level'
 
     @classmethod
-    def set_session_min_logging_level(cls, request: HTMXRequest, min_log_level: int):
-        request.session[cls.ADMIN_MIN_LOGGING_LEVEL_SESSION_KEY]: int = min_log_level
+    def set_session_min_logging_level(cls, request: HTMXRequest, min_logging_level: int):
+        request.session[cls.ADMIN_MIN_LOGGING_LEVEL_SESSION_KEY]: int = min_logging_level
 
     @classmethod
     def get_session_min_logging_level(cls, request: HTMXRequest) -> int:
