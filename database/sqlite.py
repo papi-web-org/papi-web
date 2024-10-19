@@ -700,11 +700,11 @@ class EventDatabase(SQLiteDatabase):
     ) -> StoredEvent:
         """Updates the event database with the information in the provided
         `stored_event`."""
-        fields: tuple[str] = (
+        fields: list[str] = [
             'name', 'start', 'stop', 'public', 'path', 'background_image', 'background_color', 'update_password',
             'record_illegal_moves', 'allow_results_deletion_on_input_screens', 'timer_colors', 'timer_delays',
             'last_update',
-        )
+        ]
         params: tuple = (
             stored_event.name, stored_event.start, stored_event.stop, stored_event.public, stored_event.path,
             stored_event.background_image, stored_event.background_color, stored_event.update_password,
