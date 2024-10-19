@@ -220,7 +220,7 @@ class IllegalMoveUserController(AbstractUserInputController):
         name='user-add-illegal-move',
         status_code=HTTP_200_OK,
     )
-    async def htmx_user_input_screen_add_illegal_move(
+    async def htmx_user_add_illegal_move(
             self, request: HTMXRequest,
             event_uniq_id: str,
             screen_uniq_id: str,
@@ -236,7 +236,7 @@ class IllegalMoveUserController(AbstractUserInputController):
         name='user-delete-illegal-move',
         status_code=HTTP_200_OK,
     )
-    async def htmx_user_input_screen_delete_illegal_move(
+    async def htmx_user_delete_illegal_move(
             self, request: HTMXRequest,
             event_uniq_id: str,
             screen_uniq_id: str,
@@ -307,7 +307,7 @@ class ResultUserController(AbstractUserInputController):
              '{event_uniq_id:str}/{screen_uniq_id:str}/{tournament_id:int}/{round:int}/{board_id:int}/{result:int}',
         name='user-add-result'
     )
-    async def htmx_user_input_screen_add_result(
+    async def htmx_user_add_result(
             self, request: HTMXRequest,
             event_uniq_id: str,
             screen_uniq_id: str,
@@ -326,7 +326,7 @@ class ResultUserController(AbstractUserInputController):
         name='user-delete-result',
         status_code=HTTP_200_OK,
     )
-    async def htmx_user_input_screen_delete_result(
+    async def htmx_user_delete_result(
             self, request: HTMXRequest,
             event_uniq_id: str,
             screen_uniq_id: str,
