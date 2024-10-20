@@ -221,10 +221,11 @@ class Family:
             self.calculated_number = ceil(cut_items_number / self.parts)
         else:
             self.calculated_number = cut_items_number
+        divisor: int = self.columns * 2 if players_instead_of_boards else self.columns
         # ensure that the number of items is divisible by the number of columns
-        if self.calculated_number % self.columns != 0:
+        if self.calculated_number % divisor != 0:
             self.calculated_number = min(
-                (self.calculated_number // self.columns + 1) * self.columns,
+                (self.calculated_number // divisor + 1) * divisor,
                 cut_items_number)
         # recalculate the number of parts
         # (because the number of items by part may increase to fit the number of columns)
