@@ -14,7 +14,7 @@
         Utilisateur : {{ chessevent.user_id }}
     </div>
     <div>
-        Mot de passe : {% if chessevent.password %}********{% else %}<span class="fst-italic">aucun</span>{% endif %}
+        Mot de passe : chessevent.shadowed_password
     </div>
     <div>
         Évènement : {{ chessevent.event_id }}
