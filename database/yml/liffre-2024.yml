@@ -1,0 +1,138 @@
+name: "10e open international de Liffré"
+start: "2024-10-19 00:00"
+stop: "2024-10-25 23:59"
+background_image: "FRA/BRE/35/F35046.png"
+background_color: "#d8d8d8"
+update_password: "mot_de_passe"
+record_illegal_moves: 0
+allow_results_deletion_on_input_screens: false
+chessevents:
+  liffre-10:
+    user_id: "pascal"
+    password: "Find it!"
+    event_id: "BRE_35_OIL2024"
+  liffre-10-blitz:
+    user_id: "pascal"
+    password: "Find it!"
+    event_id: "BRE_35_OILBlitzLiffre2024"
+timers:
+  principal:
+    hours:
+      ouverture-pointage:
+        date_str: "2024-10-24"
+        time_str: "10:00"
+        text_before: "Ouverture du pointage dans %s"
+        text_after: "Pointage ouvert depuis %s"
+      fermeture-pointage:
+        time_str: "14:00"
+        text_before: "Fermeture du pointage dans %s"
+        text_after: "Pointage fermé depuis %s"
+      1:
+        time_str: "15:00"
+      2:
+        date_str: "2024-10-20"
+        time_str: "09:00"
+      3:
+        time_str: "15:00"
+      4:
+        date_str: "2024-10-21"
+        time_str: "14:00"
+      5:
+        date_str: "2024-10-22"
+        time_str: "09:00"
+      6:
+        time_str: "15:00"
+      7:
+        date_str: "2024-10-23"
+        time_str: "14:00"
+      8:
+        date_str: "2024-10-24"
+        time_str: "14:00"
+      9:
+        date_str: "2024-10-25"
+        time_str: "09:00"
+      remise-prix:
+        time_str: "15:00"
+        text_before: "Remise des prix dans %s"
+        text_after: "Remise des prix commencée depuis %s"
+  blitz:
+    hours:
+      1:
+        date_str: "2024-10-23"
+        time_str: "20:00"
+      2:
+        time_str: "20:15"
+      3:
+        time_str: "20:30"
+      4:
+        time_str: "21:00"
+      5:
+        time_str: "21:15"
+      6:
+        time_str: "21:30"
+      7:
+        time_str: "22:00"
+      8:
+        time_str: "22:15"
+      9:
+        time_str: "22:30"
+      remise-prix:
+        time_str: "22:50"
+        text_before: "Remise des prix dans %s"
+        text_after: "Remise des prix commencée depuis %s"
+tournaments:
+  a:
+    filename: "liffre-10-a"
+    name: "Tournoi A"
+    ffe_id: 63050
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "liffre-10"
+    chessevent_tournament_name: "A"
+  b:
+    filename: "liffre-10-b"
+    name: "Tournoi B"
+    ffe_id: 63051
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "liffre-10"
+    chessevent_tournament_name: "B"
+  blitz:
+    filename: "liffre-10-blitz"
+    name: "Tournoi de blitz"
+    ffe_id: 64615
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "liffre-10-blitz"
+    chessevent_tournament_name: "BLITZ"
+screens:
+families:
+  saisie-a:
+    name: "Tournoi A"
+    type: "input"
+    menu: "saisie-a:*,saisie-b:*"
+    menu_text: "Tournoi A [%f-%l]"
+    timer_uniq_id: "principal"
+    tournament_uniq_id: "a"
+    parts: 3
+  saisie-b:
+    name: "Tournoi B"
+    type: "input"
+    menu: "saisie-a:*,saisie-b:*"
+    menu_text: "Tournoi B [%f-%l]"
+    timer_uniq_id: "principal"
+    tournament_uniq_id: "b"
+    parts: 2
+  saisie-blitz:
+    name: "Blitz"
+    type: "input"
+    menu: "@family"
+    menu_text: "Tables %f à %l"
+    timer_uniq_id: "blitz"
+    tournament_uniq_id: "blitz"
+    parts: 2
+  alpha-blitz:
+    name: "Blitz"
+    type: "players"
+    columns: 2
+    menu_link: false
+    timer_uniq_id: "blitz"
+    tournament_uniq_id: "blitz"
+    parts: 1
