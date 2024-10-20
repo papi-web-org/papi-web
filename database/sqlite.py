@@ -149,7 +149,8 @@ class EventDatabase(SQLiteDatabase):
         - If `field_type` is provided, all values must be of type `field_type`.
         - If `empty_allowed` is set to False, `supposed_dict` cannot be empty.
         """
-        assert isinstance(supposed_dict, dict), f'{yml_file.name}: {dict_path}/ is no dictionary'
+        assert (supposed_dict is None and empty_allowed) or isinstance(supposed_dict, dict), \
+            f'{yml_file.name}: {dict_path}/ is no dictionary'
         fields: list[str] = []
         if mandatory_fields is not None:
             for k in mandatory_fields:
@@ -285,7 +286,7 @@ class EventDatabase(SQLiteDatabase):
                             ))
                             chessevent_ids_by_uniq_id[chessevent_uniq_id] = stored_chessevent.id
                     timer_ids_by_uniq_id: dict[str, int] = {}
-                    if 'timers' in event_dict:
+                    if 'timers' in event_dict and event_dict['timers'] is not None:
                         self._check_populate_dict(yml_file, '/timers', event_dict['timers'])
                         for timer_uniq_id, timer_dict in event_dict['timers'].items():
                             self._check_populate_dict(
@@ -327,7 +328,7 @@ class EventDatabase(SQLiteDatabase):
                                     stored_timer_hour.text_after = timer_hour_dict.get('text_after', None)
                                 event_database.update_stored_timer_hour(stored_timer_hour)
                     tournament_ids_by_uniq_id: dict[str, int] = {}
-                    if 'tournaments' in event_dict:
+                    if 'tournaments' in event_dict and event_dict['tournaments'] is not None:
                         self._check_populate_dict(yml_file, '/tournaments', event_dict['tournaments'])
                         for tournament_uniq_id, tournament_dict in event_dict['tournaments'].items():
                             self._check_populate_dict(
@@ -365,8 +366,9 @@ class EventDatabase(SQLiteDatabase):
                             ))
                             tournament_ids_by_uniq_id[tournament_uniq_id] = stored_tournament.id
                     screen_ids_by_uniq_id: dict[str, int] = {}
-                    if 'screens' in event_dict:
-                        self._check_populate_dict(yml_file, '/screens', event_dict['screens'])
+                    if 'screens' in event_dict and event_dict['screens'] is not None:
+                        self._check_populate_dict(
+                            yml_file, '/screens', event_dict['screens'])
                         for screen_uniq_id, screen_dict in event_dict['screens'].items():
                             self._check_populate_dict(
                                 yml_file, f'/screens/{screen_uniq_id}', screen_dict,
@@ -459,7 +461,7 @@ class EventDatabase(SQLiteDatabase):
                                     stored_screen_set.number = screen_set_dict.get('number', None)
                                     event_database.update_stored_screen_set(stored_screen_set)
                     family_ids_by_uniq_id: dict[str, int] = {}
-                    if 'families' in event_dict:
+                    if 'families' in event_dict and event_dict['families'] is not None:
                         self._check_populate_dict(yml_file, '/families', event_dict['families'])
                         for family_uniq_id, family_dict in event_dict['families'].items():
                             self._check_populate_dict(
@@ -508,7 +510,7 @@ class EventDatabase(SQLiteDatabase):
                                 number=family_dict.get('number', None),
                             ))
                             family_ids_by_uniq_id[family_uniq_id] = stored_family.id
-                    if 'rotators' in event_dict:
+                    if 'rotators' in event_dict and event_dict['rotators'] is not None:
                         self._check_populate_dict(yml_file, '/rotators', event_dict['rotators'])
                         for rotator_uniq_id, rotator_dict in event_dict['rotators'].items():
                             self._check_populate_dict(
