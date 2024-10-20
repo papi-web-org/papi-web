@@ -360,10 +360,10 @@ class Tournament:
             player.compute_points(self._current_round)
             # virtual points
             player.vpoints = 0.0
-            vpoints = 0
+            vpoints: float = 0.0
             if self._pairing == TournamentPairing.HALEY:
                 if self._current_round <= 2 and player.rating >= self._rating_limit1:
-                    vpoints = 1
+                    vpoints = 1.0
             elif self._pairing == TournamentPairing.HALEY_SOFT:
                 # Round 1: All players above rating_limit1 get 1 vpoint
                 # Round 2: All players above rating_limit1 get 1 vpoint
@@ -372,7 +372,7 @@ class Tournament:
                 # https://dna.ffechecs.fr/wp-content/uploads/sites/2/2023/10/Livre-arbitre-octobre-2023.pdf,
                 # please remove if OK
                 if self._current_round <= 2 and player.rating >= self.rating_limit1:
-                    vpoints = 1
+                    vpoints = 1.0
                 elif self._current_round == 2 and player.rating < self.rating_limit1:
                     vpoints = 0.5
             elif self._pairing == TournamentPairing.SAD:
@@ -395,20 +395,20 @@ class Tournament:
                     potential_vpoints = 0.5 * player.points // 1.5
                     if player.rating >= self.rating_limit1:
                         # Group A players get 2 virtual points
-                        vpoints = 2
+                        vpoints = 2.0
                     elif player.rating >= self.rating_limit2:
                         # Group B players start with 1 point
                         # Players cannot have more than 2 points
-                        vpoints = min(2, 1 + potential_vpoints)
+                        vpoints = min(2.0, 1.0 + potential_vpoints)
                     else:
                         # Group C players start with 0 points
                         # Players cannor have more than 2 points
-                        vpoints = min(2, potential_vpoints)
+                        vpoints = min(2.0, potential_vpoints)
                     if 2 * player.points >= self._rounds:
                         # If a player gets at least half the possible score,
                         # their capital is set a 2 points.
                         # Assumes a 0-0.5-1 scoring system.
-                        vpoints = 2
+                        vpoints = 2.0
             player.vpoints = player.points + vpoints
 
     def store_illegal_move(self, player: Player):
