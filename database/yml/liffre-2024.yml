@@ -19,7 +19,7 @@ timers:
   principal:
     hours:
       ouverture-pointage:
-        date_str: "2024-10-24"
+        date_str: "2024-10-19"
         time_str: "10:00"
         text_before: "Ouverture du pointage dans %s"
         text_after: "Pointage ouvert depuis %s"
@@ -105,7 +105,6 @@ tournaments:
 screens:
 families:
   saisie-a:
-    name: "Tournoi A"
     type: "input"
     menu: "saisie-a:*,saisie-b:*"
     menu_text: "Tournoi A [%f-%l]"
@@ -113,7 +112,6 @@ families:
     tournament_uniq_id: "a"
     parts: 3
   saisie-b:
-    name: "Tournoi B"
     type: "input"
     menu: "saisie-a:*,saisie-b:*"
     menu_text: "Tournoi B [%f-%l]"
@@ -121,7 +119,6 @@ families:
     tournament_uniq_id: "b"
     parts: 2
   saisie-blitz:
-    name: "Blitz"
     type: "input"
     menu: "@family"
     menu_text: "Tables %f à %l"
@@ -129,7 +126,6 @@ families:
     tournament_uniq_id: "blitz"
     parts: 2
   alpha-blitz:
-    name: "Blitz"
     type: "players"
     columns: 2
     menu_link: false

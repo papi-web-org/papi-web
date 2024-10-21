@@ -49,13 +49,8 @@ class Family:
 
     @property
     def name(self) -> str:
-        if self.stored_family.name:
-            return self.stored_family.name
-        else:
-            if len(self.screens_by_uniq_id) > 1:
-                return '%f à %l'
-            else:
-                return '%t'
+        name: str = self.stored_family.name if self.stored_family.name else '%t (%f à %l)'
+        return name.replace('%t', self.tournament.name)
 
     @property
     def tournament_id(self) -> int:
@@ -239,10 +234,12 @@ class Family:
 
     @property
     def numbers_str(self):
-        name: str = 'échiquiers' if self.type == ScreenType.Boards else 'joueur·euses'
+        name: str = 'échiquiers' if self.type in [ScreenType.Boards, ScreenType.Input, ] else 'joueur·euses'
         match (self.first, self.last, self.number, self.parts):
             case (None, None, None, None):
-                return 'tous les échiquiers' if self.type == ScreenType.Boards else 'tou·tes les joueur·euses'
+                return 'tous les échiquiers' \
+                    if self.type in [ScreenType.Boards, ScreenType.Input, ] \
+                    else 'tou·tes les joueur·euses'
             case (first, None, None, None) if first is not None:
                 return f'{name} à partir du n°{first}'
             case (None, last, None, None) if last is not None:

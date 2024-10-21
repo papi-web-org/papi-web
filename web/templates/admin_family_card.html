@@ -15,6 +15,12 @@
             Type : {{ screen_type_icon(family.type, true) }} {{ family.type_str }}
         </div>
         <div>
+            Tournoi : {{ family.tournament.name }}
+        </div>
+        <div>
+            Sélection : {{ family.numbers_str }}
+        </div>
+        <div>
             Colonnes : {% for i in range(family.columns) %}<i class="bi-square-fill"></i> {% endfor %}
         </div>
         <div class="{% if not family.menu_label %}text-secondary{% endif %}">
