@@ -1,15 +1,22 @@
-<div class="text-end">
-    <button
-            class="btn btn-primary text-nowrap"
-            hx-post="{{ url_for('admin-event-modal-create') }}"
-            hx-target="#admin-modal-container"
-            hx-swap="innerHTML"
-            data-bs-toggle="modal"
-            data-bs-target="#admin-modal-container"
-            hx-indicator="#please-wait">
-        <i class="bi-plus-square-fill"></i> Créer un évènement
-    </button>
+<div class="row mb-2">
+    <div class="col-auto fs-3 fw-bold">
+        <i class="bi-gear-fill"></i>
+        Configuration de Papi-web
+    </div>
+    <div class="col text-end">
+        <button
+                class="btn btn-primary text-nowrap"
+                hx-post="{{ url_for('admin-event-modal-create') }}"
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait">
+            <i class="bi-plus-square-fill"></i> Créer un évènement
+        </button>
+    </div>
 </div>
+
 <table class="table table-striped table-sm table-hover border-black w-auto bg-light mx-auto justify-content-center">
     <thead class="table-dark position-sticky top-0 z-2">
         <tr>
