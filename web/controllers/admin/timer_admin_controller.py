@@ -6,10 +6,10 @@ from typing import Annotated, Any
 
 from litestar import post, get, delete, patch
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
+from litestar.contrib.htmx.response import HTMXTemplate, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template, Redirect
+from litestar.response import Template
 from litestar.status_codes import HTTP_200_OK
 
 from common.logger import get_logger
@@ -132,9 +132,11 @@ class TimerAdminController(AbstractEventAdminController):
             timer_id: int | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         web_context: TimerAdminWebContext = TimerAdminWebContext(
             request, data=None, event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=None)
+        if web_context.error:
+            return web_context.error
         if data is None:
             data = {}
             match action:
@@ -186,7 +188,7 @@ class TimerAdminController(AbstractEventAdminController):
     async def htmx_admin_timer_create_modal(
             self, request: HTMXRequest,
             event_uniq_id: str,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_modal(request, action='create', event_uniq_id=event_uniq_id, timer_id=None)
 
     @get(
@@ -198,7 +200,7 @@ class TimerAdminController(AbstractEventAdminController):
             action: str,
             event_uniq_id: str,
             timer_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_modal(request, action=action, event_uniq_id=event_uniq_id, timer_id=timer_id)
 
     def _admin_timer_update(
@@ -207,7 +209,7 @@ class TimerAdminController(AbstractEventAdminController):
             action: str,
             event_uniq_id: str,
             timer_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         match action:
             case 'update' | 'delete' | 'clone' | 'create':
                 web_context: TimerAdminWebContext = TimerAdminWebContext(
@@ -279,7 +281,7 @@ class TimerAdminController(AbstractEventAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_update(
             request, data=data, action='create', event_uniq_id=event_uniq_id, timer_id=None)
 
@@ -292,7 +294,7 @@ class TimerAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             timer_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_update(
             request, data=data, action='clone', event_uniq_id=event_uniq_id, timer_id=timer_id)
 
@@ -305,7 +307,7 @@ class TimerAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             timer_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_update(
             request, data=data, action='update', event_uniq_id=event_uniq_id, timer_id=timer_id)
 
@@ -319,7 +321,7 @@ class TimerAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             timer_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_update(
             request, data=data, action='delete', event_uniq_id=event_uniq_id, timer_id=timer_id)
 
@@ -400,9 +402,11 @@ class TimerAdminController(AbstractEventAdminController):
             timer_hour_id: int | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         web_context: TimerAdminWebContext = TimerAdminWebContext(
             request, data=None, event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=timer_hour_id)
+        if web_context.error:
+            return web_context.error
         if data is None:
             if web_context.admin_timer_hour:
                 data = {
@@ -438,7 +442,7 @@ class TimerAdminController(AbstractEventAdminController):
             self, request: HTMXRequest,
             event_uniq_id: str,
             timer_id: int,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_hours_modal(
             request, event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=None)
 
@@ -451,7 +455,7 @@ class TimerAdminController(AbstractEventAdminController):
             event_uniq_id: str,
             timer_id: int,
             timer_hour_id: int,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_hours_modal(
             request, event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=timer_hour_id)
 
@@ -462,7 +466,7 @@ class TimerAdminController(AbstractEventAdminController):
             event_uniq_id: str,
             timer_id: int,
             timer_hour_id: int | None,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         match action:
             case 'delete' | 'clone' | 'update' | 'add' | 'reorder':
                 web_context: TimerAdminWebContext = TimerAdminWebContext(
@@ -520,7 +524,7 @@ class TimerAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             timer_id: int,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_hours_update(
             request, data=data, action='add', event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=None)
 
@@ -534,7 +538,7 @@ class TimerAdminController(AbstractEventAdminController):
             event_uniq_id: str,
             timer_id: int,
             timer_hour_id: int,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_hours_update(
             request, data=data, action='clone', event_uniq_id=event_uniq_id, timer_id=timer_id,
             timer_hour_id=timer_hour_id)
@@ -549,7 +553,7 @@ class TimerAdminController(AbstractEventAdminController):
             event_uniq_id: str,
             timer_id: int,
             timer_hour_id: int,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_hours_update(
             request, data=data, action='update', event_uniq_id=event_uniq_id, timer_id=timer_id,
             timer_hour_id=timer_hour_id)
@@ -565,7 +569,7 @@ class TimerAdminController(AbstractEventAdminController):
             event_uniq_id: str,
             timer_id: int,
             timer_hour_id: int,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_hours_update(
             request, data=data, action='delete', event_uniq_id=event_uniq_id, timer_id=timer_id,
             timer_hour_id=timer_hour_id)
@@ -579,6 +583,6 @@ class TimerAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str | list[int]], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             timer_id: int,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_timer_hours_update(
             request, data=data, action='reorder', event_uniq_id=event_uniq_id, timer_id=timer_id, timer_hour_id=None)

@@ -3,7 +3,7 @@ from typing import Annotated, Any
 
 from litestar import get
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
+from litestar.contrib.htmx.response import HTMXTemplate, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
@@ -11,7 +11,7 @@ from litestar.response import Template
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from data.event import Event
-from data.loader import EventLoader
+from data.loader import EventLoader, ArchiveLoader
 from database.access import access_driver, odbc_drivers
 from web.controllers.index_controller import AbstractController, WebContext
 from web.messages import Message
@@ -22,8 +22,7 @@ logger: Logger = get_logger()
 
 class AdminWebContext(WebContext):
     """
-    The basic admin web context, where parameters admin_main_selector and admin_event_selector are expected and passed
-    to the template engine to propagate the context.
+    The basic admin web context.
     """
 
     def __init__(
@@ -38,7 +37,7 @@ class AdminWebContext(WebContext):
         self.check_admin_tab()
 
     def check_admin_tab(self):
-        if self.admin_tab not in [None, 'config', 'passed_events', 'current_events', 'coming_events', ]:
+        if self.admin_tab not in [None, 'config', 'passed_events', 'current_events', 'coming_events', 'archives', ]:
             self._redirect_error(f'Invalid value [{self.admin_tab}] for parameter [admin_tab]')
 
     @property
@@ -124,11 +123,12 @@ class AbstractIndexAdminController(AbstractAdminController):
             cls,
             request: HTMXRequest,
             admin_tab: str | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         web_context: AdminWebContext = AdminWebContext(request, data=None, admin_tab=admin_tab)
         if web_context.error:
             return web_context.error
         event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
+        archive_loader: ArchiveLoader = ArchiveLoader.get(request=request)
         nav_tabs: dict[str, dict[str]] = {
             'current_events': {
                 'title': f'Évènements en cours ({len(event_loader.current_events) or "-"})',
@@ -153,6 +153,14 @@ class AbstractIndexAdminController(AbstractAdminController):
                 'disabled': not event_loader.passed_events,
                 'empty_str': 'Aucun évènement passé.',
                 'icon_class': 'bi-calendar-minus',
+            },
+            'archives': {
+                'title': f'Archives ({len(archive_loader.archives_sorted_by_date) or "-"})',
+                'template': 'admin_archives.html',
+                'archives': archive_loader.archives_sorted_by_date,
+                'disabled': not archive_loader.archives_sorted_by_date,
+                'empty_str': 'Aucun évènement archivé.',
+                'icon_class': 'bi-archive-fill',
             },
             'config': {
                 'title': 'Configuration Papi-web',
@@ -185,7 +193,7 @@ class IndexAdminController(AbstractIndexAdminController):
             cls, request: HTMXRequest,
             admin_tab: str | None,
             admin_columns: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         if admin_columns is not None:
             SessionHandler.set_session_admin_columns(request, admin_columns)
         return cls._admin_render(request, admin_tab)
@@ -197,7 +205,7 @@ class IndexAdminController(AbstractIndexAdminController):
     async def htmx_admin(
             self, request: HTMXRequest,
             admin_columns: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin(
             request,
             admin_tab=None,
@@ -212,7 +220,7 @@ class IndexAdminController(AbstractIndexAdminController):
             self, request: HTMXRequest,
             admin_tab: str,
             admin_columns: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin(
             request,
             admin_tab=admin_tab,

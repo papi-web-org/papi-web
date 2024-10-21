@@ -3,10 +3,10 @@ from typing import Annotated, Any
 
 from litestar import get
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate, Reswap
+from litestar.contrib.htmx.response import HTMXTemplate, Reswap, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template, Redirect
+from litestar.response import Template
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
@@ -59,9 +59,13 @@ class IndexUserController(AbstractUserController):
 
     @staticmethod
     def _user_render(
-            web_context: UserWebContext,
-    ) -> Template:
-        event_loader: EventLoader = EventLoader.get(request=web_context.request, lazy_load=True)
+            request: HTMXRequest,
+            user_tab: str | None,
+    ) -> Template | ClientRedirect:
+        web_context: UserWebContext = UserWebContext(request, data=None, user_tab=user_tab)
+        if web_context.error:
+            return web_context.error
+        event_loader: EventLoader = EventLoader.get(request=request, lazy_load=True)
         current_events: list[Event]
         coming_events: list[Event]
         passed_events: list[Event]
@@ -139,13 +143,12 @@ class IndexUserController(AbstractUserController):
             self, request: HTMXRequest,
             user_tab: str | None,
             user_columns: int | None,
-    ) -> Template | Reswap | Redirect:
+    ) -> Template | Reswap | ClientRedirect:
         if user_columns:
             SessionHandler.set_session_user_columns(request, user_columns)
         date: float | None = self.get_if_modified_since(request)
         if date is None or self._user_refresh_needed(request, user_tab, date):
-            web_context: UserWebContext = UserWebContext(request, data=None, user_tab=user_tab)
-            return self._user_render(web_context)
+            return self._user_render(request, user_tab=user_tab)
         else:
             return Reswap(content=None, method='none', status_code=HTTP_304_NOT_MODIFIED)
 
@@ -156,7 +159,7 @@ class IndexUserController(AbstractUserController):
     async def htmx_user(
             self, request: HTMXRequest,
             user_columns: int | None,
-    ) -> Template | Reswap | Redirect:
+    ) -> Template | Reswap | ClientRedirect:
         return self._user(request, user_tab=None, user_columns=user_columns)
 
     @get(
@@ -167,5 +170,5 @@ class IndexUserController(AbstractUserController):
             self, request: HTMXRequest,
             user_tab: str,
             user_columns: int | None,
-    ) -> Template | Reswap | Redirect:
+    ) -> Template | Reswap | ClientRedirect:
         return self._user(request, user_tab=user_tab, user_columns=user_columns)

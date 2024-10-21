@@ -9,10 +9,10 @@ import requests
 import validators
 from litestar import get, patch, delete, post
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
+from litestar.contrib.htmx.response import HTMXTemplate, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template, Redirect
+from litestar.response import Template
 from litestar.status_codes import HTTP_200_OK
 
 from common import format_timestamp_date
@@ -82,7 +82,7 @@ class AbstractEventAdminController(AbstractIndexAdminController):
             request: HTMXRequest,
             event_uniq_id: str,
             admin_event_tab: str | None = None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         logging_levels: dict[int, dict[str, str]] = {
             logging.DEBUG: {
                 'name': 'DEBUG',
@@ -198,7 +198,7 @@ class EventAdminController(AbstractEventAdminController):
             show_results_screens_on_screen_list: bool | None,
             show_image_screens_on_screen_list: bool | None,
             min_logging_level: int | None,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         if admin_columns:
             SessionHandler.set_session_admin_columns(request, admin_columns)
         if show_family_screens_on_screen_list is not None:
@@ -250,7 +250,7 @@ class EventAdminController(AbstractEventAdminController):
             show_results_screens_on_screen_list: bool | None,
             show_image_screens_on_screen_list: bool | None,
             min_logging_level: int | None,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         return self._admin_event(
             request,
             event_uniq_id=event_uniq_id,
@@ -287,7 +287,7 @@ class EventAdminController(AbstractEventAdminController):
             show_results_screens_on_screen_list: bool | None,
             show_image_screens_on_screen_list: bool | None,
             min_logging_level: int | None,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         return self._admin_event(
             request,
             event_uniq_id=event_uniq_id,
@@ -503,7 +503,7 @@ class EventAdminController(AbstractEventAdminController):
             event_uniq_id: str | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         web_context: EventAdminWebContext = EventAdminWebContext(
             request, data=data, event_uniq_id=event_uniq_id, admin_event_tab=None)
         if web_context.error:
@@ -594,7 +594,7 @@ class EventAdminController(AbstractEventAdminController):
     )
     async def htmx_admin_event_create_modal(
             self, request: HTMXRequest,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_event_modal(request, action='create', event_uniq_id=None, )
 
     @get(
@@ -605,7 +605,7 @@ class EventAdminController(AbstractEventAdminController):
             self, request: HTMXRequest,
             action: str,
             event_uniq_id: str,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_event_modal(request, action=action, event_uniq_id=event_uniq_id, )
 
     def _admin_event_update(
@@ -613,7 +613,7 @@ class EventAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             action: str,
             event_uniq_id: str | None,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         match action:
             case 'create' | 'clone' | 'update' | 'delete':
                 web_context: EventAdminWebContext = EventAdminWebContext(
@@ -686,7 +686,7 @@ class EventAdminController(AbstractEventAdminController):
     async def htmx_admin_event_create(
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         return self._admin_event_update(request, data=data, action='create', event_uniq_id=None)
 
     @post(
@@ -697,7 +697,7 @@ class EventAdminController(AbstractEventAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         return self._admin_event_update(request, data=data, action='clone', event_uniq_id=event_uniq_id)
 
     @delete(
@@ -709,7 +709,7 @@ class EventAdminController(AbstractEventAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         return self._admin_event_update(request, data=data, action='delete', event_uniq_id=event_uniq_id)
 
     @patch(
@@ -720,5 +720,5 @@ class EventAdminController(AbstractEventAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         return self._admin_event_update(request, data=data, action='update', event_uniq_id=event_uniq_id)

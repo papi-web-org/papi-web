@@ -3,7 +3,7 @@ from typing import Annotated, Any
 
 from litestar import post, get, patch, delete
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
+from litestar.contrib.htmx.response import HTMXTemplate, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
@@ -223,7 +223,7 @@ class FamilyAdminController(AbstractEventAdminController):
             family_id: int | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         web_context: FamilyAdminWebContext = FamilyAdminWebContext(
             request, data=None, event_uniq_id=event_uniq_id, family_id=family_id)
         if web_context.error:
@@ -299,7 +299,7 @@ class FamilyAdminController(AbstractEventAdminController):
     async def htmx_admin_family_create_modal(
             self, request: HTMXRequest,
             event_uniq_id: str,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_family_modal(request, action='create', event_uniq_id=event_uniq_id, family_id=None)
 
     @get(
@@ -311,7 +311,7 @@ class FamilyAdminController(AbstractEventAdminController):
             action: str,
             event_uniq_id: str,
             family_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_family_modal(
             request, action=action, event_uniq_id=event_uniq_id, family_id=family_id)
 
@@ -321,7 +321,7 @@ class FamilyAdminController(AbstractEventAdminController):
             action: str,
             event_uniq_id: str,
             family_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         match action:
             case 'update' | 'delete' | 'clone' | 'create':
                 web_context: FamilyAdminWebContext = FamilyAdminWebContext(
@@ -380,7 +380,7 @@ class FamilyAdminController(AbstractEventAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_family_update(
             request, data=data, action='create', event_uniq_id=event_uniq_id, family_id=None)
 
@@ -393,7 +393,7 @@ class FamilyAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             family_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_family_update(
             request, data=data, action='clone', event_uniq_id=event_uniq_id, family_id=family_id)
 
@@ -406,7 +406,7 @@ class FamilyAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             family_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_family_update(
             request, data=data, action='update', event_uniq_id=event_uniq_id, family_id=family_id)
 
@@ -420,6 +420,6 @@ class FamilyAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             family_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_family_update(
             request, data=data, action='delete', event_uniq_id=event_uniq_id, family_id=family_id)

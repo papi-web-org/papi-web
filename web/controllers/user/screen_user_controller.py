@@ -4,10 +4,10 @@ from typing import Annotated, Any
 
 from litestar import post, get
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import Reswap, HTMXTemplate
+from litestar.contrib.htmx.response import Reswap, HTMXTemplate, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template, Redirect
+from litestar.response import Template
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
@@ -178,7 +178,7 @@ class ScreenUserController(AbstractUserController):
     def _user_screen_render(
             cls,
             web_context: ScreenOrRotatorUserWebContext,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return HTMXTemplate(
             template_name="user_screen.html",
             context=web_context.template_context | {
@@ -199,7 +199,7 @@ class ScreenUserController(AbstractUserController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             screen_uniq_id: str,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         web_context: LoginUserWebContext = LoginUserWebContext(
             request, data=data, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id)
         if web_context.error:
@@ -256,7 +256,7 @@ class ScreenUserController(AbstractUserController):
             self, request: HTMXRequest,
             event_uniq_id: str,
             screen_uniq_id: str,
-    ) -> Template | Reswap | Redirect:
+    ) -> Template | Reswap | ClientRedirect:
         web_context: BasicScreenOrFamilyUserWebContext = BasicScreenOrFamilyUserWebContext(
             request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id)
         if web_context.error:
@@ -276,7 +276,7 @@ class ScreenUserController(AbstractUserController):
         event_uniq_id: str,
         rotator_id: int,
         rotator_screen_index: int,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         web_context: RotatorUserWebContext = RotatorUserWebContext(
             request, data=None, event_uniq_id=event_uniq_id, rotator_id=rotator_id,
             rotator_screen_index=rotator_screen_index)

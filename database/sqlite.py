@@ -561,11 +561,11 @@ class EventDatabase(SQLiteDatabase):
                 database.close()
 
     def delete(self) -> Path:
-        """Soft-deletes the event databse file by archiving it."""
+        """Soft-deletes the event database file by archiving it."""
         file: Path = EventDatabase(self.uniq_id).file
         index: int = 0
         date_str: str = datetime.strftime(datetime.now(), "%Y-%m-%d-%H-%M")
-        arch: Path = file.parent / f'{file.stem}_{date_str}.arch'
+        arch: Path = file.parent / f'{file.stem}_{date_str}.{PapiWebConfig.arch_ext}'
         while True:
             try:
                 file.rename(arch)

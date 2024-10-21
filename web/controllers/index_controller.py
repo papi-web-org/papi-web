@@ -7,7 +7,7 @@ from typing import Annotated, Any
 from httpdate import unixtime_to_httpdate, httpdate_to_unixtime
 from litestar import get, Controller
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
+from litestar.contrib.htmx.response import HTMXTemplate, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template, Redirect
@@ -16,6 +16,7 @@ from common import RGB, check_rgb_str
 from common.logger import get_logger
 from common.papi_web_config import PapiWebConfig
 from web.messages import Message
+from web.urls import index_url
 
 logger: Logger = get_logger()
 
@@ -32,7 +33,7 @@ class WebContext:
     ):
         self.request: HTMXRequest = request
         self.data: dict[str, str] = data
-        self.error: Redirect | Template | None = None
+        self.error: ClientRedirect | None = None
 
     @property
     def background_image(self) -> str:
@@ -211,15 +212,9 @@ class AbstractController(Controller):
     """
 
     @staticmethod
-    def redirect_error(request: HTMXRequest, errors: str | list[str] | Exception) -> Template:
-        web_context: WebContext = WebContext(request, {})
+    def redirect_error(request: HTMXRequest, errors: str | list[str] | Exception) -> ClientRedirect:
         Message.error(request, errors)
-        return HTMXTemplate(
-            template_name="index.html",
-            re_target="body",
-            context=web_context.template_context | {
-                'messages': Message.messages(request),
-            })
+        return ClientRedirect(redirect_to=index_url(request))
 
     @staticmethod
     def _render_messages(request: HTMXRequest) -> Template:

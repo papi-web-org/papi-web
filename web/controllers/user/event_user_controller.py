@@ -4,10 +4,10 @@ from typing import Annotated, Any
 
 from litestar import get
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import Reswap, HTMXTemplate
+from litestar.contrib.htmx.response import Reswap, HTMXTemplate, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template, Redirect
+from litestar.response import Template
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.exception import PapiWebException
@@ -193,7 +193,7 @@ class EventUserController(AbstractUserController):
             event_uniq_id: str,
             user_event_tab: str | None,
             user_columns: int | None,
-    ) -> Template | Reswap | Redirect:
+    ) -> Template | Reswap | ClientRedirect:
         web_context: EventUserWebContext = EventUserWebContext(
             request,
             data=None,
@@ -217,7 +217,7 @@ class EventUserController(AbstractUserController):
             self, request: HTMXRequest,
             event_uniq_id: str,
             user_columns: int | None,
-    ) -> Template | Reswap | Redirect:
+    ) -> Template | Reswap | ClientRedirect:
         return self._user_event(
             request, event_uniq_id=event_uniq_id, user_event_tab=None, user_columns=user_columns)
 
@@ -230,6 +230,6 @@ class EventUserController(AbstractUserController):
             event_uniq_id: str,
             user_event_tab: str,
             user_columns: int | None,
-    ) -> Template | Reswap | Redirect:
+    ) -> Template | Reswap | ClientRedirect:
         return self._user_event(
             request, event_uniq_id=event_uniq_id, user_event_tab=user_event_tab, user_columns=user_columns)

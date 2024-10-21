@@ -7,10 +7,10 @@ from zipfile import ZipInfo, ZipFile
 
 from litestar import patch, delete, put, Response, get
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
+from litestar.contrib.htmx.response import HTMXTemplate, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template, Redirect, File
+from litestar.response import Template, File
 from litestar.status_codes import HTTP_200_OK
 
 from common.logger import get_logger
@@ -135,7 +135,7 @@ class AbstractUserInputController(AbstractUserController):
             screen_uniq_id: str,
             tournament_id: int,
             board_id: int,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         web_context: BoardUserWebContext = BoardUserWebContext(
             request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id,
             tournament_id=tournament_id, board_id=board_id)
@@ -162,7 +162,7 @@ class CheckInUserController(AbstractUserInputController):
         screen_uniq_id: str,
         tournament_id: int,
         player_id: int,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         web_context: PlayerUserWebContext = PlayerUserWebContext(
             request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id,
             tournament_id=tournament_id, player_id=player_id, tournament_started=False)
@@ -192,7 +192,7 @@ class IllegalMoveUserController(AbstractUserInputController):
             tournament_id: int,
             player_id: int,
             add: bool
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         web_context: PlayerUserWebContext = PlayerUserWebContext(
             request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id,
             tournament_id=tournament_id, player_id=player_id, tournament_started=True)
@@ -226,7 +226,7 @@ class IllegalMoveUserController(AbstractUserInputController):
             screen_uniq_id: str,
             tournament_id: int,
             player_id: int,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         return self._delete_or_add_illegal_move(
             request, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id, tournament_id=tournament_id,
             player_id=player_id, add=True)
@@ -242,7 +242,7 @@ class IllegalMoveUserController(AbstractUserInputController):
             screen_uniq_id: str,
             tournament_id: int,
             player_id: int,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         return self._delete_or_add_illegal_move(
             request, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id, tournament_id=tournament_id,
             player_id=player_id, add=False)
@@ -261,7 +261,7 @@ class ResultUserController(AbstractUserInputController):
             screen_uniq_id: str,
             tournament_id: int,
             board_id: int,
-    ) -> Redirect | Template:
+    ) -> Template | ClientRedirect:
         web_context: BoardUserWebContext = BoardUserWebContext(
             request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id,
             tournament_id=tournament_id, board_id=board_id)
@@ -280,7 +280,7 @@ class ResultUserController(AbstractUserInputController):
             round: int,
             board_id: int,
             result: int | None,
-    ) -> Template | Redirect:
+    ) -> Template | ClientRedirect:
         web_context: BoardUserWebContext = BoardUserWebContext(
             request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id, tournament_id=tournament_id,
             board_id=board_id)
@@ -315,7 +315,7 @@ class ResultUserController(AbstractUserInputController):
             round: int,
             board_id: int,
             result: int,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._user_update_result(
             request, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id, tournament_id=tournament_id,
             round=round, board_id=board_id, result=result)
@@ -333,7 +333,7 @@ class ResultUserController(AbstractUserInputController):
             tournament_id: int,
             round: int,
             board_id: int,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._user_update_result(
             request, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id, tournament_id=tournament_id,
             round=round, board_id=board_id, result=None)
@@ -347,7 +347,7 @@ class DownloadUserController(AbstractUserController):
     async def htmx_user_download_event_tournaments(
             self, request: HTMXRequest,
             event_uniq_id: str,
-    ) -> Response[bytes] | Template:
+    ) -> Response[bytes] | ClientRedirect:
         web_context: EventUserWebContext = EventUserWebContext(
             request, data=None, event_uniq_id=event_uniq_id, user_event_tab=None)
         if web_context.error:
@@ -377,7 +377,7 @@ class DownloadUserController(AbstractUserController):
             self, request: HTMXRequest,
             event_uniq_id: str,
             tournament_id: int,
-    ) -> File | Template | Redirect:
+    ) -> File | ClientRedirect:
         web_context: TournamentUserWebContext = TournamentUserWebContext(
             request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=None, screen_needed=False,
             tournament_id=tournament_id, tournament_started=None)

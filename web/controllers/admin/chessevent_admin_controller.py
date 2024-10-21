@@ -3,7 +3,7 @@ from typing import Annotated, Any
 
 from litestar import get, delete, patch, post
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
+from litestar.contrib.htmx.response import HTMXTemplate, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
@@ -104,9 +104,11 @@ class ChessEventAdminController(AbstractEventAdminController):
             chessevent_id: int | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         web_context: ChessEventAdminWebContext = ChessEventAdminWebContext(
             request, data=None, event_uniq_id=event_uniq_id, chessevent_id=chessevent_id)
+        if web_context.error:
+            return web_context.error
         if data is None:
             data: dict[str, str] = {}
             match action:
@@ -150,7 +152,7 @@ class ChessEventAdminController(AbstractEventAdminController):
     async def htmx_admin_chessevent_create_modal(
             self, request: HTMXRequest,
             event_uniq_id: str,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_chessevent_modal(
             request, action='create', event_uniq_id=event_uniq_id, chessevent_id=None)
 
@@ -163,7 +165,7 @@ class ChessEventAdminController(AbstractEventAdminController):
             action: str,
             event_uniq_id: str,
             chessevent_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_chessevent_modal(
             request, action=action, event_uniq_id=event_uniq_id, chessevent_id=chessevent_id)
 
@@ -173,7 +175,7 @@ class ChessEventAdminController(AbstractEventAdminController):
             action: str,
             event_uniq_id: str,
             chessevent_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         match action:
             case 'update' | 'delete' | 'clone' | 'create':
                 web_context: ChessEventAdminWebContext = ChessEventAdminWebContext(
@@ -233,7 +235,7 @@ class ChessEventAdminController(AbstractEventAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_chessevent_update(
             request, data=data, action='create', event_uniq_id=event_uniq_id, chessevent_id=None)
 
@@ -246,7 +248,7 @@ class ChessEventAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             chessevent_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_chessevent_update(
             request, data=data, action='clone', event_uniq_id=event_uniq_id, chessevent_id=chessevent_id)
 
@@ -259,7 +261,7 @@ class ChessEventAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             chessevent_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_chessevent_update(
             request, data=data, action='update', event_uniq_id=event_uniq_id, chessevent_id=chessevent_id)
 
@@ -273,6 +275,6 @@ class ChessEventAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             chessevent_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_chessevent_update(
             request, data=data, action='delete', event_uniq_id=event_uniq_id, chessevent_id=chessevent_id)

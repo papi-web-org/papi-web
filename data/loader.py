@@ -1,11 +1,14 @@
 import time
 from contextlib import suppress
+from dataclasses import dataclass
 from functools import cached_property
 from logging import Logger
 from operator import attrgetter
+from pathlib import Path
 
 from litestar.contrib.htmx.request import HTMXRequest
 
+from common import format_timestamp_date_time
 from common.papi_web_config import PapiWebConfig
 from data.event import Event
 from database.sqlite import EventDatabase
@@ -143,3 +146,40 @@ class EventLoader:
             event for event in self.events_by_id.values()
             if event.public and time.time() < event.start
         ], key=lambda event: (-event.stop, -event.start, event.name))
+
+
+@dataclass
+class Archive:
+    """ This class implements archives (deleted events). """
+    file: Path
+    name: str
+    date: float
+
+    @property
+    def date_str(self):
+        return format_timestamp_date_time(self.date)
+
+
+class ArchiveLoader:
+    """
+    This class help loading archives (deleted events) efficiently.
+    Usage:
+    archive_loader: ArchiveLoader = ArchiveLoader.get(request)
+    archives: list[Archives] = archive_loader.archives_sorted_by_date()
+    """
+
+    @classmethod
+    def get(cls, request: HTMXRequest | None):
+        if not request:
+            return cls()
+        archive_loader: ArchiveLoader = request.state.get('archive_loader')
+        if not archive_loader:
+            request.state['archive_loader'] = cls()
+        return request.state['archive_loader']
+
+    @cached_property
+    def archives_sorted_by_date(self) -> list[Archive]:
+        return sorted([
+                          Archive(file, file.stem, file.lstat().st_ctime)
+                          for file in PapiWebConfig.event_path.glob(f'*.{PapiWebConfig.arch_ext}')
+                      ], key=lambda archive: archive.date)

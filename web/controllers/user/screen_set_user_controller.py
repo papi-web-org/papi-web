@@ -4,10 +4,10 @@ from typing import Annotated, Any
 
 from litestar import get
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate, Reswap
+from litestar.contrib.htmx.response import HTMXTemplate, Reswap, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.response import Template, Redirect
+from litestar.response import Template
 from litestar.status_codes import HTTP_304_NOT_MODIFIED
 
 from common.logger import get_logger
@@ -88,7 +88,7 @@ class ScreenSetUserController(AbstractUserController):
             event_uniq_id: str,
             screen_uniq_id: str,
             screen_set_uniq_id: str,
-    ) -> Template | Reswap | Redirect:
+    ) -> Template | Reswap | ClientRedirect:
         web_context: ScreenSetOrFamilyUserWebContext = ScreenSetOrFamilyUserWebContext(
             request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id,
             screen_set_uniq_id=screen_set_uniq_id)

@@ -4,7 +4,7 @@ from typing import Annotated, Any
 
 from litestar import post, get, delete, patch
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
+from litestar.contrib.htmx.response import HTMXTemplate, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
@@ -166,7 +166,7 @@ class TournamentAdminController(AbstractEventAdminController):
             tournament_id: int | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         web_context: TournamentAdminWebContext = TournamentAdminWebContext(
             request, data=None, event_uniq_id=event_uniq_id, tournament_id=tournament_id)
         if web_context.error:
@@ -250,7 +250,7 @@ class TournamentAdminController(AbstractEventAdminController):
     async def htmx_admin_tournament_create_modal(
             self, request: HTMXRequest,
             event_uniq_id: str,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_tournament_modal(request, action='create', event_uniq_id=event_uniq_id, tournament_id=None)
 
     @get(
@@ -262,7 +262,7 @@ class TournamentAdminController(AbstractEventAdminController):
             action: str,
             event_uniq_id: str,
             tournament_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_tournament_modal(
             request, action=action, event_uniq_id=event_uniq_id, tournament_id=tournament_id)
 
@@ -272,7 +272,7 @@ class TournamentAdminController(AbstractEventAdminController):
             action: str,
             event_uniq_id: str,
             tournament_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         match action:
             case 'update' | 'delete' | 'clone' | 'create':
                 web_context: TournamentAdminWebContext = TournamentAdminWebContext(
@@ -334,7 +334,7 @@ class TournamentAdminController(AbstractEventAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_tournament_update(
             request, data=data, action='create', event_uniq_id=event_uniq_id, tournament_id=None)
 
@@ -347,7 +347,7 @@ class TournamentAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             tournament_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_tournament_update(
             request, data=data, action='clone', event_uniq_id=event_uniq_id, tournament_id=tournament_id)
 
@@ -360,7 +360,7 @@ class TournamentAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             tournament_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_tournament_update(
             request, data=data, action='update', event_uniq_id=event_uniq_id, tournament_id=tournament_id)
 
@@ -374,6 +374,6 @@ class TournamentAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             tournament_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_tournament_update(
             request, data=data, action='delete', event_uniq_id=event_uniq_id, tournament_id=tournament_id)

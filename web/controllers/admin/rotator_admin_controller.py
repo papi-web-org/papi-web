@@ -3,7 +3,7 @@ from typing import Annotated, Any
 
 from litestar import post, get, delete, patch
 from litestar.contrib.htmx.request import HTMXRequest
-from litestar.contrib.htmx.response import HTMXTemplate
+from litestar.contrib.htmx.response import HTMXTemplate, ClientRedirect
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Template
@@ -132,7 +132,7 @@ class RotatorAdminController(AbstractEventAdminController):
             rotator_id: int | None,
             data: dict[str, str] | None = None,
             errors: dict[str, str] | None = None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         web_context: RotatorAdminWebContext = RotatorAdminWebContext(
             request, data=None, event_uniq_id=event_uniq_id, rotator_id=rotator_id)
         if web_context.error:
@@ -183,7 +183,7 @@ class RotatorAdminController(AbstractEventAdminController):
     async def htmx_admin_rotator_create_modal(
             self, request: HTMXRequest,
             event_uniq_id: str,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_rotator_modal(
             request, action='create', event_uniq_id=event_uniq_id, rotator_id=None)
 
@@ -196,7 +196,7 @@ class RotatorAdminController(AbstractEventAdminController):
             action: str,
             event_uniq_id: str,
             rotator_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_rotator_modal(
             request, action=action, event_uniq_id=event_uniq_id, rotator_id=rotator_id)
 
@@ -206,7 +206,7 @@ class RotatorAdminController(AbstractEventAdminController):
             action: str,
             event_uniq_id: str,
             rotator_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         match action:
             case 'update' | 'delete' | 'clone' | 'create':
                 web_context: RotatorAdminWebContext = RotatorAdminWebContext(
@@ -262,7 +262,7 @@ class RotatorAdminController(AbstractEventAdminController):
             self, request: HTMXRequest,
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_rotator_update(
             request, data=data, action='create', event_uniq_id=event_uniq_id, rotator_id=None)
 
@@ -275,7 +275,7 @@ class RotatorAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             rotator_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_rotator_update(
             request, data=data, action='clone', event_uniq_id=event_uniq_id, rotator_id=rotator_id)
 
@@ -288,7 +288,7 @@ class RotatorAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             rotator_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_rotator_update(
             request, data=data, action='update', event_uniq_id=event_uniq_id, rotator_id=rotator_id)
 
@@ -302,6 +302,6 @@ class RotatorAdminController(AbstractEventAdminController):
             data: Annotated[dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED), ],
             event_uniq_id: str,
             rotator_id: int | None,
-    ) -> Template:
+    ) -> Template | ClientRedirect:
         return self._admin_rotator_update(
             request, data=data, action='delete', event_uniq_id=event_uniq_id, rotator_id=rotator_id)
