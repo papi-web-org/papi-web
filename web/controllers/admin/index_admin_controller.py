@@ -42,7 +42,7 @@ class AdminWebContext(WebContext):
 
     @property
     def background_image(self) -> str:
-        if self.admin_tab == 'config':
+        if self.admin_tab in ['archives', 'config', ]:
             return PapiWebConfig.default_background_image
         else:
             return ''
