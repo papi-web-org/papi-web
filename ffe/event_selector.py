@@ -1,5 +1,6 @@
 from logging import Logger
 
+from common.exception import PapiWebException
 from common.singleton import Singleton
 from common.logger import get_logger, print_interactive, input_interactive
 from data.event import Event
@@ -42,6 +43,9 @@ class EventSelector(metaclass=Singleton):
                 except ValueError:
                     pass
         event: Event = events[event_num - 1]
-        while ActionSelector().run(event.uniq_id):
-            pass
+        try:
+            while ActionSelector().run(event.uniq_id):
+                pass
+        except PapiWebException as pwe:
+            logger.warning(pwe)
         return True

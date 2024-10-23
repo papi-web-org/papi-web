@@ -600,7 +600,7 @@ class EventDatabase(SQLiteDatabase):
 
     def __enter__(self) -> Self:
         if not self.exists():
-            raise FileNotFoundError(
+            raise PapiWebException(
                 f'La base de données ne peut être ouverte car le fichier [{self.file.resolve()}] n\'existe pas.')
         super().__enter__()
         papi_web_version: Version = PapiWebConfig.version
