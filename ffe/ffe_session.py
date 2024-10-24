@@ -10,10 +10,11 @@ from requests import Session, Response
 from requests.exceptions import ConnectionError, Timeout, RequestException
 from logging import Logger
 
-from common.config_reader import TMP_DIR
+from common.papi_web_config import TMP_DIR
 from data.tournament import Tournament
 from common.logger import get_logger
 from database.papi import PapiDatabase
+from database.sqlite import EventDatabase
 
 logger: Logger = get_logger()
 
@@ -36,9 +37,11 @@ FEES_DIR: Path = Path('fees')
 
 
 class FFESession(Session):
+    """A requests session specialized for communication with the FFE website.
+    Currently, it relies on hacks, because no API is available."""
     def __init__(self, tournament: Tournament):
         super().__init__()
-        self.__tournament = tournament
+        self.__tournament: Tournament = tournament
         self.__init_vars: dict[str, str] | None = None
         self.__auth_vars: dict[str, str] | None = None
         self.__tournament_ffe_url: str | None = None
@@ -136,6 +139,7 @@ class FFESession(Session):
         return True
 
     def test(self):
+        """Try logging in to the FFE website."""
         logger.info('Tournoi [%s] :', self.__tournament.ffe_id)
         if not self.__ffe_init():
             return
@@ -220,7 +224,7 @@ class FFESession(Session):
         tmp_file.parents[0].mkdir(parents=True, exist_ok=True)
         logger.debug('Copie de %s vers %s...', self.__tournament.file, tmp_file)
         tmp_file.write_bytes(self.__tournament.file.read_bytes())
-        with PapiDatabase(self.__tournament.event_uniq_id, self.__tournament.uniq_id, tmp_file, 'w') as tmp_database:
+        with PapiDatabase(tmp_file, write=True) as tmp_database:
             tmp_database: PapiDatabase
             logger.debug('Suppression des données personnelles des joueur·euses...')
             tmp_database.delete_players_personal_data()
@@ -234,8 +238,9 @@ class FFESession(Session):
         _, error = self.__parse_html(html)
         if error:
             return
-        self.__tournament.ffe_upload_marker.parents[0].mkdir(parents=True, exist_ok=True)
-        self.__tournament.ffe_upload_marker.touch()
+        with EventDatabase(self.__tournament.event.uniq_id, write=True) as event_database:
+            event_database.set_tournament_last_ffe_upload(self.__tournament.id)
+            event_database.commit()
         logger.info('upload OK')
         if not set_visible:
             return

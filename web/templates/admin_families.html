@@ -1,2 +1,72 @@
-<h1>{{ admin_event.name }} - Familles d'écrans</h1>
-<div>Not implemented yet</div>
+{% extends 'cards_container.html' %}
+{% from 'macros.j2' import tooltip_attributes, event_visibility_icon, screen_type_icon %}
+
+{% block cards_container_title %}
+    {{ event_visibility_icon(admin_event, '') }}
+    {{ admin_event.name }} - Familles d'écrans
+{% endblock %}
+
+{% block cards_container_right_buttons %}
+    {% with id='show-details-on-family-list', name='show_details_on_family_list' %}
+        <div
+                class="form-check form-switch d-inline-block pe-3 mt-2"
+                {{ tooltip_attributes('info', 'Activer ou désactiver l\'affichage des détails sur les cartes des familles d\'écrans ci-dessous.', 'top') }}
+        >
+            <input
+                    hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='families') }}"
+                    hx-vals='{"{{ name }}": "{% if show_details_on_family_list %}false{% else %}true{% endif %}"}'
+                    hx-swap="multi:#admin-header,#admin-content"
+                    hx-indicator="#please-wait"
+                    class="form-check-input"
+                    type="checkbox"
+                    id="{{ id }}"
+                    {% if show_details_on_family_list %}checked{% endif %} /><label for="{{ id }}" class="form-check-label"> Détails</label>
+        </div>
+    {% endwith %}
+    <span {{ tooltip_attributes('info', 'Rafraîchir cet onglet.', 'top') }}>
+        <button
+                class="btn btn-primary text-nowrap me-2"
+                hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='families') }}"
+                hx-swap="multi:#admin-header,#admin-content"
+                hx-indicator="#please-wait"
+        >
+            <i class="bi-arrow-clockwise"></i>
+        </button>
+    </span>
+    <span {{ tooltip_attributes('info', 'Ajouter une nouvelle famille d\'écrans à l\'évènement.' if admin_event.tournaments_by_id else 'Vous devez créer un tournoi avant de pouvoir créer des familles d\'écrans', 'top') }}>
+        <button
+                class="btn btn-primary text-nowrap"
+                hx-get="{{ url_for('admin-family-create-modal', event_uniq_id=admin_event.uniq_id) }}"
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait"
+                {% if not admin_event.tournaments_by_id %}
+                    disabled
+                {% endif %}
+        >
+            <i class="bi-plus-square-fill"></i> Créer une famille
+        </button>
+    </span>
+{% endblock %}
+
+{% block cards_container_cards %}
+    <div class="row">
+        {% if admin_event.families_by_id %}
+            {% for family in admin_event.families_by_id.values() %}
+                {% with
+                    card_class='bg-light',
+                    card_background_url=family.event.background_url,
+                    card_background_color=family.event.background_color
+                %}
+                    {% include 'admin_family_card.html' %}
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            <div class="col-12 mb-3">
+                Aucune famille d'écrans.
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

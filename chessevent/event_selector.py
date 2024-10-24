@@ -1,28 +1,30 @@
-from typing import List, Optional
 from logging import Logger
 
 from chessevent.action_selector import ActionSelector
-from common.papi_web_config import PapiWebConfig
-from common.singleton import singleton
+from common.exception import PapiWebException
 from common.logger import get_logger, print_interactive, input_interactive
-from data.event import Event, get_events_sorted_by_name
+from common.singleton import Singleton
+from data.event import Event
+from data.loader import EventLoader
 
 logger: Logger = get_logger()
 
 
-@singleton
-class EventSelector:
-    def __init__(self, config: PapiWebConfig):
+class EventSelector(metaclass=Singleton):
+    """The CLI interface to select an event."""
+    def __init__(self):
         self.__silent: bool = False
-        self.__config: PapiWebConfig = config
 
-    def run(self) -> bool:
-        events: List[Event] = get_events_sorted_by_name(False, with_tournaments_only=True)
-        self.__silent = True  # verbose on the first call only
+    @staticmethod
+    def run() -> bool:
+        """The CLI interface function for selection of an event.
+        Returns True if all went well (might be unreachable).
+        Returns False if interrupted or if the user choses to quit."""
+        events: list[Event] = EventLoader.get(request=None, lazy_load=True).events_sorted_by_name
         if not events:
             logger.error('Aucun évènement trouvé')
             return False
-        event_num: Optional[int] = None
+        event_num: int | None = None
         if len(events) == 1:
             event_num = 1
             if input_interactive('Un seul évènement trouvé, tapez Entrée pour continuer (Q pour quitter) ') == 'Q':
@@ -32,7 +34,7 @@ class EventSelector:
             event_range = range(1, len(events) + 1)
             for num in event_range:
                 event: Event = events[num - 1]
-                print_interactive(f'  - [{num}] {event.name} ({event.uniq_id}.ini)')
+                print_interactive(f'  - [{num}] {event.name} ({event.uniq_id})')
             print_interactive('  - [Q] Quitter')
             while event_num is None:
                 choice: str = input_interactive('Votre choix : ')
@@ -45,6 +47,9 @@ class EventSelector:
                 except ValueError:
                     pass
         event: Event = events[event_num - 1]
-        while ActionSelector(self.__config).run(event.uniq_id):
-            pass
+        try:
+            while ActionSelector().run(event.uniq_id):
+                pass
+        except PapiWebException as pwe:
+            logger.warning(pwe)
         return True

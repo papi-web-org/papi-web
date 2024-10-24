@@ -1,0 +1,36 @@
+{% from 'macros.j2' import tooltip_attributes, screen_type_icon, rotator_icon, modal_script, tooltip_script, background_script, copyright_script %}
+
+{% extends 'base.html' %}
+
+{% block header %}
+    <div id="user-header" class="header user-header position-sticky top-0 mx-2 border-bottom border-dark">
+        <div hx-ext="bs-tabs" class="bs-tabs">
+            <nav>
+                <div class="nav nav-tabs mt-1" id="nav-tab" role="tablist">
+                    {% block user_header_back_button %}
+                        USER_HEADER_BACK_BUTTON
+                    {% endblock user_header_back_button %}
+                    {% block user_header_refresher %}
+                        USER_HEADER_REFRESHER
+                    {% endblock user_header_refresher %}
+                    {% block user_header_nav %}
+                        USER_HEADER_NAV
+                    {% endblock user_header_nav %}
+                    {% include 'user_columns_buttons.html' %}
+                </div>
+            </nav>
+        </div>
+        {{ copyright_script(show=true) }}
+    </div>
+{% endblock header %}
+
+{% block content %}
+    <div id="user-content" class="content user-content tab-content border border-dark mx-2 p-3">
+        {% block user_content %}
+            USER_CONTENT
+        {% endblock user_content %}
+        {{ modal_script() }}
+        {{ tooltip_script() }}
+        {{ background_script(background_info) }}
+   </div>
+{% endblock content %}

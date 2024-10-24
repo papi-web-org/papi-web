@@ -1,0 +1,52 @@
+{% extends 'user_card.html' %}
+{% from 'macros.j2' import tooltip_attributes, rotator_visibility_icon, rotator_icon %}
+
+{% block card_header %}
+    {% if admin_auth %}
+        {{ rotator_visibility_icon(rotator) }}
+    {% endif %}
+    {{ rotator.uniq_id }}
+{% endblock %}
+
+{% block card_title %}
+    {{ rotator_icon() }}
+    {{ rotator.uniq_id }}
+{% endblock %}
+
+{% block card_text %}
+    <div>
+        Délai de rotation : {{ rotator.delay }} sec.
+    </div>
+    <div>
+        Menus des écrans : {% if rotator.show_menus %}Affichés{% else %}Cachés{% endif %}
+    </div>
+    <div class="mb-2">
+        {% if not rotator.families and not rotator.screens %}
+            Aucun écran ni famille à afficher.
+        {% else %}
+            {% if rotator.screens %}
+                {% if show_details_on_rotator_list %}
+                    <hr/>
+                {% endif %}
+                Écrans :
+                {% for screen in rotator.screens %}
+                    <div>
+                        {# screen_visibility_icon(screen, '') #} {{ screen_type_icon(screen.type, true) }} {{ screen.name }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% if rotator.families %}
+                {% if rotator.screens or show_details_on_rotator_list %}
+                    <hr/>
+                {% endif %}
+                Familles :
+                {% for family in rotator.families %}
+                    <div>
+                        {# family_visibility_icon(family, '') #} {{ screen_type_icon(family.type, true) }} {{ family.uniq_id }} {{ family.name }} ({{ family.screens_by_uniq_id|length }} écrans)
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endif %}
+    </div>
+{% endblock %}
+

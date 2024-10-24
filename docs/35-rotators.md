@@ -2,6 +2,9 @@
 
 # Papi-web - Écrans rotatifs
 
+> [!CAUTION]
+> Cette page décrivant la configuration au format INI des écrans rotatifs est obsolète et sera prochainement remplacée par un tutoriel.
+
 Avec la version 1 de Papi-web, les organisateurs s'appuyaient parfois sur des modules externes de navigateurs (Tab Rotate sur Chrome, Tab Rotator sur Firefox, ...) pour permettre une rotation de l'affichage entre plusieurs écrans.
 
 Cette fonctionnalité est intégrée nativement dans la version 2 de Papi-web grâce aux écrans rotatifs.

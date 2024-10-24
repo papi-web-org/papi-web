@@ -1,0 +1,43 @@
+{% from 'macros.j2' import tooltip_attributes, modal_script, tooltip_script, background_script %}
+
+{% extends 'base.html' %}
+
+{% block header %}
+    <div id="admin-header" class="header admin-header position-sticky top-0 mx-2 border-bottom border-dark">
+        <div hx-ext="bs-tabs" class="bs-tabs">
+            <nav>
+                <div class="nav nav-tabs mt-1" id="nav-tab" role="tablist">
+                    {% block admin_header_back_button %}
+                        ADMIN_HEADER_BACK_BUTTON
+                    {% endblock admin_header_back_button %}
+                    {% block admin_header_nav %}
+                        ADMIN_HEADER_NAV
+                    {% endblock admin_header_nav %}
+                    {% include 'admin_columns_buttons.html' %}
+                </div>
+            </nav>
+        </div>
+    </div>
+{% endblock header %}
+
+{% block content %}
+    <div id="admin-content" class="content admin-content tab-content border border-dark mx-2 p-3">
+        {% block admin_content %}
+            ADMIN_CONTENT
+        {% endblock admin_content %}
+        <div id="admin-modal-container"
+            class="modal modal-blur overflow-auto"
+            style="display: none"
+            aria-hidden="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false"
+            tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered d-block w-80 mw-100" role="document">
+                <div class="modal-content"></div>
+            </div>
+        </div>
+        {{ modal_script() }}
+        {{ tooltip_script() }}
+        {{ background_script(background_info) }}
+    </div>
+{% endblock content %}

@@ -1,0 +1,303 @@
+name: "37e open Fide de Domloup"
+start: "2024-08-24 00:00"
+stop: "2024-08-25 23:59"
+background_image: "FRA/BRE/35/F35043.png"
+background_color: "#e5f4ff"
+update_password: "mot_de_passe"
+record_illegal_moves: 0
+allow_results_deletion_on_input_screens: true
+chessevents:
+  domloup-fide-37:
+    user_id: "C69548"
+    password: "Find it!"
+    event_id: "BRE_35_domloupfide37"
+timers:
+  chronometre:
+    hours:
+      ouverture-pointage-sms:
+        date_str: "2024-08-24"
+        time_str: "08:00"
+        text_before: "Ouverture du pointage par SMS dans %s"
+        text_after: "Pointage par SMS ouvert depuis %s"
+      ouverture-pointage:
+        time_str: "08:45"
+        text_before: "Ouverture du pointage dans %s"
+        text_after: "Pointage ouvert depuis %s"
+      fermeture-pointage:
+        time_str: "09:15"
+        text_before: "Fermeture du pointage dans %s"
+        text_after: "Pointage fermé depuis %s"
+      1:
+        time_str: "09:30"
+      2:
+        time_str: "13:15"
+      3:
+        time_str: "16:30"
+      4:
+        date_str: "2024-08-25"
+        time_str: "09:30"
+      5:
+        time_str: "13:15"
+      remise-prix:
+        time_str: "16:30"
+        text_before: "Remise des prix dans %s"
+        text_after: "Remise des prix commencée depuis %s"
+tournaments:
+  A:
+    filename: "domloup-fide-37-a"
+    name: "Tournoi A"
+    ffe_id: 999990
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide-37"
+    chessevent_tournament_name: "Tournoi A"
+  B:
+    filename: "domloup-fide-37-b"
+    name: "Tournoi B"
+    ffe_id: 999991
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide-37"
+    chessevent_tournament_name: "Tournoi B"
+  C:
+    filename: "domloup-fide-37-c"
+    name: "Tournoi C"
+    ffe_id: 999992
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide-37"
+    chessevent_tournament_name: "Tournoi C"
+  D:
+    filename: "domloup-fide-37-d"
+    name: "Tournoi D"
+    ffe_id: 999993
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide-37"
+    chessevent_tournament_name: "Tournoi D"
+  E:
+    filename: "domloup-fide-37-e"
+    name: "Tournoi E"
+    ffe_id: 999994
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide-37"
+    chessevent_tournament_name: "Tournoi E"
+  F:
+    filename: "domloup-fide-37-f"
+    name: "Tournoi F"
+    ffe_id: 999995
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "domloup-fide-37"
+    chessevent_tournament_name: "Tournoi F"
+  X:
+    filename: "domloup-fide-37-x"
+    name: "Tournoi X"
+    chessevent_uniq_id: "domloup-fide-37"
+    chessevent_tournament_name: "Tournois par niveaux"
+screens:
+  affiche:
+    name: "Affiche"
+    type: "image"
+    background_image: "https://domloup.echecs35.fr/sites/domloup.echecs35.fr/files/domloup-fide-37-affiche.jpg"
+    background_color: "#ffffff"
+  saisie-A:
+    name: "Tournoi A"
+    type: "input"
+    menu_text: "Tournoi A"
+    menu: "@input"
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "A"
+  saisie-B:
+    name: "Tournoi B"
+    type: "input"
+    menu_text: "Tournoi B"
+    menu: "@input"
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "B"
+  saisie-C:
+    name: "Tournoi C"
+    type: "input"
+    menu_text: "Tournoi C"
+    menu: "@input"
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "C"
+  saisie-D:
+    name: "Tournoi D"
+    type: "input"
+    menu_text: "Tournoi D"
+    menu: "@input"
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "D"
+  saisie-E:
+    name: "Tournoi E"
+    type: "input"
+    menu_text: "Tournoi E"
+    menu: "@input"
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "E"
+  saisie-F:
+    name: "Tournoi F"
+    type: "input"
+    menu_text: "Tournoi F"
+    menu: "@input"
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "F"
+  affichage-2-AB:
+    name: "Tournois A et B"
+    type: "boards"
+    menu_link: false
+    menu:
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "A"
+      -
+        tournament_uniq_id: "B"
+  affichage-2-CD:
+    name: "Tournois C et D"
+    type: "boards"
+    menu_link: false
+    menu:
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "C"
+      -
+        tournament_uniq_id: "D"
+  affichage-2-EF:
+    name: "Tournois E et F"
+    type: "boards"
+    menu_link: false
+    menu:
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "E"
+      -
+        tournament_uniq_id: "F"
+  affichage-3-ABC:
+    name: "Tournois A, B et C"
+    type: "boards"
+    menu_link: false
+    menu:
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "A"
+      -
+        tournament_uniq_id: "B"
+      -
+        tournament_uniq_id: "C"
+  affichage-3-DEF:
+    name: "Tournois D, E et F"
+    type: "boards"
+    menu_link: false
+    menu:
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "D"
+      -
+        tournament_uniq_id: "E"
+      -
+        tournament_uniq_id: "F"
+  joueurs-A:
+    name: "Tournoi A"
+    type: "players"
+    menu_link: false
+    menu:
+    timer_uniq_id: "chronometre"
+    players_show_unpaired: true
+    sets:
+      -
+        tournament_uniq_id: "A"
+  joueurs-B:
+    name: "Tournoi B"
+    type: "players"
+    menu_link: false
+    menu:
+    timer_uniq_id: "chronometre"
+    players_show_unpaired: true
+    sets:
+      -
+        tournament_uniq_id: "B"
+  joueurs-C:
+    name: "Tournoi C"
+    type: "players"
+    menu_link: false
+    menu:
+    timer_uniq_id: "chronometre"
+    players_show_unpaired: true
+    sets:
+      -
+        tournament_uniq_id: "C"
+  joueurs-D:
+    name: "Tournoi D"
+    type: "players"
+    menu_link: false
+    menu:
+    timer_uniq_id: "chronometre"
+    players_show_unpaired: true
+    sets:
+      -
+        tournament_uniq_id: "D"
+  joueurs-E:
+    name: "Tournoi E"
+    type: "players"
+    menu_link: false
+    menu:
+    timer_uniq_id: "chronometre"
+    players_show_unpaired: true
+    sets:
+      -
+        tournament_uniq_id: "E"
+  joueurs-F:
+    name: "Tournoi F"
+    type: "players"
+    menu_link: false
+    menu:
+    timer_uniq_id: "chronometre"
+    players_show_unpaired: true
+    sets:
+      -
+        tournament_uniq_id: "F"
+  resultats:
+    type: "results"
+    timer_uniq_id: "chronometre"
+    results_limit: 20
+  resultats-ABC:
+    type: "results"
+    name: "Derniers résultats tournois A, B et C"
+    timer_uniq_id: "chronometre"
+    results_limit: 20
+    results_tournament_uniq_ids:
+      - "A"
+      - "B"
+      - "C"
+  resultats-DEF:
+    type: "results"
+    name: "Derniers résultats tournois D, E et F"
+    timer_uniq_id: "chronometre"
+    results_limit: 20
+    results_tournament_uniq_ids:
+      - "D"
+      - "E"
+      - "F"
+rotators:
+  affichage-3:
+    screen_uniq_ids:
+      - "affichage-3-ABC"
+      - "affichage-3-DEF"
+  affichage-2:
+    screen_uniq_ids:
+      - "affichage-2-AB"
+      - "affichage-2-CD"
+      - "affichage-2-EF"

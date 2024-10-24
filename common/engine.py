@@ -10,15 +10,18 @@ from packaging.version import Version
 from requests import Response, get
 from requests.exceptions import ConnectionError, Timeout, RequestException, \
     HTTPError  # pylint: disable=redefined-builtin
-from common.config_reader import TMP_DIR
-from common.papi_web_config import PapiWebConfig, PAPI_WEB_VERSION
+from common.papi_web_config import PapiWebConfig, TMP_DIR
 from common.logger import get_logger, configure_logger
+from data.loader import EventLoader
+from database.sqlite import EventDatabase
 
 logger: Logger = get_logger()
 configure_logger(logging.INFO)
 
 
 class Engine:
+    """Base class for both ChessEvent, FFE and web server engines."""
+
     def __init__(self):
         try:
             TMP_DIR.mkdir(parents=True, exist_ok=True)
@@ -26,29 +29,37 @@ class Engine:
             logger.critical(f'Impossible de créer le répertoire {TMP_DIR.absolute()} :-(')
             raise pe
         logger.info('Reading configuration file...')
-        self._config = PapiWebConfig()
         self._check_version()
+        if not EventLoader.get(request=None, lazy_load=True).event_uniq_ids:
+            logger.info('Aucune base de données trouvée, création des bases de données d\'exemple')
+            for event_id in (
+                file.stem for file in PapiWebConfig.database_yml_path.glob(f'*.{PapiWebConfig.yml_ext}')
+            ):
+                EventDatabase(event_id).create(populate=True)
 
     def _check_version(self):
+        """Compares the current version with the last available stable version
+        on the Papi-web GitHub repository.
+        If a new stable version is available, inform the user."""
         last_stable_version: Version | None = self._get_last_stable_version()
         if not last_stable_version:
             logger.warning('La vérification de la version a échoué')
             return
-        if last_stable_version == PAPI_WEB_VERSION:
+        if last_stable_version == PapiWebConfig.version:
             logger.info('Votre version de Papi-web est à jour')
             return
         last_stable_matches = re.match(
             r'^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$', str(last_stable_version))
-        if re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$', str(PAPI_WEB_VERSION)):
-            if last_stable_version > PAPI_WEB_VERSION:
+        if re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)$', str(PapiWebConfig.version)):
+            if last_stable_version > PapiWebConfig.version:
                 logger.warning('Une version plus récente que la vôtre est disponible (%s)',
                                last_stable_version)
             else:
                 logger.warning('Vous utilisez une version plus récente que la dernière version stable disponible, '
                                'vous ne seriez pas développeur des fois ?')
             return
-        if not (matches := re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)rc(?P<rc>\d+)$', str(PAPI_WEB_VERSION))):
-            raise ValueError(f'Version de Papi-web invalide [{str(PAPI_WEB_VERSION)}]')
+        if not (matches := re.match(r'^(?P<major>\d+)\.(?P<minor>\d+)rc(?P<rc>\d+)$', str(PapiWebConfig.version))):
+            raise ValueError(f'Version de Papi-web invalide [{str(PapiWebConfig.version)}]')
         if last_stable_matches.group('major') > matches.group('major'):
             logger.warning('Une version majeure plus récente que la vôtre est disponible (%s)',
                            last_stable_version)
@@ -62,6 +73,10 @@ class Engine:
 
     @staticmethod
     def _get_last_stable_version() -> Version | None:
+        """Retrieves the available versions from the Papi-web GitHub
+        repository.
+        If an error occurred, returns None.
+        Otherwise, the last stable version is returned."""
         url: str = 'https://api.github.com/repos/papi-web-org/papi-web/releases'
         try:
             logger.debug('Recherche d\'une version plus récente sur GitHub (%s)...', url)

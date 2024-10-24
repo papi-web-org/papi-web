@@ -10,9 +10,6 @@ from common.logger import get_logger
 
 logger: Logger = get_logger()
 
-DEFAULT_RECORD_ILLEGAL_MOVES_ENABLE: bool = False
-DEFAULT_RECORD_ILLEGAL_MOVES_NUMBER: int = 2
-
 
 try:
     import itertools
@@ -60,6 +57,8 @@ class Result(IntEnum):
 
     @classmethod
     def from_papi_value(cls, value: int) -> Self:
+        """Create a `Result` instance from the stored value in the
+        Papi database."""
         match value:
             case 0:
                 return cls.NOT_PAIRED
@@ -87,6 +86,7 @@ class Result(IntEnum):
         """
         The default value in points, according to FIDE rules, with a
         full-point Pairing Allocated Bye.
+        Assumes a 0-0.5-1 scoring system.
         """
         match self:
             case Result.NOT_PAIRED | Result.LOSS | Result.FORFEIT_LOSS | Result.DOUBLE_FORFEIT:
@@ -112,6 +112,9 @@ class Result(IntEnum):
 
         >>> Result.NOT_PAIRED.opposite_result == Result.NOT_PAIRED
         True
+
+        >>> Result.DOUBLE_FORFEIT.opposite_result == Result.DOUBLE_FORFEIT
+        True
         """
         match self:
             case Result.LOSS:
@@ -132,8 +135,10 @@ class Result(IntEnum):
                 raise ValueError(f"Unknown value: {self}")
 
     @classmethod
-    def imputable_results(cls) -> tuple[Self, Self, Self]:
-        return cls.GAIN, cls.DRAW_OR_HPB, cls.LOSS
+    def imputable_results(cls) -> tuple[Self, Self, Self, Self, Self, Self]:
+        """Imputable results are the ones that a player can
+        input by themselves, namely a win, a draw, or a loss or forfeits."""
+        return cls.GAIN, cls.DRAW_OR_HPB, cls.LOSS, cls.PAB_OR_FORFEIT_GAIN_OR_FPB, cls.FORFEIT_LOSS, cls.DOUBLE_FORFEIT
 
 
 class TournamentType(IntEnum):
@@ -175,6 +180,7 @@ class TournamentType(IntEnum):
 
 
 class TournamentRating(IntEnum):
+    """A wrapper around the tournament rating used stored in the papi db."""
     UNKNOWN = 0
     STANDARD = 1
     RAPID = 2
@@ -245,12 +251,7 @@ class TournamentRating(IntEnum):
 class TournamentPairing(IntEnum):
     """An enumeration representing the supported types of tournament
     pairings.
-    Currently, only Swiss Dutch, along with several accelerations, are supported.
-    A project for Berger-paired tournaments is in the TODO list."""
-    # NOTE(PA) never thought of it because Berger-paired tournaments can be managed in Papi by
-    # Berger-pairing all the rounds and setting the pairing-type back to Swiss in the end.
-    # NOTE(Amaras) Based on your remark, this sounds like a bad API design which
-    # is why I thought about doing something to make it better.
+    Swiss Dutch with acceleration and Berger-table tournaments are supported."""
     UNKNOWN = 0
     STANDARD = 1
     HALEY = 2
@@ -650,7 +651,8 @@ class PlayerRatingType(IntEnum):
 
 class PlayerTitle(IntEnum):
     """The possible FIDE titles: GM, WGM, IM, WIM, FM, WFM.
-    Also includes the "no title" case, but does not include CM nor WCM."""
+    Also includes the "no title" case, but does not include CM nor WCM.
+    This is for Papi-compatibility reasons."""
     GRANDMASTER = 6
     WOMAN_GRANDMASTER = 5
     INTERNATIONAL_MASTER = 4
@@ -740,35 +742,72 @@ class Color(StrEnum):
 
 class ScreenType(StrEnum):
     Boards = auto()
+    Input = auto()
     Players = auto()
     Results = auto()
+    Image = auto()
 
     def __str__(self) -> str:
         match self:
             case ScreenType.Boards:
-                return "Appariements par table"
+                return "Échiquiers"
+            case ScreenType.Input:
+                return "Saisie"
             case ScreenType.Players:
-                return "Appariements par joueur.euse"
+                return "Appariements"
             case ScreenType.Results:
                 return "Résultats"
+            case ScreenType.Image:
+                return "Image"
             case _:
-                raise ValueError
+                raise ValueError(f'Invalid screen type: {self}')
 
     @classmethod
-    def from_str(cls, value) -> Self:
+    def from_str(cls, value: str) -> Self:
         match value:
             case 'boards':
                 return cls.Boards
+            case 'input':
+                return cls.Input
             case 'players':
                 return cls.Players
             case 'results':
                 return cls.Results
+            case 'image':
+                return cls.Image
             case _:
-                raise ValueError(f'Invalid board type: {value}')
+                raise ValueError(f'Invalid screen type: {value}')
 
-    @classmethod
-    def names(cls) -> list[str]:
-        return [member.value for member in iter(cls)]
+    def to_str(self) -> Self:
+        match self:
+            case self.Boards:
+                return 'boards'
+            case self.Input:
+                return 'input'
+            case self.Players:
+                return 'players'
+            case self.Results:
+                return 'results'
+            case self.Image:
+                return 'image'
+            case _:
+                raise ValueError(f'Invalid screen type: {self}')
+
+    @property
+    def icon_str(self) -> str:
+        match self:
+            case self.Boards:
+                return 'bi-card-list'
+            case self.Input:
+                return 'bi-pencil-fill'
+            case self.Players:
+                return 'bi-people-fill'
+            case self.Results:
+                return 'bi-trophy-fill'
+            case self.Image:
+                return 'bi-image'
+            case _:
+                raise ValueError(f'Invalid screen type: {self}')
 
 
 class NeedsUpload(Enum):

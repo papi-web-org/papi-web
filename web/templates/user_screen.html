@@ -1,0 +1,114 @@
+{% from 'macros.j2' import modal_script, tooltip_script, background_script, copyright_script %}
+
+{% extends 'base.html' %}
+
+{% block header %}
+    <div id="user-screen-header" class="header user-header user-screen-header">
+        <button
+                id="user-screen-exit-button"
+                class="btn btn-secondary position-fixed bottom-0 end-0 me-2 mb-2"
+                hx-get="{{ url_for('user-event-tab', event_uniq_id=user_event.uniq_id, user_event_tab=user_event_tab) }}"
+                hx-target="body"
+                hx-indicator="#please-wait">
+            <i class="bi-x-circle-fill"></i>
+        </button>
+        <script>
+            {% if screen.timer %}
+                {% if not screen.timer.error %}
+                    <!-- user_timer.js -->
+                    {% include 'user_timer.js' %}
+                {% endif %}
+            {% endif %}
+        </script>
+        {% if screen.menu_screens and (not rotator or rotator.show_menus) %}
+            <div id="#screen-menu" class="screen-menu text-start w-100 m-0 p-2 fw-bold">
+                {% for entry in screen.menu_screens %}
+                    {% if entry.menu_label is not none %}
+                        <a
+                                class="screen-menu-item cursor-pointer text-nowrap py-0 px-1 my-0 {% if loop.first %}ms-0{% else %}ms-1{% endif %} {% if loop.last %}me-0{% else %}me-1{% endif %} {% if screen.uniq_id == entry.uniq_id %}selected{% endif %}"
+                                hx-get="{{ url_for('user-screen', event_uniq_id=user_event.uniq_id, screen_uniq_id=entry.uniq_id) }}"
+                                hx-target="body"
+                                hx-indicator="#please-wait"
+                        >{{ entry.menu_label }}</a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if screen.timer %}
+            <!-- user_timer.html -->
+            {% include 'user_timer.html' %}
+        {% endif %}
+        {% if rotator %}
+            <div
+                    class="rotator-refresher"
+                    hx-get="{{ url_for('user-rotator', event_uniq_id=user_event.uniq_id, rotator_id=rotator.id, rotator_screen_index=rotator_screen_index) }}"
+                    hx-target="body"
+                    hx-trigger="every {{ rotator.delay }}s"
+                    hx-indicator="#please-wait"
+            ></div>
+        {% else %}
+            <div
+                    class="refresher screen-refresher"
+                    hx-headers='{"If-Modified-Since": "{{ now_http_date }}"}'
+                    hx-get="{{ url_for('user-screen', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id) }}"
+                    hx-target="body"
+                    hx-trigger="every {{ papi_web_config.user_screen_update_delay }}s queue:none"
+                    hx-indicator="#please-wait"
+            ></div>
+        {% endif %}
+        {{ copyright_script(show=screen.type != 'image') }}
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div id="user-screen-content" class="content user-content user-screen-content">
+        {% if screen.type == 'boards' %}
+            <div class="screen boards-screen">
+                {% for screen_set in screen.screen_sets_sorted_by_order %}
+                    {% include 'user_boards_screen_set.html' %}
+                {% endfor %}
+            </div>
+        {% elif screen.type == 'input' %}
+            <div class="screen input-screen">
+                {% include 'user_login_modal.html' %}
+                {% for screen_set in screen.screen_sets_sorted_by_order %}
+                    {% include 'user_boards_screen_set.html' %}
+                {% endfor %}
+                <div id="user-modal-container"
+                    class="modal modal-blur overflow-auto"
+                    style="display: none"
+                    aria-hidden="true"
+                    data-bs-backdrop="static"
+                    data-bs-keyboard="false"
+                    tabindex="-1">
+                    {% if board %}
+                        {% include 'user_input_screen_board_result_modal.html' %}
+                    {% endif %}
+                </div>
+                {% if board %}
+                    <script>
+                        $('#user-modal-container').modal('show');
+                        $('body').css('padding-right', '0');
+                    </script>
+                {% endif %}
+            </div>
+        {% elif screen.type == 'players' %}
+            <div class="screen players-screen">
+                {% for screen_set in screen.screen_sets_sorted_by_order %}
+                    {% include 'user_players_screen_set.html' %}
+                {% endfor %}
+            </div>
+        {% elif screen.type == 'results' %}
+            <div class="screen results-screen">
+                {% include 'user_results_screen.html' %}
+            </div>
+        {% elif screen.type == 'image' %}
+            <div
+                    class="screen image-screen position-absolute top-0 bottom-0 start-0 end-0 border border-black"
+                    style="background-image: url('{{ screen.image }}');"
+            ></div>
+        {% endif %}
+        {{ tooltip_script() }}
+        {{ background_script(background_info) }}
+    </div>
+{% endblock content %}

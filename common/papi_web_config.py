@@ -1,9 +1,8 @@
 import logging
-import os
 import re
 import socket
-from pathlib import Path
 from logging import Logger
+from pathlib import Path
 
 import jinja2
 import litestar
@@ -11,23 +10,13 @@ import pyodbc
 import uvicorn
 from packaging.version import Version
 
-from common.singleton import singleton
-from common.config_reader import ConfigReader, TMP_DIR
+from common.config_reader import ConfigReader
 from common.logger import get_logger, configure_logger
+from common.singleton import Singleton
 
 logger: Logger = get_logger()
 
-PAPI_WEB_VERSION: Version = Version('2.4rc3')
-
-BOOTSTRAP_VERSION: Version = Version('5.3.3')
-JQUERY_VERSION: Version = Version('3.7.1')
-HTMX_VERSION: Version = Version('1.9.12')
-BOOTSTRAP_ICONS_VERSION: Version = Version('1.11.3')
-
-
-PAPI_WEB_URL = 'https://github.com/papi-web-org/papi-web'
-
-PAPI_WEB_COPYRIGHT: str = '© Pascal AUBRY 2013-2024'
+TMP_DIR: Path = Path('tmp')
 
 CONFIG_FILE: Path = Path('papi-web.ini')
 
@@ -39,10 +28,17 @@ DEFAULT_FFE_UPLOAD_DELAY: int = 180
 MIN_FFE_UPLOAD_DELAY: int = 60
 
 
-@singleton
-class PapiWebConfig:
+class PapiWebConfig(metaclass=Singleton):
+    """The configuration for the application.
+    Only 5 properties can be configured:
+        1. The logging level
+        2. The web host IP
+        3. The web port
+        4. Whether a browser window opens
+        5. The delay between FFE uploads."""
+
     def __init__(self):
-        self.reader = ConfigReader(CONFIG_FILE, TMP_DIR / 'config' / f'papi-web.ini.{os.getpid()}.read', silent=False)
+        self.reader = ConfigReader(CONFIG_FILE)
         self.__log_level: int | None = None
         self.__web_host: str | None = None
         self.__web_port: int | None = None
@@ -163,49 +159,51 @@ class PapiWebConfig:
     def ffe_upload_delay(self) -> int:
         return self.__ffe_upload_delay
 
-    @property
-    def version(self) -> Version:
-        return PAPI_WEB_VERSION
+    version: Version = Version('2.4rc11')
 
-    @property
-    def url(self) -> str:
-        return PAPI_WEB_URL
+    url: str = 'https://github.com/papi-web-org/papi-web'
 
-    @property
-    def copyright(self) -> str:
-        return PAPI_WEB_COPYRIGHT
+    copyright: str = '© Pascal AUBRY 2013-2024'
 
-    @property
-    def litestar_version(self) -> Version:
-        return litestar.__version__.formatted(short=True)
+    event_path: Path = Path() / 'events'
 
-    @property
-    def jinja2_version(self) -> Version:
-        return jinja2.__version__
+    event_ext: str = 'db'
 
-    @property
-    def uvicorn_version(self) -> Version:
-        return uvicorn.__version__
+    arch_ext: str = 'arch'
 
-    @property
-    def pyodbc_version(self) -> Version:
-        return Version(pyodbc.version)
+    custom_path: Path = Path().absolute() / 'custom'
 
-    @property
-    def bootstrap_version(self) -> Version:
-        return BOOTSTRAP_VERSION
+    default_papi_path: Path = Path() / 'papi'
 
-    @property
-    def bootstrap_icons_version(self) -> Version:
-        return BOOTSTRAP_ICONS_VERSION
+    papi_ext: str = 'papi'
 
-    @property
-    def htmx_version(self) -> Version:
-        return HTMX_VERSION
+    _database_path: Path = Path(__file__).resolve().parent / '..' / 'database'
 
-    @property
-    def jquery_version(self) -> Version:
-        return JQUERY_VERSION
+    database_sql_path: Path = _database_path / 'sql'
+
+    database_yml_path: Path = _database_path / 'yml'
+
+    yml_ext: str = 'yml'
+
+    litestar_version: Version = litestar.__version__.formatted(short=True)
+
+    jinja2_version: Version = jinja2.__version__
+
+    uvicorn_version: Version = uvicorn.__version__
+
+    pyodbc_version: Version = Version(pyodbc.version)
+
+    bootstrap_version: Version = Version('5.3.3')
+
+    bootstrap_icons_version: Version = Version('1.11.3')
+
+    htmx_version: Version = Version('1.9.12')
+
+    jquery_version: Version = Version('3.7.1')
+
+    sortable_version: Version = Version('1.15.2')
+
+    jstree_version: Version = Version('3.3.17')
 
     def __url(self, ip: str | None) -> str | None:
         if ip is None:
@@ -239,3 +237,81 @@ class PapiWebConfig:
     @property
     def local_url(self) -> str:
         return self.__url(self.local_ip)
+
+    default_record_illegal_moves_number: int = 0
+
+    default_allow_results_deletion_on_input_screens: bool = False
+
+    default_timer_colors: dict[int, str] = {
+            1: '#00FF00',
+            2: '#FF7700',
+            3: '#FF0000',
+        }
+
+    default_timer_delays: dict[int, int] = {
+            1: 15,
+            2: 5,
+            3: 10,
+        }
+
+    default_players_show_unpaired: bool = True
+
+    default_rotator_delay: int = 15
+
+    default_rotator_show_menus: bool = False
+
+    default_timer_round_text_before: str = 'Début de la ronde {} dans %s'
+
+    default_timer_round_text_after: str = 'Ronde {} commencée depuis %s'
+
+    user_index_update_delay: int = 10
+
+    user_event_update_delay: int = 10
+
+    user_screen_update_delay: int = 10
+
+    user_screen_set_update_delay: int = 10
+
+    allowed_columns: list[int] = [1, 2, 3, 4, 6]
+
+    default_columns: int = 4
+
+    default_background_image: str = '/static/images/papi-web-background.png'
+
+    error_background_image: str = '/static/images/papi-web-error.png'
+
+    default_background_color: str = '#e9ecef'
+
+    admin_background_color: str = '#dbcdff'
+
+    user_background_color: str = default_background_color
+
+    @staticmethod
+    def default_boards_screen_menu_text(single_tournament: bool, first_last: bool) -> str:
+        if single_tournament:
+            if first_last:
+                return 'Éch. %f-%l'
+            else:
+                return 'Par échiquier'
+        else:
+            if first_last:
+                return '%t [Éch. %f-%l]'
+            else:
+                return '%t (par échiquier)'
+
+    @staticmethod
+    def default_players_screen_menu_text(single_tournament: bool, first_last: bool) -> str:
+        if single_tournament:
+            if first_last:
+                return '%f-%l'
+            else:
+                return 'Par ordre alpha.'
+        else:
+            if first_last:
+                return '%t [Éch. %f-%l]'
+            else:
+                return '%t (par ordre alpha.)'
+
+    default_results_screen_menu_text: str = 'Derniers résultats'
+
+    chessevent_download_url: str = 'https://chessevent.echecs-bretagne.fr/download'

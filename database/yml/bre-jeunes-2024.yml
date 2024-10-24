@@ -1,0 +1,335 @@
+name: "Championnat de Bretagne jeunes 2024"
+start: "2024-03-07 00:00"
+stop: "2024-03-10 23:59"
+background_image: "FRA/BRE/BRE.png"
+background_color: "#dbf1ff"
+chessevents:
+  bre-jeunes-2024:
+    user_id: lbe
+    password: "Find it!"
+    event_id: "BRE_35_BretagneJeunes2024"
+timers:
+  grands:
+    hours:
+      pointage:
+        date_str: "2024-03-07"
+        time_str: "08:30"
+        text_before: "Fin du pointage des grands dans %s"
+        text_after: "Pointage des grands fini depuis %s"
+      1:
+        time_str: "09:00"
+      2:
+        time_str: "14:30"
+      3:
+        date_str: "2024-03-08"
+        time_str: "08:30"
+      4:
+        time_str: "14:00"
+      5:
+        date_str: "2024-03-09"
+        time_str: "08:30"
+      6:
+        time_str: "14:00"
+      7:
+        date_str: "2024-03-10"
+        time_str: "08:30"
+      remise-des-prix:
+        time_str: "14:30"
+        text_before: "Remise des prix dans %s"
+        text_after: "Remise des prix commencée depuis %s"
+  petits:
+    hours:
+      pointage:
+        date_str: "2024-03-08"
+        time_str: "13:00"
+        text_before: "Fin du pointage des petits dans %s"
+        text_after: "Pointage des petits fini depuis %s"
+      1:
+        time_str: "14:00"
+      2:
+        time_str: "16:30"
+      3:
+        date_str: "2024-03-09"
+        time_str: "10:30"
+      4:
+        time_str: "14:00"
+      5:
+        time_str: "16:30"
+      6:
+        date_str: "2024-03-10"
+        time_str: "08:00"
+      7:
+        time_str: "10:30"
+      remise-des-prix:
+        time_str: "14:30"
+        text_before: "Remise des prix dans %s"
+        text_after: "Remise des prix commencée depuis %s"
+tournaments:
+  U08:
+    filename: "bre-jeunes-2024-u08"
+    name: "Tournoi U08"
+    ffe_id: 62486
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "bre-jeunes-2024"
+    chessevent_tournament_name: "Tournoi U08"
+  U10:
+    filename: "bre-jeunes-2024-u10"
+    name: "Tournoi U10"
+    ffe_id: 62487
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "bre-jeunes-2024"
+    chessevent_tournament_name: "Tournoi U12"
+  U12:
+    filename: "bre-jeunes-2024-u12"
+    name: "Tournoi U12"
+    ffe_id: 62488
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "bre-jeunes-2024"
+    chessevent_tournament_name: "Tournoi U12"
+  U14:
+    filename: "bre-jeunes-2024-u14"
+    name: "Tournoi U14"
+    ffe_id: 62489
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "bre-jeunes-2024"
+    chessevent_tournament_name: "Tournoi U14"
+  U16:
+    filename: "bre-jeunes-2024-u16"
+    name: "Tournoi U16"
+    ffe_id: 62490
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "bre-jeunes-2024"
+    chessevent_tournament_name: "Tournoi U16"
+  open-a:
+    filename: "bre-jeunes-2024-open-a"
+    name: "Open A"
+    ffe_id: 62487
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "bre-jeunes-2024"
+    chessevent_tournament_name: "Open A"
+  open-b:
+    filename: "bre-jeunes-2024-open-b"
+    name: "Open B"
+    ffe_id: 62492
+    ffe_password: "ABCDEFGHIJ"
+    chessevent_uniq_id: "bre-jeunes-2024"
+    chessevent_tournament_name: "Open B"
+screens:
+  affichage-petits-u08:
+    type: "boards"
+    menu: "affichage-petits-*"
+    menu_text: "U08"
+    timer_uniq_id: "petits"
+    sets:
+      -
+        tournament_uniq_id: "U08"
+  affichage-petits-u10:
+    type: "boards"
+    menu: "affichage-petits-*"
+    menu_text: "U10"
+    timer_uniq_id: "petits"
+    sets:
+      -
+        tournament_uniq_id: "U10"
+  affichage-petits-open-b:
+    type: "boards"
+    menu: "affichage-petits-*"
+    menu_text: "Open B"
+    timer_uniq_id: "petits"
+    sets:
+      -
+        tournament_uniq_id: "open-b"
+  affichage-petits:
+    type: "boards"
+    timer_uniq_id: "petits"
+    columns: 2
+    sets:
+      -
+        tournament_uniq_id: "U08"
+      -
+        tournament_uniq_id: "U10"
+      -
+        tournament_uniq_id: "open-b"
+  affichage-grands-u12:
+    type: "boards"
+    menu: "affichage-grands-*"
+    menu_text: "U12"
+    timer_uniq_id: "grands"
+    sets:
+      -
+        tournament_uniq_id: "U12"
+  affichage-grands-u14:
+    type: "boards"
+    menu: "affichage-grands-*"
+    menu_text: "U14"
+    timer_uniq_id: "grands"
+    sets:
+      -
+        tournament_uniq_id: "U14"
+  affichage-grands-u16:
+    type: "boards"
+    menu: "affichage-grands-*"
+    menu_text: "U16"
+    timer_uniq_id: "grands"
+    sets:
+      -
+        tournament_uniq_id: "U16"
+  affichage-grands-open-a:
+    type: "boards"
+    menu: "affichage-grands-*"
+    menu_text: "Open A"
+    timer_uniq_id: "grands"
+    sets:
+      -
+        tournament_uniq_id: "open-a"
+  affichage-grands:
+    type: "boards"
+    timer_uniq_id: "grands"
+    columns: 2
+    sets:
+      -
+        tournament_uniq_id: "U12"
+      -
+        tournament_uniq_id: "U14"
+      -
+        tournament_uniq_id: "U16"
+      -
+        tournament_uniq_id: "open-a"
+  affichage-tous:
+    public: false
+    type: "boards"
+    timer_uniq_id: "grands"
+    columns: 4
+    sets:
+      -
+        tournament_uniq_id: "U08"
+      -
+        tournament_uniq_id: "U10"
+      -
+        tournament_uniq_id: "open-b"
+      -
+        tournament_uniq_id: "U12"
+      -
+        tournament_uniq_id: "U14"
+      -
+        tournament_uniq_id: "U16"
+      -
+        tournament_uniq_id: "open-a"
+  saisie-petits-u08:
+    type: "input"
+    menu: "saisie-petits-*"
+    menu_text: "U08"
+    timer_uniq_id: "petits"
+    sets:
+      -
+        tournament_uniq_id: "U08"
+  saisie-petits-u10:
+    type: "input"
+    menu: "saisie-petits-*"
+    menu_text: "U10"
+    timer_uniq_id: "petits"
+    sets:
+      -
+        tournament_uniq_id: "U10"
+  saisie-petits-open-b:
+    type: "input"
+    menu: "saisie-petits-*"
+    menu_text: "Open B"
+    timer_uniq_id: "petits"
+    sets:
+      -
+        tournament_uniq_id: "open-b"
+  saisie-grands-u12:
+    type: "input"
+    menu: "saisie-grands-*"
+    menu_text: "U12"
+    timer_uniq_id: "grands"
+    sets:
+      -
+        tournament_uniq_id: "U12"
+  saisie-grands-u14:
+    type: "input"
+    menu: "saisie-grands-*"
+    menu_text: "U14"
+    timer_uniq_id: "grands"
+    sets:
+      -
+        tournament_uniq_id: "U14"
+  saisie-grands-u16:
+    type: "input"
+    menu: "saisie-grands-*"
+    menu_text: "U16"
+    timer_uniq_id: "grands"
+    sets:
+      -
+        tournament_uniq_id: "U16"
+  saisie-grands-open-a:
+    type: "input"
+    menu: "saisie-grands-*"
+    menu_text: "Open A"
+    timer_uniq_id: "grands"
+    sets:
+      -
+        tournament_uniq_id: "open-a"
+  resultats-petits:
+    type: "results"
+    timer_uniq_id: "petits"
+    sets:
+      -
+        tournament_uniq_id: "U08"
+      -
+        tournament_uniq_id: "U10"
+      -
+        tournament_uniq_id: "open-b"
+  resultats-grands:
+    type: "results"
+    timer_uniq_id: "grands"
+    sets:
+      -
+        tournament_uniq_id: "U12"
+      -
+        tournament_uniq_id: "U14"
+      -
+        tournament_uniq_id: "U16"
+      -
+        tournament_uniq_id: "open-a"
+  resultats-tous:
+    type: "results"
+    results_limit: 30
+    sets:
+      -
+        tournament_uniq_id: "U08"
+      -
+        tournament_uniq_id: "U10"
+      -
+        tournament_uniq_id: "open-b"
+      -
+        tournament_uniq_id: "U12"
+      -
+        tournament_uniq_id: "U14"
+      -
+        tournament_uniq_id: "U16"
+      -
+        tournament_uniq_id: "open-a"
+rotators:
+  grands:
+    screen_uniq_ids:
+      - "affichage-grands-u12"
+      - "affichage-grands-u14"
+      - "affichage-grands-u16"
+      - "affichage-grands-open-a"
+  petits:
+    screen_uniq_ids:
+      - "affichage-petits-u08"
+      - "affichage-petits-u10"
+      - "affichage-petits-open-b"
+  tous:
+    screen_uniq_ids:
+      - "affichage-petits-u08"
+      - "affichage-petits-u10"
+      - "affichage-petits-open-b"
+      - "affichage-grands-u12"
+      - "affichage-grands-u14"
+      - "affichage-grands-u16"
+      - "affichage-grands-open-a"
+    delay: 20

@@ -1,201 +1,115 @@
-<div class="row">
-    <div class="col-10">
-        <h1>
-            <button
-                    class="btn btn-sm btn-primary"
-                    role="button"
-                    hx-post="{{ url_for('admin-update-header') }}"
-                    hx-vals='{"admin_main_selector": "@events"}'
-                    hx-swap="multi:#admin-header,#admin-content"
-                    hx-indicator="#please-wait">
-                <i class="bi-caret-left-square-fill"></i>
-            </button>
-            {{ admin_event.name }} - Configuration
-            <button
-                    class="btn btn-primary"
-                    hx-post="{{ url_for('admin-event-render-edit-modal') }}"
-                    hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
-                    hx-target="#admin-modal-container"
-                    hx-swap="innerHTML"
-                    data-bs-toggle="modal"
-                    data-bs-target="#admin-modal-container"
-                    hx-indicator="#please-wait">
-                <i class="bi-pencil-fill"></i> Modifier l'évènement
-            </button>
-        </h1>
+{% from 'macros.j2' import event_visibility_icon %}
+<div class="row mb-2">
+    <div class="col-auto fs-3 fw-bold">
+        {{ event_visibility_icon(admin_event, '') }}
+        {{ admin_event.name }}
     </div>
-    <div class="col-2 d-flex justify-content-end">
-        <h1>
-            <button
-                    class="btn btn-danger"
-                    hx-post="{{ url_for('admin-event-render-delete-modal') }}"
-                    hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
-                    hx-target="#admin-modal-container"
-                    hx-swap="innerHTML"
-                    data-bs-toggle="modal"
-                    data-bs-target="#admin-modal-container"
-                    hx-indicator="#please-wait">
-                <i class="bi-trash-fill"></i> Supprimer l'évènement
-            </button>
-        </h1>
+    <div class="col text-end fs-3">
+        <button
+                class="btn btn-primary text-nowrap ms-1"
+                hx-get="{{ url_for('admin-event-modal', action='update', event_uniq_id=admin_event.uniq_id) }}"
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait">
+            <i class="bi-pencil-fill"></i> Éditer
+        </button>
+        <button
+                class="btn btn-primary text-nowrap ms-1"
+                hx-get="{{ url_for('admin-event-modal', action='clone', event_uniq_id=admin_event.uniq_id) }}"
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait">
+            <i class="bi-copy"></i> Dupliquer
+        </button>
+        <button
+                class="btn btn-danger text-nowrap ms-1"
+                hx-get="{{ url_for('admin-event-modal', action='delete', event_uniq_id=admin_event.uniq_id) }}"
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait">
+            <i class="bi-trash-fill"></i> Supprimer
+        </button>
     </div>
 </div>
 
-<table class="table border-black">
-    <thead class="table-dark">
+<table class="table border-black w-auto bg-light mx-auto justify-content-center">
+    <thead class="table-dark position-sticky top-0 z-2">
         <tr>
-            <th scope="col" class="text-nowrap">Information</th>
-            <th scope="col" class="text-nowrap">Valeur</th>
-            <th scope="col" class="width-100">Actions</th>
-        </tr>
+            <th scope="col" class="text-nowrap" colspan="2">Personnalisation</th>
+            <th scope="col" class=""></th>
+       </tr>
     </thead>
     <tbody>
         <tr>
-            <th scope="row" class="text-nowrap">Identifiant unique</th>
+            <th scope="row" class="text-nowrap">Identifiant unique de l'évènement</th>
             <td class="text-nowrap">{{ admin_event.uniq_id }}</td>
-            <td>
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-event-render-edit-modal') }}"
-                        hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
-                        hx-target="#admin-modal-container"
-                        hx-swap="innerHTML"
-                        data-bs-toggle="modal"
-                        data-bs-target="#admin-modal-container"
-                        hx-indicator="#please-wait">
-                    <i class="bi-pencil-fill"></i> Éditer
-                </button>
-            </td>
-        </tr>
-        <tr>
-            <th scope="row" class="text-nowrap">Fichier de configuration</th>
-            <td class="text-nowrap">{{ admin_event.ini_file }}</td>
             <td></td>
         </tr>
         <tr>
-            <th scope="row" class="text-nowrap">Nom</th>
-            <td class="text-nowrap">{{ admin_event.name }}</td>
-            <td>
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-event-render-edit-modal') }}"
-                        hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
-                        hx-target="#admin-modal-container"
-                        hx-swap="innerHTML"
-                        data-bs-toggle="modal"
-                        data-bs-target="#admin-modal-container"
-                        hx-indicator="#please-wait">
-                    <i class="bi-pencil-fill"></i> Éditer
-                </button>
-            </td>
+            <th scope="row" class="text-nowrap">Début</th>
+            <td class="">{{ admin_event.formatted_start_date_time }}</td>
+            <td></td>
         </tr>
         <tr>
-            <th scope="row" class="text-nowrap">Personnalisation CSS</th>
-            <td class="text-nowrap">{% if admin_event.css %}{{ admin_event.css }}{% else %}<em>Aucune</em>{% endif %}</td>
-            <td>
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-event-render-edit-modal') }}"
-                        hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
-                        hx-target="#admin-modal-container"
-                        hx-swap="innerHTML"
-                        data-bs-toggle="modal"
-                        data-bs-target="#admin-modal-container"
-                        hx-indicator="#please-wait">
-                    <i class="bi-pencil-fill"></i> Éditer
-                </button>
+            <th scope="row" class="text-nowrap">Fin</th>
+            <td class="">{{ admin_event.formatted_stop_date_time }}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Visibilité</th>
+            <td class="">
+                {{ event_visibility_icon(admin_event, '') }}
+                {% if admin_event.public %}Publique{% else %}Privée{% endif %}
             </td>
+            <td></td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Répertoire par défaut des fichiers Papi</th>
+            <td class="">{{ admin_event.path }}{% if not admin_event.stored_event.path %} <span class="fst-italic">(par défaut)</span>{% endif %}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Image et couleur de fond</th>
+            <td class="text-nowrap">
+                <div style="width: 160px; height: 90px; background-image: url('{{ admin_event.background_url }}'); background-color: {{ admin_event.background_color }}; background-repeat: no-repeat; background-size: contain; background-position: center center;">
+                </div>
+            </td>
+            <td></td>
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Mot de passe de saisie des scores</th>
-            <td class="text-nowrap">{% if admin_event.update_password %}********{% else %}<em>Aucun</em>{% endif %}</td>
-            <td>
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-event-render-edit-modal') }}"
-                        hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
-                        hx-target="#admin-modal-container"
-                        hx-swap="innerHTML"
-                        data-bs-toggle="modal"
-                        data-bs-target="#admin-modal-container"
-                        hx-indicator="#please-wait">
-                    <i class="bi-pencil-fill"></i> Éditer
-                </button>
-            </td>
+            <td class="text-nowrap">{% if admin_event.update_password %}********{% else %}<span class="fst-italic">Aucun</span>{% endif %}</td>
+            <td></td>
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Nombre maximum de coups illégaux enregistrés</th>
-            <td class="text-nowrap">{% if admin_event.record_illegal_moves %}{{ admin_event.record_illegal_moves }}{% else %}<em>Aucun</em>{% endif %}</td>
-            <td>
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-event-render-edit-modal') }}"
-                        hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
-                        hx-target="#admin-modal-container"
-                        hx-swap="innerHTML"
-                        data-bs-toggle="modal"
-                        data-bs-target="#admin-modal-container"
-                        hx-indicator="#please-wait">
-                    <i class="bi-pencil-fill"></i> Éditer
-                </button>
-            </td>
+            <td class="text-nowrap">{% if admin_event.record_illegal_moves %}{{ admin_event.record_illegal_moves }}{% else %}Aucun{% endif %}{% if admin_event.stored_event.record_illegal_moves is none %}<span class="fst-italic"> (par défaut)</span>{% endif %}</td>
+            <td></td>
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Suppression des résultats entrés sur les écrans de saisie</th>
-            <td class="text-nowrap">{% if admin_event.record_illegal_moves %}Oui{% else %}Non{% endif %}</td>
-            <td>
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-event-render-edit-modal') }}"
-                        hx-vals='{"admin_event_uniq_id": "{{ admin_event.uniq_id }}"}'
-                        hx-target="#admin-modal-container"
-                        hx-swap="innerHTML"
-                        data-bs-toggle="modal"
-                        data-bs-target="#admin-modal-container"
-                        hx-indicator="#please-wait">
-                    <i class="bi-pencil-fill"></i> Éditer
-                </button>
-            </td>
+            <td class="text-nowrap">{% if admin_event.allow_results_deletion_on_input_screens %}Autorisée{% else %}Non autorisée{% endif %}{% if admin_event.stored_event.allow_results_deletion_on_input_screens is none %}<span class="fst-italic"> (par défaut)</span>{% endif %}</td>
+            <td></td>
         </tr>
         <tr>
-            <th scope="row" class="text-nowrap">Connexions à ChessEvent</th>
+            <th scope="row" class="text-nowrap">Paramètres par défaut des chronomètres</th>
             <td class="text-nowrap">
-                {% if admin_event.chessevents|length %}{{ admin_event.chessevents|length }}{% else %}<em>Aucune</em>{% endif %}
+                <div style="background-color: {{ admin_event.timer_colors[1] }}">&nbsp;{{ admin_event.timer_delays[1] }} minutes avant&nbsp;</div>
+                <div style="background-color: {{ admin_event.timer_colors[2] }}">&nbsp;{{ admin_event.timer_delays[2] }} minutes avant&nbsp;</div>
+                <div style="background-color: {{ admin_event.timer_colors[3] }}">&nbsp;{{ admin_event.timer_delays[3] }} minutes après&nbsp;</div>
             </td>
-            <td>
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-update-header') }}"
-                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@chessevents"}'
-                        hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait">
-                    {% if admin_event.tournaments|length %}
-                        <i class="bi-caret-right-square-fill"></i> Gérer les connexions
-                    {% else %}
-                        <i class="bi-plus-square-fill"></i> Créer une connexion
-                    {% endif %}
-                </button>
-            </td>
+            <td></td>
         </tr>
         <tr>
-            <th scope="row" class="text-nowrap">Tournois</th>
-            <td class="text-nowrap">
-                {% if admin_event.tournaments|length %}{{ admin_event.tournaments|length }}{% else %}<em>Aucun</em>{% endif %}
-            </td>
-            <td>
-                <button
-                        class="btn btn-sm btn-primary p-1"
-                        hx-post="{{ url_for('admin-update-header') }}"
-                        hx-vals='{"admin_main_selector": "{{ admin_event.uniq_id }}", "admin_event_selector": "@tournaments"}'
-                        hx-swap="multi:#admin-header,#admin-content"
-                        hx-indicator="#please-wait">
-                    {% if admin_event.tournaments|length %}
-                        <i class="bi-caret-right-square-fill"></i> Gérer les tournois
-                    {% else %}
-                        <i class="bi-plus-square-fill"></i> Créer un tournoi
-                    {% endif %}
-                </button>
-            </td>
+            <th scope="row" class="text-nowrap">Dernière mise à jour</th>
+            <td class="text-nowrap">{{ admin_event.last_update_str }}</td>
+            <td></td>
         </tr>
     </tbody>
 </table>

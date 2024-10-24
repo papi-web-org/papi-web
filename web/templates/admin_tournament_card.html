@@ -1,0 +1,168 @@
+{% extends 'admin_card.html' %}
+{% from 'macros.j2' import tooltip_attributes, tournament_status_icon %}
+
+{% block card_header %}
+    {{ tournament_status_icon(tournament) }} {{ tournament.uniq_id }}
+{% endblock %}
+
+{% block card_title %}
+    {{ tournament.name }}
+{% endblock %}
+
+{% block card_text %}
+    <div class="">
+        {% if not tournament.file_exists %}
+            {% set text='Le fichier Papi du tournoi n\'existe pas ('~tournament.file~').' %}
+            {% set type='error' %}
+        {% elif not tournament.rounds %}
+            {% set text='Le fichier Papi du tournoi existe mais une erreur est survenue lors de sa lecture ('~tournament.file~').' %}
+            {% set type='error' %}
+        {% else %}
+            {% set text='Le fichier Papi du tournoi a été lu correctement ('~tournament.file~').' %}
+            {% set type='info' %}
+        {% endif %}
+        <span
+                class="me-2 text-nowrap"
+                {{ tooltip_attributes(type, text, 'top') }}
+        >
+            {% if not tournament.file_exists or not tournament.rounds %}
+                <i class="bi-file-earmark-excel-fill text-danger"></i>
+            {% else %}
+                <i class="bi-file-check-fill text-success"></i>
+            {% endif %}
+            {{ tournament.filename }}
+        </span>
+    </div>
+    <div class="text-start">
+        {% if tournament.ffe_id %}
+            FFE :
+            {{ tournament.ffe_id }}
+        {% else %}
+            <i class="bi-x">-</i>
+        {% endif %}
+    </div>
+    <div class="text-start">
+        <span
+                class="me-2 text-nowrap {% if not tournament.rounds %}text-secondary{% endif %}"
+                {% if tournament.rounds %}
+                    {{ tooltip_attributes('info', (tournament.players_by_id|length - 1)~' joueur·euses ont été trouvées dans le fichier Papi ('~tournament.file~').', 'top') }}
+                {% endif %}
+        >
+            <i class="bi-people-fill"></i>
+            {% if tournament.rounds %}
+                {{ tournament.players_by_id|length - 1 }}
+            {% else %}
+                <i class="bi-question text-secondary"></i>
+            {% endif %}
+        </span>
+        <span
+                class="me-2 text-nowrap {% if not tournament.rounds %}text-secondary{% endif %}"
+        >
+            {{ tournament_status_icon(tournament) }}
+            {% if tournament.rounds %}
+                {{ tournament.current_round }}/{{ tournament.rounds }}
+            {% else %}
+                <i class="bi-question"></i>
+            {% endif %}
+        </span>
+        <span
+                class="me-2 text-nowrap"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                data-bs-html="true"
+                data-bs-custom-class="papi-web-tooltip-info"
+                data-bs-title="
+                    <i class='bi bi-info-circle-fill'></i>
+                    {% if tournament.chessevent %}
+                        La connexion à la plateforme ChessEvent est configurée ({{ tournament.chessevent.uniq_id }}).
+                    {% else %}
+                        Aucune connexion à la plateforme ChessEvent.
+                    {% endif %}
+                "
+        >
+            <i class="
+                    {% if tournament.chessevent %}
+                        bi-cloud-download-fill
+                    {% else %}
+                        bi-cloud-download text-secondary
+                    {% endif %}"
+            ></i>
+        </span>
+        {% if not tournament.record_illegal_moves %}
+            {% set text='Les coups illégaux ne sont pas enregistrés sur ce tournoi.' %}
+        {% elif tournament.record_illegal_moves == 1 %}
+            {% set text='Au maximum un coup illégal est enregistré sur ce tournoi.' %}
+        {% else %}
+            {% set text='Au maximum '~tournament.record_illegal_moves~' coups illégaux sont enregistrés sur ce tournoi.' %}
+        {% endif %}
+        <span
+                class="me-2 text-nowrap"
+                {{ tooltip_attributes(type, text, 'top') }}
+        >
+            {% if not tournament.record_illegal_moves %}
+                <i class="bi-flag text-secondary"></i>
+            {% else %}
+                {% for i in range(tournament.record_illegal_moves) %}
+                    <i class="bi-flag-fill"></i>
+                {% endfor %}
+            {% endif %}
+        </span>
+    </div>
+    <div class="text-start">
+        {% if tournament.pairing %}
+            {{ tournament.pairing }}
+        {% endif %}
+    </div>
+    <div class="text-start">
+        {% if tournament.rating %}
+            {{ tournament.rating }}
+        {% endif %}
+    </div>
+    <div class="text-start">
+        <i class="bi-pencil-fill"></i>
+        {{ tournament.last_update_str }}
+    </div>
+{% endblock %}
+
+{% block card_buttons_left %}
+    <span {{ tooltip_attributes('info', 'Modifier les propriétés du tournoi.', 'top') }}>
+        <button
+                class="btn btn-sm btn-primary p-1 text-nowrap"
+                hx-get="{{ url_for('admin-tournament-modal', action='update', event_uniq_id=admin_event.uniq_id, tournament_id=tournament.id) }}"
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait"
+        >
+            <i class="bi-pencil-fill"></i> Éditer
+        </button>
+    </span>
+{% endblock %}
+
+{% block card_buttons_right %}
+    <span {{ tooltip_attributes('info', 'Dupliquer le tournoi dans l\'évènement.', 'top') }}>
+        <button
+                class="btn btn-sm btn-primary p-1 text-nowrap"
+                hx-get="{{ url_for('admin-tournament-modal', action='clone', event_uniq_id=admin_event.uniq_id, tournament_id=tournament.id) }}"
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait" >
+            <i class="bi-copy"></i>
+        </button>
+    </span>
+    <span {{ tooltip_attributes('info', 'Supprimer le tournoi.', 'top') }}>
+        <button
+                class="btn btn-sm btn-danger p-1 text-nowrap"
+                hx-get="{{ url_for('admin-tournament-modal', action='delete', event_uniq_id=admin_event.uniq_id, tournament_id=tournament.id) }}"
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait" >
+            <i class="bi-trash-fill"></i>
+        </button>
+    </span>
+{% endblock %}

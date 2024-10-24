@@ -1,0 +1,49 @@
+{% extends 'cards_container.html' %}
+{% from 'macros.j2' import tooltip_attributes %}
+
+{% block cards_container_title %}
+    <i class="{{ nav_tab.icon_class }}"></i> {{ nav_tab.title }}
+{% endblock %}
+
+{% block cards_container_right_buttons %}
+    <button
+            class="btn btn-primary text-nowrap"
+            hx-get="{{ url_for('admin', event_tab=event_tab) }}"
+            hx-swap="multi:#admin-header,#admin-content"
+            hx-indicator="#please-wait"
+    >
+        <i class="bi-arrow-clockwise"></i>
+    </button>
+    <button
+            class="btn btn-primary text-nowrap"
+            hx-get="{{ url_for('admin-event-modal-create') }}"
+            hx-target="#admin-modal-container"
+            hx-swap="innerHTML"
+            data-bs-toggle="modal"
+            data-bs-target="#admin-modal-container"
+            hx-indicator="#please-wait">
+        <i class="bi-plus-square-fill"></i> Créer un évènement
+    </button>
+{% endblock %}
+
+{% block cards_container_cards %}
+    <div class="row">
+        {% if nav_tab.events %}
+            {% for event in nav_tab.events %}
+                {% with
+                    card_url=url_for('admin-event', event_uniq_id=event.uniq_id),
+                    card_class=('bg-light' if event.public else 'bg-danger-subtle') if admin_auth else 'bg-light',
+                    card_background_url=event.background_url,
+                    card_background_color=event.background_color
+                %}
+                    {% include 'admin_event_card.html' %}
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            <div class="col-12 mb-3">
+                {{ nav_tab.empty_str }}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+

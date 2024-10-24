@@ -1,0 +1,38 @@
+<div class="col-lg-{{ 12 // user_columns }} mb-3 d-flex align-items-stretch">
+    <div
+            class="card {% if card_url %}btn{% endif %} p-1 w-100 {{ card_class }}"
+            {% if card_url %}
+                hx-get="{{ card_url }}"
+                hx-target="body"
+                hx-indicator="#please-wait"
+            {% endif %}
+    >
+        <div class="card-header fw-bold text-center">
+            {% block card_header %}
+                CARD_HEADER
+            {% endblock %}
+        </div>
+        <div
+                class="card-body p-2 d-flex flex-column"
+                style="
+                    {% if card_background_url %}
+                        background-image: url('{{ card_background_url }}');
+                    {% endif %}
+                    {% if card_background_color %}
+                        background-color: {{ card_background_color }};
+                    {% endif %}
+                    "
+        >
+            <div class="card-title text-start fs-4 fw-bold">
+                {% block card_title %}
+                    CARD_TITLE
+                {% endblock %}
+            </div>
+            <div class="card-text mb-auto mt-1 text-start">
+                {% block card_text %}
+                    CARD_TEXT
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>

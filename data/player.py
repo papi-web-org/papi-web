@@ -14,6 +14,7 @@ logger: Logger = get_logger()
 @dataclass
 @total_ordering
 class Player:
+    """A data class representing a player in a tournament."""
     ref_id: int
     last_name: str
     first_name: str
@@ -30,9 +31,9 @@ class Player:
     board_number: int | None = field(default=None, init=False)
     color: Color | None = field(default=None, init=False)
     illegal_moves: int = 0
-    handicap_initial_time: int | None = field(default=None, init=False)
-    handicap_increment: int | None = field(default=None, init=False)
-    handicap_time_modified: bool | None = field(default=None, init=False)
+    time_control_initial_time: int | None = field(default=None, init=False)
+    time_control_increment: int | None = field(default=None, init=False)
+    time_control_modified: bool | None = field(default=None, init=False)
 
     @property
     def id(self) -> int:
@@ -42,7 +43,7 @@ class Player:
     def title_str(self) -> str:
         return str(self.title)
 
-    def compute_points(self, max_round):
+    def compute_points(self, max_round: int):
         """Computes and stores the points of the player,
         from round 1 to round `max_round` (returns None)"""
         # NOTE(Amaras) this does not rely on the fact that insertion order
@@ -65,10 +66,13 @@ class Player:
         return '{:.1f}'.format(points).replace('.0', '').replace('.5', '½')
 
     def set_points(self, points: float):
+        """Deprecated method, use direct assignment instead."""
         warnings.warn("Use direct assignment to points instead")
         self.points = points
 
     def add_points(self, points: float):
+        """If `self.points` is set, add `points` to it.
+        Otherwise, leave `self.points` as None."""
         with suppress(TypeError):
             self.points += points
 
@@ -77,10 +81,13 @@ class Player:
         return self._points_str(self.points)
 
     def set_vpoints(self, vpoints: float):
+        """Deprecated method, use direct assignment instead."""
         warnings.warn("Use direct assignment to vpoints instead")
         self.vpoints = vpoints
 
     def add_vpoints(self, vpoints: float):
+        """If `self.vpoints` is set, add `vpoints` to it.
+        Otherwise, leave `self.vpoints` as None."""
         with suppress(TypeError):
             self.vpoints += vpoints
 
@@ -97,14 +104,17 @@ class Player:
         return 'Exempt' + ('e' if self.gender == PlayerGender.FEMALE else '')
 
     def set_board_id(self, board_id: int):
+        """Deprecated method, use direct assignment instead."""
         warnings.warn("Use direct assignment to board_id instead")
         self.board_id = board_id
 
     def set_board_number(self, board_number: int):
+        """Deprecated method, use direct assignment instead."""
         warnings.warn("Use direct assignment to board_number instead")
         self.board_number = board_number
 
     def set_color(self, color: Color):
+        """Deprecated method, use direct assignment instead."""
         warnings.warn("Use direct assignment to color instead")
         self.color = color
 
@@ -121,29 +131,29 @@ class Player:
             return str(self.color)
 
     @property
-    def handicap_initial_time_minutes(self) -> int | None:
+    def time_control_initial_time_minutes(self) -> int | None:
         with suppress(TypeError):
-            return self.handicap_initial_time // 60
+            return self.time_control_initial_time // 60
 
     @property
-    def handicap_initial_time_seconds(self) -> int | None:
+    def time_control_initial_time_seconds(self) -> int | None:
         with suppress(TypeError):
-            return self.handicap_initial_time % 60
+            return self.time_control_initial_time % 60
 
     @property
     def handicap_str(self) -> str | None:
-        if self.handicap_initial_time is None:
+        if self.time_control_initial_time is None:
             return None
-        (minutes, seconds) = divmod(self.handicap_initial_time, 60)
+        (minutes, seconds) = divmod(self.time_control_initial_time, 60)
         minutes_str: str = f'{minutes}\'' if minutes > 0 else ''
         seconds_str: str = f'{seconds}"' if seconds > 0 else ''
-        class_str: str = 'modified-time' if self.handicap_time_modified else 'base-time'
-        return f'<span class="{class_str}">{minutes_str}{seconds_str}</span> + {self.handicap_increment}"/cp'
+        class_str: str = 'modified-time' if self.time_control_modified else 'base-time'
+        return f'<span class="{class_str}">{minutes_str}{seconds_str}</span> + {self.time_control_increment}"/cp'
 
-    def set_handicap(self, initial_time: int, increment: int, time_modified: bool):
-        self.handicap_initial_time = initial_time
-        self.handicap_increment = increment
-        self.handicap_time_modified = time_modified
+    def set_time_control(self, initial_time: int, increment: int, modified: bool):
+        self.time_control_initial_time = initial_time
+        self.time_control_increment = increment
+        self.time_control_modified = modified
 
     def __le__(self, other):
         # p1 <= p2 calls p1.__le__(p2)

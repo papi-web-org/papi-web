@@ -1,71 +1,91 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>{% block title %}Base title{% endblock %}</title>
-        <link rel="shortcut icon" type="image/png" href="{{ url_for('static', file_path='/images/papi-web.ico') }}"/>
-        {# https://github.com/twbs/bootstrap/releases #}
-        <link href="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-5.3.3-dist/css/bootstrap.min.css') }}" rel="stylesheet">
-        {# https://github.com/twbs/icons/releases #}
-        <link rel="stylesheet" href="{{ url_for('static', file_path='/lib/bootstrap-icons/bootstrap-icons-1.11.3/font/bootstrap-icons.min.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', file_path='/css/base.css') }}" type="text/css" />
-        {# https://jquery.com/download/ #}
-        <script src="{{ url_for('static', file_path='/lib/jquery/jquery-3.7.1.min.js') }}"></script>
-        {# https://unpkg.com/browse/htmx.org@1.9.12/dist/ #}
-        <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/htmx.min.js') }}"></script>
-        <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/ext/remove-me.js') }}"></script>
-        <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/ext/multi-swap.js') }}"></script>
-{# TODO this was really nicer than the HTMX code in messages.html
-        <script>
-            $(document).ready(function(){
-                setTimeout(function(){
-                    $('#messages .alert-info').hide()
-                    $('#messages .alert-success').hide()
-                }, 2000)
-            });
-        </script>
-#}
-        <script>
-            $(document).ready(function(){
-                $('.xillegal-move-flag-wrapper').on('click dblclick mouseup mousedown', function(e) {
-                    alert('STOP ' + e.target.classList.contains('illegal-move-flag'));
-                    /* e.stopPropagation(); */
-                    e.preventDefault();
-                });
-            });
-        </script>
-        {% block head %}
-        {% endblock %}
+        {% if not request.htmx %}
+            <title>{% block title %}Papi-web{% endblock %}</title>
+            <link rel="shortcut icon" type="image/png" href="{{ url_for('static', file_path='/images/papi-web.ico') }}"/>
+            {# https://github.com/twbs/bootstrap/releases #}
+            <link href="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-5.3.3-dist/css/bootstrap.min.css') }}" rel="stylesheet">
+            {# https://github.com/twbs/icons/releases #}
+            <link rel="stylesheet" href="{{ url_for('static', file_path='/lib/bootstrap-icons/bootstrap-icons-1.11.3/font/bootstrap-icons.min.css') }}">
+            <link rel="stylesheet" href="{{ url_for('static', file_path='/css/base.css') }}" type="text/css" />
+            <link rel="stylesheet" href="{{ url_for('static', file_path='/css/user.css') }}" type="text/css" />
+            <link rel="stylesheet" href="{{ url_for('static', file_path='/css/admin.css') }}" type="text/css" />
+            {# https://jquery.com/download/ #}
+            <script src="{{ url_for('static', file_path='/lib/jquery/jquery-3.7.1.min.js') }}"></script>
+            {# https://unpkg.com/browse/htmx.org@1.9.12/dist/ #}
+            <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/htmx.min.js') }}"></script>
+            <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/ext/remove-me.js') }}"></script>
+            <script src="{{ url_for('static', file_path='/lib/htmx/htmx-1.9.12/ext/multi-swap.js') }}"></script>
+            {# https://github.com/SortableJS/Sortable #}
+            <script src="{{ url_for('static', file_path='/lib/sortable/sortable-1.15.2/Sortable.min.js') }}"></script>
+            <script src="{{ url_for('static', file_path='/lib/htmx/htmx-sortable.js') }}"></script>
+            {# https://github.com/vakata/jstree #}
+            <link rel="stylesheet" href="{{ url_for('static', file_path='/lib/jstree/jstree-3.3.17-dist/themes/default/style.min.css') }}" type="text/css" />
+            <script src="{{ url_for('static', file_path='/lib/jstree/jstree-3.3.17-dist/jstree.min.js') }}"></script>
+            {% block head %}
+            {% endblock %}
+        {% endif %}
     </head>
     <body hx-ext="multi-swap">
-        <div id="messages">
+        <div id="messages" class="w-50 position-fixed top-0 end-0 m-2 z-2">
             {% include 'messages.html' %}
         </div>
-        {% block header %}
-        {% endblock %}
-        {% block content %}
-            Body content
-        {% endblock %}
-        <div id="copyright-wrapper" class="copyright-wrapper">
-            <div id="copyright" class="copyright">
-                Papi-web {{ papi_web_config.version }} - {{ papi_web_config.copyright }} - <a href="{{ papi_web_config.url }}" rel = "noopener noreferrer" target="_blank">{{ papi_web_config.url }}</a>
-            </div>
+        <div id="header-wrapper" class="header-wrapper top-0 position-sticky z-1">
+            {% block header %}
+            {% endblock %}
         </div>
+        <div id="content-wrapper" class="content-wrapper">
+            {% block content %}
+                Body content
+            {% endblock %}
+        </div>
+        <div id="footer-wrapper" class="footer-wrapper">
+            {% block footer %}
+            {% endblock %}
+        </div>
+        {% if not (user_screen and user_screen.type == 'image') %}
+            <div id="copyright-wrapper" class="copyright-wrapper">
+                <div id="copyright" class="copyright fst-italic text-center">
+                    Papi-web {{ papi_web_config.version }} - {{ papi_web_config.copyright }} - {{ papi_web_config.url }}
+                </div>
+            </div>
+        {% endif %}
 	    <div id="please-wait-wrapper">
-            <div id="please-wait" class="please-wait htmx-indicator"></div>
+            <div
+                    id="please-wait"
+                    class="please-wait htmx-indicator position-fixed top-50 start-50 translate-middle"
+            ></div>
         </div>
         <div id="modals"
-            class="modal modal-blur fade"
+            class="modal modal-blur overflow-auto"
             style="display: none"
             aria-hidden="false"
             data-bs-backdrop="static"
             data-bs-keyboard="false"
             tabindex="-1">
-            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-dialog modal-lg modal-dialog-centered d-block w-80 mw-100" role="document">
                 <div class="modal-content"></div>
             </div>
         </div>
-        <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js') }}"></script>
+        {% if not request.htmx %}
+            <script src="{{ url_for('static', file_path='/lib/bootstrap/bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js') }}"></script>
+            {{ tooltip_script() }}
+        {% endif %}
     </body>
-    {% block footer %}
-    {% endblock %}
+    <script>
+        var confirm_when_leaving = true;
+        document.addEventListener('htmx:afterRequest', function(evt) {
+            if (evt.detail.xhr.getResponseHeader('hx-redirect')) {
+                confirm_when_leaving = false;
+            }
+        });
+        $(window).bind('beforeunload', function(){
+            if (confirm_when_leaving) {
+                return 'Voulez-vous redémarrer l\'application Papi-web ?';
+            } else {
+                return false;
+            }
+        });
+    </script>
 </html>

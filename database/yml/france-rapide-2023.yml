@@ -1,0 +1,86 @@
+name: "Championnat de France rapide 2023"
+start: "2023-06-25 00:00"
+stop: "2023-06-25 23:59"
+background_image: "FRA/FRA.png"
+background_color: "#f5f5f5"
+update_password: "mot_de_passe"
+record_illegal_moves: 0
+allow_results_deletion_on_input_screens: true
+timers:
+  chronometre:
+    hours:
+      pointage:
+        date_str: "2023-06-25"
+        time_str: "09:00"
+        text_before: "Fin du pointage dans %s"
+        text_after: "Pointage terminé depuis %s"
+      1:
+        time_str: "09:30"
+      2:
+        time_str: "10:15"
+      3:
+        time_str: "11:00"
+      4:
+        time_str: "11:45"
+      5:
+        time_str: "13:30"
+      6:
+        time_str: "14:15"
+      7:
+        time_str: "15:00"
+      8:
+        time_str: "15:45"
+      9:
+        time_str: "16:30"
+      remise-prix:
+        time_str: "17:15"
+        text_before: "Début de la remise des prix dans %s"
+        text_after: "Remise des prix débutée depuis %s"
+tournaments:
+  france-rapide:
+    filename: "france-rapide-2023"
+    name: "Championnat de France rapide 2023"
+    ffe_id: 59698
+    ffe_password: "ABCDEFGHIJ"
+screens:
+  resultats:
+    type: "results"
+    timer_uniq_id: "chronometre"
+    results_limit: 30
+  affiche:
+    type: "image"
+    name: "Affiche"
+    background_image: "http://asnieres2023.ffechecs.org/wp-content/uploads/sites/58/2023/02/affiche_2023_A4-pdf.jpg"
+families:
+  alpha:
+    type: "players"
+    columns: 2
+    menu: "@family"
+    menu_text: "[%f-%l]"
+    parts: 8
+    name: "Joueur·euses de %f à %l"
+    players_show_unpaired: false
+    tournament_uniq_id: "france-rapide"
+  saisie:
+    type: "input"
+    columns: 2
+    menu: "@family"
+    menu_text: "[%f-%l]"
+    parts: 8
+    name: "Échiquiers %f à %l"
+    timer_uniq_id: "chronometre"
+    tournament_uniq_id: "france-rapide"
+  affichage:
+    type: "boards"
+    columns: 2
+    menu: "@family"
+    menu_text: "[%f-%l]"
+    parts: 8
+    name: "Échiquiers %f à %l"
+    timer_uniq_id: "chronometre"
+    tournament_uniq_id: "france-rapide"
+rotators:
+  alpha:
+    family_uniq_ids:
+      - "alpha"
+    delay: 15

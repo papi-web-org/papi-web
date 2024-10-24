@@ -8,6 +8,7 @@ logger: Logger = get_logger()
 
 
 class ChessEventTournament:
+    """A class representing all the data of a ChessEvent tournament."""
     def __init__(
             self,
             chessevent_tournament_info: dict[
@@ -69,17 +70,21 @@ class ChessEventTournament:
         self.error = False
 
     def __str__(self) -> str:
-        lines: list[str] = []
-        lines.append(f'  - Nom : {self.name}')
-        lines.append(f'  - Type : {self.type}')
-        lines.append(f'  - Nombre de rondes : {self.rounds}')
-        lines.append(f'  - Appariement : {self.pairing}')
-        lines.append(f'  - Cadence : {self.time_control}')
-        lines.append(f'  - Lieu : {self.location}')
-        lines.append(f'  - Arbitre : {self.arbiter}')
-        lines.append(f'  - Dates : {self.start} - {self.end}')
-        for tie_break_index in range(1, 4):
-            lines.append(f'  - Départage n°{tie_break_index} : {self.tie_breaks[tie_break_index]}')
-        lines.append(f'  - Classement utilisé : {self.rating}')
-        lines.append(f'  - Homologation : {self.ffe_id}')
-        return '\n'.join(lines)
+        return '\n'.join(
+            [
+                f'  - Nom : {self.name}',
+                f'  - Type : {self.type}',
+                f'  - Nombre de rondes : {self.rounds}',
+                f'  - Appariement : {self.pairing}',
+                f'  - Cadence : {self.time_control}',
+                f'  - Lieu : {self.location}',
+                f'  - Arbitre : {self.arbiter}',
+                f'  - Dates : {self.start} - {self.end}',
+            ] + [
+                f'  - Départage n°{tie_break_index} : {self.tie_breaks[tie_break_index]}'
+                for tie_break_index in range(1, 4)
+            ] + [
+                f'  - Classement utilisé : {self.rating}',
+                f'  - Homologation : {self.ffe_id}',
+            ]
+        )

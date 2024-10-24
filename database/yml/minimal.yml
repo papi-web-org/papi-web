@@ -1,0 +1,24 @@
+name: "Évènement minimal"
+public: true
+tournaments:
+  T:
+    filename: "minimal"
+    name: "Tournoi"
+screens:
+  saisie:
+    type: "input"
+    sets:
+      -
+        tournament_uniq_id: "T"
+  affichage:
+    type: "boards"
+    sets:
+      -
+        tournament_uniq_id: "T"
+  appariements:
+    type: "players"
+    sets:
+      -
+        tournament_uniq_id: "T"
+  resultats:
+    type: "results"

@@ -1,0 +1,446 @@
+<div class="modal-dialog modal-dialog-centered admin-tournament-edit-modal d-block w-80 mw-100">
+    <form
+            {% if action == 'create' %}
+                hx-post="{{ url_for('admin-tournament-' ~ action, event_uniq_id=admin_event.uniq_id) }}"
+            {% elif action == 'clone' %}
+                hx-post="{{ url_for('admin-tournament-' ~ action, event_uniq_id=admin_event.uniq_id, tournament_id=admin_tournament.id) }}"
+            {% elif action == 'update' %}
+                hx-patch="{{ url_for('admin-tournament-' ~ action, event_uniq_id=admin_event.uniq_id, tournament_id=admin_tournament.id) }}"
+            {% elif action == 'delete' %}
+                hx-delete="{{ url_for('admin-tournament-' ~ action, event_uniq_id=admin_event.uniq_id, tournament_id=admin_tournament.id) }}"
+            {% else %}
+                hx-get="{{ url_for('unknown-action-' ~ action) }}"
+            {% endif %}
+            hx-swap="multi:#messages,#admin-header,#admin-content"
+            hx-indicator="#please-wait">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    {% if action == 'create' %}
+                        Création d'un tournoi
+                    {% elif action == 'clone' %}
+                        Duplication du tournoi [{{ admin_tournament.uniq_id }}]
+                    {% elif action == 'update' %}
+                        Modification du tournoi [{{ admin_tournament.uniq_id }}]
+                    {% elif action == 'delete' %}
+                        Suppression du tournoi [{{ admin_tournament.uniq_id }}]
+                    {% else %}
+                        ?
+                    {% endif %}
+                </h2>
+            </div>
+            <div class="modal-body">
+                {% if action == 'delete' %}
+                    <h3 class="text-danger">
+                        Attention : la suppression d'un tournoi est définitive !
+                    </h3>
+                    {% if admin_tournament.dependent_screens %}
+                        <p>Les écrans suivants seront supprimés :</p>
+                        <ul>
+                            {% for screen in admin_tournament.dependent_screens %}
+                                <li>{{ screen.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                   {% if admin_tournament.dependent_families %}
+                        <p>Les familles d'écrans suivantes seront supprimées :</p>
+                        <ul>
+                            {% for family in admin_tournament.dependent_families %}
+                                <li>{{ family.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% with id='uniq-id', name='uniq_id' %}
+                        <div>
+                            <label for="{{ id }}" class="form-label">Entrez l'identifiant du tournoi pour confirmer sa suppression :</label>
+                            <input
+                                    name="{{ name }}"
+                                    type="text" id="{{ id }}"
+                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                    aria-describedby="{{ id }}-help {{ id }}-error"
+                                    placeholder="Entrez ici l'identifiant du tournoi"
+                                    value="" />
+                            <div id="{{ id }}-help" class="form-text">
+                                Les données du tournoi sont supprimées de Papi-web mais le fichier Papi du tournoi est conservé sur le système de fichiers.
+                            </div>
+                            {% if name in errors %}
+                                <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                    {{ errors[name] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endwith %}
+                {% elif action in ['create', 'update', 'clone', ] %}
+                    <h3>
+                        Propriétés
+                    </h3>
+                    <div class="row">
+                        <div class="col-6">
+                            {% with id='uniq-id', name='uniq_id' %}
+                                <label for="{{ id }}" class="form-label">Identifiant (unique) :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : principal"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  L'identifiant unique, utilisé pour référencer le tournoi.
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="col-6">
+                            {% with id='name', name='name' %}
+                                <label for="{{ id }}" class="form-label">Nom :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : Tournoi principal"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  Le nom du tournoi, utilisé pour l'affichage.
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                    <h3>
+                        Fichier Papi
+                    </h3>
+                    <div class="row">
+                        <div class="col-6">
+                            {% with id='path', name='path' %}
+                                <label for="{{ id }}" class="form-label">Répertoire du fichier Papi :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : c:\echecs\ligue\tournois"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  Le répertoire du fichier Papi, par défaut [{{ admin_event.path }}].
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="col-6">
+                            {% with id='filename', name='filename' %}
+                                <label for="{{ id }}" class="form-label">Nom du fichier Papi (sans extension) :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : tournoi_principal"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  Le nom du fichier Papi du tournoi, sans l'extension .papi (par défaut le numéro d'homologation du tournoi puis l'identifiant unique du tournoi).
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                    <h3>
+                        Site fédéral
+                    </h3>
+                    <div class="row">
+                        <div class="col-6">
+                            {% with id='ffe-id', name='ffe_id' %}
+                                <label for="{{ id }}" class="form-label">Numéro d'homologation FFE (facultatif) :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : 68991"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  Le numéro d'homologation du tournoi auprès de la Fédération Française des échecs est un entier, il est utilisé pour se connecter sur le site fédéral et réaliser toutes les opérations d'administration.
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="col-6">
+                            {% with id='ffe-password', name='ffe_password' %}
+                                <label for="{{ id }}" class="form-label">Mot de passe de connexion au site fédéral :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : KYNPRTZMHX"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  Le mot de passe est composé de 10 caractères majuscules, il est utilisé pour se connecter sur le site fédéral et réaliser toutes les opérations d'administration.
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                {% endif %}
+                {% if action == 'update' %}
+                    <h3>
+                        Cadence
+                    </h3>
+                    <div class="row">
+                        <div class="col-6">
+                            {% with id='time-control-initial-time', name='time_control_initial_time' %}
+                                <label for="{{ id }}" class="form-label">Temps initial (facultatif) :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : 300 (5 minutes)"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  Le temps initial à la pendule en secondes (peut être nul si incrément).
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="col-6">
+                            {% with id='time-control-increment', name='time_control_increment' %}
+                                <label for="{{ id }}" class="form-label">Incrément (facultatif) :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : 3"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  L'incrément de temps gagné par les joueur·euses à chaque coup.
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                    <h3>
+                        Tournoi à handicap
+                    </h3>
+                    <div class="row">
+                        <div class="col-4">
+                            {% with id='time-control-handicap-penalty-value', name='time_control_handicap_penalty_value' %}
+                                <label for="{{ id }}" class="form-label">Pénalité par tranche :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : 30 (secondes)"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  Le temps retranché au·à la joueur·euse le·la mieux classé·e, en secondes (ce temps est multiplié par le nombre de tranches de différence entre les deux joueur·euses).
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="col-4">
+                            {% with id='time-control-handicap-penalty-step', name='time_control_handicap_penalty_step' %}
+                                <label for="{{ id }}" class="form-label">Tranche de classement :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : 50 (points Elo)"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  Le nombre de points de différences entre le classement des joueurs servant à calculer le nombre de pénalités appliquées au·à la joueur·euse le·la mieux classé·e.
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="col-4">
+                            {% with id='time-control-handicap-min-time', name='time_control_handicap_min_time' %}
+                                <label for="{{ id }}" class="form-label">Temps minimal :</label>
+                                <input
+                                        name="{{ name }}"
+                                        type="text" id="{{ id }}"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : 60 (secondes)"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                  Le temps minimal qui sera accordé au·à la joueur·euse le·la mieux classé·e même si la différence de classement est très importante.
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endwith %}
+                    </div>
+                    <h3>
+                        ChessEvent
+                    </h3>
+                    {% if admin_event.chessevents_by_id %}
+                        <div class="row">
+                            <div class="col-6">
+                                {% with id='chessevent-id', name='chessevent_id' %}
+                                    <label for="{{ id }}" class="form-label">Connexion à ChessEvent :</label>
+                                    <select
+                                            name="{{ name }}"
+                                            id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error" >
+                                        {% for value, text in chessevent_options.items() %}
+                                            <option value="{{ value }}" {% if value == data[name] %}selected{%endif %}>
+                                                {{ text }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div id="{{ id }}-help" class="form-text">
+                                      Si elle est autorisée, la suppression des résultats entrés sur les écrans de saisie est réalisée par la combinaison Ctrl+Alt+click.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div class="col-6">
+                                {% with id='chessevent-tournament-name', name='chessevent_tournament_name' %}
+                                    <label for="{{ id }}" class="form-label">Le nom du tournoi sur la plateforme ChessEvent :</label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="text" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : Tournoi principal"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                      Le nom du tournoi sur la plateforme ChessEvent.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div>
+                            Pas de connexion à ChessEvent (aucune connexion enregistrée).
+                        </div>
+                    {% endif %}
+                    <h3>
+                        Enregistrement des coups illégaux
+                    </h3>
+                    {% with id='record-illegal-moves', name='record_illegal_moves' %}
+                        <div>
+                            <label for="{{ id }}" class="form-label">Enregistrement des coups illégaux :</label>
+                            <select
+                                    name="{{ name }}"
+                                    id="{{ id }}"
+                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                    aria-describedby="{{ id }}-help {{ id }}-error" >
+                                {% for value, text in record_illegal_moves_options.items() %}
+                                    <option value="{{ value }}" {% if value == data[name] %}selected{%endif %}>{{ text }}</option>
+                                {% endfor %}
+                            </select>
+                            <div id="{{ id }}-help" class="form-text">
+                              Le nombre maximum de coups illégaux que l'on peut enregistrer par ronde pour un·e joueur·euse
+                                (de 0 à 3, par défaut {% if papi_web_config.default_record_illegal_moves_enabled %}{{ papi_web_config.default_record_illegal_moves_number }}{% else %}0{% endif %}).
+                                Cette valeur peut être modifiée pour chaque tournoi.
+                            </div>
+                            {% if name in errors %}
+                                <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                    {{ errors[name] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endwith %}
+                {% endif %}
+            </div>
+            <div class="modal-footer d-block">
+                <div class="row">
+                    <div class="col col-6 text-start">
+                        <button
+                                type="submit"
+                                class="text-nowrap white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %}"
+                                data-bs-dismiss="modal"
+                        >
+                            <i class="bi-floppy-fill"></i>
+                            {% if action == 'create' %}
+                                Créer
+                            {% elif action == 'clone' %}
+                                Dupliquer
+                            {% elif action == 'update' %}
+                                Modifier
+                            {% elif action == 'delete' %}
+                                Supprimer
+                            {% else %}
+                                ?
+                            {% endif %}
+                        </button>
+                    </div>
+                    <div class="col col-6 text-end">
+                        <button
+                                class="btn btn-secondary text-nowrap"
+                                hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='tournaments') }}"
+                                hx-swap="multi:#messages,#admin-header,#admin-content"
+                                hx-trigger="click, keyup[key=='Escape'] from:body"
+                                hx-indicator="#please-wait"
+                                data-bs-dismiss="modal"
+                        >
+                            <i class="bi-x-circle-fill"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+    (new bootstrap.Modal(document.getElementById('admin-modal-container'))).show();
+</script>

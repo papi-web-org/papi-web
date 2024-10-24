@@ -2,6 +2,9 @@
 
 # Affichage des appariements par ordre alphabétique
 
+> [!CAUTION]
+> Cette page décrivant la configuration au format INI des écrans d'affichage des appariements par ordre alphabétique est obsolète et sera prochainement remplacée par un tutoriel.
+
 L'affichage par ordre alphabétique permet aux joueur·euses de trouver beaucoup plus rapidement leur table à chaque ronde, il est particulièrement important pour les tournois à forte participation pour lesquels les niveaux de points des appariements peuvent être très fournis.
 
 La déclaration des écrans par ordre alphabétique est détaillée ci-dessous, on notera qu'elle ressemble énormément à celle des écrans par échiquier, aux exceptions suivantes :

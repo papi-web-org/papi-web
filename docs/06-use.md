@@ -47,7 +47,7 @@ Le délai minimum entre deux téléchargements sur le site fédéral est par dé
 Le serveur Papi-web se lance en exécutant le script `server.bat` :
 ```
 C:\...\papi-web-<version>$ server.bat
-Papi-web <version>> Copyright © Pascal AUBRY 2013-2024
+Papi-web <version> Copyright © Pascal AUBRY 2013-2024
 Starting Papi-web server, please wait...
 Reading configuration file...
 log: INFO
@@ -66,20 +66,41 @@ On arrête le serveur en tapant `Ctrl-C`.
 Les outils d'interface avec le site fédéral se lancent en exécutant le script `ffe.bat` :
 ```
 C:\...\papi-web-<version>$ ffe.bat
-INFO     [1] Open Fide de domloup (domloup-fide.ini)
-INFO     [2] Championnat de France de parties rapides (france-rapide.ini)
-INFO     Veuillez entrer le numéro de votre évènement (ou [Q] pour quitter) :
+[1] Open Fide de domloup (domloup-fide.ini)
+[2] Championnat de France de parties rapides (france-rapide.ini)
+Veuillez entrer le numéro de votre évènement (ou [Q] pour quitter) :
 2
-INFO     Evènement : Championnat de France de parties rapides
-INFO     Tournois : 58878 (C:\...\58878.papi)
-INFO     Actions :
-INFO       - [T] Tester les codes d'accès des tournois
-INFO       - [V] Rendre les tournois visibles sur le site fédéral
-INFO       - [H] Télécharger les factures d'homologation
-INFO       - [U] Mettre en ligne les tournois
-INFO       - [Q] Revenir à la liste des évènements
-INFO     Entrez votre choix :
+Evènement : Championnat de France de parties rapides
+Tournois : 58878 (C:\...\58878.papi)
+Actions :
+- [T] Tester les codes d'accès des tournois
+- [V] Rendre les tournois visibles sur le site fédéral
+- [H] Télécharger les factures d'homologation
+- [U] Mettre en ligne les tournois
+- [Q] Revenir à la liste des évènements
+Entrez votre choix :
 ```
 > [!NOTE]
-> Pour utiliser les outils d'interface avec le site fédéral sur les tournois de vos évènements, il est nécessaire de déclarer le numéro d'homologation et le code d'accès des tournois ([détails](12-qualified.md)).
+> Pour utiliser les outils d'interface avec le site fédéral sur les tournois de vos évènements, il est nécessaire de déclarer le numéro d'homologation et le code d'accès des tournois.
+
+## Interface avec la plateforme ChessEvent (`chessevent.bat`)
+
+Les outils d'interface avec la plateforme ChessEvent se lancent en exécutant le script `chessevent.bat` :
+```
+C:\...\papi-web-<version>$ chessevent.bat
+[1] Open Fide de domloup (domloup-fide.ini)
+[2] Championnat de France de parties rapides (france-rapide.ini)
+Veuillez entrer le numéro de votre évènement (ou [Q] pour quitter) :
+1
+Évènement : 37e open Fide de Domloup
+Tournois : Tournoi A, Tournoi B, Tournoi C, Tournoi D, Tournoi E, Tournoi F, Tournoi X
+Actions :
+  - [C] Créer les fichiers Papi
+  - [U] Créer les fichiers Papi et les envoyer sur le site fédéral
+  - [Q] Revenir à la liste des évènements
+Entrez votre choix (par défaut C) : 
+```
+
+> [!NOTE]
+> Pour utiliser les outils d'interface avec la plateforme ChessEvent sur les tournois de vos évènements, il est nécessaire de déclarer les identifiants d'accès à la plateforme ChessEvent.
 

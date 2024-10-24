@@ -1,0 +1,189 @@
+<div class="admin-timer-hours-modal-timer-hour-div {% if not admin_timer_hour and admin_timer.timer_hours_sorted_by_order|length > 1 %}cursor-grab{% endif %}">
+    <input type='hidden' name='item' value='{{ timer_hour.id }}'/>
+    {% if admin_timer_hour.id == timer_hour.id %}
+        <form
+                hx-patch="{{ url_for('admin-timer-hour-update', event_uniq_id=admin_event.uniq_id, timer_id=admin_timer.id, timer_hour_id=timer_hour.id) }}"
+                hx-target="closest .admin-timer-hours-modal-timer-hour-div"
+                hx-swap="innerHTML"
+                hx-trigger="end"
+                hx-indicator="#please-wait">
+            <div class="admin-timer-hour-div edit border {% if timer_hour.error %}border-danger{% else %}border-secondary{% endif %} px-1 mb-1">
+                <div class="row">
+                    <div class="col-3">
+                        {% with id='date-str', name='date_str' %}
+                            <label for="{{ id }}" class="form-label">Date :</label>
+                            <input
+                                    name="{{ name }}"
+                                    type="date" id="{{ id }}"
+                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                    aria-describedby="{{ id }}-help {{ id }}-error"
+                                    placeholder="Format : AAAA-MM-JJ"
+                                    value="{{ data[name] }}" />
+                            <div id="{{ id }}-help" class="form-text">
+                                {% if timer_hour.order == 1 %}
+                                    Obligatoire.
+                                {% else %}
+                                    Facultative.
+                                {% endif %}
+                            </div>
+                            {% if name in errors %}
+                                <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                    {{ errors[name] }}
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="col-2">
+                        {% with id='time-str', name='time_str' %}
+                            <label for="{{ id }}" class="form-label">Heure :</label>
+                            <input
+                                    name="{{ name }}"
+                                    type="time" id="{{ id }}"
+                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                    aria-describedby="{{ id }}-help {{ id }}-error"
+                                    placeholder="Format : HH:MM"
+                                    value="{{ data[name] }}" />
+                            <div id="{{ id }}-help" class="form-text">
+                                Obligatoire.
+                            </div>
+                            {% if name in errors %}
+                                <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                    {{ errors[name] }}
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="col-5">
+                        {% with id='uniq-id', name='uniq_id' %}
+                            <label for="{{ id }}" class="form-label">Numéro de ronde ou texte :</label>
+                            <input
+                                    name="{{ name }}"
+                                    type="text" id="{{ id }}"
+                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                    aria-describedby="{{ id }}-help {{ id }}-error"
+                                    placeholder="Exemple : debut-pointage"
+                                    value="{{ data[name] }}" />
+                            <div id="{{ id }}-help" class="form-text">
+                              Les textes avant et après l'horaire ci-dessous sont facultatifs pour les numéros de rondes.
+                            </div>
+                            {% if name in errors %}
+                                <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                    {{ errors[name] }}
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="col-2 text-end">
+                        <button
+                                class="btn btn-sm btn-primary text-nowrap mb-1"
+                                hx-patch="{{ url_for('admin-timer-hour-update', event_uniq_id=admin_event.uniq_id, timer_id=admin_timer.id, timer_hour_id=timer_hour.id) }}"
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait">
+                            <i class="bi-floppy-fill"></i> Enregistrer
+                        </button>
+                        <button
+                                class="btn btn-sm btn-secondary text-nowrap mb-1"
+                                hx-get="{{ url_for('admin-timer-hours-modal', event_uniq_id=admin_event.uniq_id, timer_id=admin_timer.id) }}"
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                hx-trigger="click, keyup[key=='Escape'] from:body"
+                                hx-indicator="#please-wait">
+                            <i class="bi-x-circle-fill"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-5">
+                        {% with id='text-before', name='text_before' %}
+                            <label for="{{ id }}" class="form-label">Texte avant l'horaire :</label>
+                            <input
+                                    name="{{ name }}"
+                                    type="text" id="{{ id }}"
+                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                    aria-describedby="{{ id }}-help {{ id }}-error"
+                                    placeholder="Exemple : Début du pointage dans %s"
+                                    value="{{ data[name] }}" />
+                            <div id="{{ id }}-help" class="form-text">
+                              %s est remplacé par le temps restant.
+                            </div>
+                            {% if name in errors %}
+                                <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                    {{ errors[name] }}
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="col-5">
+                        {% with id='text-after', name='text_after' %}
+                            <label for="{{ id }}" class="form-label">Texte après l'horaire :</label>
+                            <input
+                                    name="{{ name }}"
+                                    type="text" id="{{ id }}"
+                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                    aria-describedby="{{ id }}-help {{ id }}-error"
+                                    placeholder="Exemple : Pointage commencé depuis %s"
+                                    value="{{ data[name] }}" />
+                            <div id="{{ id }}-help" class="form-text">
+                              %s est remplacé par le temps écoulé.
+                            </div>
+                            {% if name in errors %}
+                                <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                    {{ errors[name] }}
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </form>
+    {% else %}
+        <div class="admin-timer-hour-div border {% if timer_hour.error %}border-danger{% else %}border-secondary{% endif %} p-1 mb-1">
+            <div class="row">
+                <div class="col-10">
+                    <b>{% if timer_hour.timestamp %}{% if timer_hour.stored_timer_hour.date_str %}{{ timer_hour.stored_timer_hour.date_str }} {%endif %}{{ timer_hour.stored_timer_hour.time_str }}{% else %}??/??/???? ??:??{% endif %}</b> :
+                    {{ timer_hour.uniq_id }}
+                    ({% if timer_hour.text_before %}{{ timer_hour.text_before }}{% else %}???{% endif %}
+                    /
+                    {% if timer_hour.text_after %}{{ timer_hour.text_after }}{% else %}???{% endif %})
+                    {% if timer_hour.error %}<br/><span class="text-danger">{{ timer_hour.error }}</span>{%endif %}
+                </div>
+                <div class="col-2 text-nowrap text-end">
+                    {% if not admin_timer_hour %}
+                        {% if not admin_timer_hour and admin_timer.timer_hours_sorted_by_order|length > 1 %}
+                            <i class="bi-arrows-move"></i>
+                        {% endif %}
+                        <button
+                                class="btn btn-sm btn-primary text-nowrap"
+                                hx-get="{{ url_for('admin-timer-hours-hour-modal', event_uniq_id=admin_event.uniq_id, timer_id=admin_timer.id, timer_hour_id=timer_hour.id) }}"
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait">
+                            <i class="bi-pencil-fill"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-primary text-nowrap"
+                                hx-post="{{ url_for('admin-timer-hour-clone', event_uniq_id=admin_event.uniq_id, timer_id=admin_timer.id, timer_hour_id=timer_hour.id) }}"
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait">
+                            <i class="bi-copy"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-danger text-nowrap"
+                                hx-delete="{{ url_for('admin-timer-hour-delete', event_uniq_id=admin_event.uniq_id, timer_id=admin_timer.id, timer_hour_id=timer_hour.id) }}"
+                                hx-target="#admin-timer-hours-modal"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait"
+                                {% if admin_timer.timers_hours_by_id|length <= 1 %}
+                                    disabled
+                                {% endif %}
+                        >
+                            <i class="bi-trash-fill"></i>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>

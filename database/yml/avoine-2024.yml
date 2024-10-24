@@ -1,0 +1,155 @@
+name: "38e open international d'échecs d'Avoine"
+start: "2024-07-20 00:00"
+stop: "2024-07-28 23:59"
+update_password: "mot_de_passe"
+record_illegal_moves: 0
+allow_results_deletion_on_input_screens: true
+background_image: "FRA/CVL/37/G37011.png"
+background_color: "#fcffe5"
+timers:
+  chronometre:
+    hours:
+      pointage:
+        date_str: "2024-07-20"
+        time_str: "14:00"
+        text_before: "Fin du pointage dans %s"
+        text_after: "Pointage terminé depuis %s"
+      1:
+        time_str: "15:15"
+      2:
+        date_str: "2024-07-21"
+        time_str: "14:00"
+      3:
+        date_str: "2024-07-22"
+        time_str: "14:00"
+      4:
+        date_str: "2024-07-23"
+        time_str: "14:00"
+      5:
+        date_str: "2024-07-24"
+        time_str: "14:00"
+      6:
+        date_str: "2024-07-25"
+        time_str: "14:00"
+      7:
+        date_str: "2024-07-26"
+        time_str: "14:00"
+      8:
+        date_str: "2024-07-27"
+        time_str: "14:00"
+      9:
+        date_str: "2024-07-28"
+        time_str: "09:00"
+      remise-prix:
+        time_str: "16:30"
+        text_before: "Début de la remise des prix dans %s"
+        text_after: "Remise des prix débutée depuis %s"
+    delays:
+      - 15
+      - 5
+      - 60
+tournaments:
+  avoine:
+    filename: "avoine_2024"
+    name: "Avoine 2024"
+    ffe_id: 62738
+    ffe_password: "ABCDEFGHIJ"
+screens:
+  saisie-ec-fixes:
+    name: "Tables fixes espace culturel"
+    type: "input"
+    menu: "saisie-ec*"
+    menu_text: "Fixes espace culturel"
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "avoine"
+        fixed_boards_str: "212,213,214"
+  saisie-sdf-fixes:
+    name: "Tables fixes salles des fêtes"
+    type: "input"
+    menu: "saisie-sdf*"
+    menu_text: "Fixes salles des fêtes"
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "avoine"
+        fixed_boards_str: "215"
+  echiquiers-ec:
+    name: "Espace culturel"
+    type: "boards"
+    menu: "echiquiers-*"
+    menu_text: "Espace culturel"
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "avoine"
+        last: 74
+  echiquiers-sdf:
+    name: "Salle des fêtes"
+    type: "boards"
+    menu: "echiquiers-*"
+    menu_text: "Salle des fêtes"
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "avoine"
+        first: 75
+  echiquiers-fixes:
+    name: "Tables fixes"
+    type: "boards"
+    menu: "echiquiers-*"
+    menu_text: Fixes
+    timer_uniq_id: "chronometre"
+    sets:
+      -
+        tournament_uniq_id: "avoine"
+        fixed_boards_str: "212,213,214,215"
+  resultats:
+    type: "results"
+    menu_text: "Résultats"
+    timer_uniq_id: "chronometre"
+    results_tournament_uniq_ids:
+      - "avoine"
+families:
+  saisie-ec:
+    name: "Saisie Espace Culturel"
+    type: "input"
+    menu: "saisie-ec-*"
+    menu_text: "Tables [%f-%l]"
+    timer_uniq_id: "chronometre"
+    tournament_uniq_id: "avoine"
+    last: 74
+    number: 24
+  saisie-sdf:
+    name: "Saisie salle des fêtes"
+    type: "input"
+    menu: "saisie-sdf-*"
+    menu_text: "Tables [%f-%l]"
+    timer_uniq_id: "chronometre"
+    tournament_uniq_id: "avoine"
+    first: 75
+    number: 20
+  appariements:
+    name: "Échiquiers %f à %l"
+    type: "boards"
+    menu: "@family"
+    menu_text: "[%f-%l]"
+    timer_uniq_id: "chronometre"
+    tournament_uniq_id: "avoine"
+    number: 22
+  joueurs:
+    name: "Joueur·euses de %f à %l"
+    type: "players"
+    players_show_unpaired: false
+    timer_uniq_id: "chronometre"
+    tournament_uniq_id: "avoine"
+    number: 22
+rotators:
+  joueurs:
+    family_uniq_ids:
+      - "joueurs"
+    delay: 20
+  appariements:
+    family_uniq_ids:
+      - "appariements"

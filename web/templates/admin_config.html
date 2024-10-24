@@ -1,9 +1,27 @@
-<h1>Configuration de Papi-web</h1>
-<table class="table table-striped table-sm table-hover border-black">
-    <thead class="table-dark position-sticky top-0">
+<div class="row mb-2">
+    <div class="col-auto fs-3 fw-bold">
+        <i class="bi-gear-fill"></i>
+        Configuration de Papi-web
+    </div>
+    <div class="col text-end">
+        <button
+                class="btn btn-primary text-nowrap"
+                hx-post="{{ url_for('admin-event-modal-create') }}"
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait">
+            <i class="bi-plus-square-fill"></i> Créer un évènement
+        </button>
+    </div>
+</div>
+
+<table class="table table-striped table-sm table-hover border-black w-auto bg-light mx-auto justify-content-center">
+    <thead class="table-dark position-sticky top-0 z-2">
         <tr>
             <th scope="col" class="text-nowrap">Configuration</th>
-            <th scope="col" class="width-100">Valeur</th>
+            <th scope="col" class=""></th>
         </tr>
     </thead>
     <tbody>
@@ -17,11 +35,11 @@
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Accès depuis le réseau local (LAN/WAN)</th>
-            <td>{% if papi_web_config.lan_url %}<a href="{{ papi_web_config.lan_url }}" target="_blank">{{ papi_web_config.lan_url }}</a>{% else %}<em>-</em>{% endif %}</td>
+            <td>{% if papi_web_config.lan_url %}<a href="{{ papi_web_config.lan_url }}" target="_blank">{{ papi_web_config.lan_url }}</a>{% else %}<span class="fst-italic">-</span>{% endif %}</td>
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Lancement du navigateur au démarrage du serveur</th>
-            <td>{% if papi_web_config.web_launch_browser %}Oui{% else %}<em>Non</em>{% endif %}</td>
+            <td>{% if papi_web_config.web_launch_browser %}Oui{% else %}<span class="fst-italic">Non</span>{% endif %}</td>
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Version de Papi-web</th>
@@ -50,6 +68,14 @@
         <tr>
             <th scope="row" class="text-nowrap">Version de Bootstrap</th>
             <td id="bootstrap-version"></td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Version de SortableJS</th>
+            <td>{{ papi_web_config.sortable_version }}</td>
+        </tr>
+        <tr>
+            <th scope="row" class="text-nowrap">Version de jsTree</th>
+            <td>{{ papi_web_config.jstree_version }}</td>
         </tr>
         <tr>
             <th scope="row" class="text-nowrap">Version de PyODBC</th>

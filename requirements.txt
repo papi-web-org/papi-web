@@ -1,25 +1,76 @@
 AdvancedHTMLParser~=9.0.2
-requests~=2.32.3
-configparser~=7.0.0
-# PyYAML is required by Litestar
-PyYAML~=6.0.1
-colorama~=0.4.6
-colorlog~=6.8.0
-# idna is required by PyInstaller
-idna~=3.4
-# urllib3 is required by PyInstaller
-urllib3~=2.2.1
-# pefile is required by PyInstaller
-pefile~=2023.2.7
-setuptools~=70.2.0
-pyinstaller~=6.8.0
-# QueryableList~=3.1.0
-pyodbc~=5.1.0
-chardet~=5.2.0
-uvicorn~=0.30.1
-litestar~=2.9.1
 # Jinja2 is required by Litestar
 Jinja2~=3.1.4
+# MarkupSafe is required by Jinja2
+MarkupSafe~=2.1.5
+PyPAC~=0.16.4
+# PyYAML is required by Litestar
+PyYAML~=6.0.2
+# altgraph is required by pyinstaller
+altgraph~=0.17.4
+# annotated-types is required by pydantic
+annotated-types~=0.7.0
+# anyio is required by Litestar
+anyio~=4.5.0
+backports.tarfile~=1.2.0
+certifi~=2024.8.30
+cffi~=1.17.1
+chardet~=5.2.0
+charset-normalizer~=3.3.2
+# click is required by uvicorn
+click~=8.1.7
+colorama~=0.4.6
+colorlog~=6.8.0
+configparser~=7.1.0
 # cryptography is required by Litestar
 cryptography~=43.0.1
-packaging~=24.0
+# h11 is required by uvicorn
+h11~=0.14.0
+httpdate~=1.2.0
+idna~=3.10
+importlib-metadata~=8.5.0
+importlib-resources~=6.4.5
+# idna is required by requests
+inflect~=7.4.0
+jaraco.context~=6.0.1
+jaraco.functools~=4.0.2
+jaraco.text~=4.0.0
+litestar~=2.11.0
+more-itertools~=10.5.0
+# multidict is required by Litestar
+multidict~=6.1.0
+# msgspec is required by Litestar
+msgspec~=0.18.6
+mysql-connector-python~=9.0.0
+packaging~=24.1
+# pefile is required by pyinstaller
+pefile~=2024.8.26
+platformdirs~=4.3.6
+# pydantic is required by Litestar
+pydantic~=2.9.2
+pydantic-core~=2.23.4
+pyinstaller~=6.10.0
+pyinstaller-hooks-contrib~=2024.8
+pyodbc~=5.1.0
+# pywin32-ctypes is required by pyinstaller
+pywin32-ctypes~=0.2.3
+requests~=2.32.3
+requests-file~=2.1.0
+rfc3986~=2.0.0
+setuptools~=75.1.0
+# sniffio is required by Litestar
+sniffio~=1.3.1
+# tldextract is required by PyPAC
+tldextract~=5.1.2
+tomli~=2.0.1
+typeguard~=4.3.0
+# typing-extensions is required by Litestar
+typing-extensions~=4.12.2
+# tzdata is required at runtime
+tzdata~=2024.1
+# urllib3 is required by pyinstaller
+urllib3~=2.2.3
+uvicorn~=0.30.6
+validators~=0.34.0
+wheel~=0.44.0
+zipp~=3.20.2

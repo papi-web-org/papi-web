@@ -2,6 +2,9 @@
 
 # Papi-web - Gestion d'un évènement avec plusieurs tournois
 
+> [!CAUTION]
+> Cette page décrivant la configuration au format INI d'un évènement comportant plusieurs tournois est obsolète et sera prochainement remplacée par un tutoriel.
+
 Lorsqu'il n'y qu'un seul tournoi dans un évènement, le tournoi est déclaré en utilisant la rubrique `[tournament]`.
 
 ```

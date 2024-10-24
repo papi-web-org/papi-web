@@ -1,34 +1,49 @@
-<h1>{{ admin_event.name }} - Tournois</h1>
-<table class="table border-black">
-    <thead class="table-dark">
-        <tr>
-            <th scope="col" class="text-nowrap">Id</th>
-            <th scope="col" class="text-nowrap">Nom</th>
-            <th scope="col" class="text-nowrap">Fichier</th>
-            <th scope="col" class="text-nowrap">Joueur·euses</th>
-            <th scope="col" class="text-nowrap">Rondes</th>
-            <th scope="col" class="text-nowrap">N° FFE</th>
-            <th scope="col" class="text-nowrap">Mot de passe FFE</th>
-            <th scope="col" class="width-100">Handicap</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for tournament in admin_event.tournaments.values() %}
-            <tr>
-                <th scope="row" class="text-nowrap">{{ tournament.uniq_id }}</th>
-                <td class="text-nowrap">{{ tournament.name }}</td>
-                <td class="text-nowrap">{% if tournament.file %}{{ tournament.file }}{% if tournament.download_allowed %} <a href="{{ url_for('download-tournament', event_uniq_id=admin_event.uniq_id, tournament_uniq_id=tournament.uniq_id) }}"><i class="bi-cloud-arrow-down"></i></a>{% endif %}{% else %}<em>-</em>{% endif %}</td>
-                <td class="text-nowrap text-center">{% if tournament.file %}{{ tournament.players_by_name_with_unpaired | length }}{% else %}<em>-</em>{% endif %}</td>
-                <td class="text-nowrap text-center">{% if tournament.file %}{{ tournament.current_round }} / {{ tournament.rounds }}{% else %}<em>-</em>{% endif %}</td>
-                <td class="text-nowrap text-center">{% if tournament.ffe_id %}{{ tournament.ffe_id }}{% else %}<em>Aucun</em>{% endif %}</td>
-                <td class="text-nowrap">{% if tournament.ffe_password %}**********{% else %}<em>Aucun</em>{% endif %}</td>
-                <td>{% if tournament.handicap %}<i class="bi-plus-slash-minus"></i><i class="bi-hourglass-split">Oui</i>{% else %}<em>-</em>{% endif %}</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% if admin_event.download_allowed %}
-    <div>
-        <a href="{{ url_for('download-event-tournaments', event_uniq_id=admin_event.uniq_id) }}"><strong><i class="bi-cloud-arrow-down-fill"></i></strong></a>
+{% extends 'cards_container.html' %}
+{% from 'macros.j2' import tooltip_attributes, event_visibility_icon %}
+
+{% block cards_container_title %}
+    {{ event_visibility_icon(admin_event, '') }}
+    {{ admin_event.name }} - Tournois
+{% endblock %}
+
+{% block cards_container_right_buttons %}
+    <span {{ tooltip_attributes('info', 'Rafraîchir cet onglet.', 'top') }}>
+        <button
+                class="btn btn-primary text-nowrap ms-1"
+                hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='tournaments') }}"
+                hx-swap="multi:#admin-header,#admin-content"
+                hx-indicator="#please-wait"
+        >
+            <i class="bi-arrow-clockwise"></i>
+        </button>
+    </span>
+    <span {{ tooltip_attributes('info', 'Ajouter un nouveau tournoi à l\'évènement.', 'top') }}>
+        <button
+                class="btn btn-primary text-nowrap ms-1"
+                hx-get="{{ url_for('admin-tournament-create-modal', event_uniq_id=admin_event.uniq_id) }}"
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait"
+        >
+            <i class="bi-plus-square-fill"></i> Créer un tournoi
+        </button>
+    </span>
+{% endblock %}
+
+{% block cards_container_cards %}
+    <div class="row">
+        {% if admin_event.tournaments_by_uniq_id %}
+            {% for tournament in admin_event.tournaments_by_uniq_id.values() %}
+                {% with card_class='bg-light' %}
+                    {% include 'admin_tournament_card.html' %}
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            <div class="col-12 mb-3">
+                Aucun tournoi.
+            </div>
+        {% endif %}
     </div>
-{% endif %}
+{% endblock %}

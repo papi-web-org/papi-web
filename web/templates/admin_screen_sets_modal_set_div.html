@@ -1,0 +1,242 @@
+<div class="admin-screen-sets-modal-screen-set-div {% if not admin_screen_set and admin_screen.screen_sets_sorted_by_order|length > 1 %}cursor-grab{% endif %}">
+    <input type='hidden' name='item' value='{{ screen_set.id }}'/>
+    {% if admin_screen_set.id == screen_set.id %}
+        <form
+                hx-patch="{{ url_for('admin-screen-set-update', event_uniq_id=admin_event.uniq_id, screen_id=admin_screen.id, screen_set_id=admin_screen_set.id) }}"
+                hx-target="closest .admin-screen-sets-modal-screen-set-div"
+                hx-swap="innerHTML"
+                hx-trigger="end"
+                hx-indicator="#please-wait">
+            <div class="admin-screen-set-div edit border border-secondary px-1 mb-1">
+                <h3>
+                    Propriétés
+                </h3>
+                <div class="row">
+                    <div class="col-5">
+                        {% with id='tournament-id', name='tournament_id' %}
+                            <label for="{{ id }}" class="form-label">Tournoi :</label>
+                            <select
+                                    name="{{ name }}"
+                                    id="{{ id }}"
+                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                    aria-describedby="{{ id }}-help {{ id }}-error" >
+                                {% for value, text in tournament_options.items() %}
+                                    <option value="{{ value }}" {% if value == data[name] %}selected{%endif %}>
+                                        {{ text }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div id="{{ id }}-help" class="form-text">
+                                {% if admin_screen.type in ['boards', 'input'] %}
+                                    Le tournoi dont on souhaite afficher les échiquiers, obligatoire.
+                                {% else %}
+                                    Le tournoi dont on souhaite afficher les joueur·euses, obligatoire.
+                                {% endif %}
+                            </div>
+                            {% if name in errors %}
+                                <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                    {{ errors[name] }}
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="col-5">
+                        {% with id='name', name='name' %}
+                            <label for="{{ id }}" class="form-label">Nom :</label>
+                            <input
+                                    name="{{ name }}"
+                                    type="text" id="{{ id }}"
+                                    class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                    aria-describedby="{{ id }}-help {{ id }}-error"
+                                    placeholder="Exemple : {% if admin_screen.type in ['boards', 'input'] %}Échiquiers{% else %}Joueur·euses{% endif %} %f à %l"
+                                    value="{{ data[name] }}" />
+                            <div id="{{ id }}-help" class="form-text">
+                                Le nom de l'ensemble (le nom du premier ensemble d'un écran est par défaut le nom de l'écran).
+                            </div>
+                            {% if name in errors %}
+                                <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                    {{ errors[name] }}
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="col-2 text-end">
+                        <button
+                                class="btn btn-sm btn-primary text-nowrap mb-1"
+                                hx-patch="{{ url_for('admin-screen-set-update', event_uniq_id=admin_event.uniq_id, screen_id=admin_screen.id, screen_set_id=admin_screen_set.id) }}"
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait">
+                            <i class="bi-floppy-fill"></i> Enregistrer
+                        </button>
+                        <button
+                                class="btn btn-sm btn-secondary text-nowrap mb-1"
+                                hx-get="{{ url_for('admin-screen-sets-modal', event_uniq_id=admin_event.uniq_id, screen_id=admin_screen.id) }}"
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                hx-trigger="click, keyup[key=='Escape'] from:body"
+                                hx-indicator="#please-wait">
+                            <i class="bi-x-circle-fill"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+                {% if admin_screen.type in ['boards', 'input', 'players'] %}
+                    <h3>
+                        {% if admin_screen.type in ['boards', 'input'] %}
+                            Sélection des échiquiers (par ordre croissant)
+                        {% else %}
+                            Sélection des joueur·euses (par ordre alphabétique)
+                        {% endif %}
+                    </h3>
+                    <div class="row">
+                        <div class="{% if admin_screen.type in ['boards', 'input'] %}col-4{% else %}col-6{% endif %}">
+                            {% with id='first', name='first' %}
+                                <label for="{{ id }}" class="form-label">
+                                    {% if admin_screen.type in ['boards', 'input'] %}
+                                        Premier échiquier :
+                                    {% else %}
+                                        Premier·e joueur·euse :
+                                    {% endif %}
+                                </label>
+                                <input
+                                        name="{{ name }}"
+                                        type="number" id="{{ id }}" min="1"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : 15"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                    {% if admin_screen.type in ['boards', 'input'] %}
+                                        Le numéro du premier échiquier à prendre en compte, facultatif (par défaut le premier échiquier).
+                                    {% else %}
+                                        Le numéro du·de la premier·e joueur·euse, facultatif (par défaut le·la premier·e par ordre alphabétique).
+                                    {% endif %}
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="{% if admin_screen.type in ['boards', 'input'] %}col-4{% else %}col-6{% endif %}">
+                            {% with id='last', name='last' %}
+                                <label for="{{ id }}" class="form-label">
+                                    {% if admin_screen.type in ['boards', 'input'] %}
+                                        Dernier échiquier :
+                                    {% else %}
+                                        Dernier·e joueur·euse :
+                                    {% endif %}
+                                </label>
+                                <input
+                                        name="{{ name }}"
+                                        type="number" id="{{ id }}" min="1"
+                                        class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                        aria-describedby="{{ id }}-help {{ id }}-error"
+                                        placeholder="Exemple : 40"
+                                        value="{{ data[name] }}" />
+                                <div id="{{ id }}-help" class="form-text">
+                                    {% if admin_screen.type in ['boards', 'input'] %}
+                                        Le numéro du dernier échiquier à prendre en compte, facultatif (par défaut le premier échiquier).
+                                    {% else %}
+                                        Le numéro du·de la dernier·e joueur·euse, facultatif (par défaut le·la dernier·e par ordre alphabétique).
+                                    {% endif %}
+                                </div>
+                                {% if name in errors %}
+                                    <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                        {{ errors[name] }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        {% if admin_screen.type in ['boards', 'input'] %}
+                            <div class="col-4">
+                                {% with id='fixed-boards-str', name='fixed_boards_str' %}
+                                    <label for="{{ id }}" class="form-label">Échiquiers fixes :</label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="text" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : 501, 502"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                        Les numéros des tables fixes doivent être séparés par des virgules ; si ce champ est utilisé, les champs suivants ne sont pas pris en compte.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </form>
+    {% else %}
+        <div class="admin-screen-set-div border border-secondary p-1 mb-1">
+            <div class="row">
+                <div class="col-10">
+                    <div>
+                        <b>
+                            Tournoi :
+                            {% if screen_set.tournament %}
+                                {{ screen_set.tournament.name }}
+                            {% else %}
+                                <span class="text-danger">non défini</span>
+                            {% endif %}
+                        </b>
+                    </div>
+                    <div>
+                        Sélection : {{ screen_set.numbers_str }}
+                    </div>
+                    <div>
+                        Nom :
+                        {% if screen_set.name %}
+                            {{ screen_set.name }}
+                        {% else %}
+                            <span class="fst-italic">par défaut</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-2 text-nowrap text-end">
+                    {% if not admin_screen_set %}
+                        {% if admin_screen.screen_sets_sorted_by_order|length > 1 %}
+                            <i class="bi-arrows-move"></i>
+                        {% endif %}
+                        <button
+                                class="btn btn-sm btn-primary text-nowrap"
+                                hx-get="{{ url_for('admin-screen-sets-set-modal', event_uniq_id=admin_event.uniq_id, screen_id=admin_screen.id, screen_set_id=screen_set.id) }}"
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait">
+                            <i class="bi-pencil-fill"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-primary text-nowrap"
+                                hx-post="{{ url_for('admin-screen-set-clone', event_uniq_id=admin_event.uniq_id, screen_id=admin_screen.id, screen_set_id=screen_set.id) }}"
+                                hx-target="#admin-modal-container"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait">
+                            <i class="bi-copy"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-danger text-nowrap"
+                                hx-delete="{{ url_for('admin-screen-set-delete', event_uniq_id=admin_event.uniq_id, screen_id=admin_screen.id, screen_set_id=screen_set.id) }}"
+                                hx-target="#admin-screen-sets-modal"
+                                hx-swap="innerHTML"
+                                hx-indicator="#please-wait"
+                                {% if admin_screen.screen_sets_sorted_by_order|length <= 1 %}
+                                    disabled
+                                {% endif %}
+                        >
+                            <i class="bi-trash-fill"></i>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>

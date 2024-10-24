@@ -1,23 +1,72 @@
-<h1>{{ admin_event.name }} - Écrans rotatifs</h1>
-<table class="table border-black">
-    <thead class="table-dark">
-        <tr>
-            <th scope="col">Id</th>
-            <th scope="col">Délai</th>
-            <th scope="col">Ecrans</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for rotator in admin_event.rotators.values() %}
-            <tr>
-                <th scope="row"><a href="{{ url_for('render-rotator', event_uniq_id=admin_event.uniq_id, rotator_id=rotator.id) }}" target="_blank">{{ rotator.id }}</a></th>
-                <td>{{ rotator.delay }}</td>
-                <td>
-                    {% for screen in rotator.screens %}
-                        {{ screen.id }}
-                    {% endfor %}
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% extends 'cards_container.html' %}
+{% from 'macros.j2' import tooltip_attributes, event_visibility_icon %}
+
+{% block cards_container_title %}
+    {{ event_visibility_icon(admin_event, '') }}
+    {{ admin_event.name }} - Écrans rotatifs
+{% endblock %}
+
+{% block cards_container_right_buttons %}
+    {% with id='show-details-on-rotator-list', name='show_details_on_rotator_list' %}
+        <div
+                class="form-check form-switch d-inline-block pe-3 mt-2"
+                {{ tooltip_attributes('info', 'Activer ou désactiver l\'affichage des détails sur les cartes des écrans rotatifs ci-dessous.', 'top') }}
+        >
+            <input
+                    hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='rotators') }}"
+                    hx-vals='{"{{ name }}": "{% if show_details_on_rotator_list %}false{% else %}true{% endif %}"}'
+                    hx-swap="multi:#admin-header,#admin-content"
+                    hx-indicator="#please-wait"
+                    class="form-check-input"
+                    type="checkbox"
+                    id="{{ id }}"
+                    {% if show_details_on_rotator_list %}checked{% endif %} /><label for="{{ id }}" class="form-check-label"> Détails</label>
+        </div>
+    {% endwith %}
+    <span {{ tooltip_attributes('info', 'Rafraîchir cet onglet.', 'top') }}>
+        <button
+                class="btn btn-primary text-nowrap ms-1"
+                hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='rotators') }}"
+                hx-swap="multi:#admin-header,#admin-content"
+                hx-indicator="#please-wait"
+        >
+            <i class="bi-arrow-clockwise"></i>
+        </button>
+    </span>
+    <span {{ tooltip_attributes('info', 'Ajouter un nouvel écran rotatif à l\'évènement.' if admin_event.screens_by_uniq_id else 'Vous devez créer un écran ou une famille d\'écrans avant de pouvoir créer des écrans rotatifs', 'top') }}>
+        <button
+                class="btn btn-primary text-nowrap ms-1"
+                hx-get="{{ url_for('admin-rotator-create-modal', event_uniq_id=admin_event.uniq_id) }}"
+                hx-target="#admin-modal-container"
+                hx-swap="innerHTML"
+                data-bs-toggle="modal"
+                data-bs-target="#admin-modal-container"
+                hx-indicator="#please-wait"
+                {% if not admin_event.screens_by_uniq_id %}
+                    disabled
+                {% endif %}
+        >
+            <i class="bi-plus-square-fill"></i> Créer un écran rotatif
+        </button>
+    </span>
+{% endblock %}
+
+{% block cards_container_cards %}
+    <div class="row">
+        {% if admin_event.rotators_by_uniq_id %}
+            {% for rotator in admin_event.rotators_by_uniq_id.values() %}
+                {% with
+                    card_class='bg-light',
+                    card_background_url=rotator.event.background_url,
+                    card_background_color=rotator.event.background_color
+                %}
+                    {% include 'admin_rotator_card.html' %}
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            <div class="col-12 mb-3">
+                Aucune famille d'écrans.
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

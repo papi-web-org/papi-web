@@ -1,0 +1,102 @@
+/*
+###########################################################
+# EVENT
+###########################################################
+*/
+
+/*
+###########################################################
+# SCREENS
+###########################################################
+*/
+
+/*
+###########################################################
+# INPUT SCREENS - LOGIN MODAL
+###########################################################
+*/
+
+/*
+###########################################################
+# INPUT SCREENS - RESULT MODAL
+###########################################################
+*/
+.input-screen-result-modal .result-button {
+    border: 3px #000080 solid;
+}
+.input-screen-result-modal .admin-result-button {
+    border: 3px #800000 solid;
+}
+.input-screen-result-modal .result-button.draw {
+    color: #000080;
+}
+.input-screen-result-modal .result-button:hover,
+ .input-screen-result-modal .admin-result-button:hover {
+    color: #000080 !important;
+}
+.input-screen-result-modal .result-button:hover {
+    background-color: yellow !important;
+}
+ .input-screen-result-modal .admin-result-button:hover {
+    background-color: #ffc500 !important;
+}
+/*
+###########################################################
+# BOARDS/INPUT SCREENS - BOARD/PLAYER ROWS
+###########################################################
+*/
+.input-screen .board-row.result-not-set:hover {
+    background-color: yellow;
+    cursor: pointer;
+}
+.input-screen .board-row.result-set:hover {
+    background-color: #ffffcc;
+}
+.time-control-modified .minutes,
+.time-control-modified .seconds {
+    color: red;
+}
+.player-cell.last_check_in_updated, .player-cell.last_illegal_move_updated,
+.illegal-moves-cell.last_check_in_updated, .illegal-moves-cell.last_illegal_move_updated {
+    color: red !important;
+}
+.board-row.last_result_updated > * {
+    color: red !important;
+}
+/*
+###########################################################
+# PLAYERS SCREENS - ROWS
+###########################################################
+*/
+/*
+###########################################################
+# RESULTS SCREENS - ROWS
+###########################################################
+*/
+/*
+###########################################################
+# MENUS
+###########################################################
+*/
+.screen-menu {
+    font-size: x-large;
+}
+.screen-menu-item {
+    color: red;
+}
+.screen-menu-item.selected {
+    background-color: red;
+    color: white;
+}
+.screen-menu-item:hover {
+    background-color: #ffff00;
+    color: #000080;
+}
+/*
+###########################################################
+# TIMERS
+###########################################################
+*/
+.timer {
+    font-size: x-large;
+}

@@ -2,6 +2,9 @@
 
 # Affichage des résultats
 
+> [!CAUTION]
+> Cette page décrivant la configuration au format INI des écrans d'affichage des derniers résultats est obsolète et sera prochainement remplacée par un tutoriel.
+
 Dans les évènements avec plusieurs tournois, il peut être utile de suivre l'intégralité des résultats sur un seul écran, c'est l'objet des écrans de résultats.
 
 Tous les résultats saisis via les écrans de saisie sont automatiquement répertoriés et affichés en commençant par les plus récents sur les écrans de résultats.

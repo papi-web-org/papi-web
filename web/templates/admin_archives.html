@@ -1,0 +1,29 @@
+<div class="row mb-2">
+    <div class="col-auto fs-3 fw-bold">
+        <i class="{{ nav_tab.icon_class }}"></i>
+        {{ nav_tab.title }}
+    </div>
+</div>
+
+<table class="table table-striped table-sm table-hover border-black w-auto bg-light mx-auto justify-content-center">
+    <thead class="table-dark position-sticky top-0 z-2">
+        <tr>
+            <th scope="col" class="text-nowrap">Archive</th>
+            <th scope="col" class="">Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if nav_tab.archives %}
+            {% for archive in nav_tab.archives %}
+                <tr>
+                    <th scope="row" class="text-nowrap">{{ archive.name }}</th>
+                    <td>{{ archive.date_str }}</td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <th scope="row" class="text-nowrap" colspan="2">{{ nav_tab.empty_str }}</th>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>

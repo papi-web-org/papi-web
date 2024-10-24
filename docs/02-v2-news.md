@@ -13,27 +13,18 @@ Papi-web est désormais livré sous la forme d'un exécutable Windows autonome.
 
 ## Configuration plus simple
 
-Papi-web et les évènements sont désormais configuré au format INI :
+### Papi-Web
 
-```
-[rubrique]
-option = valeur
-```
+Papi-web est configuré à l'aide d'un fichier très simple au format INI ()
 
-L'écriture de lignes de code PHP n'est plus nécessaire, la configuration d'un tournoi sans personnalisation se fait en quelques secondes :
+### Évènements
 
-```
-[event]
-name = Tournoi amical 17 juin 2023
+La configuration des évènements a été réalisée à l'aide de code PHP en version 1.x, puis à l'aide d'un fichier de configuration de la version 2.0 à la version 2.3.
 
-[tournament]
-filename = amical-20230617
-```
+À partir de la version 2.4, la configuration des évènements est réalisée à l'aide d'une interface web qui ne nécessite aucune compétence informatique avancée.
 
 À voir :
 - [Configuration et utilisation](06-use.md)
-- [Guide de référence de la configuration des évènements](40-ref.md)
-
 
 ## Utilisation plus simple
 
@@ -41,7 +32,7 @@ Le lancement du serveur indique les URL à accéder (depuis le serveur et depuis
 
 ```
 C:\...\papi-web-<version>$ server.bat
-Papi-web <version>> Copyright © Pascal AUBRY 2013-2024
+Papi-web <version> Copyright © Pascal AUBRY 2013-2024
 Starting Papi-web server, please wait...
 Reading configuration file...
 log: INFO

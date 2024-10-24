@@ -1,0 +1,178 @@
+<div class="modal-dialog modal-dialog-centered admin-chessevent-edit-modal d-block w-80 mw-100">
+    <form
+            {% if action == 'create' %}
+                hx-post="{{ url_for('admin-chessevent-' ~ action, event_uniq_id=admin_event.uniq_id) }}"
+            {% elif action == 'clone' %}
+                hx-post="{{ url_for('admin-chessevent-' ~ action, event_uniq_id=admin_event.uniq_id, chessevent_id=admin_chessevent.id) }}"
+            {% elif action == 'update' %}
+                hx-patch="{{ url_for('admin-chessevent-' ~ action, event_uniq_id=admin_event.uniq_id, chessevent_id=admin_chessevent.id) }}"
+            {% elif action == 'delete' %}
+                hx-delete="{{ url_for('admin-chessevent-' ~ action, event_uniq_id=admin_event.uniq_id, chessevent_id=admin_chessevent.id) }}"
+            {% else %}
+                hx-get="{{ url_for('unknown-action-' ~ action) }}"
+            {% endif %}
+            hx-swap="multi:#messages,#admin-header,#admin-content"
+            hx-indicator="#please-wait">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    {% if action == 'create' %}
+                        Création d'une connexion à ChessEvent
+                    {% elif action == 'update' %}
+                        Modification de la connexion à ChessEvent [{{ admin_chessevent.uniq_id }}]
+                    {% else %}
+                        Suppression de la connexion à ChessEvent [{{ admin_chessevent.uniq_id }}]
+                    {% endif %}
+                </h2>
+            </div>
+            <div class="modal-body">
+                {% if action == 'delete' %}
+                    <h3 class="text-danger">
+                        Attention : la suppression d'une connexion à ChessEvent est définitive !
+                    </h3>
+                    {% if admin_chessevent.dependent_tournaments %}
+                        <p>Les tournois suivants ne seront plus connectés à ChessEvent :</p>
+                        <ul>
+                            {% for tournament in admin_chessevent.dependent_tournaments %}
+                                <li>{{ tournament.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% else %}
+                    <h3>
+                        Propriétés
+                    </h3>
+                    <div class="row">
+                        <div class="col-4">
+                            {% with id='uniq-id', name='uniq_id' %}
+                                <div>
+                                    <label for="{{ id }}" class="form-label">Identifiant (unique) :</label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="text" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : domloup-fide"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                      L'identifiant unique, utilisé pour référencer la connexion.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endwith %}
+                        </div>
+                    </div>
+                    <h3>
+                        Connexion à la plateforme ChessEvent
+                    </h3>
+                    <div class="row">
+                        <div class="col-4">
+                            {% with id='user-id', name='user_id' %}
+                                <div>
+                                    <label for="{{ id }}" class="form-label">Identifiant :</label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="text" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : Z00000"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                      L'identifiant utilisé pour se connecter sur la plateforme ChessEvent.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endwith %}
+                        </div>
+                        <div class="col-4">
+                            {% with id='password', name='password' %}
+                                <div>
+                                    <label for="{{ id }}" class="form-label">Mot de passe :</label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="text" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : mot_de_passe"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                      Le mot de passe utilisé pour se connecter sur la plateforme ChessEvent.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endwith %}
+                        </div>
+                        <div class="col-4">
+                            {% with id='event-id', name='event_id' %}
+                                <div>
+                                    <label for="{{ id }}" class="form-label">Évènement :</label>
+                                    <input
+                                            name="{{ name }}"
+                                            type="text" id="{{ id }}"
+                                            class="form-control {% if name in errors %}is-invalid{% else %}is-valid{% endif %}"
+                                            aria-describedby="{{ id }}-help {{ id }}-error"
+                                            placeholder="Exemple : BRE_35_domloupfide36"
+                                            value="{{ data[name] }}" />
+                                    <div id="{{ id }}-help" class="form-text">
+                                      Le nom de l'évènement sur la plateforme ChessEvent.
+                                    </div>
+                                    {% if name in errors %}
+                                        <div id="{{ id }}-error" class="form-text invalid-feedback">
+                                            {{ errors[name] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endwith %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer d-block">
+                <div class="row">
+                    <div class="col col-6 text-start">
+                        <button
+                                type="submit"
+                                class="text-nowrap white btn {% if action == 'delete' %}btn-danger{% else %}btn-primary{% endif %} text-nowrap"
+                                data-bs-dismiss="modal"
+                        >
+                            <i class="bi-floppy-fill"></i>
+                            {% if action == 'create' %}
+                                Créer
+                            {% elif action == 'update' %}
+                                Modifier
+                            {% else %}
+                                Supprimer
+                            {% endif %}
+                        </button>
+                    </div>
+                    <div class="col col-6 text-end">
+                        <button
+                                class="btn btn-secondary text-nowrap"
+                                hx-get="{{ url_for('admin-event-tab', event_uniq_id=admin_event.uniq_id, admin_event_tab='chessevents') }}"
+                                hx-swap="multi:#messages,#admin-header,#admin-content"
+                                hx-trigger="click, keyup[key=='Escape'] from:body"
+                                hx-indicator="#please-wait"
+                                data-bs-dismiss="modal">
+                            <i class="bi-x-circle-fill"></i> Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+    (new bootstrap.Modal(document.getElementById('admin-modal-container'))).show();
+</script>
