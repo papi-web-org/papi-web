@@ -15,6 +15,7 @@
         <script>
             {% if screen.timer %}
                 {% if not screen.timer.error %}
+                    <!-- user_timer.js -->
                     {% include 'user_timer.js' %}
                 {% endif %}
             {% endif %}
@@ -34,8 +35,8 @@
             </div>
         {% endif %}
         {% if screen.timer %}
+            <!-- user_timer.html -->
             {% include 'user_timer.html' %}
-            <script>{% include 'user_timer.js' %}</script>
         {% endif %}
         {% if rotator %}
             <div
