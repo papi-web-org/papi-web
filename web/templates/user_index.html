@@ -13,14 +13,16 @@
 {% endblock user_header_back_button %}
 
 {% block user_header_refresher %}
-    <div
-            class="refresher user-refresher"
-            hx-headers='{"If-Modified-Since": "{{ now_http_date }}"}'
-            hx-get="{{ url_for('user-tab', user_tab=user_tab) }}"
-            hx-target="body"
-            hx-trigger="every {{ papi_web_config.user_index_update_delay }}s queue:none"
-            hx-indicator="#please-wait"
-    ></div>
+    {% if not board %} {# no refresher when the result modal is shown #}
+        <div
+                class="refresher user-refresher"
+                hx-headers='{"If-Modified-Since": "{{ now_http_date }}"}'
+                hx-get="{{ url_for('user-tab', user_tab=user_tab) }}"
+                hx-target="body"
+                hx-trigger="every {{ papi_web_config.user_index_update_delay }}s queue:none"
+                hx-indicator="#please-wait"
+        ></div>
+    {% endif %}
 {% endblock user_header_refresher %}
 
 {% block user_header_nav %}

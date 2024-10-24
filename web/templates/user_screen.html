@@ -74,6 +74,23 @@
                 {% for screen_set in screen.screen_sets_sorted_by_order %}
                     {% include 'user_boards_screen_set.html' %}
                 {% endfor %}
+                <div id="user-modal-container"
+                    class="modal modal-blur overflow-auto"
+                    style="display: none"
+                    aria-hidden="true"
+                    data-bs-backdrop="static"
+                    data-bs-keyboard="false"
+                    tabindex="-1">
+                    {% if board %}
+                        {% include 'user_input_screen_board_result_modal.html' %}
+                    {% endif %}
+                </div>
+                {% if board %}
+                    <script>
+                        $('#user-modal-container').modal('show');
+                        $('body').css('padding-right', '0');
+                    </script>
+                {% endif %}
             </div>
         {% elif screen.type == 'players' %}
             <div class="screen players-screen">
@@ -91,7 +108,6 @@
                     style="background-image: url('{{ screen.image }}');"
             ></div>
         {% endif %}
-        {{ modal_script() }}
         {{ tooltip_script() }}
         {{ background_script(background_info) }}
     </div>

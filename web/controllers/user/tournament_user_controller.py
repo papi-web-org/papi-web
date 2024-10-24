@@ -22,7 +22,8 @@ from data.util import Result
 from web.controllers.index_controller import AbstractController
 from web.controllers.user.event_user_controller import EventUserWebContext
 from web.controllers.user.index_user_controller import AbstractUserController
-from web.controllers.user.screen_user_controller import ScreenUserWebContext
+from web.controllers.user.screen_user_controller import ScreenUserWebContext, AbstractScreenUserController, \
+    BasicScreenOrFamilyUserWebContext
 from web.messages import Message
 from web.session import SessionHandler
 
@@ -126,31 +127,11 @@ class PlayerUserWebContext(TournamentUserWebContext):
         }
 
 
-class AbstractUserInputController(AbstractUserController):
-    @classmethod
-    def _user_input_screen_board_row_render(
-            cls,
-            request: HTMXRequest,
-            event_uniq_id: str,
-            screen_uniq_id: str,
-            tournament_id: int,
-            board_id: int,
-    ) -> Template | ClientRedirect:
-        web_context: BoardUserWebContext = BoardUserWebContext(
-            request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id,
-            tournament_id=tournament_id, board_id=board_id)
-        if web_context.error:
-            return web_context.error
-        return HTMXTemplate(
-            template_name='user_boards_screen_board_row.html',
-            context=web_context.template_context | {
-                'last_result_updated': SessionHandler.get_session_last_result_updated(request),
-                'last_illegal_move_updated': SessionHandler.get_session_last_illegal_move_updated(request),
-                'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(request),
-            })
+class AbstractInputUserController(AbstractScreenUserController):
+    pass
 
 
-class CheckInUserController(AbstractUserInputController):
+class CheckInUserController(AbstractInputUserController):
 
     @patch(
         path='/user/toggle-check-in/{event_uniq_id:str}/{screen_uniq_id:str}/{tournament_id:int}/{player_id:int}',
@@ -171,22 +152,16 @@ class CheckInUserController(AbstractUserInputController):
         web_context.tournament.check_in_player(web_context.player, not web_context.player.check_in)
         SessionHandler.set_session_last_check_in_updated(request, web_context.tournament.id, web_context.player.id)
         EventLoader.get(request=request, lazy_load=False).clear_cache(web_context.user_event.uniq_id)
-        web_context = PlayerUserWebContext(
-            request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id,
-            tournament_id=tournament_id, player_id=player_id, tournament_started=False)
+        web_context: BasicScreenOrFamilyUserWebContext = BasicScreenOrFamilyUserWebContext(
+            request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id)
         if web_context.error:
             return web_context.error
-        return HTMXTemplate(
-            template_name='user_boards_screen_player_row_player_cell.html',
-            context=web_context.template_context | {
-                'last_check_in_updated': SessionHandler.get_session_last_check_in_updated(request),
-            })
+        return self._user_screen_render(web_context)
 
 
-class IllegalMoveUserController(AbstractUserInputController):
-    @classmethod
+class IllegalMoveUserController(AbstractInputUserController):
     def _delete_or_add_illegal_move(
-            cls, request: HTMXRequest,
+            self, request: HTMXRequest,
             event_uniq_id: str,
             screen_uniq_id: str,
             tournament_id: int,
@@ -211,9 +186,11 @@ class IllegalMoveUserController(AbstractUserInputController):
                 SessionHandler.set_session_last_illegal_move_updated(
                     request, web_context.tournament.id, web_context.player.id)
         EventLoader.get(request=request, lazy_load=False).clear_cache(web_context.user_event.uniq_id)
-        return cls._user_input_screen_board_row_render(
-            request, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id, tournament_id=tournament_id,
-            board_id=web_context.player.board_id)
+        web_context: BasicScreenOrFamilyUserWebContext = BasicScreenOrFamilyUserWebContext(
+            request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id)
+        if web_context.error:
+            return web_context.error
+        return self._user_screen_render(web_context)
 
     @put(
         path='/user/add-illegal-move/{event_uniq_id:str}/{screen_uniq_id:str}/{tournament_id:int}/{player_id:int}',
@@ -248,7 +225,7 @@ class IllegalMoveUserController(AbstractUserInputController):
             player_id=player_id, add=False)
 
 
-class ResultUserController(AbstractUserInputController):
+class ResultUserController(AbstractInputUserController):
 
     @get(
         path='/user/result-modal/{event_uniq_id:str}/{screen_uniq_id:str}/{tournament_id:int}/{board_id:int}',
@@ -268,7 +245,7 @@ class ResultUserController(AbstractUserInputController):
         if web_context.error:
             return web_context.error
         return HTMXTemplate(
-            template_name="user_input_screen_board_result_modal.html",
+            template_name="user_screen.html",
             context=web_context.template_context | {
             })
 
@@ -298,9 +275,11 @@ class ResultUserController(AbstractUserInputController):
             web_context.tournament.add_result(web_context.board, Result.from_papi_value(result))
         SessionHandler.set_session_last_result_updated(request, web_context.tournament.id, round, web_context.board.id)
         EventLoader.get(request=request, lazy_load=False).clear_cache(web_context.user_event.uniq_id)
-        return self._user_input_screen_board_row_render(
-            request, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id, tournament_id=tournament_id,
-            board_id=board_id)
+        web_context: BasicScreenOrFamilyUserWebContext = BasicScreenOrFamilyUserWebContext(
+            request, data=None, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id)
+        if web_context.error:
+            return web_context.error
+        return self._user_screen_render(web_context)
 
     @put(
         path='/user/add-result/'

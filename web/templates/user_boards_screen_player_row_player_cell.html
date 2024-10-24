@@ -8,8 +8,8 @@
     <i
         class="{% if player.check_in %}bi-check-square-fill{% else %}bi-square{% endif %}"
         {% if screen.type == 'input' %}
-            hx-target="closest td"
-            hx-swap="outerHTML transition:true"
+            hx-target="body"
+            hx-swap="transition:true"
             hx-patch="{{ url_for('user-toggle-check-in', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, player_id=player.id) }}"
             hx-indicator="#please-wait"
         {% endif %}

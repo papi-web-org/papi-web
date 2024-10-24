@@ -1,7 +1,7 @@
 {% if screen.type == 'input' and tournament.record_illegal_moves %}
     <td class="
         illegal-moves-cell bg-transparent text-nowrap w-1
-        {% if screen.update and last_illegal_move_updated and last_illegal_move_updated.expiration > now and last_illegal_move_updated.tournament_id == tournament.id and last_illegal_move_updated.player_id == player.id %}
+        {% if screen.type == 'input' and last_illegal_move_updated and last_illegal_move_updated.expiration > now and last_illegal_move_updated.tournament_id == tournament.id and last_illegal_move_updated.player_id == player.id %}
             last_illegal_move_updated
         {% endif %}"
     >
@@ -12,7 +12,7 @@
                         {% if board.result_str %}bi-file-fill{% else %}bi-file-excel-fill{% endif %}
                         illegal-move-flag
                         {% if not board.result_str %}delete{% endif %}"
-                    hx-target="closest tr"
+                    hx-target="body"
                     hx-swap="outerHTML transition:true"
                     hx-delete="{{ url_for('user-delete-illegal-move', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, player_id=player.id) }}"
                     hx-indicator="#please-wait"
@@ -23,7 +23,7 @@
             <span class="illegal-move-flag-wrapper">
                 <i
                     class="bi-flag illegal-move-flag add player-{{ tournament.id }}-{{ player.id }}"
-                    hx-target="closest tr"
+                    hx-target="body"
                     hx-swap="outerHTML transition:true"
                     hx-put="{{ url_for('user-add-illegal-move', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, player_id=player.id) }}"
                     hx-indicator="#please-wait"

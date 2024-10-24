@@ -29,17 +29,6 @@
         {% block user_content %}
             USER_CONTENT
         {% endblock user_content %}
-        <div id="user-modal-container"
-            class="modal modal-blur overflow-auto"
-            style="display: none"
-            aria-hidden="true"
-            data-bs-backdrop="static"
-            data-bs-keyboard="false"
-            tabindex="-1">
-            <div class="modal-dialog modal-lg modal-dialog-centered d-block w-80 mw-100" role="document">
-                <div class="modal-content"></div>
-            </div>
-        </div>
         {{ modal_script() }}
         {{ tooltip_script() }}
         {{ background_script(background_info) }}

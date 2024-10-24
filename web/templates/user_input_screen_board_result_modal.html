@@ -9,19 +9,15 @@
                 <button
                     class="result-button white text-black bg-white col-3 ms-auto me-auto btn fs-4 fw-bold"
                     hx-put="{{ url_for('user-add-result', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, round=tournament.current_round, board_id=board.id, result=3) }}"
-                    hx-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-row"
-                    hx-swap="outerHTML"
-                    hx-on:click="$('.refresher').remove();"
-                    data-bs-dismiss="modal"
+                    hx-target="body"
+                    hx-swap="transition:true"
                     hx-indicator="#please-wait"
                 >&nbsp;<br/>GAIN BLANCS<br/>1 - 0<br/><br/>{{ wp.last_name }}<br/>{{ wp.first_name }}<br/>{{ wp.rating }}{{ wp.rating_type }}<br/>&nbsp;</button>
                 <button
                     class="result-button draw col-3 ms-auto me-auto btn fs-4 fw-bold"
                     hx-put="{{ url_for('user-add-result', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, round=tournament.current_round, board_id=board.id, result=2) }}"
-                    hx-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-row"
-                    hx-swap="outerHTML"
-                    hx-on:click="$('.refresher').remove();"
-                    data-bs-dismiss="modal"
+                    hx-target="body"
+                    hx-swap="transition:true"
                     hx-indicator="#please-wait"
                 >
                     &nbsp;<br/>NULLE<br/>½ - ½<br/><br/><br/><br/><br/>&nbsp;
@@ -29,11 +25,8 @@
                 <button
                     class="result-button black text-white bg-black col-3 ms-auto me-auto btn fs-4 fw-bold"
                     hx-put="{{ url_for('user-add-result', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, round=tournament.current_round, board_id=board.id, result=1) }}"
-                    hx-target="#tournament-{{ tournament.id }}-board-{{ board.id }}-row"
-                    hx-swap="outerHTML"
-                    hx-on:click="$('.refresher').remove();"
-                    hx-indicator="#please-wait"
-                    data-bs-dismiss="modal"
+                    hx-target="body"
+                    hx-swap="transition:true"
                 >&nbsp;<br/>GAIN NOIRS<br/>0 - 1<br/><br/>{{ bp.last_name }}<br/>{{ bp.first_name }}<br/>{{ bp.rating }}{{ bp.rating_type }}<br/>&nbsp;</button>
             </div>
         </div>
@@ -44,8 +37,8 @@
                     class="btn btn-secondary"
                     hx-get="{{ url_for('user-screen', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id) }}"
                     hx-target="body"
+                    hx-swap="transition:true"
                     hx-indicator="#please-wait"
-                    data-bs-dismiss="modal"
             >Annuler</button>
         </div>
     </div>

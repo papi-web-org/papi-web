@@ -6,11 +6,8 @@
             {% endif %}"
         {% if screen.type == 'input' and not board.result_str %}
             hx-get="{{ url_for('user-result-modal', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, board_id=board.id) }}"
-            hx-target="#modals"
-            hx-swap="innerHTML"
-            hx-on:click="$('.refresher').remove();"
-            data-bs-toggle="modal"
-            data-bs-target="#modals"
+            hx-target="body"
+            hx-swap="transition:true"
         {% endif %}
 >
     {% if player.id == 1 %}

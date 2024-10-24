@@ -172,7 +172,7 @@ class LoginUserWebContext(ScreenUserWebContext):
             self._redirect_error(f'La paramètre [{field}] est manquant.')
 
 
-class ScreenUserController(AbstractUserController):
+class AbstractScreenUserController(AbstractUserController):
 
     @classmethod
     def _user_screen_render(
@@ -188,6 +188,9 @@ class ScreenUserController(AbstractUserController):
                 'messages': Message.messages(web_context.request),
             },
         )
+
+
+class ScreenUserController(AbstractScreenUserController):
 
     @post(
         path='/user/login/{event_uniq_id:str}/{screen_uniq_id:str}',

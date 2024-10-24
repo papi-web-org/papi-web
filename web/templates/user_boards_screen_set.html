@@ -34,7 +34,98 @@
                                 </thead>
                                 <tbody>
                                 {% for board in boards %}
-                                    {% include 'user_boards_screen_board_row.html' %}
+                                    {% with wp=board.white_player, bp=board.black_player %}
+                                    <tr
+                                        id="tournament-{{ tournament.id }}-board-{{ board.id }}-row"
+                                        class="
+                                            board-row
+                                            {% if board.result_str %}result-set{% else %}result-not-set fw-bold{% endif %}
+                                            {% if last_result_updated and last_result_updated.expiration > now and last_result_updated.tournament_id == tournament.id and last_result_updated.round == tournament.current_round and last_result_updated.board_id == board.id %}last_result_updated{% endif %}"
+                                            {% if screen.type == 'input' and board.result_str and user_event.allow_results_deletion_on_input_screens %}
+                                                hx-confirm="Voulez-vous vraiment supprimer le résultat [{{tournament.uniq_id}}] {{tournament.current_round}}.{{board.id}}?"
+                                                hx-trigger="click[ctrlKey&&altKey]"
+                                                hx-delete="{{ url_for('user-delete-result', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, round=tournament.current_round, board_id=board.id) }}"
+                                                hx-swap="outerHTML transition:true"
+                                                hx-indicator="#please-wait"
+                                                hx-target="body"
+                                            {% endif %}
+                                        >
+                                        <th
+                                            scope="row"
+                                            class="board-number bg-transparent text-end"
+                                            {% if screen.type == 'input' and not board.result_str %}
+                                                hx-get="{{ url_for('user-result-modal', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, board_id=board.id) }}"
+                                                hx-target="body"
+                                                hx-swap="transition:true"
+                                            {% endif %}
+                                        >{{ board.number }}.</th>
+                                        <td
+                                            class="points bg-transparent text-center"
+                                            {% if screen.type == 'input' and not board.result_str %}
+                                                hx-get="{{ url_for('user-result-modal', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, board_id=board.id) }}"
+                                                hx-target="body"
+                                                hx-swap="transition:true"
+                                            {% endif %}
+                                        >
+                                            {{ wp.vpoints_str }}
+                                        </td>
+                                        {% if tournament.print_real_points %}
+                                            <td
+                                                class="points bg-transparent text-center"
+                                                {% if screen.type == 'input' and not board.result_str %}
+                                                    hx-get="{{ url_for('user-result-modal', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, board_id=board.id) }}"
+                                                    hx-target="body"
+                                                    hx-swap="transition:true"
+                                                {% endif %}
+                                            >
+                                                [{{ wp.points_str }}]
+                                            </td>
+                                        {% endif %}
+                                        {% with player=wp %}{% with opponent=bp %}
+                                            {% include 'user_boards_screen_board_row_illegal_moves_cell.html' %}
+                                            {% include 'user_boards_screen_board_row_player_cell.html' %}
+                                        {% endwith %}{% endwith %}
+                                        <td
+                                            class="score bg-transparent text-center"
+                                            {% if screen.type == 'input' and not board.result_str %}
+                                                hx-get="{{ url_for('user-result-modal', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, board_id=board.id) }}"
+                                                hx-target="body"
+                                            {% endif %}
+                                        >
+                                            {% if board.result_str %}{{ board.result_str }}{% else %}n°{{ board.number }}{% endif %}
+                                        </td>
+                                        {% with player=bp %}{% with opponent=wp %}
+                                            {% include 'user_boards_screen_board_row_illegal_moves_cell.html' %}
+                                            {% include 'user_boards_screen_board_row_player_cell.html' %}
+                                        {% endwith %}{% endwith %}
+                                        {% if tournament.print_real_points %}
+                                            <td
+                                                class="points bg-transparent text-center"
+                                                {% if screen.type == 'input' and not board.result_str %}
+                                                    hx-get="{{ url_for('user-result-modal', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, board_id=board.id) }}"
+                                                    hx-target="body"
+                                                hx-swap="transition:true"
+                                                {% endif %}
+                                            >
+                                                {% if bp.id != 1 %}
+                                                    [{{ bp.points_str }}]
+                                                {% endif %}
+                                            </td>
+                                        {% endif %}
+                                        <td
+                                            class="points bg-transparent text-center"
+                                            {% if screen.type == 'input' and not board.result_str %}
+                                                hx-get="{{ url_for('user-result-modal', event_uniq_id=user_event.uniq_id, screen_uniq_id=screen.uniq_id, tournament_id=tournament.id, board_id=board.id) }}"
+                                                hx-target="body"
+                                                hx-swap="transition:true"
+                                            {% endif %}
+                                        >
+                                            {% if bp.id != 1 %}
+                                                {{ bp.vpoints_str }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
                                 {% endfor %}
                                 </tbody>
                             </table>
