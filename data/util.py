@@ -135,10 +135,10 @@ class Result(IntEnum):
                 raise ValueError(f"Unknown value: {self}")
 
     @classmethod
-    def imputable_results(cls) -> tuple[Self, Self, Self]:
+    def imputable_results(cls) -> tuple[Self, Self, Self, Self, Self, Self]:
         """Imputable results are the ones that a player can
-        input by themselves, namely a win, a draw, or a loss."""
-        return cls.GAIN, cls.DRAW_OR_HPB, cls.LOSS
+        input by themselves, namely a win, a draw, or a loss or forfeits."""
+        return cls.GAIN, cls.DRAW_OR_HPB, cls.LOSS, cls.PAB_OR_FORFEIT_GAIN_OR_FPB, cls.FORFEIT_LOSS, cls.DOUBLE_FORFEIT
 
 
 class TournamentType(IntEnum):

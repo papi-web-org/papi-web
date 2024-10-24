@@ -24,12 +24,21 @@
 .input-screen-result-modal .result-button {
     border: 3px #000080 solid;
 }
+.input-screen-result-modal .admin-result-button {
+    border: 3px #800000 solid;
+}
 .input-screen-result-modal .result-button.draw {
     color: #000080;
 }
+.input-screen-result-modal .result-button:hover,
+ .input-screen-result-modal .admin-result-button:hover {
+    color: #000080 !important;
+}
 .input-screen-result-modal .result-button:hover {
     background-color: yellow !important;
-    color: #000080 !important;
+}
+ .input-screen-result-modal .admin-result-button:hover {
+    background-color: #ffc500 !important;
 }
 /*
 ###########################################################
