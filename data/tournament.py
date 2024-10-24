@@ -406,7 +406,7 @@ class Tournament:
                         vpoints = min(2.0, potential_vpoints)
                     if 2 * player.points >= self._rounds:
                         # If a player gets at least half the possible score,
-                        # their capital is set a 2 points.
+                        # their capital is set at 2 points.
                         # Assumes a 0-0.5-1 scoring system.
                         vpoints = 2.0
             player.vpoints = player.points + vpoints
@@ -417,7 +417,7 @@ class Tournament:
         with EventDatabase(self.event.uniq_id, write=True) as event_database:
             event_database.add_stored_illegal_move(self.id, self.current_round, player.id)
             event_database.commit()
-        logger.info('le coup illégal a été enregistré')
+        logger.info('un coup illégal a été enregistré pour le·la joueur·euse [%s]', player.id)
 
     def delete_illegal_move(self, player: Player) -> bool:
         """Deletes one illegal move for the given `player` for the current
