@@ -74,8 +74,18 @@
         {% endif %}
     </body>
     <script>
+        var confirm_when_leaving = true;
+        document.addEventListener('htmx:afterRequest', function(evt) {
+            if (evt.detail.xhr.getResponseHeader('hx-redirect')) {
+                confirm_when_leaving = false;
+            }
+        });
         $(window).bind('beforeunload', function(){
-            return 'Voulez-vous redémarrer l\'application Papi-web ?';
+            if (confirm_when_leaving) {
+                return 'Voulez-vous redémarrer l\'application Papi-web ?';
+            } else {
+                return false;
+            }
         });
     </script>
 </html>
