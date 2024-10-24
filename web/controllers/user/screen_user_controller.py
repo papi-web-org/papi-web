@@ -112,6 +112,8 @@ class ScreenUserWebContext(ScreenOrRotatorUserWebContext):
         super().__init__(
             request, data=data, event_uniq_id=event_uniq_id, screen_uniq_id=screen_uniq_id, rotator_id=None,
             rotator_screen_index=None)
+        if self.error:
+            return
         if screen_needed and not self.screen:
             self._redirect_error(f'L\'écran est obligatoire.')
             return
