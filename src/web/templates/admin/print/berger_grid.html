@@ -23,8 +23,10 @@
         </thead>
         <tbody>
             {% for player_id, results in result_grid.items() %}
+                {% set excluded = tournament.tournament_players_by_id[player_id].is_excluded_from_standings %}
                 <tr
-                    class="row gy-2 gx-3 {% if loop.index is even %}even{% else %}odd{% endif %}"
+                    class="row gy-2 gx-3 {% if loop.index is even %}even{% else %}odd{% endif %} {% if excluded %}excluded-from-standings{% endif %}"
+                    {% if excluded %}title="{{ _('Excluded from the final standings: completed less than 50%% of the games (FIDE 6.6).') }}"{% endif %}
                 >
                     <td class=number">{{ grid_id_by_player_id[player_id] }}</td>
                     {% with player=tournament.tournament_players_by_id[player_id] %}

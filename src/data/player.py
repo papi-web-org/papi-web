@@ -813,6 +813,30 @@ class TournamentPlayer(Player):
             and (not pairing.result.is_unplayed or pairing.result == Result.FORFEIT_WIN)
         )
 
+    def standings_points(self, after_round: int) -> float:
+        """The score that counts towards the final standings after
+        *after_round*. Identical to :meth:`points_after`, except games
+        against a player excluded from the standings (FIDE 6.6) are not
+        counted — for the standings those games did not happen (the leaver's
+        results stay in the crosstable for rating/history only). With no
+        excluded players this equals :meth:`points_after`."""
+        caching = self.tournament._compute_caching_enabled
+        key = ('standings_points', after_round)
+        if caching:
+            cached = self._compute_cache.get(key)
+            if cached is not None:
+                return cached
+        value = sum(
+            pairing.result.points(self.point_values)
+            for round_, pairing in self.pairings.items()
+            if round_ <= after_round and self.game_counts_for_tie_breaks(pairing)
+        )
+        value += self.tournament.player_point_adjustment_total(self.id, after_round)
+        value = max(0.0, value)
+        if caching:
+            self._compute_cache[key] = value
+        return value
+
     def total_points(self, only_played: bool = False) -> float:
         return sum(
             pairing.result.points(self.point_values)
@@ -1210,6 +1234,57 @@ class TournamentPlayer(Player):
     @property
     def has_played_games(self) -> bool:
         return any(pairing.played for pairing in self.pairings.values())
+
+    @cached_property
+    def is_excluded_from_standings(self) -> bool:
+        """FIDE 6.6: in a round-robin, a player who completed less than 50%
+        of their games is kept in the crosstable but dropped from the final
+        standings, and their games are not counted in opponents' tie-breaks.
+
+        The red flag for a leaver (withdrawn or expelled) is a voluntarily
+        unplayed game — a forfeit loss or a requested bye. Two conditions,
+        both required:
+
+        - The player did not play their *last* scheduled game. Withdrawing
+          or being expelled means they were gone by the end; a player who
+          played their final round was present at the end and therefore did
+          not leave, however many earlier games they missed.
+        - More than half of their scheduled games are voluntarily unplayed
+          (equivalently, they completed fewer than half).
+
+        A forfeit *win* or a game still to be played counts as completed.
+        """
+        from data.pairings.systems import RoundRobinPairingSystem
+
+        tournament = self.tournament
+        if not tournament.round_robin_participation_rule:
+            return False
+        if tournament.pairing_system != RoundRobinPairingSystem():
+            return False
+        scheduled = [
+            pairing
+            for pairing in self.pairings.values()
+            if pairing.opponent_id is not None
+        ]
+        if not scheduled:
+            return False
+        last_scheduled = max(scheduled, key=lambda pairing: pairing.round)
+        if not last_scheduled.voluntary_unplayed:
+            return False
+        voluntarily_unplayed = sum(
+            1 for pairing in scheduled if pairing.voluntary_unplayed
+        )
+        return voluntarily_unplayed * 2 > len(scheduled)
+
+    def game_counts_for_tie_breaks(self, pairing: 'Pairing') -> bool:
+        """False when *pairing* is against a player excluded from the final
+        standings — that game must not feed any of this player's tie-breaks
+        or opponent points (FIDE 6.6). Byes and holes (no opponent) are left
+        for each tie-break to handle as before."""
+        if pairing.opponent_id is None:
+            return True
+        opponent = self.tournament.tournament_players_by_id.get(pairing.opponent_id)
+        return opponent is None or not opponent.is_excluded_from_standings
 
     def round_performance(self, round_index: int) -> float | None:
         """Single-round performance indicator: the Elo rating change (K=20)

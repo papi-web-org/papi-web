@@ -59,6 +59,7 @@
         {% set ns = namespace(current_key=None) %}
         {% for tournament_player in admin_tournament.tournament_players_by_rank.values() %}
         {% set group_key = tournament_player.before_manual_rank_key %}
+        {% set is_excluded = tournament_player.is_excluded_from_standings %}
         {% set no_played_games_class = '' if tournament_player.has_played_games else 'text-warning' %}
         {% set row_class='even' if loop.index is even else 'odd' %}
 
@@ -81,12 +82,14 @@
 
         <tr
                 id="player-{{ tournament_player.id }}"
-                class="player-row {{ row_class }} {% if not sortable %}non-sortable{% endif %} {% if new_point_group %}separator{% endif %}"
-                {% if not tournament_player.has_played_games %}
+                class="player-row {{ row_class }} {% if is_excluded %}excluded-from-standings non-sortable{% elif not sortable %}non-sortable{% endif %} {% if new_point_group %}separator{% endif %}"
+                {% if is_excluded %}
+                    {{ macros.tooltip_attributes('warning', _('Not counted in the final standings: withdrew or was expelled having completed less than 50%% of the games (FIDE 6.6). The result stays in the crosstable.'), 'top') }}
+                {% elif not tournament_player.has_played_games %}
                     {{ macros.tooltip_attributes('warning', _('No games played on the board for this player.'), 'top') }}
                 {% endif %}
         >
-            <td class="rank text-end {{ no_played_games_class }}">{{ tournament_player.rank }}</td>
+            <td class="rank text-end {{ no_played_games_class }}">{{ '—' if is_excluded else tournament_player.rank }}</td>
             <td class="title text-end {{ no_played_games_class }}">{{ tournament_player.display_title }}</td>
             <td class="name text-start {{ no_played_games_class }} fw-bold">
                 {% include '/admin/player_link.html' %}

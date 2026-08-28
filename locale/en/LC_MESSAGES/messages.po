@@ -636,6 +636,10 @@ msgstr ""
 msgid "A pairing number between 1 and {max} is expected."
 msgstr ""
 
+#, python-format
+msgid "A player on this board is excluded from the final standings: they completed less than 50%% of their games (FIDE 6.6)."
+msgstr ""
+
 msgid "A player starts every round with these points added to those they have scored. They only are used for pairing, never for ranking, and are not part of the results submitted for rating."
 msgstr ""
 
@@ -674,6 +678,10 @@ msgid "A set named [{name}] already exists. Tick the overwrite option to replace
 msgstr ""
 
 msgid "A set with this name already existe."
+msgstr ""
+
+#, python-format
+msgid "A team in this match is excluded from the final standings: it completed less than 50%% of its matches (FIDE 6.6)."
 msgstr ""
 
 msgid "A template name is required."
@@ -3442,6 +3450,14 @@ msgstr ""
 msgid "Exclude: {values}"
 msgstr ""
 
+#, python-format
+msgid "Excluded from the final standings: completed less than 50%% of the games (FIDE 6.6)."
+msgstr ""
+
+#, python-format
+msgid "Excluded from the final standings: completed less than 50%% of the matches (FIDE 6.6)."
+msgstr ""
+
 msgid "Exempt *** MAN"
 msgstr "Exempt"
 
@@ -5718,6 +5734,14 @@ msgid "Not assigned"
 msgstr ""
 
 msgid "Not counted as a federation (1.4.2a)"
+msgstr ""
+
+#, python-format
+msgid "Not counted in the final standings: withdrew or was expelled having completed less than 50%% of the games (FIDE 6.6). The result stays in the crosstable."
+msgstr ""
+
+#, python-format
+msgid "Not counted in the final standings: withdrew or was expelled having completed less than 50%% of the matches (FIDE 6.6). The result stays in the crosstable."
 msgstr ""
 
 msgid "Not enough byes available to set a Full-Point Bye (required: 2)."

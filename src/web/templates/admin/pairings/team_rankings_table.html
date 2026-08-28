@@ -37,8 +37,14 @@
     </thead>
     <tbody>
         {% for row in standings %}
-            <tr class="player-row {{ 'even' if loop.index is even else 'odd' }}">
-                <td class="rank text-end">{{ row.rank }}</td>
+            {% set is_excluded = row.team.is_excluded_from_standings %}
+            <tr
+                class="player-row {{ 'even' if loop.index is even else 'odd' }} {% if is_excluded %}excluded-from-standings{% endif %}"
+                {% if is_excluded %}
+                    {{ macros.tooltip_attributes('warning', _('Not counted in the final standings: withdrew or was expelled having completed less than 50%% of the matches (FIDE 6.6). The result stays in the crosstable.'), 'top') }}
+                {% endif %}
+            >
+                <td class="rank text-end">{{ '—' if is_excluded else row.rank }}</td>
                 <td class="name text-start">
                     <strong>{{ row.team.name }}</strong>
                 </td>

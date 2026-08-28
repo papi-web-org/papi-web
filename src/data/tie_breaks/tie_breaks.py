@@ -288,7 +288,9 @@ class TieBreak(OptionHandler[TieBreakOption], ABC):
             if cached is not None:
                 return cached
         if tournament.pairing_system == RoundRobinPairingSystem():
-            score = player.points_after(after_round)
+            # Use the standings score so a game against an excluded player
+            # (FIDE 6.6) does not inflate this opponent's contribution.
+            score = player.standings_points(after_round)
             if caching:
                 player._compute_cache[cache_key] = score
             return score
@@ -452,7 +454,7 @@ class WinsTieBreak(PlayerRecordTieBreak):
         return sum(
             pairing.result.points(point_values) == Result.WIN.points(point_values)
             for round_index, pairing in player.pairings.items()
-            if round_index <= after_round
+            if round_index <= after_round and player.game_counts_for_tie_breaks(pairing)
         )
 
     @property
@@ -513,7 +515,7 @@ class GamesWonTieBreak(PlayerRecordTieBreak):
         return sum(
             pairing.result == Result.WIN
             for round_index, pairing in player.pairings.items()
-            if round_index <= after_round
+            if round_index <= after_round and player.game_counts_for_tie_breaks(pairing)
         )
 
     @property
@@ -571,7 +573,7 @@ class GamesPlayedWithBlackTieBreak(PlayerRecordTieBreak):
         return sum(
             pairing.color == BoardColor.BLACK and pairing.played
             for round_index, pairing in player.pairings.items()
-            if round_index <= after_round
+            if round_index <= after_round and player.game_counts_for_tie_breaks(pairing)
         )
 
 
@@ -605,7 +607,7 @@ class GamesWonWithBlackTieBreak(PlayerRecordTieBreak):
         return sum(
             pairing.color == BoardColor.BLACK and pairing.result == Result.WIN
             for round_index, pairing in player.pairings.items()
-            if round_index <= after_round
+            if round_index <= after_round and player.game_counts_for_tie_breaks(pairing)
         )
 
 
@@ -657,7 +659,7 @@ class ProgressiveScoresTieBreak(PlayerRecordTieBreak):
         self, player: TournamentPlayer, *, after_round: int
     ) -> float:
         return sum(
-            player.points_after(r)
+            player.standings_points(r)
             for r in range(1 + self.cutter.bottom_cut, after_round + 1)
         )
 
@@ -735,7 +737,7 @@ class RoundsElectedToPlayTieBreak(PlayerRecordTieBreak):
                 Result.HALF_POINT_BYE,
             )
             for round_index, pairing in player.pairings.items()
-            if round_index <= after_round
+            if round_index <= after_round and player.game_counts_for_tie_breaks(pairing)
         )
 
 
@@ -765,7 +767,7 @@ class StandardPointsTieBreak(PlayerRecordTieBreak):
         return sum(
             pairing.result.points()
             for round_index, pairing in player.pairings.items()
-            if round_index <= after_round
+            if round_index <= after_round and player.game_counts_for_tie_breaks(pairing)
         )
 
     def get_warning_for_tournament(self, tournament: 'Tournament') -> str | None:
@@ -840,7 +842,7 @@ class PointsTieBreak(PlayerRecordTieBreak):
             # A Keizer's primary score is its running Keizer total, not a
             # count of game points; it is what the standings rank on.
             return tournament.keizer_scorer.total(player, after_round=after_round)
-        return player.points_after(after_round)
+        return player.standings_points(after_round)
 
     @property
     def supports_team_mode(self) -> bool:
@@ -967,7 +969,7 @@ class KashdanTieBreak(PlayerRecordTieBreak):
         pairings: list[Pairing] = [
             pairing
             for round_index, pairing in player.pairings.items()
-            if round_index <= after_round
+            if round_index <= after_round and player.game_counts_for_tie_breaks(pairing)
         ]
         score_by_result: dict[Result, float] = {
             Result.WIN: 4,
@@ -1112,6 +1114,8 @@ class StandardBuchholzTieBreak(BuchholzTieBreak):
         vur: list[float] = []
         for match in team_record.matches:
             if match.round_ > after_round:
+                continue
+            if not tournament_context.match_counts_for_tie_breaks(match):
                 continue
             is_bye = match.match_type in (
                 TeamMatchType.PAB,
@@ -1369,6 +1373,8 @@ class ForeBuchholzTieBreak(BuchholzTieBreak):
         for match in team_record.matches:
             if match.round_ > after_round:
                 continue
+            if not tournament_context.match_counts_for_tie_breaks(match):
+                continue
             is_bye = match.match_type in (
                 TeamMatchType.PAB,
                 TeamMatchType.HPB,
@@ -1537,6 +1543,7 @@ class SumOfBuchholzTieBreak(BuchholzTieBreak):
             if match.round_ <= after_round
             and match.played
             and match.opponent_id is not None
+            and tournament_context.match_counts_for_tie_breaks(match)  # FIDE 6.6
         )
 
 
@@ -1641,6 +1648,7 @@ class AverageOfBuchholzTieBreak(BuchholzTieBreak):
             if match.round_ <= after_round
             and match.played
             and match.opponent_id is not None
+            and tournament_context.match_counts_for_tie_breaks(match)  # FIDE 6.6
         ]
         if not opponent_records:
             return 0.0
@@ -1727,6 +1735,8 @@ class SonnebornBergerTieBreak(OpponentRecordTieBreak):
         general_contributions: list[SBContribution] = []
         voluntary_unplayed: list[SBContribution] = []
         for round_index, pairing in pairings.items():
+            if not player.game_counts_for_tie_breaks(pairing):
+                continue
             if pairing.unplayed and not played_modifier:
                 dummy, result = self._dummy_score(
                     player, pairing, after_round=after_round
@@ -1884,8 +1894,10 @@ class KoyaTieBreak(OpponentRecordTieBreak):
         for _round_index, pairing in pairings.items():
             if pairing.opponent_id is None:
                 continue
+            if not player.game_counts_for_tie_breaks(pairing):
+                continue
             opponent = tournament.players_by_id[pairing.opponent_id]
-            opponent_score = opponent.points_after(after_round)
+            opponent_score = opponent.standings_points(after_round)
             if opponent_score >= score_limit:
                 score += pairing.result.points(tournament.point_values)
         return score
@@ -1919,6 +1931,8 @@ class KoyaTieBreak(OpponentRecordTieBreak):
         score = 0.0
         for match in team_record.matches:
             if match.round_ > after_round or match.opponent_id is None:
+                continue
+            if not tournament_context.match_counts_for_tie_breaks(match):
                 continue
             opponent = all_records[match.opponent_id]
             if opponent.total(score_type) >= score_limit:
@@ -2010,6 +2024,8 @@ class AverageRatingOpponentsTieBreak(OpponentRatingTieBreak):
         for pairing in pairings:
             if pairing.unplayed:
                 continue
+            if not player.game_counts_for_tie_breaks(pairing):
+                continue
             assert pairing.opponent_id is not None
             opponent = tournament.players_by_id[pairing.opponent_id]
             ratings.append(opponent.rating)
@@ -2061,6 +2077,8 @@ class TournamentPerformanceRatingTieBreak(OpponentRatingTieBreak):
         ratings = []
         score = 0.0
         for pairing in pairings:
+            if not player.game_counts_for_tie_breaks(pairing):
+                continue
             assert pairing.opponent_id is not None
             opponent = tournament.players_by_id[pairing.opponent_id]
             ratings.append(opponent.rating)
@@ -2105,7 +2123,9 @@ class AveragePerformanceRatingOpponentsTieBreak(OpponentRatingTieBreak):
         played_games: list[Pairing] = [
             pairing
             for round_index, pairing in player.pairings.items()
-            if round_index <= after_round and pairing.played
+            if round_index <= after_round
+            and pairing.played
+            and player.game_counts_for_tie_breaks(pairing)
         ]
         performance_ratings = []
         performance_tie_break = TournamentPerformanceRatingTieBreak()
@@ -2153,7 +2173,9 @@ class PerfectTournamentPerformanceTieBreak(OpponentRatingTieBreak):
         played_rounds: list[Pairing] = [
             pairing
             for round_index, pairing in player.pairings.items()
-            if round_index <= after_round and pairing.played
+            if round_index <= after_round
+            and pairing.played
+            and player.game_counts_for_tie_breaks(pairing)
         ]
         if not played_rounds:
             return 0
@@ -2342,7 +2364,9 @@ class AveragePerfectPerformanceTieBreak(OpponentRatingTieBreak):
         pairings: list[Pairing] = [
             pairing
             for round_index, pairing in player.pairings.items()
-            if round_index <= after_round and pairing.played
+            if round_index <= after_round
+            and pairing.played
+            and player.game_counts_for_tie_breaks(pairing)  # FIDE 6.6
         ]
         ptp_tie_break = PerfectTournamentPerformanceTieBreak()
         tournament: 'Tournament' = player.tournament
@@ -2504,9 +2528,13 @@ class DirectEncounterTieBreak(TieBreak):
         attribute (if possible) an integer value from 0 to len(group).
         """
 
-        # Group players by the rank sort key before the tie-break
+        # Group players by the rank sort key before the tie-break. Players
+        # excluded from the standings (FIDE 6.6) take no part in the direct
+        # encounter — they are neither ranked nor counted as opponents.
         players_by_rank_group: dict[tuple, list[TournamentPlayer]] = defaultdict(list)
         for player in tournament.players:
+            if player.is_excluded_from_standings:
+                continue
             rank_group = player.rank_sort_key_before_tie_break(tie_break_index)
             players_by_rank_group[rank_group].append(player)
 

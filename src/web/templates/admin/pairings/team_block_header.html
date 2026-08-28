@@ -11,12 +11,14 @@
         hx-swap-oob="true"
     {% endif %}
 >
+    {% set match_excluded = team_board.team_a.is_excluded_from_standings or (team_board.team_b and team_board.team_b.is_excluded_from_standings) %}
     <tr
-        class="team-block-header header"
+        class="team-block-header header {% if match_excluded %}board-excluded{% endif %}"
         data-block-id="team-block-body-{{ team_board.id }}"
         data-collapse-key="{{ team_board.team_a.id }}-{{ team_board.team_b.id if team_board.team_b else 'bye' }}"
         aria-expanded="true"
         style="cursor: pointer;"
+        {% if match_excluded %}data-bs-toggle="tooltip" data-bs-title="{{ _('A team in this match is excluded from the final standings: it completed less than 50%% of its matches (FIDE 6.6).') }}"{% endif %}
     >
         <td class="text-center text-nowrap">
             <i class="bi bi-chevron-down team-block-chevron me-1"></i>

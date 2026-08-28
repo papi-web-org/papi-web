@@ -411,6 +411,14 @@ class PlayerRankingPrintDocument(AbstractPlayerRankingPrintDocument):
         return _('Ranking after round #{round}').format(round=self.ranking_round)
 
     @property
+    def ordered_tournament_players(self) -> list[TournamentPlayer]:
+        return [
+            player
+            for player in super().ordered_tournament_players
+            if not player.is_excluded_from_standings
+        ]
+
+    @property
     def player_columns(self) -> list[TournamentPlayerTableColumn]:
         return self.column_handler.get_player_ranking_columns(self.tournament)
 
@@ -1021,10 +1029,15 @@ class TeamRankingPrintDocument(PrintDocument):
             and self.tournament.primary_score == ScoreType.MATCH_POINTS
         )
         team_tie_breaks = self.tournament.team_tie_breaks
+        standings = [
+            row
+            for row in self.tournament.team_standings(after_round=self.ranking_round)
+            if not row['team'].is_excluded_from_standings
+        ]
         return {
             'tournament': self.tournament,
             'subtitle': self.tournament.name,
-            'standings': self.tournament.team_standings(after_round=self.ranking_round),
+            'standings': standings,
             'primary_is_mp': primary_is_mp,
             'team_tie_breaks': team_tie_breaks,
         }
@@ -2808,7 +2821,8 @@ class IndividuelTeamRankingPrintDocument(PrintDocument, ABC):
             for tournament_player in self.tournament.compute_tournament_player_ranks(
                 after_round=self.ranking_round
             ).values()
-            if not self.tournament.started or tournament_player.has_played_games
+            if (not self.tournament.started or tournament_player.has_played_games)
+            and not tournament_player.is_excluded_from_standings
         ]
 
         # Group by entity

@@ -33,7 +33,7 @@
                 {% endfor %}
 
                 {% if standings %}
-                    {% for row in standings %}
+                    {% for row in standings if not row.team.is_excluded_from_standings %}
                         <div class="player-row" id="team-{{ row.team.id }}">
                             <div class="text-end pe-2">{{ row.rank }}</div>
                             <div class="text-start fw-bold">{{ row.team.name }}</div>

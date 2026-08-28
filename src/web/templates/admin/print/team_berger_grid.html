@@ -34,7 +34,7 @@
             <tbody>
                 {% for row in player_rows %}
                     {% set tp = row.tournament_player %}
-                    <tr class="row gy-2 gx-3 {% if loop.index is even %}even{% else %}odd{% endif %} {% if row.first_of_team and not loop.first %}team-separator{% endif %}">
+                    <tr class="row gy-2 gx-3 {% if loop.index is even %}even{% else %}odd{% endif %} {% if row.first_of_team and not loop.first %}team-separator{% endif %} {% if row.team.is_excluded_from_standings %}excluded-from-standings{% endif %}">
                         <td class="number">{{ row.grid_id }}</td>
                         <td class="player">{{ tp.full_name }}</td>
                         <td class="player">{% if row.first_of_team %}{{ row.team.name }}{% endif %}</td>
@@ -72,7 +72,10 @@
             </thead>
             <tbody>
                 {% for team in teams %}
-                    <tr class="row gy-2 gx-3 {% if loop.index is even %}even{% else %}odd{% endif %}">
+                    <tr
+                        class="row gy-2 gx-3 {% if loop.index is even %}even{% else %}odd{% endif %} {% if team.is_excluded_from_standings %}excluded-from-standings{% endif %}"
+                        {% if team.is_excluded_from_standings %}title="{{ _('Excluded from the final standings: completed less than 50%% of the matches (FIDE 6.6).') }}"{% endif %}
+                    >
                         <td class="number">{{ grid_id_by_team_id[team.id] }}</td>
                         <td class="player">{{ team.name }}</td>
                         {% for opponent in teams %}

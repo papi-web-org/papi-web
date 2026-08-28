@@ -24,3 +24,8 @@
 .rr-table tr:first-of-type td.self-game {
     position: relative;
 }
+
+.rr-table tr.excluded-from-standings td {
+    color: #888;
+    font-style: italic;
+}

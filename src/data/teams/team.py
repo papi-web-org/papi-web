@@ -170,6 +170,54 @@ class Team:
             return captain.full_name
         return self.stored_team.captain_name or None
 
+    @cached_property
+    def is_excluded_from_standings(self) -> bool:
+        """FIDE 6.6 (team analogue): a team round-robin team that completed
+        less than 50% of its matches — every board forfeited, the mark of a
+        withdrawn or expelled team — is kept in the crosstable but dropped
+        from the final standings, and its matches don't count in the other
+        teams' tie-breaks.
+
+        A match counts as not completed when the team forfeited every one of
+        its boards (:meth:`TeamBoard.team_all_forfeit`). Two conditions, both
+        required:
+
+        - The team did not play its *last* scheduled match (it forfeited
+          every board). A team present for its final round was there at the
+          end and so did not withdraw, whatever it missed earlier.
+        - More than half of its scheduled matches were forfeited this way.
+
+        A match still being played, or a bye, is not counted.
+        """
+        from data.pairings.systems import TeamRoundRobinPairingSystem
+
+        tournament = self.tournament
+        if tournament is None:
+            return False
+        if not tournament.round_robin_participation_rule:
+            return False
+        if not isinstance(tournament.pairing_system, TeamRoundRobinPairingSystem):
+            return False
+        scheduled = [
+            team_board
+            for team_board in tournament.team_boards_by_id.values()
+            if team_board.stored_team_board.team_b_id is not None
+            and self.id
+            in (
+                team_board.stored_team_board.team_a_id,
+                team_board.stored_team_board.team_b_id,
+            )
+        ]
+        if not scheduled:
+            return False
+        last_scheduled = max(scheduled, key=lambda team_board: team_board.round)
+        if not last_scheduled.team_all_forfeit(self.id):
+            return False
+        abandoned = sum(
+            1 for team_board in scheduled if team_board.team_all_forfeit(self.id)
+        )
+        return abandoned * 2 > len(scheduled)
+
     @property
     def has_been_paired(self) -> bool:
         """True if this team has been paired in at least one round.

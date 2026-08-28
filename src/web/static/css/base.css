@@ -1534,6 +1534,10 @@ table th.padded-header {
     padding-top: 60px;
 }
 
+table.prominent tr.board-excluded td {
+    opacity: 0.45;
+}
+
 button.collapse-button {
     border: none;
     background-color: transparent;

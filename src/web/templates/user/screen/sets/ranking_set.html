@@ -31,7 +31,7 @@
                     </thead>
                     <tbody>
                         {% if tournament_players %}
-                            {% for tournament_player in tournament_players %}
+                           {% for tournament_player in tournament_players if not tournament_player.is_excluded_from_standings %}
                                 <tr id="player-{{ tournament_player.id }}" class="player-row {{ 'even' if loop.index is even else 'odd' }}">
                                     {% for column in player_columns %}
                                         <td class="{{ column.get_cell_classes(tournament_player) }}">
