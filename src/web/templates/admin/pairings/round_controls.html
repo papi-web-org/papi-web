@@ -66,6 +66,10 @@
                     hx-get="{{ url_for('admin-pairings-unfinished-round-modal', event_uniq_id=admin_event.uniq_id, tournament_id=admin_tournament.id, round=admin_round) }}"
                     data-bs-toggle="modal"
                     data-bs-target="#modal-wrapper"
+                {% elif not admin_tournament.pairing_system.round_per_round_pairing_generation and admin_round == admin_tournament.current_round and admin_round < admin_tournament.rounds and admin_tournament.round_has_pairings(admin_round) %}
+                    hx-get="{{ url_for('admin-pairings-set-current-round-modal', event_uniq_id=admin_event.uniq_id, tournament_id=admin_tournament.id, round=admin_round) }}"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modal-wrapper"
                 {% elif admin_round < admin_tournament.rounds %}
                     hx-get="{{ url_for('admin-event-pairings-tab', event_uniq_id=admin_event.uniq_id, tournament_id=admin_tournament.id, round=admin_round + 1) }}"
                     hx-replace-url="true"
