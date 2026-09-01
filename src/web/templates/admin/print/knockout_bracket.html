@@ -1,0 +1,184 @@
+{% extends '/admin/print/base.html' %}
+
+{% block css %}
+    {# The bracket is far wider than the page; give it its own scroll box
+       capped at the viewport so the centred print wrapper can't push its
+       left edge off-screen. #}
+    .ko-bracket { max-width: 95vw; overflow-x: auto; margin-top: 1.5rem; }
+    {# The canvas holds the SVG and, behind it, the round stripes. On screen
+       it is the SVG's natural width; for print it scales to the page. #}
+    .ko-canvas { position: relative; }
+    {# Explicit height on screen so the canvas has a definite height for the
+       absolutely-positioned stripe divs; print scales it (height:auto). #}
+    {# The print stylesheet gives every element a white background; the SVG
+       must stay transparent or it hides the stripe divs behind it. #}
+    .ko-canvas > svg { position: relative; z-index: 1; display: block;
+                       width: 100%; font-family: inherit;
+                       background-color: transparent; }
+    {# Stripes are CSS backgrounds (not SVG shapes) so the browser's
+       "Background graphics" print option turns them on and off, and are
+       positioned in per-cent so they scale with the SVG. #}
+    .ko-bands { position: absolute; inset: 0; z-index: 0; }
+    .ko-band { position: absolute; top: 0; bottom: 0; background-color: #f4f4f6; }
+    .ko-band.alt { background-color: #eaeaee; }
+    .ko-col-header { font-weight: 700; font-size: 0.95rem; fill: #444;
+                     text-anchor: middle; }
+    .ko-connector { stroke: #bbb; stroke-width: 1.5; fill: none; }
+    .ko-box { fill: #fff; stroke: #9aa; stroke-width: 2; }
+    .ko-divider { stroke: #eee; stroke-width: 1; }
+    .ko-name { font-size: 0.8rem; fill: #222; }
+    .ko-name.win { font-weight: 700; }
+    .ko-detail { font-size: 0.68rem; fill: #888; }
+    {# The group (a second line under the name) and the seed number (row end). #}
+    .ko-group { font-size: 0.66rem; fill: #777; font-style: italic; }
+    .ko-seed { font-size: 0.72rem; fill: #999; }
+    .ko-score { font-size: 0.8rem; fill: #222; text-anchor: end; }
+    .ko-score.win { font-weight: 700; }
+    .ko-empty { fill: #aaa; }
+
+    {# Hover a participant anywhere in the bracket to trace their whole path
+       (screen only — the highlight has no effect on the printed page). #}
+    .ko-slot-hit { fill: transparent; }
+    .ko-slot[data-pid] { cursor: pointer; }
+    .ko-name.ko-hl { fill: #0d6efd; font-weight: 700; }
+
+    {# Schedule view. #}
+    .ko-schedule { margin-top: 1.5rem; }
+    .ko-round-title { font-weight: 700; font-size: 1.5rem; margin: 2rem 0 0.5rem; }
+    .ko-round-datetime { font-weight: 400; font-size: 1rem; color: #555; }
+    .ko-group-title { font-weight: 600; color: #555; margin: 0.75rem 0 0.15rem; }
+    .ko-sched-table { width: 100%; border-collapse: collapse; }
+    .ko-sched-table td { padding: 2px 8px; border-bottom: 1px solid #eee; }
+    .ko-sched-name { width: 42%; }
+    .ko-sched-name.win { font-weight: 700; }
+    .ko-sched-score { width: 8%; text-align: center; }
+    .ko-sched-vs { width: 2%; text-align: center; color: #999; }
+
+    {# On screen the bracket scrolls; for print it can't, so drop the scroll
+       box and scale the whole canvas to fit a landscape page. #}
+    @media print {
+        @page { size: landscape; margin: 1cm; }
+        {# The shared print wrapper flex-centres its content, which collapses
+           a percentage width to nothing; make it a full-width block so the
+           bracket can fill the page. #}
+        .center-wrapper, .page-content { display: block; width: 100%; }
+        .ko-bracket { max-width: none; width: 100%; overflow: visible; }
+        .ko-canvas { width: 100% !important; }
+        .ko-canvas > svg { width: 100%; height: auto; }
+    }
+{% endblock %}
+
+{% block content %}
+    {% if show_schedule %}
+        {% if not schedule %}
+            <p>{{ _('This tournament has no bracket to show.') }}</p>
+        {% else %}
+            <div class="ko-schedule">
+                {% for round in schedule %}
+                    <div class="ko-round-title">
+                        {{ _('Round #%(round)d', round=round.app_round) }}
+                        {% if round.datetime %}
+                            <span class="ko-round-datetime">— {{ round.datetime }}</span>
+                        {% endif %}
+                    </div>
+                    {% for group in round.groups %}
+                        <div class="ko-group-title">{{ group.name }}</div>
+                        <table class="ko-sched-table">
+                            {% for m in group.matches %}
+                                <tr>
+                                    <td class="ko-sched-name {{ 'win' if m.top.winner }}">{{ m.top.name or '—' }}</td>
+                                    <td class="ko-sched-score">{{ m.top.score }}</td>
+                                    <td class="ko-sched-vs">–</td>
+                                    <td class="ko-sched-score">{{ m.bottom.score }}</td>
+                                    <td class="ko-sched-name {{ 'win' if m.bottom.winner }}">{{ m.bottom.name or '—' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% elif not svg %}
+        <p>{{ _('This tournament has no bracket to show.') }}</p>
+    {% else %}
+        {% set bw = svg.box_width %}
+        {% set bh = svg.box_height %}
+        <div class="ko-bracket">
+            <div class="ko-canvas" style="width: {{ svg.width }}px;">
+                {# Round stripes: CSS-background divs behind the SVG, in
+                   per-cent so they track the scaled SVG. #}
+                <div class="ko-bands">
+                    {% for band in svg.bands %}
+                        <div class="ko-band {{ 'alt' if band.app_round % 2 == 0 }}"
+                             style="left: {{ 100 * band.x / svg.width }}%;
+                                    width: {{ 100 * band.width / svg.width }}%;"></div>
+                    {% endfor %}
+                </div>
+                <svg viewBox="0 0 {{ svg.width }} {{ svg.height }}"
+                     height="{{ svg.height }}">
+                    {# Connectors first, so the boxes sit on top. Each is a
+                       straight segment; together they form the bracket lines. #}
+                    {% for c in svg.connectors %}
+                        <line class="ko-connector"
+                              x1="{{ c.x1 }}" y1="{{ c.y1 }}"
+                              x2="{{ c.x2 }}" y2="{{ c.y2 }}" />
+                    {% endfor %}
+
+                    {% for column in svg.columns %}
+                        {% if column.matches %}
+                            <text class="ko-col-header"
+                                  x="{{ column.x + bw / 2 }}"
+                                  y="{{ column.header_y }}">{{ column.name }}</text>
+                        {% endif %}
+                        {% for pm in column.matches %}
+                            {% set m = pm.match %}
+                            <g>
+                                <rect class="ko-box" x="{{ pm.x }}" y="{{ pm.y }}"
+                                      width="{{ bw }}" height="{{ bh }}" rx="3" />
+                                <line class="ko-divider"
+                                      x1="{{ pm.x }}" y1="{{ pm.y + bh / 2 }}"
+                                      x2="{{ pm.x + bw }}" y2="{{ pm.y + bh / 2 }}" />
+                                {% for slot, name_y, sub_y, slot_top in [
+                                        (m.top, pm.y + bh * 0.24, pm.y + bh * 0.42, pm.y),
+                                        (m.bottom, pm.y + bh * 0.72, pm.y + bh * 0.90, pm.y + bh / 2)] %}
+                                    <g class="ko-slot"{% if slot.participant_id %} data-pid="{{ slot.participant_id }}"{% endif %}>
+                                        <rect class="ko-slot-hit"
+                                              x="{{ pm.x }}" y="{{ slot_top }}"
+                                              width="{{ bw }}" height="{{ bh / 2 }}" />
+                                        {# The seed (rank) goes before the name; the rating follows it. #}
+                                        <text class="ko-name {{ 'win' if slot.winner }} {{ 'ko-empty' if not slot.name }}"
+                                              x="{{ pm.x + 8 }}" y="{{ name_y }}">{% if slot.seed %}<tspan class="ko-seed">#{{ slot.seed }}</tspan> {% endif %}{{ slot.name or '—' }}{% if slot.detail %} <tspan class="ko-detail">{{ slot.detail }}</tspan>{% endif %}</text>
+                                        {% if slot.group %}
+                                            <text class="ko-group" x="{{ pm.x + 8 }}" y="{{ sub_y }}">{{ slot.group }}</text>
+                                        {% endif %}
+                                        {% if slot.score %}
+                                            <text class="ko-score {{ 'win' if slot.winner }}"
+                                                  x="{{ pm.x + bw - 8 }}" y="{{ name_y }}">{{ slot.score }}</text>
+                                        {% endif %}
+                                    </g>
+                                {% endfor %}
+                            </g>
+                        {% endfor %}
+                    {% endfor %}
+                </svg>
+            </div>
+        </div>
+        <script>
+            (function () {
+                document.querySelectorAll('.ko-canvas svg').forEach(function (svg) {
+                    function highlight(pid, on) {
+                        if (!pid) return;
+                        svg.querySelectorAll('.ko-slot[data-pid="' + pid + '"] .ko-name')
+                           .forEach(function (t) { t.classList.toggle('ko-hl', on); });
+                    }
+                    function pidOf(event) {
+                        var slot = event.target.closest('.ko-slot');
+                        return slot ? slot.getAttribute('data-pid') : null;
+                    }
+                    svg.addEventListener('mouseover', function (e) { highlight(pidOf(e), true); });
+                    svg.addEventListener('mouseout', function (e) { highlight(pidOf(e), false); });
+                });
+            })();
+        </script>
+    {% endif %}
+{% endblock %}

@@ -1,16 +1,14 @@
 {% import '/common/macros.j2' as macros with context %}
 {% import '/admin/common/macros.j2' as admin_macros with context %}
 
-{# The round count. Some systems settle it themselves — a round-robin
-   from its entrants, a Scheveningen from its boards — and neither is
-   knowable while the tournament is being created. Those show an empty,
-   disabled field reading "Automatic"; the count is stored as 0 and
-   worked out on demand (see ``Tournament.rounds``). Everything else is
-   typed in as before.
+{# The round count. Some systems settle it themselves — a round-robin from its
+   entrants, a knock-out from the bracket depth. Before pairing the field is
+   blank and shows an "Automatic" placeholder for those systems; typed in for
+   the rest. Once paired it is greyed out.
 
-   Re-rendered on its own whenever the pairing system or its variation
-   changes, so the field follows what is on screen rather than what was
-   saved. #}
+   Re-rendered on its own whenever the pairing system or its variation changes;
+   the current value is included so it survives that re-render, and the schedule
+   is refreshed with it. #}
 <div
     id="rounds-field"
     hx-trigger="rounds-params-updated"
@@ -23,17 +21,21 @@
         if admin_tournament
         else ''
     ) }}"
-    hx-include='[name="pairing_system"],[name$="_pairing_variation"],[name="team_player_count"]'
+    hx-include='[name="rounds"],[name="pairing_system"],[name$="_pairing_variation"],[name="team_player_count"]'
     hx-indicator="#please-wait"
+    hx-on::after-swap="{{ reload_schedule_script|safe }}"
 >
     {{ admin_macros.number_input(
         name='rounds',
         label=_('%(string)s:', string=_('Rounds')),
         data=data, errors=errors,
-        placeholder=_('Automatic') if rounds_are_automatic else '',
+        placeholder=_('Automatic') if rounds_placeholder_automatic else '',
         disabled=rounds_are_automatic,
         input_tooltip=rounds_automatic_reason if rounds_are_automatic else '',
     ) }}
+    {% if rounds_automatic_hint %}
+        <div class="form-text text-muted mt-0 mb-2">{{ rounds_automatic_hint }}</div>
+    {% endif %}
     <script>
         $('#rounds').on('change delay:0.3s', () => {{ reload_schedule_script|safe }});
     </script>

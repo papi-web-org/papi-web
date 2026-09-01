@@ -1,0 +1,88 @@
+{# Options are the tournament's pairing dimensions (individual/team + enabled
+   plugins); an empty value means the plain seed order. #}
+{% set grouping_options = {'': _('No grouping')} %}
+{% for dimension in admin_tournament.prohibited_pairing_dimensions() %}
+    {% set _ = grouping_options.update({dimension.id: dimension.label}) %}
+{% endfor %}
+<div class="row gy-2 gx-3" id="ko-grouping-{{ setting.id }}">
+    {{ admin_macros.select_input(
+        name=setting.id,
+        label=_('%(string)s:', string=setting.name),
+        tooltip_text=(
+            _(
+                'Seed the bracket so each group plays itself before it meets '
+                'other groups. Groups are padded with byes to fit the bracket. '
+                'Within a group, teams are ordered by pairing number.'
+            ) if admin_tournament.is_team_tournament else _(
+                'Seed the bracket so each group plays itself before it meets '
+                'other groups. Groups are padded with byes to fit the bracket. '
+                'Within a group, players are ordered by rating.'
+            )
+        ),
+        select_options=grouping_options,
+        data=data, errors=errors
+    ) }}
+    {# A live preview of the groups and the bracket cost for the selected
+       dimension — one hidden block each, revealed by the script below. #}
+    <div class="col-12 ko-grouping-previews">
+        {% for dimension in admin_tournament.prohibited_pairing_dimensions() %}
+            {% set preview = admin_tournament.knockout.grouping_preview(dimension.id) %}
+            {% if preview %}
+                <div class="ko-grouping-preview small" data-dim="{{ dimension.id }}" style="display: none;">
+                    {# Separate the group info from the pairing settings above. #}
+                    <hr class="mt-2 mb-3">
+                    <div class="mb-1">
+                        {% for group in preview.groups %}
+                            <span class="badge rounded-pill text-bg-light border me-1">{{ group.label or _('Unaffiliated') }}: {{ group.count }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="{{ 'text-danger fw-semibold' if preview.blown_up else 'text-muted' }}">
+                        {{ ngettext(
+                            '%(players)d player in %(groups)d groups → %(size)d-slot bracket, %(rounds)d rounds (%(byes)d byes).',
+                            '%(players)d players in %(groups)d groups → %(size)d-slot bracket, %(rounds)d rounds (%(byes)d byes).',
+                            preview.players,
+                            players=preview.players, groups=preview.group_count,
+                            size=preview.bracket_size, rounds=preview.rounds, byes=preview.byes
+                        ) }}
+                        {% if preview.blown_up %}
+                            {{ _('The groups are very uneven, so most of the bracket is byes — consider a different grouping or none.') }}
+                        {% endif %}
+                    </div>
+                    {% if preview.byes %}
+                        <div class="text-muted fst-italic">
+                            {{ _('For best results, make the groups equal in size — ideally a power-of-two number of players each (2, 4, 8, 16…) — so the bracket needs no byes.') }}
+                        </div>
+                    {% endif %}
+                    {% if preview.unaffiliated %}
+                        <div class="text-muted">
+                            {{ ngettext(
+                                '%(n)d player has no %(dim)s and joins one shared group.',
+                                '%(n)d players have no %(dim)s and join one shared group.',
+                                preview.unaffiliated, n=preview.unaffiliated, dim=dimension.label
+                            ) }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+<script>
+    // Bind with jQuery: select2 fires its change through jQuery's trigger,
+    // which a native addEventListener('change') would miss.
+    $(function () {
+        var root = document.getElementById('ko-grouping-{{ setting.id }}');
+        if (!root) return;
+        var $select = $(root).find('select[name="{{ setting.id }}"]');
+        var previews = root.querySelectorAll('.ko-grouping-preview');
+        function update() {
+            var value = $select.val() || '';
+            previews.forEach(function (preview) {
+                preview.style.display =
+                    preview.getAttribute('data-dim') === value ? '' : 'none';
+            });
+        }
+        $select.on('change', update);
+        update();
+    });
+</script>

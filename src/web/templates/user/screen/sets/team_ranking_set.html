@@ -9,7 +9,11 @@
     and tournament.primary_score|string == 'MATCH_POINTS'
 ) %}
 {% set team_tie_breaks = tournament.tie_breaks | selectattr('supports_team_mode') | list %}
-{% set numeric_count = (5 if primary_is_mp else 1) + 1 + team_tie_breaks | length %}
+{# A knock-out ranks by the round reached: one plain-language result column
+   in place of the points / tie-break columns. #}
+{% set eliminates = tournament.pairing_system.eliminates_participants %}
+{% set knockout_standings = tournament.knockout.team_standing_labels() if eliminates else {} %}
+{% set numeric_count = 1 if eliminates else ((5 if primary_is_mp else 1) + 1 + team_tie_breaks | length) %}
 <div class="row gy-2 gx-3 screen-set-row mx-0 w-100 px-3 py-2">
     {% for standings in screen_set.team_standings_lists %}
         <div class="col screen-set-col {% if not loop.first %}border-start border-2 border-dark{% endif %}">
@@ -19,47 +23,55 @@
             >
                 <div class="grid-header fw-bold text-end pe-2">{{ _('Rk. *** RANK COLUMN HEADER') }}</div>
                 <div class="grid-header fw-bold text-start">{{ _('Team') }}</div>
-                <div class="grid-header fw-bold text-center">{{ _('Played') }}</div>
-                {% if primary_is_mp %}
-                    <div class="grid-header fw-bold text-center">{{ _('W *** TEAM RANKING HEADER WIN') }}</div>
-                    <div class="grid-header fw-bold text-center">{{ _('D *** TEAM RANKING HEADER DRAW') }}</div>
-                    <div class="grid-header fw-bold text-center">{{ _('L *** TEAM RANKING HEADER LOSS') }}</div>
-                    <div class="grid-header fw-bold text-center">{{ _('F *** TEAM RANKING HEADER FORFEIT') }}</div>
-                    <div class="grid-header fw-bold text-center">{{ _('MP *** MATCH POINTS') }}</div>
+                {% if eliminates %}
+                    <div class="grid-header fw-bold text-end pe-2">{{ _('Result *** KNOCK-OUT RESULT COLUMN') }}</div>
                 {% else %}
-                    <div class="grid-header fw-bold text-center">{{ _('GP *** GAME POINTS') }}</div>
+                    <div class="grid-header fw-bold text-center">{{ _('Played') }}</div>
+                    {% if primary_is_mp %}
+                        <div class="grid-header fw-bold text-center">{{ _('W *** TEAM RANKING HEADER WIN') }}</div>
+                        <div class="grid-header fw-bold text-center">{{ _('D *** TEAM RANKING HEADER DRAW') }}</div>
+                        <div class="grid-header fw-bold text-center">{{ _('L *** TEAM RANKING HEADER LOSS') }}</div>
+                        <div class="grid-header fw-bold text-center">{{ _('F *** TEAM RANKING HEADER FORFEIT') }}</div>
+                        <div class="grid-header fw-bold text-center">{{ _('MP *** MATCH POINTS') }}</div>
+                    {% else %}
+                        <div class="grid-header fw-bold text-center">{{ _('GP *** GAME POINTS') }}</div>
+                    {% endif %}
+                    {% for tie_break in team_tie_breaks %}
+                        <div class="grid-header fw-bold text-center">{{ tie_break.acronym }}</div>
+                    {% endfor %}
                 {% endif %}
-                {% for tie_break in team_tie_breaks %}
-                    <div class="grid-header fw-bold text-center">{{ tie_break.acronym }}</div>
-                {% endfor %}
 
                 {% if standings %}
                     {% for row in standings %}
                         <div class="player-row" id="team-{{ row.team.id }}">
                             <div class="text-end pe-2">{{ row.rank }}</div>
                             <div class="text-start fw-bold">{{ row.team.name }}</div>
-                            <div class="text-center">{{ row.played }}</div>
-                            {% if primary_is_mp %}
-                                <div class="text-center">{{ row.wins }}</div>
-                                <div class="text-center">{{ row.draws }}</div>
-                                <div class="text-center">{{ row.losses }}</div>
-                                <div class="text-center">{{ row.forfeits }}</div>
-                                <div class="text-center fw-bold">{{ '%g'|format(row.mp) }}</div>
+                            {% if eliminates %}
+                                <div class="text-end pe-2 fw-bold">{{ knockout_standings[row.team.id] }}</div>
                             {% else %}
-                                <div class="text-center fw-bold">{{ '%g'|format(row.gp) }}</div>
+                                <div class="text-center">{{ row.played }}</div>
+                                {% if primary_is_mp %}
+                                    <div class="text-center">{{ row.wins }}</div>
+                                    <div class="text-center">{{ row.draws }}</div>
+                                    <div class="text-center">{{ row.losses }}</div>
+                                    <div class="text-center">{{ row.forfeits }}</div>
+                                    <div class="text-center fw-bold">{{ '%g'|format(row.mp) }}</div>
+                                {% else %}
+                                    <div class="text-center fw-bold">{{ '%g'|format(row.gp) }}</div>
+                                {% endif %}
+                                {% for tie_break in team_tie_breaks %}
+                                    {% set value = row.tie_break_values[loop.index0].value | float %}
+                                    <div class="text-center">
+                                        {% if tie_break.display_rank_delta %}
+                                            {{ ('+%d'|format(value|int)) if value else '—' }}
+                                        {% elif value == value|round(0) %}
+                                            {{ value|int }}
+                                        {% else %}
+                                            {{ '%.2f'|format(value) }}
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
                             {% endif %}
-                            {% for tie_break in team_tie_breaks %}
-                                {% set value = row.tie_break_values[loop.index0].value | float %}
-                                <div class="text-center">
-                                    {% if tie_break.display_rank_delta %}
-                                        {{ ('+%d'|format(value|int)) if value else '—' }}
-                                    {% elif value == value|round(0) %}
-                                        {{ value|int }}
-                                    {% else %}
-                                        {{ '%.2f'|format(value) }}
-                                    {% endif %}
-                                </div>
-                            {% endfor %}
                         </div>
                     {% endfor %}
                 {% else %}

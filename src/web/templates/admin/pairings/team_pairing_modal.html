@@ -32,6 +32,91 @@
             </div>
         </div>
         <div class="modal-body">
+            {# Knock-out: a match level on game points still needs a
+               qualifier. Show who advances and, when a play-off is
+               configured, let the arbiter designate the winning team. #}
+            {% set ko_adv = admin_tournament.knockout.team_board_advancement(team_board) %}
+            {% if ko_adv %}
+                <div class="mb-3">
+                    <h6 class="mb-2">{{ _('Who advances') }}</h6>
+                    {% if ko_adv.winner_id %}
+                        {% set winner_name = team_board.team_a.name
+                            if ko_adv.winner_id == team_board.team_a.id
+                            else team_board.team_b.name %}
+                        <div class="mb-2">
+                            <span class="badge rounded-pill bg-dark text-primary lh-1 me-1">1</span>
+                            <b>{{ winner_name }}</b>
+                            {% if ko_adv.reason %}
+                                <span class="text-secondary">({{ ko_adv.reason }})</span>
+                            {% endif %}
+                        </div>
+                    {% elif not ko_adv.manual_reached %}
+                        <div class="text-warning mb-2">
+                            <i class="bi-exclamation-triangle-fill pe-1"></i>
+                            {{ _('No tie-break decides this tied match. Add the '
+                                '"Manual" tie-break to hold a play-off.') }}
+                        </div>
+                    {% endif %}
+                    {% if ko_adv.breakdown %}
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th class="text-end">{{ team_board.team_a.name }}</th>
+                                    <th class="text-end">{{ team_board.team_b.name }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in ko_adv.breakdown %}
+                                    {% if row.is_manual %}
+                                        <tr class="{{ '' if row.used else 'text-muted' }}">
+                                            <td class="align-middle">{{ _('Manual') }}</td>
+                                            {% for team in [team_board.team_a, team_board.team_b] %}
+                                                <td class="text-end">
+                                                    <button
+                                                        class="btn btn-sm {{ 'btn-primary'
+                                                            if ko_adv.winner_id == team.id
+                                                            else 'btn-outline-primary' }}"
+                                                        {% if row.used %}
+                                                            hx-put="{{ url_for(
+                                                                'admin-pairings-knockout-team-winner',
+                                                                event_uniq_id=admin_event.uniq_id,
+                                                                tournament_id=admin_tournament.id,
+                                                                round=team_board.round,
+                                                                team_board_id=team_board.id,
+                                                                team_id=(0 if ko_adv.winner_id == team.id else team.id),
+                                                            ) }}"
+                                                            hx-target="body"
+                                                            hx-indicator="#please-wait"
+                                                            {{ macros.tooltip_attributes('',
+                                                                _('Click again to clear.'), 'top')
+                                                                if ko_adv.winner_id == team.id }}
+                                                        {% else %}
+                                                            disabled
+                                                        {% endif %}
+                                                    >{{ _('Mark as winner') }}</button>
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% else %}
+                                        <tr class="{{ 'fw-bold' if row.decisive }}{{ ' text-muted' if not row.used }}">
+                                            <td>{{ row.acronym }}</td>
+                                            <td class="text-end">{{ '%g'|format(row.value_a) }}</td>
+                                            <td class="text-end">{{ '%g'|format(row.value_b) }}</td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                </div>
+                {% if not admin_tournament.pairing_system.eliminates_participants %}
+                    <hr class="my-3" />
+                {% endif %}
+            {% endif %}
+            {# Unpairing belongs to systems whose pairings the arbiter owns
+               (Swiss); a knock-out's matches come from the bracket. #}
+            {% if not admin_tournament.pairing_system.eliminates_participants %}
             {% set action = 'MANUAL_UNPAIRING' %}
             {% set action_route = url_for(
                 'admin-pairings-unpair-team-board',
@@ -94,6 +179,7 @@
                 </span>
             {% else %}
                 </div>
+            {% endif %}
             {% endif %}
         </div>
     </div>

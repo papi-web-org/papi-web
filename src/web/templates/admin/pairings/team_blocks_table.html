@@ -22,8 +22,31 @@
         </colgroup>
     {% endif %}
     {% include '/admin/pairings/pairing_table_header.html' %}
-    {% for team_board in admin_team_boards %}
-        {% include '/admin/pairings/team_block.html' %}
+    {# Exact column count (mirrors the colgroup) so a bracket-section header
+       spans every column without a colspan larger than the table, which
+       corrupts the fixed table layout. #}
+    {% set bracket_ncols = 4 + (2 if admin_tournament.record_illegal_moves else 0) %}
+    {% set bracket_sections = admin_tournament.round_sections(admin_team_boards) %}
+    {% for section_label, section_boards in bracket_sections %}
+        {# Head each knock-out round with its name (Upper Bracket Semifinals /
+           Lower Bracket Round 1 / Final / Grand Final / …). #}
+        {% if section_label %}
+            <tbody>
+                <tr class="bracket-section-header">
+                    {# Override the striped/hover table background variables
+                       (Bootstrap paints them as an overlay, so a plain bg-* is
+                       hidden under it) with the page bg — also kills the hover
+                       highlight on the header. #}
+                    <td colspan="{{ bracket_ncols }}" class="fw-semibold small text-primary py-1 text-start"
+                        style="--bs-table-bg-type: var(--bs-body-bg); --bs-table-bg-state: var(--bs-body-bg);">
+                        {{ section_label }}
+                    </td>
+                </tr>
+            </tbody>
+        {% endif %}
+        {% for team_board in section_boards %}
+            {% include '/admin/pairings/team_block.html' %}
+        {% endfor %}
     {% endfor %}
     {% if not admin_team_boards %}
         <tbody>

@@ -194,10 +194,13 @@
 {% endmacro %}
 
 {% macro tie_break_configuration_button(tournament) %}
+    {% set is_advancement = tournament.tie_break_config_purpose == 'ADVANCEMENT' %}
+    {% set configure_label = _('Configure the advancement tie-breaks of the tournament.')
+        if is_advancement else _('Configure the tie-breaks of the tournament.') %}
     <span
         class="flex-shrink-0"
         {% if client.can_update_tournaments %}
-            {{ macros.tooltip_attributes('info', _('Configure the tie-breaks of the tournament.'), 'top') }}
+            {{ macros.tooltip_attributes('info', configure_label, 'top') }}
         {% else %}
             {{ macros.tooltip_attributes('warning', _('You are not allowed to update the tournament.'), 'top') }}
         {% endif %}
@@ -213,7 +216,7 @@
             hx-indicator="#please-wait"
             data-bs-toggle="modal"
             data-bs-target="#modal-wrapper"
-            aria-label="{{ _('Configure the tie-breaks of the tournament.') }}"
+            aria-label="{{ configure_label }}"
             {% if not client.can_update_tournaments %}disabled{% endif %}
         >
             <i class="bi-gear-fill"></i>
@@ -222,9 +225,11 @@
 {% endmacro %}
 
 {% macro tie_break_values(item) %}
-    {% if item.tie_breaks_by_id %}
-        {% set invalid_messages_by_id = item.tie_breaks_invalid_messages %}
-        {% for stored_id, tie_break in item.tie_breaks_by_id.items() %}
+    {% set config = item.tie_breaks_by_id %}
+    {% set advancement = item.tie_break_config_purpose == 'ADVANCEMENT' %}
+    {% if config %}
+        {% set invalid_messages_by_id = {} if advancement else item.tie_breaks_invalid_messages %}
+        {% for stored_id, tie_break in config.items() %}
             {% if stored_id in invalid_messages_by_id %}
                 {% set badge_class = 'text-bg-danger' %}
                 {% set has_issue = true %}
@@ -249,9 +254,9 @@
 {% endmacro %}
 
 {% macro tie_break_section_warning(item, extra_class='') %}
-    {# The points alone leave every tie unbroken, so that counts as
-       nothing configured, whether or not the criterion is listed. #}
-    {% set section_warning = (
+    {# A knock-out ranks by the round reached — there is no standings
+       tie-break to be missing, so the recommendation does not apply. #}
+    {% set section_warning = None if item.pairing_system.eliminates_participants else (
         _('It is highly recommended to set at least one tie-break.')
         if item.only_ranks_on_points else
         item.tie_breaks_warning_message
@@ -270,6 +275,10 @@
 
 {% macro tie_break_summary(item, view, placement) %}
     {% if view == 'list' %}
+        {% set is_advancement = item.tie_break_config_purpose == 'ADVANCEMENT' %}
+        {% set edit_label = _('Configure the advancement tie-breaks of the tournament.')
+            if is_advancement else _('Configure the tie-breaks of the tournament.') %}
+        {% set has_config = item.tie_breaks_by_id %}
         <span class="d-flex align-items-center gap-2 w-100">
             {% call collection_macros.column_edit_button(
                 not client.can_update_tournaments,
@@ -280,15 +289,15 @@
                 ),
                 'info' if client.can_update_tournaments else 'warning',
                 (
-                    _('Configure the tie-breaks of the tournament.')
+                    edit_label
                     if client.can_update_tournaments else
                     _('You are not allowed to update the tournament.')
-                ) if not item.tie_breaks_by_id else '',
+                ) if not has_config else '',
                 'collection-inline-edit-label-group'
-                ~ (' pb-1' if item.tie_breaks_by_id else ''),
+                ~ (' pb-1' if has_config else ''),
                 true,
                 'collection-inline-edit-preserve-colour',
-                _('Configure the tie-breaks of the tournament.'),
+                edit_label,
             ) %}
                 <span class="d-inline-flex flex-wrap align-items-center gap-1 min-width-0">
                     {{ tie_break_values(item) }}

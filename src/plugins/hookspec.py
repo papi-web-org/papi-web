@@ -53,10 +53,8 @@ if TYPE_CHECKING:
         IndividualTeamType,
     )
     from data.print_documents.place_cards.data import PlaceCardPlayer
-    from data.prohibited_pairings import (
-        ProhibitedPairingDimension,
-        RoundProhibitedPairingGroup,
-    )
+    from data.pairing_dimensions import PairingDimension
+    from data.prohibited_pairings import RoundProhibitedPairingGroup
     from data.rule_sets import RuleSet
     from data.screens.screen_types import ScreenType
     from data.teams.team_affiliation import TeamAffiliationSource
@@ -375,7 +373,7 @@ class AppHookSpecs:
     @hookspec
     def get_prohibited_pairing_dimensions(
         self,
-    ) -> list['ProhibitedPairingDimension']:
+    ) -> list['PairingDimension']:
         """Extra prohibited-pairing grouping dimensions a plugin
         contributes (e.g. a federation "ligue", a school). Each buckets
         a tournament's members so that members sharing a key must not be

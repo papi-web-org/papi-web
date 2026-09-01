@@ -949,6 +949,11 @@ class PapiConverter:
     def _tiebreaks_to_papi_tiebreaks(
         tournament: Tournament,
     ) -> tuple[list[str | None], dict[int, int]]:
+        if tournament.pairing_system.eliminates_participants:
+            # A knock-out ranks by the round reached, not by any tie-break, so
+            # export none — its configured tie-breaks are Art. 12 advancement
+            # criteria (deciding a level match), not standings.
+            return [None, None, None], {}
         papi_tiebreaks: list[str | None] = []
         manual_tiebreak_by_player_id: dict[int, int] = {}
         manual_index: int | None = None
@@ -1099,14 +1104,32 @@ class PapiConverter:
         )
 
         # Convert rounds/pairings
+        tournament = tournament_player.tournament
+        eliminates = tournament.pairing_system.eliminates_participants
         for round, pairing in tournament_player.pairings_by_round.items():
             papi_round = PapiRound.from_pairing(pairing, pab_value)
 
-            # Get opponent index using the mapping from internal player ID to list index
+            # Get opponent index using the mapping from internal player ID to index
             opponent_index = None
             if pairing.opponent_id is not None:
                 opponent_index = player_id_to_index.get(pairing.opponent_id)
             papi_round.opponent = opponent_index
+
+            # In a knock-out a player has no opponent in a round when they are
+            # eliminated (unpaired) or seated on a structural bye (a top seed
+            # sitting the round out). Papi cannot take a *scoring* bye with no
+            # adversary — it assigns a default one, so several such byes in a
+            # round collide on its per-round adversary index — so represent
+            # every opponent-less played round as a zero-point bye, which it
+            # accepts and which leaves the score untouched (a knock-out ranks
+            # on the round reached, not on the points).
+            if (
+                eliminates
+                and papi_round.opponent is None
+                and tournament.round_has_pairings(round)
+            ):
+                papi_round = PapiRound.zero_point_bye()
+
             papi_player.rounds[round] = papi_round
 
         return papi_player

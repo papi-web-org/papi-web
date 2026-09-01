@@ -19,9 +19,11 @@
     {% set _white_molter_code = wtp.team.player_round_label(wtp, admin_round) if (wtp and wtp.team) else (molter_code[0] if molter_code is defined and molter_code else none) %}
     {% set _black_molter_code = btp.team.player_round_label(btp, admin_round) if (btp and btp.team) else (molter_code[1] if molter_code is defined and molter_code else none) %}
     <td class="text-center text-nowrap">{% if board.fixed_number %}<span class="border border-light rounded p-1" data-bs-toggle="tooltip" data-bs-title="{{ _('Fixed table') }}">{{ board.number_str }}</span>{% else %}{{ board.number_str }}{% endif %}</td>
-    <td class="text-center">{% if wtp %}{{ wtp.vpoints_str }}{% endif %}</td>
-    {% if admin_tournament.print_real_points(admin_round) %}
-        <td class="text-start">{% if wtp %}[{{ wtp.points_str }}]{% endif %}</td>
+    {% if not admin_tournament.hide_pairing_points %}
+        <td class="text-center">{% if wtp %}{{ wtp.vpoints_str }}{% endif %}</td>
+        {% if admin_tournament.print_real_points(admin_round) %}
+            <td class="text-start">{% if wtp %}[{{ wtp.points_str }}]{% endif %}</td>
+        {% endif %}
     {% endif %}
     {% if admin_tournament.record_illegal_moves %}
         {% if wtp %}
@@ -52,7 +54,9 @@
         {% endif %}
     </td>
     <td class="text-center" style="width: 4.5rem;">
+        {% set ko_adv = admin_tournament.knockout.board_advancement(board) %}
         <span
+            class="position-relative d-inline-block"
             {% if not client.can_enter_results(admin_tournament.id) %}
                 {{ macros.tooltip_attributes('warning', _('You are not allowed to enter results.'), 'top') }}
                 {% set allowed=false %}
@@ -71,8 +75,16 @@
             {% else %}
                 {% set _modal_disabled = not_allowed or not wtp or (admin_event.is_team_event and not btp) or ('MANUAL_UNPAIRING' not in existing_actions and board.exempt) %}
             {% endif %}
+            {# A locked round is read-only: show the result as plain text
+               rather than an editable button. #}
+            {% if round_locked is defined and round_locked %}
+            <span
+                class="d-inline-block text-nowrap position-relative text-center py-1"
+                style="width: 4.5rem;"
+            >
+            {% else %}
             <button
-                class="btn btn-sm btn-outline-primary text-nowrap"
+                class="btn btn-sm btn-outline-primary text-nowrap position-relative"
                 style="width: 4.5rem;"
                 {% if _modal_disabled %}
                     disabled
@@ -85,8 +97,35 @@
                     data-bs-target="#modal-wrapper"
                 {% endif %}
             >
+            {% endif %}
                 {% if board.result_str %}{{ board.result_str }}{% else %}-{% endif %}
-            </button>
+                {# Knock-out markers live inside the button so hovering/clicking
+                   them counts as the button. The advancing side gets a numbered
+                   badge; a drawn game a diagonally-cut warning corner. #}
+                {% if ko_adv and ko_adv.winner_id %}
+                    {% set _win_left = wtp and ko_adv.winner_id == wtp.id %}
+                    <span
+                        class="badge rounded-pill bg-primary text-dark lh-1 d-inline-flex
+                            align-items-center justify-content-center position-absolute
+                            top-50 translate-middle {{ 'start-0' if _win_left else 'start-100' }}"
+                        style="width: 1.1rem; height: 1.1rem; font-size: 0.7rem;"
+                        {{ macros.tooltip_attributes('', _('Advances')
+                            ~ (' (' ~ ko_adv.reason ~ ')' if ko_adv.reason else ''), 'top') }}
+                    >1</span>
+                {% elif ko_adv and ko_adv.manual_pending %}
+                    <span
+                        class="position-absolute top-0 end-0 overflow-hidden"
+                        style="width: 1.7rem; height: 1.7rem;
+                            border-top-right-radius: 0.25rem;"
+                        {{ macros.tooltip_attributes('', _('Draw — choose who advances.'), 'top') }}
+                    >
+                        <span class="d-block w-100 h-100 bg-primary"
+                            style="clip-path: polygon(0 0, 100% 0, 100% 100%);"></span>
+                        <i class="bi-exclamation-triangle-fill text-dark position-absolute"
+                            style="top: 2px; right: 3px; font-size: 0.6rem; line-height: 1;"></i>
+                    </span>
+                {% endif %}
+            {% if round_locked is defined and round_locked %}</span>{% else %}</button>{% endif %}
         </span>
     </td>
     {% if btp %}
@@ -112,10 +151,12 @@
                 {% endwith %}
             {% endif %}
         </td>
-        {% if admin_tournament.print_real_points(admin_round) %}
-            <td class="text-end">[{{ btp.points_str }}]</td>
+        {% if not admin_tournament.hide_pairing_points %}
+            {% if admin_tournament.print_real_points(admin_round) %}
+                <td class="text-end">[{{ btp.points_str }}]</td>
+            {% endif %}
+            <td class="text-center">{{ btp.vpoints_str }}</td>
         {% endif %}
-        <td class="text-center">{{ btp.vpoints_str }}</td>
     {% else %}
         {% if admin_tournament.record_illegal_moves %}
             <td></td>
@@ -132,6 +173,11 @@
                     {% if _black_molter_code %}<small class="text-muted me-1">{{ _black_molter_code }}</small>{% endif %}
                     <em class="text-muted">—</em>
                 {% endif %}
+            {% elif admin_tournament.pairing_system.eliminates_participants %}
+                {# A knock-out's byes are structural bracket padding — a
+                   participant may bye several rounds — so show a plain label,
+                   not the Swiss repeat-bye warning. #}
+                {{ _('EXEMPT') }}
             {% else %}
                 {% if _black_molter_code %}<small class="text-muted me-1">{{ _black_molter_code }}</small>{% endif %}
                 {% set first_pab_round = wtp.first_pab_round if wtp else none %}
@@ -144,7 +190,9 @@
                 {% endif %}
             {% endif %}
         </td>
-        <td></td>
-        {% if admin_tournament.print_real_points(admin_round) %}<td></td>{% endif %}
+        {% if not admin_tournament.hide_pairing_points %}
+            <td></td>
+            {% if admin_tournament.print_real_points(admin_round) %}<td></td>{% endif %}
+        {% endif %}
     {% endif %}
 </tr>

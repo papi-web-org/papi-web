@@ -362,6 +362,86 @@
                     </div>
                 </div>
                 {% endif %}
+
+                {# Knock-out: a drawn game still needs a qualifier. Shown at
+                   the bottom, below the results, since it only applies once a
+                   draw has been entered. #}
+                {% set ko_adv = admin_tournament.knockout.board_advancement(board) %}
+                {% if ko_adv %}
+                    <hr class="my-3" />
+                    <div class="mb-1">
+                        <h6 class="mb-2">{{ _('Who advances') }}</h6>
+                        {% if ko_adv.winner_id %}
+                            {% set winner_name = wtp.full_name
+                                if ko_adv.winner_id == wtp.id else btp.full_name %}
+                            <div class="mb-2">
+                                <span class="badge rounded-pill bg-primary text-dark lh-1 me-1">1</span>
+                                <b>{{ winner_name }}</b>
+                                {% if ko_adv.reason %}
+                                    <span class="text-secondary">({{ ko_adv.reason }})</span>
+                                {% endif %}
+                            </div>
+                        {% elif not ko_adv.manual_reached %}
+                            <div class="text-warning mb-2">
+                                <i class="bi-exclamation-triangle-fill pe-1"></i>
+                                {{ _('No tie-break decides this drawn game. Add the '
+                                    '"Manual" tie-break to hold a play-off.') }}
+                            </div>
+                        {% endif %}
+                        {% if ko_adv.breakdown %}
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th class="text-end">{{ wtp.full_name }}</th>
+                                        <th class="text-end">{{ btp.full_name }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in ko_adv.breakdown %}
+                                        {% if row.is_manual %}
+                                            <tr class="{{ '' if row.used else 'text-muted' }}">
+                                                <td class="align-middle">{{ _('Manual') }}</td>
+                                                {% for side in [wtp, btp] %}
+                                                    <td class="text-end">
+                                                        <button
+                                                            class="btn btn-sm {{ 'btn-primary'
+                                                                if ko_adv.winner_id == side.id
+                                                                else 'btn-outline-primary' }}"
+                                                            {% if row.used %}
+                                                                hx-put="{{ url_for(
+                                                                    'admin-pairings-knockout-player-winner',
+                                                                    event_uniq_id=admin_event.uniq_id,
+                                                                    tournament_id=admin_tournament.id,
+                                                                    round=admin_round,
+                                                                    board_id=board.identifier,
+                                                                    player_id=(0 if ko_adv.winner_id == side.id else side.id),
+                                                                ) }}"
+                                                                hx-target="body"
+                                                                hx-indicator="#please-wait"
+                                                                {{ macros.tooltip_attributes('',
+                                                                    _('Click again to clear.'), 'top')
+                                                                    if ko_adv.winner_id == side.id }}
+                                                            {% else %}
+                                                                disabled
+                                                            {% endif %}
+                                                        >{{ _('Mark as winner') }}</button>
+                                                    </td>
+                                                {% endfor %}
+                                            </tr>
+                                        {% else %}
+                                            <tr class="{{ 'fw-bold' if row.decisive }}{{ ' text-muted' if not row.used }}">
+                                                <td>{{ row.acronym }}</td>
+                                                <td class="text-end">{{ '%g'|format(row.value_a) }}</td>
+                                                <td class="text-end">{{ '%g'|format(row.value_b) }}</td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

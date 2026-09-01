@@ -705,6 +705,15 @@ class TeamPairingEngine(PairingEngine, ABC):
 
     BYE_ID = 0
 
+    @property
+    def byes_unpaired_absent_teams(self) -> bool:
+        """Whether a team not paired this round (and not checked in) is given
+        an automatic zero-point-bye envelope. True for the fixed-schedule /
+        Swiss systems where every team is expected each round; False for an
+        elimination bracket, where an unpaired team is knocked out or waiting
+        in the other bracket, not sitting out a round."""
+        return True
+
     def _generate_stored_boards(
         self,
         tournament: 'Tournament',
@@ -899,8 +908,10 @@ class TeamPairingEngine(PairingEngine, ABC):
             # records, so its output won't reference them either. Teams
             # the schedule already paired this round (fixed-schedule
             # systems pair every team, present or not) keep their match —
-            # no spurious ZPB on top of it.
-            for team in tournament.teams:
+            # no spurious ZPB on top of it. An elimination bracket never
+            # byes an unpaired team: it is knocked out or waiting in the
+            # other bracket, not sitting out.
+            for team in tournament.teams if self.byes_unpaired_absent_teams else []:
                 if (
                     team.check_in
                     or team.id in manual_bye_team_ids

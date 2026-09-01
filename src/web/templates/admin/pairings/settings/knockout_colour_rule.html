@@ -1,0 +1,10 @@
+<div class="row gy-2 gx-3">
+    {{ admin_macros.select_input(
+        name=setting.id,
+        label=_('%(string)s:', string=setting.name),
+        tooltip_text=_('How each match\'s colours are decided.'),
+        select_options=setting.options,
+        tooltip_select=true,
+        data=data, errors=errors
+    ) }}
+</div>

@@ -37,7 +37,7 @@ from data.pairings.fixed_table import (
     TablePairing,
 )
 from data.pairings.settings import PairingSetting
-from data.pairings.systems import PairingSystem, SwissPairingSystem
+from data.pairings.systems import PairingSystem, swiss_style_permission_handler
 from data.pairings.variations import PairingVariation
 from data.safety_mode import PairingAction, PermissionHandler
 from database.sqlite.event.event_store import StoredBoard, StoredTeamBoard
@@ -312,7 +312,7 @@ class ScheveningenPairingSystem(
 
     @cached_property
     def permission_handler(self) -> PermissionHandler[PairingAction]:
-        return SwissPairingSystem().permission_handler
+        return swiss_style_permission_handler(protect_unpairing=False)
 
     def default_current_round(self, tournament: 'Tournament') -> int:
         return tournament.last_paired_round

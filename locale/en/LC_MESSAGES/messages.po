@@ -45,6 +45,12 @@ msgid "%(minutes)d min before"
 msgstr ""
 
 #, python-format
+msgid "%(n)d player has no %(dim)s and joins one shared group."
+msgid_plural "%(n)d players have no %(dim)s and join one shared group."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
 msgid "%(n)d players freed from their soft constraints"
 msgstr ""
 
@@ -215,6 +221,12 @@ msgstr[1] ""
 #, python-format
 msgid "%(num)d unknown column (ignored)"
 msgid_plural "%(num)d unknown columns (ignored)"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-format
+msgid "%(players)d player in %(groups)d groups → %(size)d-slot bracket, %(rounds)d rounds (%(byes)d byes)."
+msgid_plural "%(players)d players in %(groups)d groups → %(size)d-slot bracket, %(rounds)d rounds (%(byes)d byes)."
 msgstr[0] ""
 msgstr[1] ""
 
@@ -905,6 +917,12 @@ msgstr ""
 msgid "Advanced criteria can be created from the dedicated criteria form."
 msgstr ""
 
+msgid "Advancement tie-breaks"
+msgstr ""
+
+msgid "Advances"
+msgstr ""
+
 msgid "Affects the rating that will be chosen for each player."
 msgstr ""
 
@@ -1060,6 +1078,9 @@ msgstr ""
 msgid "Alphabetical"
 msgstr ""
 
+msgid "Alternate colours"
+msgstr ""
+
 msgid "An error occurred. Consult the logs for more details."
 msgstr ""
 
@@ -1107,6 +1128,9 @@ msgid "Application"
 msgstr ""
 
 msgid "Application startup..."
+msgstr ""
+
+msgid "Applied in order, these decide who advances from a level knock-out match (a tied team match or a drawn individual game). The \"Manual\" tie-break stands for a play-off — when reached, you designate the winner from the pairing tab. The standings always rank by the round reached."
 msgstr ""
 
 msgid "Apply"
@@ -1928,6 +1952,9 @@ msgstr ""
 msgid "Clear the tag filter."
 msgstr ""
 
+msgid "Click again to clear."
+msgstr ""
+
 msgid "Click and drag to select balanced groups."
 msgstr ""
 
@@ -2022,6 +2049,9 @@ msgstr ""
 msgid "Colour #3 is used from the start of the rounds and for {delay_3} minutes after (delay #3)."
 msgstr ""
 
+msgid "Colour assignment"
+msgstr ""
+
 msgid "Colour history"
 msgstr ""
 
@@ -2032,6 +2062,9 @@ msgid "Colour rule:"
 msgstr ""
 
 msgid "Colour thresholds"
+msgstr ""
+
+msgid "Colours are drawn at random for each match."
 msgstr ""
 
 msgid "Columns"
@@ -2095,6 +2128,9 @@ msgid "Configuration *** WITH_SHORTCUT_INDICATION"
 msgstr "<u>C</u>onfiguration"
 
 msgid "Configure prohibited pairings for this round."
+msgstr ""
+
+msgid "Configure the advancement tie-breaks of the tournament."
 msgstr ""
 
 msgid "Configure the category sets, which are available for all events."
@@ -2164,6 +2200,10 @@ msgid "Content"
 msgstr ""
 
 msgid "Continue"
+msgstr ""
+
+#, python-format
+msgid "Continue with %(calculated)s round(s)?"
 msgstr ""
 
 msgid "Corners"
@@ -2909,6 +2949,12 @@ msgstr ""
 msgid "Dominican Republic"
 msgstr ""
 
+msgid "Double elimination"
+msgstr ""
+
+msgid "Double elimination — two-game matches"
+msgstr ""
+
 msgid "Double-round Berger"
 msgstr ""
 
@@ -2954,7 +3000,13 @@ msgstr ""
 msgid "Draw"
 msgstr ""
 
+msgid "Draw — choose who advances."
+msgstr ""
+
 msgid "Draw:"
+msgstr ""
+
+msgid "Drawing of lots"
 msgstr ""
 
 #, python-format
@@ -3163,6 +3215,9 @@ msgid "Each row represents one norm achieved by a player. The IT1 certificate fo
 msgstr ""
 
 msgid "Each rule grants virtual points to a range of pairing numbers over a range of rounds. Those points only are used for pairing, not for ranking."
+msgstr ""
+
+msgid "Each side takes the opposite colour to its previous round; when an upset makes two clash, the higher seed alternates and the lower seed takes what is left. For a team, this alternates which team is board-one White."
 msgstr ""
 
 msgid "Each stage rescaled so the winner scores 1 and the last-placed 0, then summed. Evens out stages with different field sizes."
@@ -3655,6 +3710,9 @@ msgstr ""
 msgid "Filter out players with a lower rating."
 msgstr ""
 
+msgid "Final"
+msgstr ""
+
 msgid "Finland"
 msgstr ""
 
@@ -3729,6 +3787,9 @@ msgstr ""
 msgid "Font size adjustment (%%):"
 msgstr ""
 
+msgid "For best results, make the groups equal in size — ideally a power-of-two number of players each (2, 4, 8, 16…) — so the bracket needs no byes."
+msgstr ""
+
 msgid "For each round, sum the opponent score multiplied by the team score obtained in that match across all rounds. The four variants (EMMSB / EMGSB / EGMSB / EGGSB) choose which score type — match points or game points — is used on each side; pick one in the variant option below (FIDE tie-break regulations, Art. 13.2)."
 msgstr ""
 
@@ -3776,6 +3837,12 @@ msgid "Forfeited games are considered as played."
 msgstr ""
 
 msgid "Forfeits played"
+msgstr ""
+
+msgid "Format as schedule"
+msgstr ""
+
+msgid "Fourth place"
 msgstr ""
 
 msgid "Fr *** FRIDAY"
@@ -3937,7 +4004,16 @@ msgstr ""
 msgid "Go to the screen."
 msgstr ""
 
+msgid "Grand Final"
+msgstr ""
+
+msgid "Grand Final (reset)"
+msgstr ""
+
 msgid "Grand Master"
+msgstr ""
+
+msgid "Grand final reset"
 msgstr ""
 
 msgid "Grant 4 tie-break points for a win, 2 for a draw, 1 for a loss, and 0 for an unplayed game."
@@ -3955,8 +4031,14 @@ msgstr ""
 msgid "Group"
 msgstr ""
 
+msgid "Group by"
+msgstr ""
+
 #, python-brace-format
 msgid "Group {group_id}"
+msgstr ""
+
+msgid "Grouped"
 msgstr ""
 
 msgid "Groups can't be edited for this pairing system."
@@ -4017,6 +4099,9 @@ msgstr ""
 msgid "Hide"
 msgstr ""
 
+msgid "Higher seed plays White"
+msgstr ""
+
 msgid "Highlight"
 msgstr ""
 
@@ -4050,6 +4135,9 @@ msgid "Hours"
 msgstr ""
 
 msgid "How a player's Keizer total is rounded for the ranking and the pairings table."
+msgstr ""
+
+msgid "How each match's colours are decided."
 msgstr ""
 
 msgid "How each source tournament is named in the list."
@@ -4507,6 +4595,15 @@ msgstr ""
 msgid "Kiribati"
 msgstr ""
 
+msgid "Knock-out"
+msgstr ""
+
+msgid "Knock-out Bracket"
+msgstr ""
+
+msgid "Knock-out Schedule"
+msgstr ""
+
 msgid "Kosovo"
 msgstr ""
 
@@ -4695,6 +4792,19 @@ msgstr ""
 msgid "Loss:"
 msgstr ""
 
+msgid "Lower Bracket Final"
+msgstr ""
+
+msgid "Lower Bracket Quarterfinals"
+msgstr ""
+
+#, python-brace-format
+msgid "Lower Bracket Round {number}"
+msgstr ""
+
+msgid "Lower Bracket Semifinals"
+msgstr ""
+
 msgid "Luxembourg"
 msgstr ""
 
@@ -4815,6 +4925,9 @@ msgid "Mark as \"%(status)s\" "
 msgstr ""
 
 msgid "Mark as \"Present\" (recommended)"
+msgstr ""
+
+msgid "Mark as winner"
 msgstr ""
 
 msgid "Mark this round as over and define the next one as the current round."
@@ -5438,6 +5551,9 @@ msgstr ""
 msgid "No group of two or more members."
 msgstr ""
 
+msgid "No grouping"
+msgstr ""
+
 msgid "No home page"
 msgstr ""
 
@@ -5593,6 +5709,9 @@ msgstr ""
 msgid "No ranking rules configured"
 msgstr ""
 
+msgid "No reset game is needed: the winners-bracket champion won the grand final."
+msgstr ""
+
 msgid "No result"
 msgstr ""
 
@@ -5656,6 +5775,12 @@ msgid "No teams"
 msgstr ""
 
 msgid "No teams in this tournament."
+msgstr ""
+
+msgid "No tie-break decides this drawn game. Add the \"Manual\" tie-break to hold a play-off."
+msgstr ""
+
+msgid "No tie-break decides this tied match. Add the \"Manual\" tie-break to hold a play-off."
 msgstr ""
 
 msgid "No tie-breaks defined other than points."
@@ -6075,6 +6200,10 @@ msgstr ""
 msgid "Others"
 msgstr ""
 
+#, python-brace-format
+msgid "Out — round {round}"
+msgstr ""
+
 msgid "Overall"
 msgstr ""
 
@@ -6410,6 +6539,9 @@ msgstr ""
 msgid "Place:"
 msgstr ""
 
+msgid "Play a match for third place between the two losing semi-finalists, alongside the final."
+msgstr ""
+
 msgid "Played"
 msgstr ""
 
@@ -6711,6 +6843,9 @@ msgstr ""
 msgid "Please enter the name of the event."
 msgstr ""
 
+msgid "Please enter the number of rounds."
+msgstr ""
+
 msgid "Please select a competitor type."
 msgstr ""
 
@@ -6979,6 +7114,9 @@ msgid "QR Code type:"
 msgstr ""
 
 msgid "Qatar"
+msgstr ""
+
+msgid "Quarterfinals"
 msgstr ""
 
 msgid "Quick-apply a tie-break set (replace actual tie-breaks)"
@@ -7272,6 +7410,10 @@ msgstr ""
 msgid "Reset zoom"
 msgstr ""
 
+#, python-brace-format
+msgid "Resolve the tied match(es) of round {round} before pairing the next round."
+msgstr ""
+
 msgid "Restart to complete the move"
 msgstr ""
 
@@ -7283,6 +7425,9 @@ msgstr ""
 
 msgid "Result"
 msgstr ""
+
+msgid "Result *** KNOCK-OUT RESULT COLUMN"
+msgstr "Result"
 
 #, python-brace-format
 msgid "Result [{result}] can't be used with a board."
@@ -7472,10 +7617,17 @@ msgstr ""
 msgid "Round %(round)d - Board %(board_number)d"
 msgstr ""
 
+msgid "Round count"
+msgstr ""
+
 msgid "Round meets 1.5.6a?"
 msgstr ""
 
 msgid "Round number or text"
+msgstr ""
+
+#, python-brace-format
+msgid "Round of {count}"
 msgstr ""
 
 msgid "Round performance indicators"
@@ -7489,6 +7641,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Round {round}"
+msgstr ""
+
+#, python-brace-format
+msgid "Round {round} has tied match(es) that the advancement tie-breaks cannot decide. Add the \"Manual\" tie-break in the tie-break settings to designate the winner of a play-off — or add other advancement tie-breaks."
 msgstr ""
 
 #, python-brace-format
@@ -7567,6 +7723,9 @@ msgid "Rules are applied in order: each rule only breaks the ties left by the ea
 msgstr ""
 
 msgid "Rules used were only effective until march 2026 (legacy)."
+msgstr ""
+
+msgid "Runner-up"
 msgstr ""
 
 msgid "Russia"
@@ -7752,6 +7911,12 @@ msgstr ""
 msgid "Seed color"
 msgstr ""
 
+msgid "Seed the bracket so each group plays itself before it meets other groups. Groups are padded with byes to fit the bracket. Within a group, players are ordered by rating."
+msgstr ""
+
+msgid "Seed the bracket so each group plays itself before it meets other groups. Groups are padded with byes to fit the bracket. Within a group, teams are ordered by pairing number."
+msgstr ""
+
 msgid "Select"
 msgstr ""
 
@@ -7832,6 +7997,9 @@ msgstr ""
 msgid "Selection: %(selection)s"
 msgstr ""
 
+msgid "Semifinals"
+msgstr ""
+
 msgid "Senegal"
 msgstr ""
 
@@ -7907,6 +8075,9 @@ msgid "Set the coefficient applied to this tournament’s scores."
 msgstr ""
 
 msgid "Set the current round"
+msgstr ""
+
+msgid "Set the number of rounds to lay out a schedule."
 msgstr ""
 
 #, python-brace-format
@@ -8023,6 +8194,12 @@ msgstr ""
 #, python-brace-format
 msgid "Single Screens ({num}) *** WITH_SHORTCUT_INDICATION"
 msgstr "<u>S</u>ingle Screens ({num})"
+
+msgid "Single elimination"
+msgstr ""
+
+msgid "Single elimination — two-game matches"
+msgstr ""
 
 msgid "Size (pt)"
 msgstr ""
@@ -8244,6 +8421,9 @@ msgstr ""
 msgid "Std *** STANDARD RATING ACRONYM"
 msgstr "Std"
 
+msgid "Still in"
+msgstr ""
+
 msgid "Strikethrough"
 msgstr ""
 
@@ -8352,6 +8532,9 @@ msgid "Team"
 msgstr ""
 
 msgid "Team Cards"
+msgstr ""
+
+msgid "Team Knock-out"
 msgstr ""
 
 msgid "Team Round-Robin"
@@ -8539,6 +8722,9 @@ msgstr "Th"
 msgid "Thailand"
 msgstr ""
 
+msgid "The \"Manual\" tie-break settles the match by play-off, so any tie-break listed below it never applies. Move \"Manual\" to the end of the list."
+msgstr ""
+
 msgid "The FIDE rules stipulate that only the pairings of the round <b>prior</b> to the current one may be modified. Changes to pairings previous to this should be made at the <b>end</b> of the tournament, <b>after</b> the rankings have been published, and solely for the computation of the FIDE ratings."
 msgstr ""
 
@@ -8690,6 +8876,9 @@ msgstr ""
 msgid "The game points scored on every board but the bottom one; if that leaves the teams level, the bottom-most board left is excluded in turn until one team is ahead."
 msgstr ""
 
+msgid "The groups are very uneven, so most of the bracket is byes — consider a different grouping or none."
+msgstr ""
+
 msgid "The image is too large (max 2 MB)."
 msgstr ""
 
@@ -8804,9 +8993,6 @@ msgid "The number of points achieved against all players who have scored at leas
 msgstr ""
 
 msgid "The number of points in the standard 1/0.5/0 point system."
-msgstr ""
-
-msgid "The number of rounds follows from the pairing system and is worked out when the pairings are generated."
 msgstr ""
 
 msgid "The number of rounds follows from the pairing system."
@@ -8970,6 +9156,10 @@ msgstr ""
 msgid "The rule set fixes the team sort order."
 msgstr ""
 
+#, python-format
+msgid "The schedule was configured with %(scheduled)s round(s), but this pairing system will play %(calculated)s."
+msgstr ""
+
 msgid "The scoring criterion applied to rank the competitors."
 msgstr ""
 
@@ -8990,6 +9180,9 @@ msgid "The source events and tournaments will not be deleted."
 msgstr ""
 
 msgid "The source has been removed."
+msgstr ""
+
+msgid "The stronger seed takes White in every match (for a team, board-one White)."
 msgstr ""
 
 #, python-brace-format
@@ -9092,6 +9285,9 @@ msgstr ""
 msgid "The way to share the prizes between players with the same points."
 msgstr ""
 
+msgid "The winners-bracket champion reaches the grand final unbeaten. If the losers-bracket champion wins it, play a deciding second game (they must be beaten twice)."
+msgstr ""
+
 msgid "There already is an hour defined at this time."
 msgstr ""
 
@@ -9113,6 +9309,9 @@ msgid "There can only be one main category."
 msgstr ""
 
 msgid "There needs to be at least one screen or multi-screen defined for the rotator to be accessible."
+msgstr ""
+
+msgid "These decide who advances from a level knock-out match — a tied team match or a drawn individual game — applied in the order listed. They do not affect the standings, which rank by the round each participant reached."
 msgstr ""
 
 msgid "These lower-ranked players were released so the round could be paired."
@@ -9140,6 +9339,12 @@ msgid "These tags are shared by every event of this installation."
 msgstr ""
 
 msgid "These tournaments are already included for this account by a higher access level."
+msgstr ""
+
+msgid "Third place"
+msgstr ""
+
+msgid "Third-place playoff"
 msgstr ""
 
 msgid "This account can not be deleted."
@@ -9363,6 +9568,9 @@ msgstr ""
 msgid "This tie-break can't be used twice in a row (ignored)."
 msgstr ""
 
+msgid "This tie-break cannot decide which team advances in a knock-out."
+msgstr ""
+
 msgid "This tie-break has no effect with tournaments using the standard point system."
 msgstr ""
 
@@ -9391,6 +9599,9 @@ msgid "This tie-break uses a legacy way to compute values."
 msgstr ""
 
 msgid "This tournament has already been paired; teams can no longer be added."
+msgstr ""
+
+msgid "This tournament has no bracket to show."
 msgstr ""
 
 msgid "This tournament has no norm-eligible titled players."
@@ -9436,6 +9647,9 @@ msgid "Tie-breaks are managed by rule set \"{name}\". Change the rule set on the
 msgstr ""
 
 msgid "Tie-breaks determine the rankings for players that are tied with the same number of points."
+msgstr ""
+
+msgid "Tied match — choose who advances."
 msgstr ""
 
 msgid "Time"
@@ -9761,6 +9975,9 @@ msgstr ""
 msgid "Ukraine"
 msgstr ""
 
+msgid "Unaffiliated"
+msgstr ""
+
 msgid "Unassigned *** TEAM NOT ASSIGNED TO A TOURNAMENT"
 msgstr "Unassigned"
 
@@ -9995,6 +10212,19 @@ msgid "Updating"
 msgstr ""
 
 msgid "Upload image"
+msgstr ""
+
+msgid "Upper Bracket Final"
+msgstr ""
+
+msgid "Upper Bracket Quarterfinals"
+msgstr ""
+
+#, python-brace-format
+msgid "Upper Bracket Round of {count}"
+msgstr ""
+
+msgid "Upper Bracket Semifinals"
 msgstr ""
 
 msgid "Uruguay"
@@ -10298,6 +10528,9 @@ msgstr ""
 msgid "White wins"
 msgstr ""
 
+msgid "Who advances"
+msgstr ""
+
 msgid "Width"
 msgstr ""
 
@@ -10311,6 +10544,9 @@ msgid "Win"
 msgstr ""
 
 msgid "Win:"
+msgstr ""
+
+msgid "Winner"
 msgstr ""
 
 msgid "With less players than prizes, some prizes will not be attributed."
@@ -11159,6 +11395,10 @@ msgid "{screen_type}-screen"
 msgstr ""
 
 #, python-brace-format
+msgid "{stage} — game {game}"
+msgstr ""
+
+#, python-brace-format
 msgid "{start} → {end}"
 msgstr ""
 
@@ -11191,4 +11431,57 @@ msgstr ""
 
 msgid "← Back to IT1 certificate"
 msgstr ""
+
+#~ msgid "Res. ** RESULT COLUMN HEADER"
+#~ msgstr "Res."
+
+#~ msgid "Benefit from the very last (experimental) features (USE AT YOUR OWN RISKS!)."
+#~ msgstr ""
+
+#~ msgid "Choose your language"
+#~ msgstr ""
+
+#~ msgid "Date format"
+#~ msgstr ""
+
+#~ msgid "Experimental features in version %(version)s are:"
+#~ msgstr ""
+
+#~ msgid "Federation plugins"
+#~ msgstr ""
+
+#~ msgid "Invalid locale [{locale}]."
+#~ msgstr ""
+
+#~ msgid "One or more of the plugins required to use this event are disabled, making it inaccessible. You can enable plugins in the application settings."
+#~ msgstr ""
+
+#~ msgid "Please choose a federation."
+#~ msgstr ""
+
+#~ msgid "Please validate the global configuration of the application."
+#~ msgstr ""
+
+#~ msgid "Please wait until the application settings have been set on the server…"
+#~ msgstr ""
+
+#~ msgid "Sharly Chess settings"
+#~ msgstr ""
+
+#~ msgid "Sharly Chess settings have been updated."
+#~ msgstr ""
+
+#~ msgid "The default federation for your events."
+#~ msgstr ""
+
+#~ msgid "These plugins can only be activated on events of their federation."
+#~ msgstr ""
+
+#~ msgid "Used by %(num)d event."
+#~ msgid_plural "Used by %(num)d events."
+#~ msgstr[0] ""
+#~ msgstr[1] ""
+
+#~ msgid "The number of rounds follows from the pairing system and is worked out when the pairings are generated."
+#~ msgstr ""
 

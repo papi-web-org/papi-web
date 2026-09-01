@@ -11,16 +11,20 @@
             <tr class="player-header">
                 <th class="header text-end">{{ _('Rk. *** RANK COLUMN HEADER') }}</th>
                 <th class="header text-start">{{ _('Team') }}</th>
-                <th class="header text-center">{{ _('Played *** TEAM RANKING HEADER PLAYED') }}</th>
-                {% if primary_is_mp %}
-                    <th class="header text-center">{{ _('W *** TEAM RANKING HEADER WIN') }}</th>
-                    <th class="header text-center">{{ _('D *** TEAM RANKING HEADER DRAW') }}</th>
-                    <th class="header text-center">{{ _('L *** TEAM RANKING HEADER LOSS') }}</th>
-                    <th class="header text-center">{{ _('F *** TEAM RANKING HEADER FORFEIT') }}</th>
+                {% if eliminates %}
+                    <th class="header text-end">{{ _('Result *** KNOCK-OUT RESULT COLUMN') }}</th>
+                {% else %}
+                    <th class="header text-center">{{ _('Played *** TEAM RANKING HEADER PLAYED') }}</th>
+                    {% if primary_is_mp %}
+                        <th class="header text-center">{{ _('W *** TEAM RANKING HEADER WIN') }}</th>
+                        <th class="header text-center">{{ _('D *** TEAM RANKING HEADER DRAW') }}</th>
+                        <th class="header text-center">{{ _('L *** TEAM RANKING HEADER LOSS') }}</th>
+                        <th class="header text-center">{{ _('F *** TEAM RANKING HEADER FORFEIT') }}</th>
+                    {% endif %}
+                    {% for tie_break in team_tie_breaks %}
+                        <th class="header text-center">{{ tournament.tie_break_acronym(tie_break) }}</th>
+                    {% endfor %}
                 {% endif %}
-                {% for tie_break in team_tie_breaks %}
-                    <th class="header text-center">{{ tournament.tie_break_acronym(tie_break) }}</th>
-                {% endfor %}
             </tr>
         </thead>
         <tbody>
@@ -28,17 +32,21 @@
                 <tr class="player-row {{ 'even' if loop.index is even else 'odd' }}">
                     <td class="text-end">{{ row.rank }}</td>
                     <td class="name text-start">{{ row.team.name }}</td>
-                    <td class="text-center">{{ row.played }}</td>
-                    {% if primary_is_mp %}
-                        <td class="text-center">{{ row.wins }}</td>
-                        <td class="text-center">{{ row.draws }}</td>
-                        <td class="text-center">{{ row.losses }}</td>
-                        <td class="text-center">{{ row.forfeits }}</td>
+                    {% if eliminates %}
+                        <td class="text-end">{{ knockout_standings[row.team.id] }}</td>
+                    {% else %}
+                        <td class="text-center">{{ row.played }}</td>
+                        {% if primary_is_mp %}
+                            <td class="text-center">{{ row.wins }}</td>
+                            <td class="text-center">{{ row.draws }}</td>
+                            <td class="text-center">{{ row.losses }}</td>
+                            <td class="text-center">{{ row.forfeits }}</td>
+                        {% endif %}
+                        {% for tie_break in team_tie_breaks %}
+                            {% set value = row.tie_break_values[loop.index0] %}
+                            <td class="text-center">{{ value.display_string_value }}</td>
+                        {% endfor %}
                     {% endif %}
-                    {% for tie_break in team_tie_breaks %}
-                        {% set value = row.tie_break_values[loop.index0] %}
-                        <td class="text-center">{{ value.display_string_value }}</td>
-                    {% endfor %}
                 </tr>
             {% endfor %}
             {% if not standings %}

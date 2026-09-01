@@ -282,6 +282,7 @@ class TrfEncodedType:
                 | 'CUSTOM_SCHEVENINGEN'
                 | 'FIDE_SCHEVENINGEN_G1'
                 | 'CUSTOM_KNOCKOUT'
+                | 'CUSTOM_TEAM_KNOCKOUT'
             ):
                 return 'FIDE_ROUNDROBIN'
             case _:

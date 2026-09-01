@@ -1,5 +1,9 @@
-{% set rule_set_managed = admin_tournament.rule_set_managed_tie_breaks %}
-{% set only_the_points = admin_tournament.only_ranks_on_points %}
+{% set advancement = admin_tournament.tie_break_config_purpose == 'ADVANCEMENT' %}
+{% set config_tie_breaks = admin_tournament.tie_breaks_by_id %}
+{# Advancement tie-breaks are hand-picked and never rule-set managed; the
+   "points alone" caveat is a standings notion and does not apply. #}
+{% set rule_set_managed = (not advancement) and admin_tournament.rule_set_managed_tie_breaks %}
+{% set only_the_points = (not advancement) and admin_tournament.only_ranks_on_points %}
 {# A definite width, not fit-content: sizing to the content meant the
    dialog moved whenever the content did — opening the custom-sets section,
    or the body growing tall enough for a scrollbar. Anything too wide now
@@ -25,15 +29,30 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2 class="modal-title">
-                {{ _('Tie-breaks') }}
-                <i
-                    class="bi-info-circle-fill"
-                    style="font-size: 70%"
-                    {{ macros.tooltip_attributes('', _(
-                        'Tie-breaks determine the rankings for players '
-                        'that are tied with the same number of points.'
-                    )) }}
-                ></i>
+                {% if advancement %}
+                    {{ _('Advancement tie-breaks') }}
+                    <i
+                        class="bi-info-circle-fill"
+                        style="font-size: 70%"
+                        {{ macros.tooltip_attributes('', _(
+                            'These decide who advances from a level '
+                            'knock-out match — a tied team match or a drawn '
+                            'individual game — applied in the order listed. '
+                            'They do not affect the standings, which rank by '
+                            'the round each participant reached.'
+                        )) }}
+                    ></i>
+                {% else %}
+                    {{ _('Tie-breaks') }}
+                    <i
+                        class="bi-info-circle-fill"
+                        style="font-size: 70%"
+                        {{ macros.tooltip_attributes('', _(
+                            'Tie-breaks determine the rankings for players '
+                            'that are tied with the same number of points.'
+                        )) }}
+                    ></i>
+                {% endif %}
             </h2>
             <button
                 type="button"
@@ -68,7 +87,8 @@
             <h4 class="mb-3">
                 {{ _('%(string)s:', string=_('Tournament')) }}
                 {{ admin_tournament.name }}
-                {% set warning_message = admin_tournament.tie_breaks_warning_message %}
+                {% set warning_message = None if advancement
+                    else admin_tournament.tie_breaks_warning_message %}
                 {% if warning_message %}
                     <i
                         class="bi-exclamation-triangle-fill text-warning ps-2"
@@ -76,6 +96,28 @@
                     ></i>
                 {% endif %}
             </h4>
+            {% if advancement %}
+                {% with type='info', message=_(
+                    'Applied in order, these decide who advances from a '
+                    'level knock-out match (a tied team match or a drawn '
+                    'individual game). The "Manual" tie-break stands for a '
+                    'play-off — when reached, you designate the winner from '
+                    'the pairing tab. The standings always rank by the round '
+                    'reached.'
+                ) %}
+                    {% include '/common/alert.html' %}
+                {% endwith %}
+                {% if admin_tournament.advancement_tie_breaks_after_manual %}
+                    {% with type='warning', hide_remove_button=true,
+                        icon='bi-exclamation-triangle-fill', message=_(
+                            'The "Manual" tie-break settles the match by '
+                            'play-off, so any tie-break listed below it never '
+                            'applies. Move "Manual" to the end of the list.'
+                        ) %}
+                        {% include '/common/alert.html' %}
+                    {% endwith %}
+                {% endif %}
+            {% endif %}
             {% if rule_set_managed %}
                 {% with type='info', message=_(
                     'Tie-breaks are managed by rule set "{name}". Change '
@@ -96,16 +138,16 @@
             {% endif %}
             {# Ranking on tie-breaks without the score is almost never
                what an arbiter means, so say so rather than let it pass. #}
-            {% if admin_tournament.tie_breaks_by_id and not admin_tournament.ranks_on_points %}
+            {% if not advancement and admin_tournament.tie_breaks_by_id and not admin_tournament.ranks_on_points %}
                 {% with type='warning', message=_(
                     'The points are not among the ranking criteria.'
                 ), hide_remove_button=true, icon='bi-exclamation-triangle-fill' %}
                     {% include '/common/alert.html' %}
                 {% endwith %}
             {% endif %}
-            {% if admin_tournament.tie_breaks_by_id %}
+            {% if config_tie_breaks %}
                 {% set reorder_enabled = (
-                    not rule_set_managed and admin_tournament.tie_breaks_by_id|length > 1
+                    not rule_set_managed and config_tie_breaks|length > 1
                 ) %}
                 <form
                     class="{% if reorder_enabled %}sortable{% endif %} d-flex flex-column gap-2"
@@ -118,8 +160,9 @@
                     hx-trigger="end"
                     hx-indicator="#please-wait"
                 >
-                    {% set invalid_messages_by_id = admin_tournament.tie_breaks_invalid_messages %}
-                    {% for stored_id, tie_break in admin_tournament.tie_breaks_by_id.items() %}
+                    {% set invalid_messages_by_id = {} if advancement
+                        else admin_tournament.tie_breaks_invalid_messages %}
+                    {% for stored_id, tie_break in config_tie_breaks.items() %}
                         <div
                             class="tie-break-row border border-secondary bg-body-tertiary
                                 {% if reorder_enabled %}cursor-grab{% endif %}"
@@ -197,7 +240,7 @@
                                         </span>
                                         {# The standings rank on the criteria
                                            listed, so the last one has to stay. #}
-                                        {% set is_last_tie_break = admin_tournament.tie_breaks_by_id|length == 1 %}
+                                        {% set is_last_tie_break = (not advancement) and config_tie_breaks|length == 1 %}
                                         <span
                                             {{ macros.tooltip_attributes(
                                                 'info',
@@ -290,7 +333,7 @@
                 {% endif %}
                 {% set save_as_invalid = invalid_messages_by_id|length > 0 %}
                 {% set has_custom_sets = tie_break_set_custom_names|length > 0 %}
-                {% if not rule_set_managed and not only_the_points and (not save_as_invalid or has_custom_sets) %}
+                {% if not advancement and not rule_set_managed and not only_the_points and (not save_as_invalid or has_custom_sets) %}
                     <div class="mt-3">
                         <button
                             type="button"

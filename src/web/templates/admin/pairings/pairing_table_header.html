@@ -6,10 +6,7 @@
         hx-swap-oob="true"
     {% endif %}
 >
-    {% set hide_player_points = (
-        admin_tournament.event.is_team_event
-        and admin_tournament.pairing_system.paired_by_team
-    ) %}
+    {% set hide_player_points = admin_tournament.hide_pairing_points %}
     {% set board_header = _(
         'Board (%(remaining)d)',
         remaining=admin_tournament.boards_without_result(admin_round)|length
