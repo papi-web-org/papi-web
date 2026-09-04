@@ -237,11 +237,6 @@ body[data-bs-theme="dark"] #top-nav-wrapper {
     margin-right: 1rem;
 }
 
-.row .input-block:has(.form-switch) {
-    height: 100%;
-    align-items: center;
-}
-
 .pw-input-group {
     flex-grow: 1;
     width: auto;
@@ -439,6 +434,11 @@ body[data-bs-theme="dark"] .htmx-indicator {
     min-width: 0;
 }
 
+.btn.compact-y-padding {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
 .collection-view-toggle .btn {
     min-width: 2.25rem;
 }
@@ -534,6 +534,7 @@ body[data-bs-theme="dark"] .htmx-indicator {
 
 .collection-details-toggle .form-check-input {
     margin-left: -2.75rem;
+    margin-top: 0;
 }
 
 .collection-card {
@@ -1144,6 +1145,11 @@ body[data-bs-theme="dark"] .htmx-indicator {
 .collection-component-drag_handle .handle:active {
     cursor: grabbing;
 }
+
+.round-control-icon {
+    top: 2px;
+}
+
 .image-screen, .card-body {
 	background-repeat: no-repeat;
 	background-position: center center;
@@ -1242,6 +1248,76 @@ body[data-bs-theme=light] {
 body[data-bs-theme=light] .nav {
     --bs-nav-link-color: #000;
     --bs-nav-link-hover-color: #000;
+}
+
+@supports (text-box-trim: trim-both) {
+    h5 {
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+    }
+
+    .btn .btn > * {
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+        padding-top: calc(var(--bs-btn-padding-y) + 0.35rem);
+        padding-bottom: calc(var(--bs-btn-padding-y) + 0.35rem);
+    }
+
+    .btn .d-inline-flex.align-items-center *{
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+    }
+
+    .btn.compact-y-padding {
+        padding-top: 0.35rem;
+        padding-bottom: 0.35rem;
+    }
+
+    .badge {
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+        --bs-badge-padding-y: 0.45rem;
+    }
+
+    .tag-badge {
+        padding-top: 0.4em;
+        padding-bottom: 0.4em;
+    }
+
+    .form-check > span {
+        display: inline-flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .form-check, .form-check span *, .form-check-label {
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+        margin-bottom: 0;
+        align-items: center;
+    }
+
+    .form-check-input {
+        margin-top: 0.05rem;
+    }
+
+    .bi, .form-check .switch-placeholder, .form-check *[data-bs-toggle="tooltip"] {
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+    }
+
+    span:has(*[data-bs-toggle="tooltip"]) {
+        line-height: 0;
+    }
+
+    .round-control-icon {
+        top:0;
+    }
+
+    th * {
+        text-box-trim: trim-both;
+        text-box-edge: cap alphabetic;
+    }
 }
 
 body[data-bs-theme=light] .btn-primary {

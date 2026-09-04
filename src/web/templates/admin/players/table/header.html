@@ -14,7 +14,7 @@
             {# Covers the buttons, index and title columns #}
             <div class="d-flex align-items-center">
                 <i
-                    class="bi-arrow-clockwise btn text-dark py-0 ps-0 pe-1 m-0"
+                    class="bi-arrow-clockwise btn text-dark compact-y-padding ps-0 pe-1 m-0"
                     hx-get="{{ url }}"
                     hx-target="body"
                     hx-indicator="#please-wait"
@@ -24,7 +24,7 @@
                     {{ filtered_player_count }}/{{ allowed_players|length }}
                 </span>
                 <i
-                    class="bi-x-circle btn text-dark py-0 ps-1 pe-0 m-0"
+                    class="bi-x-circle btn text-dark compact-y-padding ps-1 pe-0 m-0"
                     hx-get="{{ url_for('admin-event-players-clear-filters', event_uniq_id=admin_event.uniq_id) }}"
                     hx-target="body"
                     hx-indicator="#please-wait"
@@ -37,7 +37,7 @@
             <th id="column-{{ column.id }}-header" class="{{ column.header_classes }} {% if column.is_compact %}compact-col{% endif %}">
                 <div class="d-flex {% if not column.align_start %}justify-content-center{% endif %}">
                     <div
-                        class="cursor-pointer d-flex"
+                        class="cursor-pointer d-flex align-items-center"
                         hx-get="{{ url_for(
                             'admin-event-players-sort',
                             event_uniq_id=admin_event.uniq_id,
@@ -50,7 +50,9 @@
                         {% if column.header_template %}
                             {% include column.header_template %}
                         {% else %}
-                            {{ column.header_content }}
+                            <span>
+                                {{ column.header_content }}
+                            </span>
                         {% endif %}
                         {% if is_sort_column %}
                             {% set is_asc_sort_icon = not is_sort_asc if column.swap_asc_desc_icon else is_sort_asc %}
