@@ -9292,6 +9292,9 @@ msgstr[1] ""
 msgid "This prize bracket"
 msgstr ""
 
+msgid "This prize bracket"
+msgstr ""
+
 msgid "This rotator is private (not visible by the spectators)."
 msgstr ""
 
