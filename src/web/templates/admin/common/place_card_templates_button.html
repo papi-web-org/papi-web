@@ -1,6 +1,6 @@
 <span class="sidebar-tooltip" {{ macros.tooltip_attributes('info', _('Place card templates'), 'right') }}>
     <button
-        class="nav-link text-start me-1 position-relative align-items-center"
+        class="nav-link text-start me-1 position-relative align-items-center {% if admin_tab == 'place_card_templates' %}active{% endif %}"
         hx-get="{{ url_for('place-card-templates') }}"
         hx-trigger="click"
         hx-target="body"

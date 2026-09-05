@@ -36,6 +36,10 @@ from web.guards import ActionGuard
 logger: logging.Logger = get_logger()
 
 _MODALS_TEMPLATE = 'admin/modals.html'
+# The place card pages live outside the admin nav tabs: this value replaces the
+# tab id in their shell context so the sidebar highlights their own button
+# instead of falling back to the first nav tab.
+PLACE_CARD_ADMIN_TAB = 'place_card_templates'
 # Sentinel: a form field left unchanged (invalid input) that patching must skip.
 _SKIP = object()
 
@@ -84,6 +88,7 @@ class PlaceCardTemplateAdminController(BaseAdminController):
             'embedded_templates': embedded,
             'previews': previews,
             'errors': errors or {},
+            'admin_tab': PLACE_CARD_ADMIN_TAB,
         }
         return HTMXTemplate(
             template_name='admin/place_card_templates/library_page.html',
@@ -325,6 +330,7 @@ class PlaceCardTemplateAdminController(BaseAdminController):
                 'field_tokens': self._field_tokens(template.type.static_id()),
                 'examples': examples,
                 'template_name': template.name,
+                'admin_tab': PLACE_CARD_ADMIN_TAB,
             }
         )
         return HTMXTemplate(
