@@ -4315,10 +4315,6 @@ msgid "Invalid expression [{expression}]"
 msgstr ""
 
 #, python-brace-format
-msgid "Invalid file extension [{extension}] (expected: .zip)."
-msgstr ""
-
-#, python-brace-format
 msgid "Invalid file extension [{extension}] (expected: {expected})."
 msgstr ""
 
@@ -8597,7 +8593,7 @@ msgstr ""
 msgid "The event type cannot be changed after creation."
 msgstr ""
 
-msgid "The file is not a valid template archive (expected a .zip)."
+msgid "The file is not a valid template archive (expected a zipped file)."
 msgstr ""
 
 msgid "The finishing position counted (e.g. 1 counts first places)."

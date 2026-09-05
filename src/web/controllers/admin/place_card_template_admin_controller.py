@@ -708,8 +708,11 @@ class PlaceCardTemplateAdminController(BaseAdminController):
         try:
             if file_path.suffix.lower() != '.zip':
                 raise PlaceCardTemplateEditorError(
-                    _('Invalid file extension [{extension}] (expected: .zip).').format(
-                        extension=file_path.suffix or '?'
+                    _(
+                        'Invalid file extension [{extension}] (expected: {expected}).'
+                    ).format(
+                        extension=file_path.suffix or '?',
+                        expected='.zip',
                     )
                 )
             template_id = PlaceCardTemplateEditor.import_zip(file_path)

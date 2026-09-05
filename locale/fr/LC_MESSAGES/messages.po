@@ -4315,10 +4315,6 @@ msgid "Invalid expression [{expression}]"
 msgstr "Expression non valide [{expression}]"
 
 #, python-brace-format
-msgid "Invalid file extension [{extension}] (expected: .zip)."
-msgstr "Extension de fichier invalide [{extension}] (attendu : .zip)."
-
-#, python-brace-format
 msgid "Invalid file extension [{extension}] (expected: {expected})."
 msgstr "Extension de fichier [{extension}] invalide (attendue : {expected})."
 
@@ -8599,8 +8595,8 @@ msgstr "L'événement n'existe plus, il ne peut donc pas être ouvert."
 msgid "The event type cannot be changed after creation."
 msgstr "Le type d'événement ne peut pas être modifié après la création."
 
-msgid "The file is not a valid template archive (expected a .zip)."
-msgstr "Le fichier n’est pas une archive de modèle valide (fichier .zip attendu)."
+msgid "The file is not a valid template archive (expected a zipped file)."
+msgstr "Le fichier n’est pas une archive de modèle valide (fichier .zip compressé attendu)."
 
 msgid "The finishing position counted (e.g. 1 counts first places)."
 msgstr "La place à l'arrivée comptée (p. ex. 1 compte les premières places)."

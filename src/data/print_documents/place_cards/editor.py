@@ -347,7 +347,7 @@ class PlaceCardTemplateEditor:
                         shutil.copyfileobj(src, dst)
         except zipfile.BadZipFile:
             raise PlaceCardTemplateEditorError(
-                _('The file is not a valid template archive (expected a .zip).')
+                _('The file is not a valid template archive (expected a zipped file).')
             )
         # Validate the imported template actually loads; roll back if not.
         from data.print_documents.place_cards.template import PlaceCardTemplate
