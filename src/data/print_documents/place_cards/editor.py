@@ -13,6 +13,7 @@ from common import (
     SharlyChessException,
 )
 from common.i18n import _
+from common.i18n.utils import unicode_normalize
 from common.logger import get_logger
 from data.print_documents.place_cards.toml_container import TOMLContainer
 from utils.enum import Extension
@@ -218,7 +219,8 @@ class PlaceCardTemplateEditor:
 
     @staticmethod
     def _slugify(value: str) -> str:
-        return re.sub(r'[^a-zA-Z0-9_-]+', '-', (value or '').strip()).strip('-')
+        value = unicode_normalize((value or '').strip())
+        return re.sub(r'[^a-zA-Z0-9_-]+', '-', value).strip('-')
 
     @classmethod
     def create(cls, name: str, card_type: str) -> str:

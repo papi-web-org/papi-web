@@ -39,6 +39,12 @@ def test_create_stores_display_name_and_slugified_id(custom_dir):
     assert _read(custom_dir, template_id)['name'] == 'My Player Cards'
 
 
+def test_create_strips_accents_from_id(custom_dir):
+    template_id = PlaceCardTemplateEditor.create('Numéro seulement', 'player')
+    assert template_id == 'Numero-seulement/Numero-seulement'
+    assert _read(custom_dir, template_id)['name'] == 'Numéro seulement'
+
+
 def test_create_rejects_empty_name(custom_dir):
     with pytest.raises(PlaceCardTemplateEditorError):
         PlaceCardTemplateEditor.create('   ', 'player')
