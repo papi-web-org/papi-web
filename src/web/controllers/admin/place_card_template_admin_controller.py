@@ -67,14 +67,23 @@ class PlaceCardTemplateAdminController(BaseAdminController):
         """Full-page template library (admin shell + template lists)."""
         from web.controllers.admin.index_admin_controller import IndexAdminController
 
+        from data.print_documents import PrintPlaceCardTypeManager
+
         templates = PlaceCardTemplate.get_place_card_templates_by_id(
             custom=True, examples=False
         )
+        type_order = {
+            place_card_type: index
+            for index, place_card_type in enumerate(
+                PrintPlaceCardTypeManager().objects()
+            )
+        }
         custom = sorted(
             (t for t in templates.values() if not t.embedded), key=lambda t: t.id
         )
         embedded = sorted(
-            (t for t in templates.values() if t.embedded), key=lambda t: t.id
+            (t for t in templates.values() if t.embedded),
+            key=lambda t: (type_order[t.type], t.id),
         )
         previews: dict[str, str] = {}
         for template in custom + embedded:
