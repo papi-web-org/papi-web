@@ -30,6 +30,7 @@ dependencies = [
   "colorama ~= 0.4.6",
   "colorlog ~= 6.10.1",
   "cryptography ~= 49.0.0",
+  "fonttools ~= 4.63.0",
   "httpdate ~= 1.2.0",
   "iso4217parse ~= 0.6.2",
   "jinja2 ~= 3.1.6",
