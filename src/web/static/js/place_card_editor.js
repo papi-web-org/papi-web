@@ -846,6 +846,57 @@
         canvas.dataset.pcBound = '1';
     }
 
+    const MIN_SCALE = 0.2, MAX_SCALE = 8;
+
+    // Zoom keeping the point under the pointer where it is, the way a map does.
+    function zoomAt(canvas, scale, clientX, clientY) {
+        const host = canvas.closest('#pc-canvas-host');
+        const oldScale = parseFloat(canvas.dataset.scale) || 1;
+        scale = clamp(scale, MIN_SCALE, MAX_SCALE);
+        if (!host || scale === oldScale) return;
+        const before = canvas.getBoundingClientRect();
+        // The pointer in unscaled card coordinates.
+        const cx = (clientX - before.left) / oldScale;
+        const cy = (clientY - before.top) / oldScale;
+        applyScale(canvas, scale);
+        // Where that point sits now; scrolling by the difference puts it back
+        // under the pointer.
+        const after = canvas.getBoundingClientRect();
+        host.scrollLeft += after.left + cx * scale - clientX;
+        host.scrollTop += after.top + cy * scale - clientY;
+    }
+
+    // A trackpad pinch reaches the page as a wheel event with ctrlKey set;
+    // Ctrl/Cmd + wheel is the mouse equivalent. A plain wheel keeps scrolling.
+    function onWheel(event) {
+        if (!event.ctrlKey && !event.metaKey) return;
+        const canvas = canvasEl();
+        if (!canvas) return;
+        event.preventDefault(); // ... and stop the browser zooming the page
+        let delta = event.deltaY;
+        if (event.deltaMode === 1) delta *= 16;  // lines, not pixels
+        // A mouse wheel sends far bigger deltas than a pinch: capping keeps one
+        // notch to a sane step without making the pinch feel sluggish.
+        const factor = Math.exp(-clamp(delta, -30, 30) * 0.01);
+        const scale = parseFloat(canvas.dataset.scale) || 1;
+        zoomAt(canvas, scale * factor, event.clientX, event.clientY);
+    }
+
+    // Safari reports a pinch as its own gesture events rather than ctrl+wheel.
+    let gestureScale = 1;
+    function onGestureStart(event) {
+        const canvas = canvasEl();
+        if (!canvas) return;
+        event.preventDefault();
+        gestureScale = parseFloat(canvas.dataset.scale) || 1;
+    }
+    function onGestureChange(event) {
+        const canvas = canvasEl();
+        if (!canvas) return;
+        event.preventDefault();
+        zoomAt(canvas, gestureScale * event.scale, event.clientX, event.clientY);
+    }
+
     function onZoom(dir) {
         const canvas = canvasEl();
         if (!canvas) return;
@@ -854,7 +905,7 @@
         else if (dir === 'out') scale /= 1.2;
         else if (dir === 'fit') scale = fitScale(canvas);
         else scale = 1; // reset to 100%
-        applyScale(canvas, clamp(scale, 0.2, 8));
+        applyScale(canvas, clamp(scale, MIN_SCALE, MAX_SCALE));
         centerView(canvas);
     }
 
@@ -870,10 +921,15 @@
         if (resizeHandle) resizeHandle.addEventListener('pointerdown', startResize);
         // The handle is positioned in viewport coords, so it must follow scroll.
         const host = document.getElementById('pc-canvas-host');
-        if (host) host.addEventListener('scroll', function () {
-            const c = canvasEl();
-            if (c) positionResizeHandle(c);
-        });
+        if (host) {
+            host.addEventListener('scroll', function () {
+                const c = canvasEl();
+                if (c) positionResizeHandle(c);
+            });
+            host.addEventListener('wheel', onWheel, { passive: false });
+            host.addEventListener('gesturestart', onGestureStart);
+            host.addEventListener('gesturechange', onGestureChange);
+        }
         document.addEventListener('click', function (event) {
             const zoom = event.target.closest('[data-pc-zoom]');
             if (zoom) { event.preventDefault(); onZoom(zoom.dataset.pcZoom); return; }
