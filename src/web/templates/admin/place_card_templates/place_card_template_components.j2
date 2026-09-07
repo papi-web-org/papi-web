@@ -6,9 +6,10 @@
     <span class="badge text-bg-secondary">{{ item.type.static_singular_name() }}</span>
 {% endmacro %}
 
+{# Shown in the cards view body and, expandable, in the list view's details row. #}
 {% macro preview(item, view, placement) %}
-    {% if view != 'list' %}
-        <div class="pc-template-preview">{{ previews.get(item.id, '') | safe }}</div>
+    {% if view != 'list' and previews.get(item.id) %}
+        <div class="pc-template-preview">{{ previews[item.id] | safe }}</div>
     {% endif %}
 {% endmacro %}
 

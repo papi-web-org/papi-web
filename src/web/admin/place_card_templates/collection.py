@@ -35,5 +35,6 @@ COLLECTION_SPEC: AdminCollectionSpec = AdminCollectionSpec(
                 cell_class='justify-content-end',
             ),
         ),
+        details=(ComponentPlacement('preview'),),
     ),
 )
