@@ -114,6 +114,26 @@ class PlaceCardTemplateEditorError(SharlyChessException):
     """Raised when a custom place card template cannot be created or written."""
 
 
+class PlaceCardTemplateEditorBuiltInNotEditableError(PlaceCardTemplateEditorError):
+    def __init__(self):
+        super().__init__(_('Only custom templates can be edited.'))
+
+
+class PlaceCardTemplateEditorTemplateNotFoundError(PlaceCardTemplateEditorError):
+    def __init__(self, template_id: str):
+        super().__init__(_('Template [{id}] not found.').format(id=template_id))
+
+
+class PlaceCardTemplateEditorItemNotFoundError(PlaceCardTemplateEditorError):
+    def __init__(self, item_id: str):
+        super().__init__(_('Item [{id}] not found.').format(id=item_id))
+
+
+class PlaceCardTemplateEditorAlignmentError(PlaceCardTemplateEditorError):
+    def __init__(self):
+        super().__init__(_('Invalid alignment.'))
+
+
 class PlaceCardTemplateEditor:
     """Write-side service for custom place card templates.
 
@@ -282,9 +302,7 @@ class PlaceCardTemplateEditor:
         (auto-derived from ``name``) and return the new template id."""
         source_file = cls._source_file(source_id)
         if source_file is None:
-            raise PlaceCardTemplateEditorError(
-                _('Template [{id}] not found.').format(id=source_id)
-            )
+            raise PlaceCardTemplateEditorTemplateNotFoundError(source_id)
         display_name = (name or '').strip() or source_id.split('/')[-1]
         folder = cls._unique_folder(display_name)
         file_stem = cls._slugify(display_name) or 'template'
@@ -313,9 +331,7 @@ class PlaceCardTemplateEditor:
         ``images/`` and ``fonts/`` folders - and return (filename, bytes)."""
         source_file = cls._source_file(template_id)
         if source_file is None:
-            raise PlaceCardTemplateEditorError(
-                _('Template [{id}] not found.').format(id=template_id)
-            )
+            raise PlaceCardTemplateEditorTemplateNotFoundError(template_id)
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
             archive.write(source_file, arcname=source_file.name)
@@ -412,9 +428,7 @@ class PlaceCardTemplateEditor:
             )
         file = cls._custom_file(template_id)
         if not file.exists():
-            raise PlaceCardTemplateEditorError(
-                _('Template [{id}] not found.').format(id=template_id)
-            )
+            raise PlaceCardTemplateEditorTemplateNotFoundError(template_id)
         file.unlink()
         # A folder may hold several templates sharing an images/ folder; only
         # drop the whole folder once its last template is gone.
@@ -454,9 +468,7 @@ class PlaceCardTemplateEditor:
         """Copy an uploaded image into the template's images/ folder (numbered to
         stay unique) and return its stored file name."""
         if not cls.is_custom(template_id):
-            raise PlaceCardTemplateEditorError(
-                _('Only custom templates can be edited.')
-            )
+            raise PlaceCardTemplateEditorBuiltInNotEditableError()
         ext = Path(filename).suffix.lower()
         if ext not in IMAGE_EXTENSIONS:
             raise PlaceCardTemplateEditorError(
@@ -479,9 +491,7 @@ class PlaceCardTemplateEditor:
         """Remove an image from the template's images/ folder and clear the
         reference from any item that was using it."""
         if not cls.is_custom(template_id):
-            raise PlaceCardTemplateEditorError(
-                _('Only custom templates can be edited.')
-            )
+            raise PlaceCardTemplateEditorBuiltInNotEditableError()
         path = cls.image_path(template_id, name)
         if path is None:
             return
@@ -504,9 +514,7 @@ class PlaceCardTemplateEditor:
         """Return the raw, typed template-wide values for the editor form."""
         source_file = cls._source_file(template_id)
         if source_file is None:
-            raise PlaceCardTemplateEditorError(
-                _('Template [{id}] not found.').format(id=template_id)
-            )
+            raise PlaceCardTemplateEditorTemplateNotFoundError(template_id)
         container = TOMLContainer(source_file)
         values: dict[str, Any] = {
             'type': container.get_str('type', default='player', values=cls._type_ids()),
@@ -528,14 +536,10 @@ class PlaceCardTemplateEditor:
     def save_metadata(cls, template_id: str, values: dict[str, Any]) -> None:
         """Persist template-wide values, dropping any that equal their default."""
         if not cls.is_custom(template_id):
-            raise PlaceCardTemplateEditorError(
-                _('Only custom templates can be edited.')
-            )
+            raise PlaceCardTemplateEditorBuiltInNotEditableError()
         file = cls._custom_file(template_id)
         if not file.exists():
-            raise PlaceCardTemplateEditorError(
-                _('Template [{id}] not found.').format(id=template_id)
-            )
+            raise PlaceCardTemplateEditorTemplateNotFoundError(template_id)
         container = TOMLContainer(file)
         container.set_value('type', value=values['type'])
         name = (values.get('name') or '').strip()
@@ -581,9 +585,7 @@ class PlaceCardTemplateEditor:
         ``updates`` lengths are expected in the new unit already."""
         cls._record_history(template_id)
         if not cls.is_custom(template_id):
-            raise PlaceCardTemplateEditorError(
-                _('Only custom templates can be edited.')
-            )
+            raise PlaceCardTemplateEditorBuiltInNotEditableError()
         file = cls._custom_file(template_id)
         container = TOMLContainer(file)
         to_unit = updates.get('unit') or TEMPLATE_META_DEFAULTS['unit']
@@ -604,9 +606,7 @@ class PlaceCardTemplateEditor:
         """Return the editable items (sections) of a template, in file order."""
         source_file = cls._source_file(template_id)
         if source_file is None:
-            raise PlaceCardTemplateEditorError(
-                _('Template [{id}] not found.').format(id=template_id)
-            )
+            raise PlaceCardTemplateEditorTemplateNotFoundError(template_id)
         container = TOMLContainer(source_file)
         items: list[dict[str, str]] = []
         for section in container.get_sections():
@@ -639,14 +639,10 @@ class PlaceCardTemplateEditor:
         means the property is absent (inherited from the template)."""
         source_file = cls._source_file(template_id)
         if source_file is None:
-            raise PlaceCardTemplateEditorError(
-                _('Template [{id}] not found.').format(id=template_id)
-            )
+            raise PlaceCardTemplateEditorTemplateNotFoundError(template_id)
         container = TOMLContainer(source_file)
         if section not in container.get_sections():
-            raise PlaceCardTemplateEditorError(
-                _('Item [{id}] not found.').format(id=section)
-            )
+            raise PlaceCardTemplateEditorItemNotFoundError(section)
         props = container.get_section_properties(section)
         kind = 'image' if 'image' in props else 'text'
         data: dict[str, str] = {'section': section, 'kind': kind}
@@ -686,9 +682,7 @@ class PlaceCardTemplateEditor:
         ``'yes' | 'no' | ''``, and strings. Returns the item id written."""
         cls._record_history(template_id)
         if not cls.is_custom(template_id):
-            raise PlaceCardTemplateEditorError(
-                _('Only custom templates can be edited.')
-            )
+            raise PlaceCardTemplateEditorBuiltInNotEditableError()
         section = cls._validate_slug(section, _('item id'))
         if section in RESERVED_SECTIONS:
             raise PlaceCardTemplateEditorError(
@@ -696,9 +690,7 @@ class PlaceCardTemplateEditor:
             )
         file = cls._custom_file(template_id)
         if not file.exists():
-            raise PlaceCardTemplateEditorError(
-                _('Template [{id}] not found.').format(id=template_id)
-            )
+            raise PlaceCardTemplateEditorTemplateNotFoundError(template_id)
         container = TOMLContainer(file)
         existing = set(container.get_sections())
         renaming = bool(original_section) and original_section != section
@@ -796,15 +788,11 @@ class PlaceCardTemplateEditor:
         are left untouched."""
         cls._record_history(template_id)
         if not cls.is_custom(template_id):
-            raise PlaceCardTemplateEditorError(
-                _('Only custom templates can be edited.')
-            )
+            raise PlaceCardTemplateEditorBuiltInNotEditableError()
         file = cls._custom_file(template_id)
         container = TOMLContainer(file)
         if section not in container.get_sections():
-            raise PlaceCardTemplateEditorError(
-                _('Item [{id}] not found.').format(id=section)
-            )
+            raise PlaceCardTemplateEditorItemNotFoundError(section)
         section_data = container.data[section]
         assert isinstance(section_data, dict)
         for key, value in updates.items():
@@ -832,21 +820,17 @@ class PlaceCardTemplateEditor:
         Only position/side keys are touched; text, style, etc. are preserved."""
         cls._record_history(template_id)
         if not cls.is_custom(template_id):
-            raise PlaceCardTemplateEditorError(
-                _('Only custom templates can be edited.')
-            )
+            raise PlaceCardTemplateEditorBuiltInNotEditableError()
         if h_align not in ('left', 'center', 'right') or v_align not in (
             'top',
             'middle',
             'bottom',
         ):
-            raise PlaceCardTemplateEditorError(_('Invalid alignment.'))
+            raise PlaceCardTemplateEditorAlignmentError()
         file = cls._custom_file(template_id)
         container = TOMLContainer(file)
         if section not in container.get_sections():
-            raise PlaceCardTemplateEditorError(
-                _('Item [{id}] not found.').format(id=section)
-            )
+            PlaceCardTemplateEditorItemNotFoundError()
         section_data = container.data[section]
         assert isinstance(section_data, dict)
         section_data['h_align'] = h_align
@@ -870,21 +854,17 @@ class PlaceCardTemplateEditor:
         the item and make the corresponding offset irrelevant in the renderer."""
         cls._record_history(template_id)
         if not cls.is_custom(template_id):
-            raise PlaceCardTemplateEditorError(
-                _('Only custom templates can be edited.')
-            )
+            raise PlaceCardTemplateEditorBuiltInNotEditableError()
         if h_align not in ('left', 'center', 'right') or v_align not in (
             'top',
             'middle',
             'bottom',
         ):
-            raise PlaceCardTemplateEditorError(_('Invalid alignment.'))
+            raise PlaceCardTemplateEditorAlignmentError()
         file = cls._custom_file(template_id)
         container = TOMLContainer(file)
         if section not in container.get_sections():
-            raise PlaceCardTemplateEditorError(
-                _('Item [{id}] not found.').format(id=section)
-            )
+            raise PlaceCardTemplateEditorItemNotFoundError(section)
         section_data = container.data[section]
         assert isinstance(section_data, dict)
         section_data['h_align'] = h_align
@@ -920,9 +900,7 @@ class PlaceCardTemplateEditor:
         - the caller does that."""
         sections = container.get_sections()
         if section not in sections:
-            raise PlaceCardTemplateEditorError(
-                _('Item [{id}] not found.').format(id=section)
-            )
+            raise PlaceCardTemplateEditorItemNotFoundError(section)
         index = sections.index(section)
         match where:
             case 'front':
@@ -951,9 +929,7 @@ class PlaceCardTemplateEditor:
         the last section is painted on top."""
         cls._record_history(template_id)
         if not cls.is_custom(template_id):
-            raise PlaceCardTemplateEditorError(
-                _('Only custom templates can be edited.')
-            )
+            raise PlaceCardTemplateEditorBuiltInNotEditableError()
         container = TOMLContainer(cls._custom_file(template_id))
         cls._move_section(container, section, where)
         container.save()
@@ -963,15 +939,11 @@ class PlaceCardTemplateEditor:
     def delete_item(cls, template_id: str, section: str) -> None:
         cls._record_history(template_id)
         if not cls.is_custom(template_id):
-            raise PlaceCardTemplateEditorError(
-                _('Only custom templates can be edited.')
-            )
+            raise PlaceCardTemplateEditorBuiltInNotEditableError()
         file = cls._custom_file(template_id)
         container = TOMLContainer(file)
         if section not in container.get_sections():
-            raise PlaceCardTemplateEditorError(
-                _('Item [{id}] not found.').format(id=section)
-            )
+            raise PlaceCardTemplateEditorItemNotFoundError(section)
         container.data.pop(section, None)
         container.save()
         logger.info('Deleted item [%s] of template [%s].', section, template_id)
