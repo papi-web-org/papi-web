@@ -1,11 +1,3 @@
-<div class="mb-2 d-flex align-items-center gap-2">
-    {% if kind == 'image' %}
-        <span class="badge text-bg-secondary">{{ _('Image') }}</span>
-    {% else %}
-        <span class="badge text-bg-info">{{ _('Text') }}</span>
-    {% endif %}
-</div>
-
 {% set h_label = _('From right') if data.anchor_h == 'right' else _('From left') %}
 {% set v_label = _('From bottom') if data.anchor_v == 'bottom' else _('From top') %}
 <div id="pc-anchor" data-section="{{ section }}" class="mb-3 d-flex gap-3 align-items-start">
