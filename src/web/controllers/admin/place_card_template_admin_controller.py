@@ -606,7 +606,7 @@ class PlaceCardTemplateAdminController(BaseAdminController):
             self._duplicate_modal_context(
                 web_context,
                 template_id,
-                data={'name': _('{name} copy').format(name=source.name)},
+                data={'name': _('{name} (copy)').format(name=source.name)},
             ),
         )
 

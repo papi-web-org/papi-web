@@ -176,7 +176,7 @@ class WhiteFederationColumn(BoardColumn):
 class ResultColumn(BoardColumn):
     @property
     def header_content(self) -> str:
-        return _('Res. ** RESULT COLUMN HEADER')
+        return _('Res. *** RESULT COLUMN HEADER')
 
     def get_cell_content(self, board: Board) -> Any:
         return board.result_str
@@ -198,7 +198,7 @@ class NoResultColumn(BoardColumn):
 class ScreenResultColumn(BoardColumn):
     @property
     def header_content(self) -> str:
-        return _('Res. ** RESULT COLUMN HEADER')
+        return _('Res. *** RESULT COLUMN HEADER')
 
     def get_cell_content(self, board: Board) -> Any:
         return board.result_str or _('#{board_number}').format(

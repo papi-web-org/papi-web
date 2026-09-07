@@ -1409,7 +1409,7 @@ msgid "Black"
 msgstr "Noirs"
 
 msgid "Black player"
-msgstr "Joueur des Noirs"
+msgstr "Joueur·euse Noirs"
 
 msgid "Black wins"
 msgstr "Victoire Noirs"
@@ -5122,7 +5122,7 @@ msgid "My group"
 msgstr "Mon groupe"
 
 msgid "My player cards"
-msgstr "Mes chevalets joueurs"
+msgstr "Mes chevalets joueur·euses"
 
 msgid "My rotator"
 msgstr "Mon écran rotatif"
@@ -6774,10 +6774,10 @@ msgstr "Score positionnel"
 msgid "Positive values are expected."
 msgstr "Des valeurs positives sont attendues."
 
-msgid "Pre"
+msgid "Pre *** PREFIX"
 msgstr "Préf"
 
-msgid "Pref."
+msgid "Pref. *** PREFERENCE"
 msgstr "Préf."
 
 msgid "Prefix / suffix"
@@ -7196,7 +7196,7 @@ msgstr "Requis (1.4.8)"
 msgid "Required by plugin <b>%(plugin)s</b>."
 msgstr "Requis par le plug-in <b>%(plugin)s</b>."
 
-msgid "Res. ** RESULT COLUMN HEADER"
+msgid "Res. *** RESULT COLUMN HEADER"
 msgstr "Rés."
 
 msgid "Reset"
@@ -8207,8 +8207,8 @@ msgstr "Déconnexion réussie."
 msgid "Sudan"
 msgstr "Soudan"
 
-msgid "Suf"
-msgstr "Suff"
+msgid "Suf *** SUFFIX"
+msgstr "Suf"
 
 msgid "Sum of Buchholz"
 msgstr "Somme des Buchholz"
@@ -8467,9 +8467,6 @@ msgstr "Couleur du texte :"
 
 msgid "Texts before and after the hour below are optional for round numbers, mandatory otherwise."
 msgstr "Les textes avant et après l'horaire ci-dessous sont facultatifs pour les numéros de rondes, obligatoires sinon."
-
-msgid "Text…"
-msgstr "Texte…"
 
 msgid "Th *** THURSDAY"
 msgstr "Je"
@@ -10209,7 +10206,7 @@ msgid "White"
 msgstr "Blancs"
 
 msgid "White player"
-msgstr "Joueur des Blancs"
+msgstr "Joueur·euse Blancs"
 
 msgid "White wins"
 msgstr "Victoire Blancs"
@@ -10439,6 +10436,9 @@ msgstr "Vous devez créer un tournoi avant de créer un groupe non-cumulable."
 
 msgid "You must create a tournament before creating these screens."
 msgstr "Vous devez créer un tournoi avant de pouvoir créer ces écrans."
+
+msgid "Your text here"
+msgstr "Votre texte ici"
 
 msgid "Youth *** EVENT TAG NAME"
 msgstr "Jeunes"
@@ -11046,10 +11046,6 @@ msgid "{name} (copy)"
 msgstr "{name} (copie)"
 
 #, python-brace-format
-msgid "{name} copy"
-msgstr "{name} copie"
-
-#, python-brace-format
 msgid "{n} players per team is not supported (FFE tables cover {sizes}; rosters larger than the maximum can be tiled in blocks)."
 msgstr "{n} joueur·euses par équipe non pris en charge (les tables FFE couvrent {sizes} ; les effectifs plus grands que le maximum peuvent être réparties en blocs)."
 
@@ -11108,7 +11104,4 @@ msgstr "—"
 
 msgid "← Back to IT1 certificate"
 msgstr "← Retour au certificat IT1"
-
-#~ msgid "Card"
-#~ msgstr "Chevalet"
 

@@ -6772,11 +6772,11 @@ msgstr ""
 msgid "Positive values are expected."
 msgstr ""
 
-msgid "Pre"
-msgstr ""
+msgid "Pre *** PREFIX"
+msgstr "Pre"
 
-msgid "Pref."
-msgstr ""
+msgid "Pref. *** PREFERENCE"
+msgstr "Pref."
 
 msgid "Prefix / suffix"
 msgstr ""
@@ -7194,7 +7194,7 @@ msgstr ""
 msgid "Required by plugin <b>%(plugin)s</b>."
 msgstr ""
 
-msgid "Res. ** RESULT COLUMN HEADER"
+msgid "Res. *** RESULT COLUMN HEADER"
 msgstr "Res."
 
 msgid "Reset"
@@ -8205,8 +8205,8 @@ msgstr ""
 msgid "Sudan"
 msgstr ""
 
-msgid "Suf"
-msgstr ""
+msgid "Suf *** SUFFIX"
+msgstr "Suf"
 
 msgid "Sum of Buchholz"
 msgstr ""
@@ -8464,9 +8464,6 @@ msgid "Text colour:"
 msgstr ""
 
 msgid "Texts before and after the hour below are optional for round numbers, mandatory otherwise."
-msgstr ""
-
-msgid "Text…"
 msgstr ""
 
 msgid "Th *** THURSDAY"
@@ -10438,6 +10435,9 @@ msgstr ""
 msgid "You must create a tournament before creating these screens."
 msgstr ""
 
+msgid "Your text here"
+msgstr ""
+
 msgid "Youth *** EVENT TAG NAME"
 msgstr "Youth"
 
@@ -11044,10 +11044,6 @@ msgid "{name} (copy)"
 msgstr ""
 
 #, python-brace-format
-msgid "{name} copy"
-msgstr ""
-
-#, python-brace-format
 msgid "{n} players per team is not supported (FFE tables cover {sizes}; rosters larger than the maximum can be tiled in blocks)."
 msgstr ""
 
@@ -11106,7 +11102,4 @@ msgstr ""
 
 msgid "← Back to IT1 certificate"
 msgstr ""
-
-#~ msgid "Card"
-#~ msgstr ""
 
