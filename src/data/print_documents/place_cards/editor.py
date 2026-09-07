@@ -777,6 +777,13 @@ class PlaceCardTemplateEditor:
         else:
             values['text'] = text or _('Text')
         cls.save_item(template_id, section, kind, values)
+        if kind == 'image':
+            # An image is a backdrop by default, so it goes under the text
+            # already on the card; a new text item stays on top. Reordered
+            # without its own history entry: adding is one undoable step.
+            container = TOMLContainer(cls._custom_file(template_id))
+            cls._move_section(container, section, 'back')
+            container.save()
         return section
 
     @classmethod
@@ -906,6 +913,48 @@ class PlaceCardTemplateEditor:
         if changed:
             container.save()
             logger.info('Moved all items to the front of template [%s].', template_id)
+
+    @staticmethod
+    def _move_section(container: TOMLContainer, section: str, where: str) -> None:
+        """Move an item section to the front or the back of the file. Not saved
+        - the caller does that."""
+        sections = container.get_sections()
+        if section not in sections:
+            raise PlaceCardTemplateEditorError(
+                _('Item [{id}] not found.').format(id=section)
+            )
+        index = sections.index(section)
+        match where:
+            case 'front':
+                target = len(sections) - 1
+            case 'back':
+                target = 0
+            case _:
+                raise PlaceCardTemplateEditorError(_('Invalid position.'))
+        if target == index:
+            return
+        sections.insert(target, sections.pop(index))
+        # TOML wants every top-level value before the first table, so the
+        # rebuilt file keeps the template-wide properties up front.
+        container.data = {
+            key: value
+            for key, value in container.data.items()
+            if not isinstance(value, dict)
+        } | {name: container.data[name] for name in sections}
+
+    @classmethod
+    def reorder_item(cls, template_id: str, section: str, where: str) -> None:
+        """Move an item within the file, which is what decides the stacking:
+        the last section is painted on top."""
+        cls._record_history(template_id)
+        if not cls.is_custom(template_id):
+            raise PlaceCardTemplateEditorError(
+                _('Only custom templates can be edited.')
+            )
+        container = TOMLContainer(cls._custom_file(template_id))
+        cls._move_section(container, section, where)
+        container.save()
+        logger.info('Moved item [%s] of template [%s] %s.', section, template_id, where)
 
     @classmethod
     def delete_item(cls, template_id: str, section: str) -> None:

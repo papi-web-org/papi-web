@@ -1744,9 +1744,6 @@ msgstr "Capitaine :"
 msgid "Captain: %(name)s"
 msgstr "Capitaine : %(name)s"
 
-msgid "Card"
-msgstr "Chevalet"
-
 msgid "Card view"
 msgstr "Affichage en cartes"
 
@@ -4346,6 +4343,9 @@ msgstr "Mot de passe invalide."
 
 msgid "Invalid period:"
 msgstr "Période invalide :"
+
+msgid "Invalid position."
+msgstr "Position invalide."
 
 msgid "Invalid rows"
 msgstr "Lignes invalides"
@@ -8096,6 +8096,9 @@ msgstr "Méthode de répartition"
 msgid "Sri Lanka"
 msgstr "Sri Lanka"
 
+msgid "Stacking"
+msgstr "Superposition"
+
 msgid "Staff"
 msgstr "Staff"
 
@@ -9438,6 +9441,12 @@ msgstr "Titrés (titres M)"
 
 msgid "Titled players"
 msgstr "Joueur·euses titré·es"
+
+msgid "To back"
+msgstr "Vers l'arrière"
+
+msgid "To front"
+msgstr "Vers l'avant"
 
 #, python-format
 msgid "To learn how to control your network, consult <a href=\"%(link)s\" target=\"_blank\">our documentation</a>."
@@ -11099,3 +11108,7 @@ msgstr "—"
 
 msgid "← Back to IT1 certificate"
 msgstr "← Retour au certificat IT1"
+
+#~ msgid "Card"
+#~ msgstr "Chevalet"
+

@@ -1744,9 +1744,6 @@ msgstr ""
 msgid "Captain: %(name)s"
 msgstr ""
 
-msgid "Card"
-msgstr ""
-
 msgid "Card view"
 msgstr ""
 
@@ -4345,6 +4342,9 @@ msgid "Invalid password."
 msgstr ""
 
 msgid "Invalid period:"
+msgstr ""
+
+msgid "Invalid position."
 msgstr ""
 
 msgid "Invalid rows"
@@ -8094,6 +8094,9 @@ msgstr ""
 msgid "Sri Lanka"
 msgstr ""
 
+msgid "Stacking"
+msgstr ""
+
 msgid "Staff"
 msgstr ""
 
@@ -9435,6 +9438,12 @@ msgid "Titled (M-titles)"
 msgstr ""
 
 msgid "Titled players"
+msgstr ""
+
+msgid "To back"
+msgstr ""
+
+msgid "To front"
 msgstr ""
 
 #, python-format
@@ -11097,3 +11106,7 @@ msgstr ""
 
 msgid "← Back to IT1 certificate"
 msgstr ""
+
+#~ msgid "Card"
+#~ msgstr ""
+

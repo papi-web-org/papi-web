@@ -144,9 +144,9 @@ class PlaceCardTemplate(PlaceCardItemStyle):
                         template=self,
                     )
                 )
-        self.items: list[PlaceCardItem] = [
-            item for item in items if item.type == 'image'
-        ] + [item for item in items if item.type != 'image']
+        # Declaration order is paint order: the last item of the file is drawn
+        # on top. The editor reorders the sections to change the stacking.
+        self.items: list[PlaceCardItem] = items
 
     def allowed_properties(
         self,

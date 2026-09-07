@@ -455,6 +455,79 @@ def test_unit_unchanged_leaves_lengths_alone(custom_dir):
     assert _read(custom_dir, template_id)['name']['h_pos'] == 25.4
 
 
+def _sections(custom_dir, template_id) -> list[str]:
+    return [
+        key
+        for key, value in _read(custom_dir, template_id).items()
+        if isinstance(value, dict)
+    ]
+
+
+def test_reorder_item_moves_within_the_file(custom_dir):
+    template_id = _new_template(custom_dir)
+    for name in ('a', 'b', 'c'):
+        PlaceCardTemplateEditor.save_item(template_id, name, 'text', {'text': name})
+    assert _sections(custom_dir, template_id) == ['a', 'b', 'c']
+    PlaceCardTemplateEditor.reorder_item(template_id, 'a', 'front')
+    assert _sections(custom_dir, template_id) == ['b', 'c', 'a']
+    PlaceCardTemplateEditor.reorder_item(template_id, 'b', 'front')
+    assert _sections(custom_dir, template_id) == ['c', 'a', 'b']
+    PlaceCardTemplateEditor.reorder_item(template_id, 'a', 'back')
+    assert _sections(custom_dir, template_id) == ['a', 'c', 'b']
+
+
+def test_reorder_item_keeps_template_properties_first(custom_dir):
+    """TOML has no way back to a top-level value once a table is open."""
+    template_id = _new_template(custom_dir)
+    PlaceCardTemplateEditor.patch_metadata(template_id, {'width': 200.0})
+    for name in ('a', 'b'):
+        PlaceCardTemplateEditor.save_item(template_id, name, 'text', {'text': name})
+    PlaceCardTemplateEditor.reorder_item(template_id, 'a', 'front')
+    keys = list(_read(custom_dir, template_id))
+    assert keys.index('width') < keys.index('b')
+    assert _read(custom_dir, template_id)['width'] == 200.0
+
+
+def test_reorder_item_at_the_edge_is_a_no_op(custom_dir):
+    template_id = _new_template(custom_dir)
+    for name in ('a', 'b'):
+        PlaceCardTemplateEditor.save_item(template_id, name, 'text', {'text': name})
+    PlaceCardTemplateEditor.reorder_item(template_id, 'a', 'back')
+    PlaceCardTemplateEditor.reorder_item(template_id, 'b', 'front')
+    assert _sections(custom_dir, template_id) == ['a', 'b']
+
+
+def test_reorder_item_rejects_bad_position(custom_dir):
+    template_id = _new_template(custom_dir)
+    PlaceCardTemplateEditor.save_item(template_id, 'a', 'text', {'text': 'a'})
+    with pytest.raises(PlaceCardTemplateEditorError):
+        PlaceCardTemplateEditor.reorder_item(template_id, 'a', 'sideways')
+
+
+def test_reorder_item_rejects_embedded(custom_dir):
+    with pytest.raises(PlaceCardTemplateEditorError):
+        PlaceCardTemplateEditor.reorder_item(
+            'player_01_standard', 'player_name', 'front'
+        )
+
+
+def test_new_image_goes_behind_the_existing_items(custom_dir):
+    template_id = _new_template(custom_dir)
+    PlaceCardTemplateEditor.save_item(template_id, 'a', 'text', {'text': 'a'})
+    section = PlaceCardTemplateEditor.add_default_item(template_id, 'image')
+    assert _sections(custom_dir, template_id) == [section, 'a']
+    # Adding stays a single undo step despite the reorder.
+    PlaceCardTemplateEditor.undo(template_id)
+    assert _sections(custom_dir, template_id) == ['a']
+
+
+def test_new_text_goes_in_front(custom_dir):
+    template_id = _new_template(custom_dir)
+    PlaceCardTemplateEditor.save_item(template_id, 'a', 'text', {'text': 'a'})
+    section = PlaceCardTemplateEditor.add_default_item(template_id, 'text')
+    assert _sections(custom_dir, template_id) == ['a', section]
+
+
 def test_export_zip_contains_template_and_images(custom_dir):
     import io
     import zipfile

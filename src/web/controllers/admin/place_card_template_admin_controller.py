@@ -978,6 +978,28 @@ class PlaceCardTemplateAdminController(BaseAdminController):
         return self._render_canvas(template_id, data, select_section=section)
 
     @post(
+        path='/place-card-item-reorder/{template_id:path}',
+        name='place-card-item-reorder',
+    )
+    async def htmx_item_reorder(
+        self,
+        request: HTMXRequest,
+        template_id: FromPath[str],
+        data: Annotated[
+            dict[str, str], Body(media_type=RequestEncodingType.URL_ENCODED)
+        ],
+    ) -> Template:
+        template_id = template_id.strip('/')
+        section = WebContext.form_data_to_str(data, 'section') or ''
+        where = WebContext.form_data_to_str(data, 'where') or ''
+        if section:
+            try:
+                PlaceCardTemplateEditor.reorder_item(template_id, section, where)
+            except PlaceCardTemplateEditorError:
+                logger.exception('Could not reorder [%s].', section)
+        return self._render_canvas(template_id, data)
+
+    @post(
         path='/place-card-item-anchor/{template_id:path}',
         name='place-card-item-anchor',
     )

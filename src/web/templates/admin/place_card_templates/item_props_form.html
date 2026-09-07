@@ -29,6 +29,19 @@
     </div>
 </div>
 
+{# Stacking: the item's position in the file decides what covers what. #}
+<div id="pc-stacking" data-section="{{ section }}" class="mb-3">
+    <label class="form-label small mb-1">{{ _('Stacking') }}</label>
+    <div class="btn-group btn-group-sm w-100" role="group">
+        <button type="button" class="btn btn-outline-secondary" data-pc-reorder="back">
+            <i class="bi-back pe-1"></i>{{ _('To back') }}
+        </button>
+        <button type="button" class="btn btn-outline-secondary" data-pc-reorder="front">
+            <i class="bi-front pe-1"></i>{{ _('To front') }}
+        </button>
+    </div>
+</div>
+
 <form id="pc-props-form" onsubmit="return false">
     <input type="hidden" name="section" value="{{ section }}">
     <input type="hidden" name="kind" value="{{ kind }}">

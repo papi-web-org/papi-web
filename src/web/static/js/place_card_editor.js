@@ -558,6 +558,15 @@
         });
     }
 
+    // Stacking is the item's order in the file: reordering re-renders the card.
+    function onReorder(where) {
+        const c = canvasEl();
+        const block = document.getElementById('pc-stacking');
+        if (!c || !block) return;
+        postForm(c.dataset.reorderUrl, { section: block.dataset.section, where: where })
+            .then(function (h) { swapCanvas(h, true); });
+    }
+
     function onOffset() {
         const c = canvasEl();
         const grid = document.getElementById('pc-anchor');
@@ -905,6 +914,12 @@
                 event.preventDefault();
                 const c = canvasEl();
                 if (c && c.dataset.selected) showItemPanel(c, c.dataset.selected, modeBtn.dataset.pcMode);
+                return;
+            }
+            const reorderBtn = event.target.closest('[data-pc-reorder]');
+            if (reorderBtn) {
+                event.preventDefault();
+                onReorder(reorderBtn.dataset.pcReorder);
                 return;
             }
             const clearWidth = event.target.closest('[data-pc-clear-width]');
