@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 import random
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -22,6 +22,13 @@ if TYPE_CHECKING:
 
 
 class PlaceCardType(IdentifiableEntity, ABC):
+    @staticmethod
+    @abstractmethod
+    def static_singular_name() -> str:
+        """Names one card of this type, where static_name() names the document
+        ("Player" against "Player Cards")."""
+        pass
+
     @classmethod
     def get_valid_option_ids(cls) -> list[str]:
         return [option.static_id() for option in cls.get_valid_option_types()]

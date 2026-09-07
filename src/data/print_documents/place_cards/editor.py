@@ -936,11 +936,14 @@ class PlaceCardTemplateEditor:
         sections.insert(target, sections.pop(index))
         # TOML wants every top-level value before the first table, so the
         # rebuilt file keeps the template-wide properties up front.
-        container.data = {
+        reordered: dict[str, Any] = {
             key: value
             for key, value in container.data.items()
             if not isinstance(value, dict)
-        } | {name: container.data[name] for name in sections}
+        }
+        for name in sections:
+            reordered[name] = container.data[name]
+        container.data = reordered
 
     @classmethod
     def reorder_item(cls, template_id: str, section: str, where: str) -> None:
