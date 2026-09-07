@@ -379,6 +379,16 @@
         }
     }
 
+    // The face (two-sided cards only) whose box contains the pointer, or null.
+    // Faces never overlap, so the first hit is the answer.
+    function faceAtPoint(canvas, x, y) {
+        for (const face of canvas.querySelectorAll('.pc-side')) {
+            const r = face.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return face;
+        }
+        return null;
+    }
+
     function undimSides(canvas) {
         canvas.querySelectorAll('.pc-side.pc-dim').forEach(function (s) {
             s.classList.remove('pc-dim');
@@ -448,6 +458,7 @@
         const scrollLeft = host ? host.scrollLeft : 0;
         const scrollTop = host ? host.scrollTop : 0;
         const carried = current.dataset.selected || '';
+        const carriedSide = current.dataset.activeSide || '';
         const holder = document.createElement('template');
         holder.innerHTML = html.trim();
         const fresh = holder.content.firstElementChild;
@@ -456,6 +467,10 @@
         initCanvas(fresh);
         updateHistoryButtons();
         if (host) { host.scrollLeft = scrollLeft; host.scrollTop = scrollTop; }
+        if (carriedSide) {
+            fresh.dataset.activeSide = carriedSide;
+            updateSideDim(fresh);
+        }
         const explicit = fresh.dataset.pcSelect;
         if (explicit) {
             const wrap = fresh.querySelector('.pc-edit-item[data-section="' + explicit + '"]');
@@ -699,6 +714,25 @@
         // Measure against the item's own face (a two-sided card has two).
         const content = item.closest('.card-content');
         if (!content) return;
+        // Two-sided cards: dropping on the other face moves the item there.
+        // The source face is lifted so the dragged item stays on top of the
+        // other one instead of sliding behind it, and both faces are undimmed
+        // so the target is visible while dragging.
+        const startFace = item.closest('.pc-side');
+        let dropFace = startFace;
+        if (startFace) {
+            startFace.classList.add('pc-drag-source');
+            undimSides(canvas);
+        }
+        function dropContent() {
+            return (dropFace && dropFace.querySelector('.card-content')) || content;
+        }
+        function clearFaceMarks() {
+            canvas.querySelectorAll('.pc-drag-source, .pc-drop-target').forEach(
+                function (face) {
+                    face.classList.remove('pc-drag-source', 'pc-drop-target');
+                });
+        }
         const unit = canvas.dataset.unit || 'mm';
         const wrap = item.closest('.pc-edit-item');
         const startRect = item.getBoundingClientRect();
@@ -727,7 +761,15 @@
             if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
             if (moved) hideResizeHandle(); // stale while the item moves
             item.style.transform = baseTransform + 'translate(' + dx / scale + 'px,' + dy / scale + 'px)';
-            const a = offsetFor(canvas, wrap, content.getBoundingClientRect(),
+            const face = faceAtPoint(canvas, ev.clientX, ev.clientY) || startFace;
+            if (face !== dropFace) {
+                if (dropFace) dropFace.classList.remove('pc-drop-target');
+                dropFace = face;
+                if (dropFace && dropFace !== startFace) {
+                    dropFace.classList.add('pc-drop-target');
+                }
+            }
+            const a = offsetFor(canvas, wrap, dropContent().getBoundingClientRect(),
                 startRect.left + dx, startRect.top + dy, startRect.width, startRect.height);
             showBadge(a, unit, ev.clientX, ev.clientY);
             liveOffset(a);
@@ -738,6 +780,8 @@
             item.classList.remove('pc-dragging');
             hideBadge();
             if (!moved) {
+                clearFaceMarks();
+                updateSideDim(canvas);
                 item.style.transform = '';
                 // A plain click on the selected item in a stack steps to the
                 // next one down, cycling through overlapping items.
@@ -749,13 +793,20 @@
             }
             // Keep the dragged transform until the re-render swaps the canvas in,
             // so the item doesn't flash back to its old position first.
-            const a = offsetFor(canvas, wrap, content.getBoundingClientRect(),
+            const a = offsetFor(canvas, wrap, dropContent().getBoundingClientRect(),
                 startRect.left + dx, startRect.top + dy, startRect.width, startRect.height);
-            postForm(canvas.dataset.moveUrl, {
+            const params = {
                 section: wrap.dataset.section,
                 h_align: a.hAlign, v_align: a.vAlign,
                 h_pos: a.hPos.toFixed(2), v_pos: a.vPos.toFixed(2),
-            }).then(function (h) { swapCanvas(h, true); });
+            };
+            if (dropFace && startFace && dropFace !== startFace) {
+                params.side = dropFace.dataset.side;
+                canvas.dataset.activeSide = dropFace.dataset.side;
+            }
+            clearFaceMarks();
+            postForm(canvas.dataset.moveUrl, params)
+                .then(function (h) { swapCanvas(h, true); });
         }
         item.addEventListener('pointermove', onMove);
         item.addEventListener('pointerup', onUp);

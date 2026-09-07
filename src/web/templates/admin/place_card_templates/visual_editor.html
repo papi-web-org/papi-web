@@ -72,9 +72,17 @@
        canvas, with its label above (print stacks them folded instead). float:none
        so the stage measures the full stacked height. */
     #place-card-canvas .card-wrapper { height: auto !important; float: none !important; box-shadow: 0 1mm 4mm rgba(0, 0, 0, 0.18); }
-    #place-card-canvas .pc-side { margin-bottom: 14mm; }
+    #place-card-canvas .pc-side { position: relative; margin-bottom: 14mm; }
     #place-card-canvas .pc-side:last-child { margin-bottom: 0; }
     #place-card-canvas .pc-side.pc-dim { opacity: 0.3; }
+    /* While dragging, the face the item comes from paints above the other one
+       so an item pulled over the neighbouring face stays visible. */
+    #place-card-canvas .pc-side.pc-drag-source { z-index: 10; }
+    /* The face the pointer is over, when it is not the item's own: dropping
+       there moves the item to that side. */
+    #place-card-canvas .pc-side.pc-drop-target .card-wrapper {
+        outline: 2px dashed var(--bs-primary); outline-offset: 2mm;
+    }
     #place-card-canvas .pc-side-title {
         color: #6c757d; font-size: 3.5mm; font-weight: 600;
         border-bottom: 0.3mm solid #adb5bd; margin-bottom: 2.5mm; padding-bottom: 1mm;
