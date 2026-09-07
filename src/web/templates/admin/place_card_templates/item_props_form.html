@@ -18,12 +18,12 @@
     <div class="flex-grow-1">
         <div class="mb-2">
             <label class="form-label small mb-1" for="pc-h-pos">{{ h_label }}</label>
-            <input type="number" step="0.1" class="form-control form-control-sm" id="pc-h-pos"
+            <input type="number" step="{{ '0.001' if unit == 'in' else '0.1' }}" class="form-control form-control-sm" id="pc-h-pos"
                    value="{{ data.h_pos }}" {% if data.anchor_h == 'center' %}disabled{% endif %}>
         </div>
         <div>
             <label class="form-label small mb-1" for="pc-v-pos">{{ v_label }}</label>
-            <input type="number" step="0.1" class="form-control form-control-sm" id="pc-v-pos"
+            <input type="number" step="{{ '0.001' if unit == 'in' else '0.1' }}" class="form-control form-control-sm" id="pc-v-pos"
                    value="{{ data.v_pos }}" {% if data.anchor_v == 'middle' %}disabled{% endif %}>
         </div>
     </div>
@@ -63,7 +63,7 @@
         </div>
         <div class="mb-2">
             <label class="form-label small mb-1" for="pc-width">{{ _('Width') }}</label>
-            <input type="number" step="0.1" class="form-control form-control-sm" id="pc-width" name="width" value="{{ data.width }}" placeholder="{{ _('auto') }}">
+            <input type="number" step="{{ '0.001' if unit == 'in' else '0.1' }}" class="form-control form-control-sm" id="pc-width" name="width" value="{{ data.width }}" placeholder="{{ _('auto') }}">
         </div>
     {% else %}
         {# Options for a field row's <select>: value is the inner expression. #}
@@ -115,7 +115,7 @@
         <div class="mb-2">
             <label class="form-label small mb-1" for="pc-width">{{ _('Width') }}</label>
             <div class="input-group input-group-sm">
-                <input type="number" step="0.1" min="0" class="form-control" id="pc-width" name="width" value="{{ data.width }}" placeholder="{{ _('Automatic') }}">
+                <input type="number" step="{{ '0.001' if unit == 'in' else '0.1' }}" min="0" class="form-control" id="pc-width" name="width" value="{{ data.width }}" placeholder="{{ _('Automatic') }}">
                 <button type="button" class="btn btn-outline-secondary" data-pc-clear-width title="{{ _('Auto-size') }}"><i class="bi-x-lg"></i></button>
             </div>
         </div>
@@ -229,7 +229,7 @@
         </label>
         <label class="col-6 d-flex align-items-center gap-2 mb-0" for="pc-border-width">
             {{ _('Width') }}
-            <input type="number" step="0.1" min="0" class="form-control form-control-sm flex-fill" style="min-width:0" id="pc-border-width" name="border_width" value="{{ data.border_width }}" placeholder="{{ _('None') }}" title="{{ _('Border width') }}">
+            <input type="number" step="{{ '0.001' if unit == 'in' else '0.1' }}" min="0" class="form-control form-control-sm flex-fill" style="min-width:0" id="pc-border-width" name="border_width" value="{{ data.border_width }}" placeholder="{{ _('None') }}" title="{{ _('Border width') }}">
         </label>
     </div>
 

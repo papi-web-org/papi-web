@@ -529,9 +529,18 @@
         const c = canvasEl();
         if (c) postForm(c.dataset.patchUrl, formParams(form)).then(function (h) { swapCanvas(h, true); });
     }
-    function onCardPatch(form) {
+    function onCardPatch(form, reloadPanel) {
         const c = canvasEl();
-        if (c) postForm(c.dataset.cardPatchUrl, formParams(form)).then(function (h) { swapCanvas(h, true); });
+        if (!c) return;
+        postForm(c.dataset.cardPatchUrl, formParams(form)).then(function (h) {
+            swapCanvas(h, true);
+            // The unit switch converts every length: reload the panel so its
+            // fields show the converted values and get the matching step.
+            if (reloadPanel) {
+                const fresh = canvasEl();
+                if (fresh) showCardPanel(fresh);
+            }
+        });
     }
 
     function onAnchor() {
@@ -983,6 +992,14 @@
                 if (t.id === 'pc-card-name') {
                     const title = document.getElementById('pc-template-name');
                     if (title) title.textContent = t.value;
+                }
+                // A radio fires both 'input' and 'change'; patch once, and
+                // straight away - a unit switch is a click, not typing.
+                if (t.name === 'unit') {
+                    if (event.type === 'change') {
+                        onCardPatch(t.closest('#pc-card-form'), true);
+                    }
+                    return;
                 }
                 debouncedCall(onCardPatch, t.closest('#pc-card-form'));
             }

@@ -75,9 +75,39 @@ ITEM_FLOAT_FIELDS: tuple[str, ...] = (
 )
 RESERVED_SECTIONS: frozenset[str] = frozenset({'default'})
 
+# Properties, template-wide and per item, whose value is a length in the card's
+# unit. Font size (pt) and rotation (degrees) are not among them.
+UNIT_SCALED_PROPS: tuple[str, ...] = (
+    'width',
+    'height',
+    'padding',
+    'max_width',
+    'h_pos',
+    'v_pos',
+    'border_width',
+)
+
+_MM_PER_INCH: float = 25.4
+
+
+# Decimals kept per unit: a tenth of a millimetre is as fine as a card layout
+# ever needs, and a thousandth of an inch (0.025 mm) is just finer than that, so
+# converting there and back lands on the original value instead of drifting.
+UNIT_DECIMALS: dict[str, int] = {'mm': 1, 'in': 3}
+
+
+def convert_unit_value(value: float, from_unit: str, to_unit: str) -> float:
+    """``value`` expressed in ``to_unit``: the same physical length, rounded to
+    that unit's precision."""
+    if from_unit == to_unit:
+        return value
+    scale = _MM_PER_INCH if from_unit == 'in' else 1 / _MM_PER_INCH
+    return round(value * scale, UNIT_DECIMALS[to_unit])
+
 
 def _fmt_float(value: float) -> str:
-    return f'{value:.2f}'.rstrip('0').rstrip('.')
+    # Three decimals: enough for the finest unit (thousandths of an inch).
+    return f'{value:.3f}'.rstrip('0').rstrip('.')
 
 
 class PlaceCardTemplateEditorError(SharlyChessException):
@@ -522,10 +552,33 @@ class PlaceCardTemplateEditor:
         container.save()
         logger.info('Saved custom place card template [%s].', template_id)
 
+    @staticmethod
+    def _convert_units(container: TOMLContainer, from_unit: str, to_unit: str) -> None:
+        """Rescale every length in the file - template-wide and in each item
+        section - so the card keeps its physical size in the new unit."""
+        sections: list[dict[str, Any]] = [container.data] + [
+            value for value in container.data.values() if isinstance(value, dict)
+        ]
+        for section in sections:
+            for prop in UNIT_SCALED_PROPS:
+                value = section.get(prop)
+                if isinstance(value, (int, float)) and not isinstance(value, bool):
+                    section[prop] = convert_unit_value(float(value), from_unit, to_unit)
+
     @classmethod
-    def patch_metadata(cls, template_id: str, updates: dict[str, Any]) -> None:
+    def patch_metadata(
+        cls,
+        template_id: str,
+        updates: dict[str, Any],
+        *,
+        convert_from: str | None = None,
+    ) -> None:
         """Merge template-wide ``updates``: None deletes the key (reverting to
-        default), anything else sets it. Item sections are left untouched."""
+        default), anything else sets it. Item sections are left untouched,
+        except when ``convert_from`` (the unit the stored lengths are in)
+        differs from the patched unit: every length is then converted first, so
+        switching unit re-expresses the layout instead of resizing it. The
+        ``updates`` lengths are expected in the new unit already."""
         cls._record_history(template_id)
         if not cls.is_custom(template_id):
             raise PlaceCardTemplateEditorError(
@@ -533,6 +586,9 @@ class PlaceCardTemplateEditor:
             )
         file = cls._custom_file(template_id)
         container = TOMLContainer(file)
+        to_unit = updates.get('unit') or TEMPLATE_META_DEFAULTS['unit']
+        if convert_from and convert_from != to_unit:
+            cls._convert_units(container, convert_from, to_unit)
         for key, value in updates.items():
             if value is None:
                 container.data.pop(key, None)

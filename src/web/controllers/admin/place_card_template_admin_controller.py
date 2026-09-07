@@ -17,6 +17,7 @@ from data.print_documents.place_cards.editor import (
     TEMPLATE_META_DEFAULTS,
     PlaceCardTemplateEditor,
     PlaceCardTemplateEditorError,
+    convert_unit_value,
 )
 from data.print_documents.place_cards.content import (
     is_builder_friendly,
@@ -253,6 +254,7 @@ class PlaceCardTemplateAdminController(BaseAdminController):
         return {
             'template_id': template_id,
             'section': section,
+            'unit': template.unit,
             'kind': data['kind'],
             'field_tokens': cls._field_tokens(template.type.static_id()),
             'font_groups': cls._font_groups(template),
@@ -506,8 +508,14 @@ class PlaceCardTemplateAdminController(BaseAdminController):
         return WebContext.values_dict_to_form_data(raw)
 
     @classmethod
-    def _parse_card_patch(cls, data: dict[str, str]) -> dict[str, Any]:
+    def _parse_card_patch(
+        cls, data: dict[str, str], *, from_unit: str = 'mm'
+    ) -> dict[str, Any]:
         """Merge dict for patch_metadata: value == default -> None (drop).
+
+        The form's lengths are in ``from_unit`` (what the fields displayed);
+        they are converted to the submitted unit before the comparison, so the
+        defaults - which are millimetres - are compared against millimetres.
 
         Only card geometry/name/two-sided is edited here. The template-level
         default style is user-authored (it seeds new items) and read-only, so it
@@ -515,6 +523,11 @@ class PlaceCardTemplateAdminController(BaseAdminController):
         """
         defaults = TEMPLATE_META_DEFAULTS
         updates: dict[str, Any] = {}
+        name = WebContext.form_data_to_str(data, 'name')
+        updates['name'] = name or None
+        unit = WebContext.form_data_to_str(data, 'unit') or 'mm'
+        unit = unit if unit in ('mm', 'in') else 'mm'
+        updates['unit'] = None if unit == defaults['unit'] else unit
 
         def num(field: str) -> Any:
             default = defaults[field]
@@ -522,12 +535,9 @@ class PlaceCardTemplateAdminController(BaseAdminController):
                 value = WebContext.form_data_to_float(data, field, empty_value=default)
             except ValueError:
                 return _SKIP
+            value = convert_unit_value(value, from_unit, unit)
             return None if value == default else value
 
-        name = WebContext.form_data_to_str(data, 'name')
-        updates['name'] = name or None
-        unit = WebContext.form_data_to_str(data, 'unit') or 'mm'
-        updates['unit'] = None if unit not in ('mm', 'in') or unit == 'mm' else unit
         for field in ('width', 'height', 'padding'):
             value = num(field)
             if value is not _SKIP and not (value is not None and value <= 0):
@@ -1017,10 +1027,14 @@ class PlaceCardTemplateAdminController(BaseAdminController):
         ],
     ) -> Template:
         template_id = template_id.strip('/')
-        was_two_sided = PlaceCardTemplate.load(template_id).is_two_sided
-        updates = self._parse_card_patch(data)
+        template = PlaceCardTemplate.load(template_id)
+        was_two_sided = template.is_two_sided
+        old_unit = template.unit
+        updates = self._parse_card_patch(data, from_unit=old_unit)
         try:
-            PlaceCardTemplateEditor.patch_metadata(template_id, updates)
+            PlaceCardTemplateEditor.patch_metadata(
+                template_id, updates, convert_from=old_unit
+            )
             # Turning two-sided off flattens the back face onto the front.
             if was_two_sided and not updates.get('two_sided'):
                 PlaceCardTemplateEditor.move_all_to_front(template_id)

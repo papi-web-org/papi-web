@@ -25,15 +25,15 @@
     <div class="row g-2 mb-2">
         <div class="col-4">
             <label class="form-label small mb-1" for="pc-card-width">{{ _('Width') }}</label>
-            <input type="number" step="0.1" class="form-control form-control-sm" id="pc-card-width" name="width" value="{{ data.width }}">
+            <input type="number" step="{{ '0.001' if data.unit == 'in' else '0.1' }}" class="form-control form-control-sm" id="pc-card-width" name="width" value="{{ data.width }}">
         </div>
         <div class="col-4">
             <label class="form-label small mb-1" for="pc-card-height">{{ _('Height') }}</label>
-            <input type="number" step="0.1" class="form-control form-control-sm" id="pc-card-height" name="height" value="{{ data.height }}">
+            <input type="number" step="{{ '0.001' if data.unit == 'in' else '0.1' }}" class="form-control form-control-sm" id="pc-card-height" name="height" value="{{ data.height }}">
         </div>
         <div class="col-4">
             <label class="form-label small mb-1" for="pc-card-padding">{{ _('Padding') }}</label>
-            <input type="number" step="0.1" class="form-control form-control-sm" id="pc-card-padding" name="padding" value="{{ data.padding }}">
+            <input type="number" step="{{ '0.001' if data.unit == 'in' else '0.1' }}" class="form-control form-control-sm" id="pc-card-padding" name="padding" value="{{ data.padding }}">
         </div>
     </div>
 </form>

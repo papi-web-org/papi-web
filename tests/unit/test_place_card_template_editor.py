@@ -397,6 +397,64 @@ def test_patch_metadata_merges_and_preserves_items(custom_dir):
     assert data['name']['text'] == 'x'
 
 
+def test_unit_change_converts_every_length(custom_dir):
+    template_id = _new_template(custom_dir)
+    PlaceCardTemplateEditor.patch_metadata(
+        template_id, {'width': 101.6, 'height': 50.8, 'padding': 5.08}
+    )
+    PlaceCardTemplateEditor.save_item(
+        template_id,
+        'name',
+        'text',
+        {'text': 'x', 'h_pos': 25.4, 'v_pos': 12.7, 'width': 76.2},
+    )
+    PlaceCardTemplateEditor.patch_metadata(
+        template_id,
+        {'unit': 'in', 'width': 4.0, 'height': 2.0, 'padding': 0.2},
+        convert_from='mm',
+    )
+    data = _read(custom_dir, template_id)
+    assert data['unit'] == 'in'
+    # The card geometry comes from the form, already in inches.
+    assert (data['width'], data['height'], data['padding']) == (4.0, 2.0, 0.2)
+    # The items are converted in place.
+    assert data['name']['h_pos'] == 1.0
+    assert data['name']['v_pos'] == 0.5
+    assert data['name']['width'] == 3.0
+    assert data['name']['text'] == 'x'
+
+
+def test_unit_change_back_restores_lengths(custom_dir):
+    """A round trip must land on the original values: an inch is kept to a
+    thousandth, which is finer than the tenth of a millimetre it converts to."""
+    template_id = _new_template(custom_dir)
+    lengths = {'h_pos': 25.4, 'v_pos': 2.0, 'width': 116.0, 'height': 36.4}
+    PlaceCardTemplateEditor.save_item(
+        template_id, 'name', 'text', {'text': 'x'} | lengths
+    )
+    PlaceCardTemplateEditor.patch_metadata(
+        template_id, {'unit': 'in'}, convert_from='mm'
+    )
+    PlaceCardTemplateEditor.patch_metadata(
+        template_id, {'unit': None}, convert_from='in'
+    )
+    data = _read(custom_dir, template_id)
+    assert 'unit' not in data
+    for prop, value in lengths.items():
+        assert data['name'][prop] == value, prop
+
+
+def test_unit_unchanged_leaves_lengths_alone(custom_dir):
+    template_id = _new_template(custom_dir)
+    PlaceCardTemplateEditor.save_item(
+        template_id, 'name', 'text', {'text': 'x', 'h_pos': 25.4}
+    )
+    PlaceCardTemplateEditor.patch_metadata(
+        template_id, {'width': 120.0}, convert_from='mm'
+    )
+    assert _read(custom_dir, template_id)['name']['h_pos'] == 25.4
+
+
 def test_export_zip_contains_template_and_images(custom_dir):
     import io
     import zipfile
