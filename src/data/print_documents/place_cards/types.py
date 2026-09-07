@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 import random
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -22,6 +22,13 @@ if TYPE_CHECKING:
 
 
 class PlaceCardType(IdentifiableEntity, ABC):
+    @staticmethod
+    @abstractmethod
+    def static_singular_name() -> str:
+        """Names one card of this type, where static_name() names the document
+        ("Player" against "Player Cards")."""
+        pass
+
     @classmethod
     def get_valid_option_ids(cls) -> list[str]:
         return [option.static_id() for option in cls.get_valid_option_types()]
@@ -155,6 +162,10 @@ class PlayerCardType(PlaceCardType):
         return _('Player Cards')
 
     @staticmethod
+    def static_singular_name() -> str:
+        return _('Player')
+
+    @staticmethod
     def get_valid_option_types() -> list[type['PrintOption']]:
         from data.print_documents.options import OptionalPlayersPrintOption
 
@@ -206,6 +217,10 @@ class BoardCardType(PlaceCardType):
     @staticmethod
     def static_name() -> str:
         return _('Board Cards')
+
+    @staticmethod
+    def static_singular_name() -> str:
+        return _('Board')
 
     @staticmethod
     def get_valid_option_types() -> list[type['PrintOption']]:
@@ -281,6 +296,10 @@ class PairingCardType(PlaceCardType):
     def static_name() -> str:
         return _('Pairing Cards')
 
+    @staticmethod
+    def static_singular_name() -> str:
+        return _('Pairing')
+
     @property
     def mirror_rotate(self) -> bool:
         return False
@@ -307,10 +326,14 @@ class PairingCardType(PlaceCardType):
             last_name=_('WHITE PLAYER'),
             color=_('W *** WHITE COLOR FOR PLACE CARDS'),
         )
+        place_card_pairing.white_player.color_background = '#fff'
+        place_card_pairing.white_player.color_text = '#000'
         place_card_pairing.black_player = cls.get_random_player(
             last_name=_('BLACK PLAYER'),
             color=_('B *** BLACK COLOR FOR PLACE CARDS'),
         )
+        place_card_pairing.black_player.color_background = '#000'
+        place_card_pairing.black_player.color_text = '#fff'
         return place_card_pairing
 
     @classmethod
@@ -354,6 +377,10 @@ class TeamCardType(PlaceCardType):
     @staticmethod
     def static_name() -> str:
         return _('Team Cards')
+
+    @staticmethod
+    def static_singular_name() -> str:
+        return _('Team')
 
     @classmethod
     def supports_event_type(cls, is_team_event: bool) -> bool:

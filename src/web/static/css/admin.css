@@ -198,6 +198,15 @@
 
 /* Select2 */
 
+/* Group (optgroup) labels: keep them a block with a left padding that applies
+   to every wrapped line, so a long section title stays indented when it wraps
+   (and lines up with the options below it). */
+.select2-container--bootstrap-5 .select2-results__group {
+    display: block;
+    white-space: normal;
+    padding-left: .75rem;
+}
+
 [data-bs-theme=dark] .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option.select2-results__option--highlighted {
     color: white;
     background-color: var(--pw-nav-bg);

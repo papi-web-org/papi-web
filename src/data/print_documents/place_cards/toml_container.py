@@ -23,6 +23,10 @@ class TOMLContainer:
         ] = {}
         try:
             self.data = toml.load(self.toml_file)
+        except FileNotFoundError:
+            # A missing file is treated as an empty container so the editor can
+            # build a brand new template before it is written to disk.
+            pass
         except TomlDecodeError as tde:
             logger.exception('[%s]: %s.', self.toml_file.name, tde)
 
@@ -276,3 +280,9 @@ class TOMLContainer:
                     del self.data[section][prop]  # type: ignore
                 else:
                     del self.data[prop]
+
+    def save(self) -> None:
+        """Write the in-memory data back to the TOML file on disk."""
+        self.toml_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.toml_file, 'w', encoding='utf-8') as f:
+            toml.dump(self.data, f)

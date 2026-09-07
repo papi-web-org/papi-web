@@ -160,12 +160,13 @@ class IndexAdminController(BaseAdminController):
         return stored_plugins
 
     @classmethod
-    def _admin_render(
+    def admin_shell_context(
         cls,
         web_context: AdminWebContext,
         template_context: dict[str, Any] | None = None,
-        keep_modal_open: bool | None = None,
-    ) -> Template:
+    ) -> dict[str, Any]:
+        """Build the full admin-shell context (sidebar nav_tabs, logo, etc.).
+        Reused by other controllers that render inside the admin shell."""
         sorted_archives = ArchiveLoader.get_sorted_archives()
         public_only: bool = not web_context.client.can_view_private_events
         events_metadata = EventLoader.get_events_metadata(public_only=public_only)
@@ -447,6 +448,16 @@ class IndexAdminController(BaseAdminController):
             | (template_context or {})
         )
 
+        return context
+
+    @classmethod
+    def _admin_render(
+        cls,
+        web_context: AdminWebContext,
+        template_context: dict[str, Any] | None = None,
+        keep_modal_open: bool | None = None,
+    ) -> Template:
+        context = cls.admin_shell_context(web_context, template_context)
         if 'modal' in context:
             return cls._render_modal(
                 'admin/modals.html', context, bool(keep_modal_open)

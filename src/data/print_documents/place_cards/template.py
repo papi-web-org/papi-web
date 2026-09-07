@@ -19,6 +19,7 @@ from data.event import Event
 from data.print_documents.place_cards.crop_marks import (
     PlaceCardCropMarks,
     CornersPlaceCardCropMarks,
+    NonePlaceCardCropMarks,
 )
 from data.print_documents.place_cards.data import (
     PlaceCardBoard,
@@ -36,11 +37,34 @@ from data.print_documents.place_cards.items import (
 )
 from data.print_documents.place_cards.toml_container import TOMLContainer
 from data.print_documents.place_cards.types import PlaceCardType
+from data.player import Player
 from data.tournament import Tournament
 from utils.enum import Extension
 from utils.file import ttf_file_inline_url, image_file_inline_url
 
 logger: logging.Logger = get_logger()
+
+# Varied sample identities for the editor's "example data" selector: a short
+# name, a long/hyphenated one, accents... so the user can check the layout
+# against real-world names, not one fixed placeholder.
+_EXAMPLE_PLAYER_NAMES: list[tuple[str, str]] = [
+    ('Emma', 'Roy'),
+    ('Jean-Christophe', 'de la Tour-Boulingrin'),
+    ('Li', 'Wu'),
+    ('María-José', 'García-Hernández'),
+]
+_EXAMPLE_TEAM_NAMES: list[str] = [
+    'Les Tours',
+    'Cavaliers de Lyon',
+    'Échecs Club Paris-Ouest',
+    'Fous Volants',
+]
+_EXAMPLE_CLUB_NAMES: list[str] = [
+    'Échiquier de Bourgogne',
+    'Club de la Tour Noire',
+    'Cercle des Échecs de Lyon',
+    'Association Caïssa',
+]
 
 
 class PlaceCardTemplate(PlaceCardItemStyle):
@@ -99,6 +123,7 @@ class PlaceCardTemplate(PlaceCardItemStyle):
         self.padding: float = custom_data.get_float('padding', default=2.0)
         self.css: str = custom_data.get_str('css', default='')
         self.font: str = custom_data.get_str('font', default='')
+        self.two_sided: bool = custom_data.get_bool('two_sided', default=False)
         items: list[PlaceCardItem] = []
         for section in custom_data.get_sections():
             if section == 'default':
@@ -119,9 +144,9 @@ class PlaceCardTemplate(PlaceCardItemStyle):
                         template=self,
                     )
                 )
-        self.items: list[PlaceCardItem] = [
-            item for item in items if item.type == 'image'
-        ] + [item for item in items if item.type != 'image']
+        # Declaration order is paint order: the last item of the file is drawn
+        # on top. The editor reorders the sections to change the stacking.
+        self.items: list[PlaceCardItem] = items
 
     def allowed_properties(
         self,
@@ -140,6 +165,7 @@ class PlaceCardTemplate(PlaceCardItemStyle):
                     'padding',
                     'css',
                     'font',
+                    'two_sided',
                 }
             )
         )
@@ -151,6 +177,36 @@ class PlaceCardTemplate(PlaceCardItemStyle):
     @property
     def template_name(self) -> str:
         return '/admin/print/place_cards/template.html'
+
+    @property
+    def is_two_sided(self) -> bool:
+        """Effectively two-sided: the explicit flag, or any displayed back item
+        (built-in two-sided templates use a back item rather than the flag)."""
+        return self.two_sided or any(item.back and item.display for item in self.items)
+
+    def available_fonts(self) -> list[Path]:
+        """Every .ttf available to this template (its own fonts/ folder first,
+        then the shared fonts), de-duplicated by file name."""
+        seen: set[str] = set()
+        fonts: list[Path] = []
+        for font_path in self.font_paths:
+            if not font_path.is_dir():
+                continue
+            for file in sorted(font_path.glob('*.ttf')):
+                if file.name not in seen:
+                    seen.add(file.name)
+                    fonts.append(file)
+        return fonts
+
+    def resolve_font(self, name: str) -> Path | None:
+        """Resolve a font file name to a Path within the template's font paths."""
+        if not name or not (Path() / name).parent.samefile(Path()):
+            return None
+        for font_path in self.font_paths:
+            file = font_path / name
+            if file.is_file():
+                return file
+        return None
 
     @property
     def font_file(self) -> Path:
@@ -175,11 +231,20 @@ class PlaceCardTemplate(PlaceCardItemStyle):
         federations: set[str],
     ) -> str:
         file: Path = self.font_file
+        # Register @font-face for every font actually used: the template font
+        # plus any per-item font overrides. (@font-face can't share a dict key,
+        # so these are emitted as a separate string below.)
+        used_fonts: dict[str, Path] = {file.stem: file}
+        for item in self.items:
+            item_font = self.resolve_font(getattr(item, 'font_family', ''))
+            if item_font is not None:
+                used_fonts.setdefault(item_font.stem, item_font)
+        font_faces: str = '\n'.join(
+            f'@font-face {{\n\tfont-family: "{font.stem}";\n'
+            f'\tsrc: url("{ttf_file_inline_url(font)}") format("truetype");\n}}'
+            for font in used_fonts.values()
+        )
         css_properties: dict[str, dict[str, str]] = {
-            '@font-face': {
-                'font-family': f'"{file.stem}"',
-                'src': f'url("{ttf_file_inline_url(file)}") format("truetype")',
-            },
             f'.{self.css_class} *': {
                 'font-family': f'{file.stem}, sans-serif',
             },
@@ -250,7 +315,9 @@ class PlaceCardTemplate(PlaceCardItemStyle):
             if federation in SharlyChessConfig().federations
         }
         return (
-            '\n'.join(
+            font_faces
+            + '\n'
+            + '\n'.join(
                 f'{locator} {{\n{"\n".join(f"\t{key}: {value};" for key, value in properties.items())}\n}}'
                 for locator, properties in css_properties.items()
             )
@@ -302,7 +369,9 @@ class PlaceCardTemplate(PlaceCardItemStyle):
                 PlaceCardItem.mirror(item, self.type.mirror_rotate) for item in items
             ]
             items += back_items
-        back_side: bool = any(item.back and item.display for item in items)
+        back_side: bool = self.two_sided or any(
+            item.back and item.display for item in items
+        )
         federations: set[str] = self.get_federations(players, pairings)
         return {
             'event': event,
@@ -347,14 +416,17 @@ class PlaceCardTemplate(PlaceCardItemStyle):
             ),
             teams=self.type.teams(tournament),
             card_width=f'{self.width}{self.unit}',
-            card_height=f'{(2 if mirror or any(item.back and item.display for item in self.items) else 1) * self.height}{self.unit}',
+            card_height=f'{(2 if mirror or self.is_two_sided else 1) * self.height}{self.unit}',
             preview=False,
         )
 
-    def preview(
-        self,
-    ) -> str:
-        """Returns a string to preview the template with moc data."""
+    def preview(self, crop_marks: bool = True) -> str:
+        """Returns a string to preview the template with mock data. With
+        ``crop_marks`` (the hover tooltip) the card renders at half-scale with
+        corner crop marks and a 1mm bleed margin, mimicking the printed sheet.
+        Without them (the library thumbnail) it renders edge-to-edge, no marks."""
+        faces = 2 if self.is_two_sided else 1
+        margin = (1.0 if crop_marks else 0.0) * (1.0 if self.unit == 'mm' else 1 / 25.4)
         return parse_jinja_template(
             '/admin/print/place_cards/tooltip_preview.html',
             self._template_context(
@@ -362,16 +434,125 @@ class PlaceCardTemplate(PlaceCardItemStyle):
                 tournament=PlaceCardTournament(),
                 round_=1,
                 mirror=False,
-                place_card_crop_marks=CornersPlaceCardCropMarks(),
+                place_card_crop_marks=(
+                    CornersPlaceCardCropMarks()
+                    if crop_marks
+                    else NonePlaceCardCropMarks()
+                ),
                 players=self.type.preview_players(),
                 boards=self.type.preview_boards(),
                 pairings=self.type.preview_pairings(),
                 teams=self.type.preview_teams(),
-                card_width=f'{self.width / 2 + 1}{self.unit}',
-                card_height=f'{(2 if any(item.back and item.display for item in self.items) else 1) * self.height / 2 + (1.0 / (1.0 if self.unit == "mm" else 25.4))}{self.unit}',
+                card_width=f'{self.width / 2 + margin}{self.unit}',
+                card_height=f'{faces * self.height / 2 + margin}{self.unit}',
                 preview=True,
             ),
         )
+
+    def editor_card_html(self, example: int = 0) -> str:
+        """Render a single sample card as an inline HTML fragment (no iframe)
+        for the visual editor. Each item is wrapped with a ``.pc-edit-item``
+        element carrying its section id so the editor can attach drag handles.
+        ``example`` seeds the sample data so the user can preview several."""
+        import random
+
+        scale: int = 2 if self.is_two_sided else 1
+        # The sample data is randomised; seed it (per chosen example) so it stays
+        # identical across the re-renders that follow every drag/add/delete.
+        random_state = random.getstate()
+        random.seed(example)
+        try:
+            players = self.type.preview_players()
+            boards = self.type.preview_boards()
+            pairings = self.type.preview_pairings()
+            teams = self.type.preview_teams()
+        finally:
+            random.setstate(random_state)
+        self._apply_example(example, players, boards, pairings, teams)
+        context = self._template_context(
+            event=PlaceCardEvent(),
+            tournament=PlaceCardTournament(),
+            round_=1,
+            mirror=False,
+            place_card_crop_marks=NonePlaceCardCropMarks(),
+            players=players,
+            boards=boards,
+            pairings=pairings,
+            teams=teams,
+            card_width=f'{self.width}{self.unit}',
+            card_height=f'{scale * self.height}{self.unit}',
+            preview=True,
+        )
+        context['editor'] = True
+        context['padding'] = self.padding
+        return parse_jinja_template(
+            '/admin/print/place_cards/place_cards.html', context
+        )
+
+    @staticmethod
+    def _name_player(player: PlaceCardPlayer, example: int) -> None:
+        """Give the player a full, distinct identity for an example: name, club
+        and team, so every field token resolves to a real (non-placeholder)
+        value that varies from one example to the next."""
+        first, last = _EXAMPLE_PLAYER_NAMES[example % len(_EXAMPLE_PLAYER_NAMES)]
+        player.first_name = first
+        player.last_name = last
+        player.full_name = Player.player_full_name(first, last)
+        player.club = _EXAMPLE_CLUB_NAMES[example % len(_EXAMPLE_CLUB_NAMES)]
+        player.team_name = _EXAMPLE_TEAM_NAMES[example % len(_EXAMPLE_TEAM_NAMES)]
+
+    def _apply_example(
+        self,
+        example: int,
+        players: list[PlaceCardPlayer],
+        boards: list[PlaceCardBoard],
+        pairings: list[PlaceCardPairing],
+        teams: list[PlaceCardTeam],
+    ) -> None:
+        """Give each example a distinct, recognisable identity (name, board
+        number, team name) so the selector previews real variety rather than
+        the same placeholder with only a different rating."""
+        for player in players:
+            self._name_player(player, example)
+        for pairing in pairings:
+            if pairing.white_player:
+                self._name_player(pairing.white_player, example)
+            if pairing.black_player:
+                self._name_player(pairing.black_player, example + 1)
+        for offset, board in enumerate(boards):
+            board.number = example + 1 + offset
+        for offset, team in enumerate(teams):
+            team.name = _EXAMPLE_TEAM_NAMES[
+                (example + offset) % len(_EXAMPLE_TEAM_NAMES)
+            ]
+
+    def example_label(self, example: int) -> str:
+        """A short human label for one example, shown on the selector button
+        (the primary entity's identity for this template's card type)."""
+        import random
+
+        random_state = random.getstate()
+        random.seed(example)
+        try:
+            players = self.type.preview_players()
+            boards = self.type.preview_boards()
+            pairings = self.type.preview_pairings()
+            teams = self.type.preview_teams()
+        finally:
+            random.setstate(random_state)
+        self._apply_example(example, players, boards, pairings, teams)
+        if players:
+            return players[0].full_name
+        if pairings:
+            pairing = pairings[0]
+            white = pairing.white_player.full_name if pairing.white_player else '?'
+            black = pairing.black_player.full_name if pairing.black_player else '?'
+            return f'{white} – {black}'
+        if boards:
+            return _('Board {number}').format(number=boards[0].number)
+        if teams:
+            return teams[0].name
+        return str(example + 1)
 
     @classmethod
     def load(

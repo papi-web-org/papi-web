@@ -676,6 +676,9 @@ msgstr "Un ensemble nommé [{name}] existe déjà. Cochez l'option Remplacement 
 msgid "A set with this name already existe."
 msgstr "Un ensemble avec ce nom existe déjà."
 
+msgid "A template name is required."
+msgstr "Un nom de modèle est requis."
+
 #, python-brace-format
 msgid "A value between 0 and {max} is expected."
 msgstr "Une valeur comprise entre 0 et {max} est attendue."
@@ -887,6 +890,9 @@ msgstr "Administration"
 msgid "Administrator"
 msgstr "Administrateur·ice"
 
+msgid "Advanced"
+msgstr "Avancé"
+
 msgid "Advanced criteria can be created from the dedicated criteria form."
 msgstr "Les critères avancés peuvent-être créés depuis le formulaire de critères."
 
@@ -956,6 +962,9 @@ msgstr "Évènements"
 
 msgid "All absent *** ALL TEAMS ABSENT"
 msgstr "Toutes présentes"
+
+msgid "All caps"
+msgstr "Majuscules"
 
 msgid "All groups"
 msgstr "Tous les groupes"
@@ -1051,6 +1060,10 @@ msgstr "Un entier supérieur à 1 est attendu."
 msgid "An integer is expected."
 msgstr "Un nombre entier est attendu."
 
+#, python-brace-format
+msgid "An item [{id}] already exists."
+msgstr "Un élément [{id}] existe déjà."
+
 msgid "An unexpected error occurred while reading the CSV file. Consult the logs for more details."
 msgstr "Une erreur inattendue s'est produite lors de la lecture du fichier CSV. Consultez les logs pour plus de détails."
 
@@ -1059,6 +1072,9 @@ msgstr "Une erreur inattendue s'est produite."
 
 msgid "An update of Sharly Chess is available, but the updater tool (Sparkle) failed."
 msgstr "Une mise à jour de Sharly Chess est disponible, mais l'outil de mise à jour (Sparkle) a échoué."
+
+msgid "Anchor position"
+msgstr "Position"
 
 msgid "Andorra"
 msgstr "Andorre"
@@ -1210,6 +1226,9 @@ msgstr "Australie"
 msgid "Austria"
 msgstr "Autriche"
 
+msgid "Auto-size"
+msgstr "Taille automatique"
+
 msgid "Auto-update"
 msgstr "Mise à jour"
 
@@ -1344,6 +1363,9 @@ msgstr "Composition de base"
 msgid "Base lineup:"
 msgstr "Composition de base :"
 
+msgid "Basic"
+msgstr "Simple"
+
 msgid "Bd"
 msgstr "Éch"
 
@@ -1385,6 +1407,9 @@ msgstr "Bhoutan"
 
 msgid "Black"
 msgstr "Noirs"
+
+msgid "Black player"
+msgstr "Joueur·euse Noirs"
 
 msgid "Black wins"
 msgstr "Victoire Noirs"
@@ -1468,6 +1493,10 @@ msgstr "Sélection des échiquiers :"
 msgid "Board sets of screen %(screen_name)s"
 msgstr "Ensembles d'échiquiers de l'écran %(screen_name)s"
 
+#, python-brace-format
+msgid "Board {number}"
+msgstr "Échiquier {number}"
+
 msgid "Board:"
 msgstr "Échiquier :"
 
@@ -1485,6 +1514,9 @@ msgstr "échiquiers du n°%(first)d au n°%(last)d"
 msgid "Boards screens show pairings by board number."
 msgstr "Les écrans d'affichage des échiquiers présentent les appariements par échiquier."
 
+msgid "Bold"
+msgstr "Gras"
+
 msgid "Bolivia"
 msgstr "Bolivie"
 
@@ -1500,6 +1532,12 @@ msgstr "Les points de bonus/pénalité ont été mis à jour."
 
 msgid "Border"
 msgstr "Bordure"
+
+msgid "Border colour"
+msgstr "Couleur de bordure"
+
+msgid "Border width"
+msgstr "Épaisseur de bordure"
 
 msgid "Bosnia & Herzegovina"
 msgstr "Bosnie-Herzégovine"
@@ -1524,6 +1562,12 @@ msgstr "Buchholz"
 
 msgid "Buchholz score calculated as if all paired games for the final round had ended in draws."
 msgstr "Score Buchholz calculé comme si toutes les parties appariées pour la dernière ronde s'étaient terminées en match nul."
+
+msgid "Built-in templates"
+msgstr "Modèles intégrés"
+
+msgid "Built-in templates cannot be edited. Duplicate one to start a custom template."
+msgstr "Les modèles intégrés ne peuvent pas être modifiés. Dupliquez-en un pour créer un modèle personnalisé."
 
 msgid "Bulgaria"
 msgstr "Bulgarie"
@@ -1899,6 +1943,9 @@ msgstr "Cliquer pour modifier"
 #, python-format
 msgid "Click to mark as &quot;%(status)s&quot;"
 msgstr "Cliquer pour marquer &laquo; %(status)s &raquo;"
+
+msgid "Click to set a fill colour"
+msgstr "Cliquez pour définir une couleur de remplissage"
 
 msgid "Click to toggle check-in."
 msgstr "Cliquez pour pointer/dépointer."
@@ -2367,11 +2414,17 @@ msgstr "Affiche actuellement l'écran [{name}]"
 msgid "Custom"
 msgstr "Personnalisés"
 
+msgid "Custom CSS"
+msgstr "CSS personnalisé"
+
 msgid "Custom accelerated system"
 msgstr "Système accéléré personnalisé"
 
 msgid "Custom sets"
 msgstr "Ensembles personnalisés"
+
+msgid "Custom templates"
+msgstr "Modèles personnalisés"
 
 msgid "Custom tie-break sets"
 msgstr "Ensembles de départages personnalisés"
@@ -2553,6 +2606,12 @@ msgstr "Supprimer le pilote d'afficheur"
 msgid "Delete every player of the event"
 msgstr "Supprimer tou·tes les joueur·euses de l'évènement"
 
+msgid "Delete image"
+msgstr "Supprimer l’image"
+
+msgid "Delete item"
+msgstr "Supprimer l’élément"
+
 msgid "Delete menu"
 msgstr "Supprimer le menu"
 
@@ -2561,6 +2620,9 @@ msgstr "Supprimer l'écran multiple"
 
 msgid "Delete permanently"
 msgstr "Supprimer définitivement"
+
+msgid "Delete place card template"
+msgstr "Supprimer le modèle de chevalet"
 
 msgid "Delete player"
 msgstr "Supprimer le·la joueur·euse"
@@ -2877,6 +2939,9 @@ msgstr "Glissez pour réordonner la règle."
 msgid "Drag to set the manual order."
 msgstr "Glissez pour définir l'ordre manuel."
 
+msgid "Drag to set width"
+msgstr "Faites glisser pour définir la largeur"
+
 msgid "Draw"
 msgstr "Nulle"
 
@@ -2889,6 +2954,9 @@ msgstr "Dupliquer"
 #, python-format
 msgid "Duplicate event [%(event)s]"
 msgstr "Dupliquer l'évènement [%(event)s]"
+
+msgid "Duplicate template"
+msgstr "Dupliquer le modèle"
 
 msgid "Duplicate the account."
 msgstr "Dupliquer le compte."
@@ -3221,6 +3289,9 @@ msgstr "Modifier le chronomètre"
 msgid "Edit tournament"
 msgstr "Modifier le tournoi"
 
+msgid "Editor mode"
+msgstr "Mode d’édition"
+
 msgid "Egypt"
 msgstr "Égypte"
 
@@ -3255,8 +3326,17 @@ msgstr "Activer ce compte"
 msgid "Encounter already happened at round #%(round)d"
 msgstr "La rencontre a déjà eu lieu à la ronde n°%(round)d"
 
+msgid "End day"
+msgstr "Jour de fin"
+
+msgid "End month"
+msgstr "Mois de fin"
+
 msgid "End round"
 msgstr "Terminer la ronde"
+
+msgid "End year"
+msgstr "Année de fin"
 
 msgid "England"
 msgstr "Angleterre"
@@ -3348,6 +3428,9 @@ msgstr "Évènements ({num})"
 
 msgid "Every player of the event will be deleted before importing the ones from the file — a team event places its players by team, not by tournament, so the deletion cannot be limited to one tournament."
 msgstr "Tou·tes les joueur·euses de l'évènement seront supprimé·es avant l'import de celles et ceux du fichier : dans un évènement par équipes, les joueur·euses sont rattaché·es à une équipe et non à un tournoi, la suppression ne peut donc pas se limiter à un seul tournoi."
+
+msgid "Example data"
+msgstr "Données d’exemple"
 
 msgid "Exclude"
 msgstr "Exclure"
@@ -3517,6 +3600,9 @@ msgstr "L'identifiant Fide [{fide_id}] est déjà présent dans le tournoi [{tou
 msgid "Fide Master"
 msgstr "Maître Fide"
 
+msgid "Field"
+msgstr "Champ"
+
 msgid "Fiji"
 msgstr "Fidji"
 
@@ -3600,6 +3686,9 @@ msgstr "Points fixes par place à l'arrivée (p. ex. 20 pour le premier, 15 pour
 msgid "Fixed table"
 msgstr "Table fixe"
 
+msgid "Flag"
+msgstr "Drapeau"
+
 msgid "Floats"
 msgstr "Flotteurs"
 
@@ -3608,6 +3697,9 @@ msgstr "Plancher appliqué à"
 
 msgid "Foldable (mirrored top)"
 msgstr "Miroir (recto-verso)"
+
+msgid "Font"
+msgstr "Police"
 
 #, python-format
 msgid "Font size adjustment (%%):"
@@ -3671,11 +3763,26 @@ msgstr "France"
 msgid "Free labels used to organise and filter the list of events. Tags are shared by all the events of this installation, and are removed when an event is exported or imported."
 msgstr "Libellés libres utilisés pour organiser et filtrer la liste des évènements. Les étiquettes sont partagées par tous les évènements de cette installation, et sont retirées lorsqu'un évènement est exporté ou importé."
 
+msgid "From bottom"
+msgstr "Depuis le bas"
+
+msgid "From left"
+msgstr "Depuis la gauche"
+
+msgid "From right"
+msgstr "Depuis la droite"
+
 msgid "From the rule set"
 msgstr "Issu du jeu de règles"
 
+msgid "From top"
+msgstr "Depuis le haut"
+
 msgid "From your server find the screen or rotator you want to display, and sent it to controller using the button with this icon:"
 msgstr "Depuis votre appareil principal, trouvez l’écran ou l’écran rotatif que vous souhaitez afficher, puis envoyez-le au pilote d’écran à l’aide du bouton portant cette icône :"
+
+msgid "Full name"
+msgstr "Nom complet"
 
 msgid "Full-Point Bye"
 msgstr "Bye point entier"
@@ -3876,6 +3983,9 @@ msgstr "Contrainte stricte"
 msgid "Having a close amount of players and prizes represents a risk for a prize not to be attributed."
 msgstr "Avoir un nombre de joueur·euses et de prix proches présente un risque qu'un prix ne soit pas attribué."
 
+msgid "Height"
+msgstr "Hauteur"
+
 msgid "Hide"
 msgstr "Cacher"
 
@@ -3992,6 +4102,9 @@ msgstr "Importer"
 
 msgid "Import TRF file"
 msgstr "Importer un fichier TRF"
+
+msgid "Import a template"
+msgstr "Importer un modèle"
 
 msgid "Import a tournament"
 msgstr "Importer un tournoi"
@@ -4160,6 +4273,9 @@ msgstr "URL [{background_image}] non valide."
 msgid "Invalid account."
 msgstr "Compte invalide."
 
+msgid "Invalid alignment."
+msgstr "Alignement invalide."
+
 #, python-brace-format
 msgid "Invalid amount [{amount}]."
 msgstr "Montant [{amount}] non valide."
@@ -4171,6 +4287,10 @@ msgstr "Numéro d'échiquier non valide [{fixed_board_str}]."
 #, python-brace-format
 msgid "Invalid color [{color}] ([#RRGGBB] expected)."
 msgstr "Couleur non valide [{color}] ([#RRGGBB] attendu)."
+
+#, python-brace-format
+msgid "Invalid custom template id [{id}]."
+msgstr "Identifiant de modèle personnalisé invalide [{id}]."
 
 #, python-brace-format
 msgid "Invalid date format (expected: {format})."
@@ -4207,6 +4327,10 @@ msgid "Invalid format (expected: {format})."
 msgstr "Format invalide (attendu : {format})."
 
 #, python-brace-format
+msgid "Invalid image filename [{name}]."
+msgstr "Nom de fichier image invalide [{name}]."
+
+#, python-brace-format
 msgid "Invalid locale [{locale}]."
 msgstr "Langue [{locale}] non valide."
 
@@ -4220,8 +4344,17 @@ msgstr "Mot de passe invalide."
 msgid "Invalid period:"
 msgstr "Période invalide :"
 
+msgid "Invalid position."
+msgstr "Position invalide."
+
 msgid "Invalid rows"
 msgstr "Lignes invalides"
+
+msgid "Invalid template archive."
+msgstr "Archive de modèle invalide."
+
+msgid "Invalid template path."
+msgstr "Chemin de modèle invalide."
 
 #, python-brace-format
 msgid "Invalid time control format [{time_control}]."
@@ -4245,6 +4378,10 @@ msgstr "Valeur invalide."
 #, python-brace-format
 msgid "Invalid year of birth (expected: {min} - {max})."
 msgstr "Date de naissance invalide (attendue : {min} - {max})"
+
+#, python-brace-format
+msgid "Invalid {label} [{value}]: use only letters, digits, hyphens and underscores."
+msgstr "{label} invalide [{value}] : utilisez uniquement des lettres, des chiffres, des tirets et des traits de soulignement."
 
 #, python-brace-format
 msgid "Invalid {rating_type} rating [{rating}] (expected in range [{min}-{max}])."
@@ -4274,8 +4411,15 @@ msgstr "Il est fortement recommandé de définir au moins un départage."
 msgid "It is not possible to return players on the last round."
 msgstr "Il n'est pas possible de faire revenir des joueur·euses lors de la dernière ronde."
 
+msgid "Italic"
+msgstr "Italique"
+
 msgid "Italy"
 msgstr "Italie"
+
+#, python-brace-format
+msgid "Item [{id}] not found."
+msgstr "Élément [{id}] introuvable."
 
 msgid "Jamaica"
 msgstr "Jamaïque"
@@ -4363,6 +4507,9 @@ msgstr "Dernière vérification"
 
 msgid "Last match:"
 msgstr "Dernier match :"
+
+msgid "Last name"
+msgstr "Nom"
 
 msgid "Last name:"
 msgstr "Nom de famille :"
@@ -4890,6 +5037,9 @@ msgstr "Monétaire"
 msgid "Mongolia"
 msgstr "Mongolie"
 
+msgid "Monospace"
+msgstr "Chasse fixe"
+
 msgid "Montenegro"
 msgstr "Monténégro"
 
@@ -4970,6 +5120,9 @@ msgstr "Ma catégorie"
 
 msgid "My group"
 msgstr "Mon groupe"
+
+msgid "My player cards"
+msgstr "Mes chevalets joueur·euses"
 
 msgid "My rotator"
 msgstr "Mon écran rotatif"
@@ -5115,6 +5268,9 @@ msgstr "Nouveau menu"
 msgid "New password. Leave blank for no change."
 msgstr "Le nouveau mot de passe. Laisser vide pour ne pas changer."
 
+msgid "New place card template"
+msgstr "Nouveau modèle de chevalet"
+
 msgid "New results are in, refresh your browser"
 msgstr "De nouveaux résultats ont été enregistrés, actualisez la page"
 
@@ -5123,6 +5279,9 @@ msgstr "Nouvel écran rotatif"
 
 msgid "New tag"
 msgstr "Nouvelle étiquette"
+
+msgid "New template"
+msgstr "Nouveau modèle"
 
 msgid "New timer"
 msgstr "Nouveau chronomètre"
@@ -5175,6 +5334,9 @@ msgstr "Aucun évènement archivé."
 msgid "No available update"
 msgstr "Pas de mise à jour disponible"
 
+msgid "No built-in templates."
+msgstr "Aucun modèle intégré."
+
 msgid "No competitors are available. Add a valid source tournament first."
 msgstr "Aucun compétiteur disponible. Ajoutez d'abord un tournoi source valide."
 
@@ -5196,6 +5358,9 @@ msgstr "Aucun évènement en cours ne porte les étiquettes sélectionnées."
 msgid "No current events."
 msgstr "Aucun évènement en cours."
 
+msgid "No custom templates yet."
+msgstr "Aucun modèle personnalisé pour le moment."
+
 msgid "No director"
 msgstr "Aucun Directeur·ice "
 
@@ -5210,6 +5375,9 @@ msgstr "Aucun email"
 
 msgid "No events."
 msgstr "Aucun évènement."
+
+msgid "No file was uploaded."
+msgstr "Aucun fichier n’a été téléversé."
 
 msgid "No filtered ranking has been created yet."
 msgstr "Aucun classement filtré n'a encore été créé."
@@ -5238,8 +5406,17 @@ msgstr "Aucun horaire"
 msgid "No hours."
 msgstr "Aucun horaire."
 
+msgid "No image file was uploaded."
+msgstr "Aucun fichier image n’a été téléversé."
+
+msgid "No images yet — upload one."
+msgstr "Aucune image pour le moment — téléversez-en une."
+
 msgid "No internet connection"
 msgstr "Aucune connexion à internet"
+
+msgid "No item selected."
+msgstr "Aucun élément sélectionné."
 
 msgid "No marks"
 msgstr "Aucune marque"
@@ -5685,6 +5862,9 @@ msgstr "Octobre"
 msgid "Oman"
 msgstr "Oman"
 
+msgid "On this computer"
+msgstr "Sur cet ordinateur"
+
 msgid "Once created, you can select the timer to display in the settings of each screen, multi-screen or rotator."
 msgstr "Une fois créé, vous pouvez sélectionner le chronomètre à afficher dans les paramètres de chaque écran, écran multiple ou écran rotatif."
 
@@ -5721,6 +5901,12 @@ msgstr "Ne compter que les N meilleures étapes de chaque compétiteur (laisser 
 msgid "Only current and future events that have been declared as <b>public</b> by the administrator are visible via the network."
 msgstr "Seuls les événements actuels et à venir déclarés comme <b>publics</b> par l’administrateur·ice sont visibles via le réseau."
 
+msgid "Only custom templates can be deleted."
+msgstr "Seuls les modèles personnalisés peuvent être supprimés."
+
+msgid "Only custom templates can be edited."
+msgstr "Seuls les modèles personnalisés peuvent être modifiés."
+
 msgid "Only required for users that need to connect to the server."
 msgstr "Uniquement requis pour les utilisateur·ices devant se connecter au serveur."
 
@@ -5730,6 +5916,9 @@ msgstr "Seule l'année de naissance est nécessaire pour la plupart des tournois
 #, python-brace-format
 msgid "Only {n} more player(s) can be added ({max} max for this rule set)."
 msgstr "Seulement {n} joueur·euse(s) supplémentaires peuvent être ajouté·e(s) ({max} maximum pour ce jeu de règles)."
+
+msgid "Opacity"
+msgstr "Opacité"
 
 msgid "Open"
 msgstr "Ouvrir"
@@ -5742,6 +5931,9 @@ msgstr "Ouvrir le certificat IT1 pour cette norme"
 
 msgid "Open application (browser)"
 msgstr "Ouvrir l'application (navigateur)"
+
+msgid "Open editor"
+msgstr "Ouvrir l’éditeur"
 
 msgid "Open the event"
 msgstr "Ouvrir l'événement"
@@ -5881,6 +6073,9 @@ msgstr "PGN"
 
 msgid "PLAYER'S NAME"
 msgstr "NOM JOUEUR·EUSE"
+
+msgid "Padding"
+msgstr "Marge"
 
 msgid "Page break between matches (one match per page)."
 msgstr "Saut de page entre les matchs (un match par page)."
@@ -6155,6 +6350,12 @@ msgstr "Choisissez au moins un·e joueur·euse — deux tables vides ne peuvent 
 
 msgid "Place Cards"
 msgstr "Chevalets"
+
+msgid "Place card editor"
+msgstr "Éditeur de chevalets"
+
+msgid "Place card templates"
+msgstr "Modèles de chevalets"
 
 msgid "Place card type:"
 msgstr "Type de chevalet :"
@@ -6520,6 +6721,9 @@ msgstr "La configuration est en cours sur le serveur, veuillez patienter…"
 msgid "Please wait…"
 msgstr "Veuillez patienter…"
 
+msgid "Plugin"
+msgstr "Plug-in"
+
 #, python-brace-format
 msgid "Plugin [{plugin}] was enabled."
 msgstr "Le plugin [{plugin}] a été activé."
@@ -6570,8 +6774,17 @@ msgstr "Score positionnel"
 msgid "Positive values are expected."
 msgstr "Des valeurs positives sont attendues."
 
-msgid "Pref."
+msgid "Pre *** PREFIX"
+msgstr "Préf"
+
+msgid "Pref. *** PREFERENCE"
 msgstr "Préf."
+
+msgid "Prefix / suffix"
+msgstr "Préfixe / suffixe"
+
+msgid "Prefix / suffix (shown only when the field has a value)"
+msgstr "Préfixe / suffixe (affiché uniquement lorsque le champ a une valeur)"
 
 msgid "Prepare the settings of the pairing system."
 msgstr "Préparer les paramètres du système d'appariement."
@@ -6581,6 +6794,9 @@ msgstr "Présent·e"
 
 msgid "Present and to pair"
 msgstr "Présent·e et à apparier"
+
+msgid "Preview the card with different sample data."
+msgstr "Prévisualisez le chevalet avec différentes données d’exemple."
 
 msgid "Previous round"
 msgstr "Ronde précédente"
@@ -6874,6 +7090,9 @@ msgstr "A reçu un forfait pour la ronde à venir"
 msgid "Record"
 msgstr "Historique"
 
+msgid "Redo"
+msgstr "Rétablir"
+
 #, python-brace-format
 msgid "Reference to unknown board [{board_id}]."
 msgstr "Référence à un échiquier inconnu [{board_id}]."
@@ -6905,6 +7124,9 @@ msgstr "Rappel : vous devez peut-être mettre à jour les classements des joueu
 
 msgid "Remove"
 msgstr "Retirer"
+
+msgid "Remove fill"
+msgstr "Supprimer le remplissage"
 
 msgid "Remove from team"
 msgstr "Retirer de l'équipe"
@@ -6974,7 +7196,7 @@ msgstr "Requis (1.4.8)"
 msgid "Required by plugin <b>%(plugin)s</b>."
 msgstr "Requis par le plug-in <b>%(plugin)s</b>."
 
-msgid "Res. ** RESULT COLUMN HEADER"
+msgid "Res. *** RESULT COLUMN HEADER"
 msgstr "Rés."
 
 msgid "Reset"
@@ -6991,6 +7213,9 @@ msgstr "Réinitialiser le départage manuel"
 
 msgid "Reset order"
 msgstr "Rétablir l'ordre"
+
+msgid "Reset zoom"
+msgstr "Réinitialiser le zoom"
 
 msgid "Restart to complete the move"
 msgstr "Redémarrer pour appliquer le déplacement"
@@ -7315,6 +7540,9 @@ msgstr "Saint-Vincent-et-les Grenadines"
 msgid "San Marino"
 msgstr "Saint-Marin"
 
+msgid "Sans-serif"
+msgstr "Sans empattement"
+
 msgid "Sao Tome and Principe"
 msgstr "Sao Tomé-et-Principe"
 
@@ -7554,6 +7782,9 @@ msgstr "Septembre"
 msgid "Serbia"
 msgstr "Serbie"
 
+msgid "Serif"
+msgstr "Avec empattement"
+
 msgid "Server is already running!"
 msgstr "Le serveur est déjà en cours d'exécution !"
 
@@ -7694,6 +7925,9 @@ msgstr "Afficher les avertissements"
 msgid "Show/hide all individual games."
 msgstr "Affiche/masque toutes les parties individuelles."
 
+msgid "Show/hide outlines"
+msgstr "Afficher/masquer les contours"
+
 msgid "Show/hide the round lineups on the cards."
 msgstr "Affiche/masque les compositions par ronde sur les cartes."
 
@@ -7702,6 +7936,12 @@ msgstr "Afficher/masquer les écrans créés à partir des écrans multiples."
 
 msgid "Show/hide the team rosters on the cards."
 msgstr "Affiche/masque les effectifs des équipes sur les cartes."
+
+msgid "Side A"
+msgstr "Face A"
+
+msgid "Side B"
+msgstr "Face B"
 
 msgid "Sierra Leone"
 msgstr "Sierra Leone"
@@ -7724,6 +7964,9 @@ msgstr "Écrans simples"
 #, python-brace-format
 msgid "Single Screens ({num}) *** WITH_SHORTCUT_INDICATION"
 msgstr "Écrans&nbsp;<u>S</u>imples ({num})"
+
+msgid "Size (pt)"
+msgstr "Taille (pt)"
 
 #, python-brace-format
 msgid "Size ({unit}): {width}x{height}"
@@ -7853,6 +8096,9 @@ msgstr "Méthode de répartition"
 msgid "Sri Lanka"
 msgstr "Sri Lanka"
 
+msgid "Stacking"
+msgstr "Superposition"
+
 msgid "Staff"
 msgstr "Staff"
 
@@ -7905,8 +8151,14 @@ msgstr "Standard :"
 msgid "Start date"
 msgstr "Date de début"
 
+msgid "Start day"
+msgstr "Jour de début"
+
 msgid "Start from one of these sets, or add your own tags."
 msgstr "Partez de l’un de ces ensembles, ou ajoutez vos propres étiquettes."
+
+msgid "Start month"
+msgstr "Mois de début"
 
 #, python-brace-format, python-format
 msgid "Start of round {} in %%s"
@@ -7914,6 +8166,9 @@ msgstr "Début de la ronde {} dans %%s"
 
 msgid "Start of the sporting season"
 msgstr "Début de la saison sportive"
+
+msgid "Start year"
+msgstr "Année de début"
 
 msgid "Starting rank"
 msgstr "Classement initial"
@@ -7927,8 +8182,14 @@ msgstr "Statut"
 msgid "Std *** STANDARD RATING ACRONYM"
 msgstr "Std"
 
+msgid "Strikethrough"
+msgstr "Barré"
+
 msgid "Strong"
 msgstr "Préférence forte"
+
+msgid "Style"
+msgstr "Style"
 
 msgid "Su *** SUNDAY"
 msgstr "Di"
@@ -7945,6 +8206,9 @@ msgstr "Déconnexion réussie."
 
 msgid "Sudan"
 msgstr "Soudan"
+
+msgid "Suf *** SUFFIX"
+msgstr "Suf"
 
 msgid "Sum of Buchholz"
 msgstr "Somme des Buchholz"
@@ -7996,6 +8260,9 @@ msgstr "Fichier TRF"
 
 msgid "TRF26"
 msgstr "TRF26"
+
+msgid "Table"
+msgstr "Table"
 
 #, python-format
 msgid "Table %(table)d"
@@ -8067,6 +8334,9 @@ msgstr "Compétition par équipes"
 
 msgid "Team list"
 msgstr "Liste des équipes"
+
+msgid "Team name"
+msgstr "Nom de l’équipe"
 
 msgid "Team opponents' records"
 msgstr "Historique des équipes rencontrées"
@@ -8158,8 +8428,18 @@ msgstr "Équipes :"
 msgid "Teams: %(num)d"
 msgstr "Équipes : %(num)d"
 
+#, python-brace-format
+msgid "Template [{id}] not found."
+msgstr "Modèle [{id}] introuvable."
+
+msgid "Template fonts"
+msgstr "Polices du modèle"
+
 msgid "Template:"
 msgstr "Modèle :"
+
+msgid "Templates"
+msgstr "Modèles"
 
 msgid "Text"
 msgstr "Texte"
@@ -8173,8 +8453,14 @@ msgstr "Texte (tournoi devant)"
 msgid "Text after the hour:"
 msgstr "Texte après l'horaire :"
 
+msgid "Text align"
+msgstr "Alignement du texte"
+
 msgid "Text before the hour:"
 msgstr "Texte avant l'horaire :"
+
+msgid "Text colour"
+msgstr "Couleur du texte"
 
 msgid "Text colour:"
 msgstr "Couleur du texte :"
@@ -8223,6 +8509,12 @@ msgstr "L'administrateur·ice a toutes les permissions."
 
 msgid "The age categories in which players are distributed. A category is added to represent the missing players (E.g.: U20 / 50+ → 20+)."
 msgstr "Les catégories d'âge selon lesquelles les joueur·euses sont réparti·es. Une catégorie est ajoutée pour représenter les joueur·euses manquants (ex : U20 / 50+ → 20+)."
+
+msgid "The archive is not a valid place card template."
+msgstr "L’archive n’est pas un modèle de chevalet valide."
+
+msgid "The archive must contain exactly one template file. Export a template to see the expected format."
+msgstr "L’archive doit contenir exactement un fichier de modèle. Exportez un modèle pour voir le format attendu."
 
 #, python-brace-format
 msgid "The average of the [{tie_break}] scores of the opponents played over the board."
@@ -8302,6 +8594,9 @@ msgstr "L'événement n'existe plus, il ne peut donc pas être ouvert."
 
 msgid "The event type cannot be changed after creation."
 msgstr "Le type d'événement ne peut pas être modifié après la création."
+
+msgid "The file is not a valid template archive (expected a zipped file)."
+msgstr "Le fichier n’est pas une archive de modèle valide (fichier .zip compressé attendu)."
 
 msgid "The finishing position counted (e.g. 1 counts first places)."
 msgstr "La place à l'arrivée comptée (p. ex. 1 compte les premières places)."
@@ -8795,6 +9090,12 @@ msgstr "Cette action est impossible pour cette ronde."
 msgid "This board is recorded as an absence (forfeit) from the lineup. Use the lineup dropdown to put a player back on this slot."
 msgstr "Cet échiquier est marqué comme absent (forfait) dans la composition. Utilisez la liste déroulante de composition pour remettre unÏe joueur·euse à cette place."
 
+msgid "This content is too advanced for the block editor."
+msgstr "Ce contenu est trop avancé pour l’éditeur de blocs."
+
+msgid "This content uses advanced Jinja; simplify it to use the block editor."
+msgstr "Ce contenu utilise du Jinja avancé ; simplifiez-le pour utiliser l’éditeur de blocs."
+
 msgid "This data source in unavailable (for more details: Menu > Data sources)."
 msgstr "Cette source de données n'est pas disponible (pour plus de détails : Menu > Sources de données)."
 
@@ -9138,6 +9439,12 @@ msgstr "Titrés (titres M)"
 msgid "Titled players"
 msgstr "Joueur·euses titré·es"
 
+msgid "To back"
+msgstr "Vers l'arrière"
+
+msgid "To front"
+msgstr "Vers l'avant"
+
 #, python-format
 msgid "To learn how to control your network, consult <a href=\"%(link)s\" target=\"_blank\">our documentation</a>."
 msgstr "Pour apprendre à contrôler votre réseau, consultez <a href=\"%(link)s\" target=\"_blank\">notre documentation</a>."
@@ -9322,6 +9629,9 @@ msgstr "Turquie"
 msgid "Turkmenistan"
 msgstr "Turkménistan"
 
+msgid "Two-sided (foldable)"
+msgstr "Recto verso (pliable)"
+
 msgid "Type"
 msgstr "Type"
 
@@ -9385,6 +9695,12 @@ msgstr "Non définis"
 msgid "Undefined *** SINGULAR"
 msgstr "Non défini"
 
+msgid "Underline"
+msgstr "Souligné"
+
+msgid "Undo"
+msgstr "Annuler"
+
 #, python-brace-format
 msgid "Unexpected value [{value}]."
 msgstr "Valeur inattendue [{value}]."
@@ -9399,6 +9715,9 @@ msgstr "Identifiant unique"
 #, python-format
 msgid "Unique ID: [%(uniq_id)s]"
 msgstr "Identifiant unique : [%(uniq_id)s]"
+
+msgid "Unit"
+msgstr "Unité"
 
 msgid "United Arab Emirates"
 msgstr "Émirats arabes unis"
@@ -9426,6 +9745,10 @@ msgstr "Genre [{gender}] inconnu."
 
 msgid "Unknown group."
 msgstr "Groupe inconnu."
+
+#, python-brace-format
+msgid "Unknown place card type [{type}]."
+msgstr "Type de chevalet inconnu [{type}]."
 
 #, python-brace-format
 msgid "Unknown result [{result}]."
@@ -9525,6 +9848,10 @@ msgid "Unrated players"
 msgstr "Joueur·euses non-classé·es"
 
 #, python-brace-format
+msgid "Unsupported image type [{ext}]."
+msgstr "Type d’image non pris en charge [{ext}]."
+
+#, python-brace-format
 msgid "Upcoming ({num})"
 msgstr "À venir ({num})"
 
@@ -9576,6 +9903,9 @@ msgstr "Des mises à jour sont disponibles !"
 
 msgid "Updating"
 msgstr "Mise à jour"
+
+msgid "Upload image"
+msgstr "Téléverser une image"
 
 msgid "Uruguay"
 msgstr "Uruguay"
@@ -9875,8 +10205,14 @@ msgstr "Le score d'équipe utilisé pour calculer le départage. Les points de m
 msgid "White"
 msgstr "Blancs"
 
+msgid "White player"
+msgstr "Joueur·euse Blancs"
+
 msgid "White wins"
 msgstr "Victoire Blancs"
+
+msgid "Width"
+msgstr "Largeur"
 
 msgid "Will not participate by default in upcoming rounds"
 msgstr "Ne participera par défaut pas aux rondes à venir"
@@ -9944,6 +10280,9 @@ msgstr "AAAA-MM-JJ"
 
 msgid "YYYY/MM/DD"
 msgstr "AAAA/MM/JJ"
+
+msgid "Year of birth"
+msgstr "Année de naissance"
 
 msgid "Yemen"
 msgstr "Yémen"
@@ -10098,6 +10437,9 @@ msgstr "Vous devez créer un tournoi avant de créer un groupe non-cumulable."
 msgid "You must create a tournament before creating these screens."
 msgstr "Vous devez créer un tournoi avant de pouvoir créer ces écrans."
 
+msgid "Your text here"
+msgstr "Votre texte ici"
+
 msgid "Youth *** EVENT TAG NAME"
 msgstr "Jeunes"
 
@@ -10120,6 +10462,16 @@ msgstr "Zimbabwe"
 
 msgid "Zonal or sub-zonal (1.4.3c)"
 msgstr "Tournoi zonal ou sous-zonal (1.4.3c)"
+
+msgid "Zoom in"
+msgstr "Zoom avant"
+
+msgid "Zoom out"
+msgstr "Zoom arrière"
+
+#, python-brace-format
+msgid "[{id}] is a reserved item id."
+msgstr "[{id}] est un identifiant d’élément réservé."
 
 #, python-brace-format
 msgid "[{value}] is not a positive value."
@@ -10149,6 +10501,9 @@ msgstr "tous les tournois"
 
 msgid "any OTB result"
 msgstr "tout résultat sur l'échiquier"
+
+msgid "auto"
+msgstr "auto"
 
 #, python-brace-format
 msgid "best {num} stages"
@@ -10234,8 +10589,14 @@ msgstr "https://sharly-chess.com/fr/changelog/"
 msgid "https://sharly-chess.com/getting-started/"
 msgstr "https://sharly-chess.com/fr/bien-demarrer/"
 
+msgid "in"
+msgstr "po"
+
 msgid "incomplete *** INCOMPLETE TEAM"
 msgstr "incomplète"
+
+msgid "item id"
+msgstr "identifiant d’élément"
 
 msgid "last"
 msgstr "dernier"
@@ -10292,6 +10653,9 @@ msgstr "min."
 #, python-brace-format
 msgid "minimum: {value}"
 msgstr "minimum : {value}"
+
+msgid "mm"
+msgstr "mm"
 
 msgid "my-event"
 msgstr "mon-evenement"

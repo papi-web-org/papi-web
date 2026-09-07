@@ -1,0 +1,91 @@
+{% import '/common/macros.j2' as macros with context %}
+
+{% set collection = get_admin_collection_spec('place-card-templates') %}
+{% set collection_view_mode = get_admin_collection_view_mode('place-card-templates') %}
+{% set collection_show_details = get_admin_collection_show_details('place-card-templates') %}
+{% set collection_url = url_for('place-card-templates') %}
+
+<style>
+    .pc-template-preview { display: flex; justify-content: center; overflow: hidden; }
+    .pc-template-preview > * { max-width: 100%; }
+</style>
+
+<div class="p-3">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <h2 class="h4 mb-0">{{ _('Place card templates') }}</h2>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            {% include '/admin/common/collection_controls.html' %}
+            <div class="btn-group dropdown">
+                <button
+                    class="btn btn-primary text-nowrap"
+                    hx-get="{{ url_for('place-card-template-create-modal') }}"
+                    hx-target="body"
+                    hx-indicator="#please-wait"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modal-wrapper"
+                >
+                    <i class="bi-plus-lg pe-1"></i>{{ _('New template') }}
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                ></button>
+                <div class="dropdown-menu dropdown-menu-end">
+                    <button id="pc-import-button" class="dropdown-item">
+                        <i class="bi-upload pe-1"></i>{{ _('Import a template') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Import: a hidden multipart form. The dropdown item opens the native file
+       picker; choosing a .zip (the format produced by Export) auto-submits. #}
+    <form
+        style="display: none"
+        hx-post="{{ url_for('place-card-template-import') }}"
+        enctype="multipart/form-data"
+        hx-target="body"
+        hx-indicator="#please-wait"
+    >
+        <input id="pc-import-file-input" type="file" name="file" accept=".zip" />
+        <button id="pc-import-form-submit-button" type="submit"></button>
+        <script>
+            $('#pc-import-button').click(function () {
+                $('#pc-import-file-input').click();
+            });
+            $('#pc-import-file-input').on('input', function () {
+                $('#pc-import-form-submit-button').click();
+            });
+        </script>
+    </form>
+
+    {% if errors.get('library') %}
+        <div class="alert alert-danger">{{ errors['library'] }}</div>
+    {% endif %}
+
+    <h5 class="mb-2">{{ _('Custom templates') }}</h5>
+    {% with
+        items=custom_templates,
+        empty_message=_('No custom templates yet.'),
+        sortable=false,
+        show_details=collection_show_details
+    %}
+        {% include '/admin/common/collection.html' %}
+    {% endwith %}
+
+    <h5 class="mb-2 mt-4">{{ _('Built-in templates') }}</h5>
+    <p class="text-body-secondary small">
+        {{ _('Built-in templates cannot be edited. Duplicate one to start a custom template.') }}
+    </p>
+    {% with
+        items=embedded_templates,
+        empty_message=_('No built-in templates.'),
+        sortable=false,
+        show_details=collection_show_details
+    %}
+        {% include '/admin/common/collection.html' %}
+    {% endwith %}
+</div>

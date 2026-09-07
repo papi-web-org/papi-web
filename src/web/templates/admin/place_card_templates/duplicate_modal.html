@@ -1,0 +1,36 @@
+<div class="modal-dialog modal-dialog-scrollable" style="--bs-modal-width: min(90vw, 26rem);">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">{{ _('Duplicate template') }}</h2>
+        </div>
+        <div class="modal-body">
+            <form
+                id="modal-form"
+                hx-trigger="submit, enterKeypressFromModal"
+                hx-post="{{ url_for('place-card-template-duplicate', template_id=template_id) }}"
+                hx-target="body"
+                hx-indicator="#please-wait"
+            >
+                <div class="row gy-2 gx-3">
+                    <div class="col-12">
+                        {{ admin_macros.text_input(
+                            name='name', label=_('%(string)s:', string=_('Name')),
+                            placeholder=_('E.g.: %(string)s', string=_('My player cards')),
+                            data=data, errors=errors
+                        ) }}
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" data-bs-dismiss="modal" class="btn btn-secondary text-nowrap">
+                <i class="bi-x-circle-fill"></i>
+                {{ _('Cancel') }}
+            </button>
+            <button type="submit" form="modal-form" class="text-nowrap white btn btn-primary">
+                <i class="bi-copy pe-1"></i>
+                {{ _('Duplicate') }}
+            </button>
+        </div>
+    </div>
+</div>

@@ -15,6 +15,12 @@
     {% include 'event/event_age_category_sets_modal.html' %}
 {% elif modal == 'print' %}
     {% include 'event/print_modal.html' %}
+{% elif modal == 'place-card-template-create' %}
+    {% include 'place_card_templates/create_modal.html' %}
+{% elif modal == 'place-card-template-duplicate' %}
+    {% include 'place_card_templates/duplicate_modal.html' %}
+{% elif modal == 'place-card-template-delete' %}
+    {% include 'place_card_templates/delete_modal.html' %}
 {% elif modal == 'tournament' %}
     {% include 'tournaments/tournament_modal.html' %}
 {% elif modal == 'tournament-delete' %}

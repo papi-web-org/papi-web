@@ -1,31 +1,60 @@
+{% macro _face(side_name, side_back, board, player, pairing, team, preview) %}
+    <div class="card side-{{ side_name }}">
+        {% if editor | default(false) %}
+            <div class="pc-pad-overlay" style="border-width: {{ padding }}{{ unit }};"></div>
+        {% endif %}
+        <div class="card-cell top left"></div>
+        <div class="card-cell top center"></div>
+        <div class="card-cell top right"></div>
+        <div class="card-cell middle left"></div>
+        <div class="card-content">
+            {% for item in items %}
+                {% if item.back == side_back %}
+                    {% if editor | default(false) %}
+                        <div class="pc-edit-item" data-section="{{ item.id }}" data-kind="{{ item.type }}" data-h-align="{{ item.h_align }}" data-v-align="{{ item.v_align }}" data-width="{{ item.width if item.width else '' }}">
+                            {{ item.render_html(event=event, tournament=tournament, player=player, board=board, pairing=pairing, team=team, preview=preview, editor=true) | safe }}
+                        </div>
+                    {% else %}
+                        {{ item.render_html(event=event, tournament=tournament, player=player, board=board, pairing=pairing, team=team, preview=preview) | safe }}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="card-cell middle right"></div>
+        <div class="card-cell bottom left"></div>
+        <div class="card-cell bottom center"></div>
+        <div class="card-cell bottom right"></div>
+    </div>
+{% endmacro %}
+
 {% macro render_card(board, player, pairing, team, preview) %}
-    {% set sides={'back': true, 'front': false} if back_side else {'single': false} %}
-    <div class="card-wrapper {{ template_css_class }}" style="background-color: white">
-        {% for side_name, side_back in sides.items() %}
-            <div class="card side-{{side_name}}">
-                <div class="card-cell top left"></div>
-                <div class="card-cell top center"></div>
-                <div class="card-cell top right"></div>
-                <div class="card-cell middle left"></div>
-                <div class="card-content">
-                    {% for item in items %}
-                        {% if item.back == side_back %}
-                            {{ item.render_html(event=event, tournament=tournament, player=player, board=board, pairing=pairing, team=team, preview=preview) | safe }}
-                        {% endif %}
-                    {% endfor %}
+    {% if editor | default(false) and back_side %}
+        {# Editor: two separate upright faces, each a white card on the grey
+           canvas, with its label above (not on the card). #}
+        {% for side_back in [false, true] %}
+            <div class="pc-side" data-side="{{ 'back' if side_back else 'front' }}">
+                <div class="pc-side-title">{{ _('Side B') if side_back else _('Side A') }}</div>
+                <div class="card-wrapper {{ template_css_class }}" style="background-color: white">
+                    {{ _face('single', side_back, board, player, pairing, team, preview) }}
                 </div>
-                <div class="card-cell middle right"></div>
-                <div class="card-cell bottom left"></div>
-                <div class="card-cell bottom center"></div>
-                <div class="card-cell bottom right"></div>
             </div>
         {% endfor %}
-    </div>
+    {% elif back_side %}
+        {# Print: folded layout - back on top (rotated by CSS), front below. #}
+        <div class="card-wrapper {{ template_css_class }}" style="background-color: white">
+            {{ _face('back', true, board, player, pairing, team, preview) }}
+            {{ _face('front', false, board, player, pairing, team, preview) }}
+        </div>
+    {% else %}
+        <div class="card-wrapper {{ template_css_class }}" style="background-color: white">
+            {{ _face('single', false, board, player, pairing, team, preview) }}
+        </div>
+    {% endif %}
 {% endmacro %}
 
 <style>
     {% for item in items %}
-        {{ item.render_css(template_css_class, unit) | safe  }}
+        {{ item.render_css(template_css_class, unit, preview) | safe  }}
     {% endfor %}
     {{ template_css | safe }}
 </style>

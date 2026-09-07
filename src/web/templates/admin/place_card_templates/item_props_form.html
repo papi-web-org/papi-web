@@ -1,0 +1,263 @@
+{% set h_label = _('From right') if data.anchor_h == 'right' else _('From left') %}
+{% set v_label = _('From bottom') if data.anchor_v == 'bottom' else _('From top') %}
+<div id="pc-anchor" data-section="{{ section }}" class="mb-3 d-flex gap-3 align-items-start">
+    <div>
+        <label class="form-label small mb-1">{{ _('Anchor position') }}</label>
+        <div class="pc-anchor-grid">
+            {% for v in ['top', 'middle', 'bottom'] %}
+                {% for h in ['left', 'center', 'right'] %}
+                    <input type="radio" class="btn-check" name="anchor" id="pc-a-{{ h }}-{{ v }}"
+                           value="{{ h }}:{{ v }}"
+                           {% if h == data.anchor_h and v == data.anchor_v %}checked{% endif %}>
+                    <label class="btn btn-outline-secondary btn-sm" for="pc-a-{{ h }}-{{ v }}"
+                           title="{{ h }} / {{ v }}"><span></span></label>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="flex-grow-1">
+        <div class="mb-2">
+            <label class="form-label small mb-1" for="pc-h-pos">{{ h_label }}</label>
+            <input type="number" step="{{ '0.001' if unit == 'in' else '0.1' }}" class="form-control form-control-sm" id="pc-h-pos"
+                   value="{{ data.h_pos }}" {% if data.anchor_h == 'center' %}disabled{% endif %}>
+        </div>
+        <div>
+            <label class="form-label small mb-1" for="pc-v-pos">{{ v_label }}</label>
+            <input type="number" step="{{ '0.001' if unit == 'in' else '0.1' }}" class="form-control form-control-sm" id="pc-v-pos"
+                   value="{{ data.v_pos }}" {% if data.anchor_v == 'middle' %}disabled{% endif %}>
+        </div>
+    </div>
+</div>
+
+{# Stacking: the item's position in the file decides what covers what. #}
+<div id="pc-stacking" data-section="{{ section }}" class="mb-3">
+    <label class="form-label small mb-1">{{ _('Stacking') }}</label>
+    <div class="btn-group btn-group-sm w-100" role="group">
+        <button type="button" class="btn btn-outline-secondary" data-pc-reorder="back">
+            <i class="bi-back pe-1"></i>{{ _('To back') }}
+        </button>
+        <button type="button" class="btn btn-outline-secondary" data-pc-reorder="front">
+            <i class="bi-front pe-1"></i>{{ _('To front') }}
+        </button>
+    </div>
+</div>
+
+<form id="pc-props-form" onsubmit="return false">
+    <input type="hidden" name="section" value="{{ section }}">
+    <input type="hidden" name="kind" value="{{ kind }}">
+
+    {% if kind == 'image' %}
+        <div class="mb-2">
+            <label class="form-label small mb-1">{{ _('Image') }}</label>
+            {% if errors.get('image') %}
+                <div class="alert alert-danger py-1 px-2 small mb-2">{{ errors['image'] }}</div>
+            {% endif %}
+            <input type="hidden" id="pc-image" name="image" value="{{ data.image }}">
+            <div class="d-flex flex-wrap gap-2">
+                {% for img in images %}
+                    <div class="pc-image-thumb-wrap">
+                        <button type="button" class="pc-image-thumb {% if img.name == data.image %}active{% endif %}" data-pc-image="{{ img.name }}" title="{{ img.name }}">
+                            <img src="{{ img.url }}" alt="{{ img.name }}">
+                        </button>
+                        <button type="button" class="pc-image-del" title="{{ _('Delete image') }}"
+                                data-pc-image-delete="{{ img.name }}"
+                                data-pc-delete-url="{{ url_for('place-card-item-image-delete', template_id=template_id) }}?section={{ section }}"><i class="bi-x-lg"></i></button>
+                    </div>
+                {% endfor %}
+                {% if not images %}
+                    <div class="text-body-secondary small">{{ _('No images yet — upload one.') }}</div>
+                {% endif %}
+            </div>
+            <label class="btn btn-sm btn-outline-primary w-100 mt-2" for="pc-image-upload">
+                <i class="bi-upload pe-1"></i>{{ _('Upload image') }}
+            </label>
+            <input type="file" id="pc-image-upload" accept="image/png,image/jpeg,image/gif,image/svg+xml,image/webp" class="d-none"
+                   data-pc-image-upload="{{ url_for('place-card-item-image-upload', template_id=template_id) }}?section={{ section }}">
+        </div>
+        <div class="mb-2">
+            <label class="form-label small mb-1" for="pc-width">{{ _('Width') }}</label>
+            <input type="number" step="{{ '0.001' if unit == 'in' else '0.1' }}" class="form-control form-control-sm" id="pc-width" name="width" value="{{ data.width }}" placeholder="{{ _('auto') }}">
+        </div>
+    {% else %}
+        {# Options for a field row's <select>: value is the inner expression. #}
+        {% set field_options %}
+            {% for group in field_tokens %}
+                <optgroup label="{{ group.label }}">
+                    {% for token in group.tokens %}
+                        <option value="{{ token.expr | replace('{{', '') | replace('}}', '') | trim }}">{{ token.label }}</option>
+                    {% endfor %}
+                </optgroup>
+            {% endfor %}
+        {% endset %}
+
+        {% macro drag_handle() %}
+            <span class="pc-part-drag text-body-secondary px-1" title="{{ _('Drag to reorder') }}"><i class="bi-grip-vertical"></i></span>
+        {% endmacro %}
+
+        {% macro remove_btn() %}
+            <button type="button" class="btn btn-sm px-1 pc-part-remove" title="{{ _('Remove') }}"><i class="bi-trash"></i></button>
+        {% endmacro %}
+
+        {% macro text_row(value) %}
+            <div class="pc-part pc-part-row d-flex align-items-center gap-1 mb-1" data-part="t">
+                {{ drag_handle() }}
+                <input type="text" class="form-control form-control-sm pc-part-text flex-grow-1" style="min-width: 0" value="{{ value }}" placeholder="{{ _('Your text here') }}">
+                {{ remove_btn() }}
+            </div>
+        {% endmacro %}
+
+        {% macro field_row(expr, prefix, suffix, options) %}
+            <div class="pc-part border rounded p-1 mb-1" data-part="f">
+                <div class="d-flex align-items-center gap-1">
+                    {{ drag_handle() }}
+                    <div class="flex-grow-1" style="min-width: 0">
+                        <select class="form-select form-select-sm sharly-chess-select2 pc-part-expr" data-value="{{ expr }}">{{ options | safe }}</select>
+                    </div>
+                    {{ remove_btn() }}
+                </div>
+                <button type="button" class="btn btn-sm p-0 mt-1 pc-affix-toggle {% if prefix or suffix %}active{% endif %}" title="{{ _('Prefix / suffix (shown only when the field has a value)') }}"><i class="bi-chevron-right pc-affix-caret"></i>{{ _('Prefix / suffix') }}</button>
+                <div class="input-group input-group-sm mt-1 pc-affixes {% if not prefix and not suffix %}d-none{% endif %}">
+                    <span class="input-group-text">{{ _('Pre *** PREFIX') }}</span>
+                    <input type="text" class="form-control pc-part-prefix" value="{{ prefix }}">
+                    <span class="input-group-text">{{ _('Suf *** SUFFIX') }}</span>
+                    <input type="text" class="form-control pc-part-suffix" value="{{ suffix }}">
+                </div>
+            </div>
+        {% endmacro %}
+
+        <div class="mb-2">
+            <label class="form-label small mb-1" for="pc-width">{{ _('Width') }}</label>
+            <div class="input-group input-group-sm">
+                <input type="number" step="{{ '0.001' if unit == 'in' else '0.1' }}" min="0" class="form-control" id="pc-width" name="width" value="{{ data.width }}" placeholder="{{ _('Automatic') }}">
+                <button type="button" class="btn btn-outline-secondary" data-pc-clear-width title="{{ _('Auto-size') }}"><i class="bi-x-lg"></i></button>
+            </div>
+        </div>
+
+        <hr class="my-2">
+
+        <div class="mb-2">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <label class="form-label small mb-0">{{ _('Content') }}</label>
+                <div class="btn-group btn-group-sm ms-auto" role="group" aria-label="{{ _('Editor mode') }}">
+                    <button type="button" class="btn py-0 {% if data.content_mode != 'advanced' %}btn-secondary{% else %}btn-outline-secondary{% endif %}" data-pc-mode="basic" {% if not data.can_be_basic %}disabled title="{{ _('This content is too advanced for the block editor.') }}"{% endif %}>{{ _('Basic') }}</button>
+                    <button type="button" class="btn py-0 {% if data.content_mode == 'advanced' %}btn-secondary{% else %}btn-outline-secondary{% endif %}" data-pc-mode="advanced">{{ _('Advanced') }}</button>
+                </div>
+            </div>
+            {% if data.content_mode == 'advanced' %}
+                {# Complex Jinja (loops, if/elif, with...) can't be built from
+                   blocks, so it is edited directly. #}
+                <textarea class="form-control form-control-sm font-monospace pc-code" name="text" rows="6" spellcheck="false">{{ data.text }}</textarea>
+                {% if not data.can_be_basic %}
+                    <div class="form-text small">{{ _('This content uses advanced Jinja; simplify it to use the block editor.') }}</div>
+                {% endif %}
+            {% else %}
+                <div id="pc-content">
+                    {% for part in data.parts %}
+                        {% if part.k == 't' %}{{ text_row(part.v) }}
+                        {% else %}{{ field_row(part.e, part.p, part.s, field_options) }}{% endif %}
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="content" value="">
+                <div class="d-flex gap-1 mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary flex-fill" data-pc-add-part="t"><i class="bi-plus-lg pe-1"></i>{{ _('Text') }}</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary flex-fill" data-pc-add-part="f"><i class="bi-plus-lg pe-1"></i>{{ _('Field') }}</button>
+                </div>
+                <template id="pc-part-text-tpl">{{ text_row('') }}</template>
+                <template id="pc-part-field-tpl">{{ field_row('', '', '', field_options) }}</template>
+            {% endif %}
+        </div>
+
+        <hr class="my-2">
+
+        <div class="mb-2">
+            <label class="form-label small mb-1" for="pc-font-family">{{ _('Font') }}</label>
+            <select class="form-select form-select-sm sharly-chess-select2" id="pc-font-family" name="font_family">
+                <option value="">{{ _('Default') }}</option>
+                {% for group in font_groups %}
+                    <optgroup label="{{ group.label }}">
+                        {% for font in group.fonts %}
+                            <option value="{{ font.value }}" {% if font.value == data.font_family %}selected{% endif %}>{{ font.label }}</option>
+                        {% endfor %}
+                    </optgroup>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-2">
+            <label class="form-label small mb-1" for="pc-font-size">{{ _('Size (pt)') }}</label>
+            <input type="number" step="0.5" class="form-control form-control-sm" id="pc-font-size" name="font_size" value="{{ data.font_size }}">
+        </div>
+        <label class="form-label small mb-1">{{ _('Style') }}</label>
+        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+            <input type="checkbox" class="btn-check" name="bold" id="pc-bold" {% if data.bold == 'on' %}checked{% endif %}>
+            <label class="btn btn-outline-secondary" for="pc-bold" title="{{ _('Bold') }}"><i class="bi-type-bold"></i></label>
+            <input type="checkbox" class="btn-check" name="italic" id="pc-italic" {% if data.italic == 'on' %}checked{% endif %}>
+            <label class="btn btn-outline-secondary" for="pc-italic" title="{{ _('Italic') }}"><i class="bi-type-italic"></i></label>
+            <input type="checkbox" class="btn-check" name="underline" id="pc-underline" {% if data.underline == 'on' %}checked{% endif %}>
+            <label class="btn btn-outline-secondary" for="pc-underline" title="{{ _('Underline') }}"><i class="bi-type-underline"></i></label>
+            <input type="checkbox" class="btn-check" name="strikethrough" id="pc-strike" {% if data.strikethrough == 'on' %}checked{% endif %}>
+            <label class="btn btn-outline-secondary" for="pc-strike" title="{{ _('Strikethrough') }}"><i class="bi-type-strikethrough"></i></label>
+            <input type="checkbox" class="btn-check" name="uppercase" id="pc-uppercase" {% if data.uppercase == 'on' %}checked{% endif %}>
+            <label class="btn btn-outline-secondary" for="pc-uppercase" title="{{ _('All caps') }}"><span style="font-size: .8rem; font-weight: 600; letter-spacing: .5px;">AA</span></label>
+        </div>
+        <label class="form-label small mb-1">{{ _('Text align') }}</label>
+        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+            <input type="radio" class="btn-check" name="text_align" id="pc-ta-left" value="left" {% if data.text_align == 'left' %}checked{% endif %}>
+            <label class="btn btn-outline-secondary" for="pc-ta-left"><i class="bi-text-left"></i></label>
+            <input type="radio" class="btn-check" name="text_align" id="pc-ta-center" value="center" {% if data.text_align == 'center' %}checked{% endif %}>
+            <label class="btn btn-outline-secondary" for="pc-ta-center"><i class="bi-text-center"></i></label>
+            <input type="radio" class="btn-check" name="text_align" id="pc-ta-right" value="right" {% if data.text_align == 'right' %}checked{% endif %}>
+            <label class="btn btn-outline-secondary" for="pc-ta-right"><i class="bi-text-right"></i></label>
+        </div>
+        <div class="row g-2 mb-2 small">
+            <label class="col-6 d-flex align-items-center gap-2 mb-0" for="pc-color">
+                {{ _('Text') }}
+                <span class="pc-swatch" style="background: {{ data.color }}" title="{{ _('Text colour') }}">
+                    <input type="color" id="pc-color" name="color" value="{{ data.color }}">
+                </span>
+            </label>
+            <span class="col-6 d-flex align-items-center gap-2">
+                {{ _('Fill') }}
+                {# Our span draws the swatch (fill colour, or a transparent
+                   checkerboard when empty). The native picker sits invisibly on
+                   top just to capture the click; a hidden field carries the value
+                   so empty can mean "no fill". #}
+                <span class="pc-swatch {% if not data.background_color %}pc-fill-empty{% endif %}"
+                      {% if data.background_color %}style="background: {{ data.background_color }}"{% endif %}
+                      title="{{ _('Click to set a fill colour') }}">
+                    <input type="hidden" name="background_color" value="{{ data.background_color }}">
+                    <input type="color" id="pc-bg-color" value="{{ data.background_color or '#ffffff' }}">
+                </span>
+                <button type="button" class="btn btn-sm p-0 border-0 text-secondary {% if not data.background_color %}d-none{% endif %}" data-pc-fill-clear title="{{ _('Remove fill') }}"><i class="bi-x-circle"></i></button>
+            </span>
+        </div>
+    {% endif %}
+
+    {# Border + opacity apply to every item kind. #}
+    <div class="row g-2 mb-2 small">
+        <label class="col-6 d-flex align-items-center gap-2 mb-0" for="pc-border-color">
+            {{ _('Border') }}
+            <span class="pc-swatch" style="background: {{ data.border_color or '#000000' }}" title="{{ _('Border colour') }}">
+                <input type="color" id="pc-border-color" name="border_color" value="{{ data.border_color or '#000000' }}">
+            </span>
+        </label>
+        <label class="col-6 d-flex align-items-center gap-2 mb-0" for="pc-border-width">
+            {{ _('Width') }}
+            <input type="number" step="{{ '0.001' if unit == 'in' else '0.1' }}" min="0" class="form-control form-control-sm flex-fill" style="min-width:0" id="pc-border-width" name="border_width" value="{{ data.border_width }}" placeholder="{{ _('None') }}" title="{{ _('Border width') }}">
+        </label>
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label small mb-1">{{ _('Opacity') }}: <span class="pc-opacity-val">{{ (data.opacity | float * 100) | round | int }}%</span></label>
+        <input type="range" class="form-range" name="opacity" min="0" max="1" step="0.05" value="{{ data.opacity }}"
+               oninput="this.parentNode.querySelector('.pc-opacity-val').textContent = Math.round(this.value * 100) + '%'">
+    </div>
+
+    <details class="mb-2">
+        <summary class="small text-body-secondary">{{ _('Custom CSS') }}</summary>
+        <textarea class="form-control form-control-sm font-monospace pc-code mt-2" id="pc-css" name="css" rows="2" spellcheck="false" placeholder="border-radius: 2mm;">{{ data.css }}</textarea>
+    </details>
+
+    <button type="button" class="btn btn-sm btn-outline-danger w-100 mt-2" data-pc-delete>
+        <i class="bi-trash-fill pe-1"></i>{{ _('Delete item') }}
+    </button>
+</form>

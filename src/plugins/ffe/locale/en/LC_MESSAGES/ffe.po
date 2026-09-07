@@ -368,6 +368,9 @@ msgstr ""
 msgid "Lic. *** LICENCE COLUMN HEADER"
 msgstr "Lic."
 
+msgid "Licence"
+msgstr ""
+
 msgid "Licence no. *** LICENCE NUMBER"
 msgstr "Licence no."
 

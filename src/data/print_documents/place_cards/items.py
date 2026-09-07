@@ -2,14 +2,13 @@ import copy
 import logging
 import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
-from functools import cached_property
 from pathlib import Path
 from typing import Self, TYPE_CHECKING
 from xml.etree.ElementTree import ElementTree
 
 from PIL import Image, UnidentifiedImageError
 
-from common import BASE_DIR
+from common.i18n import _
 from common.i18n.utils import parse_jinja_string
 from common.logger import get_logger
 from data.print_documents.place_cards.data import (
@@ -128,9 +127,10 @@ class PlaceCardItem(PlaceCardItemStyle, ABC):
         pairing: PlaceCardPairing | None = None,
         team: PlaceCardTeam | None = None,
         preview: bool = False,
+        editor: bool = False,
     ) -> str:
         """Returns the HTML to output for the item."""
-        return f'<div class="card-item-wrapper {self.css_class}">{self._inner_html(event, tournament, player, board, pairing, team, preview)}</div>'
+        return f'<div class="card-item-wrapper {self.css_class}">{self._inner_html(event, tournament, player, board, pairing, team, preview, editor)}</div>'
 
     @abstractmethod
     def _inner_html(
@@ -142,6 +142,7 @@ class PlaceCardItem(PlaceCardItemStyle, ABC):
         pairing: PlaceCardPairing | None = None,
         team: PlaceCardTeam | None = None,
         preview: bool = False,
+        editor: bool = False,
     ) -> str:
         """Returns the inner HTML of the item."""
         pass
@@ -164,38 +165,53 @@ class PlaceCardItem(PlaceCardItemStyle, ABC):
     def _item_css_properties(
         self,
         unit: str,
+        preview: bool,
     ) -> dict[str, str]:
-        """Returns the CSS for the item."""
+        """Returns the CSS for the item. ``preview`` marks the on-screen
+        renders (editor, library thumbnail, tooltip) as opposed to printing."""
+        # Items are absolutely positioned within their (full-size) wrapper so
+        # that left/right/top/bottom offsets always apply - including centre and
+        # middle, which are expressed as a 50% offset plus a translate. With the
+        # default 0 offsets this renders identically to the previous model.
         item_css: dict[str, str] = {
             'opacity': f'{self.opacity}',
+            'position': 'absolute',
         }
         # font-size must apply to subitems (for federation flags)
         if self.width:
             item_css['width'] = f'{self.width}{unit}'
         if self.height:
             item_css['height'] = f'{self.height}{unit}'
+        transforms: list[str] = []
         match self.h_align:
             case 'left':
                 item_css['left'] = f'{self.h_pos}{unit}'
-                item_css['margin-right'] = 'auto'
-            case 'center':
-                item_css['margin-left'] = 'auto'
-                item_css['margin-right'] = 'auto'
             case 'right':
                 item_css['right'] = f'{self.h_pos}{unit}'
-                item_css['margin-left'] = 'auto'
+            case 'center':
+                item_css['left'] = '50%'
+                transforms.append('translateX(-50%)')
         match self.v_align:
-            case 'top' | 'bottom':
-                item_css['position'] = 'absolute'
-                item_css[self.v_align] = f'{self.v_pos}{unit}'
+            case 'top':
+                item_css['top'] = f'{self.v_pos}{unit}'
+            case 'bottom':
+                item_css['bottom'] = f'{self.v_pos}{unit}'
+            case 'middle':
+                item_css['top'] = '50%'
+                transforms.append('translateY(-50%)')
         if self.max_width is not None:
             item_css['max-width'] = f'{self.max_width}{unit}'
         if self.rotate:
-            item_css['transform'] = f'rotate({self.rotate}deg)'
+            transforms.append(f'rotate({self.rotate}deg)')
+        if transforms:
+            item_css['transform'] = ' '.join(transforms)
         if self.background_color:
             item_css['background-color'] = self.background_color
         if self.color:
             item_css['color'] = self.color
+        if self.border_width and self.border_color:
+            item_css['box-sizing'] = 'border-box'
+            item_css['border'] = f'{self.border_width}{unit} solid {self.border_color}'
         return item_css
 
     def _inner_css_properties(
@@ -210,11 +226,12 @@ class PlaceCardItem(PlaceCardItemStyle, ABC):
         self,
         template_css_class: str,
         unit: str,
+        preview: bool,
     ) -> str:
         """Returns the CSS to print for the item."""
         return (
             f'.{template_css_class} .card-item-wrapper.{self.css_class} {{\n{";\n".join(f"{key}: {value};" for key, value in self._wrapper_css_properties().items())}\n}}\n'
-            + f'.{template_css_class} .{self.css_class} .card-item {{\n{";\n".join(f"{key}: {value};" for key, value in self._item_css_properties(unit).items())}\n}}\n'
+            + f'.{template_css_class} .{self.css_class} .card-item {{\n{";\n".join(f"{key}: {value};" for key, value in self._item_css_properties(unit, preview).items())}\n}}\n'
             + f'.{template_css_class} .{self.css_class} .card-item * {{\n{";\n".join(f"{key}: {value};" for key, value in self._inner_css_properties(unit).items())}\n}}\n'
             + f'.{template_css_class} .{self.css_class} .card-item {{\n{self.css}\n}}\n'
         )
@@ -289,6 +306,7 @@ class PlaceCardText(PlaceCardItem):
         pairing: PlaceCardPairing | None = None,
         team: PlaceCardTeam | None = None,
         preview: bool = False,
+        editor: bool = False,
     ) -> str:
         if not self.display:
             return ''
@@ -306,21 +324,33 @@ class PlaceCardText(PlaceCardItem):
             },
             on_error=self.render_error('Jinja error'),
         )
-        return (
-            f'<div class="card-item {self.css_class}">{content}</div>'
-            if self.display
-            else ''
-        )
+        # In the editor an item that resolves to nothing (e.g. a field with no
+        # value) would be invisible and impossible to select or drag. Show a
+        # dimmed placeholder so it stays visible and editable.
+        if editor and not content.strip():
+            content = f'<span class="pc-empty-placeholder">{_("Text")}</span>'
+        return f'<div class="card-item {self.css_class}">{content}</div>'
 
     def _item_css_properties(
         self,
         unit: str,
+        preview: bool,
     ) -> dict[str, str]:
         item_css: dict[str, str] = {
             'font-size': f'{self.font_size}pt',
             'font-weight': 'bold' if self.bold else 'normal',
             'font-style': 'italic' if self.italic else 'normal',
         }
+        decorations: list[str] = []
+        if self.underline:
+            decorations.append('underline')
+        if self.strikethrough:
+            decorations.append('line-through')
+        item_css['text-decoration'] = ' '.join(decorations) if decorations else 'none'
+        if self.uppercase:
+            item_css['text-transform'] = 'uppercase'
+        if self.font_family:
+            item_css['font-family'] = self._font_family_css()
         if self.italic:
             # Italic glyphs overhang their advance width; without a
             # little slack the item's overflow:hidden clips the last
@@ -329,7 +359,7 @@ class PlaceCardText(PlaceCardItem):
         match self.text_align:
             case 'left' | 'center' | 'right' | 'auto':
                 item_css['text-align'] = self.text_align
-        return super()._item_css_properties(unit) | item_css
+        return super()._item_css_properties(unit, preview) | item_css
 
     def _inner_css_properties(
         self,
@@ -339,7 +369,19 @@ class PlaceCardText(PlaceCardItem):
             # the font style must be set to inner elements to apply to the federation flags.
             'font-size': f'{self.font_size}pt',
         }
+        if self.font_family:
+            # The template sets font-family on every element via `.<template> *`,
+            # so an item override must also reach the item's children.
+            inner_css['font-family'] = self._font_family_css()
         return super()._inner_css_properties(unit) | inner_css
+
+    def _font_family_css(self) -> str:
+        """The CSS font-family for this item. A bundled font file (``*.ttf``) is
+        referenced by its embedded @font-face name; anything else is treated as a
+        ready-made CSS font stack (a generic or web-safe family)."""
+        if self.font_family.lower().endswith('.ttf'):
+            return f'"{Path(self.font_family).stem}", sans-serif'
+        return self.font_family
 
     def __str__(self) -> str:
         return f'{self.__class__.__name__}({self.raw_text=}, {self.back=})'
@@ -369,38 +411,34 @@ class PlaceCardImage(PlaceCardItem):
                 logger.debug('Image file [%s] not found.', file)
             if not image:
                 logger.warning('Image file [%s] not found.', image_name)
-        if not image:
-            self._background_color = 'red'
-        self.image = image or self.default_image
+        # No image chosen, a missing file, or one whose size can't be read: the
+        # item renders as an empty outlined box everywhere - editor, preview and
+        # print - rather than standing in something that would be printed.
+        self.image: Path | None = image
         if not self.width and not self.height:
             self.width = self.height = 30.0 / (1.0 if template.unit == 'mm' else 25.4)
             logger.warning(
                 'Use [width] or [height] in section [%s] to size the image (defaults to %sx%s).',
-                self.image.name,
+                section,
                 self.width,
                 self.height,
             )
         elif not self.width or not self.height:
-            ratio: float = self.get_image_ratio(self.image)
+            ratio: float = self.get_image_ratio(self.image) if self.image else 0.0
             if not ratio:
-                self._background_color = 'red'
-                logger.warning(
-                    'Could not get ratio for image [%s], defaults to [%s].',
-                    self.image.name,
-                    self.default_image.name,
-                )
-                self.image = self.default_image
-                ratio = self.get_image_ratio(self.image)
+                if self.image:
+                    logger.warning(
+                        'Could not get ratio for image [%s].', self.image.name
+                    )
+                self.image = None
+                ratio = 1.0
             if self.width:
                 self.height = self.width / ratio
             else:
                 assert self.height
                 self.width = self.height * ratio
-        self.url = image_file_inline_url(self.image)
-
-    @property
-    def default_image(self) -> Path:
-        return BASE_DIR / 'src/web/static/images/sharly-chess-logo.svg'
+        self.has_image: bool = self.image is not None
+        self.url = image_file_inline_url(self.image) if self.image else ''
 
     @staticmethod
     def get_image_ratio(image_file: Path) -> float:
@@ -458,31 +496,39 @@ class PlaceCardImage(PlaceCardItem):
         pairing: PlaceCardPairing | None = None,
         team: PlaceCardTeam | None = None,
         preview: bool = False,
+        editor: bool = False,
     ) -> str:
+        if not self.has_image:
+            # The icon needs the editor's icon font, so only the editor gets it.
+            inner = '<i class="bi-image"></i>' if editor else ''
+            return (
+                f'<div class="card-item image pc-image-empty {self.css_class}">'
+                f'{inner}</div>'
+            )
         return f'<div class="card-item image {self.css_class}"></div>'
-
-    @cached_property
-    def image_file(
-        self,
-    ) -> Path | None:
-        for image_path in self.image_paths:
-            file: Path = image_path / self.image
-            if not file.is_file():
-                logger.debug('Image file [%s] not found.', file)
-                continue
-            return file
-        logger.warning('Image file [%s] not found.', self.image)
-        return None
 
     def _item_css_properties(
         self,
         unit: str,
+        preview: bool,
     ) -> dict[str, str]:
-        return super()._item_css_properties(unit) | {
-            'background-image': f'url("{self.url}")',
-            'background-size': 'contain',
+        item_css = super()._item_css_properties(unit, preview) | {
             'width': f'{self.width}{unit}',
             'height': f'{self.height}{unit}',
+        }
+        if not self.image:
+            # On screen the empty box is outlined so the problem is visible;
+            # printing leaves a blank space rather than marking the card.
+            item_css |= {'background-color': 'transparent'}
+            if preview:
+                item_css |= {
+                    'border': '1px dashed #adb5bd',
+                    'box-sizing': 'border-box',
+                }
+            return item_css
+        return item_css | {
+            'background-image': f'url("{self.url}")',
+            'background-size': 'contain',
         }
 
     def __str__(self) -> str:

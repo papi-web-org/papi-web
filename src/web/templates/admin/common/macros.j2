@@ -1030,6 +1030,55 @@ with_indicator: display a loading indicator, optional
     ) }}
 {% endmacro %}
 
+{% macro textarea_input(
+    name,
+    label='NO LABEL',
+    placeholder='',
+    help_text='',
+    tooltip_text='',
+    rows=3,
+    monospace=false,
+    data={},
+    errors={},
+    disabled=false
+) %}
+    <!-- textarea_input({{ name }}) -->
+    {% set id=name|replace('_', '-') %}
+    <div id="{{ id }}-wrapper" class="input-block position-relative">
+        <div class="d-flex align-items-center">
+            {%- if label -%}
+                <span id="{{ id }}-label" for="{{ id }}" class="form-check-label flex-grow-1">
+                    <span id="{{ id }}-label-text">{{- label -}}</span>
+                    {%- if tooltip_text -%}
+                        <i
+                            class="bi bi-info-circle-fill ms-2"
+                            {{ macros.tooltip_attributes('', tooltip_text, 'top') }}
+                        ></i>
+                    {%- endif -%}
+                </span>
+            {%- endif -%}
+        </div>
+        <textarea
+            id="{{ id }}"
+            name="{{ name }}"
+            data-testid="{{ id }}"
+            rows="{{ rows }}"
+            placeholder="{{ placeholder }}"
+            aria-describedby="{{ id }}-help {{ id }}-error"
+            class="form-control {% if monospace %}font-monospace{% endif %} {% if name in errors %}is-invalid{% endif %}"
+            {% if disabled %}disabled{% endif %}
+        >{{ data.get(name, '') }}</textarea>
+        {% if help_text %}
+            <div id="{{ id }}-help" class="form-text w-100">{{ help_text }}</div>
+        {% endif %}
+        {% if name in errors %}
+            <div id="{{ id }}-error" class="form-text invalid-feedback" style="display:block">
+                {{ errors[name] }}
+            </div>
+        {% endif %}
+    </div>
+{% endmacro %}
+
 {% macro number_input(
     name,
     label='NO LABEL',

@@ -1,0 +1,60 @@
+{% macro identity(item, view, placement) %}
+    <span class="fw-bold text-truncate d-block">{{ item.name }}</span>
+{% endmacro %}
+
+{% macro type_badge(item, view, placement) %}
+    <span class="badge text-bg-secondary">{{ item.type.static_singular_name() }}</span>
+{% endmacro %}
+
+{# Shown in the cards view body and, expandable, in the list view's details row. #}
+{% macro preview(item, view, placement) %}
+    {% if view != 'list' and previews.get(item.id) %}
+        <div class="pc-template-preview">{{ previews[item.id] | safe }}</div>
+    {% endif %}
+{% endmacro %}
+
+{% macro actions(item, view, placement) %}
+    <div class="collection-actions d-flex align-items-center justify-content-between gap-2">
+        <div class="d-flex align-items-center gap-1">
+            {% call macros.action_tooltip('info', _('Export'), 'top') %}
+                <button
+                    class="btn btn-sm btn-outline-primary"
+                    data-export-url="{{ url_for('place-card-template-export', template_id=item.id) }}"
+                    onclick="downloadFile(this)"
+                >
+                    <i class="bi-download"></i>
+                    {% if view == 'card' %}<span class="ms-1">{{ _('Export') }}</span>{% endif %}
+                </button>
+            {% endcall %}
+        </div>
+        <div class="d-flex align-items-center gap-1">
+            {% if not item.embedded %}
+                {% call macros.action_tooltip('info', _('Open editor'), 'top') %}
+                    <button
+                        class="btn btn-sm btn-outline-primary"
+                        hx-get="{{ url_for('place-card-visual-editor', template_id=item.id) }}"
+                        hx-target="body" hx-push-url="true" hx-indicator="#please-wait"
+                    ><i class="bi-pencil-fill"></i></button>
+                {% endcall %}
+            {% endif %}
+            {% call macros.action_tooltip('info', _('Duplicate'), 'top') %}
+                <button
+                    class="btn btn-sm btn-outline-primary"
+                    hx-get="{{ url_for('place-card-template-duplicate-modal', template_id=item.id) }}"
+                    hx-target="body" hx-indicator="#please-wait"
+                    data-bs-toggle="modal" data-bs-target="#modal-wrapper"
+                ><i class="bi-copy"></i></button>
+            {% endcall %}
+            {% if not item.embedded %}
+                {% call macros.action_tooltip('info', _('Delete'), 'top') %}
+                    <button
+                        class="btn btn-sm btn-outline-danger"
+                        hx-get="{{ url_for('place-card-template-delete-modal', template_id=item.id) }}"
+                        hx-target="body" hx-indicator="#please-wait"
+                        data-bs-toggle="modal" data-bs-target="#modal-wrapper"
+                    ><i class="bi-trash-fill"></i></button>
+                {% endcall %}
+            {% endif %}
+        </div>
+    </div>
+{% endmacro %}

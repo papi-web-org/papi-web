@@ -46,6 +46,7 @@
                 {% include 'js/time_control.js' %}
             </script>
             <script src="{{ url_for('static', file_path='/js/keyboardShortcutManager.js') }}?version={{ sharly_chess_config.version }}"></script>
+            <script src="{{ url_for('static', file_path='/js/place_card_editor.js') }}?version={{ sharly_chess_config.version }}"></script>
         {% endif %}
     </head>
     <body

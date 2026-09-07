@@ -1,0 +1,256 @@
+{% import '/common/macros.j2' as macros with context %}
+<style>
+    /* The copyright footer is noise in the editor, and the empty footer slot +
+       the page-wrapper's reserved footer height leave a gap below the editor.
+       Drop them so the editor reaches the bottom of the window. */
+    #copyright-wrapper, #footer-wrapper { display: none; }
+    #page-wrapper { min-height: 0; }
+    /* Bound the editor to the visible area. The admin shell's #page-wrapper is
+       inline-block with only a min-width, so without an explicit width it would
+       grow to the zoomed card and push the side panels off-screen. */
+    .pc-editor {
+        width: calc(var(--vw, 100vw) - var(--side-bar-width, 0px));
+        height: var(--vh, 100vh);
+        overflow: hidden;
+    }
+    /* min-width:0 lets the zoomed card scroll inside the center column instead
+       of expanding the flex item and pushing the side panels off-screen.
+       margin:auto on a flex child centres both axes yet still allows scrolling
+       to every edge when the card is zoomed larger than the viewport. */
+    #pc-canvas-host { background: var(--bs-body-bg); overflow: auto; min-width: 0; display: flex; }
+    /* A slight tint on the side panels - lighter than the main sidebar. */
+    .pc-side-panel { background: rgba(255, 255, 255, 0.03); }
+    /* Fixed width so the toolbar does not shift as the percentage changes. */
+    #pc-zoom-label { width: 4.5rem; font-variant-numeric: tabular-nums; }
+    /* Image picker thumbnails. */
+    .pc-image-thumb {
+        width: 3rem; height: 3rem; padding: 2px; background: #fff; cursor: pointer;
+        border: 2px solid var(--bs-border-color); border-radius: .25rem;
+        display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .pc-image-thumb.active { border-color: var(--bs-primary); }
+    .pc-image-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    /* A small delete "x" over the thumbnail's top-right corner, shown on hover. */
+    .pc-image-thumb-wrap { position: relative; }
+    .pc-image-del {
+        position: absolute; top: -6px; right: -6px; width: 18px; height: 18px;
+        padding: 0; line-height: 1; border: 0; border-radius: 50%;
+        background: var(--bs-danger); color: #fff; font-size: .6rem;
+        display: none; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .pc-image-thumb-wrap:hover .pc-image-del { display: flex; }
+    /* "Hide outlines" - drop the dotted/solid item outlines and the padding ring
+       for a clean, print-like preview. */
+    #pc-canvas-host.pc-hide-bounds .card-item:not(.pc-selected) { outline: none !important; }
+    #pc-canvas-host.pc-hide-bounds .pc-pad-overlay { display: none !important; }
+    #place-card-canvas { position: relative; margin: auto; }
+    #place-card-canvas .pc-canvas-stage { transform-origin: top left; }
+    /* The card markup reuses the generic class name .card, which collides with
+       Bootstrap's .card component (border + dark background). In real printing
+       the card renders in an isolated iframe; here it is inline, so neutralise
+       Bootstrap's styling. The template's own .card-content background is left
+       untouched. */
+    #place-card-canvas .card {
+        border: 0; border-radius: 0; box-shadow: none;
+        background-color: transparent; margin: 0; min-width: 0;
+    }
+    /* Default text is black in print (isolated iframe); inline it would inherit
+       the dark admin theme's light-grey text. Force print-accurate black; items
+       with their own colour still override it. */
+    /* Items may spill into the padding (dimmed by the overlay) and past the card
+       edge: printing clips them, but the editor shows them so an item dragged
+       out of the card stays visible and can be selected and moved back. */
+    #place-card-canvas .card-content { color: #000; overflow: visible; }
+    #place-card-canvas .card { position: relative; overflow: visible; }
+    /* Padding (safe zone): a translucent grey ring ABOVE the items, so anything
+       spilling into the margin shows through it dimmed. pointer-events:none so
+       items underneath stay clickable/draggable. */
+    #place-card-canvas .pc-pad-overlay {
+        box-sizing: border-box; position: absolute; inset: 0; z-index: 5;
+        border-style: solid; border-color: rgba(130, 130, 130, 0.6);
+        pointer-events: none;
+    }
+    /* Two-sided cards: each face is a separate upright white card on the grey
+       canvas, with its label above (print stacks them folded instead). float:none
+       so the stage measures the full stacked height. */
+    #place-card-canvas .card-wrapper { height: auto !important; float: none !important; box-shadow: 0 1mm 4mm rgba(0, 0, 0, 0.18); }
+    #place-card-canvas .pc-side { position: relative; margin-bottom: 14mm; }
+    #place-card-canvas .pc-side:last-child { margin-bottom: 0; }
+    #place-card-canvas .pc-side.pc-dim { opacity: 0.3; }
+    /* While dragging, the face the item comes from paints above the other one
+       so an item pulled over the neighbouring face stays visible. */
+    #place-card-canvas .pc-side.pc-drag-source { z-index: 10; }
+    /* The face the pointer is over, when it is not the item's own: dropping
+       there moves the item to that side. */
+    #place-card-canvas .pc-side.pc-drop-target .card-wrapper {
+        outline: 2px dashed var(--bs-primary); outline-offset: 2mm;
+    }
+    #place-card-canvas .pc-side-title {
+        color: #6c757d; font-size: 3.5mm; font-weight: 600;
+        border-bottom: 0.3mm solid #adb5bd; margin-bottom: 2.5mm; padding-bottom: 1mm;
+    }
+    /* Wrappers clip content (for print text-overflow); that also clips the
+       selection outline of items sitting against the card edge. Un-clip the
+       wrapper in the editor - the item itself keeps its own clipping. */
+    #place-card-canvas .card-item-wrapper { overflow: visible; }
+    /* Only the real item boxes are interactive; the full-size wrappers are not. */
+    #place-card-canvas .card-item-wrapper { pointer-events: none; }
+    #place-card-canvas .card-item { pointer-events: auto; cursor: grab; }
+    /* Show every field's box so the layout is legible. The outline STYLE tells
+       the sizing: dotted = auto-sized (shrinks to content), solid = fixed width.
+       Colour: grey normally, blue when selected. */
+    #place-card-canvas .card-item { outline: 1px dotted rgba(120, 120, 120, 0.55); }
+    #place-card-canvas .pc-edit-item:not([data-width='']) .card-item { outline-style: solid; }
+    #place-card-canvas .card-item.pc-selected { outline-color: #0d6efd; }
+    /* Placeholder for an item that resolves to no content: visible + selectable. */
+    #place-card-canvas .pc-empty-placeholder { opacity: 0.5; }
+    /* An image item with no image chosen: a dashed empty box with a faint image
+       icon (no fallback logo / red error background). */
+    #place-card-canvas .card-item.image.pc-image-empty {
+        background: transparent !important;
+        border: 1px dashed #adb5bd;
+        display: flex; align-items: center; justify-content: center;
+        color: #adb5bd;
+    }
+    #place-card-canvas .card-item.image.pc-image-empty .bi-image { font-size: 1.5rem; }
+    /* Content builder: drag handle + reorder ghost. A solid background so a
+       block stays opaque while dragged (no canvas/panel showing through). */
+    #pc-content .pc-part-drag { cursor: grab; }
+    #pc-content .pc-part { background: var(--bs-body-bg); }
+    #pc-content .sortable-ghost { opacity: 0.4; }
+    /* Delete button: a borderless red icon that fills red on hover. */
+    #pc-content .pc-part-remove {
+        border: 0;
+        color: var(--bs-danger);
+    }
+    #pc-content .pc-part-remove:hover { background: var(--bs-danger); color: #fff; }
+    /* Code boxes (raw Jinja + custom CSS): smaller monospace, auto-sized to
+       content (JS grows the height, so no manual resize or inner scrollbar). */
+    .pc-side-panel .pc-code { font-size: .7rem; line-height: 1.35; resize: none; overflow: hidden; }
+    /* Prefix/suffix toggle: a small primary-coloured text link under the field,
+       indented to line up with the start of the select above it. */
+    #pc-content .pc-affix-toggle {
+        font-size: .72rem; line-height: 1.3; text-decoration: none;
+        color: var(--bs-secondary-color); margin-left: 1.6rem;
+    }
+    #pc-content .pc-affix-toggle:hover { color: var(--bs-primary); }
+    /* A small disclosure caret that rotates when the affixes are shown. */
+    #pc-content .pc-affix-caret {
+        font-size: .6rem; display: inline-block; margin-right: .25rem;
+        transition: transform .15s;
+    }
+    #pc-content .pc-affix-toggle.active .pc-affix-caret { transform: rotate(90deg); }
+    #place-card-canvas .card-item.pc-dragging { cursor: grabbing; }
+    #pc-drag-badge {
+        position: fixed; z-index: 2000; pointer-events: none;
+        background: #212529; color: #fff; border-radius: .25rem;
+        padding: .1rem .4rem; font-size: .75rem; white-space: nowrap;
+        display: none;
+    }
+    /* Width resize handle: a knob on the selected text item's far edge. */
+    #pc-resize-handle {
+        position: fixed; z-index: 1500; width: 10px; height: 10px;
+        margin: -5px 0 0 -5px; background: #fff; border: 1px solid #0d6efd;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, .15); cursor: ew-resize;
+        display: none; touch-action: none;
+    }
+    /* Filled once the item has a fixed width; hollow while auto-sized. */
+    #pc-resize-handle.pc-set { background: #0d6efd; }
+    /* Colour swatch (text + fill): our span shows the colour (or a transparent
+       checkerboard when empty); the native colour input sits invisibly on top to
+       capture clicks and open the OS picker. */
+    .pc-swatch {
+        /* Match the height of a form-control-sm input (1.5*0.875rem line +
+           0.25rem*2 padding + 1px*2 border), independent of the .small context. */
+        position: relative; display: block; flex: 1 1 auto; min-width: 0;
+        height: calc(1.3125rem + 0.5rem + 2px);
+        border: 1px solid var(--bs-border-color); border-radius: .25rem;
+        overflow: hidden; cursor: pointer; vertical-align: middle;
+    }
+    .pc-swatch > input[type="color"] {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        opacity: 0; margin: 0; padding: 0; border: 0; cursor: pointer;
+    }
+    .pc-fill-empty {
+        background-image:
+            linear-gradient(45deg, #bbb 25%, transparent 25%, transparent 75%, #bbb 75%, #bbb),
+            linear-gradient(45deg, #bbb 25%, #fff 25%, #fff 75%, #bbb 75%, #bbb);
+        background-size: 8px 8px;
+        background-position: 0 0, 4px 4px;
+    }
+    .pc-anchor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; width: 96px; flex: 0 0 auto; }
+    .pc-anchor-grid .btn { padding: 0; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+    .pc-anchor-grid .btn span { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .4; }
+    /* Highlight the chosen anchor with the primary colour. */
+    .pc-anchor-grid .btn-check:checked + .btn {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+        color: #212529;
+    }
+    .pc-anchor-grid .btn-check:checked + .btn span { opacity: 1; }
+</style>
+
+<div class="pc-editor d-flex flex-column">
+    <div class="d-flex align-items-center gap-2 border-bottom p-2">
+        <button
+            class="btn btn-sm btn-outline-secondary"
+            hx-get="{{ url_for('place-card-templates') }}"
+            hx-target="body" hx-push-url="true" hx-indicator="#please-wait"
+        >
+            <i class="bi-chevron-left pe-1"></i>{{ _('Templates') }}
+        </button>
+        <span class="fw-bold ms-2" id="pc-template-name">{{ template_name }}</span>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-outline-secondary" data-pc-undo title="{{ _('Undo') }}" disabled><i class="bi-arrow-counterclockwise"></i></button>
+                <button type="button" class="btn btn-outline-secondary" data-pc-redo title="{{ _('Redo') }}" disabled><i class="bi-arrow-clockwise"></i></button>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary active" data-pc-bounds title="{{ _('Show/hide outlines') }}" aria-pressed="true"><i class="bi-bounding-box"></i></button>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary" data-pc-zoom="out" aria-label="{{ _('Zoom out') }}"><i class="bi-zoom-out"></i></button>
+                <button class="btn btn-outline-secondary" data-pc-zoom="reset" id="pc-zoom-label" title="{{ _('Reset zoom') }}">—</button>
+                <button class="btn btn-outline-secondary" data-pc-zoom="in" aria-label="{{ _('Zoom in') }}"><i class="bi-zoom-in"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-grow-1" style="min-height: 0; overflow: hidden;">
+        <div class="pc-side-panel border-end py-3 px-2 flex-shrink-0" style="width: 210px; overflow: auto;">
+            <h6 class="text-uppercase text-body-secondary small">{{ _('Add') }}</h6>
+            <button class="btn btn-sm btn-outline-primary w-100 mb-2" data-pc-add="text">
+                <i class="bi-fonts pe-1"></i>{{ _('Text') }}
+            </button>
+            <button class="btn btn-sm btn-outline-primary w-100" data-pc-add="image">
+                <i class="bi-image pe-1"></i>{{ _('Image') }}
+            </button>
+
+            <hr />
+
+            <h6 class="text-uppercase text-body-secondary small mt-2">{{ _('Example data') }}</h6>
+            <p class="text-body-secondary small">{{ _('Preview the card with different sample data.') }}</p>
+            <div class="d-grid gap-1">
+                {% for example in examples %}
+                    <button
+                        class="btn btn-sm btn-outline-secondary text-start text-wrap{% if example.index == 0 %} active{% endif %}"
+                        data-pc-example="{{ example.index }}"
+                        title="{{ example.label }}"
+                    >{{ example.label }}</button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="pc-canvas-host" class="flex-grow-1 p-4">
+            {% include '/admin/place_card_templates/visual_editor_canvas.html' %}
+        </div>
+
+        <div class="pc-side-panel border-start py-3 px-2 flex-shrink-0" style="width: 240px; overflow: auto;">
+            <h6 class="text-uppercase text-body-secondary small">{{ _('Properties') }}</h6>
+            <div id="pc-props" class="small text-body-secondary">
+                {{ _('No item selected.') }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="pc-drag-badge"></div>
+<div id="pc-resize-handle" title="{{ _('Drag to set width') }}"></div>

@@ -368,6 +368,9 @@ msgstr "Laisser des tables vides pour les échiquiers fixes"
 msgid "Lic. *** LICENCE COLUMN HEADER"
 msgstr "Lic."
 
+msgid "Licence"
+msgstr "Licence"
+
 msgid "Licence no. *** LICENCE NUMBER"
 msgstr "N° licence"
 

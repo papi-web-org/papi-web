@@ -1,0 +1,26 @@
+<div
+    id="place-card-canvas"
+    data-template-id="{{ template_id }}"
+    data-unit="{{ unit }}"
+    data-move-url="{{ url_for('place-card-item-move', template_id=template_id) }}"
+    data-add-url="{{ url_for('place-card-item-add', template_id=template_id) }}"
+    data-add-field-url="{{ url_for('place-card-item-add-field', template_id=template_id) }}"
+    data-delete-url="{{ url_for('place-card-canvas-delete', template_id=template_id) }}"
+    data-props-url="{{ url_for('place-card-item-props', template_id=template_id) }}"
+    data-patch-url="{{ url_for('place-card-item-patch', template_id=template_id) }}"
+    data-anchor-url="{{ url_for('place-card-item-anchor', template_id=template_id) }}"
+    data-reorder-url="{{ url_for('place-card-item-reorder', template_id=template_id) }}"
+    data-card-props-url="{{ url_for('place-card-card-props', template_id=template_id) }}"
+    data-card-patch-url="{{ url_for('place-card-card-patch', template_id=template_id) }}"
+    data-example-url="{{ url_for('place-card-example', template_id=template_id) }}"
+    data-undo-url="{{ url_for('place-card-undo', template_id=template_id) }}"
+    data-redo-url="{{ url_for('place-card-redo', template_id=template_id) }}"
+    data-can-undo="{{ '1' if can_undo else '' }}"
+    data-can-redo="{{ '1' if can_redo else '' }}"
+    data-example="{{ example | default(0) }}"
+    {% if select_section %}data-pc-select="{{ select_section }}"{% endif %}
+>
+    <div class="pc-canvas-stage">
+        {{ card_html | safe }}
+    </div>
+</div>

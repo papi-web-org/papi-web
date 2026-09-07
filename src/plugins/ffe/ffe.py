@@ -519,11 +519,30 @@ class FfePlugin(Plugin):
         tournament_player: TournamentPlayer,
         place_card_player: PlaceCardPlayer,
     ):
+        plugin_data = FFEUtils.get_player_plugin_data(tournament_player)
+        setattr(place_card_player, 'ffe_league', plugin_data.league)
         setattr(
             place_card_player,
-            'ffe_league',
-            FFEUtils.get_player_plugin_data(tournament_player).league,
+            'ffe_licence',
+            plugin_data.ffe_licence.compact_name if plugin_data.ffe_licence else '',
         )
+        setattr(
+            place_card_player,
+            'ffe_licence_number',
+            plugin_data.ffe_licence_number or '',
+        )
+
+    @hookimpl
+    def place_card_field_tokens(self) -> list[dict[str, str]]:
+        return [
+            {'group': 'FFE', 'label': _('League'), 'expr': '{{ player.ffe_league }}'},
+            {'group': 'FFE', 'label': _('Licence'), 'expr': '{{ player.ffe_licence }}'},
+            {
+                'group': 'FFE',
+                'label': _('Licence number'),
+                'expr': '{{ player.ffe_licence_number }}',
+            },
+        ]
 
     @hookimpl
     def insert_player_profile_links(

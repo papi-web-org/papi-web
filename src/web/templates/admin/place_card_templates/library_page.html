@@ -1,0 +1,15 @@
+{% extends '/admin/common/base.html' %}
+
+{% block title %}{{ _('Place card templates') }}{% endblock %}
+
+{% block wrapper_class %}admin{% endblock %}
+
+{% block admin_header_back_button %}{% endblock admin_header_back_button %}
+
+{% block admin_nav %}
+    {% include '/admin/index/_admin_nav.html' %}
+{% endblock admin_nav %}
+
+{% block admin_content %}
+    {% include '/admin/place_card_templates/_library_content.html' %}
+{% endblock admin_content %}

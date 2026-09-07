@@ -27,11 +27,7 @@ v_align = "bottom"
 v_pos = 0.0
 
 [white_federation_flag]
-text = """
-{% with player = pairing.white_player %}
-    {{ player.federation_flag | safe }}
-{% endwith %}
-"""
+text = "{{ pairing.white_player.federation_flag | safe }}"
 width = 60
 font_size=24
 h_align = "left"
@@ -39,14 +35,8 @@ v_align = "top"
 text_align = "center"
 v_pos = 0.0
 
-[white_name]
-text = """
-{% with player = pairing.white_player %}
-    {{ player.last_name }}<br/>
-    {{ player.first_name }}<br/>
-    {{ player.title }} {{ player.rating }}{{ player.rating_type }}
-{% endwith %}
-"""
+[white_last_name]
+text = "{{ pairing.white_player.last_name }}"
 width = 60.0
 bold = true
 h_align = "left"
@@ -54,17 +44,35 @@ v_align = "top"
 text_align = "center"
 v_pos = 10.0
 
-[white_info]
-text = """
-{% with player = pairing.white_player %}
-    {% if player.team_name %}
-        {{ player.team_name }}
-    {% elif player.club %}
-        {{ player.club }}
-    {% endif %}<br/>
-    {{ player.federation }}
-{% endwith %}
-"""
+[white_first_name]
+text = "{{ pairing.white_player.first_name }}"
+width = 60.0
+bold = true
+h_align = "left"
+v_align = "top"
+text_align = "center"
+v_pos = 15.0
+
+[white_rating]
+text = "{% if pairing.white_player.title %}{{ pairing.white_player.title }} {% endif %}{{ pairing.white_player.rating }}{{ pairing.white_player.rating_type }}"
+width = 60.0
+bold = true
+h_align = "left"
+v_align = "top"
+text_align = "center"
+v_pos = 20.0
+
+[white_club_team]
+text = "{% if pairing.white_player.team_name %}{{ pairing.white_player.team_name }}{% elif pairing.white_player.club %}{{ pairing.white_player.club }}{% endif %}"
+font_size = 11.0
+width = 60.0
+h_align = "left"
+v_align = "bottom"
+text_align = "center"
+v_pos = 10.5
+
+[white_federation]
+text = "{{ pairing.white_player.federation }}"
 font_size = 11.0
 width = 60.0
 h_align = "left"
@@ -73,11 +81,7 @@ text_align = "center"
 v_pos = 6.0
 
 [white_color]
-text = """
-{% with player = pairing.white_player %}
-<span style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background-color: {{ player.color_background }}; color: {{ player.color_text }};">{{ player.color }}</span>
-{% endwith %}
-"""
+text = """<span style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background-color: {{ pairing.white_player.color_background }}; color: {{ pairing.white_player.color_text }};">{{ pairing.white_player.color }}</span>"""
 font_size = 16
 width = 7
 height = 7
@@ -89,11 +93,7 @@ text_align = "center"
 v_pos = 0.0
 
 [black_federation_flag]
-text = """
-{% with player = pairing.black_player %}
-    {{ player.federation_flag | safe }}
-{% endwith %}
-"""
+text = "{{ pairing.black_player.federation_flag | safe }}"
 width = 60
 font_size=24
 h_align = "right"
@@ -101,14 +101,8 @@ v_align = "top"
 text_align = "center"
 v_pos = 0.0
 
-[black_name]
-text = """
-{% with player = pairing.black_player %}
-    {{ player.last_name }}<br/>
-    {{ player.first_name }}<br/>
-    {{ player.title }} {{ player.rating }}{{ player.rating_type }}
-{% endwith %}
-"""
+[black_last_name]
+text = "{{ pairing.black_player.last_name }}"
 width = 60.0
 bold = true
 h_align = "right"
@@ -116,17 +110,35 @@ v_align = "top"
 text_align = "center"
 v_pos = 10.0
 
-[black_info]
-text = """
-{% with player = pairing.black_player %}
-    {% if player.team_name %}
-        {{ player.team_name }}
-    {% elif player.club %}
-        {{ player.club }}
-    {% endif %}<br/>
-    {{ player.federation }}
-{% endwith %}
-"""
+[black_first_name]
+text = "{{ pairing.black_player.first_name }}"
+width = 60.0
+bold = true
+h_align = "right"
+v_align = "top"
+text_align = "center"
+v_pos = 15.0
+
+[black_rating]
+text = "{% if pairing.black_player.title %}{{ pairing.black_player.title }} {% endif %}{{ pairing.black_player.rating }}{{ pairing.black_player.rating_type }}"
+width = 60.0
+bold = true
+h_align = "right"
+v_align = "top"
+text_align = "center"
+v_pos = 20.0
+
+[black_club_team]
+text = "{% if pairing.black_player.team_name %}{{ pairing.black_player.team_name }}{% elif pairing.black_player.club %}{{ pairing.black_player.club }}{% endif %}"
+font_size = 11.0
+width = 60.0
+h_align = "right"
+v_align = "bottom"
+text_align = "center"
+v_pos = 10.5
+
+[black_federation]
+text = "{{ pairing.black_player.federation }}"
 font_size = 11.0
 width = 60.0
 h_align = "right"
@@ -135,11 +147,7 @@ text_align = "center"
 v_pos = 6.0
 
 [black_color]
-text = """
-{% with player = pairing.black_player %}
-<span style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background-color: {{ player.color_background }}; color: {{ player.color_text }};">{{ player.color }}</span>
-{% endwith %}
-"""
+text = """<span style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background-color: {{ pairing.black_player.color_background }}; color: {{ pairing.black_player.color_text }};">{{ pairing.black_player.color }}</span>"""
 font_size = 16
 width = 7
 height = 7
