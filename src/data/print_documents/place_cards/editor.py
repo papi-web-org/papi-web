@@ -830,7 +830,7 @@ class PlaceCardTemplateEditor:
         file = cls._custom_file(template_id)
         container = TOMLContainer(file)
         if section not in container.get_sections():
-            PlaceCardTemplateEditorItemNotFoundError()
+            PlaceCardTemplateEditorItemNotFoundError(section)
         section_data = container.data[section]
         assert isinstance(section_data, dict)
         section_data['h_align'] = h_align
