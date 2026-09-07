@@ -89,7 +89,7 @@
                         {% endif %}
                         <td>{{ row.federation or '—' }}</td>
                         {% for cell in row.rule_cells %}
-                            <td class="num">{% if cell.value is not none %}{{ score(cell.value) }}{% else %}—{% endif %}</td>
+                            <td class="num">{% if cell.rank_progress is not none and cell.rank_progress > 0 %}▲&nbsp;{{ cell.rank_progress }}{% elif cell.rank_progress is not none and cell.rank_progress < 0 %}▼&nbsp;{{ -cell.rank_progress }}{% elif cell.value is none %}—{% else %}{{ score(cell.value) }}{% endif %}</td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
