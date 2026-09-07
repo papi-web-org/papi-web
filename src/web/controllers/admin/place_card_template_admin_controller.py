@@ -319,7 +319,9 @@ class PlaceCardTemplateAdminController(BaseAdminController):
     def _card_context(cls, template_id: str) -> dict[str, Any]:
         return {
             'template_id': template_id,
-            'type_options': cls._type_options(),
+            'type_name': PlaceCardTemplate.load(
+                template_id
+            ).type.static_singular_name(),
             'data': cls._card_props_data(template_id),
         }
 
