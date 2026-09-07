@@ -106,3 +106,40 @@ def test_mismatched_conditional_kept_verbatim():
     parts = parse_content(text)
     assert parts == [{'k': 't', 'v': text}]
     assert serialize_content(parts) == text
+
+
+def _embedded_texts() -> list[tuple[str, str, str]]:
+    """Every (file, section, text) of the built-in templates."""
+    import toml
+
+    from common import EMBEDDED_PLACE_CARDS_DIR
+
+    texts: list[tuple[str, str, str]] = []
+    for file in sorted(EMBEDDED_PLACE_CARDS_DIR.glob('*.template')):
+        for section, data in toml.load(file).items():
+            if isinstance(data, dict) and 'text' in data:
+                texts.append((file.name, section, data['text']))
+    return texts
+
+
+def test_embedded_templates_roundtrip():
+    """The built-in templates stay editable with the visual content builder:
+    what the builder would write back must be byte-identical to what ships."""
+    for name, section, text in _embedded_texts():
+        if not is_builder_friendly(text):
+            continue
+        assert serialize_content(parse_content(text)) == text, f'{name} [{section}]'
+
+
+def test_embedded_optional_fields_are_guarded():
+    """An optional field followed by a separator carries the separator in its
+    own guard, so nothing is left dangling when the value is empty. Advanced
+    items are raw HTML, where a trailing space is markup, not a separator."""
+    for name, section, text in _embedded_texts():
+        if not is_builder_friendly(text):
+            continue
+        for part in parse_content(text):
+            if part.get('k') != 't':
+                continue
+            assert not part['v'].startswith(' '), f'{name} [{section}]: {text}'
+            assert not part['v'].endswith(' '), f'{name} [{section}]: {text}'

@@ -3,7 +3,7 @@ name = "{{ _('Standard (no flag)') }}"
 creator = "Sharly Chess <support@sharly-chess.com>"
 
 [player_name]
-text = "{{ player.title }} {{ player.full_name }}"
+text = "{% if player.title %}{{ player.title }} {% endif %}{{ player.full_name }}"
 font_size = 18.0
 bold = true
 width = 92.0
@@ -15,7 +15,7 @@ bold = true
 h_align = "right"
 
 [player_origin]
-text = "{{ player.federation }} {% if player.club %}- {{ player.club }}{% endif %}"
+text = "{{ player.federation }}{% if player.club %} - {{ player.club }}{% endif %}"
 v_pos = 8.0
 
 [player_category]

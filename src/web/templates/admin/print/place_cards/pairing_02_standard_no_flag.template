@@ -45,7 +45,7 @@ text_align = "center"
 v_pos = 10.0
 
 [white_rating]
-text = "{{ pairing.white_player.title }} {{ pairing.white_player.rating }}{{ pairing.white_player.rating_type }}"
+text = "{% if pairing.white_player.title %}{{ pairing.white_player.title }} {% endif %}{{ pairing.white_player.rating }}{{ pairing.white_player.rating_type }}"
 width = 60.0
 bold = true
 h_align = "left"
@@ -102,7 +102,7 @@ text_align = "center"
 v_pos = 10.0
 
 [black_rating]
-text = "{{ pairing.black_player.title }} {{ pairing.black_player.rating }}{{ pairing.black_player.rating_type }}"
+text = "{% if pairing.black_player.title %}{{ pairing.black_player.title }} {% endif %}{{ pairing.black_player.rating }}{{ pairing.black_player.rating_type }}"
 width = 60.0
 bold = true
 h_align = "right"
