@@ -55,10 +55,11 @@
     /* Default text is black in print (isolated iframe); inline it would inherit
        the dark admin theme's light-grey text. Force print-accurate black; items
        with their own colour still override it. */
-    /* Items may spill into the padding (dimmed by the overlay), but are clipped
-       at the card edge. */
+    /* Items may spill into the padding (dimmed by the overlay) and past the card
+       edge: printing clips them, but the editor shows them so an item dragged
+       out of the card stays visible and can be selected and moved back. */
     #place-card-canvas .card-content { color: #000; overflow: visible; }
-    #place-card-canvas .card { position: relative; overflow: hidden; }
+    #place-card-canvas .card { position: relative; overflow: visible; }
     /* Padding (safe zone): a translucent grey ring ABOVE the items, so anything
        spilling into the margin shows through it dimmed. pointer-events:none so
        items underneath stay clickable/draggable. */

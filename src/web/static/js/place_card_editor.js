@@ -554,7 +554,8 @@
 
     // Offset measured from the item's CURRENT anchor (dragging never changes
     // which anchor is used - that is set only via the anchor picker). Offsets
-    // are NOT clamped: an item may overflow the card edge (clipped by the card).
+    // are NOT clamped: an item may overflow the card edge (printing clips it, the
+    // editor keeps it visible and selectable so it can be dragged back).
     function offsetFor(canvas, wrap, contentRect, itemLeftVp, itemTopVp, itemWvp, itemHvp) {
         const scale = parseFloat(canvas.dataset.scale) || 1;
         const ppu = pxPerUnit(canvas.dataset.unit || 'mm');
