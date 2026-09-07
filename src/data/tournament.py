@@ -634,10 +634,12 @@ class Tournament:
 
     @property
     def round_robin_participation_rule(self) -> bool:
-        """FIDE 6.6: whether round-robin players who completed less than 50%
-        of their games are dropped from the final standings (and their games
-        excluded from opponents' tie-breaks). Off for tournaments created
-        before the rule existed, so their standings stay unchanged."""
+        """FIDE 6.6: whether round-robin participants who completed less than
+        50% of their games are dropped from the final standings and their
+        games annulled (not counted in the opponents' scores and
+        tie-breaks). Set by the arbiter in the tournament form, and off for
+        tournaments created before the rule existed so their standings stay
+        unchanged."""
         return bool(self.stored_tournament.round_robin_participation_rule)
 
     @property

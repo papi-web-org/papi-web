@@ -1103,6 +1103,19 @@ class BergerGridPrintDocument(PrintDocument):
             )
         }
 
+    @cached_property
+    def excluded_grid_ids(self) -> set[int]:
+        """Grid numbers of the participants dropped from the standings
+        (FIDE 6.6): every cell of their row and of their column holds an
+        annulled game, shown crossed out."""
+        return {
+            grid_id
+            for player_id, grid_id in self.grid_id_by_player_id.items()
+            if self.tournament.tournament_players_by_id[
+                player_id
+            ].is_excluded_from_standings
+        }
+
     def grid_results_points(self, results: list[list[Result | None]]) -> str:
         return Utils.points_str(
             sum(
@@ -1170,6 +1183,7 @@ class BergerGridPrintDocument(PrintDocument):
             'tournament': self.tournament,
             'result_grid': self.build_result_grid(),
             'grid_id_by_player_id': self.grid_id_by_player_id,
+            'excluded_grid_ids': self.excluded_grid_ids,
         }
 
 
@@ -1380,6 +1394,8 @@ class TeamBergerGridPrintDocument(PrintDocument):
                     player_cells[tp.id][opponent_id].append(
                         pairing.result.to_berger_table
                     )
+                    if tp.game_is_annulled(pairing):
+                        continue
                     points_by_player_id[tp.id] += pairing.result.points(
                         tournament.point_values
                     )

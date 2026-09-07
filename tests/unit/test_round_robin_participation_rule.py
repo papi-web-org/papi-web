@@ -6,7 +6,10 @@ Built on the TEC round-robin fixture (6 players, 5 rounds, ids 1..6). Player 6 i
 left the tournament having completed only 2/5 < 50%.
 """
 
+import os
 from unittest import TestCase
+from unittest.mock import patch
+from xml.etree import ElementTree
 
 import pytest
 
@@ -216,6 +219,81 @@ class RoundRobinParticipationRuleTestCase(TestCase):
         # Guard against the discovery silently testing nothing.
         self.assertIn('SONNEBORN_BERGER', baseline)
         self.assertIn('WINS', baseline)
+
+    def test_leaver_absent_from_the_sce_results(self) -> None:
+        # The Sharly upload publishes the results, so the leaver is not
+        # sent at all — games included.
+        from plugins.sce.sce_tournament_results_builder import (
+            build_tournament_results,
+        )
+
+        self._forfeit_leaver_rounds([3, 4, 5])
+        tournament = self.tournament
+        tournament.compute_tournament_player_ranks()
+        leaver_number = tournament.tournament_players_by_id[LEAVER_ID].pairing_number
+        payload = build_tournament_results(tournament, 'sce-event', 'sce-tournament')
+        self.assertNotIn(
+            leaver_number,
+            [player['pairingNumber'] for player in payload['players']],
+        )
+        for pairing in payload['pairings']:
+            self.assertNotIn(
+                leaver_number,
+                (pairing['whitePairingNumber'], pairing['blackPairingNumber']),
+            )
+        for ranking in payload['rankings']:
+            self.assertNotIn(
+                leaver_number,
+                [row['pairingNumber'] for row in ranking['standings']],
+            )
+
+    def test_leaver_absent_from_the_chess_results_upload(self) -> None:
+        from plugins.chess_results.chess_results_session import ChessResultsSession
+
+        self._forfeit_leaver_rounds([3, 4, 5])
+        tournament = self.tournament
+        tournament.compute_tournament_player_ranks()
+        leaver_number = str(
+            tournament.tournament_players_by_id[LEAVER_ID].pairing_number
+        )
+        # The upload signs its session ids with the AES credentials, which
+        # are a deployment secret: any well-formed key and IV will do here.
+        credentials = {
+            'CHESS_RESULTS_AES_KEY': '00' * 32,
+            'CHESS_RESULTS_AES_IV': '00' * 16,
+        }
+        with patch.dict(os.environ, credentials):
+            xml = ChessResultsSession(tournament).build_tournament_xml(
+                tournament, 'sid', '1', 'creator', None
+            )
+        root = ElementTree.fromstring(xml)
+        self.assertNotIn(
+            str(LEAVER_ID),
+            [player.attrib['id'] for player in root.iter('player')],
+        )
+        for pairing in root.iter('playerpairing'):
+            self.assertNotIn(
+                leaver_number, (pairing.attrib['whiteno'], pairing.attrib['blackno'])
+            )
+
+    def test_berger_grid_marks_the_annulled_games(self) -> None:
+        # The crosstable keeps every result, but the games that no longer
+        # count for either side — the leaver's row and column — are marked
+        # so the totals can be read.
+        from data.print_documents.documents import BergerGridPrintDocument
+        from data.print_documents.options import TournamentPrintOption
+
+        self._forfeit_leaver_rounds([3, 4, 5])
+        tournament = self.tournament
+        document = BergerGridPrintDocument(
+            options=[TournamentPrintOption(self._event, tournament.id)]
+        )
+        document.event = self._event
+        context = document.template_context
+        self.assertEqual(
+            context['excluded_grid_ids'],
+            {context['grid_id_by_player_id'][LEAVER_ID]},
+        )
 
     def test_rule_disabled_keeps_leaver_ranked(self) -> None:
         self._forfeit_leaver_rounds([3, 4, 5])

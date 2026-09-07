@@ -643,6 +643,9 @@ msgstr "Un·e joueur·euse de cet échiquier est exclu·e du classement final : 
 msgid "A player starts every round with these points added to those they have scored. They only are used for pairing, never for ranking, and are not part of the results submitted for rating."
 msgstr "Un·e joueur·euse commence chaque ronde avec ces points ajoutés à ceux qu'il·elle a marqués. Ils ne sont utilisés que pour l'appariement, jamais pour le classement, et ne font pas partie des résultats transmis pour l'évolution du classement des joueur·euses."
 
+msgid "A player that withdrew or was expelled having completed less than half of their games is not ranked, and their games are annulled: they no longer count in the opponents' scores and tie-breaks."
+msgstr "Un·e joueur·euse qui s'est retiré·e ou a été exclu·e après avoir disputé moins de la moitié de ses parties n'est pas classé·e, et ses parties sont annulées : elles ne comptent plus dans les points et les départages de ses adversaires."
+
 #, python-brace-format
 msgid "A player with {column}=[{value}] already exists in the event."
 msgstr "Un·e joueur·euse avec {column}=[{value}] existe déjà dans l'évènement."
@@ -683,6 +686,9 @@ msgstr "Un ensemble avec ce nom existe déjà."
 #, python-format
 msgid "A team in this match is excluded from the final standings: it completed less than 50%% of its matches (FIDE 6.6)."
 msgstr "Une équipe de ce match est exclue du classement final : moins de 50 %% de ses matchs disputés (FIDE 6.6)."
+
+msgid "A team that withdrew or was expelled having completed less than half of its matches is not ranked, and its matches are annulled: they no longer count in the other teams' scores and tie-breaks."
+msgstr "Une équipe qui s'est retirée ou a été exclue après avoir disputé moins de la moitié de ses matchs n'est pas classée, et ses matchs sont annulés : ils ne comptent plus dans les points et les départages des autres équipes."
 
 msgid "A template name is required."
 msgstr "Un nom de modèle est requis."
@@ -2955,6 +2961,14 @@ msgstr "Nulle"
 
 msgid "Draw:"
 msgstr "Nulle :"
+
+#, python-format
+msgid "Drop players that completed less than 50%% of their games (FIDE 6.6)"
+msgstr "Exclure les joueur·euses ayant disputé moins de 50 %% de leurs parties (FIDE 6.6)"
+
+#, python-format
+msgid "Drop teams that completed less than 50%% of their matches (FIDE 6.6)"
+msgstr "Exclure les équipes ayant disputé moins de 50 %% de leurs matchs (FIDE 6.6)"
 
 msgid "Duplicate"
 msgstr "Dupliquer"

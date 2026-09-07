@@ -39,7 +39,10 @@
                         {% if round_results[0] is none %}
                             <td class="result self-game"></td>
                         {% else %}
-                            <td class="result">
+                            {# An annulled game (either side dropped from the
+                               standings) stays in the table, crossed out. #}
+                            {% set annulled = excluded or loop.index in excluded_grid_ids %}
+                            <td class="result {% if annulled %}annulled{% endif %}">
                                 {% for result in round_results %}
                                     {% if result != 0 %}
                                         {% if not loop.first and result != 0 %}
@@ -54,7 +57,7 @@
                     {% with player=tournament.tournament_players_by_id[player_id] %}
                         {% for tie_break_value in player.tie_break_values %}
                             <td class="tie-break text-nowrap">
-                                {{ tie_break_value }}
+                                {{ '' if excluded else tie_break_value }}
                             </td>
                         {% endfor %}
                     {% endwith %}

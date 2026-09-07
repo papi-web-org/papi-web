@@ -1254,13 +1254,17 @@ class TournamentPlayer(Player):
 
         A forfeit *win* or a game still to be played counts as completed.
         """
-        from data.pairings.systems import RoundRobinPairingSystem
-
         tournament = self.tournament
         if not tournament.round_robin_participation_rule:
             return False
-        if tournament.pairing_system != RoundRobinPairingSystem():
+        if not tournament.pairing_system.supports_participation_rule:
             return False
+        if tournament.is_team_tournament:
+            # A team tournament applies the rule to the teams, which is
+            # what the standings rank: a player of a dropped team is
+            # dropped with it.
+            team = self.team
+            return team is not None and team.is_excluded_from_standings
         scheduled = [
             pairing
             for pairing in self.pairings.values()
@@ -1285,6 +1289,14 @@ class TournamentPlayer(Player):
             return True
         opponent = self.tournament.tournament_players_by_id.get(pairing.opponent_id)
         return opponent is None or not opponent.is_excluded_from_standings
+
+    def game_is_annulled(self, pairing: 'Pairing') -> bool:
+        """Whether *pairing* no longer counts towards the standings (FIDE
+        6.6) because either side was dropped from them. It stays in the
+        tournament table, crossed out, and out of both players' totals."""
+        return self.is_excluded_from_standings or not self.game_counts_for_tie_breaks(
+            pairing
+        )
 
     def round_performance(self, round_index: int) -> float | None:
         """Single-round performance indicator: the Elo rating change (K=20)

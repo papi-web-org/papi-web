@@ -643,6 +643,9 @@ msgstr ""
 msgid "A player starts every round with these points added to those they have scored. They only are used for pairing, never for ranking, and are not part of the results submitted for rating."
 msgstr ""
 
+msgid "A player that withdrew or was expelled having completed less than half of their games is not ranked, and their games are annulled: they no longer count in the opponents' scores and tie-breaks."
+msgstr ""
+
 #, python-brace-format
 msgid "A player with {column}=[{value}] already exists in the event."
 msgstr ""
@@ -682,6 +685,9 @@ msgstr ""
 
 #, python-format
 msgid "A team in this match is excluded from the final standings: it completed less than 50%% of its matches (FIDE 6.6)."
+msgstr ""
+
+msgid "A team that withdrew or was expelled having completed less than half of its matches is not ranked, and its matches are annulled: they no longer count in the other teams' scores and tie-breaks."
 msgstr ""
 
 msgid "A template name is required."
@@ -2954,6 +2960,14 @@ msgid "Draw"
 msgstr ""
 
 msgid "Draw:"
+msgstr ""
+
+#, python-format
+msgid "Drop players that completed less than 50%% of their games (FIDE 6.6)"
+msgstr ""
+
+#, python-format
+msgid "Drop teams that completed less than 50%% of their matches (FIDE 6.6)"
 msgstr ""
 
 msgid "Duplicate"

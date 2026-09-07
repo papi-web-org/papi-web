@@ -58,8 +58,20 @@ class Column[T](ABC):
         """The template to use for the cells. If None, the cell content is used."""
         return None
 
+    def is_cell_blank_for(self, object_: T) -> bool:
+        """Whether the cell is deliberately left empty for this object,
+        whatever its content would be."""
+        return False
+
+    def is_cell_struck_for(self, object_: T) -> bool:
+        """Whether the cell content is shown crossed out, the content
+        itself being unchanged."""
+        return False
+
     def get_cell_classes(self, object_: T) -> str:
         """CSS classes to use for the cells."""
+        if self.is_cell_struck_for(object_):
+            return f'{self.shared_classes} annulled'
         return self.shared_classes
 
     def get_footer_content(self, objects_: list[T]) -> str:

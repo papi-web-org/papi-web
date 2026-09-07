@@ -137,9 +137,12 @@ class PrizeGroup:
 
     def assign_prizes(self):
         self.tournament.compute_tournament_player_ranks()
-        sorted_tournament_players: list[TournamentPlayer] = list(
-            self.tournament.tournament_players_by_rank.values()
-        )
+        # A player dropped from the standings (FIDE 6.6) wins no prize.
+        sorted_tournament_players: list[TournamentPlayer] = [
+            tournament_player
+            for tournament_player in self.tournament.tournament_players_by_rank.values()
+            if not tournament_player.is_excluded_from_standings
+        ]
         # Each category orders its eligible players by its own ranking basis
         # (final standing by default, or a performance metric). Computed once
         # here as it is queried repeatedly during assignment.

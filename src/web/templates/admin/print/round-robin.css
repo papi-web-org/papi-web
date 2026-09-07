@@ -25,7 +25,9 @@
     position: relative;
 }
 
-.rr-table tr.excluded-from-standings td {
-    color: #888;
-    font-style: italic;
+{# A participant dropped from the standings (FIDE 6.6) keeps its
+   results in the table, with its name crossed out. Its annulled games
+   are crossed by print.css. #}
+.rr-table tr.excluded-from-standings td.player {
+    text-decoration: line-through;
 }

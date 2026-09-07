@@ -189,14 +189,12 @@ class Team:
 
         A match still being played, or a bye, is not counted.
         """
-        from data.pairings.systems import TeamRoundRobinPairingSystem
-
         tournament = self.tournament
         if tournament is None:
             return False
         if not tournament.round_robin_participation_rule:
             return False
-        if not isinstance(tournament.pairing_system, TeamRoundRobinPairingSystem):
+        if not tournament.pairing_system.supports_participation_rule:
             return False
         scheduled = [
             team_board

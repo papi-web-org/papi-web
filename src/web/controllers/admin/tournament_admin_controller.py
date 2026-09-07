@@ -298,6 +298,7 @@ class TournamentAdminController(BaseEventAdminController):
             secondary_score_for_colours: bool = True
             team_colour_type: str | None = None
             enforce_roster_order: bool = False
+            round_robin_participation_rule: bool = True
             rule_set: str | None = None
             rule_set_config: dict[str, Any] = {}
             stored_plugin_data: dict[str, dict[str, Any]] = {}
@@ -347,6 +348,9 @@ class TournamentAdminController(BaseEventAdminController):
                     stored_tournament.team_colour_type or TeamColourType.A.value
                 )
                 enforce_roster_order = stored_tournament.enforce_roster_order
+                round_robin_participation_rule = (
+                    stored_tournament.round_robin_participation_rule
+                )
                 rule_set = stored_tournament.rule_set
                 rule_set_config = stored_tournament.rule_set_config
                 for criterion in tournament_criteria:
@@ -450,6 +454,9 @@ class TournamentAdminController(BaseEventAdminController):
                     ),
                     'team_colour_type': team_colour_type,
                     'enforce_roster_order': 'on' if enforce_roster_order else '',
+                    'round_robin_participation_rule': (
+                        'on' if round_robin_participation_rule else ''
+                    ),
                     'rule_set': rule_set,
                     'date_range': WebContext.value_to_date_range_form_data(
                         start_date, stop_date
@@ -885,6 +892,10 @@ class TournamentAdminController(BaseEventAdminController):
             ):
                 errors['mp_draw'] = _('Match points must satisfy loss ≤ draw ≤ win.')
 
+        round_robin_participation_rule = WebContext.form_data_to_bool(
+            data, 'round_robin_participation_rule'
+        )
+
         rule_set_id = WebContext.form_data_to_str(data, field := 'rule_set') or None
         rule_set_type: type['RuleSet'] | None = None
         if rule_set_id:
@@ -982,6 +993,7 @@ class TournamentAdminController(BaseEventAdminController):
             secondary_score_for_colours=secondary_score_for_colours,
             team_colour_type=team_colour_type,
             enforce_roster_order=enforce_roster_order,
+            round_robin_participation_rule=round_robin_participation_rule,
             rule_set=rule_set_id,
             rule_set_config=rule_set_config,
             plugin_data=plugin_data,

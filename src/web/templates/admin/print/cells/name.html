@@ -1,7 +1,10 @@
 {% set player = tournament_player if tournament_player else player %}
+{# A participant dropped from the standings (FIDE 6.6) keeps its row in the
+   tournament table, with its name crossed out. #}
+{% set excluded = tournament_player and tournament_player.is_excluded_from_standings %}
 {% if include_player_history %}
     <div class="player-name">
-        {{ player.full_name }}
+        {% if excluded %}<s>{{ player.full_name }}</s>{% else %}{{ player.full_name }}{% endif %}
         {% with admin_tournament = tournament %}
             <div class="player-history">
                 {% include '/admin/players/history_popover.html' %}
@@ -9,5 +12,5 @@
         {% endwith %}
     </div>
 {% else %}
-    {{ player.full_name }}
+    {% if excluded %}<s>{{ player.full_name }}</s>{% else %}{{ player.full_name }}{% endif %}
 {% endif %}

@@ -46,12 +46,16 @@
                                    player-vs-self diagonal cell. #}
                                 <td class="result self-game {{ _col_sep }}"></td>
                             {% else %}
-                                <td class="result {{ _col_sep }}">
+                                {# An annulled match (either team dropped from
+                                   the standings) stays in the table, crossed
+                                   out. #}
+                                {% set annulled = row.team.is_excluded_from_standings or opponent_row.team.is_excluded_from_standings %}
+                                <td class="result {{ _col_sep }} {% if annulled %}annulled{% endif %}">
                                     {{ player_cells[tp.id][opponent_row.tournament_player.id] | join(' | ') }}
                                 </td>
                             {% endif %}
                         {% endfor %}
-                        <td class="result fw-bold">{{ row.points_str }}</td>
+                        <td class="result fw-bold">{{ '' if row.team.is_excluded_from_standings else row.points_str }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -82,7 +86,8 @@
                             {% if opponent.id == team.id %}
                                 <td class="result self-game"></td>
                             {% else %}
-                                <td class="result">
+                                {% set annulled = team.is_excluded_from_standings or opponent.is_excluded_from_standings %}
+                                <td class="result {% if annulled %}annulled{% endif %}">
                                     {{ cells[team.id][opponent.id]
                                         | selectattr('score')
                                         | map(attribute='score')
@@ -92,7 +97,7 @@
                         {% endfor %}
                         {% set standing = standings_by_team_id.get(team.id) %}
                         {% for tie_break in team_tie_breaks %}
-                            <td class="result text-nowrap">{% if standing %}{{ standing.tie_break_values[loop.index0].display_string_value }}{% endif %}</td>
+                            <td class="result text-nowrap">{% if standing and not team.is_excluded_from_standings %}{{ standing.tie_break_values[loop.index0].display_string_value }}{% endif %}</td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
