@@ -2,14 +2,12 @@ import copy
 import logging
 import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
-from functools import cached_property
 from pathlib import Path
 from typing import Self, TYPE_CHECKING
 from xml.etree.ElementTree import ElementTree
 
 from PIL import Image, UnidentifiedImageError
 
-from common import BASE_DIR
 from common.i18n import _
 from common.i18n.utils import parse_jinja_string
 from common.logger import get_logger
@@ -167,8 +165,10 @@ class PlaceCardItem(PlaceCardItemStyle, ABC):
     def _item_css_properties(
         self,
         unit: str,
+        preview: bool,
     ) -> dict[str, str]:
-        """Returns the CSS for the item."""
+        """Returns the CSS for the item. ``preview`` marks the on-screen
+        renders (editor, library thumbnail, tooltip) as opposed to printing."""
         # Items are absolutely positioned within their (full-size) wrapper so
         # that left/right/top/bottom offsets always apply - including centre and
         # middle, which are expressed as a 50% offset plus a translate. With the
@@ -226,11 +226,12 @@ class PlaceCardItem(PlaceCardItemStyle, ABC):
         self,
         template_css_class: str,
         unit: str,
+        preview: bool,
     ) -> str:
         """Returns the CSS to print for the item."""
         return (
             f'.{template_css_class} .card-item-wrapper.{self.css_class} {{\n{";\n".join(f"{key}: {value};" for key, value in self._wrapper_css_properties().items())}\n}}\n'
-            + f'.{template_css_class} .{self.css_class} .card-item {{\n{";\n".join(f"{key}: {value};" for key, value in self._item_css_properties(unit).items())}\n}}\n'
+            + f'.{template_css_class} .{self.css_class} .card-item {{\n{";\n".join(f"{key}: {value};" for key, value in self._item_css_properties(unit, preview).items())}\n}}\n'
             + f'.{template_css_class} .{self.css_class} .card-item * {{\n{";\n".join(f"{key}: {value};" for key, value in self._inner_css_properties(unit).items())}\n}}\n'
             + f'.{template_css_class} .{self.css_class} .card-item {{\n{self.css}\n}}\n'
         )
@@ -333,6 +334,7 @@ class PlaceCardText(PlaceCardItem):
     def _item_css_properties(
         self,
         unit: str,
+        preview: bool,
     ) -> dict[str, str]:
         item_css: dict[str, str] = {
             'font-size': f'{self.font_size}pt',
@@ -357,7 +359,7 @@ class PlaceCardText(PlaceCardItem):
         match self.text_align:
             case 'left' | 'center' | 'right' | 'auto':
                 item_css['text-align'] = self.text_align
-        return super()._item_css_properties(unit) | item_css
+        return super()._item_css_properties(unit, preview) | item_css
 
     def _inner_css_properties(
         self,
@@ -409,41 +411,34 @@ class PlaceCardImage(PlaceCardItem):
                 logger.debug('Image file [%s] not found.', file)
             if not image:
                 logger.warning('Image file [%s] not found.', image_name)
-        # An item with no image chosen yet renders as an empty placeholder box in
-        # the editor (rather than the fallback logo on a red error background).
-        self.has_image: bool = image is not None
-        if not image:
-            self._background_color = 'red'
-        self.image = image or self.default_image
+        # No image chosen, a missing file, or one whose size can't be read: the
+        # item renders as an empty outlined box everywhere - editor, preview and
+        # print - rather than standing in something that would be printed.
+        self.image: Path | None = image
         if not self.width and not self.height:
             self.width = self.height = 30.0 / (1.0 if template.unit == 'mm' else 25.4)
             logger.warning(
                 'Use [width] or [height] in section [%s] to size the image (defaults to %sx%s).',
-                self.image.name,
+                section,
                 self.width,
                 self.height,
             )
         elif not self.width or not self.height:
-            ratio: float = self.get_image_ratio(self.image)
+            ratio: float = self.get_image_ratio(self.image) if self.image else 0.0
             if not ratio:
-                self._background_color = 'red'
-                logger.warning(
-                    'Could not get ratio for image [%s], defaults to [%s].',
-                    self.image.name,
-                    self.default_image.name,
-                )
-                self.image = self.default_image
-                ratio = self.get_image_ratio(self.image)
+                if self.image:
+                    logger.warning(
+                        'Could not get ratio for image [%s].', self.image.name
+                    )
+                self.image = None
+                ratio = 1.0
             if self.width:
                 self.height = self.width / ratio
             else:
                 assert self.height
                 self.width = self.height * ratio
-        self.url = image_file_inline_url(self.image)
-
-    @property
-    def default_image(self) -> Path:
-        return BASE_DIR / 'src/web/static/images/sharly-chess-logo.svg'
+        self.has_image: bool = self.image is not None
+        self.url = image_file_inline_url(self.image) if self.image else ''
 
     @staticmethod
     def get_image_ratio(image_file: Path) -> float:
@@ -503,35 +498,37 @@ class PlaceCardImage(PlaceCardItem):
         preview: bool = False,
         editor: bool = False,
     ) -> str:
-        if editor and not self.has_image:
+        if not self.has_image:
+            # The icon needs the editor's icon font, so only the editor gets it.
+            inner = '<i class="bi-image"></i>' if editor else ''
             return (
                 f'<div class="card-item image pc-image-empty {self.css_class}">'
-                '<i class="bi-image"></i></div>'
+                f'{inner}</div>'
             )
         return f'<div class="card-item image {self.css_class}"></div>'
-
-    @cached_property
-    def image_file(
-        self,
-    ) -> Path | None:
-        for image_path in self.image_paths:
-            file: Path = image_path / self.image
-            if not file.is_file():
-                logger.debug('Image file [%s] not found.', file)
-                continue
-            return file
-        logger.warning('Image file [%s] not found.', self.image)
-        return None
 
     def _item_css_properties(
         self,
         unit: str,
+        preview: bool,
     ) -> dict[str, str]:
-        return super()._item_css_properties(unit) | {
-            'background-image': f'url("{self.url}")',
-            'background-size': 'contain',
+        item_css = super()._item_css_properties(unit, preview) | {
             'width': f'{self.width}{unit}',
             'height': f'{self.height}{unit}',
+        }
+        if not self.image:
+            # On screen the empty box is outlined so the problem is visible;
+            # printing leaves a blank space rather than marking the card.
+            item_css |= {'background-color': 'transparent'}
+            if preview:
+                item_css |= {
+                    'border': '1px dashed #adb5bd',
+                    'box-sizing': 'border-box',
+                }
+            return item_css
+        return item_css | {
+            'background-image': f'url("{self.url}")',
+            'background-size': 'contain',
         }
 
     def __str__(self) -> str:

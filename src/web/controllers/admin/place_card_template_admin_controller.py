@@ -537,6 +537,8 @@ class PlaceCardTemplateAdminController(BaseAdminController):
                 value = WebContext.form_data_to_float(data, field, empty_value=default)
             except ValueError:
                 return _SKIP
+            if value is None:
+                return None
             value = convert_unit_value(value, from_unit, unit)
             return None if value == default else value
 

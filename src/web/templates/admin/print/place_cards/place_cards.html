@@ -54,7 +54,7 @@
 
 <style>
     {% for item in items %}
-        {{ item.render_css(template_css_class, unit) | safe  }}
+        {{ item.render_css(template_css_class, unit, preview) | safe  }}
     {% endfor %}
     {{ template_css | safe }}
 </style>
