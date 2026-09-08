@@ -11,6 +11,7 @@
 - The edit pencil on editable table columns is now always visible instead of only appearing on hover (5.0.3)
 - Fix error status not cleared after reauthentication with Sharly-Chess.com (5.0.3)
 - Fix _Papi_ export to no longer warns that tie-break values will be missing on the _FFE_ website when the points criterion leads the ranking (5.0.3)
+- Improve the compacted sidebar on the home page (5.0.4)
 
 ## Events
 
