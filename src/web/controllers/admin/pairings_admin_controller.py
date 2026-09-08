@@ -2238,6 +2238,41 @@ class PairingsAdminController(BaseEventAdminController):
         )
 
     @get(
+        path='/pairings/set-current-round-modal/'
+        '{event_uniq_id:str}/{tournament_id:int}/{round:int}',
+        name='admin-pairings-set-current-round-modal',
+    )
+    async def admin_pairings_set_current_round_modal(
+        self,
+        request: HTMXRequest,
+        tournament_id: FromPath[int],
+        round: FromPath[int],
+    ) -> Template:
+        web_context = PairingsAdminWebContext(
+            request,
+            tournament_id=tournament_id,
+            round_=round,
+        )
+
+        return self._admin_event_pairings_render(
+            web_context,
+            {
+                'modal': 'set-current-round',
+                'no_result_board_count': len(
+                    [
+                        board
+                        for board in web_context.admin_boards
+                        if board.result == Result.NO_RESULT
+                        # A board with a hole on either side is a forfeit,
+                        # not a pending result.
+                        and board.stored_board.white_player_id is not None
+                        and board.stored_board.black_player_id is not None
+                    ]
+                ),
+            },
+        )
+
+    @get(
         path='/pairings/ratings-warning-modal/{event_uniq_id:str}/{tournament_id:int}/{round:int}',
         name='pairings-ratings-warning-modal',
     )

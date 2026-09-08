@@ -3894,6 +3894,10 @@ msgstr "Ghana"
 msgid "Give/take away access level {access_level_short_name}"
 msgstr "Donner/retirer le niveau d'accès {access_level_short_name}"
 
+#, python-format
+msgid "Go to round #%(round)d"
+msgstr "Aller à la ronde n°%(round)d"
+
 msgid "Go to the display controller."
 msgstr "Aller au pilote d'afficheur."
 
@@ -7385,6 +7389,10 @@ msgstr "Ronde n°%(round)d"
 #, python-format
 msgid "Round #%(round)d is finished."
 msgstr "La ronde %(round)d est terminée."
+
+#, python-format
+msgid "Round #%(round)d is finished. End it and make round #%(next)d the current round, or just take a look at the next round?"
+msgstr "La ronde n°%(round)d est terminée. La clôturer et définir la ronde n°%(next)d comme ronde courante, ou simplement consulter la ronde suivante ?"
 
 #, python-format
 msgid "Round #%(round)d is running."

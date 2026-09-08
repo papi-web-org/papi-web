@@ -1,0 +1,69 @@
+{% set round_finished = admin_tournament.is_round_finished(admin_round) %}
+<div
+    class="modal-dialog pairing-modal"
+    style="--bs-modal-width: min(90vw, 500px);"
+>
+    <div class="modal-content bg-secondary-subtle">
+        <div class="modal-header">
+            <div class="modal-title fw-bold">
+                <h3>
+                    {{ _('Moving on to round #%(round)d', round=admin_round+1) }}
+                </h3>
+            </div>
+        </div>
+        <div class="modal-body">
+            {% if round_finished %}
+                {{ _('Round #%(round)d is finished. End it and make round '
+                     '#%(next)d the current round, or just take a look at the '
+                     'next round?', round=admin_round, next=admin_round+1) }}
+            {% else %}
+                <h4 class="text-danger">
+                    {{ _('Warning: round #%(round)d is not finished.', round=admin_round) }}
+                </h4>
+                {% if no_result_board_count %}
+                    <ul class="mb-0">
+                        <li>{{ ngettext(
+                            '%(num)d board without result',
+                            '%(num)d boards without result',
+                            no_result_board_count
+                        ) }}</li>
+                    </ul>
+                {% endif %}
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            <button
+                type="button"
+                class="btn btn-secondary text-nowrap"
+                data-bs-dismiss="modal"
+            >
+                <i class="bi-x-circle-fill"></i>
+                {{ _('Cancel') }}
+            </button>
+            <button
+                class="btn {{ 'btn-outline-primary' if round_finished else 'btn-primary' }} text-nowrap"
+                hx-get="{{ url_for('admin-event-pairings-tab', event_uniq_id=admin_event.uniq_id, tournament_id=admin_tournament.id, round=admin_round + 1) }}"
+                hx-target="body"
+                hx-indicator="#please-wait"
+            >
+                <i class="bi-caret-right"></i>
+                {{ _('Go to round #%(round)d', round=admin_round+1) }}
+            </button>
+            {% if round_finished %}
+                <button
+                    class="btn btn-primary text-nowrap"
+                    {% if not client.can_set_current_round(admin_tournament.id) %}
+                        disabled
+                    {% else %}
+                        hx-put="{{ url_for('admin-tournament-set-current-round', event_uniq_id=admin_event.uniq_id, tournament_id=admin_tournament.id, current_round=admin_round + 1) }}"
+                        hx-target="body"
+                        hx-indicator="#please-wait"
+                    {% endif %}
+                >
+                    <i class="bi-flag-fill"></i>
+                    {{ _('End round') }}
+                </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
