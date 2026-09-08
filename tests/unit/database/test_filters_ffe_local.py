@@ -290,3 +290,25 @@ def test_year_of_birth_filter(init_mock_FFE_database):
         result = database.search_player('dupont', 'FRA', 1, None, filters)
         assert len(result) == len(expected_result)
         assert all(player.first_name in expected_result for player in result)
+
+
+def test_club_filter(init_mock_FFE_database):
+    database = init_mock_FFE_database
+    database.database.execute('UPDATE player SET club = ?', ("L'Echiquier Rennais",))
+    database.database.execute(
+        'UPDATE player SET club = ? WHERE fide_id = ?', ('Club de Paris', '0000001')
+    )
+    database.database.commit()
+
+    for club_filter, expected_result_count in [
+        ("L'Echiquier Rennais", 9),
+        ('echiquier', 9),
+        ('PARIS', 1),
+        ('Club de Lyon', 0),
+        # An interpolated value would match every player here.
+        ("' OR 1=1 --", 0),
+    ]:
+        result = database.search_player(
+            'dupont', 'FRA', 1, None, {'club_filter': club_filter}
+        )
+        assert len(result) == expected_result_count
