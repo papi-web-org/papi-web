@@ -25,9 +25,13 @@
         --bs-list-group-active-color: var(--plugin-accent-text-color);
     }
     /* The border of the two buttons stays the same whichever one is selected,
-       otherwise the group looks broken. */
-    .plugin-filter-button {
+       otherwise the group looks broken. The classes are repeated to outweigh
+       the rule of the theme. */
+    .plugin-section .btn.plugin-filter-button {
+        --bs-btn-color: var(--plugin-accent-color);
         --bs-btn-border-color: var(--plugin-accent-color);
+        --bs-btn-hover-color: var(--plugin-accent-text-color);
+        --bs-btn-hover-bg: var(--plugin-accent-color);
         --bs-btn-hover-border-color: var(--plugin-accent-color);
         --bs-btn-active-border-color: var(--plugin-accent-color);
     }
@@ -75,13 +79,6 @@
         .app-window #copyright-wrapper { display: none !important; }
         /* Nothing is displayed under the page in the window. */
         .app-window .plugin-columns { --plugin-columns-margin: 2rem; }
-        /* The accent is too light to outline the buttons on the background of
-           the window, where the border is dark instead. */
-        .app-window .plugin-filter-button {
-            --bs-btn-border-color: var(--plugin-accent-text-color);
-            --bs-btn-hover-border-color: var(--plugin-accent-text-color);
-            --bs-btn-active-border-color: var(--plugin-accent-text-color);
-        }
         /* Tooltips are displayed outside the page, hence the plain selectors.
            The grey they carry is washed out on the light background of the
            window: they take the colours of the admin view instead. */
@@ -95,6 +92,14 @@
         .sharly-chess-tooltip-error {
             --bs-tooltip-color: #ea868f;
         }
+        {% if accent_color %}
+            /* In the window, what is selected carries the accent of the system,
+               which the controls around the page are drawn in. */
+            .app-window .plugin-section {
+                --plugin-accent-color: {{ accent_color }};
+                --plugin-accent-text-color: {{ accent_text_color }};
+            }
+        {% endif %}
     </style>
 {% endif %}
 

@@ -18,6 +18,7 @@ from data.access_levels.actions import AuthAction
 from data.event_metadata import EventMetadata
 from data.loader import EventLoader
 from plugins.manager import Plugin, plugin_manager
+from utils.system_accent import readable_text_color, system_accent_color
 from web.controllers.admin.base_admin_controller import (
     AdminWebContext,
     BaseAdminController,
@@ -97,9 +98,14 @@ class PluginAdminController(BaseAdminController):
             # its own: neither the dark theme of the admin view nor the light
             # theme of the remote screens. The light theme of Bootstrap is the
             # base it is built on, see the app-window class of the page.
+            accent_color = system_accent_color()
             context |= {
                 'theme': 'light',
                 'background_info': {'color': 'transparent'},
+                'accent_color': accent_color,
+                'accent_text_color': readable_text_color(accent_color)
+                if accent_color
+                else None,
             }
         if plugin:
             context |= cls._detail_context(plugin, embedded)

@@ -51,7 +51,6 @@ from common.updaters.sparkle_updater import SparkleUpdater
 from common.updaters.version_updater import VersionUpdater
 from common.updaters.windows_updater import WindowsUpdater
 from database.sqlite.config.config_database import ConfigDatabase
-from gui.button_color import set_button_text_color
 from gui.gui_logger import GUILogHandler
 from gui.selection_popup import limit_popup_height
 from utils import Utils
@@ -345,19 +344,15 @@ class SharlyChessServerToga(toga.App):
 
         # Styles
         self.menu_button_style = Pack(
-            font_weight='bold',
             font_size=10,
         )
         self.active_menu_button_style = Pack(
             font_weight='bold',
             font_size=10,
-            background_color=self.accent_color,
-            color=self.accent_text_color,
         )
         self.button_style = Pack()
         self.active_button_style = Pack(
-            background_color=self.accent_color,
-            color=self.accent_text_color,
+            font_weight='bold',
         )
 
         # GUI elements (initialized in startup)
@@ -373,8 +368,6 @@ class SharlyChessServerToga(toga.App):
         self.requested_window_size: tuple[int, int] | None = None
         #: The buttons displayed as selected, and whether the window is the
         #: active one, which the colour of their text depends on.
-        self._active_buttons: list[toga.Button] = []
-        self.window_has_focus: bool = True
 
         # Home view
         self.home_view: Optional[toga.Box] = None
@@ -440,13 +433,6 @@ class SharlyChessServerToga(toga.App):
             self.settings_view,
         ]
 
-    #: The accent of the application, and the text read on it. They are the
-    #: colours the web interface highlights what is selected with.
-    accent_color = '#d7c9aa'
-    accent_text_color = '#212529'
-    #: The text of the button that is selected on macOS, which paints the
-    #: accent it carries darker than the other platforms do.
-    accent_button_text_color = '#ffffff'
     #: Margin around the content of a view.
     view_margin = 10
     #: Space between two networks of the networks view.
@@ -485,8 +471,6 @@ class SharlyChessServerToga(toga.App):
             size=self.compact_size,
         )
         assert isinstance(self.main_window, toga.Window)
-        self.main_window.on_gain_focus = self._on_window_focus
-        self.main_window.on_lose_focus = self._on_window_blur
         self._build_content()
         self.main_window.show()
 
@@ -979,36 +963,8 @@ class SharlyChessServerToga(toga.App):
         self.gui_loop.call_soon_threadsafe(config_update)
 
     def _set_button_active(self, button: toga.Button, style: Pack, active: bool):
-        """Displays *button* as the one that is selected, or not. The text is
-        coloured on its own: the colour of the style is not applied to the text
-        of a button on macOS."""
+        """Displays *button* as the one that is selected, or not."""
         button.style = style
-        self._active_buttons = [
-            other for other in self._active_buttons if other is not button
-        ]
-        if active:
-            self._active_buttons.append(button)
-        self._color_active_buttons()
-
-    def _color_active_buttons(self):
-        """Writes the text of the buttons that are selected in the colour it is
-        read in: macOS draws the accent they carry much lighter while the window
-        is not the active one, where dark text is what can be read."""
-        color = (
-            self.accent_button_text_color
-            if self.window_has_focus
-            else self.accent_text_color
-        )
-        for button in self._active_buttons:
-            set_button_text_color(button, color)
-
-    def _on_window_focus(self, window, **kwargs):
-        self.window_has_focus = True
-        self._color_active_buttons()
-
-    def _on_window_blur(self, window, **kwargs):
-        self.window_has_focus = False
-        self._color_active_buttons()
 
     def _show_view(self, name: str, is_compact_window: bool = True):
         if self.active_view_name == name:
