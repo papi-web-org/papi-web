@@ -11,6 +11,7 @@ from data.criteria.tournament_criteria import (
     RatingTournamentCriterion,
     TournamentCriterion,
 )
+from data.player_categories import NoCategory, PlayerCategory
 from plugins.manager import plugin_manager
 from utils.entity import EventBoundEntityManager
 from utils.enum import PlayerGender
@@ -82,6 +83,14 @@ class SearchFilterManager:
     def __init__(self, event: 'Event'):
         self.event = event
 
+    @property
+    def _filterable_categories(self) -> list[PlayerCategory]:
+        return [
+            category
+            for category in self.event.player_categories
+            if not isinstance(category, NoCategory)
+        ]
+
     def get_filters(self) -> dict[str, Any]:
         federations = {'': '-'} | {
             federation_id: f'{federation_id} - {federation_name}'
@@ -89,9 +98,6 @@ class SearchFilterManager:
         }
         if 'NON' in federations:
             del federations['NON']
-
-        categories = self.event.player_categories
-        del categories[0]
 
         filters = {
             'federation': {
@@ -104,7 +110,10 @@ class SearchFilterManager:
             },
             'category': {
                 'template_name': 'search_filters/category.html',
-                'options': {category.id: category.name for category in categories},
+                'options': {
+                    category.id: category.name
+                    for category in self._filterable_categories
+                },
             },
             'club': {
                 'template_name': 'search_filters/club.html',
@@ -133,20 +142,19 @@ class SearchFilterManager:
             filter_list: list[tuple] = []
             for criterion in tournament.criteria:
                 if isinstance(criterion, AgeCategoryTournamentCriterion):
-                    categories = [
-                        category.name for category in self.event.player_categories
-                    ]
-                    if criterion.value['min'] in categories:
-                        start = categories.index(criterion.value['min'])
-                    else:
-                        start = 0
-                    if criterion.value['max'] in categories:
-                        stop = categories.index(criterion.value['max'])
-                    else:
-                        stop = len(categories) - 1
-
+                    min_category, max_category = criterion.category_limits
                     filter_list.append(
-                        ('category_filter', [categories[i] for i in range(start, stop)])
+                        (
+                            'category_filter',
+                            [
+                                category.id
+                                for category in self._filterable_categories
+                                if (min_category is None or not category < min_category)
+                                and (
+                                    max_category is None or not max_category < category
+                                )
+                            ],
+                        )
                     )
 
                 elif isinstance(criterion, ClubTournamentCriterion):
