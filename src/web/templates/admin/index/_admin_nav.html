@@ -1,56 +1,132 @@
+{% macro nav_tab_button(nav_id, nav_tab, active) %}
+    <div class="d-flex w-100 justify-content-between align-items-center">
+         <span class="d-flex sidebar-tooltip" {{ macros.tooltip_attributes('info', nav_tab.title, 'right') }}>
+            <button
+                class="nav-link d-flex text-start justify-content-between {{ nav_tab.class }} {% if nav_tab.disabled %}link-secondary{% endif %} {%if active %}active{% endif %}"
+                id="nav-{{ nav_id }}-tab"
+                hx-get="{{ url_for('admin-tab', admin_tab=nav_id) }}"
+                hx-target="body"
+                hx-push-url="true"
+                type="button"
+                role="tab"
+                hx-indicator="#please-wait"
+                {% if nav_tab.disabled %}
+                    disabled
+                {% endif %}
+            >
+                <span>
+                    {% if nav_tab.icon_class %}
+                        <i class="{{ nav_tab.icon_class }} pe-1"></i>
+                    {% endif %}
+                    <span class="expanded-only">
+                        {{ nav_tab.title }}
+                    </span>
+                </span>
+                {% if nav_tab.experimental_features_warning %}
+                    {{ macros.experimental_warning(sharly_chess_config.experimental) }}
+                {% endif %}
+            </button>
+        </span>
+    </div>
+{% endmacro %}
+
 {% for nav_id, nav_tab in nav_tabs.items() %}
     {% if nav_tab.divider %}
         <div class="sidebar-divider my-3"></div>
     {% endif %}
-    {% if nav_tab.section_title %}
-        <div class="d-flex w-100 align-items-center pe-3 mt-3 mb-2">
-            <h4 class="ps-3 mb-0 fs-5 min-width-0">{{ nav_tab.section_title }}</h4>
-            {% if nav_tab.section_create_modal_url %}
+    {% if 'submenu' in nav_tab %}
+        {# Compact mode: the whole section behind a single icon, as its tabs
+           are otherwise reduced to a row of look-alike icons. #}
+        {% with active=(admin_tab in nav_tab.submenu) %}
+            <div
+                class="dropend compact-only w-100 sidebar-tooltip"
+                {{ macros.tooltip_attributes('info', nav_tab.title, 'right') }}
+            >
                 <button
-                    class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center ms-auto flex-shrink-0 p-0"
-                    style="width: 2rem; height: 2rem;"
-                    hx-get="{{ nav_tab.section_create_modal_url }}"
-                    hx-target="body"
-                    hx-indicator="#please-wait"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modal-wrapper"
-                    aria-label="{{ nav_tab.section_create_label }}"
-                    {{ macros.tooltip_attributes('', nav_tab.section_create_label, 'right') }}
-                ><i class="bi-plus-lg" style="margin-right: 0;"></i></button>
-            {% endif %}
-        </div>
-    {% endif %}
-    {% with active=(admin_tab == nav_id) %}
-        <div class="d-flex w-100 justify-content-between align-items-center">
-             <span class="d-flex sidebar-tooltip" {{ macros.tooltip_attributes('info', nav_tab.title, 'right') }}>
-                <button
-                    class="nav-link d-flex text-start justify-content-between {{ nav_tab.class }} {% if nav_tab.disabled %}link-secondary{% endif %} {%if active %}active{% endif %}"
-                    id="nav-{{ nav_id }}-tab"
-                    hx-get="{{ url_for('admin-tab', admin_tab=nav_id) }}"
-                    hx-target="body"
-                    hx-push-url="true"
+                    class="nav-link text-start {% if nav_tab.disabled %}link-secondary{% endif %} {% if active %}active{% endif %}"
                     type="button"
-                    role="tab"
-                    hx-indicator="#please-wait"
+                    data-bs-toggle="dropdown"
                     {% if nav_tab.disabled %}
                         disabled
                     {% endif %}
+                    aria-expanded="false"
                 >
-                    <span>
+                    <div class="d-flex align-items-center">
                         {% if nav_tab.icon_class %}
-                            <i class="{{ nav_tab.icon_class }} pe-1"></i>
+                            <i class="{{ nav_tab.icon_class }}"></i>
                         {% endif %}
-                        <span class="expanded-only">
-                            {{ nav_tab.title }}
-                        </span>
-                    </span>
-                    {% if nav_tab.experimental_features_warning %}
-                        {{ macros.experimental_warning(sharly_chess_config.experimental) }}
-                    {% endif %}
+                        <i class="bi bi-chevron-compact-right sidebar-chevron"></i>
+                    </div>
                 </button>
-            </span>
+                <ul class="dropdown-menu">
+                    {% if nav_tab.create_modal_url %}
+                        <li>
+                            <button
+                                class="dropdown-item d-flex align-items-center px-2"
+                                hx-get="{{ nav_tab.create_modal_url }}"
+                                hx-target="body"
+                                hx-indicator="#please-wait"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modal-wrapper"
+                                type="button"
+                            >
+                                <i class="bi-plus-lg pe-1"></i>
+                                {{ nav_tab.create_label }}
+                            </button>
+                        </li>
+                        <li class="dropdown-divider"></li>
+                    {% endif %}
+                    {% for sub_nav_id, sub_nav_tab in nav_tab.submenu.items() %}
+                        <li>
+                            <button
+                                class="dropdown-item d-flex align-items-center px-2 {% if sub_nav_id == admin_tab %}active{% endif %}"
+                                hx-get="{{ url_for('admin-tab', admin_tab=sub_nav_id) }}"
+                                hx-target="body"
+                                hx-push-url="true"
+                                type="button"
+                                hx-indicator="#please-wait"
+                                {% if sub_nav_tab.disabled %}
+                                    disabled
+                                {% endif %}
+                            >
+                                {% if sub_nav_tab.icon_class %}
+                                    <i class="{{ sub_nav_tab.icon_class }} pe-1"></i>
+                                {% endif %}
+                                {{ sub_nav_tab.title }}
+                            </button>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endwith %}
+
+        {# Expanded mode: the section heading and its tabs, spelled out. #}
+        <div class="expanded-only w-100">
+            <div class="d-flex w-100 align-items-center pe-3 mt-3 mb-2">
+                <h4 class="ps-3 mb-0 fs-5 min-width-0">{{ nav_tab.title }}</h4>
+                {% if nav_tab.create_modal_url %}
+                    <button
+                        class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center ms-auto flex-shrink-0 p-0"
+                        style="width: 2rem; height: 2rem;"
+                        hx-get="{{ nav_tab.create_modal_url }}"
+                        hx-target="body"
+                        hx-indicator="#please-wait"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-wrapper"
+                        aria-label="{{ nav_tab.create_label }}"
+                        {{ macros.tooltip_attributes('', nav_tab.create_label, 'right') }}
+                    ><i class="bi-plus-lg" style="margin-right: 0;"></i></button>
+                {% endif %}
+            </div>
         </div>
-    {% endwith %}
+        {% for sub_nav_id, sub_nav_tab in nav_tab.submenu.items() %}
+            <div class="expanded-only w-100">
+                {{ nav_tab_button(sub_nav_id, sub_nav_tab, admin_tab == sub_nav_id) }}
+            </div>
+        {% endfor %}
+    {% else %}
+        {{ nav_tab_button(nav_id, nav_tab, admin_tab == nav_id) }}
+    {% endif %}
 {% endfor %}
 {% if client.can_manage_source_databases or client.can_manage_application_settings %}
     <div class="sidebar-divider my-3"></div>
