@@ -31,6 +31,20 @@
         --bs-btn-hover-border-color: var(--plugin-accent-color);
         --bs-btn-active-border-color: var(--plugin-accent-color);
     }
+    /* The primary button of the light theme is the grey of the remote screens:
+       the accent is what the section highlights with. The class is repeated to
+       outweigh the rule of the theme. */
+    .plugin-section .btn.btn-primary {
+        --bs-btn-bg: var(--plugin-accent-color);
+        --bs-btn-border-color: var(--plugin-accent-color);
+        --bs-btn-color: var(--plugin-accent-text-color);
+        --bs-btn-hover-bg: var(--plugin-accent-color);
+        --bs-btn-hover-border-color: var(--plugin-accent-color);
+        --bs-btn-hover-color: var(--plugin-accent-text-color);
+        --bs-btn-active-bg: var(--plugin-accent-color);
+        --bs-btn-active-border-color: var(--plugin-accent-color);
+        --bs-btn-active-color: var(--plugin-accent-text-color);
+    }
     /* A switch that is on carries the blue of Bootstrap, which only the dark
        theme replaces. */
     .plugin-section .form-check-input:checked {
