@@ -29,15 +29,15 @@
 - Omit empty lines when importing players (5.0.0)
 - The player search results now close when clicking outside them (5.0.2)
 - When creating several players in a row, only the tournament and team are carried over to the next player; the other fields start empty (5.0.2)
-- Fix : searching or importing players no longer crashes when the local _FIDE_ database has not yet been updated to the version 5 format (5.0.3)
+- Fix: searching or importing players no longer crashes when the local _FIDE_ database has not yet been updated to the version 5 format (5.0.3)
 
 ## Teams
 
 - _Sharly Chess_ now supports **Teams** events (Swiss, Round-Robin, Scheveningen and Molter pairings)! (5.0.0)
 - The match points scored by an absent team can now be set (5.0.4)
 - The team ranking counts forfeited matches in a new **F** column (5.0.4)
-- Fix : Molter tournaments no longer ask for match-point values they never use (5.0.4)
-- Fix : the line-up editor groups the rounds sharing a line-up again (5.0.4)
+- Fix: Molter tournaments no longer ask for match-point values they never use (5.0.4)
+- Fix: the line-up editor groups the rounds sharing a line-up again (5.0.4)
 
 ## Championships
 
@@ -52,7 +52,7 @@
 - Pairing settings can be prepared before pairing round #1 and always reviewed (5.0.0)
 - Warn when top acceleration groups have an odd number of players at round #1 (5.0.0)
 - Fixed a bug concerning the hanling of the player's own keizer score (5.0.2)
-- Fix : the pairing-system warning icon in the tournament list view now shows its explanation on hover (5.0.3)
+- Fix: the pairing-system warning icon in the tournament list view now shows its explanation on hover (5.0.3)
 - Display a clearer error message when the pairing engine fails to produce pairings (5.0.3)
 
 ## Rankings
