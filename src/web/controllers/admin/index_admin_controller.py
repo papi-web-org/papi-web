@@ -166,17 +166,8 @@ class IndexAdminController(BaseAdminController):
             },
         }
         if web_context.client.can_view_passed_events:
-            nav_tabs |= {
+            event_submenu: dict[str, dict[str, Any]] = {
                 'current_events': {
-                    'section_title': _('Events'),
-                    'section_create_modal_url': (
-                        web_context.request.app.route_reverse(
-                            'admin-event-modal', admin_tab='home', action='create'
-                        )
-                        if web_context.client.can_create_events
-                        else None
-                    ),
-                    'section_create_label': _('Create an event'),
                     'title': _('Current ({num})').format(
                         num=len(current_events) or '-'
                     ),
@@ -189,7 +180,6 @@ class IndexAdminController(BaseAdminController):
                     else _('No current events.'),
                     'icon_class': 'bi-calendar indented',
                     'page_title': _('Current events'),
-                    'divider': True,
                 },
                 'coming_events': {
                     'title': _('Upcoming ({num})').format(
@@ -227,6 +217,25 @@ class IndexAdminController(BaseAdminController):
                     'empty_str': _('No archived events.'),
                     'icon_class': 'bi-archive indented',
                     'page_title': _('Archived events'),
+                },
+            }
+            create_event_modal_url = (
+                web_context.request.app.route_reverse(
+                    'admin-event-modal', admin_tab='home', action='create'
+                )
+                if web_context.client.can_create_events
+                else None
+            )
+            nav_tabs |= {
+                'events-group': {
+                    'title': _('Events'),
+                    'icon_class': 'bi-calendar-event-fill',
+                    'disabled': not create_event_modal_url
+                    and all(tab['disabled'] for tab in event_submenu.values()),
+                    'divider': True,
+                    'create_modal_url': create_event_modal_url,
+                    'create_label': _('Create an event'),
+                    'submenu': event_submenu,
                 },
             }
         else:
@@ -291,15 +300,8 @@ class IndexAdminController(BaseAdminController):
                     item.name.casefold(),
                 )
             )
-            nav_tabs |= {
+            championship_submenu: dict[str, dict[str, Any]] = {
                 'championships': {
-                    'section_title': _('Championships'),
-                    'section_create_modal_url': (
-                        web_context.request.app.route_reverse(
-                            'admin-championship-create-modal'
-                        )
-                    ),
-                    'section_create_label': _('Create a championship'),
                     'title': _('Current ({num})').format(
                         num=len(current_championships) or '-'
                     ),
@@ -309,7 +311,6 @@ class IndexAdminController(BaseAdminController):
                     'empty_str': _('No current championships.'),
                     'icon_class': 'bi-calendar indented',
                     'page_title': _('Current championships'),
-                    'divider': True,
                 },
                 'coming_championships': {
                     'title': _('Upcoming ({num})').format(
@@ -345,19 +346,40 @@ class IndexAdminController(BaseAdminController):
                     'page_title': _('Archived championships'),
                 },
             }
+            nav_tabs |= {
+                'championships-group': {
+                    'title': _('Championships'),
+                    'icon_class': 'bi-trophy-fill',
+                    'disabled': False,
+                    'divider': True,
+                    'create_modal_url': web_context.request.app.route_reverse(
+                        'admin-championship-create-modal'
+                    ),
+                    'create_label': _('Create a championship'),
+                    'submenu': championship_submenu,
+                },
+            }
+        # The grouped entries are navigation containers, not tabs, and a submenu
+        # also holds modal entries: the panes and the selected tab are keyed on
+        # the leaves that carry a template.
+        nav_tab_panes: dict[str, dict[str, Any]] = {}
+        for nav_id, nav_tab in nav_tabs.items():
+            for leaf_id, leaf in (nav_tab.get('submenu') or {nav_id: nav_tab}).items():
+                if 'template' in leaf:
+                    nav_tab_panes[leaf_id] = leaf
         admin_tab = web_context.admin_tab
         if (not template_context or 'modal' not in template_context) and (
-            admin_tab not in nav_tabs or nav_tabs[admin_tab]['disabled']
+            admin_tab not in nav_tab_panes or nav_tab_panes[admin_tab]['disabled']
         ):
-            nav_ids = list(nav_tabs)
-            start_index = nav_ids.index(admin_tab) if admin_tab in nav_tabs else -1
+            nav_ids = list(nav_tab_panes)
+            start_index = nav_ids.index(admin_tab) if admin_tab in nav_tab_panes else -1
             web_context.admin_tab = next(
                 (
                     nav_ids[(start_index + offset) % len(nav_ids)]
                     for offset in range(1, len(nav_ids) + 1)
-                    if not nav_tabs[nav_ids[(start_index + offset) % len(nav_ids)]][
-                        'disabled'
-                    ]
+                    if not nav_tab_panes[
+                        nav_ids[(start_index + offset) % len(nav_ids)]
+                    ]['disabled']
                 ),
                 nav_ids[0],
             )
@@ -373,6 +395,7 @@ class IndexAdminController(BaseAdminController):
                 'format_date_range': format_date_range,
                 'format_date': format_date,
                 'nav_tabs': nav_tabs,
+                'nav_tab_panes': nav_tab_panes,
                 'svg_logo': svg_logo,
                 'all_tags': all_tags,
                 'admin_events_tag_filter': tag_filter,
