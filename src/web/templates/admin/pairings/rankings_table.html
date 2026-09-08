@@ -92,7 +92,7 @@
             <td class="rank text-end {{ no_played_games_class }}">{{ '—' if is_excluded else tournament_player.rank }}</td>
             <td class="title text-end {{ no_played_games_class }}">{{ tournament_player.display_title }}</td>
             <td class="name text-start {{ no_played_games_class }} fw-bold">
-                {% include '/admin/player_link.html' %}
+                {%- include '/admin/player_link.html' -%}
                 <button
                     type="button"
                     class="btn player-info p-1"
