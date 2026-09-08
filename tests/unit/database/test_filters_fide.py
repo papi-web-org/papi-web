@@ -165,3 +165,12 @@ def test_all_filters(init_mock_FIDE_database):
         result = database.search_player('dupont', 'FRA', 1, None, filters)
         assert len(result) == len(expected_result)
         assert all(player.first_name in expected_result for player in result)
+
+
+def test_a_filter_value_is_not_read_as_sql(init_mock_FIDE_database):
+    database = init_mock_FIDE_database
+
+    result = database.search_player(
+        'dupont', 'FRA', 1, None, {'federation_filter': "FRA' OR '1'='1"}
+    )
+    assert result == []

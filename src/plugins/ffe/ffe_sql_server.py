@@ -195,11 +195,12 @@ class FFESqlServer(SqlServer):
             ('joueur.Prenom', '%', '%'),
             ('joueur.NrFFE', '', ''),
         )
+        filter_conditions, filter_params = self._process_filters(filters or {})
         conditions: list[str] = [
             self.RATING_TYPE_CONDITION,
-            *self._process_filters(filters or {}),
+            *filter_conditions,
         ]
-        params: list[Any] = []
+        params: list[Any] = list(filter_params)
         for token in tokens:
             token_expressions: list[str] = [
                 f'(UPPER({field[0]}) LIKE %s)' for field in str_fields
@@ -401,8 +402,9 @@ class FFESqlServer(SqlServer):
         )
 
     @staticmethod
-    def _process_filters(filters: dict):
+    def _process_filters(filters: dict) -> tuple[list[str], list[Any]]:
         conditions: list[str] = []
+        params: list[Any] = []
         if 'ffe_licence_filter' in filters:
             if filters['ffe_licence_filter'] == 'B':
                 conditions.append(
@@ -411,15 +413,18 @@ class FFESqlServer(SqlServer):
             elif filters['ffe_licence_filter'] == 'A':
                 conditions.append("(joueur.AffType='A' OR joueur.Federation !='fra')")
         if 'federation_filter' in filters:
-            conditions.append(f"joueur.Federation='{filters['federation_filter']}'")
+            conditions.append('joueur.Federation = %s')
+            params.append(filters['federation_filter'])
         if 'gender_filter' in filters:
-            conditions.append(f"joueur.Sexe='{filters['gender_filter']}'")
+            conditions.append('joueur.Sexe = %s')
+            params.append(filters['gender_filter'])
         if 'ffe_league_filter' in filters:
-            conditions.append(f"club.Ligue='{filters['ffe_league_filter']}'")
+            conditions.append('club.Ligue = %s')
+            params.append(filters['ffe_league_filter'])
         if 'club_filter' in filters:
-            conditions.append(
-                f"LOWER(club.Nom) LIKE LOWER('%%{filters['club_filter']}%%')"
-            )
+            club: str = filters['club_filter']
+            conditions.append('LOWER(club.Nom) LIKE LOWER(%s)')
+            params.append(f'%{club}%')
         if filters.get('year_of_birth_filter', None):
             age_conditions = []
             for min_year, max_year in filters['year_of_birth_filter']:
@@ -427,13 +432,14 @@ class FFESqlServer(SqlServer):
                     case None, None:
                         continue
                     case None, _:
-                        age_conditions.append(f'YEAR(joueur.NeLe) <= {max_year}')
+                        age_conditions.append('YEAR(joueur.NeLe) <= %s')
+                        params.append(max_year)
                     case _, None:
-                        age_conditions.append(f'YEAR(joueur.NeLe) >= {min_year}')
+                        age_conditions.append('YEAR(joueur.NeLe) >= %s')
+                        params.append(min_year)
                     case _, _:
-                        age_conditions.append(
-                            f'YEAR(joueur.NeLe) BETWEEN {min_year} AND {max_year}'
-                        )
+                        age_conditions.append('YEAR(joueur.NeLe) BETWEEN %s AND %s')
+                        params += [min_year, max_year]
             if age_conditions:
                 conditions.append(f'({" OR ".join(age_conditions)})')
-        return conditions
+        return conditions, params
