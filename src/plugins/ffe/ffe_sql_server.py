@@ -183,10 +183,11 @@ class FFESqlServer(SqlServer):
         # NOTE(Amaras): Quicken search if the string looks like a complete FFE
         # licence number, so that it skips a more complex request
         string = string.upper().strip()
-        if PlayerFFELicence.validate(string):
-            return await self.get_stored_players_by_licence_numbers([string])
-        if fide_id := self.string_matches_fide_id(string):
-            return await self.get_players_by_fide_id([fide_id])
+        if not filters:
+            if PlayerFFELicence.validate(string):
+                return await self.get_stored_players_by_licence_numbers([string])
+            if fide_id := self.string_matches_fide_id(string):
+                return await self.get_players_by_fide_id([fide_id])
         tokens: list[str] = [
             unicode_normalize(token) for token in re.split(r'\s+', string)
         ]
