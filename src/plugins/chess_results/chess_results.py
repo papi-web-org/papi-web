@@ -55,6 +55,28 @@ class ChessResultsPlugin(Plugin[ChessResultsConfigPluginData]):
         return _('Uploading of tournaments to Chess-Results.com.')
 
     @property
+    def keywords(self) -> list[str]:
+        return ['chess-results', 'chessresults', 'upload', 'results']
+
+    @property
+    def doc_markdown(self) -> str:
+        return '\n\n'.join(
+            [
+                _(
+                    'Chess-Results.com publishes the pairings and the standings of '
+                    'tournaments all over the world.'
+                ),
+                _(
+                    '- the number of the tournament and the identifier of its creator '
+                    'configured on the tournament;\n'
+                    '- the tournament uploaded on demand from its card, or '
+                    'automatically as soon as its data changes;\n'
+                    '- a link to the page of the tournament on Chess-Results.com.'
+                ),
+            ]
+        )
+
+    @property
     def version(self) -> Version:
         return Version('1.0.0')
 

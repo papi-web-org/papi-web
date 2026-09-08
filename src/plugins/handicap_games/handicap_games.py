@@ -53,6 +53,31 @@ class HandicapGamesPlugin(Plugin):
         )
 
     @property
+    def keywords(self) -> list[str]:
+        return ['time control', 'odds']
+
+    @property
+    def doc_markdown(self) -> str:
+        return '\n\n'.join(
+            [
+                _(
+                    'In a handicap tournament the two players of a game do not get the '
+                    'same thinking time: the stronger player plays with less time than '
+                    'the weaker one, which lets players of very different levels meet '
+                    'in the same tournament.'
+                ),
+                _(
+                    '- a rating step, a time penalty per step and a minimum time, '
+                    'configured on the tournament;\n'
+                    '- the time of each player computed for every game of the round '
+                    'from the rating difference between the two players;\n'
+                    '- the times of the two players displayed on the pairings screens '
+                    'and on the printed documents.'
+                ),
+            ]
+        )
+
+    @property
     def version(self) -> Version:
         return Version('1.0.0')
 

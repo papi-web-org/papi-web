@@ -124,6 +124,28 @@ class SCEPlugin(Plugin):
         )
 
     @property
+    def keywords(self) -> list[str]:
+        return ['sharly', 'online', 'registration', 'check-in', 'platform']
+
+    @property
+    def doc_markdown(self) -> str:
+        return '\n\n'.join(
+            [
+                _(
+                    'Sharly-Chess.com is the online platform of Sharly Chess, where '
+                    'the players register to your events and follow them live.'
+                ),
+                _(
+                    '- an event of the platform linked to your event, and its players '
+                    'synchronised in both directions;\n'
+                    '- the check-in of the players done online by the players '
+                    'themselves;\n'
+                    '- the pairings and the standings published live on the platform.'
+                ),
+            ]
+        )
+
+    @property
     def hookspecs(self) -> type | None:
         return SCEPluginHooks
 

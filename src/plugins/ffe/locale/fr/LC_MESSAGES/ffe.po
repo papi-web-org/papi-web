@@ -15,6 +15,19 @@ msgstr "%(licence_number)s (expirée)"
 msgid "%(string)s:"
 msgstr "%(string)s :"
 
+msgid ""
+"- the players searched in the federation database, with their licence, their club and their leagues;\n"
+"- the tournaments imported from and exported to the Papi format;\n"
+"- the results uploaded to the website of the federation;\n"
+"- the tie-breaks and the pairing variations used in France;\n"
+"- the clubs and the leagues available as columns, filters and groupings on the players, the documents and the screens."
+msgstr ""
+"- les joueur·euses recherché·es dans la base de la fédération, avec leur licence, leur club et leurs ligues ;\n"
+"- les tournois importés depuis et exportés vers le format Papi ;\n"
+"- les résultats téléversés vers le site de la fédération ;\n"
+"- les départages et les variantes d’appariement utilisés en France ;\n"
+"- les clubs et les ligues disponibles comme colonnes, filtres et regroupements sur les joueur·euses, les documents et les écrans."
+
 msgid "A - Competition *** FFE licence"
 msgstr "A - Compétition"
 
@@ -155,6 +168,9 @@ msgstr "Arbitre Élite 1"
 
 msgid "Elite Arbiter (level 2)"
 msgstr "Arbitre Élite 2"
+
+msgid "Everything specific to the French Chess Federation, for the events it rates."
+msgstr "Tout ce qui est spécifique à la Fédération Française des Échecs, pour les évènements qu’elle homologue."
 
 #, python-brace-format
 msgid "Exclude: {values}"

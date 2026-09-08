@@ -106,6 +106,29 @@ class FRASchoolsPlugin(Plugin):
         return _('Adds support for school competitions in France')
 
     @property
+    def keywords(self) -> list[str]:
+        return ['school', 'scolaire', 'unss', 'france']
+
+    @property
+    def doc_markdown(self) -> str:
+        return '\n\n'.join(
+            [
+                _(
+                    'French school competitions gather players by school rather than '
+                    'by club, from the local stage up to the national finals.'
+                ),
+                _(
+                    '- the school of a player picked from the national database of the '
+                    'schools;\n'
+                    '- the players of a same school kept apart in the pairings;\n'
+                    '- the schools used as the affiliation of the teams;\n'
+                    '- the school available as a column of the players and of the '
+                    'documents.'
+                ),
+            ]
+        )
+
+    @property
     def version(self) -> Version:
         return Version('0.1.1')
 

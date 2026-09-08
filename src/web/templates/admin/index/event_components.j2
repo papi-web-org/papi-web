@@ -41,13 +41,7 @@
             <i
                 class="bi-exclamation-triangle-fill text-danger"
                 {{ macros.tooltip_attributes(
-                    'warning',
-                    _(
-                        'One or more of the plugins required to use this event '
-                        'are disabled, making it inaccessible. You can enable '
-                        'plugins in the application settings.'
-                    ),
-                    'top',
+                    'warning', item.inaccessible_tooltip_message, 'top'
                 ) }}
             ></i>
         {% endif %}

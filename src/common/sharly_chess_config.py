@@ -531,6 +531,10 @@ class SharlyChessConfig(metaclass=Singleton):
     # The test federation, used not to need to set the federation when entering the application
     tests_federation: str = 'FID'
 
+    # The federation used when the application runs without its window, where
+    # the federation is chosen otherwise.
+    default_federation: str = 'FID'
+
     @property
     def federations(self) -> dict[str, str]:
         """Get the federation names. To avoid translating all

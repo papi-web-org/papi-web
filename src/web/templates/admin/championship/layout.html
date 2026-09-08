@@ -63,8 +63,8 @@
     {% if client.can_manage_source_databases %}
         {% include '/admin/common/database/database_button.html' %}
     {% endif %}
-    {% if client.can_manage_application_settings %}
-        {% include '/admin/common/settings_button.html' %}
+    {% if client.can_manage_application_settings and not has_app_window %}
+        {% include '/admin/common/plugins_button.html' %}
     {% endif %}
 {% endblock admin_nav %}
 

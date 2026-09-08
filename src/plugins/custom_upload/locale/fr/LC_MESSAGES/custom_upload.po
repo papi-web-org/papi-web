@@ -2,6 +2,17 @@
 msgid "%(default_server_path)s by default"
 msgstr "%(default_server_path)s par défaut"
 
+msgid ""
+"- a server configured on the event (FTP, FTPS or SFTP);\n"
+"- a list of documents to upload, each one targeting the whole event or only some of its tournaments;\n"
+"- documents uploaded on demand, or automatically as soon as the data of a tournament they cover changes;\n"
+"- the date of the last upload and the upload errors reported in the interface."
+msgstr ""
+"- un serveur configuré sur l’évènement (FTP, FTPS ou SFTP) ;\n"
+"- une liste de documents à téléverser, chacun couvrant tout l’évènement ou seulement certains de ses tournois ;\n"
+"- les documents téléversés à la demande, ou automatiquement dès que les données d’un tournoi qu’ils couvrent changent ;\n"
+"- la date du dernier téléversement et les erreurs de téléversement signalées dans l’interface."
+
 msgid "22 by default for SFTP, 21 for FTP/FTPS (optional)"
 msgstr "22 par défaut pour SFTP, 21 pour FTP/FTPS (facultatif)"
 
@@ -152,6 +163,9 @@ msgstr "Port :"
 
 msgid "Protocol:"
 msgstr "Protocole :"
+
+msgid "Publish the documents of an event on a website of your own, for instance the website of your club or of the tournament."
+msgstr "Publiez les documents d’un évènement sur un site web qui vous appartient, par exemple le site de votre club ou du tournoi."
 
 msgid "Remove document"
 msgstr "Supprimer le document"

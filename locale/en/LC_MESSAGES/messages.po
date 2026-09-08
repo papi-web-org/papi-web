@@ -695,6 +695,9 @@ msgstr ""
 msgid "APPLIED"
 msgstr ""
 
+msgid "About the plugins"
+msgstr ""
+
 msgid "Absence:"
 msgstr ""
 
@@ -976,6 +979,9 @@ msgid "All players are paired."
 msgstr ""
 
 msgid "All players marked as \"Present\"."
+msgstr ""
+
+msgid "All plugins"
 msgstr ""
 
 msgid "All present *** ALL TEAMS PRESENT"
@@ -1385,9 +1391,6 @@ msgid "Belgium"
 msgstr ""
 
 msgid "Belize"
-msgstr ""
-
-msgid "Benefit from the very last (experimental) features (USE AT YOUR OWN RISKS!)."
 msgstr ""
 
 msgid "Berger"
@@ -1899,9 +1902,6 @@ msgid "Choose screens to add"
 msgstr ""
 
 msgid "Choose the columns displayed."
-msgstr ""
-
-msgid "Choose your language"
 msgstr ""
 
 msgid "Clear all"
@@ -2498,7 +2498,7 @@ msgstr ""
 msgid "Date and time"
 msgstr ""
 
-msgid "Date format"
+msgid "Date format:"
 msgstr ""
 
 msgid "Date of birth"
@@ -2728,6 +2728,9 @@ msgstr ""
 
 msgid "Department *** EVENT TAG NAME"
 msgstr "Department"
+
+msgid "Depends on"
+msgstr ""
 
 msgid "Deputy Chief Arbitration"
 msgstr ""
@@ -3322,6 +3325,9 @@ msgstr ""
 msgid "Enable this account"
 msgstr ""
 
+msgid "Enable this plugin on the events that are created"
+msgstr ""
+
 #, python-format
 msgid "Encounter already happened at round #%(round)d"
 msgstr ""
@@ -3463,10 +3469,6 @@ msgstr ""
 msgid "Experimental features"
 msgstr ""
 
-#, python-format
-msgid "Experimental features in version %(version)s are:"
-msgstr ""
-
 msgid "Export"
 msgstr ""
 
@@ -3579,9 +3581,6 @@ msgid "Federation"
 msgstr ""
 
 msgid "Federation distribution (counted opponents)"
-msgstr ""
-
-msgid "Federation plugins"
 msgstr ""
 
 msgid "Federation:"
@@ -4242,12 +4241,26 @@ msgstr ""
 msgid "Install"
 msgstr ""
 
+msgid "Install it from the Plugins section to open the event."
+msgid_plural "Install them from the Plugins section to open the event."
+msgstr[0] ""
+msgstr[1] ""
+
 #, python-brace-format
 msgid "Installation of [{lib}] failed."
 msgstr ""
 
+msgid "Installed"
+msgstr ""
+
 #, python-brace-format
 msgid "Installed [{lib}]."
+msgstr ""
+
+msgid "Installed plugins"
+msgstr ""
+
+msgid "Installing a plugin makes its features available in the whole application. Every event then enables the plugins it needs, from the configuration screen of the event, so that each event only shows what it uses."
 msgstr ""
 
 msgid "International Arbiter"
@@ -4328,10 +4341,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Invalid image filename [{name}]."
-msgstr ""
-
-#, python-brace-format
-msgid "Invalid locale [{locale}]."
 msgstr ""
 
 #, python-brace-format
@@ -5259,6 +5268,9 @@ msgstr ""
 msgid "New event"
 msgstr ""
 
+msgid "New events"
+msgstr ""
+
 msgid "New group"
 msgstr ""
 
@@ -5522,6 +5534,9 @@ msgstr ""
 msgid "No players."
 msgstr ""
 
+msgid "No plugin matches your search."
+msgstr ""
+
 msgid "No prize brackets."
 msgstr ""
 
@@ -5726,6 +5741,9 @@ msgstr ""
 msgid "Not enough byes available to set a Half-Point Bye (required: 1)."
 msgstr ""
 
+msgid "Not installed"
+msgstr ""
+
 msgid "Not logged in"
 msgstr ""
 
@@ -5867,9 +5885,6 @@ msgid "Once created, you can select the timer to display in the settings of each
 msgstr ""
 
 msgid "One category can be marked as the main prize category for overall rankings, with tie options: no sharing, equal sharing, or Hort system."
-msgstr ""
-
-msgid "One or more of the plugins required to use this event are disabled, making it inaccessible. You can enable plugins in the application settings."
 msgstr ""
 
 msgid "Ongoing"
@@ -6605,9 +6620,6 @@ msgstr ""
 msgid "Please choose a federation"
 msgstr ""
 
-msgid "Please choose a federation."
-msgstr ""
-
 msgid "Please choose a name for the set."
 msgstr ""
 
@@ -6627,6 +6639,9 @@ msgid "Please choose the template."
 msgstr ""
 
 msgid "Please choose the tournament."
+msgstr ""
+
+msgid "Please choose your language and your federation to start."
 msgstr ""
 
 msgid "Please consider contacting support, or installing the new version manually."
@@ -6707,13 +6722,7 @@ msgstr ""
 msgid "Please validate the affiliation to continue."
 msgstr ""
 
-msgid "Please validate the global configuration of the application."
-msgstr ""
-
 msgid "Please validate the time control to continue."
-msgstr ""
-
-msgid "Please wait until the application settings have been set on the server…"
 msgstr ""
 
 msgid "Please wait…"
@@ -6726,7 +6735,18 @@ msgstr ""
 msgid "Plugin [{plugin}] was enabled."
 msgstr ""
 
+#, python-brace-format
+msgid "Plugin {plugin} is needed by the plugins {plugins}."
+msgstr ""
+
+#, python-brace-format
+msgid "Plugin {plugin} is used by events and can not be uninstalled."
+msgstr ""
+
 msgid "Plugins"
+msgstr ""
+
+msgid "Plugins add features to Sharly Chess: connections to the platforms of the federations, extra pairing systems, extra tie-breaks, extra screens, extra documents…"
 msgstr ""
 
 msgid "Point attribution"
@@ -7067,6 +7087,9 @@ msgstr ""
 msgid "Ratings update"
 msgstr ""
 
+msgid "Read the documentation"
+msgstr ""
+
 msgid "Ready"
 msgstr ""
 
@@ -7190,8 +7213,17 @@ msgstr ""
 msgid "Required (1.4.8)"
 msgstr ""
 
+msgid "Required by"
+msgstr ""
+
 #, python-format
 msgid "Required by plugin <b>%(plugin)s</b>."
+msgstr ""
+
+msgid "Required event type"
+msgstr ""
+
+msgid "Required federation"
 msgstr ""
 
 msgid "Res. *** RESULT COLUMN HEADER"
@@ -7648,6 +7680,9 @@ msgstr ""
 msgid "Search *** SECTION TITLE"
 msgstr "Search"
 
+msgid "Search a plugin…"
+msgstr ""
+
 msgid "Search an event"
 msgstr ""
 
@@ -7696,6 +7731,9 @@ msgid "Select %(competitor)s"
 msgstr ""
 
 msgid "Select All"
+msgstr ""
+
+msgid "Select a plugin on the left to read what it brings and install it."
 msgstr ""
 
 msgid "Select a tournament"
@@ -7883,12 +7921,6 @@ msgid "Sharly Chess recommendation (MP as primary score)"
 msgstr ""
 
 msgid "Sharly Chess server"
-msgstr ""
-
-msgid "Sharly Chess settings"
-msgstr ""
-
-msgid "Sharly Chess settings have been updated."
 msgstr ""
 
 msgid "Sharly Chess using the local network, all the traffic is public. This means anyone connected to the same network could easily gain access to an account without needing to type in the password."
@@ -8144,6 +8176,9 @@ msgid "Standard team Swiss"
 msgstr ""
 
 msgid "Standard:"
+msgstr ""
+
+msgid "Start Sharly Chess"
 msgstr ""
 
 msgid "Start date"
@@ -8567,9 +8602,6 @@ msgid "The data folder could not be added to the Microsoft Defender exception li
 msgstr ""
 
 msgid "The data folder has been successfully added to the Microsoft Defender exception list."
-msgstr ""
-
-msgid "The default federation for your events."
 msgstr ""
 
 msgid "The director is the person in charge of the event."
@@ -9046,7 +9078,7 @@ msgstr ""
 msgid "These lower-ranked teams were released so the round could be paired."
 msgstr ""
 
-msgid "These plugins can only be activated on events of their federation."
+msgid "These plugins are installed together with this one."
 msgstr ""
 
 msgid "These points count towards the tournament standings and are used for the pairings. They do not change the results of the games, which are reported to FIDE as they were played."
@@ -9139,6 +9171,11 @@ msgstr ""
 msgid "This event is public (by default, screens are visible by the spectators)."
 msgstr ""
 
+msgid "This event needs this plugin, which is not installed:"
+msgid_plural "This event needs these plugins, which are not installed:"
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "This field can't be modified once the tournament has started."
 msgstr ""
 
@@ -9207,6 +9244,22 @@ msgstr ""
 
 msgid "This player is paired in at least one round and cannot be removed from the roster (must be removed from the line-up first)."
 msgstr ""
+
+msgid "This plugin can not be uninstalled while they are installed."
+msgstr ""
+
+msgid "This plugin can only be enabled on events of this federation."
+msgstr ""
+
+#, python-format
+msgid "This plugin is required by the plugin(s) %(plugins)s."
+msgstr ""
+
+#, python-format
+msgid "This plugin is used by %(num)d event."
+msgid_plural "This plugin is used by %(num)d events."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "This prize bracket"
 msgstr ""
@@ -9707,6 +9760,9 @@ msgstr ""
 msgid "Unhandled file type [{suffix}] (expected: {expected})."
 msgstr ""
 
+msgid "Uninstall"
+msgstr ""
+
 msgid "Unique ID"
 msgstr ""
 
@@ -9958,11 +10014,8 @@ msgstr ""
 msgid "Use the timer defined for each screen."
 msgstr ""
 
-#, python-format
-msgid "Used by %(num)d event."
-msgid_plural "Used by %(num)d events."
-msgstr[0] ""
-msgstr[1] ""
+msgid "Used by"
+msgstr ""
 
 #, python-format
 msgid "Used by %(num)d tournament."
@@ -10014,6 +10067,10 @@ msgid "Verdict"
 msgstr ""
 
 msgid "Verdict:"
+msgstr ""
+
+#, python-format
+msgid "Version %(version)s"
 msgstr ""
 
 msgid "Vietnam"
@@ -10157,7 +10214,7 @@ msgstr ""
 msgid "Weight each counted stage’s value by the tournament’s coefficient."
 msgstr ""
 
-msgid "Welcome to Sharly Chess!"
+msgid "Welcome to Sharly Chess!"
 msgstr ""
 
 msgid "What separates the last teams when they are level on both match points and game points, judged on the boards of their own encounter."
@@ -11102,4 +11159,73 @@ msgstr ""
 
 msgid "← Back to IT1 certificate"
 msgstr ""
+
+#~ msgid "Federation plugins"
+#~ msgstr ""
+
+#~ msgid "These plugins can only be activated on events of their federation."
+#~ msgstr ""
+
+#~ msgid "Used by %(num)d event."
+#~ msgid_plural "Used by %(num)d events."
+#~ msgstr[0] ""
+#~ msgstr[1] ""
+
+#~ msgid "%(num)d event."
+#~ msgid_plural "%(num)d events."
+#~ msgstr[0] ""
+#~ msgstr[1] ""
+
+#~ msgid "Benefit from the very last (experimental) features (USE AT YOUR OWN RISKS!)."
+#~ msgstr ""
+
+#~ msgid "Choose your language"
+#~ msgstr ""
+
+#~ msgid "Date format"
+#~ msgstr ""
+
+#~ msgid "Experimental features in version %(version)s are:"
+#~ msgstr ""
+
+#~ msgid "Invalid locale [{locale}]."
+#~ msgstr ""
+
+#~ msgid "Please choose a federation."
+#~ msgstr ""
+
+#~ msgid "Please validate the global configuration of the application."
+#~ msgstr ""
+
+#~ msgid "Please wait until the application settings have been set on the server…"
+#~ msgstr ""
+
+#~ msgid "Sharly Chess settings"
+#~ msgstr ""
+
+#~ msgid "Sharly Chess settings have been updated."
+#~ msgstr ""
+
+#~ msgid "The default federation for your events."
+#~ msgstr ""
+
+#~ msgid "Welcome to Sharly Chess!"
+#~ msgstr ""
+
+#~ msgid "One or more of the plugins required to use this event are disabled, making it inaccessible. You can enable plugins in the application settings."
+#~ msgstr ""
+
+#~ msgid "Plugin {plugin} has been installed as a dependency."
+#~ msgstr ""
+
+#~ msgid "Plugin {plugin} has been installed."
+#~ msgstr ""
+
+#~ msgid "Plugin {plugin} has been uninstalled."
+#~ msgstr ""
+
+#~ msgid "This event uses the plugin {plugins}, which is not installed: install it from the Plugins section to open the event."
+#~ msgid_plural "This event uses the plugins {plugins}, which are not installed: install them from the Plugins section to open the event."
+#~ msgstr[0] ""
+#~ msgstr[1] ""
 

@@ -1,3 +1,10 @@
+msgid ""
+"- a **Chess960** screen type, holding the start position of the round so that it can be displayed to the players;\n"
+"- an **All Chess960 positions** document, listing every start position with its number."
+msgstr ""
+"- un type d’écran **Chess960**, contenant la position de départ de la ronde afin de l’afficher aux joueur·euses ;\n"
+"- un document **Toutes les positions Chess960**, listant chaque position de départ avec son numéro."
+
 msgid "Adds a screen showing the Chess960 start position."
 msgstr "Ajoute un écran d'affichage de la position Chess960 de départ."
 
@@ -6,6 +13,9 @@ msgstr "Toutes les positions Chess960"
 
 msgid "Chess960"
 msgstr "Chess960"
+
+msgid "Chess960 (also called Fischer random chess) starts the games from one of the 960 possible shuffles of the pieces on the first rank."
+msgstr "Le Chess960 (aussi appelé échecs aléatoires Fischer) débute les parties depuis l’une des 960 dispositions possibles des pièces sur la première rangée."
 
 msgid "Chess960 positions"
 msgstr "Positions Chess960"

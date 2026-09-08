@@ -143,9 +143,15 @@ class ConfigDatabase(MigrationDatabase):
     # ---------------------------------------------------------------------------------
 
     def _row_to_stored_plugin(self, row: dict[str, Any]) -> StoredPlugin:
+        default_event_is_enabled = row['default_event_is_enabled']
         return StoredPlugin(
             name=row['name'],
             is_enabled=self.load_bool_from_database_field(row['is_enabled']),
+            default_event_is_enabled=(
+                None
+                if default_event_is_enabled is None
+                else self.load_bool_from_database_field(default_event_is_enabled)
+            ),
             plugin_data=self.load_json_from_database_field(row['plugin_data'], {}),
         )
 
@@ -160,9 +166,11 @@ class ConfigDatabase(MigrationDatabase):
 
     def update_stored_plugin(self, stored_plugin: StoredPlugin) -> StoredPlugin | None:
         self.execute(
-            'UPDATE `plugin` SET `is_enabled` = ?, `plugin_data` = ? WHERE `name` = ?',
+            'UPDATE `plugin` SET `is_enabled` = ?, `default_event_is_enabled` = ?, '
+            '`plugin_data` = ? WHERE `name` = ?',
             (
                 stored_plugin.is_enabled,
+                stored_plugin.default_event_is_enabled,
                 self.dump_to_json_database_field(stored_plugin.plugin_data),
                 stored_plugin.name,
             ),

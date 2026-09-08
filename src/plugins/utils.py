@@ -205,6 +205,37 @@ class Plugin[PD: PluginData](IdentifiableEntity, ABC):
         """Briefly describes the features of the plugin."""
 
     @property
+    def doc_markdown(self) -> str | None:
+        """Markdown detailing the features of the plugin, displayed on its page.
+        None to only display *description*."""
+        return None
+
+    @property
+    def doc_html(self) -> str | None:
+        """*doc_markdown* rendered as HTML."""
+        from utils.markdown import markdown_to_html
+
+        markdown = self.doc_markdown
+        return markdown_to_html(markdown) if markdown else None
+
+    @property
+    def doc_slug(self) -> str | None:
+        """Slug of the page of the plugin on the documentation website,
+        None when the plugin has no page there."""
+        return None
+
+    @property
+    def keywords(self) -> list[str]:
+        """Extra terms matched when searching for the plugin, on top of its
+        name and description."""
+        return []
+
+    @property
+    def search_text(self) -> str:
+        """The text searched when filtering the list of plugins."""
+        return ' '.join([self.name, self.description] + self.keywords).casefold()
+
+    @property
     @abstractmethod
     def version(self) -> Version:
         """Version of the plugin."""
@@ -224,6 +255,13 @@ class Plugin[PD: PluginData](IdentifiableEntity, ABC):
     def default_event_is_enabled(self) -> bool:
         """Defines if the plugin is enabled by default at event level."""
         return False
+
+    @property
+    def event_is_enabled_by_default(self) -> bool:
+        """Whether new events enable the plugin. The choice made in the Plugins
+        section prevails over the default the plugin declares."""
+        stored = self.context.stored_plugin.default_event_is_enabled
+        return self.default_event_is_enabled if stored is None else stored
 
     @property
     def federation(self) -> str | None:
@@ -268,8 +306,19 @@ class Plugin[PD: PluginData](IdentifiableEntity, ABC):
             if self.__class__ in plugin.dependencies
         ]
 
+    @property
+    def required_by_enabled_plugins(self) -> list['Plugin']:
+        """List of the enabled plugins that have this plugin as dependency,
+        which prevent it from being disabled."""
+        return [plugin for plugin in self.required_by_plugins if plugin.is_enabled]
+
+    def used_by_events(
+        self, events_metadata: list['EventMetadata']
+    ) -> list['EventMetadata']:
+        return [event for event in events_metadata if self.id in event.enabled_plugins]
+
     def used_by_events_count(self, events_metadata: list['EventMetadata']) -> int:
-        return sum([self.id in event.enabled_plugins for event in events_metadata])
+        return len(self.used_by_events(events_metadata))
 
     @abstractmethod
     def used_by_stored_tournament(

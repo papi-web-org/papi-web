@@ -1,0 +1,18 @@
+<span class="sidebar-tooltip" {{ macros.tooltip_attributes('info', _('Plugins'), 'right') }}>
+    <button
+        class="nav-link text-start me-1 position-relative align-items-center {% if admin_tab == 'plugins' %}active{% endif %}"
+        hx-get="{{ url_for('admin-plugins') }}"
+        hx-trigger="click"
+        hx-target="body"
+        hx-push-url="true"
+        hx-indicator="#please-wait"
+        data-testid="plugins-button"
+    >
+        <div class="d-block">
+            <i class="bi bi-plugin"></i>
+            <span class="pe-2 expanded-only">
+                {{ _('Plugins') }}
+            </span>
+        </div>
+    </button>
+</span>

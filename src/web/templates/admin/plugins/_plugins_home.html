@@ -1,0 +1,32 @@
+{% import '/common/macros.j2' as macros with context %}
+
+<div class="card">
+    <div class="card-body">
+        <h3 class="h5">{{ _('About the plugins') }}</h3>
+        <p>
+            {{ _(
+                'Plugins add features to Sharly Chess: connections to the platforms '
+                'of the federations, extra pairing systems, extra tie-breaks, extra '
+                'screens, extra documents…'
+            ) }}
+        </p>
+        <p>
+            {{ _(
+                'Installing a plugin makes its features available in the whole '
+                'application. Every event then enables the plugins it needs, from '
+                'the configuration screen of the event, so that each event only '
+                'shows what it uses.'
+            ) }}
+        </p>
+        <p class="mb-0">
+            {{ _('Select a plugin on the left to read what it brings and install it.') }}
+        </p>
+        <a
+            class="btn btn-sm btn-outline-primary mt-3"
+            href="{{ macros.doc_url('plugins')|trim }}"
+            target="_blank"
+        >
+            <i class="bi-book pe-1"></i>{{ _('Read the documentation') }}
+        </a>
+    </div>
+</div>

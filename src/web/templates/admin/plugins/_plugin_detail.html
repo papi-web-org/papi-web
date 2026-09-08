@@ -1,0 +1,211 @@
+{% import '/common/macros.j2' as macros with context %}
+
+{% macro plugin_link(plugin) %}
+    <a href="#" class="plugin-link" data-plugin-id="{{ plugin.id }}">{{ plugin.name }}</a>
+{% endmacro %}
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex align-items-start gap-3 flex-wrap">
+            <div>
+                <h3 class="h5 mb-1">
+                    <i class="bi-plugin pe-1"></i>
+                    {{ plugin.name }}
+                </h3>
+                <div class="text-body-secondary small">
+                    {{ _('Version %(version)s', version=plugin.version) }}
+                </div>
+            </div>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                {% if plugin.is_enabled %}
+                    {% set uninstall_blocked_message = '' %}
+                    {% if blocking_plugins %}
+                        {% set uninstall_blocked_message = _(
+                            'This plugin is required by the plugin(s) %(plugins)s.',
+                            plugins=blocking_plugins|map(attribute='name')|join(', ')
+                        ) %}
+                    {% elif used_by_events %}
+                        {% set uninstall_blocked_message = ngettext(
+                            'This plugin is used by %(num)d event.',
+                            'This plugin is used by %(num)d events.',
+                            used_by_events|length
+                        ) %}
+                    {% endif %}
+                    <span
+                        {% if uninstall_blocked_message %}
+                            {{ macros.tooltip_attributes('info', uninstall_blocked_message, 'top') }}
+                        {% endif %}
+                    >
+                        <button
+                            type="button"
+                            class="btn btn-outline-danger text-nowrap"
+                            data-testid="plugin-uninstall-{{ plugin.id }}"
+                            hx-post="{{ url_for('admin-plugin-toggle', plugin_id=plugin.id) }}{% if embedded %}?embedded=1{% endif %}"
+                            hx-target="body"
+                            hx-indicator="#please-wait"
+                            {% if uninstall_blocked_message %}disabled{% endif %}
+                        >
+                            <i class="bi-dash-circle-fill pe-1"></i>{{ _('Uninstall') }}
+                        </button>
+                    </span>
+                {% else %}
+                    <button
+                        type="button"
+                        class="btn btn-primary text-nowrap"
+                        data-testid="plugin-install-{{ plugin.id }}"
+                        hx-post="{{ url_for('admin-plugin-toggle', plugin_id=plugin.id) }}{% if embedded %}?embedded=1{% endif %}"
+                        hx-target="body"
+                        hx-indicator="#please-wait"
+                    >
+                        <i class="bi-plus-circle-fill pe-1"></i>{{ _('Install') }}
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <dl class="row mt-3 mb-0 small">
+            <dt class="col-sm-4">{{ _('Status') }}</dt>
+            <dd class="col-sm-8">
+                {% if plugin.is_enabled %}
+                    <span class="text-success">
+                        <i class="bi-check-circle-fill pe-1"></i>{{ _('Installed') }}
+                    </span>
+                {% else %}
+                    <span class="text-body-secondary">{{ _('Not installed') }}</span>
+                {% endif %}
+            </dd>
+
+            {% if plugin.is_enabled %}
+                <dt class="col-sm-4">{{ _('New events') }}</dt>
+                <dd class="col-sm-8">
+                    <div class="form-check form-switch mb-0">
+                        <input
+                            type="checkbox"
+                            role="switch"
+                            class="form-check-input"
+                            id="plugin-default-event-{{ plugin.id }}"
+                            data-testid="plugin-default-event-{{ plugin.id }}"
+                            {% if plugin.event_is_enabled_by_default %}checked{% endif %}
+                            hx-post="{{ url_for('admin-plugin-default-event', plugin_id=plugin.id) }}{% if embedded %}?embedded=1{% endif %}"
+                            hx-target="#plugin-detail"
+                            hx-indicator="#please-wait"
+                        >
+                        <label
+                            class="form-check-label"
+                            for="plugin-default-event-{{ plugin.id }}"
+                        >
+                            {{ _('Enable this plugin on the events that are created') }}
+                        </label>
+                    </div>
+                </dd>
+            {% endif %}
+
+            {% if plugin.federation %}
+                <dt class="col-sm-4">{{ _('Required federation') }}</dt>
+                <dd class="col-sm-8">
+                    {{ federation_name or plugin.federation }} ({{ plugin.federation }})
+                    <div class="text-body-secondary">
+                        {{ _('This plugin can only be enabled on events of this federation.') }}
+                    </div>
+                </dd>
+            {% endif %}
+
+            {% if plugin.supported_event_types is not none %}
+                <dt class="col-sm-4">{{ _('Required event type') }}</dt>
+                <dd class="col-sm-8">
+                    {% for event_type in plugin.supported_event_types %}
+                        {{ event_type }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </dd>
+            {% endif %}
+
+            {% if plugin.depends_on_plugins %}
+                <dt class="col-sm-4">{{ _('Depends on') }}</dt>
+                <dd class="col-sm-8">
+                    {% for dependency in plugin.depends_on_plugins %}
+                        {{ plugin_link(dependency) }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                    <div class="text-body-secondary">
+                        {{ _('These plugins are installed together with this one.') }}
+                    </div>
+                </dd>
+            {% endif %}
+
+            {% if blocking_plugins %}
+                <dt class="col-sm-4">{{ _('Required by') }}</dt>
+                <dd class="col-sm-8">
+                    {% for blocking_plugin in blocking_plugins %}
+                        {{ plugin_link(blocking_plugin) }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                    <div class="text-body-secondary">
+                        {{ _('This plugin can not be uninstalled while they are installed.') }}
+                    </div>
+                </dd>
+            {% endif %}
+
+            {% if used_by_events %}
+                <dt class="col-sm-4">{{ _('Used by') }}</dt>
+                <dd class="col-sm-8">
+                    {# An event can be used by hundreds of events: they are
+                       listed on demand, and only counted until then. #}
+                    <button
+                        type="button"
+                        class="collapse-button collapsed p-0 collapse-state-not-saved"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#plugin-used-by-events"
+                        aria-expanded="false"
+                        aria-controls="plugin-used-by-events"
+                    >
+                        <i class="bi-chevron-down text-body pe-1"></i>{{ ngettext(
+                            '%(num)d event',
+                            '%(num)d events',
+                            used_by_events|length
+                        ) }}
+                    </button>
+                    <ul
+                        id="plugin-used-by-events"
+                        class="collapse collapse-state-not-saved list-unstyled mb-0 mt-1"
+                    >
+                        {% for event in used_by_events %}
+                            <li>
+                                {% if event.accessible and event.are_all_plugins_enabled %}
+                                    <a href="{{ url_for('admin-event', event_uniq_id=event.uniq_id) }}">
+                                        {{ event.name }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-body-secondary">
+                                        <i
+                                            class="bi-exclamation-triangle-fill text-danger pe-1"
+                                            {{ macros.tooltip_attributes(
+                                                'warning',
+                                                event.inaccessible_tooltip_message,
+                                                'top',
+                                            ) }}
+                                        ></i>{{ event.name }}
+                                    </span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </dd>
+            {% endif %}
+        </dl>
+    </div>
+</div>
+
+<div class="mt-3">
+    {% if plugin.doc_html %}
+        <div class="plugin-doc">{{ plugin.doc_html|safe }}</div>
+    {% else %}
+        <p>{{ plugin.description }}</p>
+    {% endif %}
+    {% if plugin.doc_slug %}
+        <a
+            class="btn btn-sm btn-outline-primary"
+            href="{{ macros.doc_url(plugin.doc_slug)|trim }}"
+            target="_blank"
+        >
+            <i class="bi-book pe-1"></i>{{ _('Read the documentation') }}
+        </a>
+    {% endif %}
+</div>
