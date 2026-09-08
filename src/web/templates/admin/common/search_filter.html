@@ -1,17 +1,4 @@
 <style>
-.button_badge {
-    background-color: #fa3e3e;
-    border-radius: 12px;
-    color: white;
-
-    padding: 1px 3px;
-    font-size: 10px;
-
-    position: absolute;
-    top: 4px;
-    right: 8px;
-    line-height: 1;
-}
 #search-criteria-collapse-toggle {
     cursor: pointer;
     transition: background-color .15s ease-in-out, color .15s ease-in-out;
@@ -44,5 +31,8 @@
 >
     <i class="bi bi-funnel funnel-outline"></i>
     <i class="bi bi-funnel-fill funnel-filled"></i>
-    <span id="filter-count"></span>
+    <span
+        id="filter-count"
+        class="badge rounded-pill text-bg-danger position-absolute top-0 start-100 translate-middle d-none"
+    ></span>
 </button>
