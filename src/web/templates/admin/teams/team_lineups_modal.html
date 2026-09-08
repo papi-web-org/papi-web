@@ -315,10 +315,10 @@
                             }
                             // The round's button states the same fact, so it
                             // follows the drag too: left alone it would go on
-                            // marking a round just put back in order.
-                            // The mark belongs to the round's group, whose
-                            // other rounds inherit this very line-up — so
-                            // editing here settles it for all of them.
+                            // marking a round just put back in order. The
+                            // mark belongs to the round's group, so it stands
+                            // as long as any round of the group is out of
+                            // order.
                             const button = document.querySelector(
                                 '.lineup-round-button[data-round="'
                                 + section.dataset.round + '"]'
@@ -333,7 +333,22 @@
                                 ? group.querySelector('.lineup-round-mark')
                                 : null;
                             if (mark) {
-                                mark.style.display = outOfOrder ? '' : 'none';
+                                const groupOutOfOrder = Array.from(
+                                    group.querySelectorAll('.lineup-round-button')
+                                ).some(function (groupButton) {
+                                    const groupSection = document.querySelector(
+                                        '.lineup-round-section[data-round="'
+                                        + groupButton.dataset.round + '"]'
+                                    );
+                                    const groupWarning = groupSection
+                                        ? groupSection.querySelector(
+                                            '.lineup-order-warning'
+                                        )
+                                        : null;
+                                    return groupWarning
+                                        && groupWarning.style.display !== 'none';
+                                });
+                                mark.style.display = groupOutOfOrder ? '' : 'none';
                             }
                         }
                         // Put the players already on boards back in roster

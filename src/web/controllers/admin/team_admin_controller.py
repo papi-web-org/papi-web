@@ -880,22 +880,24 @@ class TeamAdminController(BaseEventAdminController):
     ) -> list[list[dict[str, Any]]]:
         """Split the rounds into runs sharing one line-up.
 
-        A round opens a run when it does not take the previous round's
-        line-up — that is, whenever the editor's "use the previous
-        round's line-up" box is unticked or absent (round 1, and any
-        paired round, whose line-up is whatever is on its boards).
+        Rounds are grouped on the line-up they show: a round joins the
+        run in progress when the same players stand on the same boards
+        as in the round before it. A paired round's line-up is whatever
+        is on its boards, so a whole tournament paired at once (a
+        round-robin) still groups the rounds a team plays alike.
         """
         groups: list[list[dict[str, Any]]] = []
+        previous_slots: tuple[int | None, ...] | None = None
         for round_info in rounds_data:
-            inherits = (
-                round_info['round'] > 1
-                and not round_info['is_paired']
-                and round_info['lineup_source'] != 'explicit'
+            slots = tuple(
+                player.id if player is not None else None
+                for player in round_info['slots']
             )
-            if groups and inherits:
+            if groups and slots == previous_slots:
                 groups[-1].append(round_info)
             else:
                 groups.append([round_info])
+            previous_slots = slots
         return groups
 
     @classmethod

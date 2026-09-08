@@ -414,10 +414,17 @@ class Team:
     def lineup_out_of_roster_order(self, round_: int) -> bool:
         """True iff *round_*'s board players (holes skipped) are not in
         ascending roster order. Used to warn when a line-up reshuffles
-        players relative to the roster."""
+        players relative to the roster. Once the round is paired its
+        boards are the source of truth, as in
+        :meth:`round_board_slots`."""
+        board_slots = self.round_board_slots(round_)
+        if board_slots is not None:
+            lineup = [player for player in board_slots if player is not None]
+        else:
+            lineup = self.effective_round_lineup(round_)
         roster_index = {player.id: i for i, player in enumerate(self.players)}
         last = -1
-        for player in self.effective_round_lineup(round_):
+        for player in lineup:
             idx = roster_index.get(player.id)
             if idx is None:
                 continue
