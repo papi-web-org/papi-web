@@ -1,6 +1,7 @@
 import csv
 from collections import defaultdict, Counter
 from collections.abc import Callable
+from contextlib import suppress
 from datetime import date
 from functools import cached_property
 from itertools import islice
@@ -2751,12 +2752,12 @@ class PlayerAdminController(BaseEventAdminController):
             },
         )
 
-    def _convert_filters(self, event: Event, json_filters: str) -> dict:
-        min_date = min([tournament.start_date for tournament in event.tournaments])
-        max_date = max([tournament.stop_date for tournament in event.tournaments])
-
+    @staticmethod
+    def _convert_filters(event: Event, json_filters: str) -> dict:
         def _get_year_for(category: PlayerCategory) -> int:
-            return category.representative_year(event, min_date, max_date)
+            return category.representative_year(
+                event, event.start_date, event.stop_date
+            )
 
         try:
             filters = json.loads(json_filters)
@@ -2767,9 +2768,13 @@ class PlayerAdminController(BaseEventAdminController):
             junior_categories: list[Any] = event.junior_categories
             senior_categories: list[Any] = event.senior_categories
             categories_intervals = []
-            category_filters = [
-                PlayerCategory.from_id(cat) for cat in filters['category_filter']
-            ]
+            category_filters = []
+            for category_id in filters['category_filter']:
+                with suppress(ValueError):
+                    category = PlayerCategory.from_id(category_id)
+                    if category in junior_categories or category in senior_categories:
+                        category_filters.append(category)
+            category_filters.sort()
 
             while len(category_filters):
                 # merges adjacent categories and finds the birth year interval that matches each one
@@ -2780,23 +2785,24 @@ class PlayerAdminController(BaseEventAdminController):
                 ) + 1 == player_categories.index(category_filters[0]):
                     stop = category_filters.pop(0)
 
+                max_year: int | None
                 if start in junior_categories:
                     if (index := junior_categories.index(start)) == 0:
                         max_year = None
                     else:
                         max_year = _get_year_for(junior_categories[index - 1]) - 1
-                elif start in senior_categories:
+                else:
                     max_year = _get_year_for(start)
 
+                min_year: int | None
                 if stop in junior_categories:
                     min_year = _get_year_for(stop)
-                elif stop in senior_categories:
-                    if (index := senior_categories.index(stop)) == len(
-                        senior_categories
-                    ) - 1:
-                        min_year = None
-                    else:
-                        min_year = _get_year_for(senior_categories[index + 1]) + 1
+                elif (index := senior_categories.index(stop)) == len(
+                    senior_categories
+                ) - 1:
+                    min_year = None
+                else:
+                    min_year = _get_year_for(senior_categories[index + 1]) + 1
 
                 categories_intervals.append((min_year, max_year))
 
