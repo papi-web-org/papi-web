@@ -311,6 +311,14 @@ window.addEventListener('show.bs.collapse', e => saveState(e.target, true));
 
 window.addEventListener('hide.bs.collapse', e => saveState(e.target, false));
 
+const restoreTriggersState = (id, isOpen) => {
+    const selector = `[data-bs-toggle="collapse"][data-bs-target="#${id}"], [data-bs-toggle="collapse"][href="#${id}"]`;
+    document.querySelectorAll(selector).forEach(trigger => {
+        trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        trigger.classList.toggle('collapsed', !isOpen);
+    });
+};
+
 const restoreState = () => {
   const states = JSON.parse(localStorage.getItem('collapseStates') || '{}');
   Object.entries(states).forEach(([id, isOpen]) => {
@@ -326,6 +334,7 @@ const restoreState = () => {
         el.style.height = '';
         el.setAttribute('aria-expanded', 'false');
     }
+    restoreTriggersState(id, isOpen);
   });
 };
 
