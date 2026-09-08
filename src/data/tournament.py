@@ -1667,7 +1667,7 @@ class Tournament:
                     continue
                 # A PAB team still participates (it's present, just unpaired),
                 # so OWN-ELO should reflect its strength. The bye envelope has
-                # no boards, so take the round's line-up players' ratings.
+                # no boards, so take the round's lineup players' ratings.
                 bye_team = self.event.teams_by_id.get(a_id)
                 pab_ratings: tuple[int | None, ...]
                 if bye_team is None:
@@ -2817,7 +2817,7 @@ class Tournament:
         round — absent seats, e.g. freed by unpairing and awaiting a forfeit
         pairing. Each is ``(board_index, label)`` like ``(5, 'B3')``. Empty
         for other systems. A present-but-unpaired player's seat isn't a hole
-        (it's filled in the line-up); only ``None`` slots count."""
+        (it's filled in the lineup); only ``None`` slots count."""
         from data.pairings.fixed_table import FixedTablePairingEngine
 
         engine = self.pairing_variation.engine
@@ -2851,7 +2851,7 @@ class Tournament:
         may be ``None`` (a hole) — but not both. Two players ⇒ a game; one
         player + a hole ⇒ a forfeit win for the present player (handled by
         :meth:`create_boards`, which scores a one-sided flat board as a
-        forfeit). No line-up is touched."""
+        forfeit). No lineup is touched."""
         if white_id is None and black_id is None:
             raise SharlyChessException('A board needs at least one player.')
         for player_id in (white_id, black_id):

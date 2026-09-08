@@ -8363,11 +8363,11 @@ msgid "The limit can only be adjusted by {count} half-points."
 msgstr ""
 
 #, python-format
-msgid "The line-up for round %(round)d is not in the same order as the team roster."
+msgid "The lineup for round %(round)d is not in the same order as the team roster."
 msgstr ""
 
 #, python-format
-msgid "The line-up for rounds %(first_round)d-%(last_round)d is not in the same order as the team roster."
+msgid "The lineup for rounds %(first_round)d-%(last_round)d is not in the same order as the team roster."
 msgstr ""
 
 msgid "The lowest rating that a player should have for their expected score to be greater than or equal to their score."
@@ -8913,7 +8913,7 @@ msgstr ""
 msgid "This player has already been paired; their team cannot be changed."
 msgstr ""
 
-msgid "This player is paired in at least one round and cannot be removed from the roster (must be removed from the line-up first)."
+msgid "This player is paired in at least one round and cannot be removed from the roster (must be removed from the lineup first)."
 msgstr ""
 
 msgid "This prize bracket"
@@ -8929,7 +8929,7 @@ msgid "This round cannot be edited."
 msgstr ""
 
 #, python-format
-msgid "This round has been paired, so its line-up is what stands on its boards. If you really want to edit this line-up: go to the Pairings tab, select round #%(round)d and open this modal again."
+msgid "This round has been paired, so its lineup is what stands on its boards. If you really want to edit this lineup: go to the Pairings tab, select round #%(round)d and open this modal again."
 msgstr ""
 
 #, python-brace-format
@@ -8948,7 +8948,7 @@ msgid "This round is paired; the prohibited pairings used are frozen."
 msgstr ""
 
 #, python-format
-msgid "This round will use round #%(round)d's line-up when paired."
+msgid "This round will use round #%(round)d's lineup when paired."
 msgstr ""
 
 msgid "This row contains errors that prevent it from being imported."
@@ -8973,7 +8973,7 @@ msgstr ""
 msgid "This team has already been paired; its tournament cannot be changed."
 msgstr ""
 
-msgid "This team has no rounds to show a line-up for."
+msgid "This team has no rounds to show a lineup for."
 msgstr ""
 
 msgid "This tie-break can be used multiple times."
@@ -9628,7 +9628,7 @@ msgstr ""
 msgid "Use the alert message defined on each screen."
 msgstr ""
 
-msgid "Use the previous round's line-up (untick to set this round)"
+msgid "Use the previous round's lineup (untick to set this round)"
 msgstr ""
 
 msgid "Use the standard FIDE rating for unrated players"
@@ -9783,7 +9783,7 @@ msgstr "WIM"
 msgid "Wales"
 msgstr ""
 
-msgid "Warn on line-up out of roster order"
+msgid "Warn on lineup out of roster order"
 msgstr ""
 
 msgid "Warning: all hours for this timer will be permanently deleted!"
@@ -9849,7 +9849,7 @@ msgstr ""
 msgid "When defined, the alert message is displayed in a scrolling banner at the bottom of the screens."
 msgstr ""
 
-msgid "When enabled, a warning is shown if a per-round line-up places players in a different order than the team roster. The line-up can still be reordered freely."
+msgid "When enabled, a warning is shown if a per-round lineup places players in a different order than the team roster. The lineup can still be reordered freely."
 msgstr ""
 
 msgid "When hovering a player's name with the mouse, display its history."

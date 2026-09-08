@@ -110,11 +110,11 @@ class Team:
 
     def player_round_label(self, player: 'Player', round_: int) -> str | None:
         """Fixed-table code for ``player`` this round — the team letter plus
-        the player's 1-based line-up slot (e.g. ``A1``, ``B3``). Derived from
+        the player's 1-based lineup slot (e.g. ``A1``, ``B3``). Derived from
         the player's actual seat in :meth:`effective_round_slots`, so it
         follows the player wherever they end up (manual re-pairing included),
         independent of which physical board they sit at. ``None`` when the
-        team has no letter or the player isn't in this round's line-up."""
+        team has no letter or the player isn't in this round's lineup."""
         letter = self.pairing_label
         if letter is None:
             return None
@@ -391,7 +391,7 @@ class Team:
         n = tournament.team_player_count
         slots: list['Player | None'] = [None] * n
         players_by_id = self.event.players_by_id
-        # Which line-up slot each board seats this team's player on. A
+        # Which lineup slot each board seats this team's player on. A
         # match seats slot i on board i, but a table that rotates one
         # team around the other does not.
         slot_by_board_index = tournament.pairing_variation.engine.team_board_slots(
@@ -413,7 +413,7 @@ class Team:
 
     def lineup_out_of_roster_order(self, round_: int) -> bool:
         """True iff *round_*'s board players (holes skipped) are not in
-        ascending roster order. Used to warn when a line-up reshuffles
+        ascending roster order. Used to warn when a lineup reshuffles
         players relative to the roster. Once the round is paired its
         boards are the source of truth, as in
         :meth:`round_board_slots`."""

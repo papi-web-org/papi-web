@@ -18,12 +18,12 @@
         <div class="modal-body">
             {% if not rounds_data %}
                 <div class="text-muted">
-                    {{ _('This team has no rounds to show a line-up for.') }}
+                    {{ _('This team has no rounds to show a lineup for.') }}
                 </div>
             {% else %}
                 <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
                     <label class="form-label mb-0">{{ _('Round:') }}</label>
-                    {# One button group per run of rounds sharing a line-up,
+                    {# One button group per run of rounds sharing a lineup,
                        so which rounds follow which is read off the row
                        instead of being hidden in a tooltip. #}
                     {% for group in round_groups %}
@@ -49,17 +49,17 @@
                                 {% endfor %}
                             </div>
                             {# One mark for the group: its rounds share a
-                               line-up, so they are in or out of roster order
+                               lineup, so they are in or out of roster order
                                together. #}
                             <i
                                 class="lineup-round-mark bi-recycle"
                                 {{ macros.tooltip_attributes(
                                     '',
                                     _(
-                                        'The line-up for round %(round)d is not in the same order as the team roster.',
+                                        'The lineup for round %(round)d is not in the same order as the team roster.',
                                         round=first_round
                                     ) if first_round == last_round else _(
-                                        'The line-up for rounds %(first_round)d-%(last_round)d is not in the same order as the team roster.',
+                                        'The lineup for rounds %(first_round)d-%(last_round)d is not in the same order as the team roster.',
                                         first_round=first_round,
                                         last_round=last_round
                                     ),
@@ -86,7 +86,7 @@
                         {% if not editable %}
                             <div class="alert alert-info py-1 px-2 small mb-2">
                                 {{ _(
-                                    'This round has been paired, so its line-up is what stands on its boards. If you really want to edit this line-up: go to the Pairings tab, select round #%(round)d and open this modal again.',
+                                    'This round has been paired, so its lineup is what stands on its boards. If you really want to edit this lineup: go to the Pairings tab, select round #%(round)d and open this modal again.',
                                     round=round_num
                                 ) }}
                             </div>
@@ -102,7 +102,7 @@
                             <i class="bi-recycle"></i>
                             <span class="flex-grow-1">
                                 {{ _(
-                                    'The line-up for round %(round)d is not in the same order as the team roster.',
+                                    'The lineup for round %(round)d is not in the same order as the team roster.',
                                     round=round_num
                                 ) }}
                             </span>
@@ -149,7 +149,7 @@
                                     >
                                     <label class="form-check-label" for="use-previous-r{{ round_num }}">
                                         {{ _(
-                                            "Use the previous round's line-up "
+                                            "Use the previous round's lineup "
                                             "(untick to set this round)"
                                         ) }}
                                     </label>
@@ -157,7 +157,7 @@
                                 <div class="lineup-previous-note text-muted small mb-2">
                                     {{ _(
                                         "This round will use round #%(round)d's "
-                                        "line-up when paired.",
+                                        "lineup when paired.",
                                         round=round_num - 1
                                     ) }}
                                 </div>
@@ -415,12 +415,12 @@
                             if (resetOrder) {
                                 resetOrder.addEventListener('click', function () {
                                     // On a round that takes the previous
-                                    // round's line-up, the reorder has to make
-                                    // the line-up this round's own. Left
+                                    // round's lineup, the reorder has to make
+                                    // the lineup this round's own. Left
                                     // inheriting, the save would drop what was
                                     // just reordered — and the reorder would
                                     // in any case belong to the round the
-                                    // line-up came from, reaching back over
+                                    // lineup came from, reaching back over
                                     // rounds the captain did not touch.
                                     if (usePrev && usePrev.checked) {
                                         usePrev.checked = false;

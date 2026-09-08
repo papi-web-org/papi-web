@@ -783,11 +783,11 @@ class TeamAdminController(BaseEventAdminController):
         if player is not None:
             if self._player_is_paired(team, player):
                 # A paired player can't leave the roster — it would orphan
-                # their board(s). The line-up must be edited first.
+                # their board(s). The lineup must be edited first.
                 Message.warning(
                     request,
                     _(
-                        'This player is paired in at least one round and cannot be removed from the roster (must be removed from the line-up first).'
+                        'This player is paired in at least one round and cannot be removed from the roster (must be removed from the lineup first).'
                     ),
                 )
             else:
@@ -878,11 +878,11 @@ class TeamAdminController(BaseEventAdminController):
     def _group_rounds_by_lineup(
         rounds_data: list[dict[str, Any]],
     ) -> list[list[dict[str, Any]]]:
-        """Split the rounds into runs sharing one line-up.
+        """Split the rounds into runs sharing one lineup.
 
-        Rounds are grouped on the line-up they show: a round joins the
+        Rounds are grouped on the lineup they show: a round joins the
         run in progress when the same players stand on the same boards
-        as in the round before it. A paired round's line-up is whatever
+        as in the round before it. A paired round's lineup is whatever
         is on its boards, so a whole tournament paired at once (a
         round-robin) still groups the rounds a team plays alike.
         """
@@ -914,7 +914,7 @@ class TeamAdminController(BaseEventAdminController):
         warn_lineup_order = False
         if tournament is not None:
             warn_lineup_order = tournament.warn_lineup_order
-            # Every round, played ones included: the team's line-up through
+            # Every round, played ones included: the team's lineup through
             # the whole tournament is worth seeing in one place. A played
             # round is shown read-only unless the pairings tab asked for
             # that very round — see ``editable`` below.
@@ -950,7 +950,7 @@ class TeamAdminController(BaseEventAdminController):
                 {
                     'round': round_,
                     'is_paired': is_paired,
-                    # A played round's line-up is its boards, and moving a
+                    # A played round's lineup is its boards, and moving a
                     # player there has to move them on the board too. That
                     # is what the pairings tab does, and it opens this same
                     # modal naming the round — so the round it names is
@@ -1073,8 +1073,8 @@ class TeamAdminController(BaseEventAdminController):
                     team.delete_round_lineup(round_, database)
                 else:
                     team.set_round_lineup(round_, slot_values, database)
-                # The line-up-average sort mode keys off the round 1
-                # line-up, so re-sort once it changes (self-guards for
+                # The lineup-average sort mode keys off the round 1
+                # lineup, so re-sort once it changes (self-guards for
                 # the other modes and once a round is paired).
                 if tournament is not None:
                     tournament.resort_teams(database)
@@ -1141,7 +1141,7 @@ class TeamAdminController(BaseEventAdminController):
                 team.round_board_slots(round_) or team.effective_round_slots(round_)
             )
         ]
-        # Keyed by the team's line-up slot, which is the board index in
+        # Keyed by the team's lineup slot, which is the board index in
         # a straight team match but not in a table that rotates one team
         # around the other.
         slot_by_board_index = tournament.pairing_variation.engine.team_board_slots(

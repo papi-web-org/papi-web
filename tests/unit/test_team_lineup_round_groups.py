@@ -1,7 +1,7 @@
-"""The line-ups modal groups its round buttons on the line-up each
+"""The lineups modal groups its round buttons on the lineup each
 round shows, whatever pairs the rounds.
 
-The grouping used to be read off the "use the previous round's line-up"
+The grouping used to be read off the "use the previous round's lineup"
 box, and a paired round always opened a group of its own. Systems that
 pair every round up front (a round-robin, a Scheveningen table, a
 Molter table) then gave every round a button group of its own, however
@@ -34,8 +34,8 @@ N = 4  # boards per match
 
 def _round_groups(tournament: Tournament, team: Team) -> list[list[int]]:
     """The modal's round groups, as lists of round numbers. Mirrors how
-    the controller reads each round's line-up: the boards once the round
-    is paired, the stored or inherited line-up before that."""
+    the controller reads each round's lineup: the boards once the round
+    is paired, the stored or inherited lineup before that."""
     rounds_data = [
         {
             'round': round_,
@@ -126,7 +126,7 @@ class TeamLineupRoundGroupsTestCase(TestCase):
 
     def _play(self, tournament: Tournament, round_: int) -> None:
         """Every board of *round_* to White, so the next round can pair.
-        A board a line-up left as a hole is a forfeit and already has
+        A board a lineup left as a hole is a forfeit and already has
         its result."""
         for board in tournament.get_round_boards(round_):
             if (
@@ -156,7 +156,7 @@ class TeamLineupRoundGroupsTestCase(TestCase):
 
     def test_round_robin_groups_the_rounds_a_team_plays_alike(self) -> None:
         """A round-robin pairs every round up front. The team keeps one
-        line-up for rounds 1-2 and reshuffles for round 3, so that is
+        lineup for rounds 1-2 and reshuffles for round 3, so that is
         what the buttons say — not one group per round."""
         self._create('TEAM_ROUND_ROBIN_BERGER', rounds=3, teams=4)
         self._set_lineup(0, 3, [1, 0, 2, 3])
@@ -167,9 +167,9 @@ class TeamLineupRoundGroupsTestCase(TestCase):
         )
 
     def test_round_robin_reads_the_holes_a_lineup_leaves(self) -> None:
-        """A board a team leaves empty is part of the line-up it shows:
+        """A board a team leaves empty is part of the lineup it shows:
         the round it starts leaving that board empty opens a group, and
-        the rounds inheriting the line-up join it."""
+        the rounds inheriting the lineup join it."""
         self._create('TEAM_ROUND_ROBIN_BERGER', rounds=3, teams=4)
         with EventDatabase(EVENT_ID, write=True) as database:
             team = self._team(self._load(), 0)
@@ -189,7 +189,7 @@ class TeamLineupRoundGroupsTestCase(TestCase):
 
     def test_team_swiss_rounds_yet_to_be_paired_follow_the_last(self) -> None:
         """A Swiss pairs one round at a time. The rounds still to come
-        inherit the line-up, so they share the group of the round they
+        inherit the lineup, so they share the group of the round they
         inherit it from."""
         self._create('TEAM_SWISS_STANDARD', rounds=3, teams=4)
         tournament = self._pair(1)
@@ -199,7 +199,7 @@ class TeamLineupRoundGroupsTestCase(TestCase):
     def test_scheveningen_rotation_is_not_a_new_lineup(self) -> None:
         """A Scheveningen table rotates one team's players around the
         other, so a player changes board from round to round without the
-        line-up changing. The rounds stay in one group."""
+        lineup changing. The rounds stay in one group."""
         self._create('SCHEVENINGEN_STANDARD', rounds=N, teams=2)
         tournament = self._pair(N)
         self.assertEqual(tournament.last_paired_round, N)

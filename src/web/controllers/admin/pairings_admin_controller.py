@@ -297,9 +297,9 @@ class PairingsAdminWebContext(BaseEventAdminWebContext):
         )
         if self.admin_tournament.event.is_team_event:
             # Flat team systems (Molter) reach here — team-vs-team systems
-            # already returned above. Only players seated in a team's line-up
+            # already returned above. Only players seated in a team's lineup
             # for this round belong in the "to pair" list; benched players
-            # aren't meant to play. Reads the line-up, never writes it.
+            # aren't meant to play. Reads the lineup, never writes it.
             round_ = self.admin_round or 1
             seated_ids: set[int] = set()
             for team in self.admin_tournament.teams:
@@ -1248,7 +1248,7 @@ class PairingsAdminController(BaseEventAdminController):
         side_team: Team,
         board_index: int,
     ) -> int:
-        """The line-up slot ``side_team`` fills by seating a player on
+        """The lineup slot ``side_team`` fills by seating a player on
         the board at ``board_index``."""
         return tournament.pairing_variation.engine.team_board_slots(
             tournament, team_board, side_team.id
