@@ -1208,7 +1208,7 @@ body[data-bs-theme="dark"] .htmx-indicator {
 .modal {
     --bs-modal-width: min(90vw, 1000px);
 }
-.modal * + h4, .modal * + .collapse-button {
+.modal * + h4, .modal * + .collapse-button, .modal * + form > h4:first-child {
     margin-top: 1.5rem;
 }
 .modal h4, .modal * + .collapse-button {
