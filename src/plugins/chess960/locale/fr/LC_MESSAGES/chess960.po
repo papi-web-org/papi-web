@@ -14,8 +14,8 @@ msgstr "Toutes les positions Chess960"
 msgid "Chess960"
 msgstr "Chess960"
 
-msgid "Chess960 (also called Fischer random chess) starts the games from one of the 960 possible shuffles of the pieces on the first rank."
-msgstr "Le Chess960 (aussi appelé échecs aléatoires Fischer) débute les parties depuis l’une des 960 dispositions possibles des pièces sur la première rangée."
+msgid "Chess960 (also called Fischer random chess) starts the games from one of the 960 possible shuffles of the pieces on the first rank (with the King between the two Rooks and the Bishops on opposite-colored squares)."
+msgstr "Le Chess960 (aussi appelé échecs aléatoires Fischer) débute les parties depuis l’une des 960 dispositions possibles des pièces sur la première rangée (avec le Roi entre les deux Tours et les Fous sur des cases de couleurs oppposées)."
 
 msgid "Chess960 positions"
 msgstr "Positions Chess960"

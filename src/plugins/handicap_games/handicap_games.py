@@ -63,8 +63,7 @@ class HandicapGamesPlugin(Plugin):
                 _(
                     'In a handicap tournament the two players of a game do not get the '
                     'same thinking time: the stronger player plays with less time than '
-                    'the weaker one, which lets players of very different levels meet '
-                    'in the same tournament.'
+                    "the weaker one, which which reduces the strongest player's chances of winning."
                 ),
                 _(
                     '- a rating step, a time penalty per step and a minimum time, '

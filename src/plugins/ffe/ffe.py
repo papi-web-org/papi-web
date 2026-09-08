@@ -215,7 +215,7 @@ class FfePlugin(Plugin):
                 ),
                 _(
                     '- the players searched in the federation database, with their '
-                    'licence, their club and their leagues;\n'
+                    'licence, their club and their league;\n'
                     '- the tournaments imported from and exported to the Papi format;\n'
                     '- the results uploaded to the website of the federation;\n'
                     '- the tie-breaks and the pairing variations used in France;\n'

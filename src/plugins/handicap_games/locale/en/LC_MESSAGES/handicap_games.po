@@ -20,7 +20,7 @@ msgstr ""
 msgid "Handicap games"
 msgstr ""
 
-msgid "In a handicap tournament the two players of a game do not get the same thinking time: the stronger player plays with less time than the weaker one, which lets players of very different levels meet in the same tournament."
+msgid "In a handicap tournament the two players of a game do not get the same thinking time: the stronger player plays with less time than the weaker one, which which reduces the strongest player's chances of winning."
 msgstr ""
 
 msgid "Minimum time (secs):"

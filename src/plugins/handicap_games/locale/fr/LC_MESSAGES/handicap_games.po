@@ -23,8 +23,8 @@ msgstr "Tranche Elo :"
 msgid "Handicap games"
 msgstr "Parties à handicap"
 
-msgid "In a handicap tournament the two players of a game do not get the same thinking time: the stronger player plays with less time than the weaker one, which lets players of very different levels meet in the same tournament."
-msgstr "Dans un tournoi à handicap, les deux joueur·euses d’une partie ne disposent pas du même temps de réflexion : le·la plus fort·e joue avec moins de temps que le·la plus faible, ce qui permet à des joueur·euses de niveaux très différents de se rencontrer dans le même tournoi."
+msgid "In a handicap tournament the two players of a game do not get the same thinking time: the stronger player plays with less time than the weaker one, which which reduces the strongest player's chances of winning."
+msgstr "Dans un tournoi à handicap, les deux joueur·euses d’une partie ne disposent pas du même temps de réflexion : le·la plus fort·e joue avec moins de temps que le·la plus faible, ce qui diminue les chances de gain du·de la joueur·euse le·la plus fort·e."
 
 msgid "Minimum time (secs):"
 msgstr "Temps minimal (sec.) :"

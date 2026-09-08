@@ -12,7 +12,7 @@ msgstr ""
 msgid "Chess960"
 msgstr ""
 
-msgid "Chess960 (also called Fischer random chess) starts the games from one of the 960 possible shuffles of the pieces on the first rank."
+msgid "Chess960 (also called Fischer random chess) starts the games from one of the 960 possible shuffles of the pieces on the first rank (with the King between the two Rooks and the Bishops on opposite-colored squares)."
 msgstr ""
 
 msgid "Chess960 positions"

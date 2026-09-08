@@ -40,8 +40,8 @@ msgstr "L'évènement ChessEvent n'est pas défini."
 msgid "ChessEvent event:"
 msgstr "Évènement ChessEvent :"
 
-msgid "ChessEvent handles the online registration and the payment of the players for tournaments organised in France."
-msgstr "ChessEvent gère les inscriptions en ligne et le paiement des joueur·euses pour les tournois organisés en France."
+msgid "ChessEvent handles the online registration of the players for tournaments organised in France."
+msgstr "ChessEvent gère les inscriptions en ligne des joueur·euses pour les tournois organisés en France."
 
 msgid "ChessEvent password not defined."
 msgstr "Le mot de passe ChessEvent n'est pas défini."

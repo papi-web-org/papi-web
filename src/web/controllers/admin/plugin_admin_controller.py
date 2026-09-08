@@ -179,7 +179,7 @@ class PluginAdminController(BaseAdminController):
         if blocking_plugins := plugin.required_by_enabled_plugins:
             Message.error(
                 request,
-                _('Plugin {plugin} is needed by the plugins {plugins}.').format(
+                _('Plugin [{plugin}] is needed by the plugins {plugins}.').format(
                     plugin=plugin.name,
                     plugins=', '.join(
                         blocking_plugin.name for blocking_plugin in blocking_plugins
@@ -191,7 +191,7 @@ class PluginAdminController(BaseAdminController):
             Message.error(
                 request,
                 _(
-                    'Plugin {plugin} is used by events and can not be uninstalled.'
+                    'Plugin [{plugin}] is used by events and can not be uninstalled.'
                 ).format(plugin=plugin.name),
             )
             return

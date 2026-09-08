@@ -120,7 +120,8 @@ class FRASchoolsPlugin(Plugin):
                 _(
                     '- the school of a player picked from the national database of the '
                     'schools;\n'
-                    '- the players of a same school kept apart in the pairings;\n'
+                    '- the possibility to prevent pairings between players from the '
+                    'same school;\n'
                     '- the schools used as the affiliation of the teams;\n'
                     '- the school available as a column of the players and of the '
                     'documents.'

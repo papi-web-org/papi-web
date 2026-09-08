@@ -12,7 +12,7 @@ msgid ""
 "- the pairings and the standings published live on the platform."
 msgstr ""
 "- un évènement de la plateforme lié à votre évènement, et ses joueur·euses synchronisé·es dans les deux sens ;\n"
-"- le pointage des joueur·euses réalisé en ligne par les joueur·euses elleux-mêmes ;\n"
+"- le pointage des joueur·euses réalisé en ligne par les joueur·euses en autonomie ;\n"
 "- les appariements et les classements publiés en direct sur la plateforme."
 
 msgid "All player conflicts resolved."

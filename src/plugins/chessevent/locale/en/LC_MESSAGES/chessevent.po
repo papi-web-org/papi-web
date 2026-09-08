@@ -37,7 +37,7 @@ msgstr ""
 msgid "ChessEvent event:"
 msgstr ""
 
-msgid "ChessEvent handles the online registration and the payment of the players for tournaments organised in France."
+msgid "ChessEvent handles the online registration of the players for tournaments organised in France."
 msgstr ""
 
 msgid "ChessEvent password not defined."

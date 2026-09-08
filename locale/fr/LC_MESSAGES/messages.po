@@ -6734,16 +6734,16 @@ msgid "Plugin"
 msgstr "Plug-in"
 
 #, python-brace-format
+msgid "Plugin [{plugin}] is needed by the plugins {plugins}."
+msgstr "Le plug-in [{plugin}] est requis par les plug-ins {plugins}."
+
+#, python-brace-format
+msgid "Plugin [{plugin}] is used by events and can not be uninstalled."
+msgstr "Le plug-in [{plugin}] est utilisé par des évènements et ne peut pas être désinstallé."
+
+#, python-brace-format
 msgid "Plugin [{plugin}] was enabled."
 msgstr "Le plugin [{plugin}] a été activé."
-
-#, python-brace-format
-msgid "Plugin {plugin} is needed by the plugins {plugins}."
-msgstr "Le plug-in {plugin} est requis par les plug-ins {plugins}."
-
-#, python-brace-format
-msgid "Plugin {plugin} is used by events and can not be uninstalled."
-msgstr "Le plug-in {plugin} est utilisé par des évènements et ne peut pas être désinstallé."
 
 msgid "Plugins"
 msgstr "Plug-ins"
@@ -10216,8 +10216,8 @@ msgstr "Une semaine"
 msgid "Weight each counted stage’s value by the tournament’s coefficient."
 msgstr "Pondérer la valeur de chaque étape comptée par le coefficient du tournoi."
 
-msgid "Welcome to Sharly Chess!"
-msgstr "Bienvenue dans Sharly Chess !"
+msgid "Welcome to Sharly Chess!"
+msgstr "Bienvenue dans Sharly Chess !"
 
 msgid "What separates the last teams when they are level on both match points and game points, judged on the boards of their own encounter."
 msgstr "Ce qui départage les deux dernières équipes lorsqu'elles sont à égalité à la fois aux points de match et aux points de parties, en se fondant sur les échiquiers de leur confrontation."
@@ -11161,73 +11161,4 @@ msgstr "—"
 
 msgid "← Back to IT1 certificate"
 msgstr "← Retour au certificat IT1"
-
-#~ msgid "Federation plugins"
-#~ msgstr "Plug-ins de fédération"
-
-#~ msgid "These plugins can only be activated on events of their federation."
-#~ msgstr "Ces plug-ins ne peuvent-être activés que pour les évènements de leur fédération."
-
-#~ msgid "Used by %(num)d event."
-#~ msgid_plural "Used by %(num)d events."
-#~ msgstr[0] "Utilisé par %(num)d évènement."
-#~ msgstr[1] "Utilisé par %(num)d évènements."
-
-#~ msgid "%(num)d event."
-#~ msgid_plural "%(num)d events."
-#~ msgstr[0] "%(num)d évènement."
-#~ msgstr[1] "%(num)d évènements."
-
-#~ msgid "Benefit from the very last (experimental) features (USE AT YOUR OWN RISKS!)."
-#~ msgstr "Bénéficiez des toutes dernières fonctionnalités (expérimentales) de l'application (UTILISEZ À VOS PROPRES RISQUES !)."
-
-#~ msgid "Choose your language"
-#~ msgstr "Veuillez choisir votre langue"
-
-#~ msgid "Date format"
-#~ msgstr "Format des dates"
-
-#~ msgid "Experimental features in version %(version)s are:"
-#~ msgstr "Les fonctionnalités expérimentales en version %(version)s sont :"
-
-#~ msgid "Invalid locale [{locale}]."
-#~ msgstr "Langue [{locale}] non valide."
-
-#~ msgid "Please choose a federation."
-#~ msgstr "Veuillez choisir une fédération."
-
-#~ msgid "Please validate the global configuration of the application."
-#~ msgstr "Veuillez valider la configuration globale de l'application."
-
-#~ msgid "Please wait until the application settings have been set on the server…"
-#~ msgstr "La configuration est en cours sur le serveur, veuillez patienter…"
-
-#~ msgid "Sharly Chess settings"
-#~ msgstr "Configuration de Sharly Chess"
-
-#~ msgid "Sharly Chess settings have been updated."
-#~ msgstr "La configuration de Sharly Chess a été mise à jour."
-
-#~ msgid "The default federation for your events."
-#~ msgstr "La fédération par défaut pour vos évènements."
-
-#~ msgid "Welcome to Sharly Chess!"
-#~ msgstr "Bienvenue dans Sharly Chess !"
-
-#~ msgid "One or more of the plugins required to use this event are disabled, making it inaccessible. You can enable plugins in the application settings."
-#~ msgstr "Au moins l'un des plug-ins requis pour utiliser cet évènement est désactivé, le rendant inaccessible. Vous pouvez activer les plug-ins dans les paramètres de l'application."
-
-#~ msgid "Plugin {plugin} has been installed as a dependency."
-#~ msgstr "Le plug-in {plugin} a été installé comme dépendance."
-
-#~ msgid "Plugin {plugin} has been installed."
-#~ msgstr "Le plug-in {plugin} a été installé."
-
-#~ msgid "Plugin {plugin} has been uninstalled."
-#~ msgstr "Le plug-in {plugin} a été désinstallé."
-
-#~ msgid "This event uses the plugin {plugins}, which is not installed: install it from the Plugins section to open the event."
-#~ msgid_plural "This event uses the plugins {plugins}, which are not installed: install them from the Plugins section to open the event."
-#~ msgstr[0] "Cet évènement utilise le plug-in {plugins}, qui n’est pas installé : installez-le depuis la section Plug-ins pour ouvrir l’évènement."
-#~ msgstr[1] "Cet évènement utilise les plug-ins {plugins}, qui ne sont pas installés : installez-les depuis la section Plug-ins pour ouvrir l’évènement.\""
 

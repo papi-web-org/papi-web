@@ -6732,15 +6732,15 @@ msgid "Plugin"
 msgstr ""
 
 #, python-brace-format
+msgid "Plugin [{plugin}] is needed by the plugins {plugins}."
+msgstr ""
+
+#, python-brace-format
+msgid "Plugin [{plugin}] is used by events and can not be uninstalled."
+msgstr ""
+
+#, python-brace-format
 msgid "Plugin [{plugin}] was enabled."
-msgstr ""
-
-#, python-brace-format
-msgid "Plugin {plugin} is needed by the plugins {plugins}."
-msgstr ""
-
-#, python-brace-format
-msgid "Plugin {plugin} is used by events and can not be uninstalled."
 msgstr ""
 
 msgid "Plugins"
@@ -10214,7 +10214,7 @@ msgstr ""
 msgid "Weight each counted stage’s value by the tournament’s coefficient."
 msgstr ""
 
-msgid "Welcome to Sharly Chess!"
+msgid "Welcome to Sharly Chess!"
 msgstr ""
 
 msgid "What separates the last teams when they are level on both match points and game points, judged on the boards of their own encounter."
@@ -11159,73 +11159,4 @@ msgstr ""
 
 msgid "← Back to IT1 certificate"
 msgstr ""
-
-#~ msgid "Federation plugins"
-#~ msgstr ""
-
-#~ msgid "These plugins can only be activated on events of their federation."
-#~ msgstr ""
-
-#~ msgid "Used by %(num)d event."
-#~ msgid_plural "Used by %(num)d events."
-#~ msgstr[0] ""
-#~ msgstr[1] ""
-
-#~ msgid "%(num)d event."
-#~ msgid_plural "%(num)d events."
-#~ msgstr[0] ""
-#~ msgstr[1] ""
-
-#~ msgid "Benefit from the very last (experimental) features (USE AT YOUR OWN RISKS!)."
-#~ msgstr ""
-
-#~ msgid "Choose your language"
-#~ msgstr ""
-
-#~ msgid "Date format"
-#~ msgstr ""
-
-#~ msgid "Experimental features in version %(version)s are:"
-#~ msgstr ""
-
-#~ msgid "Invalid locale [{locale}]."
-#~ msgstr ""
-
-#~ msgid "Please choose a federation."
-#~ msgstr ""
-
-#~ msgid "Please validate the global configuration of the application."
-#~ msgstr ""
-
-#~ msgid "Please wait until the application settings have been set on the server…"
-#~ msgstr ""
-
-#~ msgid "Sharly Chess settings"
-#~ msgstr ""
-
-#~ msgid "Sharly Chess settings have been updated."
-#~ msgstr ""
-
-#~ msgid "The default federation for your events."
-#~ msgstr ""
-
-#~ msgid "Welcome to Sharly Chess!"
-#~ msgstr ""
-
-#~ msgid "One or more of the plugins required to use this event are disabled, making it inaccessible. You can enable plugins in the application settings."
-#~ msgstr ""
-
-#~ msgid "Plugin {plugin} has been installed as a dependency."
-#~ msgstr ""
-
-#~ msgid "Plugin {plugin} has been installed."
-#~ msgstr ""
-
-#~ msgid "Plugin {plugin} has been uninstalled."
-#~ msgstr ""
-
-#~ msgid "This event uses the plugin {plugins}, which is not installed: install it from the Plugins section to open the event."
-#~ msgid_plural "This event uses the plugins {plugins}, which are not installed: install them from the Plugins section to open the event."
-#~ msgstr[0] ""
-#~ msgstr[1] ""
 

@@ -47,8 +47,10 @@ class Chess960Plugin(Plugin):
         return '\n\n'.join(
             [
                 _(
-                    'Chess960 (also called Fischer random chess) starts the games from '
-                    'one of the 960 possible shuffles of the pieces on the first rank.'
+                    'Chess960 (also called Fischer random chess) starts the games '
+                    'from one of the 960 possible shuffles of the pieces on the first '
+                    'rank (with the King between the two Rooks and the Bishops on '
+                    'opposite-colored squares).'
                 ),
                 _(
                     '- a **Chess960** screen type, holding the start position of the '

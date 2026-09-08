@@ -89,7 +89,7 @@ class ChessEventPlugin(Plugin):
         return '\n\n'.join(
             [
                 _(
-                    'ChessEvent handles the online registration and the payment of the '
+                    'ChessEvent handles the online registration of the '
                     'players for tournaments organised in France.'
                 ),
                 _(

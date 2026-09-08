@@ -863,7 +863,7 @@ class SharlyChessServerToga(toga.App):
                 style=Pack(width=self.setup_logo_width, height=self.setup_logo_width),
             ),
             toga.Label(
-                _('Welcome to Sharly Chess!'), font_weight='bold', text_align='center'
+                _('Welcome to Sharly Chess!'), font_weight='bold', text_align='center'
             ),
             toga.Label(
                 _('Please choose your language and your federation to start.'),
