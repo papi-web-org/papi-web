@@ -2,16 +2,22 @@
     <div class="col-12">
           <div class="input-group">
             {{ admin_macros.search_indicator('player-search-indicator') }}
-            <select name="data_source" id="data-source-select" class="form-select w-auto">
-                {% for data_source in data_sources %}
-                    <option
-                        value="{{ data_source.id }}"
-                        {% if selected_data_source == data_source.id %}selected{% endif %}
-                    >
-                        {{ data_source.name }}
-                    </option>
-                {% endfor %}
-            </select>
+            {% set data_source_options = {} %}
+            {% for data_source in data_sources %}
+                {% do data_source_options.update({data_source.id: data_source.name}) %}
+            {% endfor %}
+            <div
+                class="form-control p-0 border-0 select2-border-radius-0-left select2-border-radius-0-right"
+                style="flex: 0 1 14rem;"
+            >
+                {{ admin_macros.select_content(
+                    id='data-source-select',
+                    name='data_source',
+                    options=data_source_options,
+                    selected=[selected_data_source],
+                    search_disabled=true,
+                ) }}
+            </div>
             <input
                 id="search-input"
                 name="search"
