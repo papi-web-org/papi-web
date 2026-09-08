@@ -386,9 +386,6 @@ msgstr ""
 msgid "Make visible on FFE site"
 msgstr ""
 
-msgid "Match lost by forfeit, counted as 0 match points."
-msgstr ""
-
 msgid "Max. teams per league:"
 msgstr ""
 
@@ -797,4 +794,7 @@ msgid "{n} game lost by forfeit, counted as -1."
 msgid_plural "{n} games lost by forfeit, counted as -1 each."
 msgstr[0] ""
 msgstr[1] ""
+
+#~ msgid "Match lost by forfeit, counted as 0 match points."
+#~ msgstr ""
 

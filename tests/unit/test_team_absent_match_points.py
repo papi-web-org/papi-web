@@ -1,0 +1,221 @@
+"""Match points scored by an absent team.
+
+A team that forfeits its whole match, or is left unpaired as absent,
+takes the tournament's absence match points (``mp_zpb``, stored under
+``ZERO_POINT_BYE``) rather than the score of a match played and lost.
+The FFE cups need it: there a match lost over the board is worth 1 point
+and a match lost by forfeit 0.
+
+The value defaults to the Loss value, which is what such a team scored
+before it could be set.
+"""
+
+from unittest import TestCase
+
+import pytest
+
+from data.loader import EventLoader
+from data.teams.team import Team
+from data.tournament import Tournament
+from database.sqlite.event.event_database import EventDatabase
+from database.sqlite.event.event_store import (
+    StoredPlayer,
+    StoredTeam,
+    StoredTournamentPlayer,
+)
+from tests.test_config import TestUtils
+from utils.enum import EventType, Result, ScoreType, TeamByeType
+
+
+EVENT_ID = 'test-team-absent-match-points'
+TOURNAMENT_NAME = 'tournament'
+N = 2  # boards per match
+TEAMS = 4
+
+# The FFE cup scheme: a match played and lost is still worth a point,
+# one lost by forfeit nothing.
+_CUP_MATCH_POINTS = {
+    Result.WIN.value: 3.0,
+    Result.DRAW.value: 2.0,
+    Result.LOSS.value: 1.0,
+    Result.ZERO_POINT_BYE.value: 0.0,
+}
+
+
+@pytest.mark.unit
+class TeamAbsentMatchPointsTestCase(TestCase):
+    def tearDown(self) -> None:
+        TestUtils.delete_event(EVENT_ID)
+
+    def _create(self, match_points: dict[int, float]) -> None:
+        TestUtils.create_event(EVENT_ID, overrides={'event_type': EventType.TEAM})
+        TestUtils.create_tournament(
+            EVENT_ID,
+            TOURNAMENT_NAME,
+            overrides={
+                'rounds': TEAMS - 1,
+                'current_round': 1,
+                'team_player_count': N,
+                'pairing': 'TEAM_ROUND_ROBIN_BERGER',
+                'primary_score': ScoreType.MATCH_POINTS,
+                'match_points': match_points,
+            },
+        )
+        self.team_ids: list[int] = []
+        with EventDatabase(EVENT_ID, write=True) as database:
+            tournament_id = next(
+                stored.id
+                for stored in database.load_stored_tournaments()
+                if stored.name == TOURNAMENT_NAME
+            )
+            assert tournament_id is not None
+            for seed in range(1, TEAMS + 1):
+                team_id = database.add_stored_team(
+                    StoredTeam(
+                        id=None,
+                        name=f'Team{seed}',
+                        tournament_id=tournament_id,
+                        pairing_number=seed,
+                        check_in=True,
+                    )
+                )
+                self.team_ids.append(team_id)
+                for index in range(N):
+                    player_id = database.add_stored_player(
+                        StoredPlayer(
+                            id=None,
+                            last_name=f'T{seed}P{index}',
+                            team_id=team_id,
+                            team_index=index,
+                            check_in=True,
+                        )
+                    )
+                    database.add_stored_tournament_player(
+                        StoredTournamentPlayer(
+                            tournament_id=tournament_id,
+                            player_id=player_id,
+                            pairing_number=index + 1,
+                        )
+                    )
+
+    def _load(self) -> Tournament:
+        try:
+            EventLoader.unload_event(EVENT_ID)
+        except KeyError:
+            pass
+        # A Tournament holds its event weakly, so the event has to
+        # outlive this call.
+        self._event = EventLoader().load_event(EVENT_ID)
+        return self._event.tournaments_by_name[TOURNAMENT_NAME]
+
+    def _forfeit_round_one(self, tournament: Tournament, team_id: int):
+        """Every board of the team's round-1 match forfeited by it."""
+        team_board = next(
+            tb
+            for tb in tournament.get_round_team_boards(1)
+            if team_id
+            in (tb.stored_team_board.team_a_id, tb.stored_team_board.team_b_id)
+        )
+        for board in team_board.boards:
+            white_team_id, _ = team_board.board_team_ids(board)
+            tournament.add_result(
+                board,
+                Result.FORFEIT_LOSS if white_team_id == team_id else Result.FORFEIT_WIN,
+            )
+        return self._load()
+
+    @staticmethod
+    def _row(tournament: Tournament, team_id: int) -> dict:
+        return next(
+            entry
+            for entry in tournament.team_standings()
+            if entry['team'].id == team_id
+        )
+
+    @classmethod
+    def _mp(cls, tournament: Tournament, team_id: int) -> float:
+        return cls._row(tournament, team_id)['mp']
+
+    def _round_one_match(self, tournament: Tournament, team_id: int):
+        return next(
+            tb
+            for tb in tournament.get_round_team_boards(1)
+            if team_id
+            in (tb.stored_team_board.team_a_id, tb.stored_team_board.team_b_id)
+        )
+
+    def _opponent_id(self, tournament: Tournament, team_id: int) -> int:
+        stb = self._round_one_match(tournament, team_id).stored_team_board
+        assert stb.team_b_id is not None
+        return stb.team_b_id if stb.team_a_id == team_id else stb.team_a_id
+
+    def test_forfeited_match_scores_the_absence_value(self) -> None:
+        self._create(_CUP_MATCH_POINTS)
+        tournament = self._load()
+        self.assertEqual(tournament.generate_round_pairings(1), '')
+        tournament = self._load()
+        forfeit_id = self.team_ids[0]
+        opponent_id = self._opponent_id(tournament, forfeit_id)
+        tournament = self._forfeit_round_one(tournament, forfeit_id)
+        self.assertEqual(self._mp(tournament, forfeit_id), 0.0)
+        self.assertEqual(self._mp(tournament, opponent_id), 3.0)
+
+    def test_forfeited_match_falls_back_to_the_loss_value(self) -> None:
+        """No absence value set: the forfeiting team scores a loss, as it
+        did before the value existed."""
+        match_points = dict(_CUP_MATCH_POINTS)
+        del match_points[Result.ZERO_POINT_BYE.value]
+        self._create(match_points)
+        tournament = self._load()
+        self.assertEqual(tournament.generate_round_pairings(1), '')
+        tournament = self._load()
+        forfeit_id = self.team_ids[0]
+        tournament = self._forfeit_round_one(tournament, forfeit_id)
+        self.assertEqual(self._mp(tournament, forfeit_id), 1.0)
+
+    def test_the_match_score_shows_the_absence_value(self) -> None:
+        self._create(_CUP_MATCH_POINTS)
+        tournament = self._load()
+        self.assertEqual(tournament.generate_round_pairings(1), '')
+        tournament = self._load()
+        forfeit_id = self.team_ids[0]
+        tournament = self._forfeit_round_one(tournament, forfeit_id)
+        team_board = self._round_one_match(tournament, forfeit_id)
+        expected = (
+            ('0', '3')
+            if team_board.stored_team_board.team_a_id == forfeit_id
+            else ('3', '0')
+        )
+        self.assertEqual(team_board.match_score_pair, expected)
+        self.assertEqual(
+            team_board.match_score_display, f'{expected[0]} – {expected[1]}'
+        )
+
+    def test_a_forfeited_match_is_tallied_as_a_forfeit_not_a_loss(self) -> None:
+        """The ranking table's F column: a match forfeited outright leaves
+        the L column, so a loss is one taken over the board."""
+        self._create(_CUP_MATCH_POINTS)
+        tournament = self._load()
+        self.assertEqual(tournament.generate_round_pairings(1), '')
+        tournament = self._load()
+        forfeit_id = self.team_ids[0]
+        opponent_id = self._opponent_id(tournament, forfeit_id)
+        tournament = self._forfeit_round_one(tournament, forfeit_id)
+        forfeit_row = self._row(tournament, forfeit_id)
+        self.assertEqual(forfeit_row['forfeits'], 1)
+        self.assertEqual(forfeit_row['losses'], 0)
+        self.assertEqual(forfeit_row['played'], 1)
+        opponent_row = self._row(tournament, opponent_id)
+        self.assertEqual(opponent_row['wins'], 1)
+        self.assertEqual(opponent_row['forfeits'], 0)
+
+    def test_a_team_left_unpaired_as_absent_scores_the_absence_value(self) -> None:
+        """The other absence: no match at all, the team marked absent for
+        the round."""
+        self._create(_CUP_MATCH_POINTS)
+        absent_id = self.team_ids[0]
+        team: Team = self._load().event.teams_by_id[absent_id]
+        with EventDatabase(EVENT_ID, write=True) as database:
+            team.set_round_bye(1, TeamByeType.ZPB, database)
+        tournament = self._load()
+        self.assertEqual(self._mp(tournament, absent_id), 0.0)

@@ -34,6 +34,10 @@
 ## Teams
 
 - _Sharly Chess_ now supports **Teams** events (Swiss, Round-Robin, Scheveningen and Molter pairings)! (5.0.0)
+- The match points scored by an absent team can now be set (5.0.4)
+- The team ranking counts forfeited matches in a new **F** column (5.0.4)
+- Fix : Molter tournaments no longer ask for match-point values they never use (5.0.4)
+- Fix : the line-up editor groups the rounds sharing a line-up again (5.0.4)
 
 ## Championships
 

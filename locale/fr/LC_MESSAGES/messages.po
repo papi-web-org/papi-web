@@ -3418,6 +3418,9 @@ msgstr "Sonneborn-Berger étendu"
 msgid "F *** SHORT NAME FOR RATING TYPE FIDE"
 msgstr "F"
 
+msgid "F *** TEAM RANKING HEADER FORFEIT"
+msgstr "F"
+
 msgid "FA *** SHORT NAME FOR FIDE Arbiter"
 msgstr "AF"
 
@@ -4650,6 +4653,9 @@ msgstr "Points de match"
 msgid "Match points must satisfy loss ≤ draw ≤ win."
 msgstr "Les points de match doivent satisfaire défaite ≤ nulle ≤ victoire."
 
+msgid "Match points scored by an absent team — one left unpaired as absent, or one that forfeited its whole match. Defaults to the Loss value."
+msgstr "Points de match marqués par une équipe absente — laissée non appariée comme absente, ou ayant déclaré forfait pour tout le match. Par défaut, la valeur Défaite."
+
 msgid "Match points vs game points"
 msgstr "Points de match vs points de partie"
 
@@ -4680,6 +4686,9 @@ msgstr "Conforme aux critères"
 #, python-format
 msgid "Matches from #%(first)d to #%(last)d"
 msgstr "Matchs du n°%(first)d au n°%(last)d"
+
+msgid "Matches lost by forfeit."
+msgstr "Matchs perdus par forfait."
 
 msgid "Matches per column:"
 msgstr "Matchs par colonne :"

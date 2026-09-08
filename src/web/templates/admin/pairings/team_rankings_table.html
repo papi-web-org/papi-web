@@ -24,6 +24,12 @@
                 <th class="text-center">{{ _('W *** TEAM RANKING HEADER WIN') }}</th>
                 <th class="text-center">{{ _('D *** TEAM RANKING HEADER DRAW') }}</th>
                 <th class="text-center">{{ _('L *** TEAM RANKING HEADER LOSS') }}</th>
+                <th
+                    class="text-center"
+                    {{ macros.tooltip_attributes(
+                        '', _('Matches lost by forfeit.'), 'top'
+                    ) }}
+                >{{ _('F *** TEAM RANKING HEADER FORFEIT') }}</th>
             {% endif %}
             {% for tie_break in team_tie_breaks %}
                 <th
@@ -47,6 +53,7 @@
                     <td class="text-center">{{ row.wins }}</td>
                     <td class="text-center">{{ row.draws }}</td>
                     <td class="text-center">{{ row.losses }}</td>
+                    <td class="text-center">{{ row.forfeits }}</td>
                 {% endif %}
                 {% for tie_break in team_tie_breaks %}
                     {% set value = row.tie_break_values[loop.index0] %}

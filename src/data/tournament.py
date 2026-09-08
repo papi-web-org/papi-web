@@ -594,8 +594,12 @@ class Tournament:
         to DRAW points (avoids over-rewarding an odd team out and
         matches Olympiad practice for unopposed teams); other team
         systems (round-robin, Molter) keep WIN as the PAB default,
-        though they rarely produce PABs in practice. Forfeit handling
-        is separate."""
+        though they rarely produce PABs in practice.
+
+        ``ZERO_POINT_BYE`` is the absent team's score, whether it was
+        left unpaired as absent or forfeited a paired match outright. It
+        defaults to LOSS, the score such a team took before the value
+        could be set."""
         from data.pairings.systems import TeamSwissPairingSystem
 
         if not self.is_team_tournament:
@@ -603,11 +607,13 @@ class Tournament:
         raw = self.stored_tournament.match_points or {}
         win = float(raw.get(Result.WIN.value, 2.0))
         draw = float(raw.get(Result.DRAW.value, 1.0))
+        loss = float(raw.get(Result.LOSS.value, 0.0))
         pab_default = draw if self.pairing_system == TeamSwissPairingSystem() else win
         return {
             Result.WIN: win,
             Result.DRAW: draw,
-            Result.LOSS: float(raw.get(Result.LOSS.value, 0.0)),
+            Result.LOSS: loss,
+            Result.ZERO_POINT_BYE: float(raw.get(Result.ZERO_POINT_BYE.value, loss)),
             Result.PAIRING_ALLOCATED_BYE: float(
                 raw.get(Result.PAIRING_ALLOCATED_BYE.value, pab_default)
             ),
@@ -852,10 +858,14 @@ class Tournament:
                 'wins': 0,
                 'draws': 0,
                 'losses': 0,
+                # A match the team forfeited outright counts here rather
+                # than as a loss, so a loss is one taken over the board.
+                'forfeits': 0,
             }
         win_mp = match_points.get(Result.WIN, 2.0)
         draw_mp = match_points.get(Result.DRAW, 1.0)
         loss_mp = match_points.get(Result.LOSS, 0.0)
+        absent_mp = match_points.get(Result.ZERO_POINT_BYE, loss_mp)
         pab_mp = match_points.get(Result.PAIRING_ALLOCATED_BYE, win_mp)
         # Flat fixed-table fallback (no team_boards): sum player points
         # straight into team totals. Use ``team_game_points`` so the
@@ -928,7 +938,7 @@ class Tournament:
                 # individual byes scaled by team_player_count.
                 match stb.bye_type:
                     case TeamByeType.ZPB:
-                        ent['mp'] += loss_mp
+                        ent['mp'] += absent_mp
                         # Team-level forfeit: every board counts as a
                         # forfeited game, scored at the absent-board game
                         # point value (the gp_zpb override, otherwise 0).
@@ -960,27 +970,29 @@ class Tournament:
             # round's penalties/bonuses); the deltas are added to the totals
             # separately by _apply_point_adjustments_to_standings below.
             a_gp_effective, b_gp_effective = team_board.effective_game_points
+            match_points_pair = team_board.match_points_pair()
+            assert match_points_pair is not None
+            a_mp, b_mp = match_points_pair
+            if ent_a:
+                ent_a['mp'] += a_mp
+            if ent_b:
+                ent_b['mp'] += b_mp
             if a_gp_effective > b_gp_effective:
-                if ent_a:
-                    ent_a['mp'] += win_mp
-                    ent_a['wins'] += 1
-                if ent_b:
-                    ent_b['mp'] += loss_mp
-                    ent_b['losses'] += 1
+                a_outcome, b_outcome = 'wins', 'losses'
             elif a_gp_effective < b_gp_effective:
-                if ent_a:
-                    ent_a['mp'] += loss_mp
-                    ent_a['losses'] += 1
-                if ent_b:
-                    ent_b['mp'] += win_mp
-                    ent_b['wins'] += 1
+                a_outcome, b_outcome = 'losses', 'wins'
             else:
-                if ent_a:
-                    ent_a['mp'] += draw_mp
-                    ent_a['draws'] += 1
-                if ent_b:
-                    ent_b['mp'] += draw_mp
-                    ent_b['draws'] += 1
+                a_outcome = b_outcome = 'draws'
+            # A side that forfeited the whole match is tallied as a
+            # forfeit, not as the result its boards add up to.
+            if team_board.team_all_forfeit(stb.team_a_id):
+                a_outcome = 'forfeits'
+            if team_board.team_all_forfeit(stb.team_b_id):
+                b_outcome = 'forfeits'
+            if ent_a:
+                ent_a[a_outcome] += 1
+            if ent_b:
+                ent_b[b_outcome] += 1
         self._apply_point_adjustments_to_standings(standings, after_round)
         rows = list(standings.values())
 
@@ -1631,8 +1643,6 @@ class Tournament:
             after_round = self.current_round
         match_points = self.match_points
         win_mp = match_points.get(Result.WIN, 2.0)
-        draw_mp = match_points.get(Result.DRAW, 1.0)
-        loss_mp = match_points.get(Result.LOSS, 0.0)
         pab_mp = match_points.get(Result.PAIRING_ALLOCATED_BYE, win_mp)
 
         totals_mp: dict[int, float] = {team.id: 0.0 for team in self.teams}
@@ -1689,13 +1699,9 @@ class Tournament:
             # Match result follows the effective game points (board + this
             # round's penalties/bonuses); the deltas are added to own_gp /
             # totals by the loop below — here they only tip the comparison.
-            a_gp_effective, b_gp_effective = team_board.effective_game_points
-            if a_gp_effective > b_gp_effective:
-                a_mp, b_mp = win_mp, loss_mp
-            elif a_gp_effective < b_gp_effective:
-                a_mp, b_mp = loss_mp, win_mp
-            else:
-                a_mp = b_mp = draw_mp
+            match_points_pair = team_board.match_points_pair()
+            assert match_points_pair is not None
+            a_mp, b_mp = match_points_pair
             b_boards = self._team_board_scores_for(team_board, b_id)
             b_ratings = self._team_board_ratings_for(team_board, b_id)
             matches_per_team[a_id].append(
@@ -3798,6 +3804,7 @@ class Tournament:
         win_mp = match_points.get(Result.WIN, 2.0)
         draw_mp = match_points.get(Result.DRAW, 1.0)
         loss_mp = match_points.get(Result.LOSS, 0.0)
+        absent_mp = match_points.get(Result.ZERO_POINT_BYE, loss_mp)
         pab_mp = match_points.get(Result.PAIRING_ALLOCATED_BYE, draw_mp)
         team_player_count = float(self.team_player_count or 0)
         win_gp_per_player = Result.WIN.point_value
@@ -3812,7 +3819,7 @@ class Tournament:
             if stb.team_b_id is None:
                 match stb.bye_type:
                     case TeamByeType.ZPB:
-                        a_entry[0] += loss_mp
+                        a_entry[0] += absent_mp
                     case TeamByeType.HPB:
                         a_entry[0] += draw_mp
                         a_entry[1] += team_player_count * draw_gp_per_player
@@ -3829,15 +3836,12 @@ class Tournament:
             b_entry = totals.setdefault(stb.team_b_id, [0.0, 0.0])
             a_entry[1] += a_gp
             b_entry[1] += b_gp
-            if a_gp > b_gp:
-                a_entry[0] += win_mp
-                b_entry[0] += loss_mp
-            elif a_gp < b_gp:
-                a_entry[0] += loss_mp
-                b_entry[0] += win_mp
-            else:
-                a_entry[0] += draw_mp
-                b_entry[0] += draw_mp
+            # The played results alone here: the adjustments are folded in
+            # below and reported separately in the 299 records.
+            match_points_pair = team_board.match_points_pair(effective=False)
+            assert match_points_pair is not None
+            a_entry[0] += match_points_pair[0]
+            b_entry[0] += match_points_pair[1]
         # Bonus / penalty points count towards the standings, and the
         # 310 record carries the standings — the 299 records emitted
         # alongside say where the difference from the played results
