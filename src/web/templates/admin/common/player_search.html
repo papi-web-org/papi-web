@@ -26,8 +26,8 @@
                     filters: getFilters(),
                     {% if admin_player %}player_id: {{ admin_player.id }},{% endif %}
                 }'
-                hx-on::before-request="$('#search-results').show();"
-                hx-on::after-request="$('#search-results').show();"
+                hx-on::before-request="refreshSearchResultsVisibility();"
+                hx-on::after-request="refreshSearchResultsVisibility();"
                 hx-sync="this:replace"
                 hx-indicator="#player-search-indicator"
                 autocomplete="off"
@@ -37,18 +37,25 @@
         <ul
             id="search-results"
             class="dropdown-menu position-absolute me-3 end-0 search-results-dropdown"
-            hx-on::after-settle="handleInitialQuery(event);"
+            hx-on::after-settle="refreshSearchResultsVisibility(); handleInitialQuery(event);"
         >
         </ul>
     </div>
     <script>
+        function refreshSearchResultsVisibility () {
+            const results = document.getElementById('search-results');
+            if (!results) return;
+            $(results).toggle(results.children.length > 0);
+        }
+
         $('#data-source-select').change(function () {
-            document.querySelector('#search-results').innerHTML = `
+            const searchInput = $('#search-input');
+            document.querySelector('#search-results').innerHTML = searchInput.val() ? `
                 <li class="dropdown-item no-hover text-nowrap">
                     <span class="fst-italic">{{ _('Searching…') }}</span>
                 </li>
-            `;
-            const searchInput = $('#search-input');
+            ` : '';
+            refreshSearchResultsVisibility();
             {% for data_source in data_sources %}
                 if ($(this).val() === '{{ data_source.id }}') {
                     searchInput.prop(
