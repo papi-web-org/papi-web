@@ -51,13 +51,8 @@ function updateFilterCount() { // update the badge
         return c + isFilterActive;
     }, 0);
 
-    if (filterCount >= 1) {
-        $("#filter-count").html(filterCount);
-        $("#filter-count").addClass("button_badge");
-    } else {
-        $("#filter-count").html("");
-        $("#filter-count").removeClass("button_badge");
-    }
+    $("#filter-count").html(filterCount >= 1 ? filterCount : "");
+    $("#filter-count").toggleClass("d-none", filterCount < 1);
 }
 
 function loadFiltersFromTournament(tournamentId) {
