@@ -13,7 +13,7 @@
 {% endblock admin_nav %}
 
 {% block admin_content %}
-    {% for nav_id, nav_tab in nav_tabs.items() %}
+    {% for nav_id, nav_tab in nav_tab_panes.items() %}
         {% with active=(admin_tab == nav_id) %}
             <div
                 class="tab-pane fade {% if active %}show active{% endif %}"
