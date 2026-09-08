@@ -3924,6 +3924,10 @@ msgstr ""
 msgid "Give/take away access level {access_level_short_name}"
 msgstr ""
 
+#, python-format
+msgid "Go to round #%(round)d"
+msgstr ""
+
 msgid "Go to the display controller."
 msgstr ""
 
@@ -7420,6 +7424,10 @@ msgstr ""
 
 #, python-format
 msgid "Round #%(round)d is finished."
+msgstr ""
+
+#, python-format
+msgid "Round #%(round)d is finished. End it and make round #%(next)d the current round, or just take a look at the next round?"
 msgstr ""
 
 #, python-format
