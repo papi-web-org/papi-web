@@ -2,7 +2,7 @@
 <tr
     id="pairing-row-{{ board.identifier }}"
     class="pairing-row {{ row_class }} {{ extra_row_class }} {% if board_excluded %}board-excluded{% endif %}"
-    {% if board_excluded %}data-bs-toggle="tooltip" data-bs-title="{{ _('A player on this board is excluded from the final standings: they completed less than 50%% of their games (FIDE 6.6).') }}"{% endif %}
+    {% if board_excluded %}data-bs-toggle="tooltip" data-bs-title="{{ _('The result of this game is not taken into account for the final standings because at least one of the players did not play 50%% of the games (FIDE 6.6).') }}"{% endif %}
     data-board-id="{{ board.identifier }}"
     data-player-id="{{ wtp.id if wtp }}"
     {# A flat team (Molter) board with a missing side is a forfeit hole —
