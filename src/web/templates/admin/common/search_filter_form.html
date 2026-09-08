@@ -12,24 +12,23 @@
             </form>
         </div>
         <div class="row my-2">
-            <div class="col-md-6">
-            </div>
-            <div class="me-auto col-md-6">
-                <div class="dropdown btn-group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                        {{_('Load tournament criteria')}}<span class="visually-hidden">Toggle Dropdown</span>
-                    </button>
-                    <div class="dropdown-menu" style="z-index:1010">
-                        {% for id in tournament_options %}
-                            {% if id != "" %}
-                                <a name="{{tournament_options[id]}}" class="dropdown-item" onclick="loadFiltersFromTournament({{id}})">
+            <div class="col-12 text-end">
+                {% set criteria_tournament_ids = tournament_options | reject('equalto', '') | list %}
+                {% if criteria_tournament_ids %}
+                    <div class="dropdown btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{_("Use a tournament's criteria")}}<span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" style="z-index:1010">
+                            {% for id in criteria_tournament_ids %}
+                                <button type="button" class="dropdown-item" onclick="loadFiltersFromTournament({{id}})">
                                     {{tournament_options[id]}}
-                                </a>
-                            {% endif %}
-                        {% endfor %}
+                                </button>
+                            {% endfor %}
+                        </div>
                     </div>
-                </div>
-                <button type="button" class="btn btn-danger pull-right" onclick="clearFilters()">{{_('Clear all')}}</button>
+                {% endif %}
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="clearFilters()">{{_('Clear all')}}</button>
             </div>
         </div>
     </div>
