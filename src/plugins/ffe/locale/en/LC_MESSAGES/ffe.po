@@ -795,6 +795,3 @@ msgid_plural "{n} games lost by forfeit, counted as -1 each."
 msgstr[0] ""
 msgstr[1] ""
 
-#~ msgid "Match lost by forfeit, counted as 0 match points."
-#~ msgstr ""
-
