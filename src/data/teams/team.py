@@ -566,9 +566,9 @@ class Team:
         database: EventDatabase,
     ):
         """Replace the team's lineup for the given round. Position in
-        *player_ids* determines the board index (0-based). ``None``
-        at index i = hole on board i (no row stored for that index,
-        producing a gap in the lineup's index sequence)."""
+        *player_ids* determines the board index (0-based). ``None`` at
+        index i = hole on board i, stored as a row with no player, so a
+        lineup that fields nobody is a lineup all the same."""
         entries = [
             StoredTeamRoundLineupEntry(
                 team_id=self.id,
@@ -577,7 +577,6 @@ class Team:
                 index=index,
             )
             for index, player_id in enumerate(player_ids)
-            if player_id is not None
         ]
         database.replace_team_round_lineup(self.id, round_, entries)
         self.stored_team.stored_round_lineups[round_] = entries

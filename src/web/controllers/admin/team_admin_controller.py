@@ -1079,10 +1079,7 @@ class TeamAdminController(BaseEventAdminController):
             )
         else:
             with EventDatabase(event.uniq_id, True) as database:
-                if all(v is None for v in slot_values):
-                    team.delete_round_lineup(round_, database)
-                else:
-                    team.set_round_lineup(round_, slot_values, database)
+                team.set_round_lineup(round_, slot_values, database)
                 # The lineup-average sort mode keys off the round 1
                 # lineup, so re-sort once it changes (self-guards for
                 # the other modes and once a round is paired).
@@ -1136,10 +1133,7 @@ class TeamAdminController(BaseEventAdminController):
             # Team has a bye / no real match this round — just persist
             # the lineup; no boards to reconcile.
             with EventDatabase(event.uniq_id, write=True) as database:
-                if all(v is None for v in new_slot_values):
-                    team.delete_round_lineup(round_, database)
-                else:
-                    team.set_round_lineup(round_, new_slot_values, database)
+                team.set_round_lineup(round_, new_slot_values, database)
             return
 
         # Baseline must reflect the actual boards, not the default-roster
@@ -1207,10 +1201,7 @@ class TeamAdminController(BaseEventAdminController):
         # boards as soon as there's a hole, and the next edit reconciles
         # against that phantom roster and corrupts the seating.
         with EventDatabase(event.uniq_id, write=True) as database:
-            if all(v is None for v in new_slot_values):
-                team.delete_round_lineup(round_, database)
-            else:
-                team.set_round_lineup(round_, new_slot_values, database)
+            team.set_round_lineup(round_, new_slot_values, database)
 
     @staticmethod
     def _reconcile_flat_round_lineup(
@@ -1313,10 +1304,7 @@ class TeamAdminController(BaseEventAdminController):
             if old_pid != (new_slot_values[i] if i < len(new_slot_values) else None)
         ]
         with EventDatabase(event.uniq_id, write=True) as database:
-            if all(v is None for v in new_slot_values):
-                team.delete_round_lineup(round_, database)
-            else:
-                team.set_round_lineup(round_, new_slot_values, database)
+            team.set_round_lineup(round_, new_slot_values, database)
             for slot, old_pid, new_pid in changes:
                 seat = board_side_by_player.get(old_pid) if old_pid else None
                 if seat is None:

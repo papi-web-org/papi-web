@@ -127,7 +127,10 @@ class TeamLineupInheritanceTestCase(TestCase):
             self._event, tournament, team, 1, [None] * N
         )
         tournament = self._load()
-        self.assertFalse(self._team(tournament).has_explicit_round_lineup(1))
+        self.assertEqual(
+            self._slot_names(self._team(tournament).effective_round_slots(1)),
+            [None] * N,
+        )
         self._play(tournament, 1)
         return self._load()
 
