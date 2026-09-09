@@ -2,6 +2,13 @@
 msgid "%(string)s:"
 msgstr ""
 
+msgid ""
+"- the school of a player picked from the national database of the schools;\n"
+"- the possibility to prevent pairings between players from the same school;\n"
+"- the schools used as the affiliation of the teams;\n"
+"- the school available as a column of the players and of the documents."
+msgstr ""
+
 msgid "Academic phase"
 msgstr ""
 
@@ -65,6 +72,9 @@ msgid "French Schools"
 msgstr ""
 
 msgid "French school"
+msgstr ""
+
+msgid "French school competitions gather players by school rather than by club, from the local stage up to the national finals."
 msgstr ""
 
 msgid "French schools (FRA)"

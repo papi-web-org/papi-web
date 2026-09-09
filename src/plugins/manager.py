@@ -150,6 +150,26 @@ class AppPluginManager(PluginManager):
         self.reload_register()
         return plugins_to_enable
 
+    def disable_plugin(self, plugin: Plugin):
+        from database.sqlite.config.config_database import ConfigDatabase
+
+        if not plugin.is_enabled:
+            return
+        with ConfigDatabase(True) as database:
+            stored_plugin = copy.copy(plugin.context.stored_plugin)
+            stored_plugin.is_enabled = False
+            database.update_stored_plugin(stored_plugin)
+        self.reload_register()
+
+    def set_event_is_enabled_by_default(self, plugin: Plugin, is_enabled: bool):
+        from database.sqlite.config.config_database import ConfigDatabase
+
+        with ConfigDatabase(True) as database:
+            stored_plugin = copy.copy(plugin.context.stored_plugin)
+            stored_plugin.default_event_is_enabled = is_enabled
+            database.update_stored_plugin(stored_plugin)
+        plugin.reload_context()
+
     def hook_for_event(self, event: Optional['Event'], hook_name: str):
         remove_plugins = []
         if event:

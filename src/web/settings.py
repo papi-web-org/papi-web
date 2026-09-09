@@ -56,6 +56,7 @@ from web.controllers.admin.place_card_template_admin_controller import (
     PlaceCardTemplateAdminController,
 )
 from web.controllers.admin.player_admin_controller import PlayerAdminController
+from web.controllers.admin.plugin_admin_controller import PluginAdminController
 from web.controllers.admin.prize_admin_controller import PrizeAdminController
 from web.controllers.admin.prize_config_admin_controller import (
     PrizeConfigAdminController,
@@ -103,6 +104,7 @@ _route_handlers: Sequence[ControllerRouterHandler] = [
     EventAdminController,
     EventDocumentsController,
     PlaceCardTemplateAdminController,
+    PluginAdminController,
     TournamentAdminController,
     TeamAdminController,
     PairingsAdminController,

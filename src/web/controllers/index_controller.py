@@ -16,7 +16,6 @@ from common.sharly_chess_config import SharlyChessConfig
 from web.controllers.admin.base_admin_controller import AdminWebContext
 from web.controllers.admin.index_admin_controller import IndexAdminController
 from web.controllers.base_controller import BaseController, WebContext
-from web.messages import Message
 from web.session import SessionEventsShowDetails
 
 
@@ -45,23 +44,6 @@ class IndexController(BaseController):
         if show_details is not None:
             SessionEventsShowDetails(request).set(show_details)
         return IndexAdminController._admin_render(web_context)
-
-    @get(
-        path='/wait',
-        name='wait',
-    )
-    async def wait(
-        self,
-        request: HTMXRequest,
-    ) -> Template:
-        web_context: WebContext = WebContext(request)
-        return HTMXTemplate(
-            template_name='wait.html',
-            context=web_context.template_context
-            | {
-                'messages': Message.messages(request),
-            },
-        )
 
     @get(
         path='/empty-modal',

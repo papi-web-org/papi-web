@@ -41,6 +41,30 @@ class CustomUploadPlugin(Plugin):
         return _('Upload tournament documents to custom location')
 
     @property
+    def keywords(self) -> list[str]:
+        return ['ftp', 'website', 'publish']
+
+    @property
+    def doc_markdown(self) -> str:
+        return '\n\n'.join(
+            [
+                _(
+                    'Publish the documents of an event on a website of your own, for '
+                    'instance the website of your club or of the tournament.'
+                ),
+                _(
+                    '- a server configured on the event (FTP, FTPS or SFTP);\n'
+                    '- a list of documents to upload, each one targeting the whole '
+                    'event or only some of its tournaments;\n'
+                    '- documents uploaded on demand, or automatically as soon as the '
+                    'data of a tournament they cover changes;\n'
+                    '- the date of the last upload and the upload errors reported in '
+                    'the interface.'
+                ),
+            ]
+        )
+
+    @property
     def version(self) -> Version:
         return Version('0.1.0')
 

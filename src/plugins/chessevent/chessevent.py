@@ -77,6 +77,33 @@ class ChessEventPlugin(Plugin):
         )
 
     @property
+    def keywords(self) -> list[str]:
+        return ['chessevent', 'registration', 'import', 'france']
+
+    @property
+    def doc_slug(self) -> str:
+        return 'chessevent'
+
+    @property
+    def doc_markdown(self) -> str:
+        return '\n\n'.join(
+            [
+                _(
+                    'ChessEvent handles the online registration of the '
+                    'players for tournaments organised in France.'
+                ),
+                _(
+                    '- the credentials of your ChessEvent account configured on the '
+                    'event;\n'
+                    '- the players of a tournament imported from the platform, with '
+                    'their registration and their check-in;\n'
+                    '- the import replayed at any time to pick up the late '
+                    'registrations.'
+                ),
+            ]
+        )
+
+    @property
     def version(self) -> Version:
         return Version('0.1.0')
 

@@ -420,7 +420,16 @@ class WebContext:
             'client': self.client,
             'user_agent': self.request.headers.get('User-Agent', ''),
             'utils': Utils,
+            'has_app_window': self.has_app_window,
         }
+
+    @property
+    def has_app_window(self) -> bool:
+        """Whether the application runs with a window of its own, which is
+        where the settings and the plugins are managed then."""
+        from gui.server_gui_toga import SharlyChessServerToga
+
+        return SharlyChessServerToga.instance is not None
 
 
 class BaseController(Controller):

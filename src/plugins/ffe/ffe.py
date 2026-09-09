@@ -202,6 +202,30 @@ class FfePlugin(Plugin):
         )
 
     @property
+    def keywords(self) -> list[str]:
+        return ['fide', 'france', 'ffe', 'papi', 'licence', 'league']
+
+    @property
+    def doc_markdown(self) -> str:
+        return '\n\n'.join(
+            [
+                _(
+                    'Everything specific to the French Chess Federation, for the '
+                    'events it rates.'
+                ),
+                _(
+                    '- the players searched in the federation database, with their '
+                    'licence, their club and their league;\n'
+                    '- the tournaments imported from and exported to the Papi format;\n'
+                    '- the results uploaded to the website of the federation;\n'
+                    '- the tie-breaks and the pairing variations used in France;\n'
+                    '- the clubs and the leagues available as columns, filters and '
+                    'groupings on the players, the documents and the screens.'
+                ),
+            ]
+        )
+
+    @property
     def version(self) -> Version:
         return Version('0.1.1')
 

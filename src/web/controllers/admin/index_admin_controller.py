@@ -1,6 +1,5 @@
 import shutil
 from collections import defaultdict
-from copy import copy
 from datetime import date
 from logging import Logger
 from pathlib import Path
@@ -26,7 +25,7 @@ from common.i18n import (
     _,
     locales,
 )
-from common.i18n.utils import by, locale_localized_name
+from common.i18n.utils import by
 from common.logger import get_logger
 from common.network import NetworkMonitor
 from common.sharly_chess_config import SharlyChessConfig
@@ -50,7 +49,6 @@ from database.sqlite.config.config_database import ConfigDatabase
 from database.sqlite.config.config_store import (
     StoredConfig,
     StoredPlayerCategorySet,
-    StoredPlugin,
     StoredTag,
 )
 from database.sqlite.event.event_database import EventDatabase
@@ -70,10 +68,9 @@ from database.sqlite.local_source_database.delays import (
     OutdatedDelay,
 )
 from database.sqlite.sqlite_database import SQLiteDatabase
-from plugins.manager import Plugin, plugin_manager
+from plugins.manager import plugin_manager
 from utils import Utils
 from utils.date_time import (
-    DateFormatterManager,
     format_date,
     format_date_range,
 )
@@ -98,67 +95,6 @@ logger: Logger = get_logger()
 
 
 class IndexAdminController(BaseAdminController):
-    @classmethod
-    def _admin_validate_config_update_data(
-        cls,
-        data: dict[str, str] | None = None,
-    ) -> StoredConfig:
-        config = SharlyChessConfig()
-        if data is None:
-            data = {}
-        errors: dict[str, str] = {}
-        experimental = WebContext.form_data_to_bool(data, 'experimental')
-        federation = WebContext.form_data_to_str(data, field := 'federation')
-        if federation:
-            if federation not in config.federations:
-                errors[field] = f'Invalid federation [{federation}].'
-                data[field] = ''
-                federation = None
-        else:
-            errors[field] = _('Please choose a federation.')
-        locale = WebContext.form_data_to_str(data, field := 'locale')
-        if locale and locale not in locales:
-            errors[field] = _('Invalid locale [{locale}].').format(locale=locale)
-            data[field] = ''
-        date_formatter_id = (
-            WebContext.form_data_to_str(data, field := 'date_formatter') or ''
-        )
-        try:
-            DateFormatterManager().get_object(date_formatter_id)
-        except KeyError:
-            errors[field] = f'invalid date formatter [{date_formatter_id}].'
-        stored_config = copy(config.stored_config)
-        stored_config.force_edit = False
-        stored_config.experimental = experimental
-        stored_config.federation = federation
-        stored_config.locale = locale
-        stored_config.date_formatter = date_formatter_id
-        stored_config.errors = errors
-        return stored_config
-
-    @classmethod
-    def _admin_validate_plugins_update_data(
-        cls, data: dict[str, str] | None = None
-    ) -> list[StoredPlugin]:
-        if data is None:
-            data = {}
-        stored_plugins: list[StoredPlugin] = []
-        enabled_plugins = plugin_manager.get_plugins_with_dependencies(
-            [
-                plugin
-                for plugin in plugin_manager.all_plugins
-                if WebContext.form_data_to_bool(data, plugin.form_key)
-            ]
-        )
-        for plugin in plugin_manager.all_plugins:
-            stored_plugins.append(
-                StoredPlugin(
-                    name=plugin.id,
-                    is_enabled=plugin in enabled_plugins,
-                )
-            )
-        return stored_plugins
-
     @classmethod
     def admin_shell_context(
         cls,
@@ -595,7 +531,7 @@ class IndexAdminController(BaseAdminController):
             event_enabled_plugins = [
                 plugin
                 for plugin in plugin_manager.enabled_plugins
-                if plugin.default_event_is_enabled
+                if plugin.event_is_enabled_by_default
             ]
         else:
             assert admin_event is not None
@@ -1824,119 +1760,6 @@ class IndexAdminController(BaseAdminController):
                 config_database.update_stored_config(sharly_chess_config.stored_config)
             sharly_chess_config.load_and_set_env()
         return self._admin_render(web_context=web_context)
-
-    def _config_modal_context(
-        self,
-        data: dict[str, str] | None = None,
-        errors: dict[str, str] | None = None,
-    ) -> dict[str, Any]:
-        config = SharlyChessConfig()
-        if data is None:
-            data = WebContext.values_dict_to_form_data(
-                {
-                    'console_log_level': config.console_log_level,
-                    'console_color': config.console_color,
-                    'console_show_date': config.console_show_date,
-                    'console_show_level': config.console_show_level,
-                    'experimental': config.experimental,
-                    'launch_browser': config.launch_browser,
-                    'federation': config.stored_config.federation,
-                    'locale': config.locale,
-                    'date_formatter': config.date_formatter.id,
-                }
-            )
-
-        for plugin in plugin_manager.all_plugins:
-            if plugin.form_key not in data:
-                data[plugin.form_key] = WebContext.value_to_form_data(plugin.is_enabled)
-
-        if errors is None:
-            errors = {}
-
-        locale_options: dict[str, str] = {
-            locale: locale_localized_name(locale) for locale in locales
-        }
-
-        global_plugins: list[Plugin] = []
-        plugins_by_federation: dict[str | None, list[Plugin]] = defaultdict(list)
-
-        for plugin in plugin_manager.all_plugins:
-            federation = plugin.federation
-            if federation:
-                plugins_by_federation[federation].append(plugin)
-            else:
-                global_plugins.append(plugin)
-
-        template_context = {
-            'events_metadata': EventLoader.get_events_metadata(),
-            'locale_options': locale_options,
-            'global_plugins': global_plugins,
-            'federation_plugins': plugins_by_federation,
-            'federation_options': (
-                {} if data['federation'] else {'': _('Please choose a federation')}
-            )
-            | self._get_federation_options(),
-            'date_formatter_options': DateFormatterManager().options(),
-            'modal': 'config',
-            'data': data,
-            'errors': errors,
-        }
-
-        return template_context
-
-    @get(
-        path='/config-modal',
-        name='admin-config-modal',
-        guards=[ActionGuard(AuthAction.MANAGE_APPLICATION_SETTINGS)],
-    )
-    async def htmx_admin_config_modal(self, request: HTMXRequest) -> Template:
-        config = SharlyChessConfig()
-        web_context = AdminWebContext(request)
-        template_context = self._config_modal_context()
-        return self._admin_render(
-            web_context=web_context,
-            template_context=template_context,
-            keep_modal_open=config.force_edit,
-        )
-
-    @patch(
-        path='/config-update',
-        name='admin-config-update',
-        guards=[ActionGuard(AuthAction.MANAGE_APPLICATION_SETTINGS)],
-    )
-    async def htmx_admin_config_update(
-        self,
-        request: HTMXRequest,
-        data: Annotated[
-            dict[str, str],
-            Body(media_type=RequestEncodingType.URL_ENCODED),
-        ],
-    ) -> Template:
-        web_context = AdminWebContext(request)
-        stored_config: StoredConfig = self._admin_validate_config_update_data(data)
-        stored_plugins: list[StoredPlugin] = self._admin_validate_plugins_update_data(
-            data
-        )
-        errors = stored_config.errors
-        if errors:
-            template_context = self._config_modal_context(data, errors)
-            sharly_chess_config: SharlyChessConfig = SharlyChessConfig()
-            return self._admin_render(
-                web_context=web_context,
-                template_context=template_context,
-                keep_modal_open=sharly_chess_config.force_edit,
-            )
-        with ConfigDatabase(write=True) as config_database:
-            stored_config.force_edit = False
-            config_database.update_stored_config(stored_config)
-            for stored_plugin in stored_plugins:
-                config_database.update_stored_plugin(stored_plugin)
-        config = SharlyChessConfig()
-        if config.locale != stored_config.locale:
-            self.set_locale(request, stored_config.locale)
-        config.load_and_set_env()
-        Message.success(request, _('Sharly Chess settings have been updated.'))
-        return self._render_empty_modal_and_messages(request, after_receive=True)
 
     @get(
         path='/database-status-badge',

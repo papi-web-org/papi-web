@@ -44,13 +44,16 @@ from common import (
     DEVEL_ENV,
     MANUAL_PATH_USED,
 )
-from common.i18n import _, ngettext
+from common.i18n import _, locales, ngettext
+from common.i18n.utils import locale_localized_name
 from common.logger import get_logger
 from common.updaters.sparkle_updater import SparkleUpdater
 from common.updaters.version_updater import VersionUpdater
 from common.updaters.windows_updater import WindowsUpdater
 from database.sqlite.config.config_database import ConfigDatabase
 from gui.gui_logger import GUILogHandler
+from gui.selection_popup import limit_popup_height
+from gui.web_view_background import show_window_through
 from utils import Utils
 from utils.program_variables import ProgramVar
 from web.server_engine import ServerEngine
@@ -304,7 +307,8 @@ class SharlyChessServerToga(toga.App):
                 raise NotImplementedError(f'{sys.platform=}')
 
         # Resolve icon path dynamically to support both dev and installed environments
-        icon_path = web_dir / 'static' / 'images' / icon_file_name
+        self.images_dir = web_dir / 'static' / 'images'
+        icon_path = self.images_dir / icon_file_name
 
         # Use FLATPAK_ID if available to match the sandbox ID
         app_id = FLATPAK_ID or 'com.sharlychess.app'
@@ -341,19 +345,15 @@ class SharlyChessServerToga(toga.App):
 
         # Styles
         self.menu_button_style = Pack(
-            font_weight='bold',
             font_size=10,
         )
         self.active_menu_button_style = Pack(
             font_weight='bold',
             font_size=10,
-            background_color='#0078d7',
-            color='#ffffff',
         )
         self.button_style = Pack()
         self.active_button_style = Pack(
-            background_color='#0078d7',
-            color='#ffffff',
+            font_weight='bold',
         )
 
         # GUI elements (initialized in startup)
@@ -362,9 +362,13 @@ class SharlyChessServerToga(toga.App):
         # Menu buttons
         self.menu_home_btn: Optional[toga.Button] = None
         self.menu_networks_btn: Optional[toga.Button] = None
+        self.menu_plugins_btn: Optional[toga.Button] = None
         self.menu_logs_btn: Optional[toga.Button] = None
         self.menu_settings_btn: Optional[toga.Button] = None
         self.active_view_name: str | None = None
+        self.requested_window_size: tuple[int, int] | None = None
+        #: The buttons displayed as selected, and whether the window is the
+        #: active one, which the colour of their text depends on.
 
         # Home view
         self.home_view: Optional[toga.Box] = None
@@ -376,6 +380,10 @@ class SharlyChessServerToga(toga.App):
         # Networks view
         self.networks_view: Optional[toga.Box] = None
         self.lan_ifaces: list[dict[str, str]] | None = None
+
+        # Plugins view
+        self.plugins_view: Optional[toga.Box] = None
+        self.plugins_web_view: Optional[toga.WebView] = None
 
         # Logs view
         self.logs_view: Optional[toga.Box] = None
@@ -396,6 +404,14 @@ class SharlyChessServerToga(toga.App):
         self.check_beta_switch: Optional[toga.Switch] = None
         self.latest_version_label: Optional[toga.Label] = None
         self.latest_version_btn: Optional[toga.Button] = None
+        self.locale_select: Optional[toga.Selection] = None
+        self.date_formatter_select: Optional[toga.Selection] = None
+        self.experimental_switch: Optional[toga.Switch] = None
+
+        # Setup content, displayed while the settings have not been set
+        self.federation_field: Optional[toga.Widget] = None
+        self.setup_start_button: Optional[toga.Button] = None
+        self.settings_labels: list[toga.Label] = []
         self.version_search_ongoing = False
 
     @property
@@ -403,6 +419,7 @@ class SharlyChessServerToga(toga.App):
         return [
             self.menu_home_btn,
             self.menu_networks_btn,
+            self.menu_plugins_btn,
             self.menu_logs_btn,
             self.menu_settings_btn,
         ]
@@ -412,24 +429,63 @@ class SharlyChessServerToga(toga.App):
         return [
             self.home_view,
             self.networks_view,
+            self.plugins_view,
             self.logs_view,
             self.settings_view,
         ]
 
+    #: Margin around the content of a view.
+    view_margin = 10
+    #: Space between two networks of the networks view.
+    network_gap = 10
+    #: Width of the QR code of a network.
+    network_qrcode_width = 120
+    #: Size of the logo displayed while the settings have not been set.
+    setup_logo_width = 96
+    #: The number of federations the list of the selection displays.
+    federation_visible_items = 12
+
     @property
     def compact_view_style(self) -> Pack:
-        margin = 10
         return Pack(
             direction=COLUMN,
-            margin=margin,
+            margin=self.view_margin,
             align_items='center',
-            width=self.compact_size[0] - margin * 2,
+            width=self.compact_size[0] - self.view_margin * 2,
         )
 
     # --- Toga lifecycle ---
     def startup(self):
         SharlyChessConfig().load_and_set_env()
 
+        # The web views are built once and reused by every content: rebuilding
+        # the one of the logs would lose the logs it holds.
+        self.html_view = toga.WebView(
+            style=Pack(flex=1), on_webview_load=self._on_logview_load
+        )
+        self.plugins_web_view = toga.WebView(style=Pack(flex=1, margin_top=10))
+        show_window_through(self.plugins_web_view)
+
+        # Window class used instead of MainWindow to avoid having a toolbar
+        # See https://github.com/beeware/toga/issues/1870#issuecomment-2272534628
+        self.main_window = toga.Window(  # type: ignore
+            title='Sharly Chess',
+            size=self.compact_size,
+        )
+        assert isinstance(self.main_window, toga.Window)
+        self._build_content()
+        self.main_window.show()
+
+    def _build_content(self):
+        """Builds the content of the window. The texts of the widgets are
+        translated when they are built, so the whole content is built again
+        when the language changes (see _rebuild_content())."""
+        self.settings_labels = []
+        if SharlyChessConfig().force_edit:
+            # Nothing is usable before the language and the federation are set,
+            # not even the web server (see on_running()).
+            self._build_setup_content()
+            return
         # Menu buttons
         self.menu_home_btn = toga.Button(
             _('Home'),
@@ -441,6 +497,12 @@ class SharlyChessServerToga(toga.App):
             style=self.menu_button_style,
             enabled=False,
             on_press=self._show_networks_view,
+        )
+        self.menu_plugins_btn = toga.Button(
+            _('Plugins'),
+            style=self.menu_button_style,
+            on_press=self._show_plugins_view,
+            enabled=False,
         )
         self.menu_logs_btn = toga.Button(
             _('Logs'),
@@ -510,12 +572,21 @@ class SharlyChessServerToga(toga.App):
         )
 
         # Networks view
-        self.networks_view = toga.Box(style=self.compact_view_style)
-
-        # Log view: WebView with HTML for ANSI color support
-        self.html_view = toga.WebView(
-            style=Pack(flex=1), on_webview_load=self._on_logview_load
+        # No fixed width: the row of networks is as wide as the networks need,
+        # and the window follows (see _apply_requested_window_size()).
+        self.networks_view = toga.Box(
+            style=Pack(direction=COLUMN, margin=self.view_margin, align_items='center')
         )
+
+        # Plugins view: the plugins section of the web interface, which the
+        # local machine reaches with the administration access level.
+        assert self.plugins_web_view is not None
+        self.plugins_view = toga.Box(
+            style=Pack(direction=COLUMN, flex=1),
+            children=[self.plugins_web_view],
+        )
+
+        # Log view: the WebView holds the logs and is kept across rebuilds.
         self.logs_view = toga.Box(style=Pack(direction=COLUMN, flex=1))
         log_buttons = toga.Box(style=Pack(direction=ROW, margin=(10, 0), gap=5))
         self.log_settings_btn = toga.Button(
@@ -580,6 +651,7 @@ class SharlyChessServerToga(toga.App):
         )
         self.log_settings_container = toga.Box()
         self.logs_view.add(self.log_settings_container)
+        assert self.html_view is not None
         self.logs_view.add(self.html_view)
 
         # Settings view
@@ -593,7 +665,7 @@ class SharlyChessServerToga(toga.App):
         self.data_path_input = toga.TextInput(
             value=str(DATA_DIR.absolute()),
             readonly=True,
-            width=self.compact_size[0] - 20,
+            width=self.compact_size[0] - self.view_margin * 2,
         )
         if sys.platform == 'darwin':
             # toga maps TextInput to an NSTextField that wraps a long value
@@ -634,9 +706,22 @@ class SharlyChessServerToga(toga.App):
         )
         changelog_button = toga.Button(_('Changelog'), on_press=self._open_changelog)
         title_style = Pack(font_weight='bold', font_size=10, text_align='center')
+        general_children: list[toga.Widget] = [
+            self._settings_row(_('Language:'), self._build_locale_select()),
+            self._settings_row(_('Federation:'), self._build_federation_select()),
+            self._settings_row(_('Date format:'), self._build_date_formatter_select()),
+            self._settings_row('', self.launch_browser_switch),
+        ]
+        if config.experimental_features:
+            self.experimental_switch = toga.Switch(
+                text=_('Experimental features'),
+                value=config.experimental,
+                on_change=self._on_experimental_switch_change,
+            )
+            general_children.append(self._settings_row('', self.experimental_switch))
         self.settings_view.add(
             toga.Label(_('General'), style=title_style),
-            toga.Box(children=[self.launch_browser_switch]),
+            *general_children,
             toga.Divider(margin=(5, 0)),
             toga.Label(_('Data folder'), style=title_style),
             self.data_path_input,
@@ -664,17 +749,201 @@ class SharlyChessServerToga(toga.App):
         self.main_box.add(btn_row)
         self.main_box.add(self.home_view)
 
-        # Window class used instead of MainWindow to avoid having a toolbar
-        # See https://github.com/beeware/toga/issues/1870#issuecomment-2272534628
-        self.main_window = toga.Window(  # type: ignore
-            title='Sharly Chess',
-            size=self.compact_size,
-            content=self.main_box,
+        assert isinstance(self.main_window, toga.Window)
+        self.main_window.content = self.main_box
+
+    def _settings_row(self, label: str, widget: toga.Widget) -> toga.Box:
+        """A row of the settings: the fields fill the width left by the labels,
+        which are all as wide as the widest of them (see
+        _align_settings_labels()), so that the fields are aligned with each
+        other instead of every row being centred on its own width."""
+        widget.style.flex = 1
+        label_widget = toga.Label(label, text_align='right')
+        self.settings_labels.append(label_widget)
+        return toga.Box(
+            direction=ROW,
+            align_items='center',
+            gap=8,
+            width=self.compact_size[0] - self.view_margin * 4,
+            children=[label_widget, widget],
+        )
+
+    def _align_settings_labels(self):
+        """Gives every label of the settings the width of the widest one. The
+        width of a text depends on the language it is written in and on the
+        font of the platform, so it is measured instead of being set."""
+        assert isinstance(self.main_window, toga.Window)
+        if not self.settings_labels or self.main_window.content is None:
+            return
+        self.main_window.content.refresh()
+        width = max(label.layout.content_width for label in self.settings_labels)
+        if not width:
+            return
+        for label in self.settings_labels:
+            label.style.width = width
+
+    @staticmethod
+    def _select(
+        items: list[dict[str, str]],
+        selected: str | None,
+        accessor_key: str,
+        on_change: Callable,
+    ) -> toga.Selection:
+        """A selection whose handler is only set once its value is: setting the
+        value of a selection triggers its handler, which would write the value
+        that is being displayed back to the configuration."""
+        select = toga.Selection(items=items, accessor='text')
+        if selected is not None:
+            assert isinstance(select.items, ListSource)
+            if item := select.items.find(data={accessor_key: selected}):
+                select.value = item
+        select.on_change = on_change
+        return select
+
+    def _build_locale_select(self) -> toga.Selection:
+        self.locale_select = self._select(
+            [
+                {'locale': locale, 'text': locale_localized_name(locale)}
+                for locale in locales
+            ],
+            SharlyChessConfig().locale,
+            'locale',
+            self._on_locale_change,
+        )
+        return self.locale_select
+
+    def _build_federation_select(self, none_text: str | None = None) -> toga.Selection:
+        config = SharlyChessConfig()
+        items = [
+            {'federation': federation, 'text': f'{federation} - {name}'}
+            for federation, name in config.federations.items()
+        ]
+        if none_text:
+            items.insert(0, {'federation': '', 'text': none_text})
+        select = self._select(
+            items,
+            config.stored_config.federation or ('' if none_text else None),
+            'federation',
+            self._on_federation_change,
+        )
+        # There are more than two hundred federations: the list of the
+        # selection would be as tall as the screen.
+        limit_popup_height(select, self.federation_visible_items)
+        self.federation_field = select
+        return select
+
+    def _build_date_formatter_select(self) -> toga.Selection:
+        from utils.date_time import DateFormatterManager
+
+        self.date_formatter_select = self._select(
+            [
+                {'date_formatter': formatter_id, 'text': name}
+                for formatter_id, name in DateFormatterManager().options().items()
+            ],
+            SharlyChessConfig().date_formatter.id,
+            'date_formatter',
+            self._on_date_formatter_change,
+        )
+        return self.date_formatter_select
+
+    def _build_setup_content(self):
+        """The content displayed while the settings of the application have not
+        been set: the application can not be used before they are."""
+        self.main_box = toga.Box(
+            style=Pack(direction=COLUMN, margin=(15, 10, 10, 10), align_items='center'),
+            gap=10,
+        )
+        self.setup_start_button = toga.Button(
+            _('Start Sharly Chess'),
+            on_press=self._on_setup_done,
+            enabled=bool(SharlyChessConfig().stored_config.federation),
+            font_weight='bold',
+        )
+        self.main_box.add(
+            toga.ImageView(
+                image=toga.Image(self.images_dir / 'sharly-chess.png'),
+                style=Pack(width=self.setup_logo_width, height=self.setup_logo_width),
+            ),
+            toga.Label(
+                _('Welcome to Sharly Chess!'), font_weight='bold', text_align='center'
+            ),
+            toga.Label(
+                _('Confirm your settings to start.'),
+                text_align='center',
+            ),
+            self._settings_row(_('Language:'), self._build_locale_select()),
+            self._settings_row(
+                _('Federation:'),
+                self._build_federation_select(
+                    none_text=_('Please choose a federation')
+                ),
+            ),
+            self._settings_row(_('Date format:'), self._build_date_formatter_select()),
+            self.setup_start_button,
         )
         assert isinstance(self.main_window, toga.Window)
-        self.main_window.show()
+        self.main_window.content = self.main_box
+        self._align_settings_labels()
+        self._request_window_size(self.compact_size)
+
+    def _rebuild_content(self):
+        """Builds the content again, so that it is displayed in the language
+        that has just been chosen."""
+        active_view_name = self.active_view_name
+        self.active_view_name = None
+        self._build_content()
+        if SharlyChessConfig().force_edit:
+            return
+        if self.server_running:
+            self.on_server_ready()
+        self._update_latest_version_components()
+        self.active_view_name = 'home'
+        if active_view_name and active_view_name != 'home':
+            # Displaying the view sizes the window to it.
+            getattr(self, f'_show_{active_view_name}_view')(None)
+        else:
+            self._request_window_size(self.compact_size)
+
+    def _on_locale_change(self, widget: toga.Selection, **kwargs):
+        locale = getattr(widget.value, 'locale')
+        if locale == SharlyChessConfig().locale:
+            return
+        self._update_config('locale', locale)
+        # The content is built again once the handler is over: it replaces the
+        # selection this handler was called from.
+        self.gui_loop.call_soon_threadsafe(self._rebuild_content)
+
+    def _on_federation_change(self, widget: toga.Selection, **kwargs):
+        federation = getattr(widget.value, 'federation') or None
+        self._update_config('federation', federation)
+        if self.setup_start_button is not None:
+            self.setup_start_button.enabled = federation is not None
+
+    def _on_date_formatter_change(self, widget: toga.Selection, **kwargs):
+        self._update_config('date_formatter', getattr(widget.value, 'date_formatter'))
+
+    def _on_experimental_switch_change(self, widget: toga.Switch, **kwargs):
+        self._update_config('experimental', widget.value)
+
+    def _on_setup_done(self, widget):
+        """The settings have been set: the application is usable and the web
+        server is started."""
+        if not SharlyChessConfig().stored_config.federation:
+            return
+        self._update_config('force_edit', False)
+        self.setup_start_button = None
+        self.active_view_name = None
+        self._build_content()
+        self.active_view_name = 'home'
+        # The content that replaces the setup one is not as tall.
+        self._request_window_size(self.compact_size)
+        self._start()
 
     def update_from_sharly_chess_config(self):
+        if self.launch_browser_switch is None:
+            # The setup content does not hold these widgets.
+            return
+
         def config_update():
             config = SharlyChessConfig()
             assert self.launch_browser_switch is not None
@@ -696,6 +965,10 @@ class SharlyChessServerToga(toga.App):
 
         self.gui_loop.call_soon_threadsafe(config_update)
 
+    def _set_button_active(self, button: toga.Button, style: Pack, active: bool):
+        """Displays *button* as the one that is selected, or not."""
+        button.style = style
+
     def _show_view(self, name: str, is_compact_window: bool = True):
         if self.active_view_name == name:
             return
@@ -706,12 +979,11 @@ class SharlyChessServerToga(toga.App):
         view: toga.Box = getattr(self, f'{name}_view')
         self.main_box.add(view)
         for btn in self.menu_buttons:
-            btn.style = self.menu_button_style
+            self._set_button_active(btn, self.menu_button_style, active=False)
         view_btn: toga.Button = getattr(self, f'menu_{name}_btn')
-        view_btn.style = self.active_menu_button_style
+        self._set_button_active(view_btn, self.active_menu_button_style, active=True)
         self.active_view_name = name
-        assert isinstance(self.main_window, toga.Window)
-        self.main_window.size = (
+        self._request_window_size(
             self.compact_size if is_compact_window else self.expanded_size
         )
 
@@ -723,12 +995,89 @@ class SharlyChessServerToga(toga.App):
         assert self.html_view is not None
         self.html_view.refresh()
 
+    def _show_plugins_view(self, widget):
+        self._show_view('plugins', is_compact_window=False)
+        # Loading a page while the window is being resized leaves the interface
+        # unresponsive: the load is queued behind the resize, which does not
+        # return before its animation is over.
+        self.gui_loop.call_soon_threadsafe(self._load_plugins_page)
+
+    def _load_plugins_page(self):
+        assert self.plugins_web_view is not None
+        # Reloaded on every display so that the page shows the plugins as they
+        # are, whatever happened since the last time it was displayed.
+        self.plugins_web_view.url = (
+            f'{SharlyChessConfig().local_url}/plugins?embedded=1'
+        )
+
+    def _request_window_size(self, size: tuple[int, int]):
+        """Requests a resize of the window, applied once the view being displayed
+        has been built. Resizes are animated, and changing the content of a view
+        interrupts the animation and leaves the window half resized: the size is
+        applied on the next iteration of the event loop, when the handler that
+        displays the view is done, and only the last requested size is used."""
+        schedule = self.requested_window_size is None
+        self.requested_window_size = size
+        if schedule:
+            self.gui_loop.call_soon_threadsafe(self._apply_requested_window_size)
+
+    def _apply_requested_window_size(self):
+        assert isinstance(self.main_window, toga.Window)
+        assert self.main_box is not None
+        assert self.requested_window_size is not None
+        size = self.requested_window_size
+        self.requested_window_size = None
+        if self.main_window.content is not None:
+            # The minimum size of the view is only known once its content has
+            # been laid out.
+            self.main_window.content.refresh()
+        # A window asked to be smaller than its content is resized back by Toga,
+        # which interrupts the resize and leaves it at an intermediate size, so
+        # never ask for less than what the view needs. This is also what widens
+        # the window on the networks view when the networks do not fit in the
+        # compact width.
+        layout = self.main_box.layout
+        width = max(size[0], layout.min_width)
+        height = max(size[1], layout.min_height)
+        if not self._set_window_size_keeping_top(width, height):
+            position = self.main_window.position
+            self.main_window.size = (width, height)
+            self.main_window.position = position
+
+    def _set_window_size_keeping_top(self, width: int, height: int) -> bool:
+        """Resizes the window keeping its top left corner in place, and returns
+        whether it could be done. Windows are anchored on their bottom left
+        corner on macOS, which makes the window jump every time a view of a
+        different height is displayed."""
+        if sys.platform != 'darwin':
+            return False
+        try:
+            from rubicon.objc import CGPoint, CGRect, CGSize
+
+            native = self.main_window._impl.native  # type: ignore[union-attr]
+            frame = native.frame
+            top = frame.origin.y + frame.size.height
+            native.setFrame(
+                CGRect(
+                    CGPoint(frame.origin.x, top - height),
+                    CGSize(width, height),
+                ),
+                display=True,
+                animate=True,
+            )
+        except Exception:
+            logger.debug('Could not resize the window.', exc_info=True)
+            return False
+        return True
+
     def _show_networks_view(self, widget):
         self._show_view('networks')
         self._refresh_networks_view(hard_refresh=False)
 
     def _show_settings_view(self, widget):
         self._show_view('settings')
+        # The labels can only be measured once the view they are in is laid out.
+        self._align_settings_labels()
         self._update_latest_version_components()
 
     def _toggle_log_settings(self, widget):
@@ -737,10 +1086,14 @@ class SharlyChessServerToga(toga.App):
         assert self.log_settings_btn is not None
         if self.log_settings in self.log_settings_container.children:
             self.log_settings_container.remove(self.log_settings)
-            self.log_settings_btn.style = self.button_style
+            self._set_button_active(
+                self.log_settings_btn, self.button_style, active=False
+            )
         else:
             self.log_settings_container.add(self.log_settings)
-            self.log_settings_btn.style = self.active_button_style
+            self._set_button_active(
+                self.log_settings_btn, self.active_button_style, active=True
+            )
 
     def _open_data_path_explorer(self, widget):
         self._open_dir_in_explorer(DATA_DIR)
@@ -1011,6 +1364,16 @@ class SharlyChessServerToga(toga.App):
         self.gui_handler = GUILogHandler(self)
         self.gui_handler.setLevel(logging.DEBUG)
 
+        # Start message processing
+        asyncio.create_task(self._process_message_queue())
+        if SharlyChessConfig().force_edit:
+            # The application only starts once its settings have been set, so
+            # that it is never reachable half configured (see _on_setup_done()).
+            return
+        self._start()
+
+    def _start(self):
+        """Looks for updates and starts the web server."""
         assert self.home_progress_bar is not None
         self.home_progress_bar.value = 1
         self.home_progress_bar.start()
@@ -1018,8 +1381,6 @@ class SharlyChessServerToga(toga.App):
         asyncio.run_coroutine_threadsafe(
             self._search_for_updates(is_startup=True), self.server_loop
         )
-        # Start message processing and kick the server immediately
-        asyncio.create_task(self._process_message_queue())
         if not self.server_running:
             self._on_start_server(None)
 
@@ -1086,7 +1447,9 @@ class SharlyChessServerToga(toga.App):
                     text_align='center',
                 )
             )
-            network_section = toga.Box(style=Pack(direction=ROW, margin_top=15, gap=10))
+            network_section = toga.Box(
+                style=Pack(direction=ROW, margin_top=15, gap=self.network_gap)
+            )
             self.networks_view.add(network_section)
             for item in self.lan_ifaces:
                 url = config.app_url(item['ip'])
@@ -1101,7 +1464,11 @@ class SharlyChessServerToga(toga.App):
                     label = f'{label} ({type})'
 
                 qr_widget = toga.ImageView(
-                    image=toga_img, style=Pack(width=120, height=120)
+                    image=toga_img,
+                    style=Pack(
+                        width=self.network_qrcode_width,
+                        height=self.network_qrcode_width,
+                    ),
                 )
                 network_item.add(qr_widget)
                 network_item.add(self.make_link_button(url))
@@ -1127,8 +1494,7 @@ class SharlyChessServerToga(toga.App):
             )
         )
         self.networks_view.add(refresh_box)
-        assert isinstance(self.main_window, toga.Window)
-        self.main_window.size = self.compact_size
+        self._request_window_size(self.compact_size)
 
     def _noop(self, widget: toga.Widget):
         pass
@@ -1241,7 +1607,7 @@ class SharlyChessServerToga(toga.App):
 
     @staticmethod
     def _open_discord(widget):
-        webbrowser.open('https://discord.gg/ezvxaCwUmw')
+        webbrowser.open(SharlyChessConfig().discord_url)
 
     @staticmethod
     def _open_mail(widget):

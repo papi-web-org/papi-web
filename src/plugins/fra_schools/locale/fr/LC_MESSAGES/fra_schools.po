@@ -2,6 +2,17 @@
 msgid "%(string)s:"
 msgstr "%(string)s :"
 
+msgid ""
+"- the school of a player picked from the national database of the schools;\n"
+"- the possibility to prevent pairings between players from the same school;\n"
+"- the schools used as the affiliation of the teams;\n"
+"- the school available as a column of the players and of the documents."
+msgstr ""
+"- l’établissement d’un·e joueur·euse choisi dans la base nationale des établissements ;\n"
+"- la possibilité de ne pas apparier ensemble des joueur·euses d’un même établissement ;\n"
+"- les établissements utilisés comme affiliation des équipes ;\n"
+"- l’établissement disponible comme colonne des joueur·euses et des documents."
+
 msgid "Academic phase"
 msgstr "Phase académique"
 
@@ -66,6 +77,9 @@ msgstr "Établissements Scolaires"
 
 msgid "French school"
 msgstr "Établissement scolaire"
+
+msgid "French school competitions gather players by school rather than by club, from the local stage up to the national finals."
+msgstr "Les compétitions scolaires françaises regroupent les joueur·euses par établissement plutôt que par club, de l’échelon local jusqu’aux finales nationales."
 
 msgid "French schools (FRA)"
 msgstr "Établissements scolaires (FRA)"

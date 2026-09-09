@@ -1,9 +1,7 @@
 {% import '/common/macros.j2' as macros with context %}
 {% import '/admin/common/macros.j2' as admin_macros with context %}
 
-{% if modal == 'config' %}
-    {% include 'index/config_modal.html' %}
-{% elif modal == 'event' %}
+{% if modal == 'event' %}
     {% include 'event/event_modal.html' %}
 {% elif modal == 'event-delete' %}
     {% include 'event/event_delete_modal.html' %}

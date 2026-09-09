@@ -59,20 +59,8 @@
         {% endif %}
     >
         {% set redirect_url = '' %}
-        {% if sharly_chess_config.force_edit %}
-            {% if client.can_manage_application_settings %}
-                {% if request.url.path != '/home' %}
-                    {% set redirect_url = '/home' %}
-                {% endif %}
-            {% else %}
-                {% if request.url.path != '/wait' %}
-                    {% set redirect_url = '/wait' %}
-                {% endif %}
-            {% endif %}
-        {% else %}
-            {% if request.url.path == '/' %}
-                {% set redirect_url = '/home' %}
-            {% endif %}
+        {% if request.url.path == '/' %}
+            {% set redirect_url = '/home' %}
         {% endif %}
         {% if redirect_url %}
             <p>{{ _('Please wait…') }}</p>

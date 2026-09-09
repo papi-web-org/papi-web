@@ -1,3 +1,12 @@
+msgid ""
+"- the credentials of your ChessEvent account configured on the event;\n"
+"- the players of a tournament imported from the platform, with their registration and their check-in;\n"
+"- the import replayed at any time to pick up the late registrations."
+msgstr ""
+"- les identifiants de votre compte ChessEvent configurés sur l’évènement ;\n"
+"- les joueur·euses d’un tournoi importé·es depuis la plateforme, avec leur inscription et leur pointage ;\n"
+"- l’import rejoué à tout moment pour récupérer les inscriptions tardives."
+
 msgid "A value is expected."
 msgstr "Une valeur est attendue."
 
@@ -30,6 +39,9 @@ msgstr "L'évènement ChessEvent n'est pas défini."
 
 msgid "ChessEvent event:"
 msgstr "Évènement ChessEvent :"
+
+msgid "ChessEvent handles the online registration of the players for tournaments organised in France."
+msgstr "ChessEvent gère les inscriptions en ligne des joueur·euses pour les tournois organisés en France."
 
 msgid "ChessEvent password not defined."
 msgstr "Le mot de passe ChessEvent n'est pas défini."

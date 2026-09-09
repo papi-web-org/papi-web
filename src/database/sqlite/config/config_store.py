@@ -60,6 +60,8 @@ class StoredConfig:
 class StoredPlugin:
     name: str
     is_enabled: bool
+    #: Whether new events enable the plugin, None for the default it declares.
+    default_event_is_enabled: bool | None = None
     plugin_data: dict[str, dict[str, dict[str, Any]]] = field(
         default_factory=dict[str, dict[str, dict[str, Any]]]
     )

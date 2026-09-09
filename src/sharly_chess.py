@@ -136,6 +136,30 @@ try:
             action='store_true',
             help='Force console/CLI mode (default is GUI for bundled apps)',
         )
+        parser.add_argument(
+            '--example-events',
+            action=argparse.BooleanOptionalAction,
+            help=(
+                'install the example events on a new installation, which is '
+                'asked for on the console otherwise'
+            ),
+        )
+    parser.add_argument(
+        '--locale',
+        type=str,
+        help=(
+            'set the language of the application, which is set in its window '
+            'otherwise (required in console mode, where there is no window)'
+        ),
+    )
+    parser.add_argument(
+        '--federation',
+        type=str,
+        help=(
+            'set the default federation of the events, which is set in the '
+            'window of the application otherwise (required in console mode)'
+        ),
+    )
     parser.add_argument(
         '-g',
         '--generate-tournament',
@@ -224,6 +248,43 @@ try:
     if debug:
         # set the log level to DEBUG before loading the logging configuration of the application
         set_logging_config(console_log_level=logging.DEBUG)
+
+    from common.i18n import locales
+    from common.sharly_chess_config import SharlyChessConfig
+    from database.sqlite.config.config_database import ConfigDatabase
+
+    def apply_settings(locale: str | None, federation: str | None) -> None:
+        """Sets the language and the federation of the application. They are
+        set in its window, but they can also be given on the command line, which
+        skips the settings the window asks for when they have not been set."""
+        config = SharlyChessConfig()
+        if locale and locale not in locales:
+            logger.error('Unknown language [%s], expected one of %s.', locale, locales)
+            sys.exit(1)
+        if federation and federation not in config.federations:
+            logger.error('Unknown federation [%s].', federation)
+            sys.exit(1)
+        if not locale and not federation:
+            return
+        stored_config = config.stored_config
+        stored_config.locale = locale or stored_config.locale
+        stored_config.federation = federation or stored_config.federation
+        # The window only asks for the settings while they are missing.
+        if stored_config.locale and stored_config.federation:
+            stored_config.force_edit = False
+        with ConfigDatabase(write=True) as config_database:
+            config_database.update_stored_config(stored_config)
+        config.load_and_set_env()
+
+    apply_settings(args.locale, args.federation)
+
+    # Answers the question asked on a new installation, so that starting the
+    # application does not need a console to answer it on.
+    if (example_events := getattr(args, 'example_events', None)) is not None:
+        from common.data_recovery import DataRecovery
+
+        DataRecovery.install_example_events = example_events
+
     # Check if GUI mode should be used
     if not TEST_ENV and not (DEVEL_ENV and args.cli):
         # Pre-check GTK availability on Linux before trying to create the app
@@ -350,6 +411,13 @@ try:
                 raise
 
     # Original console mode
+    # There is no window here to set the settings that have not been set, which
+    # the defaults stand in for (the command line has been applied above).
+    from common.i18n import DEFAULT_LOCALE
+
+    if SharlyChessConfig().force_edit:
+        apply_settings(DEFAULT_LOCALE, SharlyChessConfig.default_federation)
+
     try:
         se: ServerEngine = ServerEngine(debug=debug, profile=args.profile, port=port)
         asyncio.run(se.serve())

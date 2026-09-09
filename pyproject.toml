@@ -35,6 +35,7 @@ dependencies = [
   "iso4217parse ~= 0.6.2",
   "jinja2 ~= 3.1.6",
   "litestar ~= 2.24.0",
+  "markdown-it-py ~= 4.2.0",
   "packaging ~= 26.2",
   "paramiko >= 5.0.0",
   "pathvalidate ~= 3.3.1",

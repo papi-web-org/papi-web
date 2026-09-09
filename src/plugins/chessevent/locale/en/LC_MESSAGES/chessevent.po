@@ -1,3 +1,9 @@
+msgid ""
+"- the credentials of your ChessEvent account configured on the event;\n"
+"- the players of a tournament imported from the platform, with their registration and their check-in;\n"
+"- the import replayed at any time to pick up the late registrations."
+msgstr ""
+
 msgid "A value is expected."
 msgstr ""
 
@@ -29,6 +35,9 @@ msgid "ChessEvent event not defined."
 msgstr ""
 
 msgid "ChessEvent event:"
+msgstr ""
+
+msgid "ChessEvent handles the online registration of the players for tournaments organised in France."
 msgstr ""
 
 msgid "ChessEvent password not defined."

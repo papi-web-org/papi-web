@@ -1,3 +1,9 @@
+msgid ""
+"- the number of the tournament and the identifier of its creator configured on the tournament;\n"
+"- the tournament uploaded on demand from its card, or automatically as soon as its data changes;\n"
+"- a link to the page of the tournament on Chess-Results.com."
+msgstr ""
+
 msgid "Auto-upload disabled"
 msgstr ""
 
@@ -12,6 +18,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Chess-Results.com only displays {max} tie-breaks. However, the rankings remain the same as in Sharly Chess."
+msgstr ""
+
+msgid "Chess-Results.com publishes the pairings and the standings of tournaments all over the world."
 msgstr ""
 
 msgid "Chess-Results.com upload"

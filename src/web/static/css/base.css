@@ -1306,7 +1306,10 @@ body[data-bs-theme=light] .nav {
         text-box-edge: cap alphabetic;
     }
 
-    span:has(*[data-bs-toggle="tooltip"]) {
+    /* A span holding nothing but an icon carrying a tooltip, whose line
+       height would space the icon out. A span holding text as well keeps its
+       own, without which the text has no line box and is not displayed. */
+    span:has(> *[data-bs-toggle="tooltip"]:only-child) {
         line-height: 0;
     }
 
