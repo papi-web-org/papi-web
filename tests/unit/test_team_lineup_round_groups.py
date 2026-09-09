@@ -218,7 +218,7 @@ class TeamLineupRoundGroupsTestCase(TestCase):
             _round_groups(tournament, self._team(tournament)), [[1, 2], [3]]
         )
 
-    def test_team_swiss_lineup_of_its_own_opens_a_group(self) -> None:
+    def test_team_swiss_lineup_of_its_own_does_not_open_a_group(self) -> None:
         """A round still to be paired goes by where its line-up comes
         from: round 3 stores one of its own, so it opens a group the
         rounds after it follow — even though it happens to seat the same
@@ -228,7 +228,7 @@ class TeamLineupRoundGroupsTestCase(TestCase):
         tournament = self._pair(1)
         self.assertEqual(tournament.last_paired_round, 1)
         self.assertEqual(
-            _round_groups(tournament, self._team(tournament)), [[1, 2], [3, 4, 5]]
+            _round_groups(tournament, self._team(tournament)), [[1, 2, 3, 4, 5]]
         )
 
     def test_team_swiss_rounds_follow_a_paired_round_they_take_over(self) -> None:
