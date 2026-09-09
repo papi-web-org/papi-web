@@ -636,8 +636,15 @@ msgstr "Un nombre est attendu."
 msgid "A pairing number between 1 and {max} is expected."
 msgstr "Un numéro d'appariement compris entre 1 et {max} est attendu."
 
+#, python-format
+msgid "The result of this game is not taken into account for the final standings because at least one of the players did not play 50%% of the games (FIDE 6.6)."
+msgstr "Le résultat de cette partie n'est pas pris en compte pour le classement final car au moins un·e des joueur·euses n'a pas disputé 50%% des parties (FIDE 6.6)."
+
 msgid "A player starts every round with these points added to those they have scored. They only are used for pairing, never for ranking, and are not part of the results submitted for rating."
 msgstr "Un·e joueur·euse commence chaque ronde avec ces points ajoutés à ceux qu'il·elle a marqués. Ils ne sont utilisés que pour l'appariement, jamais pour le classement, et ne font pas partie des résultats transmis pour l'évolution du classement des joueur·euses."
+
+msgid "A player that withdrew or was expelled having completed less than half of their games is not ranked, and their games are annulled: they no longer count in the opponents' scores and tie-breaks."
+msgstr "Un·e joueur·euse qui a abandonné ou a été exclu·e après avoir disputé moins de la moitié de ses parties n'est pas classé·e, et ses parties sont annulées : elles ne comptent plus dans les points et les départages de ses adversaires."
 
 #, python-brace-format
 msgid "A player with {column}=[{value}] already exists in the event."
@@ -675,6 +682,13 @@ msgstr "Un ensemble nommé [{name}] existe déjà. Cochez l'option Remplacement 
 
 msgid "A set with this name already existe."
 msgstr "Un ensemble avec ce nom existe déjà."
+
+#, python-format
+msgid "The result of this match is not taken into account for the final standings because at least one of the teams did not play 50%% of the matches (FIDE 6.6)."
+msgstr "Le résultat de ce match n'est pas pris en compte pour le classement final car au moins une des équipes n'a pas disputé 50%% des matchs (FIDE 6.6)."
+
+msgid "A team that withdrew or was expelled having completed less than half of its matches is not ranked, and its matches are annulled: they no longer count in the other teams' scores and tie-breaks."
+msgstr "Une équipe qui a abandonné ou a été exclue après avoir disputé moins de la moitié de ses matchs n'est pas classée, et ses matchs sont annulés : ils ne comptent plus dans les points et les départages des autres équipes."
 
 msgid "A template name is required."
 msgstr "Un nom de modèle est requis."
@@ -2954,6 +2968,14 @@ msgstr "Nulle"
 msgid "Draw:"
 msgstr "Nulle :"
 
+#, python-format
+msgid "Drop players that completed less than 50%% of their games (FIDE 6.6)"
+msgstr "Exclure les joueur·euses ayant disputé moins de 50 %% de leurs parties (FIDE 6.6)"
+
+#, python-format
+msgid "Drop teams that completed less than 50%% of their matches (FIDE 6.6)"
+msgstr "Exclure les équipes ayant disputé moins de 50 %% de leurs matchs (FIDE 6.6)"
+
 msgid "Duplicate"
 msgstr "Dupliquer"
 
@@ -3451,6 +3473,14 @@ msgstr "Exclure les joueur·euses correspondant au critère au lieu de les inclu
 msgid "Exclude: {values}"
 msgstr "Exclure : {values}"
 
+#, python-format
+msgid "Excluded from the final standings: completed less than 50%% of the games (FIDE 6.6)."
+msgstr "Exclu·e du classement final : moins de 50 %% des parties disputées (FIDE 6.6)."
+
+#, python-format
+msgid "Excluded from the final standings: completed less than 50%% of the matches (FIDE 6.6)."
+msgstr "Exclue du classement final : moins de 50 %% des matchs disputés (FIDE 6.6)."
+
 msgid "Exempt *** MAN"
 msgstr "Exempt"
 
@@ -3899,6 +3929,10 @@ msgstr "Ghana"
 #, python-brace-format
 msgid "Give/take away access level {access_level_short_name}"
 msgstr "Donner/retirer le niveau d'accès {access_level_short_name}"
+
+#, python-format
+msgid "Go to round #%(round)d"
+msgstr "Aller à la ronde n°%(round)d"
 
 msgid "Go to the display controller."
 msgstr "Aller au pilote d'afficheur."
@@ -5736,6 +5770,14 @@ msgstr "Non attribué"
 msgid "Not counted as a federation (1.4.2a)"
 msgstr "Non comptée comme une fédération (1.4.2a)"
 
+#, python-format
+msgid "Not counted in the final standings: withdrew or was expelled having completed less than 50%% of the games (FIDE 6.6). The result stays in the crosstable."
+msgstr "Non compté·e au classement final : forfait ou exclusion avec moins de 50 %% des parties disputées (FIDE 6.6). Le résultat reste dans la grille."
+
+#, python-format
+msgid "Not counted in the final standings: withdrew or was expelled having completed less than 50%% of the matches (FIDE 6.6). The result stays in the crosstable."
+msgstr "Non comptée au classement final : forfait ou exclusion avec moins de 50 %% des matchs disputés (FIDE 6.6). Le résultat reste dans la grille."
+
 msgid "Not enough byes available to set a Full-Point Bye (required: 2)."
 msgstr "Il n'y a pas assez de byes disponibles pour attribuer un bye point entier (requis : 2)."
 
@@ -7406,6 +7448,10 @@ msgstr "Ronde n°%(round)d"
 #, python-format
 msgid "Round #%(round)d is finished."
 msgstr "La ronde %(round)d est terminée."
+
+#, python-format
+msgid "Round #%(round)d is finished. End it and make round #%(next)d the current round, or just take a look at the next round?"
+msgstr "La ronde n°%(round)d est terminée. La clôturer et définir la ronde n°%(next)d comme ronde courante, ou simplement consulter la ronde suivante ?"
 
 #, python-format
 msgid "Round #%(round)d is running."

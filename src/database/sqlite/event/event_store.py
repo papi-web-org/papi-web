@@ -321,6 +321,7 @@ class StoredTournament:
     rule_set_config: dict[str, Any] = field(default_factory=dict[str, Any])
     prohibited_pairing_dimension: str | None = None
     prohibited_pairing_dimension_is_hard: bool = True
+    round_robin_participation_rule: bool = True
     stored_tie_breaks: list[StoredTieBreak] = field(
         default_factory=list[StoredTieBreak]
     )

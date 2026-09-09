@@ -281,7 +281,11 @@ class ChessResultsSession(Session):
         pdata = ET.SubElement(root, 'players')
         prev_tb_values: list[str] | None = None
         tournament.compute_tournament_player_ranks()
+        # Chess-Results publishes the standings, so a player dropped from
+        # them (FIDE 6.6) is not uploaded at all, games included.
         for p in tournament.tournament_players_by_pairing_number.values():
+            if p.is_excluded_from_standings:
+                continue
             # Get up to `MAX_TIE_BREAKS` tiebreak keys (pad with zeros if fewer)
             tb_values: list[str] = []
             for tbv in p.tie_break_values[:MAX_TIE_BREAKS]:
@@ -345,6 +349,14 @@ class ChessResultsSession(Session):
             # the positional id there.
             compact_numbering = not tournament.leave_fixed_board_holes
             for board in boards:
+                if any(
+                    player is not None and player.is_excluded_from_standings
+                    for player in (
+                        board.optional_white_tournament_player,
+                        board.black_tournament_player,
+                    )
+                ):
+                    continue
                 table_number = board.number if compact_numbering else board.board_id
                 ET.SubElement(
                     ppair,
@@ -373,6 +385,8 @@ class ChessResultsSession(Session):
                 last_board_id = max(last_board_id, table_number)
 
             for player in tournament.get_unpaired_tournament_players(boards):
+                if player.is_excluded_from_standings:
+                    continue
                 last_board_id += 1
                 result = player.pairings_by_round[round_].result
                 ET.SubElement(
@@ -418,11 +432,14 @@ class ChessResultsSession(Session):
         from utils.enum import ScoreType
 
         event = tournament.event
+        # Chess-Results publishes the standings, so a team dropped from
+        # them (FIDE 6.6) is not uploaded at all, matches included.
         teams = sorted(
             (
                 team
                 for team in event.teams_by_id.values()
                 if team.tournament_id == tournament.id
+                and not team.is_excluded_from_standings
             ),
             key=lambda team: (team.pairing_number or 0, team.name.lower()),
         )
@@ -434,8 +451,13 @@ class ChessResultsSession(Session):
 
         # Dense individual ranks by points (the player tie-breaks are team
         # tie-breaks here, meaningless per player — left empty).
+        uploaded_player_ids = {player.id for team in teams for player in team.players}
         ranked = sorted(
-            tournament_players_by_id.values(),
+            (
+                tp
+                for tp in tournament_players_by_id.values()
+                if tp.id in uploaded_player_ids
+            ),
             key=lambda tp: -(tp.points or 0),
         )
         rank_by_id: dict[int, int] = {}
@@ -548,6 +570,10 @@ class ChessResultsSession(Session):
             for team_board in visible_matches:
                 pairing_no = team_board.display_number
                 stb = team_board.stored_team_board
+                if stb.team_a_id not in team_no or (
+                    stb.team_b_id is not None and stb.team_b_id not in team_no
+                ):
+                    continue
                 gp_a, gp_b = team_board.game_points
                 if stb.team_b_id is None:
                     # PAB: full game points to the bye team, no boards

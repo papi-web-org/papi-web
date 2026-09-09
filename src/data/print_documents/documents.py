@@ -411,6 +411,14 @@ class PlayerRankingPrintDocument(AbstractPlayerRankingPrintDocument):
         return _('Ranking after round #{round}').format(round=self.ranking_round)
 
     @property
+    def ordered_tournament_players(self) -> list[TournamentPlayer]:
+        return [
+            player
+            for player in super().ordered_tournament_players
+            if not player.is_excluded_from_standings
+        ]
+
+    @property
     def player_columns(self) -> list[TournamentPlayerTableColumn]:
         return self.column_handler.get_player_ranking_columns(self.tournament)
 
@@ -1021,10 +1029,15 @@ class TeamRankingPrintDocument(PrintDocument):
             and self.tournament.primary_score == ScoreType.MATCH_POINTS
         )
         team_tie_breaks = self.tournament.team_tie_breaks
+        standings = [
+            row
+            for row in self.tournament.team_standings(after_round=self.ranking_round)
+            if not row['team'].is_excluded_from_standings
+        ]
         return {
             'tournament': self.tournament,
             'subtitle': self.tournament.name,
-            'standings': self.tournament.team_standings(after_round=self.ranking_round),
+            'standings': standings,
             'primary_is_mp': primary_is_mp,
             'team_tie_breaks': team_tie_breaks,
         }
@@ -1088,6 +1101,19 @@ class BergerGridPrintDocument(PrintDocument):
             for index, tournament_player in enumerate(
                 grid_player_sorter.sorted_tournament_players(self.tournament)
             )
+        }
+
+    @cached_property
+    def excluded_grid_ids(self) -> set[int]:
+        """Grid numbers of the participants dropped from the standings
+        (FIDE 6.6): every cell of their row and of their column holds an
+        annulled game, shown crossed out."""
+        return {
+            grid_id
+            for player_id, grid_id in self.grid_id_by_player_id.items()
+            if self.tournament.tournament_players_by_id[
+                player_id
+            ].is_excluded_from_standings
         }
 
     def grid_results_points(self, results: list[list[Result | None]]) -> str:
@@ -1157,6 +1183,7 @@ class BergerGridPrintDocument(PrintDocument):
             'tournament': self.tournament,
             'result_grid': self.build_result_grid(),
             'grid_id_by_player_id': self.grid_id_by_player_id,
+            'excluded_grid_ids': self.excluded_grid_ids,
         }
 
 
@@ -1367,6 +1394,8 @@ class TeamBergerGridPrintDocument(PrintDocument):
                     player_cells[tp.id][opponent_id].append(
                         pairing.result.to_berger_table
                     )
+                    if tp.game_is_annulled(pairing):
+                        continue
                     points_by_player_id[tp.id] += pairing.result.points(
                         tournament.point_values
                     )
@@ -2808,7 +2837,8 @@ class IndividuelTeamRankingPrintDocument(PrintDocument, ABC):
             for tournament_player in self.tournament.compute_tournament_player_ranks(
                 after_round=self.ranking_round
             ).values()
-            if not self.tournament.started or tournament_player.has_played_games
+            if (not self.tournament.started or tournament_player.has_played_games)
+            and not tournament_player.is_excluded_from_standings
         ]
 
         # Group by entity

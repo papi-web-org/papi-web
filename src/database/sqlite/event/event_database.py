@@ -680,6 +680,9 @@ class EventDatabase(MigrationDatabase):
             prohibited_pairing_dimension_is_hard=cls.load_bool_from_database_field(
                 row['prohibited_pairing_dimension_is_hard']
             ),
+            round_robin_participation_rule=cls.load_bool_from_database_field(
+                row['round_robin_participation_rule']
+            ),
         )
 
         return stored_tournament
@@ -774,6 +777,7 @@ class EventDatabase(MigrationDatabase):
                 'rule_set',
                 'prohibited_pairing_dimension',
                 'prohibited_pairing_dimension_is_hard',
+                'round_robin_participation_rule',
             ],
         ) | {
             'start_date': cls.dump_date_to_database_field(stored_tournament.start_date),

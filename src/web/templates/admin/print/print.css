@@ -25,6 +25,30 @@ tr.odd * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
 }
+{# An annulled game (either side dropped from the standings, FIDE 6.6): the
+   result stays readable but greyed, with a cross over the cell. Drawn as two
+   corner-to-corner gradients so the cross fits whatever the cell size. #}
+td.annulled {
+    color: #555555;
+    background-image:
+        linear-gradient(
+            to top right,
+            transparent calc(50% - 0.6px),
+            #A0A0A0 calc(50% - 0.6px),
+            #A0A0A0 calc(50% + 0.6px),
+            transparent calc(50% + 0.6px)
+        ),
+        linear-gradient(
+            to bottom right,
+            transparent calc(50% - 0.6px),
+            #A0A0A0 calc(50% - 0.6px),
+            #A0A0A0 calc(50% + 0.6px),
+            transparent calc(50% + 0.6px)
+        );
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
 {# ========== WIDTH, MARGINS, PADDING ==========#}
 body { margin: 4px; }
 tr td, tr th {
