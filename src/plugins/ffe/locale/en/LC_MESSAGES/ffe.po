@@ -688,13 +688,13 @@ msgstr ""
 msgid "Tournament successfully uploaded."
 msgstr ""
 
-msgid "Tournament upload failed, consult the FFE modal for more details."
+msgid "Tournament upload failed, consult Menu > Data Transfer > FFE for more details."
 msgstr ""
 
 msgid "Tournament upload has been planned."
 msgstr ""
 
-msgid "Tournament visibility could not be set, consult the FFE modal for more details."
+msgid "Tournament visibility could not be set, consult Menu > Data Transfer > FFE for more details."
 msgstr ""
 
 msgid "Tournament visibility could not be set."
