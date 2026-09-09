@@ -866,7 +866,7 @@ class SharlyChessServerToga(toga.App):
                 _('Welcome to Sharly Chess!'), font_weight='bold', text_align='center'
             ),
             toga.Label(
-                _('Please choose your language and your federation to start.'),
+                _('Confirm your settings to start.'),
                 text_align='center',
             ),
             self._settings_row(_('Language:'), self._build_locale_select()),
@@ -876,6 +876,7 @@ class SharlyChessServerToga(toga.App):
                     none_text=_('Please choose a federation')
                 ),
             ),
+            self._settings_row(_('Date format:'), self._build_date_formatter_select()),
             self.setup_start_button,
         )
         assert isinstance(self.main_window, toga.Window)

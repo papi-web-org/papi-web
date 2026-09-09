@@ -2107,6 +2107,9 @@ msgstr ""
 msgid "Confirm the new data folder \"{folder}\"?"
 msgstr ""
 
+msgid "Confirm your settings to start."
+msgstr ""
+
 #, python-brace-format
 msgid "Connect to the Sharly Chess network via {type},<br />then scan to access the Sharly Chess server."
 msgstr ""
@@ -2729,7 +2732,7 @@ msgstr ""
 msgid "Department *** EVENT TAG NAME"
 msgstr "Department"
 
-msgid "Depends on"
+msgid "Dependencies"
 msgstr ""
 
 msgid "Deputy Chief Arbitration"
@@ -3325,7 +3328,7 @@ msgstr ""
 msgid "Enable this account"
 msgstr ""
 
-msgid "Enable this plugin on the events that are created"
+msgid "Enabled by default"
 msgstr ""
 
 #, python-format
@@ -3578,6 +3581,10 @@ msgid "Fed. *** FEDERATION COLUMN HEADER"
 msgstr "Fed."
 
 msgid "Federation"
+msgstr ""
+
+#, python-format
+msgid "Federation (%(federation)s)"
 msgstr ""
 
 msgid "Federation distribution (counted opponents)"
@@ -4248,9 +4255,6 @@ msgstr[1] ""
 
 #, python-brace-format
 msgid "Installation of [{lib}] failed."
-msgstr ""
-
-msgid "Installed"
 msgstr ""
 
 #, python-brace-format
@@ -5268,9 +5272,6 @@ msgstr ""
 msgid "New event"
 msgstr ""
 
-msgid "New events"
-msgstr ""
-
 msgid "New group"
 msgstr ""
 
@@ -5739,9 +5740,6 @@ msgid "Not enough byes available to set a Full-Point Bye (required: 2)."
 msgstr ""
 
 msgid "Not enough byes available to set a Half-Point Bye (required: 1)."
-msgstr ""
-
-msgid "Not installed"
 msgstr ""
 
 msgid "Not logged in"
@@ -6641,9 +6639,6 @@ msgstr ""
 msgid "Please choose the tournament."
 msgstr ""
 
-msgid "Please choose your language and your federation to start."
-msgstr ""
-
 msgid "Please consider contacting support, or installing the new version manually."
 msgstr ""
 
@@ -7213,17 +7208,11 @@ msgstr ""
 msgid "Required (1.4.8)"
 msgstr ""
 
-msgid "Required by"
-msgstr ""
-
 #, python-format
 msgid "Required by plugin <b>%(plugin)s</b>."
 msgstr ""
 
-msgid "Required event type"
-msgstr ""
-
-msgid "Required federation"
+msgid "Requirements"
 msgstr ""
 
 msgid "Res. *** RESULT COLUMN HEADER"
@@ -9245,12 +9234,6 @@ msgstr ""
 msgid "This player is paired in at least one round and cannot be removed from the roster (must be removed from the line-up first)."
 msgstr ""
 
-msgid "This plugin can not be uninstalled while they are installed."
-msgstr ""
-
-msgid "This plugin can only be enabled on events of this federation."
-msgstr ""
-
 #, python-format
 msgid "This plugin is required by the plugin(s) %(plugins)s."
 msgstr ""
@@ -9686,6 +9669,10 @@ msgstr ""
 msgid "Type"
 msgstr ""
 
+#, python-format
+msgid "Type (%(types)s)"
+msgstr ""
+
 msgid "Type A (simple preferences)"
 msgstr ""
 
@@ -10067,10 +10054,6 @@ msgid "Verdict"
 msgstr ""
 
 msgid "Verdict:"
-msgstr ""
-
-#, python-format
-msgid "Version %(version)s"
 msgstr ""
 
 msgid "Vietnam"

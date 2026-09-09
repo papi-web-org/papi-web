@@ -8,13 +8,10 @@
     <div class="card-body">
         <div class="d-flex align-items-start gap-3 flex-wrap">
             <div>
-                <h3 class="h5 mb-1">
+                <h3 class="h5 mb-0">
                     <i class="bi-plugin pe-1"></i>
                     {{ plugin.name }}
                 </h3>
-                <div class="text-body-secondary small">
-                    {{ _('Version %(version)s', version=plugin.version) }}
-                </div>
             </div>
             <div class="ms-auto d-flex align-items-center gap-2">
                 {% if plugin.is_enabled %}
@@ -64,81 +61,70 @@
         </div>
 
         <dl class="row mt-3 mb-0 small">
-            <dt class="col-sm-4">{{ _('Status') }}</dt>
-            <dd class="col-sm-8">
-                {% if plugin.is_enabled %}
-                    <span class="text-success">
-                        <i class="bi-check-circle-fill pe-1"></i>{{ _('Installed') }}
-                    </span>
-                {% else %}
-                    <span class="text-body-secondary">{{ _('Not installed') }}</span>
-                {% endif %}
-            </dd>
-
-            {% if plugin.is_enabled %}
-                <dt class="col-sm-4">{{ _('New events') }}</dt>
+            {% if plugin.federation or plugin.supported_event_types is not none %}
+                <dt class="col-sm-4">{{ _('Requirements') }}</dt>
                 <dd class="col-sm-8">
-                    <div class="form-check form-switch mb-0">
-                        <input
-                            type="checkbox"
-                            role="switch"
-                            class="form-check-input"
-                            id="plugin-default-event-{{ plugin.id }}"
-                            data-testid="plugin-default-event-{{ plugin.id }}"
-                            {% if plugin.event_is_enabled_by_default %}checked{% endif %}
-                            hx-post="{{ url_for('admin-plugin-default-event', plugin_id=plugin.id) }}{% if embedded %}?embedded=1{% endif %}"
-                            hx-target="#plugin-detail"
-                            hx-indicator="#please-wait"
-                        >
-                        <label
-                            class="form-check-label"
-                            for="plugin-default-event-{{ plugin.id }}"
-                        >
-                            {{ _('Enable this plugin on the events that are created') }}
-                        </label>
-                    </div>
-                </dd>
-            {% endif %}
-
-            {% if plugin.federation %}
-                <dt class="col-sm-4">{{ _('Required federation') }}</dt>
-                <dd class="col-sm-8">
-                    {{ federation_name or plugin.federation }} ({{ plugin.federation }})
-                    <div class="text-body-secondary">
-                        {{ _('This plugin can only be enabled on events of this federation.') }}
-                    </div>
-                </dd>
-            {% endif %}
-
-            {% if plugin.supported_event_types is not none %}
-                <dt class="col-sm-4">{{ _('Required event type') }}</dt>
-                <dd class="col-sm-8">
-                    {% for event_type in plugin.supported_event_types %}
-                        {{ event_type }}{% if not loop.last %}, {% endif %}
-                    {% endfor %}
+                    {%- if plugin.federation -%}
+                        {{ _(
+                            'Federation (%(federation)s)',
+                            federation=(federation_name or plugin.federation)
+                                ~ ' - ' ~ plugin.federation
+                        ) }}
+                    {%- endif -%}
+                    {%- if plugin.federation
+                        and plugin.supported_event_types is not none %}, {% endif -%}
+                    {%- if plugin.supported_event_types is not none -%}
+                        {{ _(
+                            'Type (%(types)s)',
+                            types=plugin.supported_event_types|join(', ')
+                        ) }}
+                    {%- endif -%}
                 </dd>
             {% endif %}
 
             {% if plugin.depends_on_plugins %}
-                <dt class="col-sm-4">{{ _('Depends on') }}</dt>
+                <dt
+                    class="col-sm-4"
+                    {{ macros.tooltip_attributes(
+                        'info',
+                        _('These plugins are installed together with this one.'),
+                        'top',
+                    ) }}
+                >{{ _('Dependencies') }}</dt>
                 <dd class="col-sm-8">
                     {% for dependency in plugin.depends_on_plugins %}
                         {{ plugin_link(dependency) }}{% if not loop.last %}, {% endif %}
                     {% endfor %}
-                    <div class="text-body-secondary">
-                        {{ _('These plugins are installed together with this one.') }}
-                    </div>
                 </dd>
             {% endif %}
 
-            {% if blocking_plugins %}
-                <dt class="col-sm-4">{{ _('Required by') }}</dt>
+            {% if plugin.is_enabled %}
+                <dt class="col-sm-4">{{ _('Enabled by default') }}</dt>
                 <dd class="col-sm-8">
-                    {% for blocking_plugin in blocking_plugins %}
-                        {{ plugin_link(blocking_plugin) }}{% if not loop.last %}, {% endif %}
-                    {% endfor %}
-                    <div class="text-body-secondary">
-                        {{ _('This plugin can not be uninstalled while they are installed.') }}
+                    <div class="d-flex gap-3">
+                        {% for enabled, label in [
+                            (true, _('Yes')), (false, _('No'))
+                        ] %}
+                            <div class="form-check mb-0">
+                                <input
+                                    type="radio"
+                                    class="form-check-input"
+                                    name="plugin-default-event-{{ plugin.id }}"
+                                    id="plugin-default-event-{{ plugin.id }}-{{ loop.index }}"
+                                    data-testid="plugin-default-event-{{ plugin.id }}-{{ 'yes' if enabled else 'no' }}"
+                                    {% if plugin.event_is_enabled_by_default == enabled %}checked{% endif %}
+                                    hx-post="{{ url_for(
+                                        'admin-plugin-default-event', plugin_id=plugin.id
+                                    ) }}?enabled={{ 1 if enabled else 0 }}{% if embedded %}&embedded=1{% endif %}"
+                                    hx-target="#plugin-detail"
+                                    hx-indicator="#please-wait"
+                                >
+                                <label
+                                    class="form-check-label"
+                                    for="plugin-default-event-{{ plugin.id }}-{{ loop.index }}"
+                                >{{ label }}</label>
+                            </div>
+                        {% endfor %}
                     </div>
                 </dd>
             {% endif %}

@@ -2107,6 +2107,9 @@ msgstr "Configurer les départages du tournoi."
 msgid "Confirm the new data folder \"{folder}\"?"
 msgstr "Confirmer le nouveau dossier de données « {folder} » ?"
 
+msgid "Confirm your settings to start."
+msgstr "Confirmez vos paramètres pour démarrer."
+
 #, python-brace-format
 msgid "Connect to the Sharly Chess network via {type},<br />then scan to access the Sharly Chess server."
 msgstr "Connectez-vous au réseau Sharly Chess via {type},<br />puis scannez pour accéder au serveur Sharly Chess."
@@ -2729,8 +2732,8 @@ msgstr "Danemark"
 msgid "Department *** EVENT TAG NAME"
 msgstr "Département"
 
-msgid "Depends on"
-msgstr "Dépend de"
+msgid "Dependencies"
+msgstr "Dépendances"
 
 msgid "Deputy Chief Arbitration"
 msgstr "Arbitrage adjoint"
@@ -3325,8 +3328,8 @@ msgstr "Activer le pointage des joueur·euses depuis les écrans de pointage."
 msgid "Enable this account"
 msgstr "Activer ce compte"
 
-msgid "Enable this plugin on the events that are created"
-msgstr "Activer ce plug-in sur les évènements créés"
+msgid "Enabled by default"
+msgstr "Activation par défaut"
 
 #, python-format
 msgid "Encounter already happened at round #%(round)d"
@@ -3579,6 +3582,10 @@ msgstr "Féd."
 
 msgid "Federation"
 msgstr "Fédération"
+
+#, python-format
+msgid "Federation (%(federation)s)"
+msgstr "Fédération (%(federation)s)"
 
 msgid "Federation distribution (counted opponents)"
 msgstr "Répartition par fédération (adversaires compté·es)"
@@ -4249,9 +4256,6 @@ msgstr[1] "Installez-les depuis la section Plug-ins pour ouvrir l’évènement.
 #, python-brace-format
 msgid "Installation of [{lib}] failed."
 msgstr "L'installation de la bibliothèque [{lib}] a échoué."
-
-msgid "Installed"
-msgstr "Installé"
 
 #, python-brace-format
 msgid "Installed [{lib}]."
@@ -5268,9 +5272,6 @@ msgstr "Nouveau pilote d'afficheur"
 msgid "New event"
 msgstr "Nouvel évènement"
 
-msgid "New events"
-msgstr "Nouveaux évènements"
-
 msgid "New group"
 msgstr "Nouveau groupe"
 
@@ -5740,9 +5741,6 @@ msgstr "Il n'y a pas assez de byes disponibles pour attribuer un bye point entie
 
 msgid "Not enough byes available to set a Half-Point Bye (required: 1)."
 msgstr "Il n'y a pas de bye disponible (requis : 1)."
-
-msgid "Not installed"
-msgstr "Non installé"
 
 msgid "Not logged in"
 msgstr "Non connecté"
@@ -6643,9 +6641,6 @@ msgstr "Veuillez choisir le modèle."
 msgid "Please choose the tournament."
 msgstr "Veuillez choisir le tournoi."
 
-msgid "Please choose your language and your federation to start."
-msgstr "Choisissez votre langue et votre fédération pour démarrer."
-
 msgid "Please consider contacting support, or installing the new version manually."
 msgstr "Considérez contacter le support, ou installer la nouvelle version manuellement."
 
@@ -7215,18 +7210,12 @@ msgstr "La requête à la base de données a échoué."
 msgid "Required (1.4.8)"
 msgstr "Requis (1.4.8)"
 
-msgid "Required by"
-msgstr "Requis par"
-
 #, python-format
 msgid "Required by plugin <b>%(plugin)s</b>."
 msgstr "Requis par le plug-in <b>%(plugin)s</b>."
 
-msgid "Required event type"
-msgstr "Type d'évènement requis"
-
-msgid "Required federation"
-msgstr "Fédération requise"
+msgid "Requirements"
+msgstr "Prérequis"
 
 msgid "Res. *** RESULT COLUMN HEADER"
 msgstr "Rés."
@@ -9247,12 +9236,6 @@ msgstr "Ce·tte joueur·euse a déjà été apparié·e, son équipe ne peut êt
 msgid "This player is paired in at least one round and cannot be removed from the roster (must be removed from the line-up first)."
 msgstr "Ce·tte joueur·euse est apparié·e pour au moins une ronde et ne peut être supprimé·e de l'effectif (doit d'abord être supprimé·e de la composition de la ronde)."
 
-msgid "This plugin can not be uninstalled while they are installed."
-msgstr "Ce plug-in ne peut pas être désinstallé tant qu'ils sont installés."
-
-msgid "This plugin can only be enabled on events of this federation."
-msgstr "Ce plug-in ne peut être activé que sur les évènements de cette fédération."
-
 #, python-format
 msgid "This plugin is required by the plugin(s) %(plugins)s."
 msgstr "Ce plug-in est requis par le(s) plug-in(s) %(plugins)s."
@@ -9688,6 +9671,10 @@ msgstr "Recto verso (pliable)"
 msgid "Type"
 msgstr "Type"
 
+#, python-format
+msgid "Type (%(types)s)"
+msgstr "Type (%(types)s)"
+
 msgid "Type A (simple preferences)"
 msgstr "Type A (préférences simples)"
 
@@ -10070,10 +10057,6 @@ msgstr "Verdict"
 
 msgid "Verdict:"
 msgstr "Verdict :"
-
-#, python-format
-msgid "Version %(version)s"
-msgstr "Version %(version)s"
 
 msgid "Vietnam"
 msgstr "Vietnam"

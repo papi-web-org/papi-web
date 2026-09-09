@@ -62,7 +62,9 @@
         --bs-btn-hover-bg: var(--plugin-accent-color);
         --bs-btn-hover-color: var(--plugin-accent-text-color);
     }
-    .plugin-list-item.active .text-body-secondary { color: inherit !important; }
+    /* What is selected is read on the accent, whatever colour it carries
+       otherwise. */
+    .plugin-list-item.active .text-success { color: inherit !important; }
     .plugin-doc h1, .plugin-doc h2 { font-size: 1.2rem; margin-top: 1.2rem; }
     .plugin-doc h3, .plugin-doc h4 { font-size: 1.05rem; margin-top: 1rem; }
     .plugin-doc table { width: auto; }
@@ -154,7 +156,6 @@
                                 <i class="bi-check-circle-fill text-success ms-auto"></i>
                             {% endif %}
                         </div>
-                        <div class="small text-body-secondary text-wrap">{{ plugin.description }}</div>
                     </button>
                 {% endfor %}
             </div>

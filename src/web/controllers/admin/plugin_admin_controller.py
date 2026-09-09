@@ -205,14 +205,13 @@ class PluginAdminController(BaseAdminController):
         self,
         request: HTMXRequest,
         plugin_id: FromPath[str],
+        enabled: FromQuery[bool | None] = None,
         embedded: FromQuery[bool | None] = None,
     ) -> Template:
         """Sets whether new events enable the plugin."""
         web_context = AdminWebContext(request)
         plugin = self._get_plugin(plugin_id)
-        plugin_manager.set_event_is_enabled_by_default(
-            plugin, not plugin.event_is_enabled_by_default
-        )
+        plugin_manager.set_event_is_enabled_by_default(plugin, bool(enabled))
         return HTMXTemplate(
             template_name='admin/plugins/_plugin_detail.html',
             context=web_context.template_context
