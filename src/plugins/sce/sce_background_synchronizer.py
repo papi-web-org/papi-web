@@ -14,6 +14,7 @@ from plugins.sce.sce_sync_status import (
     SCESyncStatus,
     NetworkFailureSCESyncStatus,
     UnexpectedFailureSCESyncStatus,
+    AuthFailureSCESyncStatus,
 )
 from plugins.sce.utils import SCEUtils
 from web.channels import channels_plugin
@@ -82,7 +83,10 @@ def sync_event(event_uniq_id: str):
     except Exception as e:
         logger.exception(e)
         if event:
-            _exit_with_status(event, UnexpectedFailureSCESyncStatus())
+            status: SCESyncStatus = UnexpectedFailureSCESyncStatus()
+            if not SCEUtils.get_event_plugin_data(event).tokens:
+                status = AuthFailureSCESyncStatus()
+            _exit_with_status(event, status)
     finally:
         _ONGOING_EVENTS_UNIQ_IDS.discard(event_uniq_id)
         if event:

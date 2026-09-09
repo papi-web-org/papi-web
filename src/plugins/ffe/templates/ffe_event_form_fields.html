@@ -3,7 +3,7 @@
     <div class="col-12">
         {{ admin_macros.switch_input(
             name='ffe_leave_fixed_board_holes',
-            placeholder=_('Leave empty tables for fixed boards:'),
+            placeholder=_('Leave empty tables for fixed boards'),
             help_text=_('When enabled, a fixed board number leaves its natural table empty and keeps the same board numbering as the FFE website. When disabled, tables are renumbered so that no table is left empty.'),
             disabled=not client.can_update_event,
             data=data, errors=errors,

@@ -126,7 +126,7 @@
 
 {% macro doc_icon(url, class) %}
     <a href="{{ doc_url(url) }}" target="_blank" class="{{ class }}">
-        <i class="bi-info-circle"></i>
+        <i class="bi bi-info-circle"></i>
     </a>
 {% endmacro %}
 
@@ -262,7 +262,9 @@
 {% endmacro %}
 
 {% macro column_cell(column, object) %}
-    {% set content = column.get_cell_content(object) %}
+    {% set content = (
+        '' if column.is_cell_blank_for(object) else column.get_cell_content(object)
+    ) %}
     {% if column.is_cell_content_safe %}
         {{ content|safe }}
     {% else %}

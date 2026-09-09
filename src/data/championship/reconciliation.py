@@ -61,8 +61,16 @@ class ReconciledParticipation:
 
     @property
     def field_size(self) -> int:
+        # The size of the field that was ranked: a participant dropped from
+        # the source's standings (FIDE 6.6) is not part of it, and must not
+        # inflate the ranking points of those who were.
         tournament = self.source.tournament
-        return len(tournament.tournament_players) if tournament is not None else 0
+        if tournament is None:
+            return 0
+        return sum(
+            not player.is_excluded_from_standings
+            for player in tournament.tournament_players
+        )
 
     @property
     def wins(self) -> int:
@@ -215,7 +223,9 @@ class ReconciledTeamParticipation:
     @property
     def field_size(self) -> int:
         tournament = self.source.tournament
-        return len(tournament.teams) if tournament is not None else 0
+        if tournament is None:
+            return 0
+        return sum(not team.is_excluded_from_standings for team in tournament.teams)
 
     @property
     def wins(self) -> int:
@@ -319,6 +329,10 @@ def reconcile_players(
         if source.tournament is None:
             continue
         for tournament_player in source.tournament.tournament_players:
+            # A player dropped from a source's standings (FIDE 6.6) did not
+            # place in it, so brings nothing to the championship.
+            if tournament_player.is_excluded_from_standings:
+                continue
             participations.append(ReconciledParticipation(source, tournament_player))
 
     union_find = _UnionFind(len(participations))
@@ -370,6 +384,8 @@ def reconcile_teams(
             row['team'].id: row for row in tournament.team_standings()
         }
         for team in tournament.teams:
+            if team.is_excluded_from_standings:
+                continue
             row = standings_by_team_id.get(team.id)
             if row is not None:
                 participations.append(ReconciledTeamParticipation(source, team, row))

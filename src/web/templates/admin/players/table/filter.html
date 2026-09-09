@@ -1,7 +1,7 @@
 {% set is_active = column.has_active_filter_value %}
 <form
     id="column-{{ column.id }}-filter"
-    class="d-inline-block ps-1"
+    class="d-inline-flex align-items-center ps-1"
     hx-get="{{ url_for(
         'admin-event-players-set-filter',
         event_uniq_id=admin_event.uniq_id,
@@ -35,7 +35,7 @@
                     {% if column.all_filter_value_active %}checked{% endif %}
                     onclick="$('input.filter-{{ column.id }}').prop('checked', this.checked)"
                 />
-                <button type="submit" class="btn w-100 text-end py-0" data-bs-dismiss="modal" >
+                <button type="submit" class="btn w-100 text-end compact-y-padding" data-bs-dismiss="modal" >
                     <i class="bi-check-lg pe-1"></i>
                     {{ _('OK') }}
                 </button>

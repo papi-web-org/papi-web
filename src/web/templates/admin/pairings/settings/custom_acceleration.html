@@ -11,24 +11,14 @@
     {% set first_number_field = setting.id ~ '_' ~ index ~ '_first_number' %}
     {% set last_number_field = setting.id ~ '_' ~ index ~ '_last_number' %}
     <tr class="custom-acceleration-row">
-        <td>
-            <input
-                type="number" step="0.5" min="0" max="{{ setting.MAX_VPOINTS }}"
-                class="form-control form-control-sm {{ 'is-invalid' if errors.get(vpoints_field) }}"
-                name="{{ vpoints_field }}"
-                data-testid="{{ vpoints_field | replace('_', '-') }}"
-                value="{{ data.get(vpoints_field, '') }}"
-                required
-            >
-        </td>
         {% for first_field, last_field, max_value, placeholder_first, placeholder_last in [
             (
                 first_round_field, last_round_field, admin_tournament.rounds,
-                _('1st'), _('last'),
+                1, admin_tournament.rounds | string,
             ),
             (
                 first_number_field, last_number_field, admin_tournament.player_count,
-                _('1st'), _('last'),
+                1, admin_tournament.player_count | string,
             ),
         ] %}
             <td>
@@ -60,6 +50,16 @@
                 </div>
             </td>
         {% endfor %}
+        <td>
+            <input
+                type="number" step="0.5" min="0" max="{{ setting.MAX_VPOINTS }}"
+                class="form-control form-control-sm {{ 'is-invalid' if errors.get(vpoints_field) }}"
+                name="{{ vpoints_field }}"
+                data-testid="{{ vpoints_field | replace('_', '-') }}"
+                value="{{ data.get(vpoints_field, '') }}"
+                required
+            >
+        </td>
         <td class="text-end">
             <button
                 type="button"
@@ -103,9 +103,9 @@
 <table class="table table-sm align-middle mb-2" id="custom-acceleration-table">
     <thead>
         <tr>
-            <th class="small" style="width: 6rem">{{ _('Points') }}</th>
             <th class="small">{{ _('Rounds') }}</th>
             <th class="small">{{ _('Pairing numbers') }}</th>
+            <th class="small" style="width: 6rem">{{ _('Points') }}</th>
             <th></th>
         </tr>
     </thead>

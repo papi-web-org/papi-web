@@ -1,0 +1,221 @@
+{% import '/common/macros.j2' as macros with context %}
+
+<style>
+    /* The list of the plugins and the page of the selected one scroll on their
+       own, so that the list stays in place while its page is read, and the
+       search stays in place while the list is scrolled. */
+    .plugin-columns { --plugin-columns-margin: 6rem; }
+    .plugin-column {
+        max-height: calc(var(--vh, 100vh) - var(--plugin-columns-margin));
+        overflow-y: auto;
+    }
+    .plugin-list-column { display: flex; flex-direction: column; overflow-y: hidden; }
+    .plugin-list-column #plugin-list { overflow-y: auto; min-height: 0; }
+    /* The labels are only as wide as the longest of them, and a row lines up
+       on the text of its value, which can be taller than its label. */
+    .plugin-properties {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        align-items: baseline;
+        column-gap: 1.5rem;
+        row-gap: .75rem;
+    }
+    .plugin-properties dd { margin-bottom: 0; }
+    /* The requirements are spaced out when they wrap, which the badges they
+       carry leave no room between the lines otherwise. */
+    .plugin-requirements {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        column-gap: 1.5rem;
+        row-gap: .5rem;
+    }
+    /* Bootstrap highlights what is selected with its own blue: the accent of
+       the application is used instead, so that the selection carries the same
+       colour in the admin view and in the window of the application. Scoped to
+       this section, the themes are left untouched. */
+    .plugin-section {
+        --plugin-accent-color: #d7c9aa;
+        --plugin-accent-text-color: #212529;
+    }
+    .plugin-list-item.active {
+        --bs-list-group-active-bg: var(--plugin-accent-color);
+        --bs-list-group-active-border-color: var(--plugin-accent-color);
+        --bs-list-group-active-color: var(--plugin-accent-text-color);
+    }
+    /* The border of the two buttons stays the same whichever one is selected,
+       otherwise the group looks broken. The classes are repeated to outweigh
+       the rule of the theme. */
+    .plugin-section .btn.plugin-toggle-button {
+        --bs-btn-color: var(--plugin-accent-color);
+        --bs-btn-border-color: var(--plugin-accent-color);
+        --bs-btn-hover-color: var(--plugin-accent-text-color);
+        --bs-btn-hover-bg: var(--plugin-accent-color);
+        --bs-btn-hover-border-color: var(--plugin-accent-color);
+        --bs-btn-active-border-color: var(--plugin-accent-color);
+    }
+    /* The primary button of the light theme is the grey of the remote screens:
+       the accent is what the section highlights with. The class is repeated to
+       outweigh the rule of the theme. */
+    .plugin-section .btn.btn-primary {
+        --bs-btn-bg: var(--plugin-accent-color);
+        --bs-btn-border-color: var(--plugin-accent-color);
+        --bs-btn-color: var(--plugin-accent-text-color);
+        --bs-btn-hover-bg: var(--plugin-accent-color);
+        --bs-btn-hover-border-color: var(--plugin-accent-color);
+        --bs-btn-hover-color: var(--plugin-accent-text-color);
+        --bs-btn-active-bg: var(--plugin-accent-color);
+        --bs-btn-active-border-color: var(--plugin-accent-color);
+        --bs-btn-active-color: var(--plugin-accent-text-color);
+    }
+    /* A switch that is on carries the blue of Bootstrap, which only the dark
+       theme replaces. */
+    .plugin-section .form-check-input:checked {
+        background-color: var(--plugin-accent-color);
+        border-color: var(--plugin-accent-color);
+    }
+    .plugin-toggle-button.active {
+        --bs-btn-active-bg: var(--plugin-accent-color);
+        --bs-btn-active-border-color: var(--plugin-accent-color);
+        --bs-btn-active-color: var(--plugin-accent-text-color);
+        --bs-btn-hover-bg: var(--plugin-accent-color);
+        --bs-btn-hover-color: var(--plugin-accent-text-color);
+    }
+    /* What is selected is read on the accent, whatever colour it carries
+       otherwise. */
+    .plugin-list-item.active .text-success { color: inherit !important; }
+    .plugin-doc h1, .plugin-doc h2 { font-size: 1.2rem; margin-top: 1.2rem; }
+    .plugin-doc h3, .plugin-doc h4 { font-size: 1.05rem; margin-top: 1rem; }
+    .plugin-doc table { width: auto; }
+    .plugin-doc table th, .plugin-doc table td { padding: .15rem .6rem .15rem 0; }
+</style>
+{% if embedded %}
+    <style>
+        /* The page displayed in the window of the application: it carries
+           neither the theme of the admin view nor the one of the remote
+           screens, it lets the window show through instead. The Bootstrap
+           light theme is only its base. */
+        .app-window { background-color: transparent; }
+        .app-window .sidebar,
+        .app-window #copyright-wrapper { display: none !important; }
+        /* Nothing is displayed under the page in the window. */
+        .app-window .plugin-columns { --plugin-columns-margin: 2rem; }
+        /* Tooltips are displayed outside the page, hence the plain selectors.
+           The grey they carry is washed out on the light background of the
+           window: they take the colours of the admin view instead. */
+        .sharly-chess-tooltip-info,
+        .sharly-chess-tooltip-warning,
+        .sharly-chess-tooltip-error {
+            --bs-tooltip-bg: #212529;
+            --bs-tooltip-color: #dee2e6;
+        }
+        .sharly-chess-tooltip-warning,
+        .sharly-chess-tooltip-error {
+            --bs-tooltip-color: #ea868f;
+        }
+        {% if accent_color %}
+            /* In the window, what is selected carries the accent of the system,
+               which the controls around the page are drawn in. */
+            .app-window .plugin-section {
+                --plugin-accent-color: {{ accent_color }};
+                --plugin-accent-text-color: {{ accent_text_color }};
+            }
+        {% endif %}
+    </style>
+{% endif %}
+
+<div class="p-3 plugin-section">
+    <div class="row g-3 plugin-columns">
+        <div class="col-12 col-md-5 col-xl-4 plugin-column plugin-list-column">
+            <input
+                id="plugin-search-input"
+                type="search"
+                class="form-control mb-2"
+                autocomplete="off"
+                placeholder="{{ _('Search a plugin…') }}"
+                aria-label="{{ _('Search a plugin…') }}"
+            >
+            <div id="plugin-list" class="list-group">
+                {% for plugin in plugins %}
+                    <button
+                        type="button"
+                        class="list-group-item list-group-item-action plugin-list-item
+                            {% if selected_plugin and selected_plugin.id == plugin.id %}active{% endif %}"
+                        data-plugin-id="{{ plugin.id }}"
+                        data-plugin-search="{{ plugin.search_text }}"
+                        data-testid="plugin-list-item-{{ plugin.id }}"
+                        hx-get="{{ url_for('admin-plugin-detail', plugin_id=plugin.id) }}{% if embedded %}?embedded=1{% endif %}"
+                        hx-target="#plugin-detail"
+                        hx-indicator="#please-wait"
+                    >
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi-plugin"></i>
+                            <span class="fw-bold">{{ plugin.name }}</span>
+                            {% if plugin.federation %}
+                                <span class="badge text-bg-secondary">{{ plugin.federation }}</span>
+                            {% endif %}
+                            {% if plugin.is_enabled %}
+                                <i class="bi-check-circle-fill text-success ms-auto"></i>
+                            {% endif %}
+                        </div>
+                    </button>
+                {% endfor %}
+            </div>
+            <div id="plugin-list-empty" class="text-body-secondary small mt-2" style="display: none">
+                {{ _('No plugin matches your search.') }}
+            </div>
+        </div>
+
+        <div class="col-12 col-md-7 col-xl-8 plugin-column">
+            <div id="plugin-detail">
+                {% if selected_plugin %}
+                    {% include '/admin/plugins/_plugin_detail.html' %}
+                {% else %}
+                    {% include '/admin/plugins/_plugins_home.html' %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filterPlugins() {
+        const search = $('#plugin-search-input').val().trim().toLowerCase();
+        let visible = 0;
+        $('.plugin-list-item').each(function () {
+            const show = (
+                !search || $(this).attr('data-plugin-search').indexOf(search) !== -1
+            );
+            $(this).toggle(show);
+            if (show) visible += 1;
+        });
+        $('#plugin-list-empty').toggle(visible === 0);
+    }
+
+    $('#plugin-search-input').on('input', filterPlugins);
+
+    $('.plugin-list-item').click(function () {
+        $('.plugin-list-item').removeClass('active');
+        $(this).addClass('active');
+    });
+
+    {# A plugin named on the page of another one opens its own page. #}
+    $('#plugin-detail').on('click', '.plugin-link', function (event) {
+        event.preventDefault();
+        $('.plugin-list-item[data-plugin-id="' + $(this).attr('data-plugin-id') + '"]')
+            .click();
+    });
+
+    {% if embedded %}
+        {# In the application the pages are displayed in a web view with no way
+           back: the links are opened in the web browser instead. #}
+        $('#plugin-detail').on('click', 'a[href]:not(.plugin-link)', function (event) {
+            event.preventDefault();
+            fetch(
+                '{{ url_for('admin-open-external') }}?url=' + encodeURIComponent(this.href)
+            );
+        });
+    {% endif %}
+
+    filterPlugins();
+</script>

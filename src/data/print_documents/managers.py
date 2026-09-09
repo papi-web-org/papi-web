@@ -193,8 +193,8 @@ class PrintPlaceCardTypeManager(EntityManager[PlaceCardType]):
     def entity_types(self) -> list[type[PlaceCardType]]:
         return [
             PlayerCardType,
-            BoardCardType,
             PairingCardType,
+            BoardCardType,
             TeamCardType,
         ]
 

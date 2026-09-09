@@ -283,6 +283,14 @@
                 <span class="text-secondary"><i>{{ _('No prizes defined') }}</i></span>
             {% endif %}
         </section>
+        {% if prize_category.is_main %}
+            <section class="collection-detail-section">
+                <h6>{{ _('Prize sharing') }}</h6>
+                <span class="{% if prize_category.prize_sharing.static_id() == 'NONE' %}text-secondary{% endif %}">
+                {{ prize_category.prize_sharing.static_name() }}
+                </span>
+            </section>
+        {% endif %}
     </div>
 {% endmacro %}
 

@@ -1,0 +1,11 @@
+{% extends '/admin/common/modal/delete_modal.html' %}
+
+{% block modal_title %}
+    {{ _('Delete place card template') }}
+{% endblock %}
+
+{% block object_name %}
+    {{ template_name }}
+{% endblock %}
+
+{% block delete_url %}{{ url_for('place-card-template-delete', template_id=template_id) }}{% endblock %}

@@ -1,9 +1,7 @@
 {% import '/common/macros.j2' as macros with context %}
 {% import '/admin/common/macros.j2' as admin_macros with context %}
 
-{% if modal == 'config' %}
-    {% include 'index/config_modal.html' %}
-{% elif modal == 'event' %}
+{% if modal == 'event' %}
     {% include 'event/event_modal.html' %}
 {% elif modal == 'event-delete' %}
     {% include 'event/event_delete_modal.html' %}
@@ -15,6 +13,12 @@
     {% include 'event/event_age_category_sets_modal.html' %}
 {% elif modal == 'print' %}
     {% include 'event/print_modal.html' %}
+{% elif modal == 'place-card-template-create' %}
+    {% include 'place_card_templates/create_modal.html' %}
+{% elif modal == 'place-card-template-duplicate' %}
+    {% include 'place_card_templates/duplicate_modal.html' %}
+{% elif modal == 'place-card-template-delete' %}
+    {% include 'place_card_templates/delete_modal.html' %}
 {% elif modal == 'tournament' %}
     {% include 'tournaments/tournament_modal.html' %}
 {% elif modal == 'tournament-delete' %}
@@ -77,6 +81,8 @@
     {% include 'pairings/team_absents_modal.html' %}
 {% elif modal == 'unfinished-round' %}
     {% include 'pairings/unfinished_round_modal.html' %}
+{% elif modal == 'set-current-round' %}
+    {% include 'pairings/set_current_round_modal.html' %}
 {% elif modal == 'pairing-ratings-warning' %}
     {% include 'pairings/ratings_warning_modal.html' %}
 {% elif modal == 'pairing-absents' %}

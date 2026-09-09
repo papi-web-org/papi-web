@@ -165,7 +165,7 @@
     {% if view == 'list' %}
         <span class="text-truncate" title="{{ item.pairing_variation.name }}">
             {{ item.pairing_variation.name }}
-            {% if warning_message %}<i class="bi-exclamation-triangle-fill text-warning ms-1"></i>{% endif %}
+            {% if warning_message %}<i class="bi-exclamation-triangle-fill text-warning ms-1" {{ macros.tooltip_attributes('warning', warning_message, 'top') }}></i>{% endif %}
         </span>
     {% else %}
         <div class="collection-fact">

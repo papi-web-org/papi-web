@@ -177,3 +177,13 @@ class UnexpectedFailureSCESyncStatus(FailureSCESyncStatus):
     @property
     def details(self) -> str:
         return _('consult the logs')
+
+
+class AuthFailureSCESyncStatus(FailureSCESyncStatus):
+    @staticmethod
+    def static_id() -> str:
+        return 'AUTH_FAILURE'
+
+    @property
+    def details(self) -> str:
+        return _('re-authorisation required')

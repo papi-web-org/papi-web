@@ -1,4 +1,5 @@
 import re
+import time
 from datetime import date
 
 import pytest
@@ -23,6 +24,26 @@ TEAM_CHAMPIONSHIP_NAME = 'Team Championship UI Test'
 CHAMPIONSHIP_ID = 'championship_ui_test'
 RENAMED_CHAMPIONSHIP_ID = 'championship-ui-renamed'
 TEAM_CHAMPIONSHIP_ID = 'team_championship_ui_test'
+
+
+def _select_criterion_type(modal, type_value: str, reveal_container_id: str):
+    """Pick a criterion type and wait for its option container to reveal.
+
+    Setting the Select2 ``#type`` fires a late empty-value ``change`` that its
+    toggle handler reads as "hide everything", so re-fire ``change`` until the
+    reveal survives Select2's settle.
+    """
+    select = modal.locator('select[name="type"]')
+    container = modal.locator(f'#{reveal_container_id}')
+    select.select_option(type_value, force=True)
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline:
+        select.dispatch_event('change')
+        if container.is_visible():
+            time.sleep(0.2)
+            if container.is_visible():
+                return
+    expect(container).to_be_visible()
 
 
 def _delete_test_championship():
@@ -299,6 +320,11 @@ def test_championship_admin_workflow(page: Page):
     expect(category_rows).to_have_count(2)
     expect(category_rows.nth(0)).to_contain_text('Under 12')
     expect(category_rows.nth(1)).to_contain_text('Women')
+    # Wait for Sortable: it and the form's ``end`` htmx trigger are wired in
+    # the same post-swap pass, so dispatching ``end`` before it loses the event.
+    page.wait_for_function(
+        "Boolean(Sortable.get(document.getElementById('championship-category-rows')))"
+    )
     previous_categories = page.locator('#championship-category-rows').element_handle()
     assert previous_categories
     page.evaluate(
@@ -320,8 +346,7 @@ def test_championship_admin_workflow(page: Page):
     expect(modal.get_by_role('heading', name='Criteria list')).to_be_visible()
     modal.locator('button.btn-primary', has_text='Add').click()
     expect(modal.get_by_role('heading', name='Create criterion')).to_be_visible()
-    modal.locator('select[name="type"]').select_option('AGE', force=True)
-    modal.locator('select[name="type"]').dispatch_event('change')
+    _select_criterion_type(modal, 'AGE', 'MIN_AGE_CATEGORY_container')
     expect(modal.locator('#MIN_AGE_CATEGORY_container')).to_be_visible()
     expect(modal.locator('#GENDER_VALUE_container')).to_be_hidden()
     expect(modal.locator('#MIN_RATING_container')).to_be_hidden()
@@ -330,8 +355,7 @@ def test_championship_admin_workflow(page: Page):
     modal.locator('.dropdown-toggle-split').click()
     modal.get_by_role('button', name='Create and add another').click()
     expect(modal.get_by_text('Criterion [Age: U12 – U12]')).to_be_visible()
-    modal.locator('select[name="type"]').select_option('GENDER', force=True)
-    modal.locator('select[name="type"]').dispatch_event('change')
+    _select_criterion_type(modal, 'GENDER', 'GENDER_VALUE_container')
     expect(modal.locator('#GENDER_VALUE_container')).to_be_visible()
     expect(modal.locator('#MIN_AGE_CATEGORY_container')).to_be_hidden()
     modal.locator('select[name="GENDER_VALUE"]').select_option('F', force=True)

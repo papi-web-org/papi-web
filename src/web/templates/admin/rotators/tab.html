@@ -53,7 +53,8 @@
         items=admin_rotators,
         empty_message=_('No rotators'),
         sortable=false,
-        show_details=collection_show_details
+        show_details=collection_show_details,
+        hidden_list_columns=['actions'] if not client.can_manage_screens else []
     %}
         {% include '/admin/common/collection.html' %}
     {% endwith %}

@@ -374,6 +374,9 @@ class SharlyChessConfig(metaclass=Singleton):
     """ The URL of the donation website. """
     donate_url: str = 'https://donations.sharly-chess.com'
 
+    """ The URL of the Discord server of the project. """
+    discord_url: str = 'https://discord.gg/ezvxaCwUmw'
+
     """ The contact email. """
     mail: str = 'contact@sharly-chess.com'
 
@@ -530,6 +533,10 @@ class SharlyChessConfig(metaclass=Singleton):
 
     # The test federation, used not to need to set the federation when entering the application
     tests_federation: str = 'FID'
+
+    # The federation used when the application runs without its window, where
+    # the federation is chosen otherwise.
+    default_federation: str = 'FID'
 
     @property
     def federations(self) -> dict[str, str]:

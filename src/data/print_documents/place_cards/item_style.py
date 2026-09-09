@@ -38,6 +38,26 @@ class PlaceCardItemStyle:
             prop='italic',
             default=template.italic if template else False,
         )
+        self._underline: bool = data.get_bool(
+            section=section,
+            prop='underline',
+            default=template.underline if template else False,
+        )
+        self._strikethrough: bool = data.get_bool(
+            section=section,
+            prop='strikethrough',
+            default=template.strikethrough if template else False,
+        )
+        self._uppercase: bool = data.get_bool(
+            section=section,
+            prop='uppercase',
+            default=template.uppercase if template else False,
+        )
+        self._font_family: str = data.get_str(
+            section=section,
+            prop='font_family',
+            default=template.font_family if template else '',
+        )
         self._h_align: str = data.get_str(
             section=section,
             prop='h_align',
@@ -75,6 +95,16 @@ class PlaceCardItemStyle:
             prop='background_color',
             default=template.background_color if template else '',
         )
+        self._border_width: float = data.get_float(
+            section=section,
+            prop='border_width',
+            default=template.border_width if template else 0.0,
+        )
+        self._border_color: str = data.get_str(
+            section=section,
+            prop='border_color',
+            default=template.border_color if template else '',
+        )
         self._text_align: str = data.get_str(
             section=section,
             prop='text_align',
@@ -93,6 +123,22 @@ class PlaceCardItemStyle:
     @property
     def italic(self) -> bool:
         return self._italic
+
+    @property
+    def underline(self) -> bool:
+        return self._underline
+
+    @property
+    def strikethrough(self) -> bool:
+        return self._strikethrough
+
+    @property
+    def uppercase(self) -> bool:
+        return self._uppercase
+
+    @property
+    def font_family(self) -> str:
+        return self._font_family
 
     @property
     def h_align(self) -> str:
@@ -126,6 +172,14 @@ class PlaceCardItemStyle:
     def background_color(self) -> str:
         return self._background_color
 
+    @property
+    def border_width(self) -> float:
+        return self._border_width
+
+    @property
+    def border_color(self) -> str:
+        return self._border_color
+
     def allowed_properties(
         self,
     ) -> set[str]:
@@ -133,6 +187,10 @@ class PlaceCardItemStyle:
             'font_size',
             'bold',
             'italic',
+            'underline',
+            'strikethrough',
+            'uppercase',
+            'font_family',
             'h_align',
             'v_align',
             'h_pos',
@@ -140,6 +198,8 @@ class PlaceCardItemStyle:
             'opacity',
             'color',
             'background_color',
+            'border_width',
+            'border_color',
             'text_align',
         }
 

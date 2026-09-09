@@ -108,19 +108,16 @@
                     {% endif %}
                 </div>
             {% else %}
-                {% set hidden_list_columns = [] if show_family_screens else ['source'] %}
                 {% if collection_view_mode.value == 'list' %}
                     <div class="admin-collection-list-scroll screens-collection-list-scroll">
                         <div
                             class="screens-collection-list-sections"
-                            style="--collection-list-columns: {{ collection_macros.list_grid_template(
-                                collection,
-                                hidden_list_columns,
-                            ) }};"
+                            style="--collection-list-columns: {{ collection_macros.list_grid_template(collection) }};"
                         >
                 {% endif %}
                 {% for screen_type, screen_type_data in admin_screen_types_data.items() %}
                     {% if screen_type_data.screens %}
+                        {% set hidden_list_columns = [] if screen_type.has_screen_sets else ['screen_sets'] %}
                         {% set expanded = screen_type.value in admin_screens_screen_types %}
                         <div class="screens-collection-list-section">
                             <div class="row gy-2 gx-3 screens-collection-section-heading">

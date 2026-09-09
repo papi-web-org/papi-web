@@ -3,7 +3,7 @@ import shutil
 import sqlite3
 from time import perf_counter
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime
 from functools import cached_property
 from logging import Logger
@@ -20,7 +20,7 @@ from common import (
     ARCHIVES_DIR,
     BACKUP_BASE_DIR,
 )
-from common.exception import SharlyChessException
+from common.exception import SharlyChessException, DatabaseInaccessibleException
 from common.i18n.utils import normalized_key
 from common.logger import get_logger
 from data.event import Event
@@ -37,6 +37,14 @@ logger: Logger = get_logger()
 class EventLoader:
     _valid_event_ids: set[str] = set()
     _invalid_uniq_ids: set[str] = set()
+    # Event files present on disk but that could not be opened (locked by another
+    # program, file sync such as OneDrive, permissions…). Kept apart from
+    # _invalid_uniq_ids so they are retried on each scan and recover once the file
+    # becomes accessible again.
+    _inaccessible_uniq_ids: set[str] = set()
+    # Last metadata successfully read for each event, reused to display an event
+    # that has become inaccessible with its real name and dates.
+    _last_known_metadata: dict[str, EventMetadata] = {}
 
     @classmethod
     def get(cls, request: HTMXRequest | None):
@@ -57,6 +65,9 @@ class EventLoader:
         event_ids = [uniq_id] if uniq_id is not None else cls.all_event_ids()
         cls._clean_not_existing_event_database_files(cls._valid_event_ids)
         cls._clean_not_existing_event_database_files(cls._invalid_uniq_ids)
+        cls._clean_not_existing_event_database_files(cls._inaccessible_uniq_ids)
+        # Inaccessible ids are deliberately excluded so they are retried: a locked
+        # file may become readable again once the lock is released.
         known_event_ids = cls._valid_event_ids | cls._invalid_uniq_ids
         metadata_by_event_id: dict[str, EventMetadata] = {}
         for event_id in event_ids:
@@ -65,10 +76,50 @@ class EventLoader:
             try:
                 metadata_by_event_id[event_id] = cls.check_event_database(event_id)
                 cls._valid_event_ids.add(event_id)
+                cls._inaccessible_uniq_ids.discard(event_id)
+                cls._last_known_metadata[event_id] = metadata_by_event_id[event_id]
+            except DatabaseInaccessibleException as e:
+                logger.debug('Event [%s] could not be opened: %s', event_id, e)
+                cls._inaccessible_uniq_ids.add(event_id)
             except SharlyChessException as e:
-                logger.exception(e)
+                logger.debug('Event [%s] could not be loaded: %s', event_id, e)
                 cls._invalid_uniq_ids.add(event_id)
         return metadata_by_event_id
+
+    @classmethod
+    def inaccessible_events_metadata(cls) -> list[EventMetadata]:
+        """Placeholder metadata for event files that exist but could not be opened
+        (locked by another program, file sync such as OneDrive, permissions…).
+        They are listed but flagged as not accessible so the user can see that they
+        exist and have not been lost. As the database can't be read, only the id is
+        known; the file modification date is used to place them in the right list."""
+        cls.load_event_ids()
+        events_metadata: list[EventMetadata] = []
+        for uniq_id in sorted(cls._inaccessible_uniq_ids):
+            known = cls._last_known_metadata.get(uniq_id)
+            if known is not None:
+                # Reuse the real name and dates so the event stays in its section.
+                events_metadata.append(replace(known, accessible=False))
+                continue
+            # Never read successfully: fall back to the file modification date.
+            try:
+                modified = date.fromtimestamp(
+                    EventDatabase.event_database_path(uniq_id).stat().st_mtime
+                )
+            except OSError:
+                modified = date.today()
+            events_metadata.append(
+                EventMetadata(
+                    uniq_id=uniq_id,
+                    name=uniq_id,
+                    federation='',
+                    player_rating_type=0,
+                    start_date=modified,
+                    stop_date=modified,
+                    accessible=False,
+                )
+            )
+        return events_metadata
 
     @classmethod
     def check_event_database(cls, event_uniq_id: str) -> EventMetadata:
@@ -141,15 +192,17 @@ class EventLoader:
         for file in EVENTS_DIR.glob(f'*.{Extension.EVENT_DB}'):
             uniq_id = cls.format_uniq_id(file.stem)
             if uniq_id != file.stem:
+                target_id: str = uniq_id
                 index: int = 1
-                new_file = cls.event_file_path(uniq_id)
-                while new_file.exists():
+                while cls.event_file_path(target_id).exists():
                     index += 1
-                    new_file = cls.event_file_path(f'{uniq_id}-{index}')
+                    target_id = f'{uniq_id}-{index}'
+                new_file = cls.event_file_path(target_id)
                 shutil.move(file, new_file)
                 logger.warning(
                     'File [%s] has been renamed [%s]', file.name, new_file.name
                 )
+                uniq_id = target_id
             ids.append(uniq_id)
         return ids
 
@@ -234,10 +287,28 @@ class EventLoader:
         cls, conditions: list[Callable[[EventMetadata], bool]]
     ) -> list[EventMetadata]:
         metadata_by_event_id = cls.load_event_ids()
-        events_metadata = [
-            metadata_by_event_id.get(uniq_id) or cls.load_event_metadata(uniq_id)
-            for uniq_id in cls._valid_event_ids
-        ]
+        events_metadata: list[EventMetadata] = []
+        # sorted() copies the set so it can be mutated while iterating below.
+        for uniq_id in sorted(cls._valid_event_ids):
+            metadata = metadata_by_event_id.get(uniq_id)
+            if metadata is None:
+                try:
+                    metadata = cls.load_event_metadata(uniq_id)
+                except DatabaseInaccessibleException as e:
+                    # An event that was valid but has since become unreadable
+                    # (locked, file sync…) is demoted so it is listed as
+                    # inaccessible rather than crashing the page.
+                    logger.debug('Event [%s] could not be opened: %s', uniq_id, e)
+                    cls._valid_event_ids.discard(uniq_id)
+                    cls._inaccessible_uniq_ids.add(uniq_id)
+                    continue
+                except SharlyChessException as e:
+                    logger.debug('Event [%s] could not be loaded: %s', uniq_id, e)
+                    cls._valid_event_ids.discard(uniq_id)
+                    cls._invalid_uniq_ids.add(uniq_id)
+                    continue
+            cls._last_known_metadata[uniq_id] = metadata
+            events_metadata.append(metadata)
         return [
             event_metadata
             for event_metadata in events_metadata

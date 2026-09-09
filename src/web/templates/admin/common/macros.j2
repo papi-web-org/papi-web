@@ -644,7 +644,7 @@ with_indicator: display a loading indicator, optional
                     pw-input-group
                     {% if input_type in ['password', 'search', 'integer-range', 'select-range'] %}input-group{% endif %}
                     {% if default_checkbox %}input-group{% endif %}
-                    {% if input_type == 'switch' %}form-check form-switch d-inline-block me-2{% endif %}
+                    {% if input_type == 'switch' %}form-check form-switch d-inline-flex align-items-center me-2{% endif %}
                     {% if input_type == 'checkbox' %}form-check d-inline-block me-2{% endif %}
                 "
             >
@@ -666,7 +666,7 @@ with_indicator: display a loading indicator, optional
                     ) }}
                 {% elif input_type == 'switch' or input_type == 'checkbox' %}
                     <span
-                        id="{{ id }}-input-container"
+                        id="{{ id }}-input-container input-container"
                         {% if input_tooltip %}
                             {{ macros.tooltip_attributes('', input_tooltip, 'top') }}
                         {% endif %}
@@ -684,11 +684,13 @@ with_indicator: display a loading indicator, optional
                                 disabled
                             {% endif %}
                         />
-                        {{ placeholder }}
+                        <span class="switch-placeholder">
+                            {{ placeholder }}
+                        </span>
                     </span>
                     {% if doc_icon %}<span >{{ macros.doc_icon(doc_icon, 'ms-2') }}</span>{% endif %}
                     {%- if tooltip_text and not label -%}
-                        <span class="text-nowrap">
+                        <span class="text-nowrap tooltip-icon">
                             <i
                                 class="bi bi-info-circle-fill ms-2"
                                 {{ macros.tooltip_attributes('', tooltip_text, 'top') }}
@@ -859,7 +861,7 @@ with_indicator: display a loading indicator, optional
                         <i
                             id="{{ id }}-toggle-password"
                             data-testid="{{ id }}-toggle-password"
-                            class="input-group-text {{ 'bi-eye-slash-fill' if not password_visible else 'bi-eye-fill' }} ps-2 pt-2 cursor-pointer {% if name in errors %}is-invalid{% endif %} {% if valid %}is-valid{% endif %}"
+                            class="input-group-text {{ 'bi-eye-slash-fill' if not password_visible else 'bi-eye-fill' }} cursor-pointer {% if name in errors %}is-invalid{% endif %} {% if valid %}is-valid{% endif %}"
                             hx-on:click="toggle_password(event, '#{{ id }}')"
                         ></i>
                     {% endif %}
@@ -1034,6 +1036,55 @@ with_indicator: display a loading indicator, optional
         hx_sync=hx_sync,
         hx_vals=hx_vals
     ) }}
+{% endmacro %}
+
+{% macro textarea_input(
+    name,
+    label='NO LABEL',
+    placeholder='',
+    help_text='',
+    tooltip_text='',
+    rows=3,
+    monospace=false,
+    data={},
+    errors={},
+    disabled=false
+) %}
+    <!-- textarea_input({{ name }}) -->
+    {% set id=name|replace('_', '-') %}
+    <div id="{{ id }}-wrapper" class="input-block position-relative">
+        <div class="d-flex align-items-center">
+            {%- if label -%}
+                <span id="{{ id }}-label" for="{{ id }}" class="form-check-label flex-grow-1">
+                    <span id="{{ id }}-label-text">{{- label -}}</span>
+                    {%- if tooltip_text -%}
+                        <i
+                            class="bi bi-info-circle-fill ms-2"
+                            {{ macros.tooltip_attributes('', tooltip_text, 'top') }}
+                        ></i>
+                    {%- endif -%}
+                </span>
+            {%- endif -%}
+        </div>
+        <textarea
+            id="{{ id }}"
+            name="{{ name }}"
+            data-testid="{{ id }}"
+            rows="{{ rows }}"
+            placeholder="{{ placeholder }}"
+            aria-describedby="{{ id }}-help {{ id }}-error"
+            class="form-control {% if monospace %}font-monospace{% endif %} {% if name in errors %}is-invalid{% endif %}"
+            {% if disabled %}disabled{% endif %}
+        >{{ data.get(name, '') }}</textarea>
+        {% if help_text %}
+            <div id="{{ id }}-help" class="form-text w-100">{{ help_text }}</div>
+        {% endif %}
+        {% if name in errors %}
+            <div id="{{ id }}-error" class="form-text invalid-feedback" style="display:block">
+                {{ errors[name] }}
+            </div>
+        {% endif %}
+    </div>
 {% endmacro %}
 
 {% macro number_input(
@@ -1902,7 +1953,7 @@ with_indicator: display a loading indicator, optional
     default_state=false
 ) %}
     <div class="input-block position-relative">
-        <div class="pw-input-group form-check form-switch d-inline-block pe-3">
+        <div class="pw-input-group form-check form-switch d-inline-flex align-items-center pe-3">
             <span {% if used_message %}{{ macros.tooltip_attributes('info', used_message, 'top') }}{% endif %}>
                 <input
                     id="{{ plugin.form_key }}"
@@ -1922,7 +1973,7 @@ with_indicator: display a loading indicator, optional
                         disabled
                     {% endif %}
                 >
-                {{ plugin.name }}
+                <span>{{ plugin.name }}</span>
             </span>
             {% if used_message %}
                 <input

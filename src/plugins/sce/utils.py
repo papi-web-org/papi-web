@@ -29,7 +29,11 @@ from plugins.sce.sce_managers import (
     SCESyncStatusManager,
     SCETournamentFailureStatusManager,
 )
-from plugins.sce.sce_sync_status import SCESyncStatus, NeverSyncedSCESyncStatus
+from plugins.sce.sce_sync_status import (
+    SCESyncStatus,
+    NeverSyncedSCESyncStatus,
+    AuthFailureSCESyncStatus,
+)
 from plugins.sce.sce_tournament_status import (
     SCETournamentStatus,
     ModifiedSCETournamentStatus,
@@ -38,6 +42,7 @@ from plugins.sce.sce_tournament_status import (
     NeverUploadedSCETournamentStatus,
     OngoingSCETournamentStatus,
     UpToDateSCETournamentStatus,
+    AuthFailureSCETournamentStatus,
 )
 from plugins.utils import PluginUtils
 from utils import Utils
@@ -269,6 +274,26 @@ class SCEUtils:
             )
         except KeyError:
             return NeverSyncedSCESyncStatus()
+
+    @classmethod
+    def clear_auth_error_statuses(cls, event: Event) -> None:
+        """Clear the error states left by a lost authorization once the event has
+        been re-authenticated, so the data transfer error badge disappears."""
+        event_plugin_data = cls.get_event_plugin_data(event)
+        if (
+            event_plugin_data.last_sync_attempt_status
+            == AuthFailureSCESyncStatus.static_id()
+        ):
+            event_plugin_data.last_sync_attempt_status = None
+            cls.update_event_plugin_data(event, event_plugin_data)
+        for tournament in event.tournaments:
+            tournament_plugin_data = cls.get_tournament_plugin_data(tournament)
+            if (
+                tournament_plugin_data.upload_failure_id
+                == AuthFailureSCETournamentStatus.static_id()
+            ):
+                tournament_plugin_data.upload_failure_id = None
+                cls.update_tournament_plugin_data(tournament, tournament_plugin_data)
 
     @classmethod
     def resolve_tournament_auto_upload(cls, tournament: Tournament) -> bool:

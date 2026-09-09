@@ -42,7 +42,10 @@
         {% include '/admin/common/database/database_button.html' %}
     {% endif %}
     {% if client.can_manage_application_settings %}
-        {% include '/admin/common/settings_button.html' %}
+        {% include '/admin/common/place_card_templates_button.html' %}
+        {% if not has_app_window %}
+            {% include '/admin/common/plugins_button.html' %}
+        {% endif %}
     {% endif %}
     <div class="sidebar-divider my-3"></div>
     {% include '/common/profile/profile_button.html' %}

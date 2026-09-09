@@ -13,6 +13,11 @@
     opacity: 0.3;
 }
 
+.rankings-table tr.excluded-from-standings > td {
+    text-decoration: line-through;
+    color: var(--bs-secondary-color);
+}
+
 .nav-icon-badge {
     bottom: 4px;
     display: flex;
@@ -198,6 +203,15 @@
 
 /* Select2 */
 
+/* Group (optgroup) labels: keep them a block with a left padding that applies
+   to every wrapped line, so a long section title stays indented when it wraps
+   (and lines up with the options below it). */
+.select2-container--bootstrap-5 .select2-results__group {
+    display: block;
+    white-space: normal;
+    padding-left: .75rem;
+}
+
 [data-bs-theme=dark] .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option.select2-results__option--highlighted {
     color: white;
     background-color: var(--pw-nav-bg);
@@ -340,10 +354,13 @@
 .screens-collection-list-section,
 .screens-collection-list-section > .collapse.show,
 .screens-collection-list-section > .collapsing,
-.screens-collection-section-content,
-.screens-collection-list-sections .admin-collection-list {
+.screens-collection-section-content {
     display: grid;
     grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+}
+
+.screens-collection-list-sections .admin-collection-list {
     grid-column: 1 / -1;
 }
 

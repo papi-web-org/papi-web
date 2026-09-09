@@ -1,7 +1,7 @@
 {% import '/admin/common/tag_macros.j2' as tag_macros with context %}
 
 {% macro item_class(item, view) -%}
-    {%- if not item.are_all_plugins_enabled -%}
+    {%- if not item.accessible or not item.are_all_plugins_enabled -%}
         collection-status-danger
     {%- elif item.public -%}
         collection-status-public
@@ -11,7 +11,7 @@
 {%- endmacro %}
 
 {% macro row_href(item, view, placement) %}
-    {% if item.are_all_plugins_enabled %}
+    {% if item.accessible and item.are_all_plugins_enabled %}
         {{ url_for('admin-event', event_uniq_id=item.uniq_id) }}
     {% endif %}
 {% endmacro %}
@@ -24,17 +24,24 @@
         <span class="fw-bold {% if view == 'list' %}text-truncate min-width-0{% else %}collection-card-title{% endif %}">
             {{ item.name }}
         </span>
-        {% if not item.are_all_plugins_enabled %}
+        {% if not item.accessible %}
             <i
-                class="bi-exclamation-triangle-fill text-danger"
+                class="bi-lock-fill text-danger"
                 {{ macros.tooltip_attributes(
                     'warning',
                     _(
-                        'One or more of the plugins required to use this event '
-                        'are disabled, making it inaccessible. You can enable '
-                        'plugins in the application settings.'
+                        'This event exists on the server but could not be opened. It '
+                        'may be locked by another program, by file synchronisation '
+                        '(OneDrive, Google Drive, DropBox, etc.) or by antivirus software.'
                     ),
                     'top',
+                ) }}
+            ></i>
+        {% elif not item.are_all_plugins_enabled %}
+            <i
+                class="bi-exclamation-triangle-fill text-danger"
+                {{ macros.tooltip_attributes(
+                    'warning', item.inaccessible_tooltip_message, 'top'
                 ) }}
             ></i>
         {% endif %}
@@ -211,7 +218,7 @@
 
 {% macro actions(item, view, placement) %}
     {% set event = item %}
-    {% if event.are_all_plugins_enabled and (client.can_manage_events or client.can_create_events) %}
+    {% if event.accessible and event.are_all_plugins_enabled and (client.can_manage_events or client.can_create_events) %}
         <div class="collection-actions d-flex align-items-center justify-content-between gap-2">
             <div class="d-flex align-items-center gap-1">
                 {% if client.can_manage_events %}

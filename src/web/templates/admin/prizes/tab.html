@@ -346,7 +346,7 @@
             <div class="border-top pt-2 mt-2 text-end">
                 {% if show_group_total %}
                     <div>
-                        {{ _('%(string)s:', string=_('This group')) }}
+                        {{ _('%(string)s:', string=_('This prize bracket')) }}
                         {{ macros.prize_totals_value(
                             admin_prize_group.format_total_monetary_value(prize_currency)
                                 if admin_prize_group.total_monetary_value else None,

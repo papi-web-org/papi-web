@@ -18,6 +18,7 @@ from plugins.sce.sce_sync_status import (
     PlayerConflictsSCESyncStatus,
     NetworkFailureSCESyncStatus,
     UnexpectedFailureSCESyncStatus,
+    AuthFailureSCESyncStatus,
     PlayerDuplicatesSCESyncStatus,
     PlayerDuplicatesAndConflictsSCESyncStatus,
 )
@@ -67,4 +68,5 @@ class SCESyncStatusManager(EntityManager[SCESyncStatus]):
             PlayerDuplicatesAndConflictsSCESyncStatus,
             NetworkFailureSCESyncStatus,
             UnexpectedFailureSCESyncStatus,
+            AuthFailureSCESyncStatus,
         ]

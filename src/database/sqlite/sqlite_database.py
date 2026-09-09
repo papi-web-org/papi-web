@@ -73,6 +73,17 @@ class SQLiteDatabase:
                 self.cursor.execute('BEGIN IMMEDIATE')
 
             return self
+        except OperationalError as e:
+            # A failure to open the file (missing, locked, inaccessible…) is an
+            # expected, handled case surfaced by the callers, so it is kept at
+            # debug level to avoid flooding the logs.
+            logger.debug(
+                'Failed to open database %s (write=%s): %s',
+                self.file,
+                self.write,
+                e,
+            )
+            raise
         except Exception as e:
             logger.exception(
                 'Failed to open database %s (write=%s): %s',

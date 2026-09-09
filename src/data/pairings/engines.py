@@ -15,7 +15,7 @@ from data.pairings.bbp_history import (
 )
 from typing_extensions import override
 
-from common.exception import SharlyChessException
+from common.exception import PairingEngineError, SharlyChessException
 from common.i18n import _
 from common.logger import (
     get_logger,
@@ -147,6 +147,13 @@ class PairingEngine(ABC):
                 partial_pairings,
                 prohibited_pairing_override=prohibited_override,
             )
+        except PairingEngineError as e:
+            logger.exception(e)
+            if e.detail:
+                return _('Pairing generation failed: {details}').format(
+                    details=e.detail
+                )
+            return _('An error occurred. Consult the logs for more details.')
         except Exception as e:
             logger.exception(e)
             return _('An error occurred. Consult the logs for more details.')
@@ -328,6 +335,12 @@ class BbpPairings(PairingEngine):
                 'Pairings generation not allowed if previous rounds have '
                 'missing results, players to pair or absent players.'
             )
+        if tournament.has_acceleration_beyond_last_round():
+            return _(
+                'Pairings generation not allowed while an acceleration rule '
+                'extends past the last round. Adjust the acceleration settings '
+                'or the number of rounds.'
+            )
         return None
 
     def _generate_stored_boards(
@@ -361,11 +374,28 @@ class BbpPairings(PairingEngine):
                 capture_output=True,
                 encoding='utf-8',
             )
-            if not pairings_file_path.exists():
-                raise SharlyChessException(
+            # bbp opens the output file before it computes the matching, so a
+            # failure (e.g. NO_VALID_PAIRING) leaves an *empty* file behind:
+            # keying a full generation on the exit status rather than the
+            # file's existence is what surfaces the reason instead of a bare
+            # "not possible". Complementary (partial) runs stay lenient — an
+            # unpaired remainder there is a normal outcome, reported by the
+            # caller as "N players remain unpaired".
+            full_generation_failed = result.returncode != 0 and not partial_pairings
+            if full_generation_failed or not pairings_file_path.exists():
+                detail = (result.stderr or result.stdout or '').strip()
+                # Every bbp diagnostic embeds the input path and then the
+                # reason as ``<verb> <trf_file_path>: <reason>``. The temp
+                # path is meaningless to the operator, so keep only the part
+                # after it (the reason itself may contain further colons).
+                marker = f'{trf_file_path}: '
+                if marker in detail:
+                    detail = detail.split(marker, 1)[1].strip()
+                raise PairingEngineError(
                     f'{tournament.log_prefix}round {round_} - Pairing generation '
                     f'with BbpPairings failed with status {result.returncode}.\n'
-                    f'stdout: {result.stdout}\nstderr: {result.stderr}'
+                    f'stdout: {result.stdout}\nstderr: {result.stderr}',
+                    detail=detail,
                 )
             try:
                 bbp_tmp_dir = TMP_DIR / 'bbp-pairings'

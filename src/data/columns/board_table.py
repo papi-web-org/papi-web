@@ -34,12 +34,18 @@ class NumberColumn(BoardColumn):
         return _('Bd. *** BOARD NUMBER COLUMN HEADER')
 
     def get_cell_content(self, board: Board) -> Any:
+        if board.fixed_number:
+            return (
+                f'<span class="border border-dark rounded p-1" '
+                f'data-bs-toggle="tooltip" '
+                f'data-bs-title="{escape(_("Fixed table"))}">'
+                f'{escape(board.number_str)}</span>'
+            )
         return board.number_str
 
-    def get_cell_classes(self, board: Board) -> str:
-        if board.fixed_number:
-            return f'{self.shared_classes} text-decoration-underline'
-        return self.shared_classes
+    @property
+    def is_cell_content_safe(self) -> bool:
+        return True
 
     @property
     def shared_classes(self) -> str:
@@ -170,7 +176,7 @@ class WhiteFederationColumn(BoardColumn):
 class ResultColumn(BoardColumn):
     @property
     def header_content(self) -> str:
-        return _('Res. ** RESULT COLUMN HEADER')
+        return _('Res. *** RESULT COLUMN HEADER')
 
     def get_cell_content(self, board: Board) -> Any:
         return board.result_str
@@ -192,7 +198,7 @@ class NoResultColumn(BoardColumn):
 class ScreenResultColumn(BoardColumn):
     @property
     def header_content(self) -> str:
-        return _('Res. ** RESULT COLUMN HEADER')
+        return _('Res. *** RESULT COLUMN HEADER')
 
     def get_cell_content(self, board: Board) -> Any:
         return board.result_str or _('#{board_number}').format(

@@ -1,3 +1,12 @@
+msgid ""
+"- a rating step, a time penalty per step and a minimum time, configured on the tournament;\n"
+"- the time of each player computed for every game of the round from the rating difference between the two players;\n"
+"- the times of the two players displayed on the pairings screens and on the printed documents."
+msgstr ""
+"- un pas de classement, une pénalité de temps par pas et un temps minimum, configurés sur le tournoi ;\n"
+"- le temps de chaque joueur·euse calculé pour chaque partie de la ronde à partir de la différence de classement entre les deux joueur·euses ;\n"
+"- les temps des deux joueur·euses affichés sur les écrans d’appariements et sur les documents imprimés."
+
 msgid "/move"
 msgstr "/coup"
 
@@ -13,6 +22,9 @@ msgstr "Tranche Elo :"
 
 msgid "Handicap games"
 msgstr "Parties à handicap"
+
+msgid "In a handicap tournament the two players of a game do not get the same thinking time: the stronger player plays with less time than the weaker one, which which reduces the strongest player's chances of winning."
+msgstr "Dans un tournoi à handicap, les deux joueur·euses d’une partie ne disposent pas du même temps de réflexion : le·la plus fort·e joue avec moins de temps que le·la plus faible, ce qui diminue les chances de gain du·de la joueur·euse le·la plus fort·e."
 
 msgid "Minimum time (secs):"
 msgstr "Temps minimal (sec.) :"

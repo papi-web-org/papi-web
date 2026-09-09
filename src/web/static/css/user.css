@@ -217,4 +217,23 @@
 */
 .timer {
     font-size: x-large;
+    flex-wrap: nowrap;
+    gap: .5em;
+    /* #page-wrapper is inline-block (shrink-to-fit for wide tables), so w-100
+       resolves against a content-sized ancestor; cap on the visible width instead
+       so long timer text truncates rather than widening the bar past the window. */
+    max-width: calc(var(--vw, 100vw) - var(--side-bar-width));
+    overflow: hidden;
+}
+.timer-text {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.timer-clock {
+    flex: 0 0 auto;
+    width: auto;
+    margin-left: .5rem;
+    font-variant-numeric: tabular-nums;
 }

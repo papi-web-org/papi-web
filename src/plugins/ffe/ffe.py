@@ -202,6 +202,30 @@ class FfePlugin(Plugin):
         )
 
     @property
+    def keywords(self) -> list[str]:
+        return ['fide', 'france', 'ffe', 'papi', 'licence', 'league']
+
+    @property
+    def doc_markdown(self) -> str:
+        return '\n\n'.join(
+            [
+                _(
+                    'Everything specific to the French Chess Federation, for the '
+                    'events it rates.'
+                ),
+                _(
+                    '- the players searched in the federation database, with their '
+                    'licence, their club and their league;\n'
+                    '- the tournaments imported from and exported to the Papi format;\n'
+                    '- the results uploaded to the website of the federation;\n'
+                    '- the tie-breaks and the pairing variations used in France;\n'
+                    '- the clubs and the leagues available as columns, filters and '
+                    'groupings on the players, the documents and the screens.'
+                ),
+            ]
+        )
+
+    @property
     def version(self) -> Version:
         return Version('0.1.1')
 
@@ -519,11 +543,30 @@ class FfePlugin(Plugin):
         tournament_player: TournamentPlayer,
         place_card_player: PlaceCardPlayer,
     ):
+        plugin_data = FFEUtils.get_player_plugin_data(tournament_player)
+        setattr(place_card_player, 'ffe_league', plugin_data.league)
         setattr(
             place_card_player,
-            'ffe_league',
-            FFEUtils.get_player_plugin_data(tournament_player).league,
+            'ffe_licence',
+            plugin_data.ffe_licence.compact_name if plugin_data.ffe_licence else '',
         )
+        setattr(
+            place_card_player,
+            'ffe_licence_number',
+            plugin_data.ffe_licence_number or '',
+        )
+
+    @hookimpl
+    def place_card_field_tokens(self) -> list[dict[str, str]]:
+        return [
+            {'group': 'FFE', 'label': _('League'), 'expr': '{{ player.ffe_league }}'},
+            {'group': 'FFE', 'label': _('Licence'), 'expr': '{{ player.ffe_licence }}'},
+            {
+                'group': 'FFE',
+                'label': _('Licence number'),
+                'expr': '{{ player.ffe_licence_number }}',
+            },
+        ]
 
     @hookimpl
     def insert_player_profile_links(

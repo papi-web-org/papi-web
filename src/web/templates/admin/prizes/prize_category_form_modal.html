@@ -59,7 +59,7 @@
                         ) }}
                     </div>
                     <div class="col-12">
-                        <div class="d-flex">
+                        <div class="d-flex align-items-center">
                             <span
                                 class="fit-content"
                                 {% if other_main_category or has_criteria %}
@@ -84,17 +84,19 @@
                                     data=data, errors=errors
                                 ) }}
                             </span>
-                            <i
-                                class="bi bi-info-circle-fill"
-                                {{ macros.tooltip_attributes(
-                                    'info', _('The main category is open to all the players.'), 'top'
-                                ) }}
-                            ></i>
+                            <span>
+                                <i
+                                    class="bi bi-info-circle-fill"
+                                    {{ macros.tooltip_attributes(
+                                        'info', _('The main category is open to all the players.'), 'top'
+                                    ) }}
+                                ></i>
+                            </span>
                         </div>
                     </div>
                     {% set has_non_monetary_prizes = admin_prize_category and admin_prize_category.has_non_monetary_prizes %}
                     <div class="col-12">
-                        <div class="d-flex">
+                        <div class="d-flex align-items-center">
                             <span
                                 id="share-prizes-container"
                                 {{ macros.tooltip_attributes(

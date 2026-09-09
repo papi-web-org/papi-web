@@ -4,7 +4,7 @@ import pytest
 from playwright.sync_api import APIRequestContext, Page, expect
 
 from data.pairings.variations import StandardTeamSwissVariation
-from tests.test_config import TestUtils
+from tests.test_config import ScreenType, TestUtils
 from utils.enum import EventType
 
 
@@ -12,6 +12,13 @@ TEAM_EVENT_ID = 'admin-collections-team-event'
 PRIZE_EVENT_ID = 'admin-collections-prize-event'
 TOURNAMENT_ID = 'admin-collections-test-tournament'
 SECOND_TOURNAMENT_ID = 'admin-collections-second-tournament'
+DISPLAY_CONTROLLER_SCREEN_NAME = 'Collection Display Controller Screen'
+DISPLAY_CONTROLLER_NAME = 'Collection Display Controller'
+STANDALONE_RESULTS_SCREEN_NAME = 'Collection Last Results Screen'
+STANDALONE_IMAGE_SCREEN_NAME = 'Collection Image Screen'
+FAMILY_TOURNAMENT_NAME = 'Collection Family Tournament'
+FAMILY_UNIQ_ID = 'collection-family-source'
+TINY_IMAGE_DATA_URI = 'data:image/gif;base64,R0lGODlhAQABAAAAACw='
 
 
 @pytest.fixture(scope='module', autouse=True)
@@ -273,3 +280,192 @@ class TestAdminCollections:
         page.get_by_role('button', name='Card view').click()
         account = page.get_by_test_id('accounts-item').first
         expect(account.locator('.collection-card-body')).to_have_count(0)
+
+    def test_admin_display_controller_assignment_uses_compact_text(
+        self,
+        page: Page,
+        api_request_context: APIRequestContext,
+    ):
+        stored_screen = TestUtils.create_screen(
+            api_request_context,
+            PRIZE_EVENT_ID,
+            DISPLAY_CONTROLLER_SCREEN_NAME,
+            ScreenType.RESULTS,
+        )
+        stored_display_controller = TestUtils.create_display_controller(
+            api_request_context,
+            PRIZE_EVENT_ID,
+            DISPLAY_CONTROLLER_NAME,
+            screen_uniq_id=stored_screen.uniq_id,
+        )
+        assert stored_display_controller.id is not None
+        try:
+            page.goto(f'/event/{PRIZE_EVENT_ID}/display_controllers')
+            item = page.get_by_test_id('display-controllers-item').filter(
+                has_text=DISPLAY_CONTROLLER_NAME
+            )
+            expect(item).to_be_visible()
+            assignment = item.locator('.collection-component-assignment')
+            expect(assignment).to_contain_text(DISPLAY_CONTROLLER_SCREEN_NAME)
+            expect(assignment).not_to_contain_text('Currently displaying')
+            expect(assignment.locator('.bi-arrow-right')).to_be_visible()
+            expect(item.locator('.collection-list-cell-actions')).to_have_count(1)
+
+            page.get_by_role('button', name='Card view').click()
+            item = page.get_by_test_id('display-controllers-item').filter(
+                has_text=DISPLAY_CONTROLLER_NAME
+            )
+            assignment = item.locator('.collection-component-assignment')
+            expect(assignment).to_contain_text(DISPLAY_CONTROLLER_SCREEN_NAME)
+            expect(assignment).not_to_contain_text('Currently displaying')
+            expect(assignment.locator('.bi-arrow-right')).to_be_visible()
+            expect(item.locator('.collection-card-footer')).to_have_count(1)
+        finally:
+            TestUtils.delete_display_controller(
+                api_request_context,
+                PRIZE_EVENT_ID,
+                stored_display_controller.id,
+            )
+            TestUtils.delete_screen(
+                api_request_context, PRIZE_EVENT_ID, stored_screen.id
+            )
+
+    def test_admin_screen_list_uses_generated_screen_names_without_multiscreen_column(
+        self,
+        page: Page,
+        api_request_context: APIRequestContext,
+    ):
+        results_screen = TestUtils.create_screen(
+            api_request_context,
+            PRIZE_EVENT_ID,
+            STANDALONE_RESULTS_SCREEN_NAME,
+            ScreenType.RESULTS,
+        )
+        image_screen = TestUtils.create_screen(
+            api_request_context,
+            PRIZE_EVENT_ID,
+            STANDALONE_IMAGE_SCREEN_NAME,
+            ScreenType.IMAGE,
+            {
+                'background_color_checkbox': True,
+                'background_image_upload': TINY_IMAGE_DATA_URI,
+            },
+        )
+        family_tournament = TestUtils.create_tournament(
+            PRIZE_EVENT_ID,
+            FAMILY_TOURNAMENT_NAME,
+            via_api_request_context=api_request_context,
+        )
+        family = TestUtils.create_family(
+            api_request_context,
+            PRIZE_EVENT_ID,
+            family_tournament,
+            FAMILY_UNIQ_ID,
+            ScreenType.INPUT,
+            {'parts': 2},
+        )
+        family = TestUtils.update_family_name(
+            PRIZE_EVENT_ID,
+            family,
+            '%t (%f to %l)',
+        )
+        try:
+            page.goto(
+                f'/event/{PRIZE_EVENT_ID}/screens'
+                '?collection_view=list&show_family_screens=true'
+            )
+
+            for screen_type, screen_name in (
+                (ScreenType.RESULTS, STANDALONE_RESULTS_SCREEN_NAME),
+                (ScreenType.IMAGE, STANDALONE_IMAGE_SCREEN_NAME),
+            ):
+                section = page.locator(f'#admin-screens-show-{screen_type.value}')
+                toggle = page.get_by_test_id(
+                    f'accordion-screen-type-{screen_type.value}'
+                )
+                if toggle.get_attribute('aria-expanded') == 'false':
+                    toggle.click()
+                expect(section).to_be_visible()
+
+                item = section.get_by_test_id('screens-item').filter(
+                    has_text=screen_name
+                )
+                expect(item).to_be_visible()
+                expect(section.locator('.collection-list-header')).not_to_contain_text(
+                    'Multi-Screen'
+                )
+                expect(section.locator('.collection-list-header')).not_to_contain_text(
+                    'Content'
+                )
+                expect(section.locator('.collection-list-header')).to_contain_text(
+                    'Timer'
+                )
+                expect(item.locator('.collection-list-cell-source')).to_have_count(0)
+                expect(item.locator('.collection-list-cell-screen_sets')).to_have_count(
+                    0
+                )
+                expect(item.locator('.collection-list-cell-timer')).to_contain_text(
+                    'No timer'
+                )
+
+            input_section = page.locator(
+                f'#admin-screens-show-{ScreenType.INPUT.value}'
+            )
+            input_toggle = page.get_by_test_id(
+                f'accordion-screen-type-{ScreenType.INPUT.value}'
+            )
+            if input_toggle.get_attribute('aria-expanded') == 'false':
+                input_toggle.click()
+            expect(input_section).to_be_visible()
+            expect(
+                input_section.locator('.collection-list-header')
+            ).not_to_contain_text('Multi-Screen')
+            expect(input_section.locator('.collection-list-header')).to_contain_text(
+                'Timer'
+            )
+            expect(input_section.locator('.collection-list-header')).to_contain_text(
+                'Content'
+            )
+            family_item = (
+                input_section.get_by_test_id('screens-item')
+                .filter(has_text=FAMILY_TOURNAMENT_NAME)
+                .first
+            )
+            expect(family_item).to_be_visible()
+            identity = family_item.locator('.collection-component-identity')
+            expect(identity).to_contain_text(FAMILY_TOURNAMENT_NAME)
+            expect(identity).to_contain_text('(')
+            expect(identity).to_contain_text(')')
+            expect(identity.locator('.badge')).to_contain_text('Multi-Screen')
+            expect(identity.locator('.bi-window-split')).to_have_count(0)
+            expect(family_item.locator('.collection-list-cell-source')).to_have_count(0)
+            expect(
+                family_item.locator('.collection-list-cell-screen_sets')
+            ).to_contain_text('1 set')
+            expect(family_item.locator('.collection-list-cell-timer')).to_contain_text(
+                'No timer'
+            )
+
+            page.goto(f'/event/{PRIZE_EVENT_ID}/families?collection_view=list')
+            family_list_item = (
+                page.get_by_test_id('families-item')
+                .filter(has_text=FAMILY_TOURNAMENT_NAME)
+                .first
+            )
+            expect(family_list_item).to_be_visible()
+            expect(page.locator('.collection-list-header')).to_contain_text('Timer')
+            expect(
+                family_list_item.locator('.collection-list-cell-timer')
+            ).to_contain_text('No timer')
+        finally:
+            assert family.id is not None
+            TestUtils.delete_family(api_request_context, PRIZE_EVENT_ID, family.id)
+            TestUtils.delete_screen(
+                api_request_context, PRIZE_EVENT_ID, image_screen.id
+            )
+            TestUtils.delete_screen(
+                api_request_context, PRIZE_EVENT_ID, results_screen.id
+            )
+            TestUtils.delete_tournament(
+                api_request_context, PRIZE_EVENT_ID, family_tournament
+            )

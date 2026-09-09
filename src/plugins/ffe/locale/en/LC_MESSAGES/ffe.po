@@ -15,6 +15,14 @@ msgstr ""
 msgid "%(string)s:"
 msgstr ""
 
+msgid ""
+"- the players searched in the federation database, with their licence, their club and their league;\n"
+"- the tournaments imported from and exported to the Papi format;\n"
+"- the results uploaded to the website of the federation;\n"
+"- the tie-breaks and the pairing variations used in France;\n"
+"- the clubs and the leagues available as columns, filters and groupings on the players, the documents and the screens."
+msgstr ""
+
 msgid "A - Competition *** FFE licence"
 msgstr "A - Competition"
 
@@ -160,6 +168,9 @@ msgid "Elite Arbiter (level 1)"
 msgstr ""
 
 msgid "Elite Arbiter (level 2)"
+msgstr ""
+
+msgid "Everything specific to the French Chess Federation, for the events it rates."
 msgstr ""
 
 #, python-brace-format
@@ -368,11 +379,14 @@ msgstr ""
 msgid "Leagues (FFE)"
 msgstr ""
 
-msgid "Leave empty tables for fixed boards:"
+msgid "Leave empty tables for fixed boards"
 msgstr ""
 
 msgid "Lic. *** LICENCE COLUMN HEADER"
 msgstr "Lic."
+
+msgid "Licence"
+msgstr ""
 
 msgid "Licence no. *** LICENCE NUMBER"
 msgstr "Licence no."

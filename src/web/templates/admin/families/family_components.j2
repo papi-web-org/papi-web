@@ -37,6 +37,17 @@
     </span>
 {% endmacro %}
 
+{% macro timer(item, view, placement) %}
+    {% if item.timer %}
+        <span
+            class="text-truncate"
+            {{ macros.tooltip_attributes('info', _('Timer'), 'top') }}
+        ><i class="bi-clock-fill pe-1 text-secondary"></i>{{ item.timer.name }}</span>
+    {% else %}
+        <span class="text-secondary fst-italic">{{ _('No timer') }}</span>
+    {% endif %}
+{% endmacro %}
+
 {% macro screen_ranges(item, view, placement) %}
     {% set family = item %}
     {% if family.screens_by_uniq_id %}

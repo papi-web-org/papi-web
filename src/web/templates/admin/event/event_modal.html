@@ -347,7 +347,7 @@
                                             used_by_tournaments_count,
                                         ) if used_by_tournaments_count else '',
                                         disabled=not client.can_update_event,
-                                        default_state=plugin.default_event_is_enabled
+                                        default_state=plugin.event_is_enabled_by_default
                                     ) }}
                                 </span>
                                 {% if plugin.event_form_fields_template %}

@@ -354,6 +354,9 @@ window.addEventListener('htmx:afterRequest', function() {
 
 window.addEventListener('htmx:afterSettle', function(event) {
     restoreState();
+    // The content that has just been swapped in needs its tooltips: it is not
+    // in the page yet when htmx:afterRequest activates them.
+    activateTooltips(event.target);
 });
 
 

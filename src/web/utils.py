@@ -6,13 +6,15 @@ from typing import Any
 
 from anyio import run
 from litestar.exceptions import (
+    HTTPException,
     NotFoundException,
     ValidationException,
     ClientException,
 )
+from litestar.status_codes import HTTP_423_LOCKED
 from litestar_htmx import HTMXRequest
 
-from common.exception import SharlyChessException
+from common.exception import SharlyChessException, DatabaseInaccessibleException
 from common.logger import get_logger
 from data.access_levels.access_levels import AccessLevel
 from data.access_levels.client import Client
@@ -66,6 +68,11 @@ class RequestUtils:
         event_uniq_id = cls._get_request_param(request, cls.EVENT_UNIQ_ID_PARAM)
         try:
             event = EventLoader.get(request).load_event(event_uniq_id)
+        except DatabaseInaccessibleException as sce:
+            raise HTTPException(
+                status_code=HTTP_423_LOCKED,
+                detail=f'Event [{event_uniq_id}] could not be opened.',
+            ) from sce
         except SharlyChessException as sce:
             raise NotFoundException(f'Event [{event_uniq_id}] not found.') from sce
         for plugin_id in event.stored_event.enabled_plugins:
@@ -85,6 +92,13 @@ class RequestUtils:
             return cls.get_event(request, reload)
         except ValidationException:
             return None
+        except HTTPException as e:
+            # A locked/inaccessible event is treated as absent here so that
+            # building a page context never fails: handlers that truly need the
+            # event still call get_event, which surfaces the 423 error page.
+            if e.status_code == HTTP_423_LOCKED:
+                return None
+            raise
 
     REQUEST_CLIENT_ATTR: str = 'sharly_chess_client'
 

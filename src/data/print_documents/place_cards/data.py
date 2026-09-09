@@ -64,11 +64,16 @@ class PlaceCardPlayer:
 
     @property
     def federation_flag(self) -> str:
-        return (
-            f'<img class="federation-flag {self.federation}" />'
-            if self.federation
-            else ''
+        # The flag itself is a CSS background-image on this element; the img needs
+        # a (transparent 1x1) src so the browser does not draw a broken-image
+        # icon over the flag.
+        if not self.federation:
+            return ''
+        blank = (
+            'data:image/gif;base64,'
+            'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
         )
+        return f'<img class="federation-flag {self.federation}" src="{blank}" alt="" />'
 
 
 class PlaceCardBoard:

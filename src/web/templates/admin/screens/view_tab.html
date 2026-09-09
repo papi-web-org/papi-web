@@ -20,7 +20,8 @@
         items=admin_screen_type_data.screens,
         empty_message=_('No screens'),
         sortable=false,
-        show_details=collection_show_details
+        show_details=collection_show_details,
+        hidden_list_columns=(['actions'] if not client.can_manage_screens else []) + (['screen_sets'] if not screen_type.has_screen_sets else [])
     %}
         {% include '/admin/common/collection.html' %}
     {% endwith %}

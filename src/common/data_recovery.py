@@ -36,6 +36,10 @@ logger = get_logger()
 class DataRecovery:
     RECOVERABLE_VERSIONS: list[Version] = []
 
+    #: Whether the example events are installed on a new installation. None to
+    #: ask the question, which the command line answers when it is set.
+    install_example_events: bool | None = None
+
     @classmethod
     def setup(cls):
         """Setup the Data recovery class. Recovers a version if necessary."""
@@ -99,13 +103,17 @@ class DataRecovery:
         if DEVEL_ENV and IS_NEW_INSTALL and not recovered:
             if (Path() / 'events' / '.scc').exists():
                 cls._recover_legacy_version(Version('4'), Path())
-            elif input_interactive_yn(
-                title='Setup',
-                question='Do you want to install example event databases',
-                yes_is_default=True,
-            ):
-                for file in EXAMPLE_EVENTS_DIR.glob(f'*.{Extension.EVENT_DB}'):
-                    shutil.copy(file, EVENTS_DIR / file.name)
+            else:
+                install_example_events = cls.install_example_events
+                if install_example_events is None:
+                    install_example_events = input_interactive_yn(
+                        title='Setup',
+                        question='Do you want to install example event databases',
+                        yes_is_default=True,
+                    )
+                if install_example_events:
+                    for file in EXAMPLE_EVENTS_DIR.glob(f'*.{Extension.EVENT_DB}'):
+                        shutil.copy(file, EVENTS_DIR / file.name)
 
         cls._recover_legacy_event_db()
         cls._clean_unsupported_version()

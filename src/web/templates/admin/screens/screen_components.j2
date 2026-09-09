@@ -2,6 +2,16 @@
     collection-status-{{ 'public' if item.public else 'private' }}
 {%- endmacro %}
 
+{% macro row_href(item, view, placement) %}
+    {% if not client.can_manage_screens %}
+        {{ url_for(
+            'user-screen',
+            event_uniq_id=admin_event.uniq_id,
+            screen_uniq_id=item.uniq_id,
+        ) }}
+    {% endif %}
+{% endmacro %}
+
 {% macro identity(item, view, placement) %}
     <span class="d-inline-flex align-items-center gap-2 min-width-0">
         {% if client.can_manage_screens %}
@@ -47,24 +57,38 @@
             </span>
         {% endif %}
     {% endset %}
-    {% if view == 'list' and not item.family and item.screen_type.has_screen_sets %}
+    {% if (
+        view == 'list'
+        and client.can_manage_screens
+        and not item.family
+        and item.screen_type.has_screen_sets
+    ) %}
         {% call collection_macros.column_edit_button(
-            not client.can_manage_screens,
+            false,
             url_for(
                 'admin-screen-sets-modal',
                 event_uniq_id=admin_event.uniq_id,
                 screen_id=item.id,
             ),
-            'info' if client.can_manage_screens else 'warning',
-            _('Edit the sets displayed on the screen.')
-            if client.can_manage_screens else
-            _('You are not allowed to manage screens.'),
+            'info',
+            _('Edit the sets displayed on the screen.'),
             'collection-inline-edit-label-group',
         ) %}
             {{ screen_sets_content }}
         {% endcall %}
     {% else %}
         {{ screen_sets_content }}
+    {% endif %}
+{% endmacro %}
+
+{% macro timer(item, view, placement) %}
+    {% if item.timer %}
+        <span
+            class="text-truncate"
+            {{ macros.tooltip_attributes('info', _('Timer'), 'top') }}
+        ><i class="bi-clock-fill pe-1 text-secondary"></i>{{ item.timer.name }}</span>
+    {% else %}
+        <span class="text-secondary fst-italic">{{ _('No timer') }}</span>
     {% endif %}
 {% endmacro %}
 
@@ -132,12 +156,12 @@
 {% macro actions(item, view, placement) %}
     {% set screen = item %}
     {% set screen_type = screen.screen_type %}
-    <div class="collection-actions d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <div class="d-flex align-items-center gap-2">
-            {% with eye_screen=screen %}
-                {% include '/admin/screens/screen_eye_link.html' %}
-            {% endwith %}
-            {% if client.can_manage_screens %}
+    {% if client.can_manage_screens %}
+        <div class="collection-actions d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-2">
+                {% with eye_screen=screen %}
+                    {% include '/admin/screens/screen_eye_link.html' %}
+                {% endwith %}
                 {% if not screen.family and screen_type.card_action_button_template %}
                     {% include screen_type.card_action_button_template %}
                 {% endif %}
@@ -187,62 +211,62 @@
                         screen.uniq_id,
                     ) }}
                 {% endif %}
+            </div>
+            {% if not screen.family %}
+                <div class="d-flex align-items-center gap-1">
+                    {% call macros.action_tooltip('info', _('Edit the properties of the screen.'), 'top') %}
+                        <button
+                            class="btn btn-sm btn-outline-primary"
+                            hx-get="{{ url_for(
+                                'admin-screen-modal',
+                                action='update',
+                                event_uniq_id=admin_event.uniq_id,
+                                screen_id=screen.id,
+                            ) }}"
+                            hx-target="body"
+                            hx-indicator="#please-wait"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modal-wrapper"
+                        >
+                            <i class="bi-pencil-fill"></i>
+                        </button>
+                    {% endcall %}
+                    {% call macros.action_tooltip('info', _('Duplicate the screen.'), 'top') %}
+                        <button
+                            class="btn btn-sm btn-outline-primary"
+                            hx-get="{{ url_for(
+                                'admin-screen-modal',
+                                action='clone',
+                                event_uniq_id=admin_event.uniq_id,
+                                screen_id=screen.id,
+                            ) }}"
+                            hx-target="body"
+                            hx-indicator="#please-wait"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modal-wrapper"
+                        >
+                            <i class="bi-copy"></i>
+                        </button>
+                    {% endcall %}
+                    {% call macros.action_tooltip('info', _('Delete the screen.'), 'top') %}
+                        <button
+                            class="btn btn-sm btn-outline-danger"
+                            hx-get="{{ url_for(
+                                'admin-screen-modal',
+                                action='delete',
+                                event_uniq_id=admin_event.uniq_id,
+                                screen_id=screen.id,
+                            ) }}"
+                            hx-target="body"
+                            hx-indicator="#please-wait"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modal-wrapper"
+                        >
+                            <i class="bi-trash-fill"></i>
+                        </button>
+                    {% endcall %}
+                </div>
             {% endif %}
         </div>
-        {% if client.can_manage_screens and not screen.family %}
-            <div class="d-flex align-items-center gap-1">
-                {% call macros.action_tooltip('info', _('Edit the properties of the screen.'), 'top') %}
-                    <button
-                        class="btn btn-sm btn-outline-primary"
-                        hx-get="{{ url_for(
-                            'admin-screen-modal',
-                            action='update',
-                            event_uniq_id=admin_event.uniq_id,
-                            screen_id=screen.id,
-                        ) }}"
-                        hx-target="body"
-                        hx-indicator="#please-wait"
-                        data-bs-toggle="modal"
-                        data-bs-target="#modal-wrapper"
-                    >
-                        <i class="bi-pencil-fill"></i>
-                    </button>
-                {% endcall %}
-                {% call macros.action_tooltip('info', _('Duplicate the screen.'), 'top') %}
-                    <button
-                        class="btn btn-sm btn-outline-primary"
-                        hx-get="{{ url_for(
-                            'admin-screen-modal',
-                            action='clone',
-                            event_uniq_id=admin_event.uniq_id,
-                            screen_id=screen.id,
-                        ) }}"
-                        hx-target="body"
-                        hx-indicator="#please-wait"
-                        data-bs-toggle="modal"
-                        data-bs-target="#modal-wrapper"
-                    >
-                        <i class="bi-copy"></i>
-                    </button>
-                {% endcall %}
-                {% call macros.action_tooltip('info', _('Delete the screen.'), 'top') %}
-                    <button
-                        class="btn btn-sm btn-outline-danger"
-                        hx-get="{{ url_for(
-                            'admin-screen-modal',
-                            action='delete',
-                            event_uniq_id=admin_event.uniq_id,
-                            screen_id=screen.id,
-                        ) }}"
-                        hx-target="body"
-                        hx-indicator="#please-wait"
-                        data-bs-toggle="modal"
-                        data-bs-target="#modal-wrapper"
-                    >
-                        <i class="bi-trash-fill"></i>
-                    </button>
-                {% endcall %}
-            </div>
-        {% endif %}
-    </div>
+    {% endif %}
 {% endmacro %}

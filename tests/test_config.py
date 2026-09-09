@@ -17,7 +17,9 @@ from data.loader import EventLoader
 from data.pairings.variations import StandardSwissVariation
 from database.sqlite.event.event_database import EventDatabase
 from database.sqlite.event.event_store import (
+    StoredDisplayController,
     StoredEvent,
+    StoredFamily,
     StoredTournament,
 )
 from plugins.ffe.ffe_tournament_importers import PapiJsonTournamentImporter
@@ -138,6 +140,23 @@ class TestUtils:
             "() => !document.querySelector('.htmx-request, .htmx-swapping')",
             timeout=timeout,
         )
+
+    @staticmethod
+    def fill_and_confirm(locator: Locator, value: str, attempts: int = 10):
+        """Fill a field and make sure the value holds.
+
+        A field in a freshly-swapped modal can silently drop the first fill
+        while the form is still initialising (the modal runs its init a beat
+        after the swap), so re-fill until the value sticks.
+        """
+        for attempt in range(attempts):
+            locator.fill(value)
+            try:
+                expect(locator).to_have_value(value, timeout=250)
+                return
+            except AssertionError:
+                if attempt == attempts - 1:
+                    raise
 
     @staticmethod
     def poll_expect_with_reload(
@@ -445,6 +464,11 @@ class TestUtils:
         # Merge overrides
         data = {**defaults, **overrides}
 
+        with EventDatabase(event_uniq_id) as event_database:
+            existing_family_ids = {
+                family.id for family in event_database.load_stored_families()
+            }
+
         form_data = cls.prepare_form_data(data)
         res = api_request_context.post(
             f'/family-create/{event_uniq_id}/{family_type.value}',
@@ -455,7 +479,31 @@ class TestUtils:
 
         with EventDatabase(event_uniq_id) as event_database:
             stored_families = event_database.load_stored_families()
-            stored_family = next(f for f in stored_families if f.uniq_id == uniq_id)
+            stored_family = next(
+                (f for f in stored_families if f.uniq_id == uniq_id), None
+            )
+            if stored_family is None:
+                stored_family = next(
+                    (f for f in stored_families if f.id not in existing_family_ids),
+                    None,
+                )
+            if stored_family is None:
+                stored_family = next(
+                    (
+                        f
+                        for f in stored_families
+                        if f.type == family_type.value
+                        and f.tournament_id == tournament.id
+                        and f.name == data['name']
+                    ),
+                    None,
+                )
+            if stored_family is None:
+                body = res.body().decode('utf-8', errors='replace')
+                raise AssertionError(
+                    f'Family [{data["name"]}] was not created. '
+                    f'Response status: {res.status}. Body: {body[:1000]}'
+                )
             return stored_family
 
     @classmethod
@@ -467,6 +515,17 @@ class TestUtils:
             headers={'Content-Type': 'application/x-www-form-urlencoded'},
         )
         cls.check_api_response(res)
+
+    @classmethod
+    def update_family_name(
+        cls,
+        event_uniq_id: str,
+        stored_family: StoredFamily,
+        name: str,
+    ) -> StoredFamily:
+        stored_family.name = name
+        with EventDatabase(event_uniq_id, write=True) as event_database:
+            return event_database.update_stored_family(stored_family)
 
     @classmethod
     def create_rotator(
@@ -529,6 +588,78 @@ class TestUtils:
     ):
         res = api_request_context.delete(
             f'/rotator-delete/{event_uniq_id}/{rotator_id}',
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+        )
+        cls.check_api_response(res)
+
+    @classmethod
+    def create_display_controller(
+        cls,
+        api_request_context: APIRequestContext,
+        event_uniq_id: str,
+        name: str,
+        overrides: Optional[dict] = None,
+        screen_uniq_id: str | None = None,
+        rotator_name: str | None = None,
+    ) -> StoredDisplayController:
+        overrides = overrides or {}
+        defaults = {
+            'name': name,
+            'public': True,
+        }
+        data = {**defaults, **overrides}
+
+        form_data = cls.prepare_form_data(data)
+        res = api_request_context.post(
+            f'/display-controller-create/{event_uniq_id}',
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            data=form_data,
+        )
+        cls.check_api_response(res)
+        with EventDatabase(event_uniq_id) as event_database:
+            stored_display_controllers = (
+                event_database.load_stored_display_controllers()
+            )
+            stored_display_controller = next(
+                controller
+                for controller in stored_display_controllers
+                if controller.name == name
+            )
+        assert stored_display_controller.id is not None
+
+        if screen_uniq_id or rotator_name:
+            if screen_uniq_id and rotator_name:
+                raise ValueError('Assign either a screen or a rotator, not both.')
+            assigned_type = 'screen' if screen_uniq_id else 'rotator'
+            object_uniq_id = screen_uniq_id or rotator_name
+            assert object_uniq_id is not None
+            res = api_request_context.patch(
+                f'/display-controller-assign/{event_uniq_id}/'
+                f'{stored_display_controller.id}/{assigned_type}/'
+                f'{parse.quote(object_uniq_id, safe="")}',
+                headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            )
+            cls.check_api_response(res)
+            with EventDatabase(event_uniq_id) as event_database:
+                reloaded_display_controller = (
+                    event_database.get_stored_display_controller(
+                        stored_display_controller.id
+                    )
+                )
+            assert reloaded_display_controller is not None
+            stored_display_controller = reloaded_display_controller
+
+        return stored_display_controller
+
+    @classmethod
+    def delete_display_controller(
+        cls,
+        api_request_context: APIRequestContext,
+        event_uniq_id: str,
+        display_controller_id: int,
+    ):
+        res = api_request_context.delete(
+            f'/display-controller-delete/{event_uniq_id}/{display_controller_id}',
             headers={'Content-Type': 'application/x-www-form-urlencoded'},
         )
         cls.check_api_response(res)

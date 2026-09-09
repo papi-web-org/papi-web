@@ -2,6 +2,16 @@
     collection-status-{{ 'public' if item.public else 'private' }}
 {%- endmacro %}
 
+{% macro row_href(item, view, placement) %}
+    {% if not client.can_manage_screens and item.assigned_object %}
+        {{ url_for(
+            'user-display-controller',
+            event_uniq_id=admin_event.uniq_id,
+            display_controller_id=item.id,
+        ) }}
+    {% endif %}
+{% endmacro %}
+
 {% macro identity(item, view, placement) %}
     <span class="d-inline-flex align-items-center gap-2 min-width-0">
         {% if client.can_manage_screens %}{{ macros.display_controller_visibility_icon(item, '') }}{% endif %}
@@ -11,9 +21,19 @@
 
 {% macro assignment(item, view, placement) %}
     <span class="d-flex min-width-0">
-        <span class="{% if not item.assigned_object %}text-secondary{% endif %} text-truncate">
-            {{ item.assigned_description or _('Neither screen nor rotator currently assigned') }}
-        </span>
+        {% if item.assigned_object %}
+            <span class="d-inline-flex align-items-center gap-2 min-width-0">
+                <i class="bi-arrow-right text-secondary"></i>
+                {% if item.assigned_type == 'screen' %}
+                    {{ macros.screen_type_icon(item.assigned_object.screen_type, true) }}
+                {% else %}
+                    {{ macros.rotator_icon() }}
+                {% endif %}
+                <span class="text-truncate">{{ item.assigned_object.name }}</span>
+            </span>
+        {% else %}
+            <span class="text-secondary text-truncate">{{ _('None') }}</span>
+        {% endif %}
     </span>
 {% endmacro %}
 
@@ -27,21 +47,21 @@
 
 {% macro actions(item, view, placement) %}
     {% set display_controller = item %}
-    <div class="collection-actions d-flex align-items-center justify-content-between gap-2">
-        <div class="d-flex align-items-center gap-1">
-            {% if display_controller.assigned_object %}
-                <a
-                    class="btn btn-sm btn-outline-primary"
-                    href="{{ url_for(
-                        'user-display-controller',
-                        event_uniq_id=admin_event.uniq_id,
-                        display_controller_id=display_controller.id,
-                    ) }}"
-                    target="_blank"
-                    {{ macros.tooltip_attributes('info', _('Go to the display controller.'), 'top') }}
-                ><i class="bi-eye"></i></a>
-            {% endif %}
-            {% if client.can_manage_screens %}
+    {% if client.can_manage_screens %}
+        <div class="collection-actions d-flex align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-1">
+                {% if display_controller.assigned_object %}
+                    <a
+                        class="btn btn-sm btn-outline-primary"
+                        href="{{ url_for(
+                            'user-display-controller',
+                            event_uniq_id=admin_event.uniq_id,
+                            display_controller_id=display_controller.id,
+                        ) }}"
+                        target="_blank"
+                        {{ macros.tooltip_attributes('info', _('Go to the display controller.'), 'top') }}
+                    ><i class="bi-eye"></i></a>
+                {% endif %}
                 <div
                     class="dropdown d-inline"
                     {{ macros.tooltip_attributes('info', _('Assign a screen to the controller.'), 'top') }}
@@ -105,9 +125,7 @@
                         {{ macros.tooltip_attributes('info', _('Remove the screen from the display controller.'), 'top') }}
                     ><i class="bi-x-lg"></i></button>
                 {% endif %}
-            {% endif %}
-        </div>
-        {% if client.can_manage_screens %}
+            </div>
             <div class="d-flex align-items-center gap-1">
                 {% call macros.action_tooltip('info', _('Edit the properties of the display controller.'), 'top') %}
                     <button
@@ -140,6 +158,6 @@
                     ><i class="bi-trash-fill"></i></button>
                 {% endcall %}
             </div>
-        {% endif %}
-    </div>
+        </div>
+    {% endif %}
 {% endmacro %}

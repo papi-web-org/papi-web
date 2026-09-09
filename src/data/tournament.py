@@ -633,6 +633,16 @@ class Tournament:
         return ScoreType.MATCH_POINTS
 
     @property
+    def round_robin_participation_rule(self) -> bool:
+        """FIDE 6.6: whether round-robin participants who completed less than
+        50% of their games are dropped from the final standings and their
+        games annulled (not counted in the opponents' scores and
+        tie-breaks). Set by the arbiter in the tournament form, and off for
+        tournaments created before the rule existed so their standings stay
+        unchanged."""
+        return bool(self.stored_tournament.round_robin_participation_rule)
+
+    @property
     def secondary_score_for_colours(self) -> bool:
         """Whether the secondary score breaks ties when deciding which
         team is the "first team" for colour allocation (§1.2.1, §4.3).
@@ -910,10 +920,15 @@ class Tournament:
         win_gp_per_player = Result.WIN.point_value
         draw_gp_per_player = Result.DRAW.point_value
         absent_gp_per_player = self.team_game_points[Result.ZERO_POINT_BYE]
+        excluded_team_ids = {
+            team.id for team in self.teams if team.is_excluded_from_standings
+        }
         for team_board in self.team_boards_by_id.values():
             if after_round is not None and team_board.round > after_round:
                 continue
             stb = team_board.stored_team_board
+            if stb.team_a_id in excluded_team_ids or stb.team_b_id in excluded_team_ids:
+                continue
             a_gp, b_gp = team_board.game_points
             if stb.team_b_id is None:
                 ent = standings.get(stb.team_a_id)
@@ -1036,6 +1051,7 @@ class Tournament:
                             records_by_id[r['team'].id]
                             for r in g
                             if r['team'].id in records_by_id
+                            and not r['team'].is_excluded_from_standings
                         ]
                         for g in groups
                         if len(g) > 1
@@ -1071,6 +1087,10 @@ class Tournament:
 
         rows.sort(
             key=lambda e: (
+                # Teams excluded from the standings (FIDE 6.6) rank last,
+                # regardless of score, so the competitors keep a contiguous
+                # ranking. They stay in the crosstable for the record.
+                e['team'].is_excluded_from_standings,
                 base_key(e)
                 + tuple(-v for v in e['tie_break_values'])
                 + (
@@ -1078,7 +1098,7 @@ class Tournament:
                     if e['team'].pairing_number is not None
                     else float('inf'),
                     e['team'].name.lower(),
-                )
+                ),
             )
         )
         for rank, entry in enumerate(rows, 1):
@@ -1566,6 +1586,9 @@ class Tournament:
             team_player_count=team_size,
             draw_gp=team_size * self.draw_points,
             predetermined_pairings=self.pairing_system.predetermined_pairings,
+            excluded_team_ids=frozenset(
+                team.id for team in self.teams if team.is_excluded_from_standings
+            ),
         )
 
     def _team_board_scores_for(
@@ -1640,6 +1663,9 @@ class Tournament:
         matches_per_team: dict[int, list[TeamMatchRecord]] = {
             team.id: [] for team in self.teams
         }
+        excluded_team_ids = {
+            team.id for team in self.teams if team.is_excluded_from_standings
+        }
 
         for team_board in self.team_boards_by_id.values():
             if team_board.round > after_round:
@@ -1647,6 +1673,8 @@ class Tournament:
             stb = team_board.stored_team_board
             a_id = stb.team_a_id
             b_id = stb.team_b_id
+            if a_id in excluded_team_ids or b_id in excluded_team_ids:
+                continue
             a_gp, b_gp = team_board.game_points
             a_boards = self._team_board_scores_for(team_board, a_id)
             a_ratings = self._team_board_ratings_for(team_board, a_id)
@@ -4109,6 +4137,19 @@ class Tournament:
                     )
         return accelerated_rounds
 
+    def has_acceleration_beyond_last_round(self) -> bool:
+        """Whether an acceleration entry would reach past the final round.
+
+        bbpPairings stores one acceleration entry per round up to the entry's
+        last round and rejects a player holding more entries than the
+        tournament has rounds. This happens when a rule's last round outlives
+        a later reduction of the round count (the settings form only validates
+        the range at save time)."""
+        return any(
+            accelerated_round.last_round > self.rounds
+            for accelerated_round in self._trf_accelerated_rounds()
+        )
+
     def set_tournament_player_points(
         self, tournament_player: TournamentPlayer, *, before_round: int
     ):
@@ -4202,7 +4243,7 @@ class Tournament:
             player.points = (
                 self.keizer_scorer.total(player, after_round=after_round)
                 if keizer
-                else player.points_after(after_round)
+                else player.standings_points(after_round)
             )
             player.compute_tie_break_values(
                 after_round=after_round, tie_breaks=tie_breaks
@@ -4220,8 +4261,12 @@ class Tournament:
                 player = self.tournament_players_by_id[player_id]
                 player.tie_break_values[index].value = tie_break_value
 
+        # Players excluded from the standings (FIDE 6.6 round-robin rule) are
+        # ranked last regardless of their score, so the competitors keep a
+        # contiguous ranking. They stay in the crosstable for the record.
         sorted_tournament_players = sorted(
-            self.tournament_players, key=lambda p: p.rank_sort_key
+            self.tournament_players,
+            key=lambda p: (p.is_excluded_from_standings, p.rank_sort_key),
         )
         self._tournament_players_by_rank = {
             rank: tournament_player

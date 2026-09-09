@@ -39,6 +39,7 @@ COLLECTION_SPEC: AdminCollectionSpec = AdminCollectionSpec(
                 width='minmax(min-content, 1fr)',
             ),
             ListColumn('screen_count', label=_('Screens')),
+            ListColumn('timer', label=_('Timer')),
             ListColumn(
                 'actions',
                 label=_('Actions'),

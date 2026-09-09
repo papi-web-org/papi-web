@@ -317,6 +317,53 @@
                             data=data, errors=errors
                         ) }}
                     </div>
+                    <div class="col-12 participation-rule-option">
+                        {{ admin_macros.switch_input(
+                            name='round_robin_participation_rule',
+                            placeholder=(
+                                _('Drop teams that completed less than 50%% of their matches (FIDE 6.6)')
+                                if is_team_event else
+                                _('Drop players that completed less than 50%% of their games (FIDE 6.6)')
+                            ),
+                            tooltip_text=(
+                                _(
+                                    'A team that withdrew or was expelled having '
+                                    'completed less than half of its matches is not '
+                                    'ranked, and its matches are annulled: they no '
+                                    'longer count in the other teams\' scores and '
+                                    'tie-breaks.'
+                                )
+                                if is_team_event else
+                                _(
+                                    'A player that withdrew or was expelled having '
+                                    'completed less than half of their games is not '
+                                    'ranked, and their games are annulled: they no '
+                                    'longer count in the opponents\' scores and '
+                                    'tie-breaks.'
+                                )
+                            ),
+                            data=data, errors=errors
+                        ) }}
+                    </div>
+                    <script>
+                        (function () {
+                            // The rule is defined for an all-play-all.
+                            const PARTICIPATION_RULE = {{
+                                pairing_systems
+                                | selectattr('supports_participation_rule')
+                                | map(attribute='id')
+                                | list
+                                | tojson
+                            }};
+                            function syncParticipationRule() {
+                                const id = $('#pairing-system').val() || '';
+                                $('.participation-rule-option')
+                                    .toggle(PARTICIPATION_RULE.includes(id));
+                            }
+                            $('#pairing-system').on('change', syncParticipationRule);
+                            syncParticipationRule();
+                        })();
+                    </script>
                 </div>
 
                 {% if is_team_event %}

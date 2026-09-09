@@ -11,6 +11,8 @@ from web.admin.label import _
 COLLECTION_SPEC: AdminCollectionSpec = AdminCollectionSpec(
     key='screens',
     components_template='/admin/screens/screen_components.j2',
+    card_href_component='row_href',
+    row_href_component='row_href',
     card=CardLayout(
         header=(ComponentPlacement('identity', 'flex-grow-1 min-width-0'),),
         summary=(
@@ -29,8 +31,8 @@ COLLECTION_SPEC: AdminCollectionSpec = AdminCollectionSpec(
                 label=_('Screen'),
                 width='minmax(min-content, 1.4fr)',
             ),
-            ListColumn('source', label=_('Multi-Screen')),
             ListColumn('screen_sets', label=_('Content')),
+            ListColumn('timer', label=_('Timer')),
             ListColumn(
                 'actions',
                 label=_('Actions'),

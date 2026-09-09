@@ -118,6 +118,15 @@ class PairingSystem[PV: PairingVariation](IdentifiableEntity, ABC):
         return False
 
     @property
+    def supports_participation_rule(self) -> bool:
+        """Whether the < 50% participation rule (FIDE 6.6) can be applied:
+        a participant who withdrew or was expelled having completed less
+        than half of their games is dropped from the final standings and
+        their games annulled. The rule is defined for an all-play-all, so
+        default False."""
+        return False
+
+    @property
     def paired_by_team(self) -> bool:
         """Whether this system pairs entire teams against each other (each
         round groups boards into team-vs-team blocks). True for the standard
@@ -318,6 +327,11 @@ class RoundRobinPairingSystem(PairingSystem['RoundRobinVariation']):
         # The Berger tables fix every opponent up front.
         return True
 
+    @property
+    @override
+    def supports_participation_rule(self) -> bool:
+        return True
+
     @override
     def variation_manager(self, event: 'Event') -> EntityManager['RoundRobinVariation']:
         from data.pairings.managers import RoundRobinVariationManager
@@ -461,6 +475,11 @@ class TeamRoundRobinPairingSystem(PairingSystem['TeamRoundRobinVariation']):
     @override
     def predetermined_pairings(self) -> bool:
         # The Berger tables fix every opponent up front.
+        return True
+
+    @property
+    @override
+    def supports_participation_rule(self) -> bool:
         return True
 
     @override

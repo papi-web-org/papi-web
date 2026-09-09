@@ -13,7 +13,7 @@ var polyglot = new Polyglot({
         'hours': '{{ _('<smart_count> hour |||| <smart_count> hours') }}',
         'days': '{{ _('<smart_count> day |||| <smart_count> days') }}',
         'weeks': '{{ _('<smart_count> week |||| <smart_count> weeks') }}',
-        'countdown': '{{ _('<first> and <second>') }}',
+        'countdown': '{{ _('<first> <second>') }}',
     },
     interpolation: {
         prefix: '<',
@@ -53,9 +53,10 @@ function duration_string(dur) {
         second = minutes > 0 ? polyglot.t('minutes', minutes) : undefined;
     } else if (minutes > 0) {
         first = polyglot.t('minutes', minutes);
-        second = seconds > 0 ? polyglot.t('seconds', seconds) : undefined;
+        second = undefined;
     } else {
         first = polyglot.t('seconds', seconds);
+        second = undefined;
     }
 
     if (second) {
@@ -67,41 +68,43 @@ function duration_string(dur) {
 
     return first;
 }
-function update_timer() {
-	now = new Date();
-	time = Math.floor(now.getTime() / 1000);
-	clock_html = two_digits(now.getHours())+':'+two_digits(now.getMinutes())+':'+two_digits(now.getSeconds());
+function update_timer(local_delay) {
+	local_date = new Date();
+	local_time = Math.floor(local_date.getTime() / 1000);
+	server_time = Math.floor(local_date.getTime() / 1000) + local_delay;
+    server_date = new Date(server_time * 1000)
+	clock_html = two_digits(server_date.getHours())+':'+two_digits(server_date.getMinutes());
 {% for timer_hour in timer.timer_hours %}
-	if (time < {{ timer_hour.timestamp_1 }}) {
+	if (server_time < {{ timer_hour.timestamp_1 }}) {
 		color = 'rgb({{ color_1_r }}, {{ color_1_g }}, {{ color_1_b }})';
-		dur = duration_string({{ timer_hour.timestamp }} - time);
+		dur = duration_string({{ timer_hour.timestamp }} - server_time);
 		text_html = '{{ timer_hour.text_before | replace ("'", "\\'") | safe }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
 		return;
 	}
-	if (time < {{ timer_hour.timestamp_2 }}) {
-		color_r = Math.floor({{ color_1_r }} + (time - {{ timer_hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_r - color_1_r }}));
-		color_g = Math.floor({{ color_1_g }} + (time - {{ timer_hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_g - color_1_g }}));
-		color_b = Math.floor({{ color_1_b }} + (time - {{ timer_hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_b - color_1_b }}));
+	if (server_time < {{ timer_hour.timestamp_2 }}) {
+		color_r = Math.floor({{ color_1_r }} + (server_time - {{ timer_hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_r - color_1_r }}));
+		color_g = Math.floor({{ color_1_g }} + (server_time - {{ timer_hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_g - color_1_g }}));
+		color_b = Math.floor({{ color_1_b }} + (server_time - {{ timer_hour.timestamp_1 }})/({{ delay_1 * 60 }})*({{ color_2_b - color_1_b }}));
 		color = 'rgb(' + color_r + ', ' + color_g + ', ' + color_b + ')';
-		dur = duration_string({{ timer_hour.timestamp }} - time);
+		dur = duration_string({{ timer_hour.timestamp }} - server_time);
 		text_html = '{{ timer_hour.text_before | replace ("'", "\\'") | safe }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
 		return;
 	}
-	if (time < {{ timer_hour.timestamp_3 }}) {
-		color_r = Math.floor({{ color_2_r }} + (time - {{ timer_hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_r - color_2_r }}));
-		color_g = Math.floor({{ color_2_g }} + (time - {{ timer_hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_g - color_2_g }}));
-		color_b = Math.floor({{ color_2_b }} + (time - {{ timer_hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_b - color_2_b }}));
+	if (server_time < {{ timer_hour.timestamp_3 }}) {
+		color_r = Math.floor({{ color_2_r }} + (server_time - {{ timer_hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_r - color_2_r }}));
+		color_g = Math.floor({{ color_2_g }} + (server_time - {{ timer_hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_g - color_2_g }}));
+		color_b = Math.floor({{ color_2_b }} + (server_time - {{ timer_hour.timestamp_2 }})/({{ delay_2 * 60 }})*({{ color_3_b - color_2_b }}));
 		color = 'rgb(' + color_r + ', ' + color_g + ', ' + color_b + ')';
-		dur = duration_string({{ timer_hour.timestamp }} - time);
+		dur = duration_string({{ timer_hour.timestamp }} - server_time);
 		text_html = '{{ timer_hour.text_before | replace ("'", "\\'") | safe }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
 		return;
 	}
-	if (time < {{ timer_hour.timestamp_next }}) {
+	if (server_time < {{ timer_hour.timestamp_next }}) {
 		color = 'rgb({{ color_3_r }}, {{ color_3_g }}, {{ color_3_b }})';
-		dur = duration_string(time - {{ timer_hour.timestamp }});
+		dur = duration_string(server_time - {{ timer_hour.timestamp }});
 		text_html = '{{ timer_hour.text_after | replace ("'", "\\'") | safe }}'.replace('%s', dur);
 		update_timer_values(clock_html, text_html, color);
 		return;
@@ -111,8 +114,12 @@ function update_timer() {
 }
 
 $(document).ready(function(){
-    if (!timer) timer = setInterval('update_timer();', 1000);
-    update_timer();
+	now = new Date();
+	local_time = Math.floor(now.getTime() / 1000);
+    server_time = Math.floor({{ now }});
+    local_delay = server_time - local_time;
+    if (!timer) timer = setInterval('update_timer(' + local_delay + ');', 1000);
+    update_timer(local_delay);
 });
 
 {% endwith %}

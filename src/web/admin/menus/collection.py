@@ -27,11 +27,7 @@ COLLECTION_SPEC: AdminCollectionSpec = AdminCollectionSpec(
                 label=_('Menu'),
                 width='minmax(min-content, 1.4fr)',
             ),
-            ListColumn(
-                'content',
-                label=_('Screens / Multi-Screens'),
-                width='minmax(11rem, 1fr)',
-            ),
+            ListColumn('content', label=_('Screens')),
             ListColumn(
                 'actions',
                 label=_('Actions'),

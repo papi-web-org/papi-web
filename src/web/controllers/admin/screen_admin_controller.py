@@ -149,6 +149,9 @@ class ScreenAdminRenderer(BaseEventAdminController):
                 sorted_screens_by_type = event.sorted_basic_screens_by_screen_type
             for screen_type_ in list(admin_screen_types_data):
                 screens = sorted_screens_by_type[screen_type_.id]
+                admin_screen_types_data[screen_type_]['has_screen_sets'] = (
+                    screen_type_.has_screen_sets
+                )
                 admin_screen_types_data[screen_type_]['screens'] = screens
                 admin_screen_types_data[screen_type_]['title'] = (
                     f'{screen_type_.name} ({len(screens) or "-"})'

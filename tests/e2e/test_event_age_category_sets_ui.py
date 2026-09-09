@@ -14,6 +14,9 @@ class TestEventAgeCategorySets:
         page.get_by_test_id('nav-admin-event-config-tab-tab').click()
         modal = page.locator('.modal-dialog')
         expect(modal).to_be_visible()
+        # .modal-dialog is a Bootstrap placeholder until htmx swaps the real
+        # form in; wait for the stored location so a fill can't be overwritten.
+        expect(modal.get_by_test_id('location')).to_have_value('Paris')
         return modal
 
     def _open_sets_modal(self, page: Page, modal):
@@ -26,7 +29,7 @@ class TestEventAgeCategorySets:
     ):
         TestUtils.create_event(EVENT_ID, via_api_request_context=api_request_context)
         modal = self._open_event_config_modal(page, EVENT_ID)
-        modal.get_by_test_id('location').fill('Unsaved Location')
+        TestUtils.fill_and_confirm(modal.get_by_test_id('location'), 'Unsaved Location')
         self._open_sets_modal(page, modal)
 
         page.get_by_role('button', name='Add').click()

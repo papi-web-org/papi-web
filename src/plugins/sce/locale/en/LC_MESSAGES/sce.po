@@ -6,6 +6,12 @@ msgstr ""
 msgid "%(string)s: %(value)s"
 msgstr ""
 
+msgid ""
+"- an event of the platform linked to your event, and its players synchronised in both directions;\n"
+"- the check-in of the players done online by the players themselves;\n"
+"- the pairings and the standings published live on the platform."
+msgstr ""
+
 msgid "All player conflicts resolved."
 msgstr ""
 
@@ -321,6 +327,9 @@ msgid "Sharly-Chess.com event not found, it most likely has been deleted."
 msgstr ""
 
 msgid "Sharly-Chess.com is not reachable at the moment."
+msgstr ""
+
+msgid "Sharly-Chess.com is the online platform of Sharly Chess, where the players register to your events and follow them live."
 msgstr ""
 
 msgid "Sharly-Chess.com player conflicts"

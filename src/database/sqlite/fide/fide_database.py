@@ -98,7 +98,7 @@ class FideDatabase(LocalSourcePlayerDatabase):
             year_of_birth=row['year_of_birth'],
             gender=row['gender'],
             title=row['fide_title'],
-            women_title=row['fide_women_title'],
+            women_title=row.get('fide_women_title') or '',
             transient_arbiter_titles={'fide': row['fide_arbiter_title']},
             ratings=ratings,
             fide_id=row['fide_id'],
@@ -244,6 +244,7 @@ class FideDatabase(LocalSourcePlayerDatabase):
     # ---------------------------------------------------------------------------------
 
     @property
-    def legacy_min_recovery_version(self) -> Version:
-        # Last change done in https://github.com/Sharly-Chess/sharly-chess/pull/1739
-        return Version('3.6.0')
+    def legacy_min_recovery_version(self) -> Version | None:
+        # Pre-version-5 databases use the version 1 schema, which lacks the
+        # columns of the current schema, so they cannot be recovered.
+        return None

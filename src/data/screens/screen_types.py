@@ -1736,7 +1736,8 @@ class RankingScreenType(ScreenType):
                 [
                     row
                     for row in tournament.team_standings(after_round=ranking_round)
-                    if (min_points is None or row[score_key] >= min_points)
+                    if not row['team'].is_excluded_from_standings
+                    and (min_points is None or row[score_key] >= min_points)
                     and (max_points is None or row[score_key] <= max_points)
                 ]
             )
@@ -1746,7 +1747,8 @@ class RankingScreenType(ScreenType):
                 [
                     player
                     for player in tournament.tournament_players_by_rank.values()
-                    if (min_points is None or (player.points or 0) >= min_points)
+                    if not player.is_excluded_from_standings
+                    and (min_points is None or (player.points or 0) >= min_points)
                     and (max_points is None or (player.points or 0) <= max_points)
                 ]
             )

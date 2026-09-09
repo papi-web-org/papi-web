@@ -2,6 +2,16 @@
     collection-status-{{ 'success' if item.rotating_screens_by_id else 'danger' }}
 {%- endmacro %}
 
+{% macro row_href(item, view, placement) %}
+    {% if not client.can_manage_screens and item.rotating_screens_by_id %}
+        {{ url_for(
+            'user-rotator',
+            event_uniq_id=admin_event.uniq_id,
+            rotator_id=item.id,
+        ) }}
+    {% endif %}
+{% endmacro %}
+
 {% macro identity(item, view, placement) %}
     <span class="d-inline-flex align-items-center gap-2 min-width-0">
         {% if client.can_manage_screens %}{{ macros.rotator_visibility_icon(item, '') }}{% endif %}
@@ -47,33 +57,32 @@
 {% endmacro %}
 
 {% macro screen_assignments(item, view, placement) %}
-    {% if view == 'card' %}
+    {% set assignment_content %}
         <span class="d-inline-flex align-items-center gap-3">
             {{ screens_count(item, view, placement) }}
             {{ families_count(item, view, placement) }}
             {{ health(item, view, placement) }}
         </span>
+    {% endset %}
+    {% if view == 'card' %}
+        {{ assignment_content }}
+    {% elif not client.can_manage_screens %}
+        {{ assignment_content }}
     {% else %}
         {% call collection_macros.column_edit_button(
-            not client.can_manage_screens,
+            false,
             url_for(
                 'admin-rotator-screens-modal',
                 event_uniq_id=admin_event.uniq_id,
                 rotator_id=item.id,
             ),
-            'info' if client.can_manage_screens else 'warning',
+            'info',
             '',
             'collection-inline-edit-label-group',
             false,
-            aria_label=_('Define the screens and multi-screens to display.')
-            if client.can_manage_screens else
-            _('You are not allowed to manage screens.'),
+            aria_label=_('Define the screens and multi-screens to display.'),
         ) %}
-            <span class="d-inline-flex align-items-center gap-3">
-                {{ screens_count(item, view, placement) }}
-                {{ families_count(item, view, placement) }}
-                {{ health(item, view, placement) }}
-            </span>
+            {{ assignment_content }}
         {% endcall %}
     {% endif %}
 {% endmacro %}
@@ -170,26 +179,24 @@
 
 {% macro actions(item, view, placement) %}
     {% set rotator = item %}
-    <div class="collection-actions d-flex align-items-center justify-content-between gap-2">
-        <div class="d-flex align-items-center gap-1">
-            {% if client.can_manage_screens and view == 'card' %}{{ screens_button(rotator, true) }}{% endif %}
-            {% if rotator.rotating_screens_by_id %}
-                <a
-                    class="btn btn-sm btn-outline-primary"
-                    href="{{ url_for('user-rotator', event_uniq_id=admin_event.uniq_id, rotator_id=rotator.id) }}"
-                    target="_blank"
-                    {{ macros.tooltip_attributes('info', _('Go to the rotator.'), 'top') }}
-                ><i class="bi-eye"></i></a>
-            {% endif %}
-            {% if client.can_manage_screens and rotator.rotating_screens_by_id %}
-                {{ admin_macros.display_controller_assign_dropdown(
-                    admin_event.sorted_display_controllers,
-                    'rotator',
-                    rotator.name,
-                ) }}
-            {% endif %}
-        </div>
-        {% if client.can_manage_screens %}
+    {% if client.can_manage_screens %}
+        <div class="collection-actions d-flex align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-1">
+                {% if view == 'card' %}{{ screens_button(rotator, true) }}{% endif %}
+                {% if rotator.rotating_screens_by_id %}
+                    <a
+                        class="btn btn-sm btn-outline-primary"
+                        href="{{ url_for('user-rotator', event_uniq_id=admin_event.uniq_id, rotator_id=rotator.id) }}"
+                        target="_blank"
+                        {{ macros.tooltip_attributes('info', _('Go to the rotator.'), 'top') }}
+                    ><i class="bi-eye"></i></a>
+                    {{ admin_macros.display_controller_assign_dropdown(
+                        admin_event.sorted_display_controllers,
+                        'rotator',
+                        rotator.name,
+                    ) }}
+                {% endif %}
+            </div>
             <div class="d-flex align-items-center gap-1">
                 {% call macros.action_tooltip('info', _('Edit the properties of the rotator.'), 'top') %}
                     <button
@@ -227,6 +234,6 @@
                     ><i class="bi-trash-fill"></i></button>
                 {% endcall %}
             </div>
-        {% endif %}
-    </div>
+        </div>
+    {% endif %}
 {% endmacro %}

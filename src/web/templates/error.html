@@ -9,10 +9,10 @@
         <p>{{ error_message }}</p>
         <p>
             {% if reload_message %}
-                <a href="#" onclick="location.assign(''); return false;">{{ reload_message }}</a>
+                <a href="#" onclick="location.reload(); return false;">{{ reload_message }}</a>
                 -
             {% endif %}
-            <a href="#" onclick="location.assign('/'); return false;">{{ _('Return to the home page') }}</a>
+            <a href="/" onclick="location.assign('/'); return false;">{{ _('Return to the home page') }}</a>
         </p>
     </div>
 {% endblock %}

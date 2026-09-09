@@ -1,3 +1,9 @@
+msgid ""
+"- a rating step, a time penalty per step and a minimum time, configured on the tournament;\n"
+"- the time of each player computed for every game of the round from the rating difference between the two players;\n"
+"- the times of the two players displayed on the pairings screens and on the printed documents."
+msgstr ""
+
 msgid "/move"
 msgstr ""
 
@@ -12,6 +18,9 @@ msgid "Elo step:"
 msgstr ""
 
 msgid "Handicap games"
+msgstr ""
+
+msgid "In a handicap tournament the two players of a game do not get the same thinking time: the stronger player plays with less time than the weaker one, which which reduces the strongest player's chances of winning."
 msgstr ""
 
 msgid "Minimum time (secs):"

@@ -37,7 +37,12 @@ class AdminWebContext(WebContext):
         self.check_admin_tab()
 
     def get_admin_event(self) -> Event:
-        assert self.admin_event is not None
+        if self.admin_event is None:
+            # get_optional_event swallows a locked/inaccessible event to keep page
+            # rendering working, so admin_event may be None here. A handler that
+            # truly needs the event re-requests it via get_event, which raises the
+            # proper 423 (locked) or 404 (missing) error rather than asserting.
+            return RequestUtils.get_event(self.request)
         return self.admin_event
 
     def check_admin_tab(self):

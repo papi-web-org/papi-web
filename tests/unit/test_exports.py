@@ -229,3 +229,22 @@ class TournamentExporterTestCase(TestCase):
             self.assertEqual(
                 expected_fixed_by_player[player.lastName], player.fixedBoard
             )
+
+    def test_papi_tie_break_warning_ignores_leading_points(self):
+        """A leading PTS takes no Papi slot, so it must not trigger the
+        'values will not appear' warning when the real tie-breaks all fit."""
+        warning = PapiConverter.check_tiebreaks_warning(
+            [
+                PointsTieBreak(),
+                WinsTieBreak(),
+                PapiPerformanceTieBreak(),
+            ]
+        )
+        self.assertIsNone(warning)
+
+    def test_papi_tie_break_warning_when_points_not_first(self):
+        """PTS anywhere but first cannot be expressed in Papi, so warn."""
+        warning = PapiConverter.check_tiebreaks_warning(
+            [WinsTieBreak(), PointsTieBreak()]
+        )
+        self.assertIsNotNone(warning)

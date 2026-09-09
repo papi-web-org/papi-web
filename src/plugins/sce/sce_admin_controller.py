@@ -398,6 +398,7 @@ class SCEAdminController(BaseAdminController):
                     SCEUtils.update_event_plugin_data(event, plugin_data, write=False)
                     try:
                         SCESession(event).update_event_from_sce_event()
+                        SCEUtils.clear_auth_error_statuses(event)
                         Message.success(
                             request,
                             _(

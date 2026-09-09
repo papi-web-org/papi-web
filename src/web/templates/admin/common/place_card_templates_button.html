@@ -1,0 +1,17 @@
+<span class="sidebar-tooltip" {{ macros.tooltip_attributes('info', _('Place card templates'), 'right') }}>
+    <button
+        class="nav-link text-start me-1 position-relative align-items-center {% if admin_tab == 'place_card_templates' %}active{% endif %}"
+        hx-get="{{ url_for('place-card-templates') }}"
+        hx-trigger="click"
+        hx-target="body"
+        hx-push-url="true"
+        hx-indicator="#please-wait"
+    >
+        <div class="d-block">
+            <i class="bi bi-person-vcard"></i>
+            <span class="pe-2 expanded-only">
+                {{ _('Place card templates') }}
+            </span>
+        </div>
+    </button>
+</span>

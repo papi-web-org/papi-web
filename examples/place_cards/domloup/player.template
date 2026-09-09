@@ -14,7 +14,7 @@ v_pos = 0.0
 text = "{{ player.federation_flag | safe }} {{ player.full_name }}"
 font_size = 18.0
 bold = true
-max_width = 92.0
+width = 92.0
 
 [player_rating]
 text = "{{ player.rating }}{{ player.rating_type }}"

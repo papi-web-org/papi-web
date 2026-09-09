@@ -194,6 +194,13 @@ class AppHookSpecs:
         """Add plugin specific data to a player before printing place cards."""
 
     @hookspec
+    def place_card_field_tokens(self) -> list[dict[str, str]]:
+        """Return the place card field tokens the plugin adds (matching the data
+        it sets in ``augment_place_card_player``). Each is a dict with keys
+        ``group`` (e.g. a federation code), ``label`` (localized) and ``expr``
+        (the Jinja expression). Surfaced in the visual editor's field picker."""
+
+    @hookspec
     def insert_player_profile_links(
         self,
         player: 'Player',

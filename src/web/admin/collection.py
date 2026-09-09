@@ -219,6 +219,9 @@ from web.admin.championship.collection import (  # noqa: E402
     SOURCE_COLLECTION_SPEC as _championship_sources_spec,
 )
 from web.admin.menus.collection import COLLECTION_SPEC as _menus_spec  # noqa: E402
+from web.admin.place_card_templates.collection import (  # noqa: E402
+    COLLECTION_SPEC as _place_card_templates_spec,
+)
 from web.admin.prizes.collection import COLLECTION_SPEC as _prizes_spec  # noqa: E402
 from web.admin.rotators.collection import COLLECTION_SPEC as _rotators_spec  # noqa: E402
 from web.admin.screens.collection import COLLECTION_SPEC as _screens_spec  # noqa: E402
@@ -234,6 +237,7 @@ _SPECS: dict[str, AdminCollectionSpec] = {
     'championships': _championships_spec,
     'championship-sources': _championship_sources_spec,
     'menus': _menus_spec,
+    'place-card-templates': _place_card_templates_spec,
     'prize-categories': _prizes_spec,
     'rotators': _rotators_spec,
     'screens': _screens_spec,

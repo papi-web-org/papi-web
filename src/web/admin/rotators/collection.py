@@ -11,6 +11,8 @@ from web.admin.label import _
 COLLECTION_SPEC: AdminCollectionSpec = AdminCollectionSpec(
     key='rotators',
     components_template='/admin/rotators/rotator_components.j2',
+    card_href_component='row_href',
+    row_href_component='row_href',
     card=CardLayout(
         header=(ComponentPlacement('identity', 'flex-grow-1 min-width-0'),),
         summary=(ComponentPlacement('screen_assignments', 'mx-auto'),),
@@ -29,13 +31,9 @@ COLLECTION_SPEC: AdminCollectionSpec = AdminCollectionSpec(
                 label=_('Rotator'),
                 width='minmax(min-content, 1.3fr)',
             ),
+            ListColumn('screen_assignments', label=_('Screens')),
             ListColumn('delay', label=_('Delay')),
             ListColumn('timer', label=_('Timer')),
-            ListColumn(
-                'screen_assignments',
-                label=_('Screens / Multi-Screens'),
-                width='minmax(11rem, 1fr)',
-            ),
             ListColumn(
                 'actions',
                 label=_('Actions'),

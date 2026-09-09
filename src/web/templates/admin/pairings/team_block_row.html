@@ -64,7 +64,7 @@
         hx-swap-oob="true"
     {% endif %}
 >
-    <td class="text-center text-nowrap">{% if board.fixed_number %}<span class="text-decoration-underline" data-bs-toggle="tooltip" data-bs-title="{{ _('Fixed table') }}">{{ board.number_str }}</span>{% else %}{{ board.number_str }}{% endif %}</td>
+    <td class="text-center text-nowrap">{% if board.fixed_number %}<span class="border border-light rounded p-1" data-bs-toggle="tooltip" data-bs-title="{{ _('Fixed table') }}">{{ board.number_str }}</span>{% else %}{{ board.number_str }}{% endif %}</td>
     {% if admin_tournament.record_illegal_moves %}
         {% with player=team_a_player, illegal_moves=team_a_pairing.illegal_moves if team_a_pairing else 0 %}{% include 'illegal_moves_cell.html' %}{% endwith %}
     {% endif %}

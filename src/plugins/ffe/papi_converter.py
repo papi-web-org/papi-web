@@ -664,6 +664,10 @@ class PapiConverter:
         tie_breaks: list[TieBreak],
         three_points_for_a_win: bool = False,
     ) -> str | None:
+        if tie_breaks and isinstance(tie_breaks[0], PointsTieBreak):
+            # Papi always ranks on the points first and has no code for them,
+            # so a leading PTS takes no slot (see _tiebreaks_to_papi_tiebreaks).
+            tie_breaks = tie_breaks[1:]
         if len(tie_breaks) <= 3 and all(
             PapiTieBreak.get_outer_value(tie_break, three_points_for_a_win)
             for tie_break in tie_breaks
