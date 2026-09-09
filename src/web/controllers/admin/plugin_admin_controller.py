@@ -36,6 +36,8 @@ PLUGINS_ADMIN_TAB = 'plugins'
 # The documentation website, on top of the application itself: the plugins pages
 # only open links of these hosts, all the others are rejected.
 DOCUMENTATION_HOSTS = ('sharly-chess.com', 'www.sharly-chess.com')
+#: The hosts of the project a page is allowed to open on top of those.
+PROJECT_HOSTS = ('discord.gg',)
 
 
 class PluginAdminController(BaseAdminController):
@@ -92,6 +94,7 @@ class PluginAdminController(BaseAdminController):
             'plugins': cls._sorted_plugins(),
             'selected_plugin': plugin,
             'embedded': embedded,
+            'discord_url': SharlyChessConfig().discord_url,
         }
         if embedded:
             # Displayed in the window of the application, which has a theme of
@@ -228,7 +231,11 @@ class PluginAdminController(BaseAdminController):
         otherwise replace the page with no way back."""
         hostname = urlparse(url).hostname
         local_hostname = urlparse(SharlyChessConfig().local_url).hostname
-        if hostname in DOCUMENTATION_HOSTS or hostname == local_hostname:
+        if (
+            hostname in DOCUMENTATION_HOSTS
+            or hostname in PROJECT_HOSTS
+            or hostname == local_hostname
+        ):
             open_url(url)
         else:
             logger.warning('Refused to open the URL [%s].', url)

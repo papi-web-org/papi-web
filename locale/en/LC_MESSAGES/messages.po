@@ -636,10 +636,6 @@ msgstr ""
 msgid "A pairing number between 1 and {max} is expected."
 msgstr ""
 
-#, python-format
-msgid "The result of this game is not taken into account for the final standings because at least one of the players did not play 50%% of the games (FIDE 6.6)."
-msgstr ""
-
 msgid "A player starts every round with these points added to those they have scored. They only are used for pairing, never for ranking, and are not part of the results submitted for rating."
 msgstr ""
 
@@ -681,10 +677,6 @@ msgid "A set named [{name}] already exists. Tick the overwrite option to replace
 msgstr ""
 
 msgid "A set with this name already existe."
-msgstr ""
-
-#, python-format
-msgid "The result of this match is not taken into account for the final standings because at least one of the teams did not play 50%% of the matches (FIDE 6.6)."
 msgstr ""
 
 msgid "A team that withdrew or was expelled having completed less than half of its matches is not ranked, and its matches are annulled: they no longer count in the other teams' scores and tie-breaks."
@@ -993,9 +985,6 @@ msgid "All players are paired."
 msgstr ""
 
 msgid "All players marked as \"Present\"."
-msgstr ""
-
-msgid "All plugins"
 msgstr ""
 
 msgid "All present *** ALL TEAMS PRESENT"
@@ -3613,10 +3602,6 @@ msgstr "Fed."
 msgid "Federation"
 msgstr ""
 
-#, python-format
-msgid "Federation (%(federation)s)"
-msgstr ""
-
 msgid "Federation distribution (counted opponents)"
 msgstr ""
 
@@ -4293,9 +4278,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Installed [{lib}]."
-msgstr ""
-
-msgid "Installed plugins"
 msgstr ""
 
 msgid "Installing a plugin makes its features available in the whole application. Every event then enables the plugins it needs, from the configuration screen of the event, so that each event only shows what it uses."
@@ -5247,6 +5229,9 @@ msgid "Natural (pairing order)"
 msgstr ""
 
 msgid "Nauru"
+msgstr ""
+
+msgid "Need a plugin of your own?"
 msgstr ""
 
 msgid "Need help?"
@@ -8348,6 +8333,9 @@ msgstr ""
 msgid "Tajikistan"
 msgstr ""
 
+msgid "Talk to us on Discord"
+msgstr ""
+
 msgid "Tanzania"
 msgstr ""
 
@@ -8660,6 +8648,9 @@ msgstr ""
 msgid "The event type cannot be changed after creation."
 msgstr ""
 
+msgid "The features your federation, your software or your events need can be added to Sharly Chess as a plugin."
+msgstr ""
+
 msgid "The file is not a valid template archive (expected a zipped file)."
 msgstr ""
 
@@ -8927,6 +8918,14 @@ msgid "The ratings in descending order."
 msgstr ""
 
 msgid "The related objects will also be deleted:"
+msgstr ""
+
+#, python-format
+msgid "The result of this game is not taken into account for the final standings because at least one of the players did not play 50%% of the games (FIDE 6.6)."
+msgstr ""
+
+#, python-format
+msgid "The result of this match is not taken into account for the final standings because at least one of the teams did not play 50%% of the matches (FIDE 6.6)."
 msgstr ""
 
 msgid "The roster cap cannot be smaller than the team-match size."
@@ -9713,10 +9712,6 @@ msgid "Two-sided (foldable)"
 msgstr ""
 
 msgid "Type"
-msgstr ""
-
-#, python-format
-msgid "Type (%(types)s)"
 msgstr ""
 
 msgid "Type A (simple preferences)"

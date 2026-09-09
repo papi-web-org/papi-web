@@ -1605,7 +1605,7 @@ class SharlyChessServerToga(toga.App):
 
     @staticmethod
     def _open_discord(widget):
-        webbrowser.open('https://discord.gg/ezvxaCwUmw')
+        webbrowser.open(SharlyChessConfig().discord_url)
 
     @staticmethod
     def _open_mail(widget):
