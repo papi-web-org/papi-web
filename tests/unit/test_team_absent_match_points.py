@@ -2,12 +2,9 @@
 
 A team that forfeits its whole match, or is left unpaired as absent,
 takes the tournament's absence match points (``mp_zpb``, stored under
-``ZERO_POINT_BYE``) rather than the score of a match played and lost.
-The FFE cups need it: there a match lost over the board is worth 1 point
-and a match lost by forfeit 0.
-
-The value defaults to the Loss value, which is what such a team scored
-before it could be set.
+``ZERO_POINT_BYE``), and defaults to the Loss value when none is set.
+The FFE cups need the distinction: there a match lost over the board is
+worth 1 match point and a match lost by forfeit 0.
 """
 
 from unittest import TestCase

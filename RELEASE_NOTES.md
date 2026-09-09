@@ -38,6 +38,7 @@
 - The team ranking counts forfeited matches in a new **F** column (5.0.4)
 - Fix: Molter tournaments no longer ask for match-point values they never use (5.0.4)
 - Fix: the lineup editor groups the rounds sharing a lineup again (5.0.4)
+- Fix: a round taking the previous round's lineup now takes the one it played (5.0.4)
 
 ## Championships
 

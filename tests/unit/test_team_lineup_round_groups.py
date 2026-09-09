@@ -1,12 +1,10 @@
-"""The lineups modal groups its round buttons on the lineup each
-round shows, whatever pairs the rounds.
+"""The lineups modal groups its round buttons into runs of rounds
+sharing one lineup.
 
-The grouping used to be read off the "use the previous round's lineup"
-box, and a paired round always opened a group of its own. Systems that
-pair every round up front (a round-robin, a Scheveningen table, a
-Molter table) then gave every round a button group of its own, however
-alike the rounds were. These tests state the grouping for a system that
-pairs one round at a time and for the three that pair them all.
+A paired round goes by what stands on its boards, a round yet to be
+paired by where its lineup comes from. These tests state the grouping
+for a system that pairs one round at a time (Swiss) and for the three
+that pair every round up front (round-robin, Scheveningen, Molter).
 """
 
 from unittest import TestCase
@@ -21,6 +19,7 @@ from database.sqlite.event.event_store import (
     StoredPlayer,
     StoredTeam,
     StoredTournamentPlayer,
+    set_stored_fields,
 )
 from tests.test_config import TestUtils
 from utils.enum import EventType, Result
@@ -218,3 +217,51 @@ class TeamLineupRoundGroupsTestCase(TestCase):
         self.assertEqual(
             _round_groups(tournament, self._team(tournament)), [[1, 2], [3]]
         )
+
+    def test_team_swiss_lineup_of_its_own_opens_a_group(self) -> None:
+        """A round still to be paired goes by where its line-up comes
+        from: round 3 stores one of its own, so it opens a group the
+        rounds after it follow — even though it happens to seat the same
+        players in the same order as the round before."""
+        self._create('TEAM_SWISS_STANDARD', rounds=5, teams=8)
+        self._set_lineup(0, 3, [0, 1, 2, 3])
+        tournament = self._pair(1)
+        self.assertEqual(tournament.last_paired_round, 1)
+        self.assertEqual(
+            _round_groups(tournament, self._team(tournament)), [[1, 2], [3, 4, 5]]
+        )
+
+    def test_team_swiss_rounds_follow_a_paired_round_they_take_over(self) -> None:
+        """Round 1 is paired with its players in an order the roster does
+        not have, and nothing is stored for round 2. Round 2 still takes
+        round 1's line-up as far as the editor is concerned, so the two
+        stay in one group."""
+        self._create('TEAM_SWISS_STANDARD', rounds=3, teams=4)
+        tournament = self._pair(1)
+        team = self._team(tournament)
+        team_board = next(
+            tb
+            for tb in tournament.get_round_team_boards(1)
+            if team.id
+            in (tb.stored_team_board.team_a_id, tb.stored_team_board.team_b_id)
+        )
+        # Swap the team's players on its first two boards, so what stands
+        # on them differs from the roster order round 2 falls back to.
+        seats = []
+        for board in team_board.boards[:2]:
+            stored = board.stored_board
+            side = (
+                'white_player_id'
+                if stored.white_player_id in self.player_ids[0]
+                else 'black_player_id'
+            )
+            seats.append((stored, side, getattr(stored, side)))
+        with EventDatabase(EVENT_ID, write=True) as database:
+            for (stored, side, _own), (_o, _s, other_player_id) in (
+                (seats[0], seats[1]),
+                (seats[1], seats[0]),
+            ):
+                set_stored_fields(stored, **{side: other_player_id})
+                database.update_stored_board(stored)
+        tournament = self._load()
+        self.assertEqual(_round_groups(tournament, self._team(tournament)), [[1, 2, 3]])

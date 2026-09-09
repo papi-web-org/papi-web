@@ -308,7 +308,11 @@ class Team:
         if tournament.team_player_count is None:
             return []
         if round_ > 1:
-            return self.effective_round_lineup(round_ - 1)
+            return [
+                player
+                for player in self.effective_round_slots(round_)
+                if player is not None
+            ]
         return self.players[: tournament.team_player_count]
 
     def lineup_source(self, round_: int) -> str:
@@ -355,6 +359,13 @@ class Team:
         # ``board_count`` override is the base-lineup editor for a team not
         # yet in a tournament — that's always round-1 / roster semantics.
         if board_count is None and round_ > 1:
+            # Once the previous round is paired, its boards are its
+            # lineup — the boards the team left empty included. Taking
+            # the previous round's lineup means that one, not the roster
+            # the chain of stored lineups would fall back to.
+            previous_boards = self.round_board_slots(round_ - 1)
+            if previous_boards is not None:
+                return previous_boards
             return self.effective_round_slots(round_ - 1)
         roster = self.players[:n]
         for i, player in enumerate(roster):

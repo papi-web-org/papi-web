@@ -880,11 +880,17 @@ class TeamAdminController(BaseEventAdminController):
     ) -> list[list[dict[str, Any]]]:
         """Split the rounds into runs sharing one lineup.
 
-        Rounds are grouped on the lineup they show: a round joins the
-        run in progress when the same players stand on the same boards
-        as in the round before it. A paired round's lineup is whatever
-        is on its boards, so a whole tournament paired at once (a
-        round-robin) still groups the rounds a team plays alike.
+        A paired round's lineup is what stands on its boards, so it joins
+        the run in progress when the same players stand on the same
+        boards as in the round before — which is what groups the rounds
+        of a tournament paired all at once (a round-robin, a Scheveningen
+        or Molter table) instead of giving each one a run of its own.
+
+        A round still to be paired has no boards to read, so it goes by
+        where its lineup comes from: it joins the run while it takes the
+        previous round's lineup (the editor's "use the previous round's
+        lineup" box), and opens one as soon as it stores a lineup of its
+        own — which the rounds after it then follow.
         """
         groups: list[list[dict[str, Any]]] = []
         previous_slots: tuple[int | None, ...] | None = None
@@ -893,7 +899,11 @@ class TeamAdminController(BaseEventAdminController):
                 player.id if player is not None else None
                 for player in round_info['slots']
             )
-            if groups and slots == previous_slots:
+            if round_info['is_paired']:
+                continues_run = slots == previous_slots
+            else:
+                continues_run = round_info['lineup_source'] != 'explicit'
+            if groups and continues_run:
                 groups[-1].append(round_info)
             else:
                 groups.append([round_info])
