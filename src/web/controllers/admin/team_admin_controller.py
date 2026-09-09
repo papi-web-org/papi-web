@@ -899,10 +899,7 @@ class TeamAdminController(BaseEventAdminController):
                 player.id if player is not None else None
                 for player in round_info['slots']
             )
-            if round_info['is_paired']:
-                continues_run = slots == previous_slots
-            else:
-                continues_run = round_info['lineup_source'] != 'explicit'
+            continues_run = slots == previous_slots
             if groups and continues_run:
                 groups[-1].append(round_info)
             else:
