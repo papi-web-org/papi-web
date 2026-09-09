@@ -85,8 +85,8 @@ msgstr "Tournoi sur le site Chess-Results.com"
 msgid "Tournament successfully uploaded."
 msgstr "Le tournoi a été mis en ligne avec succès."
 
-msgid "Tournament upload failed, consult the Chess-Results.com modal for more details."
-msgstr "La mise en ligne du tournoi a échoué, consultez la modale Chess-Results.com pour plus d'informations."
+msgid "Tournament upload failed, consult Menu > Data Transfer > Chess-Results.com for more details."
+msgstr "La mise en ligne du tournoi a échoué, consultez Menu > Transfert de données > Chess-Results.com pour plus d'informations."
 
 msgid "Tournament upload has been planned."
 msgstr "La mise en ligne du tournoi a été planifiée."
