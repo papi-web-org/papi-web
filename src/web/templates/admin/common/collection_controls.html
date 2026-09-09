@@ -7,7 +7,7 @@
         {% include collection_card_controls_template %}
     {% elif collection.card.details or collection.list.details %}
         <div
-            class="form-check form-switch collection-details-toggle mb-0"
+            class="d-inline-flex align-items-center gap-2  form-switch collection-details-toggle mb-0"
             {{ macros.tooltip_attributes('info', _('Expand or collapse the details of every item.'), 'top') }}
         >
             <input

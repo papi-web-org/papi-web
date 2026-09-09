@@ -5,7 +5,7 @@
     <span
         class="badge tag-badge rounded-pill fw-normal d-inline-flex align-items-center gap-1 {{ class }}"
         style="background-color: {{ tag.color }}; color: {{ tag.text_color }};"
-    >{{ tag.name }}{% if count is not none %}<span class="opacity-75">({{ count }})</span>{% endif %}</span>
+    ><span>{{ tag.name }}</span>{% if count is not none %}<span class="opacity-75">({{ count }})</span>{% endif %}</span>
 {% endmacro %}
 
 {% macro tag_badges(tags, class='') %}

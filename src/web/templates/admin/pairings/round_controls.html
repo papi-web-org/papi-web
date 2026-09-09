@@ -14,7 +14,7 @@
                     hx-trigger="click, SC_Ctrl_Shift_ArrowLeft from:body"
                 {% endif %}
             >
-                <i class="bi bi-skip-backward-fill position-relative" style="top: 2px;"></i>
+                <i class="bi bi-skip-backward-fill position-relative round-control-icon"></i>
             </button>
         </span>
         <span {{ macros.tooltip_attributes('info', _('Previous round'), 'bottom') }}>
@@ -32,7 +32,7 @@
                     hx-trigger="click, SC_Shift_ArrowLeft from:body"
                 {% endif %}
             >
-                <i class="bi bi-play-fill position-relative" style="top: 2px;"></i>
+                <i class="bi bi-play-fill position-relative round-control-icon"></i>
             </button>
         </span>
         <select
@@ -86,7 +86,7 @@
                     hx-trigger="click, SC_Shift_ArrowRight from:body"
                 {% endif %}
             >
-                <i class="bi-play-fill position-relative" style="top: 2px;"></i>
+                <i class="bi-play-fill position-relative round-control-icon"></i>
             </button>
         </span>
         <span {{ macros.tooltip_attributes('info', _('Current round'), 'bottom') }}>
@@ -107,7 +107,7 @@
                     hx-trigger="click, SC_Ctrl_Shift_ArrowRight from:body"
                 {% endif %}
             >
-                <i class="bi bi-fast-forward-fill position-relative" style="top: 2px;"></i>
+                <i class="bi bi-fast-forward-fill position-relative round-control-icon"></i>
             </button>
         </span>
     </div>
