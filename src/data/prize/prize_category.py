@@ -152,7 +152,8 @@ class PrizeCategory:
         return [
             tournament_player
             for tournament_player in self.prize_group.tournament.tournament_players
-            if self.player_matches_criteria(tournament_player)
+            if not tournament_player.is_excluded_from_standings
+            and self.player_matches_criteria(tournament_player)
         ]
 
     def ranking_metric(self, tournament_player: TournamentPlayer) -> float | None:

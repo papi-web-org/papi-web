@@ -13,6 +13,11 @@
     opacity: 0.3;
 }
 
+.rankings-table tr.excluded-from-standings > td {
+    text-decoration: line-through;
+    color: var(--bs-secondary-color);
+}
+
 .nav-icon-badge {
     bottom: 4px;
     display: flex;

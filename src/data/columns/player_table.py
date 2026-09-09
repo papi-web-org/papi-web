@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any
+from typing import Any, override
 
 from common.i18n import _
 from data.player import TournamentPlayer
@@ -13,6 +13,18 @@ class TournamentPlayerTableColumn(Column[TournamentPlayer], ABC):
 
     def __init__(self, usage: ColumnUsage):
         self.usage = usage
+
+    @property
+    def is_standing(self) -> bool:
+        """Whether the column shows a place in the standings (a rank, the
+        score, a tie-break) rather than a fact about the player or their
+        games. A participant dropped from the standings (FIDE 6.6) keeps
+        its row in the crosstable, with these cells left empty."""
+        return False
+
+    @override
+    def is_cell_blank_for(self, object_: TournamentPlayer) -> bool:
+        return self.is_standing and object_.is_excluded_from_standings
 
 
 class CheckinColumn(TournamentPlayerTableColumn):
@@ -50,6 +62,11 @@ class NumberColumn(TournamentPlayerTableColumn):
 
 class RankColumn(TournamentPlayerTableColumn):
     @property
+    @override
+    def is_standing(self) -> bool:
+        return True
+
+    @property
     def header_content(self) -> str:
         return _('Rk. *** RANK COLUMN HEADER')
 
@@ -62,6 +79,11 @@ class RankColumn(TournamentPlayerTableColumn):
 
 
 class ExAequoRankColumn(TournamentPlayerTableColumn):
+    @property
+    @override
+    def is_standing(self) -> bool:
+        return True
+
     @property
     def header_content(self) -> str:
         return _('Rk. *** RANK COLUMN HEADER')
@@ -77,6 +99,11 @@ class ExAequoRankColumn(TournamentPlayerTableColumn):
 
 
 class RankOverallColumn(TournamentPlayerTableColumn):
+    @property
+    @override
+    def is_standing(self) -> bool:
+        return True
+
     @property
     def header_content(self) -> str:
         return _('Rk. O. *** RANK OVERALL COLUMN HEADER')
@@ -194,6 +221,11 @@ class ClubColumn(TournamentPlayerTableColumn):
 
 class PointsColumn(TournamentPlayerTableColumn):
     @property
+    @override
+    def is_standing(self) -> bool:
+        return True
+
+    @property
     def header_content(self) -> str:
         return _('Pts *** POINTS COLUMN HEADER')
 
@@ -242,6 +274,11 @@ class RoundColumn(TournamentPlayerTableColumn):
         super().__init__(usage)
         self.round = round_
 
+    @override
+    def is_cell_struck_for(self, object_: TournamentPlayer) -> bool:
+        pairing = object_.pairings_by_round.get(self.round)
+        return pairing is not None and object_.game_is_annulled(pairing)
+
     @property
     def header_content(self) -> str:
         return _('R {round} *** ROUND COLUMN HEADER').format(round=self.round)
@@ -283,6 +320,11 @@ class TieBreakColumn(TournamentPlayerTableColumn):
         super().__init__(usage)
         self.tournament = tournament
         self.index = index
+
+    @property
+    @override
+    def is_standing(self) -> bool:
+        return True
 
     @property
     def header_content(self) -> str:

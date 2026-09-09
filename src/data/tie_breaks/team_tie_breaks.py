@@ -44,6 +44,7 @@ from data.tie_breaks.options import (
     TeamScoreTieBreakOption,
 )
 from data.tie_breaks.team_records import (
+    TeamMatchRecord,
     TeamRecord,
     adjust_opponent_total,
     dummy_opponent_score,
@@ -286,6 +287,14 @@ class TeamTieBreakContext:
     # regular matches for the opponent-based tie-breaks, rather than
     # substituting the dummy opponent of Art. 16.
     predetermined_pairings: bool = False
+    # Teams dropped from the final standings (FIDE 6.6 round-robin rule):
+    # their matches don't count towards any other team's tie-breaks.
+    excluded_team_ids: frozenset[int] = frozenset()
+
+    def match_counts_for_tie_breaks(self, match: 'TeamMatchRecord') -> bool:
+        """False when *match* is against a team excluded from the final
+        standings — that match must not feed the opponent's tie-breaks."""
+        return match.opponent_id not in self.excluded_team_ids
 
     @property
     def max_score_per_match(self) -> dict[ScoreType, float]:
@@ -526,6 +535,8 @@ class ExtendedSonnebornBergerTeamTieBreak(TeamTieBreak):
         forfeits_are_played = tournament_context.predetermined_pairings
         for match in team_record.matches:
             if match.round_ > after_round:
+                continue
+            if not tournament_context.match_counts_for_tie_breaks(match):
                 continue
             if match.unplayed and not (
                 forfeits_are_played and match.opponent_id is not None

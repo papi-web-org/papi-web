@@ -204,6 +204,8 @@ def _scoring_system(tournament: Tournament) -> dict[str, float] | None:
 def _build_players(tournament: Tournament) -> list[dict[str, Any]]:
     players = []
     for player in tournament.tournament_players_by_pairing_number.values():
+        if player.is_excluded_from_standings:
+            continue
         p: dict[str, Any] = {
             'pairingNumber': player.pairing_number,
             'lastName': player.last_name,
@@ -251,6 +253,10 @@ def _build_pairings(tournament: Tournament) -> list[dict[str, Any]]:
     for round_ in range(1, tournament.current_round + 1):
         for board in tournament.get_round_boards(round_):
             black = board.black_tournament_player
+            if board.white_tournament_player.is_excluded_from_standings or (
+                black is not None and black.is_excluded_from_standings
+            ):
+                continue
 
             entry: dict[str, Any] = {
                 'round': round_,
@@ -280,6 +286,8 @@ def _build_rankings(tournament: Tournament) -> list[dict[str, Any]]:
     if ranking_round > 0:
         tournament.compute_tournament_player_ranks(after_round=ranking_round)
         for rank, player in tournament.tournament_players_by_rank.items():
+            if player.is_excluded_from_standings:
+                continue
             standings.append(
                 {
                     'rank': rank,

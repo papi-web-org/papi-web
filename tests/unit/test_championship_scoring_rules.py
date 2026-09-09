@@ -29,13 +29,20 @@ from data.championship.scoring import (
 )
 
 
+class FakeFieldPlayer:
+    """A ranked entrant of a source tournament: only the field size and the
+    fact that it counts towards it matter here."""
+
+    is_excluded_from_standings = False
+
+
 class FakeTournament:
     def __init__(self, field_size=0):
         self._field_size = field_size
 
     @property
     def tournament_players(self):
-        return [None] * self._field_size
+        return [FakeFieldPlayer() for _ in range(self._field_size)]
 
     def ensure_tournament_player_ranks_computed(self):
         pass
