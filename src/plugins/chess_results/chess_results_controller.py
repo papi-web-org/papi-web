@@ -206,8 +206,8 @@ class ChessResultsController(BaseEventAdminController):
             Message.error(
                 request,
                 _(
-                    'Tournament upload failed, consult the '
-                    'Chess-Results.com modal for more details.'
+                    'Tournament upload failed, consult Menu > Data '
+                    'Transfer > Chess-Results.com for more details.'
                 ),
             )
         else:

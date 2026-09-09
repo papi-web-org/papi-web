@@ -86,8 +86,9 @@
                         {% if not editable %}
                             <div class="alert alert-info py-1 px-2 small mb-2">
                                 {{ _(
-                                    'This round has been paired, so its lineup is what stands on its boards. If you really want to edit this lineup: go to the Pairings tab, select round #%(round)d and open this modal again.',
-                                    round=round_num
+                                    'This round has been paired, so its line-up is '
+                                    'what stands on its boards. You can still edit '
+                                    'the line-up from the Pairings tab.'
                                 ) }}
                             </div>
                         {% endif %}
