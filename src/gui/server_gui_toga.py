@@ -53,6 +53,7 @@ from common.updaters.windows_updater import WindowsUpdater
 from database.sqlite.config.config_database import ConfigDatabase
 from gui.gui_logger import GUILogHandler
 from gui.selection_popup import limit_popup_height
+from gui.web_view_background import show_window_through
 from utils import Utils
 from utils.program_variables import ProgramVar
 from web.server_engine import ServerEngine
@@ -463,6 +464,7 @@ class SharlyChessServerToga(toga.App):
             style=Pack(flex=1), on_webview_load=self._on_logview_load
         )
         self.plugins_web_view = toga.WebView(style=Pack(flex=1, margin_top=10))
+        show_window_through(self.plugins_web_view)
 
         # Window class used instead of MainWindow to avoid having a toolbar
         # See https://github.com/beeware/toga/issues/1870#issuecomment-2272534628
