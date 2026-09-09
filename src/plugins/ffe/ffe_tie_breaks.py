@@ -861,7 +861,7 @@ class GamePointsForTieBreak(TeamTieBreak):
 
     @staticmethod
     def static_name() -> str:
-        return _('Game points "for"')
+        return _('Game points "for" ')
 
     @staticmethod
     def available_options() -> list[type[TieBreakOption]]:
