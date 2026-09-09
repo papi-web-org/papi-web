@@ -304,7 +304,7 @@ msgstr "Fonctionnalités spécifiques à la Fédération Française (recherche d
 msgid "Fédération Française des Échecs"
 msgstr "Fédération Française des Échecs"
 
-msgid "Game points \"for\""
+msgid "Game points \"for\" "
 msgstr "Points de partie « pour »"
 
 msgid "Game points differential"
@@ -693,14 +693,14 @@ msgstr "Tournoi sur le site de la FFE"
 msgid "Tournament successfully uploaded."
 msgstr "Le tournoi a été mis en ligne avec succès."
 
-msgid "Tournament upload failed, consult the FFE modal for more details."
-msgstr "La mise en ligne du tournoi a échoué, consultez la modale FFE pour plus d'informations."
+msgid "Tournament upload failed, consult Menu > Data Transfer > FFE for more details."
+msgstr "La mise en ligne du tournoi a échoué, consultez Menu > Transfert de données > FFE pour plus d'informations."
 
 msgid "Tournament upload has been planned."
 msgstr "La mise en ligne du tournoi a été planifiée."
 
-msgid "Tournament visibility could not be set, consult the FFE modal for more details."
-msgstr "La visibilité du tournoi n'a pas pu être modifiée, consultez la modale FFE pour plus d'informations."
+msgid "Tournament visibility could not be set, consult Menu > Data Transfer > FFE for more details."
+msgstr "La visibilité du tournoi n'a pas pu être modifiée, consultez Menu > Transfert de données > FFE pour plus d'informations."
 
 msgid "Tournament visibility could not be set."
 msgstr "La visibilité du tournoi n'a pas pu être configurée."
