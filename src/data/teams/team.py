@@ -110,11 +110,11 @@ class Team:
 
     def player_round_label(self, player: 'Player', round_: int) -> str | None:
         """Fixed-table code for ``player`` this round — the team letter plus
-        the player's 1-based line-up slot (e.g. ``A1``, ``B3``). Derived from
+        the player's 1-based lineup slot (e.g. ``A1``, ``B3``). Derived from
         the player's actual seat in :meth:`effective_round_slots`, so it
         follows the player wherever they end up (manual re-pairing included),
         independent of which physical board they sit at. ``None`` when the
-        team has no letter or the player isn't in this round's line-up."""
+        team has no letter or the player isn't in this round's lineup."""
         letter = self.pairing_label
         if letter is None:
             return None
@@ -351,11 +351,11 @@ class Team:
             # No tournament yet: the base lineup is the whole roster
             # (the roster size stands in for the board count).
             return list(self.players)
-        if tournament.team_player_count is None:
-            return []
-        if round_ > 1:
-            return self.effective_round_lineup(round_ - 1)
-        return self.players[: tournament.team_player_count]
+        return [
+            player
+            for player in self.effective_round_slots(round_)
+            if player is not None
+        ]
 
     def lineup_source(self, round_: int) -> str:
         """How *round_*'s effective lineup is obtained: ``'explicit'`` when
@@ -401,6 +401,13 @@ class Team:
         # ``board_count`` override is the base-lineup editor for a team not
         # yet in a tournament — that's always round-1 / roster semantics.
         if board_count is None and round_ > 1:
+            # Once the previous round is paired, its boards are its
+            # lineup — the boards the team left empty included. Taking
+            # the previous round's lineup means that one, not the roster
+            # the chain of stored lineups would fall back to.
+            previous_boards = self.round_board_slots(round_ - 1)
+            if previous_boards is not None:
+                return previous_boards
             return self.effective_round_slots(round_ - 1)
         roster = self.players[:n]
         for i, player in enumerate(roster):
@@ -419,25 +426,13 @@ class Team:
         tournament = self.tournament
         if tournament is None or tournament.team_player_count is None:
             return None
-        team_board = next(
-            (
-                tb
-                for tb in tournament.get_round_team_boards(round_)
-                if tb.stored_team_board.team_b_id is not None
-                and self.id
-                in (
-                    tb.stored_team_board.team_a_id,
-                    tb.stored_team_board.team_b_id,
-                )
-            ),
-            None,
-        )
+        team_board = tournament.team_match_by_team_and_round.get((self.id, round_))
         if team_board is None:
             return None
         n = tournament.team_player_count
         slots: list['Player | None'] = [None] * n
         players_by_id = self.event.players_by_id
-        # Which line-up slot each board seats this team's player on. A
+        # Which lineup slot each board seats this team's player on. A
         # match seats slot i on board i, but a table that rotates one
         # team around the other does not.
         slot_by_board_index = tournament.pairing_variation.engine.team_board_slots(
@@ -459,11 +454,15 @@ class Team:
 
     def lineup_out_of_roster_order(self, round_: int) -> bool:
         """True iff *round_*'s board players (holes skipped) are not in
-        ascending roster order. Used to warn when a line-up reshuffles
-        players relative to the roster."""
+        ascending roster order. Used to warn when a lineup reshuffles
+        players relative to the roster. Once the round is paired its
+        boards are the source of truth, as in
+        :meth:`round_board_slots`."""
+        slots = self.round_board_slots(round_) or self.effective_round_slots(round_)
+        lineup = [player for player in slots if player is not None]
         roster_index = {player.id: i for i, player in enumerate(self.players)}
         last = -1
-        for player in self.effective_round_lineup(round_):
+        for player in lineup:
             idx = roster_index.get(player.id)
             if idx is None:
                 continue
@@ -594,9 +593,9 @@ class Team:
         database: EventDatabase,
     ):
         """Replace the team's lineup for the given round. Position in
-        *player_ids* determines the board index (0-based). ``None``
-        at index i = hole on board i (no row stored for that index,
-        producing a gap in the lineup's index sequence)."""
+        *player_ids* determines the board index (0-based). ``None`` at
+        index i = hole on board i, stored as a row with no player, so a
+        lineup that fields nobody is a lineup all the same."""
         entries = [
             StoredTeamRoundLineupEntry(
                 team_id=self.id,
@@ -605,7 +604,6 @@ class Team:
                 index=index,
             )
             for index, player_id in enumerate(player_ids)
-            if player_id is not None
         ]
         database.replace_team_round_lineup(self.id, round_, entries)
         self.stored_team.stored_round_lineups[round_] = entries

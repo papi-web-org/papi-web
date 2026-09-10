@@ -100,9 +100,6 @@ msgstr "Format invalide (attendu : {format})."
 msgid "Loading more results…"
 msgstr "Plus de résultats en cours de chargement…"
 
-msgid "Match lost by forfeit, counted as 0 match points."
-msgstr "Match perdu par forfait, compté 0 point de match."
-
 msgid "Max. teams per school:"
 msgstr "Max. d'équipes par établissement :"
 
@@ -212,4 +209,7 @@ msgid "{n} board forfeited above a board on which a game was played, counted as 
 msgid_plural "{n} boards forfeited above a board on which a game was played, counted as -1 each."
 msgstr[0] "{n} échiquier forfait au-dessus d'un échiquier sur lequel une partie a été jouée, compté -1."
 msgstr[1] "{n} échiquiers forfaits au-dessus d'un échiquier sur lequel une partie a été jouée, comptés -1 chacun."
+
+#~ msgid "Match lost by forfeit, counted as 0 match points."
+#~ msgstr "Match perdu par forfait, compté 0 point de match."
 

@@ -851,7 +851,7 @@ class MatchSheetsPrintDocument(PrintDocument):
         fixed-table (Molter) systems; empty otherwise. Used only as the
         fallback code for an empty seat (a hole), to show which player is
         missing on a forfeit board — a seated player's code comes from their
-        own line-up slot."""
+        own lineup slot."""
         from data.pairings.fixed_table import FixedTablePairingEngine
 
         engine = self.tournament.pairing_variation.engine

@@ -1155,16 +1155,24 @@ class TrfTournamentImporter(FileTournamentImporter):
                 if oodo_round != round_:
                     continue
                 lineup_by_team.setdefault(team_id, slot_map)
+            # A lineup holds a row per board, with no player on the ones
+            # the team left empty — so a team that fielded nobody has a
+            # lineup of its own rather than one taken from the round
+            # before.
+            boards_per_match = stored_tournament.team_player_count or 0
             for team_id, slot_map in lineup_by_team.items():
-                ordered = sorted(slot_map.items(), key=lambda item: item[1])
+                slots: list[int | None] = [None] * boards_per_match
+                for player_id, slot in slot_map.items():
+                    if 0 <= slot < boards_per_match:
+                        slots[slot] = player_id
                 lineup_entries = [
                     StoredTeamRoundLineupEntry(
                         team_id=team_id,
                         round_=round_,
                         player_id=player_id,
-                        index=slot,
+                        index=index,
                     )
-                    for player_id, slot in ordered
+                    for index, player_id in enumerate(slots)
                 ]
                 database.replace_team_round_lineup(team_id, round_, lineup_entries)
 
