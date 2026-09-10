@@ -361,14 +361,7 @@ class _FfeTeamCupRuleSet(RuleSet, ABC):
         tournament = team.tournament
         if tournament is None:
             return None
-        for team_board in tournament.get_round_team_boards(round_):
-            stored = team_board.stored_team_board
-            if (
-                team.id in (stored.team_a_id, stored.team_b_id)
-                and not team_board.is_bye
-            ):
-                return team_board
-        return None
+        return tournament.team_match_by_team_and_round.get((team.id, round_))
 
     @staticmethod
     def _team_board_breakdown(

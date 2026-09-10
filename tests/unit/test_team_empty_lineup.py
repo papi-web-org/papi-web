@@ -242,3 +242,49 @@ class TeamByeRecordsTestCase(_TeamLineupHarness):
         self.assertEqual(match.own_mp, self.PAB_MP)
         self.assertEqual(match.own_mp, standings_mp)
         self.assertFalse(match.voluntary_unplayed)
+
+
+@pytest.mark.unit
+class TeamMatchIndexTestCase(_TeamLineupHarness):
+    """The index of each team's match per round follows the pairings.
+
+    It is what every lineup read looks a team's match up in, so it has
+    to be rebuilt whenever a round is paired, unpaired or byed.
+    """
+
+    def test_pairing_a_round_indexes_both_teams(self) -> None:
+        tournament = self._load()
+        self.assertEqual(tournament.team_match_by_team_and_round, {})
+        self.assertEqual(tournament.generate_round_pairings(1), '')
+        tournament = self._load()
+        index = tournament.team_match_by_team_and_round
+        self.assertEqual(len(index), TEAMS)
+        for team_id in self.team_ids:
+            team_board = index[(team_id, 1)]
+            stb = team_board.stored_team_board
+            self.assertIn(team_id, (stb.team_a_id, stb.team_b_id))
+            self.assertEqual(team_board.round, 1)
+
+    def test_unpairing_a_match_drops_both_its_teams(self) -> None:
+        tournament = self._load()
+        self.assertEqual(tournament.generate_round_pairings(1), '')
+        tournament = self._load()
+        self.assertEqual(len(tournament.team_match_by_team_and_round), TEAMS)
+        team_board = tournament.get_round_team_boards(1)[0]
+        stb = team_board.stored_team_board
+        assert stb.team_b_id is not None
+        unpaired = (stb.team_a_id, stb.team_b_id)
+        tournament.unpair_team_board(team_board)
+        index = tournament.team_match_by_team_and_round
+        self.assertEqual(len(index), TEAMS - 2)
+        for team_id in unpaired:
+            self.assertIsNone(index.get((team_id, 1)))
+
+    def test_a_bye_is_not_a_match(self) -> None:
+        """A bye envelope has no opponent and no boards, so the team has
+        no match that round."""
+        team_id = self.team_ids[0]
+        with EventDatabase(EVENT_ID, write=True) as database:
+            self._team(self._load(), 0).set_round_bye(1, TeamByeType.ZPB, database)
+        tournament = self._load()
+        self.assertIsNone(tournament.team_match_by_team_and_round.get((team_id, 1)))

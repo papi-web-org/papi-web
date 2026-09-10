@@ -1106,20 +1106,9 @@ class TeamAdminController(BaseEventAdminController):
             )
             return
 
-        # Find the team's team_board for this round (skip byes/EXEMPT —
-        # those have no opponent and don't need slot reconciliation).
-        team_board = next(
-            (
-                tb
-                for tb in tournament.get_round_team_boards(round_)
-                if (
-                    tb.stored_team_board.team_a_id == team.id
-                    or tb.stored_team_board.team_b_id == team.id
-                )
-                and tb.stored_team_board.team_b_id is not None
-            ),
-            None,
-        )
+        # Byes / EXEMPT are not in the index: they have no opponent, and
+        # no boards whose slots would need reconciling.
+        team_board = tournament.team_match_by_team_and_round.get((team.id, round_))
         if team_board is None:
             # Team has a bye / no real match this round — just persist
             # the lineup; no boards to reconcile.

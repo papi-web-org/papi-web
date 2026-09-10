@@ -380,19 +380,7 @@ class Team:
         tournament = self.tournament
         if tournament is None or tournament.team_player_count is None:
             return None
-        team_board = next(
-            (
-                tb
-                for tb in tournament.get_round_team_boards(round_)
-                if tb.stored_team_board.team_b_id is not None
-                and self.id
-                in (
-                    tb.stored_team_board.team_a_id,
-                    tb.stored_team_board.team_b_id,
-                )
-            ),
-            None,
-        )
+        team_board = tournament.team_match_by_team_and_round.get((self.id, round_))
         if team_board is None:
             return None
         n = tournament.team_player_count

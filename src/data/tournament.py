@@ -1542,6 +1542,7 @@ class Tournament:
             'teams_by_pairing_number',
             'team_boards_by_id',
             'team_boards_by_round',
+            'team_match_by_team_and_round',
             'team_pairing_blocks',
         )
 
@@ -1567,6 +1568,25 @@ class Tournament:
 
     def get_round_team_boards(self, round_: int) -> list[TeamBoard]:
         return self.team_boards_by_round.get(round_, [])
+
+    @cached_property
+    def team_match_by_team_and_round(self) -> dict[tuple[int, int], TeamBoard]:
+        """``(team_id, round)`` → the team's match that round, byes left
+        out: a bye envelope has no opponent and no boards to read a
+        lineup from. Both of a match's teams are keyed to it.
+
+        Looking a team's match up runs on every lineup read, so it is an
+        index rather than a scan of the round's matches. What it keys on
+        is fixed when a match is created, and the paths that pair, unpair
+        or bye a team all clear the team cache."""
+        matches: dict[tuple[int, int], TeamBoard] = {}
+        for team_board in self.team_boards_by_id.values():
+            stb = team_board.stored_team_board
+            if stb.team_b_id is None:
+                continue
+            matches.setdefault((stb.team_a_id, team_board.round), team_board)
+            matches.setdefault((stb.team_b_id, team_board.round), team_board)
+        return matches
 
     def team_tie_break_context(self) -> 'TeamTieBreakContext':
         """Snapshot the tournament parameters team tie-breaks need."""
