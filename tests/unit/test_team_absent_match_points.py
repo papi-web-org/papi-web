@@ -248,7 +248,7 @@ class TeamAbsentMatchPointsTestCase(TestCase):
 
     def test_a_team_left_unpaired_as_absent_scores_the_absence_value(self) -> None:
         """The other absence: no match at all, the team marked absent for
-        the round."""
+        the round. It is tallied as an absence too, not as a loss."""
         self._create(_CUP_MATCH_POINTS)
         absent_id = self.team_ids[0]
         team: Team = self._load().event.teams_by_id[absent_id]
@@ -256,3 +256,7 @@ class TeamAbsentMatchPointsTestCase(TestCase):
             team.set_round_bye(1, TeamByeType.ZPB, database)
         tournament = self._load()
         self.assertEqual(self._mp(tournament, absent_id), 0.0)
+        row = self._row(tournament, absent_id)
+        self.assertEqual(row['forfeits'], 1)
+        self.assertEqual(row['losses'], 0)
+        self.assertEqual(row['played'], 1)

@@ -858,8 +858,10 @@ class Tournament:
                 'wins': 0,
                 'draws': 0,
                 'losses': 0,
-                # A match the team forfeited outright counts here rather
-                # than as a loss, so a loss is one taken over the board.
+                # A round the team was absent for counts here rather than
+                # as a loss, so a loss is one taken over the board — a
+                # match it forfeited outright, and a round it was left
+                # unpaired as absent for.
                 'forfeits': 0,
             }
         win_mp = match_points.get(Result.WIN, 2.0)
@@ -943,7 +945,9 @@ class Tournament:
                         # forfeited game, scored at the absent-board game
                         # point value (the gp_zpb override, otherwise 0).
                         ent['gp'] += team_player_count * absent_gp_per_player
-                        ent['losses'] += 1
+                        # An absent team is absent whether the round was
+                        # paired before it went missing or not.
+                        ent['forfeits'] += 1
                     case TeamByeType.HPB:
                         ent['mp'] += draw_mp
                         ent['gp'] += team_player_count * draw_gp_per_player
