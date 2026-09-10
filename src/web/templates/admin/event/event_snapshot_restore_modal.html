@@ -1,0 +1,81 @@
+{% import '/common/macros.j2' as macros with context %}
+{% import '/admin/common/macros.j2' as admin_macros with context %}
+
+<div id="event-snapshot-restore-modal" class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">{{ _('Restore a backup') }}</h2>
+        </div>
+        <div class="modal-body">
+            <h4>{{ snapshot.taken_at_str }} &mdash; {{ snapshot.label }}</h4>
+            {% if snapshot.tournaments %}
+                <ul class="mb-3">
+                    {% for tournament in snapshot.tournaments %}
+                        <li>
+                            <span class="fw-semibold">{{ tournament.name }}</span>
+                            {% if tournament.current_round %}
+                                {{ _('Round {round} of {rounds}').format(
+                                    round=tournament.current_round,
+                                    rounds=tournament.rounds,
+                                ) }}
+                                {% if tournament.has_results %}
+                                    <span class="text-secondary">
+                                        &mdash;
+                                        {{ _('{results} of {boards} results').format(
+                                            results=tournament.results,
+                                            boards=tournament.boards,
+                                        ) }}
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-secondary fst-italic">
+                                    {{ _('not started') }}
+                                </span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <div class="alert alert-warning" role="alert">
+                <i class="bi-exclamation-triangle-fill pe-1"></i>
+                {{ _('The event will be replaced by this backup.') }}
+                {% if event_is_accessible %}
+                    {{ _(
+                        'The state it is in now is kept as a backup first, so '
+                        'this can be undone.'
+                    ) }}
+                {% else %}
+                    {{ _(
+                        'This event could not be read, so there is nothing to keep '
+                        'of the state it is in now.'
+                    ) }}
+                {% endif %}
+            </div>
+            <form
+                id="modal-form"
+                hx-post="{{ url_for(
+                    'event-snapshot-restore',
+                    event_uniq_id=snapshots_event_uniq_id,
+                    snapshot_name=snapshot.file.name,
+                ) }}"
+                hx-target="body"
+                hx-indicator="#please-wait"
+            ></form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" data-bs-dismiss="modal" class="btn btn-secondary text-nowrap">
+                <i class="bi-x-circle-fill pe-1"></i>
+                {{ _('Cancel') }}
+            </button>
+            <button
+                id="snapshot-restore-button"
+                class="btn btn-danger text-nowrap"
+                type="submit"
+                form="modal-form"
+            >
+                <i class="bi-arrow-counterclockwise pe-1"></i>
+                {{ _('Restore') }}
+            </button>
+        </div>
+    </div>
+</div>

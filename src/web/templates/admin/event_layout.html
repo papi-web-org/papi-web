@@ -52,6 +52,16 @@
 {% endblock admin_nav %}
 
 {% block admin_content %}
+    {% if client.can_manage_events %}
+        <div
+            hx-get="{{ url_for(
+                'admin-event-backup-status', event_uniq_id=admin_event.uniq_id
+            ) }}"
+            hx-trigger="ws:snapshot-failed|{{ admin_event.uniq_id }} from:body, load"
+            hx-target="#backup-message"
+            hx-swap="innerHTML"
+        ></div>
+    {% endif %}
     {% for nav_id, nav_tab in nav_tabs.items() %}
         {% if 'submenu' in nav_tab %}
             {% for nav_id, nav_tab in nav_tab.submenu.items() %}

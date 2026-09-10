@@ -1,0 +1,262 @@
+{% import '/common/macros.j2' as macros with context %}
+{% import '/admin/common/macros.j2' as admin_macros with context %}
+
+{# Reached from a healthy event and from one whose file could not be read, so
+   nothing here goes through the loaded event. #}
+
+{% macro tournament_table(tournaments) %}
+    {# Not a Bootstrap `.table`: it brings its own background, which fights the
+       striped row the state sits in, and its own padding. #}
+    <table class="w-auto mb-0 small lh-sm">
+        <thead>
+            <tr class="text-secondary">
+                <th scope="col" class="fw-normal py-0 pe-3">{{ _('Tournament') }}</th>
+                <th scope="col" class="fw-normal py-0 pe-3 text-end">{{ _('Round') }}</th>
+                <th scope="col" class="fw-normal py-0 text-end">{{ _('Results') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tournament in tournaments %}
+                <tr>
+                    <th
+                        scope="row"
+                        class="fw-semibold py-0 pe-3 text-nowrap"
+                        {% if tournament.is_name_truncated %}
+                            {{ macros.tooltip_attributes(
+                                'info', tournament.name, 'top'
+                            ) }}
+                        {% endif %}
+                    >
+                        {{ tournament.short_name }}
+                    </th>
+                    <td class="py-0 pe-3 text-end text-nowrap">
+                        {% if tournament.current_round %}
+                            {{ tournament.current_round }}/{{ tournament.rounds }}
+                        {% else %}
+                            <span class="text-secondary fst-italic">
+                                {{ _('not started') }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="py-0 text-end text-nowrap text-secondary">
+                        {% if tournament.has_results %}
+                            {{ tournament.results }}/{{ tournament.boards }}
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endmacro %}
+
+{% macro snapshot_state(snapshot, loop_index) %}
+    {% set tournaments = snapshot.tournaments %}
+    {% if tournaments is none %}
+        <span class="text-secondary" {{ macros.tooltip_attributes('', _(
+            'This backup was taken by another version of the application and '
+            'its content could not be read. It can still be restored.'
+        ), 'top') }}>&mdash;</span>
+    {% elif not tournaments %}
+        <span class="text-secondary fst-italic">{{ _('No tournament') }}</span>
+    {% elif tournaments | length <= 3 %}
+        {{ tournament_table(tournaments) }}
+    {% else %}
+        {% set rounds = tournaments | map(attribute='current_round') | reject('none') | list %}
+        <button
+            class="btn btn-sm btn-link p-0 text-decoration-none text-nowrap"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#snapshot-state-{{ loop_index }}"
+        >
+            <i class="bi-chevron-right"></i>
+            {{ ngettext(
+                '%(num)d tournament',
+                '%(num)d tournaments',
+                tournaments | length,
+            ) }}
+            {% if rounds %}
+                <span class="text-secondary text-nowrap">
+                    {% if rounds | min == rounds | max %}
+                        {{ _('R{round}').format(round=rounds | min) }}
+                    {% else %}
+                        {{ _('R{first}–R{last}').format(
+                            first=rounds | min, last=rounds | max
+                        ) }}
+                    {% endif %}
+                </span>
+            {% endif %}
+        </button>
+        <div class="collapse" id="snapshot-state-{{ loop_index }}">
+            {{ tournament_table(tournaments) }}
+        </div>
+    {% endif %}
+{% endmacro %}
+<div
+    id="event-snapshots-modal"
+    class="modal-dialog modal-dialog-scrollable modal-lg admin-event-edit-modal"
+>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">
+                {{ _('%(string)s: %(value)s', string=_('Backups'), value=snapshots_event_uniq_id) }}
+            </h2>
+        </div>
+        <div class="modal-body">
+            {% if not snapshots_enabled %}
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi-exclamation-triangle-fill pe-1"></i>
+                    {{ _(
+                        'Backups are turned off in the settings: no new one is '
+                        'being taken. The backups already taken can still be '
+                        'restored.'
+                    ) }}
+                </div>
+            {% endif %}
+
+            {% if snapshot_status.is_failing %}
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi-exclamation-octagon-fill pe-1"></i>
+                    {% if snapshot_status.last_failure == 'source_unreadable' %}
+                        {{ _(
+                            'This event could not be read to be backed up, which '
+                            'means the event itself may be damaged. Restoring the '
+                            'most recent backup below is the way out.'
+                        ) }}
+                    {% else %}
+                        {{ _('The last backup could not be written.') }}
+                    {% endif %}
+                    {% if snapshot_status.last_failure_message %}
+                        <div class="mt-2 small">{{ snapshot_status.last_failure_message }}</div>
+                    {% endif %}
+                </div>
+            {% elif snapshot_status.last_success_at %}
+                <p class="text-secondary">
+                    <i class="bi-check-circle-fill pe-1 text-success"></i>
+                    {{ _('Last backup taken at {time}.').format(
+                        time=snapshot_status.last_success_str
+                    ) }}
+                </p>
+            {% endif %}
+
+            {% if not event_is_accessible %}
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi-exclamation-triangle-fill pe-1"></i>
+                    {{ _(
+                        'This event could not be opened. Restoring a backup '
+                        'replaces its file, which is what brings it back.'
+                    ) }}
+                </div>
+            {% endif %}
+
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">{{ _('Date') }}</th>
+                        <th scope="col">{{ _('Reason') }}</th>
+                        <th scope="col">{{ _('State') }}</th>
+                        <th scope="col" class="text-end">{{ _('Size') }}</th>
+                        <th>{# buttons #}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if snapshots %}
+                        {% for snapshot in snapshots %}
+                            <tr>
+                                <th scope="row" class="fw-normal text-nowrap">
+                                    {{ snapshot.taken_at_str }}
+                                </th>
+                                <td class="small">
+                                    {% if snapshot.is_milestone %}
+                                        {{ snapshot.label }}
+                                    {% else %}
+                                        <span class="text-secondary">{{ snapshot.label }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ snapshot_state(snapshot, loop.index) }}</td>
+                                <td class="text-end text-nowrap text-secondary">
+                                    {{ (snapshot.size / 1024) | round | int }} {{ _('kB') }}
+                                </td>
+                                <td class="text-nowrap">
+                                    {% if snapshot.is_restorable %}
+                                        {% call macros.action_tooltip(
+                                            'info',
+                                            _('Restore this backup over the event. The state the event is in now is kept, so this can be undone.'),
+                                            'top',
+                                        ) %}
+                                            <button
+                                                class="btn btn-sm btn-outline-danger"
+                                                hx-get="{{ url_for(
+                                                    'event-snapshot-restore-modal',
+                                                    event_uniq_id=snapshots_event_uniq_id,
+                                                    snapshot_name=snapshot.file.name,
+                                                ) }}"
+                                                hx-push-url="false"
+                                                hx-target="body"
+                                                hx-indicator="#please-wait"
+                                                data-bs-target="#modal-wrapper"
+                                            ><i class="bi-arrow-counterclockwise"></i></button>
+                                        {% endcall %}
+                                        {% if client.can_create_events %}
+                                            {% call macros.action_tooltip(
+                                                'info',
+                                                _('Restore this backup as a new event, leaving this one alone.'),
+                                                'top',
+                                            ) %}
+                                                <button
+                                                    class="btn btn-sm btn-outline-primary"
+                                                    hx-post="{{ url_for(
+                                                        'event-snapshot-restore-copy',
+                                                        event_uniq_id=snapshots_event_uniq_id,
+                                                        snapshot_name=snapshot.file.name,
+                                                    ) }}"
+                                                    hx-target="body"
+                                                    hx-indicator="#please-wait"
+                                                ><i class="bi-copy"></i></button>
+                                            {% endcall %}
+                                        {% endif %}
+                                    {% else %}
+                                        <i
+                                            class="bi-slash-circle text-secondary"
+                                            {{ macros.tooltip_attributes('warning', _(
+                                                'This backup was taken by a more recent '
+                                                'version of the application and cannot be '
+                                                'restored by this one.'
+                                            ), 'top') }}
+                                        ></i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <th scope="row" colspan="5" class="fst-italic text-secondary">
+                                {{ _('No backup has been taken of this event yet.') }}
+                            </th>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button type="button" data-bs-dismiss="modal" class="btn btn-secondary text-nowrap">
+                <i class="bi-x-circle-fill pe-1"></i>
+                {{ _('Close') }}
+            </button>
+            {% if event_is_accessible and snapshots_enabled %}
+                <button
+                    class="btn btn-primary text-nowrap"
+                    type="button"
+                    hx-post="{{ url_for(
+                        'event-snapshot-now', event_uniq_id=snapshots_event_uniq_id
+                    ) }}"
+                    hx-target="body"
+                    hx-indicator="#please-wait"
+                    data-bs-target="#modal-wrapper"
+                >
+                    <i class="bi-camera-fill pe-1"></i>
+                    {{ _('Back up now') }}
+                </button>
+            {% endif %}
+        </div>
+    </div>
+</div>

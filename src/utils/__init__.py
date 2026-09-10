@@ -378,6 +378,20 @@ class Utils:
                 suffix = f' ≥ {min_rating}'
         return f'{prefix}{_("Rating")}{suffix}'
 
+    @staticmethod
+    def truncate_middle(text: str, max_length: int) -> str:
+        """Shortens `text` by taking characters out of its middle.
+
+        Names that differ only at their end — "… - Open A" and "… - Open B" —
+        are told apart by keeping both ends, which the end ellipsis CSS offers
+        cannot do.
+        """
+        if max_length < 2 or len(text) <= max_length:
+            return text
+        kept = max_length - 1
+        head = (kept + 1) // 2
+        return f'{text[:head]}…{text[len(text) - (kept - head) :]}'
+
 
 class SupportsEquals(Protocol):
     def __eq__(self, other: object) -> bool: ...

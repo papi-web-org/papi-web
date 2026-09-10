@@ -5,6 +5,7 @@ import re
 import subprocess
 import sys
 from copy import copy
+from pathlib import Path
 from typing import Optional, overload, TYPE_CHECKING
 
 import jinja2
@@ -14,6 +15,7 @@ from packaging.version import Version
 
 from common import (
     SHARLY_CHESS_VERSION,
+    SNAPSHOTS_DIR,
     TEST_ENV,
     enable_experimental_features,
 )
@@ -236,6 +238,39 @@ class SharlyChessConfig(metaclass=Singleton):
         if not stored_value:
             return None
         return Version(stored_value)
+
+    @property
+    def snapshot_enabled(self) -> bool:
+        return self.stored_config.snapshot_enabled
+
+    @property
+    def snapshot_dir(self) -> Path:
+        """Always absolute: the data directory is relative when the path is
+        given on the command line, and a relative one cannot be handed to a
+        folder dialog nor compared with the folder it returns."""
+        stored_value = self.stored_config.snapshot_dir
+        directory = Path(stored_value) if stored_value else SNAPSHOTS_DIR
+        return directory.absolute()
+
+    @property
+    def snapshot_dir_is_default(self) -> bool:
+        return self.stored_config.snapshot_dir is None
+
+    @property
+    def snapshot_keep_milestones(self) -> int:
+        return self.stored_config.snapshot_keep_milestones
+
+    @property
+    def snapshot_keep_auto(self) -> int:
+        return self.stored_config.snapshot_keep_auto
+
+    @property
+    def snapshot_max_total_mb(self) -> int:
+        return self.stored_config.snapshot_max_total_mb
+
+    @property
+    def snapshot_max_age_days(self) -> int:
+        return self.stored_config.snapshot_max_age_days
 
     @property
     def federation(self) -> Optional['Federation']:

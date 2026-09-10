@@ -1,0 +1,40 @@
+{% extends '/common/alert.html' %}
+{% import '/common/macros.j2' as macros with context %}
+
+{% block type %}warning{% endblock %}
+
+{% block alert_content %}
+    <div class="align-self-center">
+        <i
+            class="bi bi-exclamation-triangle-fill"
+            {% if snapshot_status.last_failure_message %}
+                {{ macros.tooltip_attributes(
+                    'warning', snapshot_status.last_failure_message, 'top'
+                ) }}
+            {% endif %}
+        ></i>
+    </div>
+    <div class="flex-grow-1 align-self-center">
+        {% if snapshot_status.last_failure == 'source_unreadable' %}
+            {{ _('This event could not be read to be backed up.') }}
+        {% else %}
+            {{ _('This event is no longer being backed up.') }}
+        {% endif %}
+    </div>
+    <div class="align-self-center">
+        <button
+            type="button"
+            class="btn btn-sm btn-outline-dark text-nowrap"
+            hx-get="{{ url_for(
+                'event-snapshots-modal', event_uniq_id=snapshots_event_uniq_id
+            ) }}"
+            hx-push-url="false"
+            hx-target="body"
+            hx-indicator="#please-wait"
+            data-bs-toggle="modal"
+            data-bs-target="#modal-wrapper"
+        >
+            {{ _('Backups') }}
+        </button>
+    </div>
+{% endblock %}

@@ -22,6 +22,8 @@ from data.access_levels.actions import AuthAction
 from data.board import Board, PlayerRatingType
 from data.criteria.managers import TournamentCriterionManager
 from data.event import Event
+from data.snapshot import SnapshotReason
+from data.snapshot_worker import SnapshotScheduler
 from data.championship.championship_loader import ChampionshipLoader
 from data.input_output import (
     DataSourceManager,
@@ -1783,6 +1785,15 @@ class TournamentAdminController(BaseEventAdminController):
             )
             importer_options.append(type(importer_option)(value))
         importer = importer_type(importer_options)
+        await SnapshotScheduler.snapshot_before_async(
+            event.uniq_id,
+            SnapshotReason.BEFORE_PLAYERS_IMPORT,
+            tournament_id=(
+                web_context.admin_tournament.id
+                if web_context.admin_tournament
+                else None
+            ),
+        )
         try:
             importer.validate_options(event)
             tournament_id = importer.load_tournament(
@@ -2732,6 +2743,10 @@ class TournamentAdminController(BaseEventAdminController):
         )
         SessionDistributePlayerCountByTournamentId(request, event).set(
             user_player_count_by_tournament_id
+        )
+
+        await SnapshotScheduler.snapshot_before_async(
+            event.uniq_id, SnapshotReason.BEFORE_PLAYERS_DISTRIBUTION
         )
 
         if distribution_type == 'rating':

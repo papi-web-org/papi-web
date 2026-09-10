@@ -1335,6 +1335,12 @@ msgstr ""
 msgid "Back"
 msgstr ""
 
+msgid "Back up now"
+msgstr ""
+
+msgid "Back up the events as they change"
+msgstr ""
+
 msgid "Background colour:"
 msgstr ""
 
@@ -1343,6 +1349,19 @@ msgid "Background colour: %(color)s"
 msgstr ""
 
 msgid "Background image URL:"
+msgstr ""
+
+#, python-brace-format
+msgid "Backup of event [{uniq_id}] taken at {time}."
+msgstr ""
+
+msgid "Backups"
+msgstr ""
+
+msgid "Backups are turned off in the settings: no new one is being taken. The backups already taken can still be restored."
+msgstr ""
+
+msgid "Backups folder"
 msgstr ""
 
 msgid "Bahamas"
@@ -1381,10 +1400,67 @@ msgstr ""
 msgid "Bd. *** BOARD NUMBER COLUMN HEADER"
 msgstr "Bd."
 
+#, python-brace-format
+msgid "Before [{tournament}] moved to round {round}"
+msgstr ""
+
+#, python-brace-format
+msgid "Before [{tournament}] was paired"
+msgstr ""
+
+#, python-brace-format
+msgid "Before [{tournament}] was unpaired"
+msgstr ""
+
+msgid "Before a restoration"
+msgstr ""
+
+msgid "Before an upgrade"
+msgstr ""
+
 msgid "Before configuring accounts, you have to be aware of a few security warnings:"
 msgstr ""
 
+msgid "Before moving to another round"
+msgstr ""
+
+#, python-brace-format
+msgid "Before moving to round {round}"
+msgstr ""
+
+msgid "Before players were distributed"
+msgstr ""
+
+msgid "Before players were imported"
+msgstr ""
+
+#, python-brace-format
+msgid "Before players were imported into [{tournament}]"
+msgstr ""
+
+#, python-brace-format
+msgid "Before round {round} of [{tournament}] was paired"
+msgstr ""
+
+#, python-brace-format
+msgid "Before round {round} of [{tournament}] was unpaired"
+msgstr ""
+
+#, python-brace-format
+msgid "Before round {round} was paired"
+msgstr ""
+
+#, python-brace-format
+msgid "Before round {round} was unpaired"
+msgstr ""
+
 msgid "Before the first round"
+msgstr ""
+
+msgid "Before the rounds were paired"
+msgstr ""
+
+msgid "Before the tournament was unpaired"
 msgstr ""
 
 msgid "Belarus"
@@ -1823,6 +1899,9 @@ msgstr ""
 msgid "Championships"
 msgstr ""
 
+msgid "Change"
+msgstr ""
+
 msgid "Change the player's tournament."
 msgstr ""
 
@@ -1884,6 +1963,9 @@ msgid "Choose between an individual or team event. Cannot be changed after the e
 msgstr ""
 
 msgid "Choose multi-screens to add"
+msgstr ""
+
+msgid "Choose my own folder"
 msgstr ""
 
 msgid "Choose one or more players."
@@ -2104,6 +2186,10 @@ msgid "Configure the tags, which are available for all events."
 msgstr ""
 
 msgid "Configure the tie-breaks of the tournament."
+msgstr ""
+
+#, python-brace-format
+msgid "Confirm the new backups folder \"{folder}\"?"
 msgstr ""
 
 #, python-brace-format
@@ -3408,6 +3494,14 @@ msgid "Event [{uniq_id}] has been deleted, the database has been archived ({arch
 msgstr ""
 
 #, python-brace-format
+msgid "Event [{uniq_id}] has been restored."
+msgstr ""
+
+#, python-brace-format
+msgid "Event [{uniq_id}] has been restored. The state it was in has been kept as a snapshot, so this can be undone."
+msgstr ""
+
+#, python-brace-format
 msgid "Event [{uniq_id}] has been updated."
 msgstr ""
 
@@ -3916,6 +4010,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Give/take away access level {access_level_short_name}"
+msgstr ""
+
+msgid "Go back to the default backups folder?"
 msgstr ""
 
 #, python-format
@@ -4529,6 +4626,10 @@ msgid "Laos"
 msgstr ""
 
 msgid "Largest number of players a team may have on its roster. Leave blank for no limit."
+msgstr ""
+
+#, python-brace-format
+msgid "Last backup taken at {time}."
 msgstr ""
 
 msgid "Last board:"
@@ -5375,6 +5476,9 @@ msgstr ""
 msgid "No available update"
 msgstr ""
 
+msgid "No backup has been taken of this event yet."
+msgstr ""
+
 msgid "No built-in templates."
 msgstr ""
 
@@ -5668,6 +5772,9 @@ msgid "No timers"
 msgstr ""
 
 msgid "No title norm has been achieved in this tournament."
+msgstr ""
+
+msgid "No tournament"
 msgstr ""
 
 msgid "No tournament has been played yet."
@@ -7281,6 +7388,15 @@ msgstr ""
 msgid "Restore"
 msgstr ""
 
+msgid "Restore a backup"
+msgstr ""
+
+msgid "Restore this backup as a new event, leaving this one alone."
+msgstr ""
+
+msgid "Restore this backup over the event. The state the event is in now is kept, so this can be undone."
+msgstr ""
+
 msgid "Result"
 msgstr ""
 
@@ -7499,6 +7615,10 @@ msgstr ""
 msgid "Round {round} of pairing number {number} is already accelerated."
 msgstr ""
 
+#, python-brace-format
+msgid "Round {round} of {rounds}"
+msgstr ""
+
 #, python-brace-format, python-format
 msgid "Round {} started for %%s"
 msgstr ""
@@ -7573,6 +7693,14 @@ msgid "Russia"
 msgstr ""
 
 msgid "Rwanda"
+msgstr ""
+
+#, python-brace-format
+msgid "R{first}–R{last}"
+msgstr ""
+
+#, python-brace-format
+msgid "R{round}"
 msgstr ""
 
 msgid "SCR"
@@ -8024,6 +8152,9 @@ msgstr ""
 msgid "Single Screens ({num}) *** WITH_SHORTCUT_INDICATION"
 msgstr "<u>S</u>ingle Screens ({num})"
 
+msgid "Size"
+msgstr ""
+
 msgid "Size (pt)"
 msgstr ""
 
@@ -8233,6 +8364,9 @@ msgid "Start year"
 msgstr ""
 
 msgid "Starting rank"
+msgstr ""
+
+msgid "State"
 msgstr ""
 
 msgid "Statistics"
@@ -8588,6 +8722,16 @@ msgstr ""
 msgid "The average of the ratings of the opponents played over the board."
 msgstr ""
 
+#, python-brace-format
+msgid "The backup of event [{uniq_id}] failed: {error}"
+msgstr ""
+
+msgid "The backups already taken will be moved there."
+msgstr ""
+
+msgid "The backups of the event, and what they are restored by."
+msgstr ""
+
 msgid "The board number the player will always be assigned to (use it for disabled people)."
 msgstr ""
 
@@ -8657,6 +8801,9 @@ msgstr ""
 msgid "The event type cannot be changed after creation."
 msgstr ""
 
+msgid "The event will be replaced by this backup."
+msgstr ""
+
 msgid "The features your federation, your software or your events need can be added to Sharly Chess as a plugin."
 msgstr ""
 
@@ -8697,6 +8844,9 @@ msgid "The label used for this multi-screen in menus. Its range is appended auto
 msgstr ""
 
 msgid "The label used for this screen in menus. If left empty, the tournament name is used."
+msgstr ""
+
+msgid "The last backup could not be written."
 msgstr ""
 
 #, python-brace-format
@@ -8776,6 +8926,9 @@ msgid "The network on which the devices are connected."
 msgstr ""
 
 msgid "The new folder can't be a sub folder of the current folder."
+msgstr ""
+
+msgid "The new folder is in use, but the backups already taken could not be moved to it. They are still in the previous folder."
 msgstr ""
 
 msgid "The number of boards per screen, optional (the number of screens adapts to the number of boards)."
@@ -8983,6 +9136,10 @@ msgstr ""
 msgid "The settings are set and can no longer be changed."
 msgstr ""
 
+#, python-brace-format
+msgid "The snapshot has been restored as the new event [{uniq_id}]."
+msgstr ""
+
 msgid "The source event and tournament will not be deleted."
 msgstr ""
 
@@ -8990,6 +9147,9 @@ msgid "The source events and tournaments will not be deleted."
 msgstr ""
 
 msgid "The source has been removed."
+msgstr ""
+
+msgid "The state it is in now is kept as a backup first, so this can be undone."
 msgstr ""
 
 #, python-brace-format
@@ -9160,6 +9320,12 @@ msgstr ""
 msgid "This action is not possible for this round."
 msgstr ""
 
+msgid "This backup was taken by a more recent version of the application and cannot be restored by this one."
+msgstr ""
+
+msgid "This backup was taken by another version of the application and its content could not be read. It can still be restored."
+msgstr ""
+
 msgid "This board is recorded as an absence (forfeit) from the lineup. Use the lineup dropdown to put a player back on this slot."
 msgstr ""
 
@@ -9205,7 +9371,25 @@ msgstr ""
 msgid "This event cannot be opened: one or more required plugins are disabled. You can enable plugins in the application settings."
 msgstr ""
 
+msgid "This event could not be opened. Restoring a backup replaces its file, which is what brings it back."
+msgstr ""
+
+msgid "This event could not be read to be backed up, which means the event itself may be damaged. Restoring the most recent backup below is the way out."
+msgstr ""
+
+msgid "This event could not be read to be backed up."
+msgstr ""
+
+msgid "This event could not be read, so there is nothing to keep of the state it is in now."
+msgstr ""
+
+msgid "This event could not be read. Archiving it sets its file aside, and its backups are kept with it: both can be brought back from the archives."
+msgstr ""
+
 msgid "This event exists on the server but could not be opened. It may be locked by another program, by file synchronisation (OneDrive, Google Drive, DropBox, etc.) or by antivirus software."
+msgstr ""
+
+msgid "This event is no longer being backed up."
 msgstr ""
 
 msgid "This event is private (by default, screens are not visible by the spectators)."
@@ -10685,6 +10869,9 @@ msgstr "incomplete"
 msgid "item id"
 msgstr ""
 
+msgid "kB"
+msgstr ""
+
 msgid "last"
 msgstr ""
 
@@ -10763,6 +10950,9 @@ msgid "norm already achieved"
 msgstr ""
 
 msgid "not counted"
+msgstr ""
+
+msgid "not started"
 msgstr ""
 
 #, python-format
@@ -11155,6 +11345,10 @@ msgid "{prefix}{int_value}<sup>{suffix}</sup>"
 msgstr ""
 
 #, python-brace-format
+msgid "{results} of {boards} results"
+msgstr ""
+
+#, python-brace-format
 msgid "{screen_type}-screen"
 msgstr ""
 
@@ -11191,4 +11385,7 @@ msgstr ""
 
 msgid "← Back to IT1 certificate"
 msgstr ""
+
+#~ msgid "This event could not be read to be backed up, which means the event itself may be damaged."
+#~ msgstr ""
 
