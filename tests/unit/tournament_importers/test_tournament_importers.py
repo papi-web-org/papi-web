@@ -1030,11 +1030,13 @@ class TournamentImporterTestCase(TestCase):
         present_names = sorted(p.last_name for p in slots if p is not None)
         self.assertEqual(present_names, ['AUBRY', 'BEC'])
 
-        # ``team_round_lineup`` is stored as index-gapped rows — only
-        # the slots that have a player exist in the DB.
+        # ``team_round_lineup`` holds a row per board, the empty ones
+        # carrying no player.
         lineup_entries = erp_a.stored_team.stored_round_lineups[2]
-        stored_indexes = sorted(e.index for e in lineup_entries)
-        self.assertEqual(stored_indexes, [0, 1])
+        self.assertEqual(
+            sorted((e.index, e.player_id is None) for e in lineup_entries),
+            [(0, False), (1, False), (2, True), (3, True)],
+        )
 
         # --- import: the team match's boards reflect the holes ---
         # Slot 0 and 1: both teams present → black_player_id is set.
