@@ -12,6 +12,7 @@ from unittest import TestCase
 import pytest
 
 from data.loader import EventLoader
+from data.tie_breaks.team_records import TeamMatchType
 from data.teams.team import Team
 from data.tournament import Tournament
 from database.sqlite.event.event_database import EventDatabase
@@ -196,6 +197,54 @@ class TeamAbsentMatchPointsTestCase(TestCase):
         opponent_row = self._row(tournament, opponent_id)
         self.assertEqual(opponent_row['wins'], 1)
         self.assertEqual(opponent_row['forfeits'], 0)
+
+    def test_a_forfeited_match_is_not_a_played_round(self) -> None:
+        """No game was played on the forfeiting team's side, so neither
+        team's round is a played one — the absent team gave it up, its
+        opponent won it by forfeit. The scores are unaffected."""
+        self._create(_CUP_MATCH_POINTS)
+        tournament = self._load()
+        self.assertEqual(tournament.generate_round_pairings(1), '')
+        tournament = self._load()
+        forfeit_id = self.team_ids[0]
+        opponent_id = self._opponent_id(tournament, forfeit_id)
+        tournament = self._forfeit_round_one(tournament, forfeit_id)
+        matches = {
+            record.team_id: record.matches[0] for record in tournament.team_records()
+        }
+        self.assertEqual(matches[forfeit_id].match_type, TeamMatchType.FORFEIT_LOSS)
+        self.assertTrue(matches[forfeit_id].voluntary_unplayed)
+        self.assertEqual(matches[forfeit_id].own_mp, 0.0)
+        self.assertEqual(matches[opponent_id].match_type, TeamMatchType.FORFEIT_WIN)
+        self.assertFalse(matches[opponent_id].voluntary_unplayed)
+        self.assertEqual(matches[opponent_id].own_mp, 3.0)
+
+    def test_a_contested_match_stays_a_played_round(self) -> None:
+        """One game over the board is enough: a team with three boards
+        forfeited has not forfeited the match."""
+        self._create(_CUP_MATCH_POINTS)
+        tournament = self._load()
+        self.assertEqual(tournament.generate_round_pairings(1), '')
+        tournament = self._load()
+        team_id = self.team_ids[0]
+        team_board = self._round_one_match(tournament, team_id)
+        for index, board in enumerate(team_board.boards):
+            white_team_id, _ = team_board.board_team_ids(board)
+            if index == 0:
+                tournament.add_result(
+                    board,
+                    Result.WIN if white_team_id == team_id else Result.LOSS,
+                )
+                continue
+            tournament.add_result(
+                board,
+                Result.FORFEIT_LOSS if white_team_id == team_id else Result.FORFEIT_WIN,
+            )
+        tournament = self._load()
+        matches = {
+            record.team_id: record.matches[0] for record in tournament.team_records()
+        }
+        self.assertEqual(matches[team_id].match_type, TeamMatchType.PLAYED)
 
     def test_a_team_left_unpaired_as_absent_scores_the_absence_value(self) -> None:
         """The other absence: no match at all, the team marked absent for

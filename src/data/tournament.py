@@ -1631,11 +1631,13 @@ class Tournament:
         """Build :class:`TeamRecord` instances for every team in this
         tournament, suitable as input to the team tie-break compute API.
 
-        A bye carries the score its bye type is worth, as the standings
-        score it, and the match type Art. 16 handling reads: a team
-        marked absent is a zero-point bye whose contribution is cut
-        first, not a pairing-allocated bye scored as a win. A match
-        played but forfeited outright is still reported as PLAYED."""
+        A round carries the score the standings give it and the match
+        type Art. 16 handling reads. A team marked absent is a
+        zero-point bye whose contribution is cut first, not a
+        pairing-allocated bye scored as a win; a team that fielded
+        nobody, or every one of whose players lost by forfeit, forfeited
+        the match rather than playing it, and its opponent won by
+        forfeit rather than over the board."""
         from data.tie_breaks.team_records import (
             TeamMatchRecord,
             TeamMatchType,
@@ -1731,6 +1733,17 @@ class Tournament:
             match_points_pair = team_board.match_points_pair()
             assert match_points_pair is not None
             a_mp, b_mp = match_points_pair
+            # A team is forfeit whether it fielded nobody or every one of
+            # its players lost by forfeit: either way no game was played
+            # on its side, and the round is not a played one for either
+            # team.
+            a_type = b_type = TeamMatchType.PLAYED
+            if team_board.team_all_forfeit(a_id):
+                a_type, b_type = TeamMatchType.FORFEIT_LOSS, TeamMatchType.FORFEIT_WIN
+            if team_board.team_all_forfeit(b_id):
+                b_type = TeamMatchType.FORFEIT_LOSS
+                if a_type != TeamMatchType.FORFEIT_LOSS:
+                    a_type = TeamMatchType.FORFEIT_WIN
             b_boards = self._team_board_scores_for(team_board, b_id)
             b_ratings = self._team_board_ratings_for(team_board, b_id)
             matches_per_team[a_id].append(
@@ -1739,7 +1752,7 @@ class Tournament:
                     opponent_id=b_id,
                     own_mp=a_mp,
                     own_gp=a_gp,
-                    match_type=TeamMatchType.PLAYED,
+                    match_type=a_type,
                     board_scores=a_boards,
                     board_ratings=a_ratings,
                 )
@@ -1750,7 +1763,7 @@ class Tournament:
                     opponent_id=a_id,
                     own_mp=b_mp,
                     own_gp=b_gp,
-                    match_type=TeamMatchType.PLAYED,
+                    match_type=b_type,
                     board_scores=b_boards,
                     board_ratings=b_ratings,
                 )

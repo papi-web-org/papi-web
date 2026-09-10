@@ -45,6 +45,7 @@
 - Fix: the "warn on lineup out of roster order" setting is honoured again (5.0.4)
 - Fix: the forfeit column was missing from the ranking screens (5.0.4)
 - Fix: a team's bye is worth the same to the tie-breaks as to its ranking row (5.0.4)
+- Fix: a forfeited match counts as unplayed in the tie-breaks, for both teams (5.0.4)
 
 ## Championships
 
