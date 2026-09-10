@@ -1,0 +1,40 @@
+{# Knock-out ranking (individual): the placement and a plain-language result
+   (Winner / Runner-up / Out — round N / Still in), a knock-out ranking by the
+   round reached rather than by a score. #}
+{% import '/common/macros.j2' as macros with context %}
+{% set knockout_standings = admin_tournament.knockout.standing_labels(
+    after_round=admin_tournament.last_paired_round
+) %}
+<div class="d-flex">
+    <h4>{{ _('Ranking') }}</h4>
+</div>
+<table
+    id="rankings-table"
+    class="rankings-table table prominent table-sm table-striped table-hover w-100 bg-light"
+>
+    <thead class="position-sticky z-2" style="top: var(--header-height);">
+        <tr class="player-header">
+            <th class="rank text-end">{{ _('Rk. *** RANK COLUMN HEADER') }}</th>
+            <th class="title text-end">&nbsp;</th>
+            <th class="name text-start">{{ _('Name *** NAME COLUMN HEADER') }}</th>
+            <th class="rating text-end">{{ admin_tournament.rating.print_view_header }}</th>
+            <th class="result text-end">{{ _('Result *** KNOCK-OUT RESULT COLUMN') }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for tournament_player in admin_tournament.tournament_players_by_rank.values() %}
+            {% set no_played_games_class = '' if tournament_player.has_played_games else 'text-warning' %}
+            <tr id="player-{{ tournament_player.id }}" class="player-row">
+                <td class="rank text-end {{ no_played_games_class }}">{{ tournament_player.rank }}</td>
+                <td class="title text-end {{ no_played_games_class }}">{{ tournament_player.display_title }}</td>
+                <td class="name text-start {{ no_played_games_class }}">
+                    {% include '/admin/player_link.html' %}
+                </td>
+                <td class="rating text-end {{ no_played_games_class }}">{{ tournament_player.rating_str }}</td>
+                <td class="result text-end {{ no_played_games_class }}">
+                    {{ knockout_standings[tournament_player.id] }}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

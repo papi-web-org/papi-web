@@ -1,0 +1,11 @@
+<div class="row gy-2 gx-3">
+    {{ admin_macros.switch_input(
+        name=setting.id,
+        placeholder=setting.name,
+        tooltip_text=_(
+            'Play a match for third place between the two losing '
+            'semi-finalists, alongside the final.'
+        ),
+        data=data, errors=errors
+    ) }}
+</div>

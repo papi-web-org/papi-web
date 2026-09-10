@@ -312,6 +312,14 @@ class PapiRound:
             cls._result_to_papi_result(pairing.result, pab_value),
         )
 
+    @classmethod
+    def zero_point_bye(cls) -> Self:
+        """A zero-point bye: the entrant sits the round out with no opponent
+        and scores nothing. A knock-out gives one to a player in the rounds
+        after they are eliminated, so Papi reads every entrant as paired or
+        given a bye in each round it has played, without altering the score."""
+        return cls(PapiColor.BYE, None, PapiResult.UNPLAYED_OR_NOT_PAIRED)
+
     @staticmethod
     def _result_to_papi_result(result: Result, pab_value: Result):
         match result:

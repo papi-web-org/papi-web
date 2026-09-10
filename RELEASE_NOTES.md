@@ -12,6 +12,7 @@
 ## Pairings
 
 - Ask if a round should be marked as completed for individual round robins (5.1.0)
+- Added support for individual and team knockout pairings (single/double elimination, and two-game-match variants) (5.1.0)
 
 ## Documents
 

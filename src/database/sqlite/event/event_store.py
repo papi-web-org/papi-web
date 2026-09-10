@@ -125,6 +125,10 @@ class StoredBoard:
     # renumbering rounds they have already played, while first_board_number,
     # board index and the numbering mode stay live.
     fixed_number: int | None = None
+    # The player designated to advance from this board when a knock-out
+    # game is drawn and the advancement tie-breaks reach the play-off
+    # (manual) step. ``None`` otherwise.
+    knockout_winner_player_id: int | None = None
 
 
 @dataclass
@@ -178,6 +182,10 @@ class StoredTeamBoard:
     # ``HPB`` (half-point), ``FPB`` (full-point) or ``ZPB`` (zero-point).
     # NULL on regular paired team_boards.
     bye_type: str | None = None
+    # The team designated to advance from this match when it is level and
+    # the advancement tie-breaks reach the play-off (manual) step. ``None``
+    # otherwise.
+    knockout_winner_team_id: int | None = None
 
 
 @dataclass

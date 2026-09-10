@@ -1,0 +1,61 @@
+{% import '/common/macros.j2' as macros with context %}
+
+{# Shown before the first round is drawn when the arbiter configured a schedule
+   over a different number of rounds than the pairing system will actually play
+   (a knock-out settles its count from the bracket depth). Continuing pairs with
+   the calculated count. #}
+<div class="modal-dialog" style="--bs-modal-width: min(90vw, 500px);">
+    <div class="modal-content bg-secondary-subtle">
+        <div class="modal-header">
+            <div class="modal-title fs-4 fw-bold">
+                {{ _('Round count') }}
+            </div>
+        </div>
+        <div class="modal-body">
+            <h5 class="text-warning">
+                {{ _(
+                    'The schedule was configured with %(scheduled)s round(s), but '
+                    'this pairing system will play %(calculated)s.',
+                    scheduled=scheduled_rounds,
+                    calculated=calculated_rounds,
+                ) }}
+            </h5>
+            <p class="mb-0">
+                {{ _('Continue with %(calculated)s round(s)?', calculated=calculated_rounds) }}
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button
+                type="button"
+                class="btn btn-secondary text-nowrap"
+                data-bs-dismiss="modal"
+            >
+                <i class="bi-x-circle-fill"></i>
+                {{ _('Cancel') }}
+            </button>
+            <button
+                type="submit"
+                class="btn btn-primary text-nowrap"
+                {% if not admin_tournament.pairing_system.round_per_round_pairing_generation %}
+                    hx-post="{{ url_for(
+                        'generate-tournament-pairings',
+                        event_uniq_id=admin_event.uniq_id,
+                        tournament_id=admin_tournament.id,
+                    ) }}?confirmed=true"
+                {% else %}
+                    hx-post="{{ url_for(
+                        'generate-round-pairings',
+                        event_uniq_id=admin_event.uniq_id,
+                        tournament_id=admin_tournament.id,
+                        round=admin_round
+                    ) }}?confirmed=true"
+                {% endif %}
+                hx-target="body"
+                hx-indicator="#please-wait"
+            >
+                <i class="bi-shuffle pe-1"></i>
+                {{ _('Continue') }}
+            </button>
+        </div>
+    </div>
+</div>

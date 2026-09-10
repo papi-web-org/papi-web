@@ -1,30 +1,14 @@
-"""Prohibited-pairing grouping dimensions.
+"""Prohibited pairings for Swiss — members that must not meet.
 
-A *dimension* buckets a tournament's members (players for an individual
-tournament, teams for a team tournament) by some affiliation key. Every
-bucket with two or more members becomes a group whose members must not
-be paired together. Core ships ``club`` / ``federation`` (individual)
-and ``team-group`` (team); plugins contribute more (e.g. a federation
-"ligue", a school) via the ``get_prohibited_pairing_dimensions`` hook.
+The grouping keys come from :class:`~data.pairing_dimensions.PairingDimension`
+(``club`` / ``federation`` / affiliation, plus plugin dimensions). This module
+turns those buckets into forbidden pairs and picks the soft-relaxation cutoff for
+a round. A knock-out reuses the same dimensions for a different purpose (seeding
+groups), so the dimension type itself lives in :mod:`data.pairing_dimensions`.
 """
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import Any
-
-from common.i18n import _
-
-
-@dataclass(frozen=True)
-class ProhibitedPairingDimension:
-    """A grouping rule. ``group_key`` returns the bucket key for a member
-    (a player for individual tournaments, a team for team ones), or
-    ``None`` when the member has no affiliation and must not be grouped."""
-
-    id: str
-    label: str
-    is_team: bool
-    group_key: Callable[[Any], str | None]
 
 
 @dataclass(frozen=True)
@@ -37,35 +21,6 @@ class RoundProhibitedPairingGroup:
     name: str
     is_hard: bool
     member_ids: list[int]
-
-
-def core_prohibited_pairing_dimensions() -> list[ProhibitedPairingDimension]:
-    return [
-        ProhibitedPairingDimension(
-            id='club',
-            label=_('Club'),
-            is_team=False,
-            group_key=lambda player: player.club.name or None,
-        ),
-        ProhibitedPairingDimension(
-            id='federation',
-            label=_('Federation'),
-            is_team=False,
-            group_key=lambda player: player.federation.name or None,
-        ),
-        ProhibitedPairingDimension(
-            id='team-group',
-            label=_('Affiliation'),
-            is_team=True,
-            group_key=lambda team: team.group.name if team.group is not None else None,
-        ),
-        ProhibitedPairingDimension(
-            id='team-federation',
-            label=_('Federation'),
-            is_team=True,
-            group_key=lambda team: team.federation or None,
-        ),
-    ]
 
 
 # A prohibited pair is the unordered pair of the two members (player ids

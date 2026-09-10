@@ -32,6 +32,7 @@ from data.tie_breaks import (
     TieBreakOption,
     TieBreakManager,
     TieBreakOptionManager,
+    TieBreakPurpose,
 )
 from data.criteria.tournament_criteria import TournamentCriterion
 from database.sqlite.event.event_store import (
@@ -88,12 +89,11 @@ if TYPE_CHECKING:
     )
     from data.rule_sets import RuleSet
     from data.rule_sets.rule_sets import PointAdjustment
-    from data.prohibited_pairings import (
-        ProhibitedPairingDimension,
-        RoundProhibitedPairingGroup,
-    )
+    from data.pairing_dimensions import PairingDimension
+    from data.prohibited_pairings import RoundProhibitedPairingGroup
     from data.pairings import PairingVariation, PairingSystem
     from data.pairings.keizer import KeizerScorer
+    from data.pairings.knockout_helpers.view import KnockoutView
     from data.teams.team import Team
     from data.tie_breaks.team_records import TeamRecord
     from data.tie_breaks.team_tie_breaks import TeamTieBreakContext
@@ -137,6 +137,7 @@ class Tournament:
         self._event_ref: 'ReferenceType[Event]' = weakref.ref(event)
         self.stored_tournament: StoredTournament = stored_tournament
         self._tournament_players_by_rank: dict[int, TournamentPlayer] | None = None
+        self._ranks_after_round: int | None = None
         # Per-player caches are valid only while pairings are stable.
         self._compute_caching_enabled: bool = False
         self._round_board_numbers_cache: dict[tuple[int, int], dict[int, int]] = {}
@@ -1017,6 +1018,16 @@ class Tournament:
         self._apply_point_adjustments_to_standings(standings, after_round)
         rows = list(standings.values())
 
+        # A knock-out ranks by the round reached, not by match/game points:
+        # bigger value (later exit) ranks first, ahead of everything else.
+        elimination_values: dict[int, float] = {}
+        if self.pairing_system.eliminates_participants:
+            elimination_values = self.knockout.team_ranking_values(
+                after_round=(
+                    after_round if after_round is not None else self.max_ranking_round
+                )
+            )
+
         def base_key(entry: dict[str, Any]) -> tuple[float, ...]:
             """Nothing ranks ahead of the configured criteria.
 
@@ -1025,7 +1036,12 @@ class Tournament:
             chosen (TRF26 record 212). The secondary score has never been
             implicit either: it is opted into with MPvGP. A tournament
             whose list holds neither ranks on its tie-breaks alone.
+
+            A knock-out is the exception: it ranks by the round reached, so
+            that is the leading key.
             """
+            if elimination_values:
+                return (-elimination_values.get(entry['team'].id, 0.0),)
             return ()
 
         for row in rows:
@@ -1195,14 +1211,14 @@ class Tournament:
             return forced[1]
         return self.stored_tournament.prohibited_pairing_dimension_is_hard
 
-    def prohibited_pairing_dimensions(self) -> 'list[ProhibitedPairingDimension]':
+    def prohibited_pairing_dimensions(self) -> 'list[PairingDimension]':
         """All grouping dimensions applicable to this tournament: the
         core ones plus any contributed by enabled plugins, filtered to
         match this tournament's individual/team nature."""
-        from data.prohibited_pairings import core_prohibited_pairing_dimensions
+        from data.pairing_dimensions import core_pairing_dimensions
         from plugins.manager import plugin_manager
 
-        dimensions = list(core_prohibited_pairing_dimensions())
+        dimensions = list(core_pairing_dimensions())
         for plugin_result in plugin_manager.hook_for_event(
             self.event, 'get_prohibited_pairing_dimensions'
         )():
@@ -1210,7 +1226,7 @@ class Tournament:
                 dimensions.extend(plugin_result)
         return [d for d in dimensions if d.is_team == self.is_team_tournament]
 
-    def prohibited_pairing_dimension(self) -> 'ProhibitedPairingDimension | None':
+    def prohibited_pairing_dimension(self) -> 'PairingDimension | None':
         dimension_id = self.prohibited_pairing_dimension_id
         if dimension_id is None:
             return None
@@ -1963,6 +1979,11 @@ class Tournament:
 
     @cached_property
     def tie_breaks_by_id(self) -> dict[int, TieBreak]:
+        """Every stored tie-break for this tournament, keyed by id, in order.
+        What they decide depends on the pairing system: a knock-out's are its
+        advancement (FIDE Art. 12) tie-breaks; every other system's are the
+        standings criteria (a knock-out's standings are fixed to the round
+        reached, so it configures advancement here instead)."""
         tie_breaks_by_id: dict[int, TieBreak] = {}
         for stored_tie_break in self.stored_tournament.stored_tie_breaks:
             if not (
@@ -1975,6 +1996,39 @@ class Tournament:
         return tie_breaks_by_id
 
     @property
+    def advancement_tie_breaks(self) -> list[TieBreak]:
+        """A knock-out's advancement tie-breaks, in order — the stored
+        tie-breaks that can decide a level match. Only read on a knock-out,
+        where the stored list *is* the advancement list."""
+        return [
+            tie_break
+            for tie_break in self.tie_breaks_by_id.values()
+            if tie_break.usable_as_knockout_advancement
+        ]
+
+    @property
+    def advancement_tie_breaks_after_manual(self) -> bool:
+        """Whether a tie-break is listed after the play-off (manual)
+        marker. A play-off settles the match outright, so anything below it
+        can never apply — worth flagging so the arbiter reorders."""
+        seen_manual = False
+        for tie_break in self.tie_breaks_by_id.values():
+            if tie_break.is_manual:
+                seen_manual = True
+            elif seen_manual:
+                return True
+        return False
+
+    @property
+    def tie_break_config_purpose(self) -> TieBreakPurpose:
+        """Whether the tie-break configuration UI edits *advancement* (a
+        knock-out) or *standings* (every other system) tie-breaks. Derived from
+        the pairing system, not stored — a tournament only ever configures one."""
+        if self.pairing_system.eliminates_participants:
+            return TieBreakPurpose.ADVANCEMENT
+        return TieBreakPurpose.STANDINGS
+
+    @property
     def tie_breaks(self) -> list[TieBreak]:
         """The ranking criteria, in order.
 
@@ -1984,6 +2038,11 @@ class Tournament:
         otherwise rank nobody. Removing the Points tie-break from a list
         that holds others is a deliberate act and is honoured.
         """
+        if self.pairing_system.eliminates_participants:
+            # A knock-out is ranked by the round reached, carried by the
+            # points themselves; it has no configurable standings
+            # tie-breaks (its Art. 12 tie-breaks are for advancement).
+            return self._default_tie_breaks
         invalid_tie_break_ids = self.tie_breaks_invalid_messages.keys()
         configured = [
             tie_break
@@ -2181,9 +2240,13 @@ class Tournament:
             raise ValueError(
                 f'Tie-break [{tie_break_id}] not part of tournament [{self.name}].'
             )
-        if len(self.tie_breaks_by_id) == 1:
-            # The standings rank on the criteria listed and nothing else,
-            # so the last one cannot go — there would be nothing to rank on.
+        if (
+            self.tie_break_config_purpose == TieBreakPurpose.STANDINGS
+            and len(self.tie_breaks_by_id) == 1
+        ):
+            # The standings rank on the criteria listed and nothing else, so
+            # the last one cannot go — there would be nothing to rank on. A
+            # knock-out's advancement list may be emptied (a play-off decides).
             raise ValueError(
                 f'Tie-break [{tie_break_id}] is the only ranking criterion '
                 f'of tournament [{self.name}].'
@@ -2551,6 +2614,12 @@ class Tournament:
     def max_ranking_round(self) -> int:
         if not self.started:
             return 0
+        if self.finished:
+            # A tournament that ends before its last reserved round (a double
+            # elimination whose grand final needs no reset) still ranks as of
+            # that last round — it is finished, just never paired, so its
+            # standings are the final ones.
+            return self.rounds
         if self.playing:
             return self.current_round - 1
         return self.current_round
@@ -2560,8 +2629,30 @@ class Tournament:
         return self.current_round != 0
 
     @property
+    def hide_pairing_points(self) -> bool:
+        """Whether the pairing table hides the running points columns. Team
+        systems that pair whole teams keep points on the team block, not the
+        board rows; and a knock-out ranks by the round reached, not points, so
+        its pairing table has no points to show for players or teams."""
+        return (
+            self.event.is_team_event and self.pairing_system.paired_by_team
+        ) or self.pairing_system.eliminates_participants
+
+    @property
+    def hide_team_block_points(self) -> bool:
+        """Whether the team blocks of the pairing table hide the running score
+        of each team. A knock-out ranks by the round reached, not points, so it
+        has no score to show; every other team system does."""
+        return self.pairing_system.eliminates_participants
+
+    @property
     def finished(self) -> bool:
-        return self.current_round == self.rounds and not self.playing
+        if self.current_round == self.rounds and not self.playing:
+            return True
+        # A system may end early: a double elimination whose grand final the
+        # winners' champion wins skips its reserved reset round, so the last
+        # round is played but never reached. The pairing system decides.
+        return self.pairing_system.tournament_is_over(self)
 
     @property
     def boards(self) -> list[Board]:
@@ -2972,6 +3063,11 @@ class Tournament:
     def get_unpaired_tournament_players(
         self, boards: list[Board]
     ) -> list[TournamentPlayer]:
+        # Knock-out: the bracket seats every player still in, so an
+        # unboarded player is knocked out, not waiting to be paired. There
+        # is nothing to hand-pair, so the "to pair" list stays empty.
+        if self.pairing_system.eliminates_participants:
+            return []
         paired_player_ids: list[int] = []
         for board in boards:
             if board.optional_white_tournament_player:
@@ -3075,7 +3171,13 @@ class Tournament:
         # envelope (real match or any bye) — a team with no envelope is
         # still waiting. Flat systems pair boards without envelopes.
         if self.event.is_team_event:
-            if self.pairing_system.paired_by_team:
+            if (
+                self.pairing_system.paired_by_team
+                and not self.pairing_system.eliminates_participants
+            ):
+                # A knocked-out team plays no more matches, so it has no
+                # envelope this round and must not hold it open — only a
+                # non-elimination system waits on every team being paired.
                 envelope_team_ids: set[int] = set()
                 for tb in self.get_round_team_boards(round_):
                     stb = tb.stored_team_board
@@ -3085,10 +3187,62 @@ class Tournament:
                 if any(team.id not in envelope_team_ids for team in self.teams):
                     return False
             return self.team_round_results_complete(round_)
+        if self.pairing_system.eliminates_participants:
+            # Knock-out: a knocked-out player has no board and no result
+            # this round, and must not hold it open. Only the players
+            # still boarded this round have a game to finish. A drawn game
+            # is still "finished" — an unresolved final simply ends in a
+            # shared title until the arbiter designates a winner, and a
+            # mid-bracket tie is caught separately by the pairing gate.
+            return all(
+                player.pairings[round_].result != Result.NO_RESULT
+                for player in self.tournament_players
+                if player.pairings[round_].exists
+                and player.pairings[round_].stored_pairing.board_id is not None
+            )
         return all(
             player.pairings[round_].result != Result.NO_RESULT
             for player in self.tournament_players
         )
+
+    @cached_property
+    def knockout(self) -> 'KnockoutView':
+        """The knock-out-specific facet of this tournament — advancement, the
+        round-reached standings, the bracket tie-resolution display and the
+        manual-winner writers. See
+        :class:`~data.pairings.knockout_helpers.view.KnockoutView`."""
+        from data.pairings.knockout_helpers.view import KnockoutView
+
+        return KnockoutView(self)
+
+    def round_sections(self, boards: list) -> list[tuple[str | None, list]]:
+        """Group a round's *boards* (individual boards or team matches) into
+        the sections the pairing tab heads with a title — for a knock-out the
+        round names ('Upper Bracket Semifinals' / 'Final' / 'Grand Final' /
+        …), the engine deciding each board's section. Returns
+        ``[(name, boards)]`` in board order. A system with no sections (Swiss,
+        round-robin, …) returns a single ``(None, boards)`` group, so the
+        caller renders as before."""
+        section_label = getattr(
+            self.pairing_variation.engine, 'board_section_label', None
+        )
+        if section_label is None or not boards:
+            return [(None, boards)]
+        grouped: dict[str | None, list] = {}
+        order: list[str | None] = []
+        for board in boards:
+            label = section_label(self, board)
+            if label not in grouped:
+                grouped[label] = []
+                order.append(label)
+            grouped[label].append(board)
+        return [(label, grouped[label]) for label in order]
+
+    def round_is_locked(self, round_: int) -> bool:
+        """Whether a round's results are read-only. The pairing system owns
+        the rule (a knock-out locks a round once the next is paired from it);
+        most systems never lock."""
+        return self.pairing_system.round_is_locked(self, round_)
 
     def team_round_results_complete(self, round_: int) -> bool:
         """All entered results for the round's real boards (team events).
@@ -3150,14 +3304,19 @@ class Tournament:
         # stays, no unpair button).
         if self.get_round_team_boards(round_):
             return True
+        # A round beyond the current count (e.g. after a double elimination's
+        # reset round is toggled off) has no pairing entry, so read defensively.
         return any(
-            player.pairings[round_].opponent_id is not None
-            or player.pairings[round_].exempt
+            (pairing := player.pairings.get(round_)) is not None
+            and (pairing.opponent_id is not None or pairing.exempt)
             for player in self.tournament_players
         )
 
     def round_has_pab(self, round_: int) -> bool:
-        return any(player.pairings[round_].exempt for player in self.tournament_players)
+        return any(
+            (pairing := player.pairings.get(round_)) is not None and pairing.exempt
+            for player in self.tournament_players
+        )
 
     def is_round_in_tournament(self, round_: int) -> bool:
         return 1 <= round_ <= self.rounds
@@ -4274,6 +4433,15 @@ class Tournament:
             ].delete_illegal_move(database)
         return deleted
 
+    @property
+    def ranked_after_round(self) -> int:
+        """The round the standings on this tournament were last computed for.
+        A label read beside those rows (a knock-out result, say) must describe
+        the same round, not the latest one played."""
+        if self._ranks_after_round is None:
+            return self.max_ranking_round
+        return self._ranks_after_round
+
     def correct_ranking_round(self, ranking_round: int | None = None) -> int:
         """Returns a correct round number that corresponds the best to a given round number."""
         if ranking_round is None:
@@ -4297,6 +4465,7 @@ class Tournament:
         return self._tournament_players_by_rank
 
     def _compute_tournament_player_ranks(self, after_round: int) -> None:
+        self._ranks_after_round = after_round
         self._keizer_scorer = None
         for player in self.tournament_players:
             player.clear_compute_caches()
@@ -4309,12 +4478,18 @@ class Tournament:
                 player = self.tournament_players_by_id[player_id]
                 player.tie_break_variables[tie_break.id] = variable
         keizer = self.pairing_system.id == 'KEIZER'
+        knockout = self.pairing_system.eliminates_participants
         for player in self.tournament_players:
-            player.points = (
-                self.keizer_scorer.total(player, after_round=after_round)
-                if keizer
-                else player.standings_points(after_round)
-            )
+            if keizer:
+                player.points = self.keizer_scorer.total(
+                    player, after_round=after_round
+                )
+            elif knockout:
+                player.points = self.knockout.ranking_value(
+                    player, after_round=after_round
+                )
+            else:
+                player.points = player.standings_points(after_round)
             player.compute_tie_break_values(
                 after_round=after_round, tie_breaks=tie_breaks
             )

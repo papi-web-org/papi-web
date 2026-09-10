@@ -103,6 +103,12 @@
                 {% set allowed=true %}
             {% endif %}
         >
+            {# A locked round is read-only: show the result as plain text. #}
+            {% if round_locked is defined and round_locked %}
+            <span class="d-inline-block text-nowrap text-center py-1" style="width: 4.5rem;">
+                {% if display_result_str %}{{ display_result_str }}{% else %}-{% endif %}
+            </span>
+            {% else %}
             <button
                 class="btn btn-sm btn-outline-primary text-nowrap"
                 style="width: 4.5rem;"
@@ -119,6 +125,7 @@
             >
                 {% if display_result_str %}{{ display_result_str }}{% else %}-{% endif %}
             </button>
+            {% endif %}
         </span>
     </td>
     {% if admin_tournament.record_illegal_moves %}

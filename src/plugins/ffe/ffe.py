@@ -336,10 +336,10 @@ class FfePlugin(Plugin):
 
     @hookimpl
     def get_prohibited_pairing_dimensions(self):
-        from data.prohibited_pairings import ProhibitedPairingDimension
+        from data.pairing_dimensions import PairingDimension
 
         return [
-            ProhibitedPairingDimension(
+            PairingDimension(
                 id='ffe-league',
                 label=_('League'),
                 is_team=False,

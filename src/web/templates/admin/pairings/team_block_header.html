@@ -20,6 +20,10 @@
         style="cursor: pointer;"
         {% if match_excluded %}data-bs-toggle="tooltip" data-bs-title="{{ _('The result of this match is not taken into account for the final standings because at least one of the teams did not play 50%% of the matches (FIDE 6.6).') }}"{% endif %}
     >
+        {# Knock-out advancement for a level match: crown on the advancing
+           team's line-up, and the score becomes a button that opens the
+           designate-winner modal. #}
+        {% set ko_adv = admin_tournament.knockout.team_board_advancement(team_board) %}
         <td class="text-center text-nowrap">
             <i class="bi bi-chevron-down team-block-chevron me-1"></i>
             <strong>{{ team_board.display_number }}</strong>
@@ -27,10 +31,12 @@
         <td colspan="{{ team_a_colspan }}">
             <div class="d-flex align-items-center">
                 <strong class="flex-grow-1">
-                    {% set _a_score = admin_tournament.team_primary_score_before_round(
-                        team_board.team_a.id, team_board.round
-                    ) %}
-                    <span class="text-contrast me-1">{{ '%g'|format(_a_score) }}</span>
+                    {% if not admin_tournament.hide_team_block_points %}
+                        {% set _a_score = admin_tournament.team_primary_score_before_round(
+                            team_board.team_a.id, team_board.round
+                        ) %}
+                        <span class="text-contrast me-1">{{ '%g'|format(_a_score) }}</span>
+                    {% endif %}
                     <a
                         class="player-link"
                         hx-get="{{ url_for(
@@ -105,10 +111,23 @@
                     {{ '%g'|format(admin_tournament.team_pab_game_points) }} – F
                 {% endif %}
             {% endset %}
-            {% if admin_tournament.pairing_system.show_unpaired_team_modal %}
+            {# A knock-out's level match is clickable too, to designate the
+               winner — with a marker on the advancing team (or a warning in
+               the corner while unresolved). #}
+            {% if admin_tournament.pairing_system.show_unpaired_team_modal or ko_adv %}
+                {# A locked round is read-only: the score (with its advancement
+                   marker) shows as plain text rather than a modal button. #}
+                {% if round_locked is defined and round_locked %}
+                <span
+                    class="d-inline-block position-relative text-nowrap text-center
+                        {% if team_board.all_games_played %}fw-bold{% endif %}"
+                    style="width: 4.5rem;"
+                >
+                {% else %}
                 <button
                     type="button"
-                    class="btn btn-sm btn-outline-primary {% if team_board.all_games_played %}fw-bold{% endif %} text-nowrap"
+                    class="btn btn-sm btn-outline-primary position-relative
+                        {% if team_board.all_games_played %}fw-bold{% endif %} text-nowrap"
                     style="width: 4.5rem;"
                     hx-get="{{ url_for(
                         'admin-event-team-pairing-modal',
@@ -122,7 +141,34 @@
                     data-bs-toggle="modal"
                     data-bs-target="#modal-wrapper"
                     onclick="event.stopPropagation()"
-                >{{ _score_text | trim }}</button>
+                >
+                {% endif %}
+                    {{ _score_text | trim }}
+                    {# Markers live inside the button/text so hover/click count
+                       as the button. #}
+                    {% if ko_adv and ko_adv.winner_id %}
+                        {% set _win_left = ko_adv.winner_id == team_board.team_a.id %}
+                        <span
+                            class="badge rounded-pill bg-dark text-primary lh-1 d-inline-flex
+                                align-items-center justify-content-center position-absolute
+                                top-50 translate-middle {{ 'start-0' if _win_left else 'start-100' }}"
+                            style="width: 1.1rem; height: 1.1rem; font-size: 0.7rem;"
+                            {{ macros.tooltip_attributes('', _('Advances')
+                                ~ (' (' ~ ko_adv.reason ~ ')' if ko_adv.reason else ''), 'top') }}
+                        >1</span>
+                    {% elif ko_adv and ko_adv.manual_pending %}
+                        <span
+                            class="position-absolute top-0 end-0 overflow-hidden"
+                            style="width: 1.7rem; height: 1.7rem; border-top-right-radius: 0.25rem;"
+                            {{ macros.tooltip_attributes('', _('Tied match — choose who advances.'), 'top') }}
+                        >
+                            <span class="d-block w-100 h-100 bg-dark"
+                                style="clip-path: polygon(0 0, 100% 0, 100% 100%);"></span>
+                            <i class="bi-exclamation-triangle-fill text-primary position-absolute"
+                                style="top: 2px; right: 3px; font-size: 0.6rem; line-height: 1;"></i>
+                        </span>
+                    {% endif %}
+                {% if round_locked is defined and round_locked %}</span>{% else %}</button>{% endif %}
             {% else %}
                 {# Fixed-schedule systems (round-robin, two-game match): the
                    match belongs to a fixed schedule and can't be unpaired, so
@@ -192,10 +238,12 @@
                                 ) }}
                             >{% if _b_mp %}{{ '%+g'|format(_b_mp) }}&nbsp;{{ _('MP *** MATCH POINTS') }}{% endif %}{% if _b_mp and _b_gp %} {% endif %}{% if _b_gp %}{{ '%+g'|format(_b_gp) }}&nbsp;{{ _('GP *** GAME POINTS') }}{% endif %}</a>
                         {% endif %}
-                        {% set _b_score = admin_tournament.team_primary_score_before_round(
-                            team_board.team_b.id, team_board.round
-                        ) %}
-                        <span class="text-contrast ms-1">{{ '%g'|format(_b_score) }}</span>
+                        {% if not admin_tournament.hide_team_block_points %}
+                            {% set _b_score = admin_tournament.team_primary_score_before_round(
+                                team_board.team_b.id, team_board.round
+                            ) %}
+                            <span class="text-contrast ms-1">{{ '%g'|format(_b_score) }}</span>
+                        {% endif %}
                     {% else %}
                         {{ _('EXEMPT') }}
                     {% endif %}

@@ -93,17 +93,24 @@ class PlayerColumnHandler:
     def get_player_ranking_columns(
         self, tournament: Tournament
     ) -> list[TournamentPlayerTableColumn]:
+        base = [
+            pt.ExAequoRankColumn,
+            pt.TitleColumn,
+            pt.NameColumn,
+            pt.RatingColumn,
+            pt.CategoryColumn,
+            pt.GenderColumn,
+            pt.FederationColumn,
+            pt.ClubColumn,
+        ]
+        if tournament.pairing_system.eliminates_participants:
+            # A knock-out ranks by the round reached: a plain-language result,
+            # not a score or standings tie-breaks.
+            return self.get_columns(
+                base + [partial(pt.KnockoutResultColumn, tournament=tournament)]
+            )
         return self.get_columns(
-            [
-                pt.ExAequoRankColumn,
-                pt.TitleColumn,
-                pt.NameColumn,
-                pt.RatingColumn,
-                pt.CategoryColumn,
-                pt.GenderColumn,
-                pt.FederationColumn,
-                pt.ClubColumn,
-            ]
+            base
             + [
                 partial(pt.TieBreakColumn, tournament=tournament, index=index)
                 for index in range(len(tournament.tie_breaks))
@@ -113,25 +120,31 @@ class PlayerColumnHandler:
     def get_player_crosstable_columns(
         self, tournament: Tournament, ranking_round: int
     ) -> list[TournamentPlayerTableColumn]:
-        return self.get_columns(
-            [
-                pt.RankColumn,
-                pt.TitleColumn,
-                pt.NameColumn,
-                pt.RatingColumn,
-                pt.CategoryColumn,
-                pt.GenderColumn,
-                pt.FederationColumn,
-            ]
-            + [
-                partial(pt.RoundColumn, round_=round_)
-                for round_ in range(1, ranking_round + 1)
-            ]
-            + [
+        Column = Callable[[ColumnUsage], TournamentPlayerTableColumn]
+        rounds: list[Column] = [
+            partial(pt.RoundColumn, round_=round_)
+            for round_ in range(1, ranking_round + 1)
+        ]
+        # A knock-out ranks by the round reached: a plain-language result,
+        # not a score or standings tie-breaks.
+        score_columns: list[Column]
+        if tournament.pairing_system.eliminates_participants:
+            score_columns = [partial(pt.KnockoutResultColumn, tournament=tournament)]
+        else:
+            score_columns = [
                 partial(pt.TieBreakColumn, tournament=tournament, index=index)
                 for index in range(len(tournament.tie_breaks))
             ]
-        )
+        column_types: list[Column] = [
+            pt.RankColumn,
+            pt.TitleColumn,
+            pt.NameColumn,
+            pt.RatingColumn,
+            pt.CategoryColumn,
+            pt.GenderColumn,
+            pt.FederationColumn,
+        ]
+        return self.get_columns(column_types + rounds + score_columns)
 
     def get_alpha_board_player_columns(self) -> list[TournamentPlayerTableColumn]:
         return self.get_columns(

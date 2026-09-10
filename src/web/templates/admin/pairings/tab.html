@@ -38,6 +38,10 @@
     </div>
     {% set is_team_paired_mode = admin_event.is_team_event and admin_tournament.pairing_system.paired_by_team %}
     {% set is_flat_team_mode = admin_event.is_team_event and not admin_tournament.pairing_system.paired_by_team %}
+    {# A locked round is read-only (the pairing system decides — e.g. a
+       knock-out locks a round once the next is paired). Set once at the top
+       so both the individual and team pairing tables see it. #}
+    {% set round_locked = admin_tournament.round_is_locked(admin_round) %}
     {% if display_rankings %}
         {# Rankings never render an unpaired sidebar, so their controls should
            use the full width and no sidebar data needs to be prepared. #}
@@ -121,7 +125,7 @@
                                 </div>
                             {% endwith %}
 
-                            {% if 'RESULT_UPDATE' in existing_actions %}
+                            {% if 'RESULT_UPDATE' in existing_actions and not round_locked %}
                             <div class="d-flex flex-column">
                                 <div style="font-size: 0.8rem;">
                                     {{ _('Keyboard shortcuts:') }}
@@ -286,9 +290,15 @@
                                the remainder equally and truncate with an
                                ellipsis. Must mirror the column order in
                                pairing_table_header.html / pairing_row.html. #}
-                            {% set hide_player_points = admin_tournament.event.is_team_event and admin_tournament.pairing_system.paired_by_team %}
+                            {% set hide_player_points = admin_tournament.hide_pairing_points %}
                             {% set show_real_points = admin_tournament.print_real_points(admin_round) %}
                             {% set show_illegal = admin_tournament.record_illegal_moves %}
+                            {# Exact column count (mirrors the colgroup below) so a
+                               bracket-section header spans every column without a
+                               colspan larger than the table — which corrupts the
+                               fixed table layout. #}
+                            {% set points_cols = 0 if hide_player_points else (2 if show_real_points else 1) %}
+                            {% set bracket_ncols = 1 + points_cols + (1 if show_illegal else 0) + 2 + (1 if show_illegal else 0) + 1 + points_cols %}
                             <colgroup>
                                 <col style="width: {% if admin_boards_sortable %}7rem{% else %}6rem{% endif %};">
                                 {% if not hide_player_points %}
@@ -306,30 +316,55 @@
                                 {% endif %}
                             </colgroup>
                             {% include '/admin/pairings/pairing_table_header.html' %}
-                            <tbody>
-                                {# Table cell codes (A1 / B3): only used as the
-                                   fallback for an empty seat (a hole), to show
-                                   which player is missing. A seated player's code
-                                   comes from their own lineup slot. #}
-                                {% set molter_refs = (
-                                    admin_tournament.pairing_variation.engine.board_references(
-                                        admin_tournament, admin_round
-                                    ) if is_flat_team_mode else none
-                                ) %}
-                                {% for board in admin_filtered_boards %}
-                                    {% with
-                                        wtp=board.optional_white_tournament_player,
-                                        btp=board.black_tournament_player,
-                                        molter_code=(
-                                            molter_refs[board.index]
-                                            if molter_refs and board.index < molter_refs|length
-                                            else none
-                                        )
-                                    %}
-                                        {% include '/admin/pairings/pairing_row.html' %}
-                                    {% endwith %}
-                                {% endfor %}
-                                {% if not admin_filtered_boards %}
+                            {# Table cell codes (A1 / B3): only used as the
+                               fallback for an empty seat (a hole), to show
+                               which player is missing. A seated player's code
+                               comes from their own line-up slot. #}
+                            {% set molter_refs = (
+                                admin_tournament.pairing_variation.engine.board_references(
+                                    admin_tournament, admin_round
+                                ) if is_flat_team_mode else none
+                            ) %}
+                            {% set bracket_sections = admin_tournament.round_sections(admin_filtered_boards) %}
+                            {# The header sits in its own tbody and the section's
+                               rows in another, so the striped row colours restart
+                               (first row striped) under each header. #}
+                            {% for section_label, section_boards in bracket_sections %}
+                                {# Head each knock-out round with its name
+                                   (Upper Bracket Semifinals / Lower Bracket
+                                   Round 1 / Final / Grand Final / …). #}
+                                {% if section_label %}
+                                    <tbody>
+                                        <tr class="bracket-section-header">
+                                            {# Override the striped/hover table
+                                               background variables (Bootstrap paints
+                                               them as an overlay, so a plain bg-* is
+                                               hidden under it) with the page bg. #}
+                                            <td colspan="{{ bracket_ncols }}" class="fw-semibold small text-primary py-1 text-start"
+                                                style="--bs-table-bg-type: var(--bs-body-bg); --bs-table-bg-state: var(--bs-body-bg);">
+                                                {{ section_label }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                {% endif %}
+                                <tbody>
+                                    {% for board in section_boards %}
+                                        {% with
+                                            wtp=board.optional_white_tournament_player,
+                                            btp=board.black_tournament_player,
+                                            molter_code=(
+                                                molter_refs[board.index]
+                                                if molter_refs and board.index < molter_refs|length
+                                                else none
+                                            )
+                                        %}
+                                            {% include '/admin/pairings/pairing_row.html' %}
+                                        {% endwith %}
+                                    {% endfor %}
+                                </tbody>
+                            {% endfor %}
+                            {% if not admin_filtered_boards %}
+                                <tbody>
                                     <tr><td colspan="99" class="text-center text-muted p-3">
                                         {% if show_without_results and admin_tournament.round_has_pairings(admin_round) %}
                                             {{ _('No games in play — all results are in.') }}
@@ -337,15 +372,21 @@
                                             {{ _('No pairings for this round yet.') }}
                                         {% endif %}
                                     </td></tr>
-                                {% endif %}
-                            </tbody>
+                                </tbody>
+                            {% endif %}
                         </table>
                     {% endif %}
                 </div>
             {% else %}
                 <div class="col-12">
                     {% if admin_event.is_team_event %}
-                        {% include '/admin/pairings/team_rankings_table.html' %}
+                        {% if admin_tournament.pairing_system.eliminates_participants %}
+                            {% include '/admin/pairings/knockout_team_rankings_table.html' %}
+                        {% else %}
+                            {% include '/admin/pairings/team_rankings_table.html' %}
+                        {% endif %}
+                    {% elif admin_tournament.pairing_system.eliminates_participants %}
+                        {% include '/admin/pairings/knockout_rankings_table.html' %}
                     {% else %}
                         {% include '/admin/pairings/rankings_table.html' %}
                     {% endif %}
@@ -356,6 +397,9 @@
     <script>
         var pairing_board_id = null;
         var keyQueue = [];
+        // A locked round is read-only: keyboard result entry and board
+        // navigation are inert (round/tournament nav still works).
+        window.roundLocked = {{ 'true' if round_locked else 'false' }};
         var requestInFlight = false;
 
         function getEditingBlocks() {
@@ -522,6 +566,11 @@
         function keydownHandler(e) {
             if ($('#pairings-table').length === 0) {
                 // The event listener is active, but the page has changed
+                return;
+            }
+            // A locked round takes no result / board-navigation keys; only
+            // round/tournament navigation (Shift + arrows) stays.
+            if (window.roundLocked && !e.shiftKey) {
                 return;
             }
             // Ignore key events originating in form controls (the inline

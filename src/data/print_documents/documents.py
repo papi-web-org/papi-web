@@ -53,6 +53,7 @@ from data.print_documents.options import (
     TeamGridSortPrintOption,
     ListPlayerSortPrintOption,
     ShowWarningsPrintOption,
+    KnockoutSchedulePrintOption,
     NonMonetaryPrintOption,
     FederationPrintOption,
     ClubThresholdPrintOption,
@@ -462,6 +463,91 @@ class PlayerCrosstablePrintDocument(AbstractPlayerRankingPrintDocument):
             'include_player_history': self.include_player_history,
             'max_round': self.ranking_round,
         }
+
+
+class KnockoutBracketPrintDocument(PrintDocument):
+    """A bracket diagram for a knock-out — the upper/lower brackets and the
+    grand final (single elimination is just the one bracket, plus a
+    third-place match when played). Offered only for knock-out tournaments."""
+
+    @staticmethod
+    def static_id() -> str:
+        return 'knockout-bracket'
+
+    @staticmethod
+    def static_name() -> str:
+        return _('Knock-out Bracket')
+
+    @classmethod
+    def is_available(cls, allowed_tournaments: list[Tournament]) -> bool:
+        if not super().is_available(allowed_tournaments):
+            return False
+        return any(
+            tournament.pairing_system.eliminates_participants
+            for tournament in allowed_tournaments
+        )
+
+    @staticmethod
+    def available_options() -> list[type[PrintOption]]:
+        return [TournamentPrintOption, KnockoutSchedulePrintOption]
+
+    @property
+    def show_schedule(self) -> bool:
+        return self._get_option(KnockoutSchedulePrintOption).value
+
+    @property
+    def title(self) -> str:
+        return _('Knock-out Schedule') if self.show_schedule else _('Knock-out Bracket')
+
+    @property
+    def template_name(self) -> str:
+        return '/admin/print/knockout_bracket.html'
+
+    @property
+    def template_context(self) -> dict[str, Any]:
+        from data.pairings.knockout_helpers.bracket_svg import build_svg
+
+        layout = self.tournament.knockout.layout()
+        context: dict[str, Any] = {
+            'tournament': self.tournament,
+            'subtitle': self.tournament.name,
+            'show_schedule': self.show_schedule,
+        }
+        if self.show_schedule:
+            context['schedule'] = self._schedule_rounds(layout)
+        else:
+            context['svg'] = build_svg(layout) if layout is not None else None
+        return context
+
+    def _schedule_rounds(self, layout) -> list[dict[str, Any]]:
+        """The bracket as a chronological list: one entry per app round, each
+        grouping its matches by bracket round (a round can hold both a
+        winners' and a losers' game), with the round's scheduled date/time when
+        one has been set."""
+        from utils.date_time import format_datetime
+
+        if layout is None:
+            return []
+        round_datetimes = self.tournament.round_datetimes
+        by_round: dict[int, list[dict[str, Any]]] = {}
+        for section in layout.sections:
+            for column in section.columns:
+                for app_round in column.app_rounds or (column.app_round,):
+                    by_round.setdefault(app_round, []).append(
+                        {'name': column.name, 'matches': list(column.matches)}
+                    )
+        return [
+            {
+                'app_round': app_round,
+                'groups': by_round[app_round],
+                'datetime': (
+                    format_datetime(dt)
+                    if (dt := round_datetimes.get(app_round))
+                    else ''
+                ),
+            }
+            for app_round in sorted(by_round)
+        ]
 
 
 class PlayerRoundPerformanceIndicatorPrintDocument(PrintDocument):
@@ -1034,12 +1120,23 @@ class TeamRankingPrintDocument(PrintDocument):
             for row in self.tournament.team_standings(after_round=self.ranking_round)
             if not row['team'].is_excluded_from_standings
         ]
+        # A knock-out ranks by the round reached, shown as a plain-language
+        # result, not match/game points or standings tie-breaks.
+        eliminates = self.tournament.pairing_system.eliminates_participants
         return {
             'tournament': self.tournament,
             'subtitle': self.tournament.name,
             'standings': standings,
             'primary_is_mp': primary_is_mp,
             'team_tie_breaks': team_tie_breaks,
+            'eliminates': eliminates,
+            'knockout_standings': (
+                self.tournament.knockout.team_standing_labels(
+                    after_round=self.ranking_round
+                )
+                if eliminates
+                else {}
+            ),
         }
 
 

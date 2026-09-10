@@ -242,9 +242,17 @@
                     <script>
                         // Some systems decide the round count (a round-robin
                         // from the entrants, a Scheveningen from the boards),
-                        // so the field is re-read whenever those change.
+                        // so the field is re-read whenever those change. The
+                        // field is already server-rendered for the current
+                        // system, so the modal's init triggers (which fire this
+                        // handler on swap) must NOT re-read it — that would wipe
+                        // a server-set validation error. Only genuine user
+                        // changes, after the modal has settled, reload it.
                         (function () {
+                            let ready = false;
+                            setTimeout(() => { ready = true; }, 250);
                             function reloadRoundsField() {
+                                if (!ready) return;
                                 const field = document.getElementById('rounds-field');
                                 if (field) htmx.trigger(field, 'rounds-params-updated');
                             }
@@ -252,6 +260,21 @@
                             $('[name$="_pairing_variation"]').on('change', reloadRoundsField);
                             $('#team-player-count').on('change', reloadRoundsField);
                         })();
+                    </script>
+                    <script>
+                        // Send the round count exactly as shown, even when the
+                        // field was just cleared and the form submitted before it
+                        // lost focus (some browsers don't commit an emptied number
+                        // input to the serialised form until then). Namespaced so
+                        // re-rendering the modal doesn't stack duplicate handlers.
+                        $('#modal-form')
+                            .off('htmx:configRequest.rounds')
+                            .on('htmx:configRequest.rounds', function (evt) {
+                                const rounds = document.getElementById('rounds');
+                                if (rounds && !rounds.disabled) {
+                                    evt.detail.parameters['rounds'] = rounds.value;
+                                }
+                            });
                     </script>
                 </div>
                 <div class="row gy-2 gx-3">
@@ -287,16 +310,19 @@
                     </div>
                     <script>
                         (function () {
-                            const PREDETERMINED = {{
+                            // Byes are only offered where the system lets the
+                            // arbiter define one (a Swiss / Keizer). Fixed-table
+                            // systems and knock-outs have no sit-out bye.
+                            const NO_BYES = {{
                                 pairing_systems
-                                | selectattr('predetermined_pairings')
+                                | rejectattr('allow_bye_definition')
                                 | map(attribute='id')
                                 | list
                                 | tojson
                             }};
                             function syncByeOptions() {
                                 const id = $('#pairing-system').val() || '';
-                                $('.bye-option').toggle(!PREDETERMINED.includes(id));
+                                $('.bye-option').toggle(!NO_BYES.includes(id));
                             }
                             $('#pairing-system').on('change', syncByeOptions);
                             syncByeOptions();

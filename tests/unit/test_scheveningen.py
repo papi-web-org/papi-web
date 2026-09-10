@@ -604,42 +604,42 @@ class TestScheveningenTournament(TestCase):
         assert not MolterTablePrintDocument.is_available([self._tournament()])
 
     def test_the_round_count_is_left_to_the_system(self):
-        """A Scheveningen's count follows its boards, so the field is
-        emptied and disabled rather than typed in — the count is worked
-        out on demand."""
+        """A Scheveningen's count follows its boards, so before pairing the
+        field shows an "Automatic" placeholder — editable (a value only lays
+        out a schedule), not required, and an unset (0) value is left blank."""
         data = {
             'pairing_system': 'SCHEVENINGEN',
             'SCHEVENINGEN_pairing_variation': 'SCHEVENINGEN_STANDARD',
             'team_player_count': '4',
-            'rounds': '1',
+            'rounds': '0',
         }
         context = TournamentAdminController._rounds_field_context(
             self._tournament(), data
         )
-        assert context['rounds_are_automatic']
-        assert context['rounds_automatic_reason']
+        assert not context['rounds_are_automatic']  # editable before pairing
+        assert context['rounds_placeholder_automatic']  # shows "Automatic"
         assert data['rounds'] == ''
 
     def test_an_entrant_driven_system_is_automatic_too(self):
         """A round-robin's count follows its teams. The form cannot know
-        it yet, but it must not ask for it either."""
+        it yet, but it must not require it either — an "Automatic" placeholder."""
         data = {
             'pairing_system': 'TEAM_ROUND_ROBIN',
             'TEAM_ROUND_ROBIN_pairing_variation': 'TEAM_ROUND_ROBIN_BERGER',
             'team_player_count': '4',
-            'rounds': '7',
+            'rounds': '0',
         }
         context = TournamentAdminController._rounds_field_context(
             self._tournament(), data
         )
-        assert context['rounds_are_automatic']
+        assert not context['rounds_are_automatic']
+        assert context['rounds_placeholder_automatic']
         assert data['rounds'] == ''
 
     def test_a_paired_tournament_shows_the_settled_count(self):
-        """Before pairing the count depends on boards or entrants that
-        may still change, so the field reads "Automatic". Once the
-        tournament is under way it is settled, and showing it beats a
-        placeholder — still greyed out, since it is not typed in."""
+        """Before pairing the field is the arbiter's ("Automatic" placeholder,
+        editable). Once the tournament is under way the count is settled, so it
+        is shown and greyed out."""
         self._add_teams(2)
         tournament = self._tournament()
         data = {
@@ -649,14 +649,15 @@ class TestScheveningenTournament(TestCase):
             'rounds': '',
         }
         context = TournamentAdminController._rounds_field_context(tournament, data)
-        assert context['rounds_are_automatic']
+        assert not context['rounds_are_automatic'], 'unpaired: editable'
+        assert context['rounds_placeholder_automatic']
         assert data['rounds'] == '', 'unpaired: the placeholder shows'
 
         self._seat_a_board()
         tournament = self._tournament()
         assert tournament.has_pairings
         context = TournamentAdminController._rounds_field_context(tournament, data)
-        assert context['rounds_are_automatic'], "still not the arbiter's to type"
+        assert context['rounds_are_automatic'], 'paired: settled, greyed out'
         assert data['rounds'] == '4'
 
     def test_a_swiss_is_still_asked_for(self):

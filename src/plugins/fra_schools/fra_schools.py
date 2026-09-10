@@ -205,14 +205,14 @@ class FRASchoolsPlugin(Plugin):
 
     @hookimpl
     def get_prohibited_pairing_dimensions(self):
-        from data.prohibited_pairings import ProhibitedPairingDimension
+        from data.pairing_dimensions import PairingDimension
 
         def school_key(player):
             school = FRASchoolsUtils.get_player_school(player)
             return str(school.id) if school and school.id is not None else None
 
         return [
-            ProhibitedPairingDimension(
+            PairingDimension(
                 id='fra-school',
                 label=_('School'),
                 is_team=False,

@@ -43,7 +43,12 @@ from data.pairings.systems import (
 from data.player import TournamentPlayer
 from data.rule_sets import RuleSet, RuleSetManager
 from data.rule_sets.rule_sets import RuleSetField, rule_set_config_key
-from data.tie_breaks import TieBreakManager, TieBreak, TieBreakOptionManager
+from data.tie_breaks import (
+    TieBreakManager,
+    TieBreak,
+    TieBreakOptionManager,
+    TieBreakPurpose,
+)
 from data.tie_breaks.sets import (
     TieBreakSetSource,
     available_tie_break_sets,
@@ -303,7 +308,9 @@ class TournamentAdminController(BaseEventAdminController):
             rule_set_config: dict[str, Any] = {}
             stored_plugin_data: dict[str, dict[str, Any]] = {}
             if action == 'create':
-                rounds = 7
+                # Blank by default: the arbiter sets it (Swiss), or leaves it for
+                # a system that settles its own count. Stored as 0 = unset.
+                rounds = 0
                 rating = TournamentRating.STANDARD.value
                 start_date = admin_event.start_date
                 stop_date = admin_event.stop_date
@@ -390,8 +397,12 @@ class TournamentAdminController(BaseEventAdminController):
             if action in ('update', 'clone'):
                 tournament = web_context.get_admin_tournament()
                 round_datetimes = tournament.round_datetimes
+            # Cover any round that already has a saved date, even past the
+            # stored count — a system that settles its own count stores 0, so
+            # ``rounds`` would otherwise drop the dates the schedule shows.
             schedule_form_data: dict[str, str] = {}
-            for round_num in range(1, rounds + 1):
+            last_scheduled = max(round_datetimes.keys(), default=0)
+            for round_num in range(1, max(rounds, last_scheduled) + 1):
                 dt = round_datetimes.get(round_num)
                 schedule_form_data[f'round_{round_num}_datetime'] = (
                     WebContext.value_to_form_data(dt) if dt else ''
@@ -510,7 +521,13 @@ class TournamentAdminController(BaseEventAdminController):
         # data and errors are always populated by the if/else block above
         assert data is not None
         assert errors is not None
-        rounds = int(data.get('rounds') or 1)
+        # Resolve the round-count field first: for a system that settles its own
+        # count it clears data['rounds'] (blank), and the schedule shows a prompt
+        # to set a number rather than any rows.
+        rounds_field_context = cls._rounds_field_context(
+            web_context.admin_tournament, data
+        )
+        rounds = int(data.get('rounds') or 0)
         event_type = (
             EventType.TEAM if admin_event.is_team_event else EventType.INDIVIDUAL
         )
@@ -594,7 +611,7 @@ class TournamentAdminController(BaseEventAdminController):
                 'data': data,
                 'errors': errors,
             }
-            | cls._rounds_field_context(web_context.admin_tournament, data)
+            | rounds_field_context
             | {
                 'tournament_criteria': tournament_criteria,
                 'force_criteria_open': any(
@@ -642,10 +659,11 @@ class TournamentAdminController(BaseEventAdminController):
             data = {}
         start_date = event.start_date
         stop_date = event.stop_date
-        # 0 (an empty field) means the pairing system works the count
-        # out from its entrants — see ``Tournament.rounds``. The field is
-        # disabled for those systems, so an empty value can only mean
-        # that; anything else must still be a positive number.
+        # 0 (a blank field) means unset: a system that settles its own count
+        # works it out (see ``Tournament.rounds``); any other system needs a
+        # value (checked below). A stored non-zero value on an automatic system
+        # is only the arbiter's schedule count, still overridden by
+        # ``Tournament.rounds``.
         rounds = WebContext.form_data_to_int(data, field := 'rounds') or 0
         rounds_are_automatic = rounds == 0
         tournament: Tournament | None = None
@@ -690,6 +708,19 @@ class TournamentAdminController(BaseEventAdminController):
         pairing = WebContext.form_data_to_str(
             data, f'{pairing_system.id}_pairing_variation'
         )
+
+        # A system that does not settle its own count needs an explicit number:
+        # a blank field must not silently become one round. Only flag it when we
+        # are sure the chosen system is not an automatic one.
+        if rounds_are_automatic and pairing:
+            from data.pairings import PairingVariationManager
+
+            try:
+                variation = PairingVariationManager(event).get_object(pairing)
+            except KeyError:
+                variation = None
+            if variation is not None and not variation.sets_its_own_round_count:
+                errors.setdefault('rounds', _('Please enter the number of rounds.'))
 
         if action == 'update':
             tournament = web_context.get_admin_tournament()
@@ -987,7 +1018,11 @@ class TournamentAdminController(BaseEventAdminController):
             player_rating_type=player_rating_type,
             start_date=start_date,
             stop_date=stop_date,
-            rounds=rounds or 1,
+            # 0 = unset; a system that settles its own count keeps it (worked
+            # out by ``Tournament.rounds``), which also defaults everything else
+            # to at least one round. Don't force 1 here, or clearing an
+            # automatic field would store a spurious count.
+            rounds=rounds,
             rating=rating or TournamentRating.STANDARD.value,
             pairing=pairing or '',
             override_unrated_rapid_blitz=override_unrated_rapid_blitz,
@@ -1101,6 +1136,8 @@ class TournamentAdminController(BaseEventAdminController):
         overrides = rule_set.tie_breaks_for_pairing(system_id)
         if not overrides:
             return
+        # Rule sets carry standings criteria, so the list replaced here is a
+        # standings one.
         database.delete_all_tournament_stored_tie_breaks(stored_tournament.id)
         for index, (tb_type, options) in enumerate(overrides):
             database.add_stored_tie_break(
@@ -1157,16 +1194,23 @@ class TournamentAdminController(BaseEventAdminController):
         tournament: Tournament | None,
         data: dict[str, str],
     ) -> dict[str, Any]:
-        """Whether the pairing system decides the round count, and why.
+        """How to render the round-count field for the chosen pairing system.
 
-        A round-robin's length follows from its entrants, a
-        Scheveningen's from its boards; neither is something the arbiter
-        should have to work out, and neither is knowable while the
-        tournament is being created. Those systems leave the field empty
-        and disabled — stored as 0, answered on demand by
-        ``Tournament.rounds``.
+        The field starts blank for every system (nothing is prefilled). A
+        round-robin's length follows from its entrants, a knock-out's from the
+        bracket depth: those systems settle their own count (worked out on
+        demand by ``Tournament.rounds``, stored as 0), so a blank field shows an
+        "Automatic" placeholder and is the arbiter's to override only when they
+        want to lay a schedule over a specific number — whatever they enter is
+        stored and shown again, and generation warns if it differs from what the
+        system will play. Once paired the count is fixed and the field is greyed.
         """
         from data.pairings import PairingVariationManager
+
+        # A stored 0 (or the create default) means "unset" — show it blank so
+        # the placeholder can speak, for every system.
+        if (data.get('rounds') or '').strip() == '0':
+            data['rounds'] = ''
 
         # 'pairing_system' carries the system id; the chosen variation
         # sits in a field named after that system and carries the full
@@ -1182,24 +1226,36 @@ class TournamentAdminController(BaseEventAdminController):
             except KeyError:
                 variation = None
         if variation is None or not variation.sets_its_own_round_count:
-            return {'rounds_are_automatic': False, 'rounds_automatic_reason': ''}
-        # Once the tournament is under way the count is settled, so show
-        # it rather than a placeholder — greyed out either way, since it
-        # is still not the arbiter's to type. Before that it is left
-        # empty: it depends on entrants or boards that may yet change,
-        # and 0 is what gets stored.
-        is_paired = tournament is not None and tournament.has_pairings
-        data['rounds'] = str(tournament.rounds) if tournament and is_paired else ''
+            return {
+                'rounds_are_automatic': False,
+                'rounds_placeholder_automatic': False,
+                'rounds_automatic_count': None,
+                'rounds_automatic_reason': '',
+                'rounds_automatic_hint': '',
+            }
+        # Once the tournament is under way the count is settled by the bracket
+        # (or table), so show it, greyed out — no longer the arbiter's to change.
+        if tournament is not None and tournament.has_pairings:
+            data['rounds'] = str(tournament.rounds)
+            return {
+                'rounds_are_automatic': True,
+                'rounds_placeholder_automatic': True,
+                'rounds_automatic_count': tournament.rounds,
+                'rounds_automatic_reason': _(
+                    'The number of rounds follows from the pairing system.'
+                ),
+                'rounds_automatic_hint': '',
+            }
+        # Before pairing: blank (showing the "Automatic" placeholder) unless the
+        # arbiter has entered a value, which is kept as-is. ``rounds_automatic_
+        # count`` feeds the schedule fallback only, not the placeholder.
+        auto = tournament.automatic_rounds if tournament else None
         return {
-            'rounds_are_automatic': True,
-            'rounds_automatic_reason': _(
-                'The number of rounds follows from the pairing system.'
-            )
-            if is_paired
-            else _(
-                'The number of rounds follows from the pairing system and is '
-                'worked out when the pairings are generated.'
-            ),
+            'rounds_are_automatic': False,
+            'rounds_placeholder_automatic': True,
+            'rounds_automatic_count': auto,
+            'rounds_automatic_reason': '',
+            'rounds_automatic_hint': '',
         }
 
     @get(
@@ -1216,7 +1272,13 @@ class TournamentAdminController(BaseEventAdminController):
         web_context = TournamentAdminWebContext(request, tournament_id=tournament_id)
         tournament = web_context.admin_tournament
         data: dict[str, str] = dict(request.query_params)
-        data.setdefault('rounds', str(tournament.rounds if tournament else 1))
+        # Seed from the stored value (0 = unset → blank), not the worked-out
+        # count, so switching system leaves the field blank rather than sticking
+        # to the automatic number.
+        data.setdefault(
+            'rounds',
+            str(tournament.stored_tournament.rounds) if tournament else '',
+        )
         template_context = (
             web_context.template_context
             | {
@@ -1256,12 +1318,12 @@ class TournamentAdminController(BaseEventAdminController):
         web_context = TournamentAdminWebContext(request, tournament_id=tournament_id)
         tournament = web_context.admin_tournament
         event = web_context.get_admin_event()
+        # Blank means no schedule yet — show the prompt (0 rows). The one
+        # exception is a paired tournament: its field is disabled, so the
+        # browser omits it, and the settled count should still lay out the rows.
         rounds_value = int(rounds or 0)
-        if rounds_value < 1:
-            if tournament:
-                rounds_value = tournament.rounds
-            else:
-                rounds_value = 1
+        if rounds_value < 1 and tournament is not None and tournament.has_pairings:
+            rounds_value = tournament.rounds
 
         min_date = event.start_date
         max_date = event.stop_date
@@ -1384,6 +1446,12 @@ class TournamentAdminController(BaseEventAdminController):
                             )
 
                 database.update_stored_tournament(stored_tournament)
+                assert stored_tournament.id is not None
+                database.reseed_tie_breaks_on_pairing_change(
+                    stored_tournament.id,
+                    tournament.stored_tournament.pairing,
+                    stored_tournament.pairing,
+                )
                 self._apply_rule_set_tie_breaks(database, event, stored_tournament)
                 success_message = _(
                     'Tournament [{tournament}] has been updated.'
@@ -1897,7 +1965,14 @@ class TournamentAdminController(BaseEventAdminController):
         except KeyError:
             return {field: f'Unknown tie-break [{tie_break_id}].'}
         tie_break = cls._tie_break_from_data(event, data)
-        if message := tournament.tie_break_invalid_message(tie_break):
+        advancement = tournament.tie_break_config_purpose == TieBreakPurpose.ADVANCEMENT
+        if advancement and not tie_break.usable_as_knockout_advancement:
+            errors[field] = _(
+                'This tie-break cannot decide which team advances in a knock-out.'
+            )
+        elif not advancement and (
+            message := tournament.tie_break_invalid_message(tie_break)
+        ):
             errors[field] = message
         else:
             existing_tie_breaks = [
@@ -1947,19 +2022,37 @@ class TournamentAdminController(BaseEventAdminController):
             for option in TieBreakOptionManager(event).objects()
         } | {'type': ''}
 
+        advancement = tournament.tie_break_config_purpose == TieBreakPurpose.ADVANCEMENT
         tie_break_select_options: dict[str, dict[str, SelectOption]] = defaultdict(dict)
         for tie_break in TieBreakManager(event).objects():
-            if not tie_break.is_compatible_with(tournament.pairing_system):
-                continue
-            # Team events: only tie-breaks that produce a per-team value
-            # (FIDE MTB26 "both" + team-only groups). Individual events:
-            # everything except team-only.
-            if event.is_team_event:
-                if not tie_break.supports_team_mode:
+            if advancement:
+                # A knock-out configures the tie-breaks that decide who
+                # advances from a level match. Team advancement compares
+                # teams (team tie-breaks); individual advancement compares
+                # players. The manual play-off marker suits either.
+                if not tie_break.usable_as_knockout_advancement:
                     continue
+                if not tie_break.is_manual:
+                    # Team advancement compares teams, so any tie-break with
+                    # a team-mode value qualifies (the team-specific ones and
+                    # the individual ones usable in team mode). Individual
+                    # advancement excludes the team-only tie-breaks.
+                    if event.is_team_event and not tie_break.supports_team_mode:
+                        continue
+                    if not event.is_team_event and tie_break.is_team_tiebreak:
+                        continue
             else:
-                if tie_break.is_team_tiebreak:
+                if not tie_break.is_compatible_with(tournament.pairing_system):
                     continue
+                # Team events: only tie-breaks that produce a per-team value
+                # (FIDE MTB26 "both" + team-only groups). Individual events:
+                # everything except team-only.
+                if event.is_team_event:
+                    if not tie_break.supports_team_mode:
+                        continue
+                else:
+                    if tie_break.is_team_tiebreak:
+                        continue
             # Picker shows the family acronym (e.g. ``ESB``) instead
             # of the configured variant (``EMMSB``) — the variant is a
             # tie-break option, not a separate type. Same idea for the
@@ -1996,6 +2089,16 @@ class TournamentAdminController(BaseEventAdminController):
     ) -> dict[str, Any]:
         """Build the additional context for the tie-breaks modal: the picker
         of tie-break sets and the user-set list for the save-as button."""
+        if tournament.tie_break_config_purpose == TieBreakPurpose.ADVANCEMENT:
+            # A knock-out's advancement tie-breaks are a short, hand-picked
+            # list; the standings-oriented preset sets do not apply.
+            return {
+                'modal': 'tie_breaks',
+                'tie_break_set_select_options': {},
+                'tie_break_set_custom_names': [],
+                'tie_break_set_save_as_error': None,
+                'tie_break_set_save_as_name_value': '',
+            } | ({'success_message': success_message} if success_message else {})
         grouped = available_tie_break_sets(tournament)
 
         select_options: dict[str, dict[str, SelectOption]] = {}

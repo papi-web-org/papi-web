@@ -21,6 +21,7 @@ class TestTournamentFunctionality:
         expect(modal).to_be_visible()
         name = 'Test Tournament'
         modal.get_by_test_id('name').fill(name)
+        modal.get_by_test_id('rounds').fill('7')
         modal.get_by_role('button', name='Create', exact=True).click()
 
         # Redirection to Tie-breaks

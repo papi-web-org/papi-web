@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from functools import cached_property
+from functools import cache, cached_property
 from typing import TYPE_CHECKING, override
 
 from common.i18n import _
@@ -22,6 +22,84 @@ if TYPE_CHECKING:
     )
     from data.tournament import Tournament
     from data.event import Event
+
+
+@cache
+def swiss_style_permission_handler(
+    *, protect_unpairing: bool = True
+) -> PermissionHandler[PairingAction]:
+    """Permissions for round-by-round systems using the Swiss pairing tab.
+
+    With *protect_unpairing*, unpairing goes through the protected-editing
+    modal: a Swiss decides each round from the ones before it, so dropping a
+    round changes what the next pairing would have been. Without it, unpairing
+    is plain: a table- or bracket-driven schedule pairs the same way whatever
+    is undone.
+    """
+    full_unpairing_mode = (
+        SafetyMode.FIDE_INCOMPATIBLE if protect_unpairing else SafetyMode.SAFE
+    )
+    manual_unpairing_rules = (
+        {
+            RoundStatus.PAST: SafetyMode.FIDE_INCOMPATIBLE,
+            RoundStatus.PREVIOUS: SafetyMode.UNSAFE,
+            RoundStatus.CURRENT: SafetyMode.UNSAFE,
+        }
+        if protect_unpairing
+        else {
+            RoundStatus.PAST: SafetyMode.SAFE,
+            RoundStatus.PREVIOUS: SafetyMode.SAFE,
+            RoundStatus.CURRENT: SafetyMode.SAFE,
+        }
+    )
+    return PermissionHandler(
+        [
+            Permission(PairingAction.FULL_PAIRING, {RoundStatus.NEXT: SafetyMode.SAFE}),
+            Permission(
+                PairingAction.PARTIAL_PAIRING, {RoundStatus.CURRENT: SafetyMode.UNSAFE}
+            ),
+            Permission(
+                PairingAction.MANUAL_PAIRING,
+                {
+                    RoundStatus.PAST: SafetyMode.FIDE_INCOMPATIBLE,
+                    RoundStatus.PREVIOUS: SafetyMode.UNSAFE,
+                    RoundStatus.CURRENT: SafetyMode.UNSAFE,
+                    RoundStatus.NEXT: SafetyMode.FIDE_INCOMPATIBLE,
+                },
+            ),
+            Permission(
+                PairingAction.FULL_UNPAIRING,
+                {RoundStatus.CURRENT: full_unpairing_mode},
+            ),
+            Permission(PairingAction.MANUAL_UNPAIRING, manual_unpairing_rules),
+            Permission(
+                PairingAction.COLOR_PERMUTE,
+                {
+                    RoundStatus.PAST: SafetyMode.FIDE_INCOMPATIBLE,
+                    RoundStatus.PREVIOUS: SafetyMode.UNSAFE,
+                    RoundStatus.CURRENT: SafetyMode.UNSAFE,
+                },
+            ),
+            Permission(
+                PairingAction.RESULT_UPDATE,
+                {
+                    RoundStatus.PAST: SafetyMode.FIDE_INCOMPATIBLE,
+                    RoundStatus.PREVIOUS: SafetyMode.UNSAFE,
+                    RoundStatus.CURRENT: SafetyMode.SAFE,
+                },
+            ),
+            Permission(
+                PairingAction.BYE_UPDATE,
+                {
+                    RoundStatus.PAST: SafetyMode.FIDE_INCOMPATIBLE,
+                    RoundStatus.PREVIOUS: SafetyMode.UNSAFE,
+                    RoundStatus.CURRENT: SafetyMode.SAFE,
+                    RoundStatus.NEXT: SafetyMode.SAFE,
+                    RoundStatus.FUTURE: SafetyMode.SAFE,
+                },
+            ),
+        ]
+    )
 
 
 class PairingSystem[PV: PairingVariation](IdentifiableEntity, ABC):
@@ -124,6 +202,33 @@ class PairingSystem[PV: PairingVariation](IdentifiableEntity, ABC):
         than half of their games is dropped from the final standings and
         their games annulled. The rule is defined for an all-play-all, so
         default False."""
+        return False
+
+    @property
+    def eliminates_participants(self) -> bool:
+        """Whether losing takes a participant out of the tournament, so
+        the field shrinks each round (a knock-out). A knocked-out player
+        is not waiting to be paired and has no result to give: they must
+        not count towards the round being finished, nor appear in the
+        unpaired ('to pair') list — only the participants still boarded
+        this round do. Default False — in a Swiss or round-robin everyone
+        plays every round."""
+        return False
+
+    def round_is_locked(self, tournament: 'Tournament', round_: int) -> bool:
+        """Whether a round's results are read-only. Default False — most
+        systems let a result be corrected at any time. A knock-out locks a
+        round once the next has been paired from it, since changing a result
+        would invalidate the bracket that was drawn."""
+        return False
+
+    def tournament_is_over(self, tournament: 'Tournament') -> bool:
+        """Whether the tournament has ended before its last reserved round is
+        reached. Default False — a tournament ends when its final round is
+        played. A double elimination reserves a reset round that is skipped
+        when the winners'-bracket champion wins the grand final, ending the
+        event a round early; the system reports that here so the standings
+        become available without pairing a round that will never be played."""
         return False
 
     @property
@@ -249,60 +354,7 @@ class SwissPairingSystem(PairingSystem['SwissVariation']):
 
     @cached_property
     def permission_handler(self) -> PermissionHandler[PairingAction]:
-        permissions = [
-            Permission(PairingAction.FULL_PAIRING, {RoundStatus.NEXT: SafetyMode.SAFE}),
-            Permission(
-                PairingAction.PARTIAL_PAIRING, {RoundStatus.CURRENT: SafetyMode.UNSAFE}
-            ),
-            Permission(
-                PairingAction.MANUAL_PAIRING,
-                {
-                    RoundStatus.PAST: SafetyMode.FIDE_INCOMPATIBLE,
-                    RoundStatus.PREVIOUS: SafetyMode.UNSAFE,
-                    RoundStatus.CURRENT: SafetyMode.UNSAFE,
-                    RoundStatus.NEXT: SafetyMode.FIDE_INCOMPATIBLE,
-                },
-            ),
-            Permission(
-                PairingAction.FULL_UNPAIRING,
-                {RoundStatus.CURRENT: SafetyMode.FIDE_INCOMPATIBLE},
-            ),
-            Permission(
-                PairingAction.MANUAL_UNPAIRING,
-                {
-                    RoundStatus.PAST: SafetyMode.FIDE_INCOMPATIBLE,
-                    RoundStatus.PREVIOUS: SafetyMode.UNSAFE,
-                    RoundStatus.CURRENT: SafetyMode.UNSAFE,
-                },
-            ),
-            Permission(
-                PairingAction.COLOR_PERMUTE,
-                {
-                    RoundStatus.PAST: SafetyMode.FIDE_INCOMPATIBLE,
-                    RoundStatus.PREVIOUS: SafetyMode.UNSAFE,
-                    RoundStatus.CURRENT: SafetyMode.UNSAFE,
-                },
-            ),
-            Permission(
-                PairingAction.RESULT_UPDATE,
-                {
-                    RoundStatus.PAST: SafetyMode.FIDE_INCOMPATIBLE,
-                    RoundStatus.PREVIOUS: SafetyMode.UNSAFE,
-                    RoundStatus.CURRENT: SafetyMode.SAFE,
-                },
-            ),
-            Permission(
-                PairingAction.BYE_UPDATE,
-                {
-                    RoundStatus.PAST: SafetyMode.FIDE_INCOMPATIBLE,
-                    RoundStatus.PREVIOUS: SafetyMode.UNSAFE,
-                    RoundStatus.CURRENT: SafetyMode.SAFE,
-                    RoundStatus.NEXT: SafetyMode.SAFE,
-                    RoundStatus.FUTURE: SafetyMode.SAFE,
-                },
-            ),
-        ]
-        return PermissionHandler(permissions)
+        return swiss_style_permission_handler()
 
     def default_current_round(self, tournament: 'Tournament') -> int:
         return tournament.last_paired_round
@@ -446,7 +498,7 @@ class TeamSwissPairingSystem(PairingSystem['TeamSwissVariation']):
 
     @cached_property
     def permission_handler(self) -> PermissionHandler[PairingAction]:
-        return SwissPairingSystem().permission_handler
+        return swiss_style_permission_handler()
 
     @property
     def allow_bye_definition(self) -> bool:
@@ -535,8 +587,9 @@ class TeamRoundRobinPairingSystem(PairingSystem['TeamRoundRobinVariation']):
     def permission_handler(self) -> PermissionHandler[PairingAction]:
         # Reuse the Swiss permission set so FULL_PAIRING is permitted
         # when the ratings-warning modal falls through to the single-
-        # round pair endpoint (variations with no settings).
-        return SwissPairingSystem().permission_handler
+        # round pair endpoint (variations with no settings). Unpairing is
+        # safe because the Berger table can regenerate the same pairings.
+        return swiss_style_permission_handler(protect_unpairing=False)
 
     def default_current_round(self, tournament: 'Tournament') -> int:
         # Swiss semantics (last PAIRED round), matching the round-by-round
