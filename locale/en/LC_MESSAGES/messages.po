@@ -6204,6 +6204,10 @@ msgstr ""
 msgid "Out — round {round}"
 msgstr ""
 
+#, python-brace-format
+msgid "Out — round {round} *** TEAM KNOCK-OUT"
+msgstr "Out — round {round}"
+
 msgid "Overall"
 msgstr ""
 
@@ -10548,6 +10552,9 @@ msgstr ""
 
 msgid "Winner"
 msgstr ""
+
+msgid "Winner *** TEAM KNOCK-OUT"
+msgstr "Winner"
 
 msgid "With less players than prizes, some prizes will not be attributed."
 msgstr ""

@@ -2564,3 +2564,101 @@ class TestTeamDoubleEliminationTwoGame:
         tournament = self._load()
         for team_board in tournament.get_round_team_boards(2):
             assert tournament.knockout.team_board_advancement(team_board) is None
+
+
+EMPTY_SEAT_EVENT_ID = 'test-team-knockout-empty-seats'
+EMPTY_SEAT_TOURNAMENT_NAME = 'team-knockout-empty-seats'
+
+
+@pytest.mark.unit
+class TestTeamKnockoutEmptySeats:
+    """A team match whose teams field fewer players than the tournament seats:
+    the unfilled boards hold no player and no result, and the level match must
+    still offer its winner to be designated."""
+
+    @pytest.fixture
+    def tournament_name(self):
+        from database.sqlite.event.event_store import StoredTeam
+        from utils.enum import EventType
+
+        TestUtils.create_event(
+            EMPTY_SEAT_EVENT_ID, overrides={'event_type': EventType.TEAM}
+        )
+        TestUtils.create_tournament(
+            EMPTY_SEAT_EVENT_ID,
+            EMPTY_SEAT_TOURNAMENT_NAME,
+            overrides={
+                'rounds': 1,
+                'current_round': 1,
+                'team_player_count': 2,
+                'pairing': 'TEAM_KNOCKOUT_STANDARD',
+            },
+        )
+        with EventDatabase(EMPTY_SEAT_EVENT_ID, write=True) as database:
+            tid = next(
+                t.id
+                for t in database.load_stored_tournaments()
+                if t.name == EMPTY_SEAT_TOURNAMENT_NAME
+            )
+            assert tid is not None
+            for index in range(2):
+                team_id = database.add_stored_team(
+                    StoredTeam(
+                        id=None,
+                        name=f'Team{index}',
+                        tournament_id=tid,
+                        pairing_number=index + 1,
+                    )
+                )
+                # One player for two seats: board two stays empty.
+                database.add_stored_player(
+                    StoredPlayer(
+                        id=None,
+                        last_name=f'T{index}P0',
+                        team_id=team_id,
+                        team_index=0,
+                        check_in=True,
+                    )
+                )
+        yield EMPTY_SEAT_TOURNAMENT_NAME
+        TestUtils.delete_event(EMPTY_SEAT_EVENT_ID)
+
+    def _load(self):
+        try:
+            EventLoader.unload_event(EMPTY_SEAT_EVENT_ID)
+        except KeyError:
+            pass
+        self._event = EventLoader().load_event(EMPTY_SEAT_EVENT_ID)
+        return self._event.tournaments_by_name[EMPTY_SEAT_TOURNAMENT_NAME]
+
+    def test_level_match_with_an_empty_seat_offers_its_winner(self, tournament_name):
+        tournament = self._load()
+        tournament.generate_round_pairings(1)
+        tournament = self._load()
+
+        team_board = next(
+            tb for tb in tournament.get_round_team_boards(1) if tb.team_b is not None
+        )
+        assert any(
+            board.optional_white_tournament_player is None
+            and board.black_tournament_player is None
+            for board in team_board.boards
+        )
+        played = next(
+            board
+            for board in team_board.boards
+            if board.optional_white_tournament_player is not None
+            and board.black_tournament_player is not None
+        )
+        tournament.add_result(played, Result.DRAW)
+        tournament = self._load()
+
+        team_board = next(
+            tb for tb in tournament.get_round_team_boards(1) if tb.team_b is not None
+        )
+        advancement = tournament.knockout.team_board_advancement(team_board)
+        assert advancement is not None
+        assert advancement.manual_pending
+        assert [match['id'] for match in tournament.knockout.unresolved_matches(1)] == [
+            team_board.id
+        ]

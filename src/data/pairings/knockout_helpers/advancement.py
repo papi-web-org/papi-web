@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from data.pairings.knockout_helpers.common import (
     board_winner_player_id,
+    team_match_all_games_played,
     team_match_winner_id,
 )
 from utils.enum import Result
@@ -191,7 +192,7 @@ class KnockoutAdvancementMixin:
         self, tournament: 'Tournament', team_board: 'TeamBoard'
     ) -> 'KnockoutAdvancement | None':
         stb = team_board.stored_team_board
-        if stb.team_b_id is None or not team_board.all_games_played:
+        if stb.team_b_id is None or not team_match_all_games_played(team_board):
             return None
         a_gp, b_gp = team_board.effective_game_points
         if a_gp != b_gp:
@@ -210,7 +211,7 @@ class KnockoutAdvancementMixin:
         if tournament.pairing_system.paired_by_team:
             for team_board in tournament.get_round_team_boards(round_):
                 stb = team_board.stored_team_board
-                if stb.team_b_id is None or not team_board.all_games_played:
+                if stb.team_b_id is None or not team_match_all_games_played(team_board):
                     continue
                 if team_match_winner_id(tournament, team_board) is not None:
                     continue

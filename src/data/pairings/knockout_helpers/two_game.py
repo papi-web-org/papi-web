@@ -10,6 +10,7 @@ from common.i18n import _
 from data.pairings.knockout_helpers.common import (
     find_knockout_board,
     find_knockout_team_board,
+    team_match_all_games_played,
     tie_resolution_message,
 )
 from data.pairings.knockout_helpers.single import single_elimination_round_name
@@ -263,7 +264,7 @@ class TwoGameMatchMixin:
         if self._game_of(team_board.round) != 2:
             return None
         stb = team_board.stored_team_board
-        if stb.team_b_id is None or not team_board.all_games_played:
+        if stb.team_b_id is None or not team_match_all_games_played(team_board):
             return None
         level = self._level_of(team_board.round)
         leg1 = find_knockout_team_board(
@@ -272,7 +273,7 @@ class TwoGameMatchMixin:
             stb.team_a_id,
             stb.team_b_id,
         )
-        if leg1 is None or not leg1.all_games_played:
+        if leg1 is None or not team_match_all_games_played(leg1):
             return None
         totals = {stb.team_a_id: 0.0, stb.team_b_id: 0.0}
         for leg in (leg1, team_board):

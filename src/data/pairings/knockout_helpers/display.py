@@ -307,13 +307,26 @@ class KnockoutDisplayMixin:
             after_round = tournament.ranked_after_round
         values = self.team_ranking_values(tournament, after_round=after_round)
         return self._labels_from_values(
-            values, [team.id for team in tournament.teams], tournament.rounds
+            values,
+            [team.id for team in tournament.teams],
+            tournament.rounds,
+            for_teams=True,
         )
 
     @staticmethod
     def _labels_from_values(
-        values: dict[int, float], ids: list[int], rounds: int
+        values: dict[int, float],
+        ids: list[int],
+        rounds: int,
+        *,
+        for_teams: bool = False,
     ) -> dict[int, str]:
+        winner = _('Winner *** TEAM KNOCK-OUT') if for_teams else _('Winner')
+        out = (
+            _('Out — round {round} *** TEAM KNOCK-OUT')
+            if for_teams
+            else _('Out — round {round}')
+        )
         still_in = [eid for eid in ids if values[eid] >= rounds + 1]
         sole_survivor = still_in[0] if len(still_in) == 1 else None
         has_third = any(values[eid] == rounds - 0.5 for eid in ids)
@@ -321,7 +334,7 @@ class KnockoutDisplayMixin:
         for eid in ids:
             value = values[eid]
             if value >= rounds + 1:
-                labels[eid] = _('Winner') if eid == sole_survivor else _('Still in')
+                labels[eid] = winner if eid == sole_survivor else _('Still in')
             elif value == rounds:
                 labels[eid] = _('Runner-up')
             elif value == rounds - 0.5:
@@ -329,5 +342,5 @@ class KnockoutDisplayMixin:
             elif value == rounds - 1 and has_third:
                 labels[eid] = _('Fourth place')
             else:
-                labels[eid] = _('Out — round {round}').format(round=int(value))
+                labels[eid] = out.format(round=int(value))
         return labels

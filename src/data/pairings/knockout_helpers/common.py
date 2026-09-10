@@ -45,6 +45,18 @@ def board_winner_player_id(board: 'Board') -> int | None:
     return None
 
 
+def team_match_all_games_played(team_board: 'TeamBoard') -> bool:
+    """Whether every game of a team match has been played. A board with
+    neither seat filled is a slot the teams left empty: it carries no result
+    and never will, so the match is not waiting on it."""
+    return not any(
+        board.no_result
+        for board in team_board.boards
+        if board.optional_white_tournament_player is not None
+        or board.black_tournament_player is not None
+    )
+
+
 def team_match_winner_id(
     tournament: 'Tournament', team_board: 'TeamBoard'
 ) -> int | None:

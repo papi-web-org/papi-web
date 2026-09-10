@@ -14,6 +14,7 @@ from data.pairings.knockout_helpers.common import (
     board_winner_player_id,
     find_knockout_board,
     find_knockout_team_board,
+    team_match_all_games_played,
     team_match_winner_id,
     tie_resolution_message as _tie_resolution_message,
 )
@@ -627,8 +628,8 @@ class TeamKnockoutTwoGameEngine(_TwoGameSingleElimMixin, TeamKnockoutEngine):
         if (
             leg1 is None
             or leg2 is None
-            or not leg1.all_games_played
-            or not leg2.all_games_played
+            or not team_match_all_games_played(leg1)
+            or not team_match_all_games_played(leg2)
         ):
             return None
         totals = {a_id: 0.0, b_id: 0.0}
@@ -749,8 +750,8 @@ class TeamDoubleEliminationTwoGameEngine(
         if (
             leg1 is None
             or leg2 is None
-            or not leg1.all_games_played
-            or not leg2.all_games_played
+            or not team_match_all_games_played(leg1)
+            or not team_match_all_games_played(leg2)
         ):
             return None
         totals = {a_id: 0.0, b_id: 0.0}

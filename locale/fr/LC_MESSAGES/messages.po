@@ -6206,6 +6206,10 @@ msgstr "Autres"
 msgid "Out — round {round}"
 msgstr "Éliminé·e — tour {round}"
 
+#, python-brace-format
+msgid "Out — round {round} *** TEAM KNOCK-OUT"
+msgstr "Éliminée — tour {round}"
+
 msgid "Overall"
 msgstr "Général"
 
@@ -10550,6 +10554,9 @@ msgstr "Victoire :"
 
 msgid "Winner"
 msgstr "Vainqueur·e"
+
+msgid "Winner *** TEAM KNOCK-OUT"
+msgstr "Vainqueur"
 
 msgid "With less players than prizes, some prizes will not be attributed."
 msgstr "Avec moins de joueur·euses que de prix, certains prix ne vont pas être attribués."
