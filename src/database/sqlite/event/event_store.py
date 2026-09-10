@@ -131,7 +131,9 @@ class StoredBoard:
 class StoredTeamRoundLineupEntry:
     team_id: int
     round_: int
-    player_id: int
+    # ``None`` for a board the team leaves empty this round, the way a
+    # ``board`` row holds an empty seat.
+    player_id: int | None
     index: int
 
 

@@ -3418,6 +3418,9 @@ msgstr "Sonneborn-Berger étendu"
 msgid "F *** SHORT NAME FOR RATING TYPE FIDE"
 msgstr "F"
 
+msgid "F *** TEAM RANKING HEADER FORFEIT"
+msgstr "F"
+
 msgid "FA *** SHORT NAME FOR FIDE Arbiter"
 msgstr "AF"
 
@@ -4650,6 +4653,9 @@ msgstr "Points de match"
 msgid "Match points must satisfy loss ≤ draw ≤ win."
 msgstr "Les points de match doivent satisfaire défaite ≤ nulle ≤ victoire."
 
+msgid "Match points scored by an absent team — one left unpaired as absent, or one that forfeited its whole match. Defaults to the Loss value."
+msgstr "Points de match marqués par une équipe absente — laissée non appariée comme absente, ou ayant déclaré forfait pour tout le match. Par défaut, la valeur Défaite."
+
 msgid "Match points vs game points"
 msgstr "Points de match vs points de partie"
 
@@ -4680,6 +4686,9 @@ msgstr "Conforme aux critères"
 #, python-format
 msgid "Matches from #%(first)d to #%(last)d"
 msgstr "Matchs du n°%(first)d au n°%(last)d"
+
+msgid "Matches lost by forfeit."
+msgstr "Matchs perdus par forfait."
 
 msgid "Matches per column:"
 msgstr "Matchs par colonne :"
@@ -8356,11 +8365,11 @@ msgid "The limit can only be adjusted by {count} half-points."
 msgstr "La limite ne peut être ajustée que de {count} demi-points."
 
 #, python-format
-msgid "The line-up for round %(round)d is not in the same order as the team roster."
+msgid "The lineup for round %(round)d is not in the same order as the team roster."
 msgstr "La composition pour la ronde %(round)d n'est pas dans le même ordre que l'effectif."
 
 #, python-format
-msgid "The line-up for rounds %(first_round)d-%(last_round)d is not in the same order as the team roster."
+msgid "The lineup for rounds %(first_round)d-%(last_round)d is not in the same order as the team roster."
 msgstr "La composition pour les rondes %(first_round)d-%(last_round)d n'est pas dans le même ordre que l'effectif."
 
 msgid "The lowest rating that a player should have for their expected score to be greater than or equal to their score."
@@ -8906,7 +8915,7 @@ msgstr "Ce·tte joueur·euse existe déjà dans le tournoi [{tournament}]."
 msgid "This player has already been paired; their team cannot be changed."
 msgstr "Ce·tte joueur·euse a déjà été apparié·e, son équipe ne peut être modifiée."
 
-msgid "This player is paired in at least one round and cannot be removed from the roster (must be removed from the line-up first)."
+msgid "This player is paired in at least one round and cannot be removed from the roster (must be removed from the lineup first)."
 msgstr "Ce·tte joueur·euse est apparié·e pour au moins une ronde et ne peut être supprimé·e de l'effectif (doit d'abord être supprimé·e de la composition de la ronde)."
 
 msgid "This prize bracket"
@@ -8921,7 +8930,7 @@ msgstr "Cet écran rotatif est public (visible des spectateur·ices)."
 msgid "This round cannot be edited."
 msgstr "Cette ronde ne peut pas être modifiée."
 
-msgid "This round has been paired, so its line-up is what stands on its boards. You can still edit the line-up from the Pairings tab."
+msgid "This round has been paired, so its lineup is what stands on its boards. You can still edit the lineup from the Pairings tab."
 msgstr "Cette ronde est appariée, sa composition est donc celle de ses échiquiers. Cette composition peut toujours être mise à jour depuis l'onglet Appariements."
 
 #, python-brace-format
@@ -8940,7 +8949,7 @@ msgid "This round is paired; the prohibited pairings used are frozen."
 msgstr "Cette ronde est appariée ; les protections d'appariement utilisées sont figées."
 
 #, python-format
-msgid "This round will use round #%(round)d's line-up when paired."
+msgid "This round will use round #%(round)d's lineup when paired."
 msgstr "Cette ronde utilisera la composition de la ronde n°%(round)d lors de l'appariement."
 
 msgid "This row contains errors that prevent it from being imported."
@@ -8965,7 +8974,7 @@ msgstr "Cet ensemble contient [{name}] deux fois de suite."
 msgid "This team has already been paired; its tournament cannot be changed."
 msgstr "Cette équipe a déjà été appariée, elle ne peut changer de tournoi."
 
-msgid "This team has no rounds to show a line-up for."
+msgid "This team has no rounds to show a lineup for."
 msgstr "Cette équipe n'a aucune ronde dont afficher la composition."
 
 msgid "This tie-break can be used multiple times."
@@ -9620,7 +9629,7 @@ msgstr "Utilisez l’onglet Staff pour déclarer les arbitres."
 msgid "Use the alert message defined on each screen."
 msgstr "Utiliser le message d'alerte défini pour chaque écran."
 
-msgid "Use the previous round's line-up (untick to set this round)"
+msgid "Use the previous round's lineup (untick to set this round)"
 msgstr "Utiliser la composition de la ronde précédente (décocher pour définir cette ronde)"
 
 msgid "Use the standard FIDE rating for unrated players"
@@ -9775,7 +9784,7 @@ msgstr "MIF"
 msgid "Wales"
 msgstr "Pays de Galles"
 
-msgid "Warn on line-up out of roster order"
+msgid "Warn on lineup out of roster order"
 msgstr "Avertir des compositions mal ordonnées"
 
 msgid "Warning: all hours for this timer will be permanently deleted!"
@@ -9841,7 +9850,7 @@ msgstr "Ce dont le·la joueur·euse a besoin à la ronde {round} pour réaliser 
 msgid "When defined, the alert message is displayed in a scrolling banner at the bottom of the screens."
 msgstr "Lorsqu'il est défini, le message d'alerte est utilisé par défaut dans le bandeau défilant en bas des écrans."
 
-msgid "When enabled, a warning is shown if a per-round line-up places players in a different order than the team roster. The line-up can still be reordered freely."
+msgid "When enabled, a warning is shown if a per-round lineup places players in a different order than the team roster. The lineup can still be reordered freely."
 msgstr "Lorsqu'activé, un avertissement est montré si une composition d'équipe pour une ronde ne respecte pas l'ordre de l'effectif. La composition peut néanmoins être réordonnée librement."
 
 msgid "When hovering a player's name with the mouse, display its history."

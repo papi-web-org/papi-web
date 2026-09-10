@@ -594,8 +594,12 @@ class Tournament:
         to DRAW points (avoids over-rewarding an odd team out and
         matches Olympiad practice for unopposed teams); other team
         systems (round-robin, Molter) keep WIN as the PAB default,
-        though they rarely produce PABs in practice. Forfeit handling
-        is separate."""
+        though they rarely produce PABs in practice.
+
+        ``ZERO_POINT_BYE`` is the absent team's score, whether it was
+        left unpaired as absent or forfeited a paired match outright. It
+        defaults to LOSS, the score such a team took before the value
+        could be set."""
         from data.pairings.systems import TeamSwissPairingSystem
 
         if not self.is_team_tournament:
@@ -603,11 +607,13 @@ class Tournament:
         raw = self.stored_tournament.match_points or {}
         win = float(raw.get(Result.WIN.value, 2.0))
         draw = float(raw.get(Result.DRAW.value, 1.0))
+        loss = float(raw.get(Result.LOSS.value, 0.0))
         pab_default = draw if self.pairing_system == TeamSwissPairingSystem() else win
         return {
             Result.WIN: win,
             Result.DRAW: draw,
-            Result.LOSS: float(raw.get(Result.LOSS.value, 0.0)),
+            Result.LOSS: loss,
+            Result.ZERO_POINT_BYE: float(raw.get(Result.ZERO_POINT_BYE.value, loss)),
             Result.PAIRING_ALLOCATED_BYE: float(
                 raw.get(Result.PAIRING_ALLOCATED_BYE.value, pab_default)
             ),
@@ -852,10 +858,16 @@ class Tournament:
                 'wins': 0,
                 'draws': 0,
                 'losses': 0,
+                # A round the team was absent for counts here rather than
+                # as a loss, so a loss is one taken over the board — a
+                # match it forfeited outright, and a round it was left
+                # unpaired as absent for.
+                'forfeits': 0,
             }
         win_mp = match_points.get(Result.WIN, 2.0)
         draw_mp = match_points.get(Result.DRAW, 1.0)
         loss_mp = match_points.get(Result.LOSS, 0.0)
+        absent_mp = match_points.get(Result.ZERO_POINT_BYE, loss_mp)
         pab_mp = match_points.get(Result.PAIRING_ALLOCATED_BYE, win_mp)
         # Flat fixed-table fallback (no team_boards): sum player points
         # straight into team totals. Use ``team_game_points`` so the
@@ -928,12 +940,14 @@ class Tournament:
                 # individual byes scaled by team_player_count.
                 match stb.bye_type:
                     case TeamByeType.ZPB:
-                        ent['mp'] += loss_mp
+                        ent['mp'] += absent_mp
                         # Team-level forfeit: every board counts as a
                         # forfeited game, scored at the absent-board game
                         # point value (the gp_zpb override, otherwise 0).
                         ent['gp'] += team_player_count * absent_gp_per_player
-                        ent['losses'] += 1
+                        # An absent team is absent whether the round was
+                        # paired before it went missing or not.
+                        ent['forfeits'] += 1
                     case TeamByeType.HPB:
                         ent['mp'] += draw_mp
                         ent['gp'] += team_player_count * draw_gp_per_player
@@ -960,27 +974,31 @@ class Tournament:
             # round's penalties/bonuses); the deltas are added to the totals
             # separately by _apply_point_adjustments_to_standings below.
             a_gp_effective, b_gp_effective = team_board.effective_game_points
+            match_points_pair = team_board.match_points_pair(
+                (a_gp_effective, b_gp_effective)
+            )
+            assert match_points_pair is not None
+            a_mp, b_mp = match_points_pair
+            if ent_a:
+                ent_a['mp'] += a_mp
+            if ent_b:
+                ent_b['mp'] += b_mp
             if a_gp_effective > b_gp_effective:
-                if ent_a:
-                    ent_a['mp'] += win_mp
-                    ent_a['wins'] += 1
-                if ent_b:
-                    ent_b['mp'] += loss_mp
-                    ent_b['losses'] += 1
+                a_outcome, b_outcome = 'wins', 'losses'
             elif a_gp_effective < b_gp_effective:
-                if ent_a:
-                    ent_a['mp'] += loss_mp
-                    ent_a['losses'] += 1
-                if ent_b:
-                    ent_b['mp'] += win_mp
-                    ent_b['wins'] += 1
+                a_outcome, b_outcome = 'losses', 'wins'
             else:
-                if ent_a:
-                    ent_a['mp'] += draw_mp
-                    ent_a['draws'] += 1
-                if ent_b:
-                    ent_b['mp'] += draw_mp
-                    ent_b['draws'] += 1
+                a_outcome = b_outcome = 'draws'
+            # A side that forfeited the whole match is tallied as a
+            # forfeit, not as the result its boards add up to.
+            if team_board.team_all_forfeit(stb.team_a_id):
+                a_outcome = 'forfeits'
+            if team_board.team_all_forfeit(stb.team_b_id):
+                b_outcome = 'forfeits'
+            if ent_a:
+                ent_a[a_outcome] += 1
+            if ent_b:
+                ent_b[b_outcome] += 1
         self._apply_point_adjustments_to_standings(standings, after_round)
         rows = list(standings.values())
 
@@ -1524,6 +1542,7 @@ class Tournament:
             'teams_by_pairing_number',
             'team_boards_by_id',
             'team_boards_by_round',
+            'team_match_by_team_and_round',
             'team_pairing_blocks',
         )
 
@@ -1549,6 +1568,25 @@ class Tournament:
 
     def get_round_team_boards(self, round_: int) -> list[TeamBoard]:
         return self.team_boards_by_round.get(round_, [])
+
+    @cached_property
+    def team_match_by_team_and_round(self) -> dict[tuple[int, int], TeamBoard]:
+        """``(team_id, round)`` → the team's match that round, byes left
+        out: a bye envelope has no opponent and no boards to read a
+        lineup from. Both of a match's teams are keyed to it.
+
+        Looking a team's match up runs on every lineup read, so it is an
+        index rather than a scan of the round's matches. What it keys on
+        is fixed when a match is created, and the paths that pair, unpair
+        or bye a team all clear the team cache."""
+        matches: dict[tuple[int, int], TeamBoard] = {}
+        for team_board in self.team_boards_by_id.values():
+            stb = team_board.stored_team_board
+            if stb.team_b_id is None:
+                continue
+            matches.setdefault((stb.team_a_id, team_board.round), team_board)
+            matches.setdefault((stb.team_b_id, team_board.round), team_board)
+        return matches
 
     def team_tie_break_context(self) -> 'TeamTieBreakContext':
         """Snapshot the tournament parameters team tie-breaks need."""
@@ -1617,10 +1655,13 @@ class Tournament:
         """Build :class:`TeamRecord` instances for every team in this
         tournament, suitable as input to the team tie-break compute API.
 
-        Only PLAYED and PAB match types are currently emitted — the
-        underlying data model does not yet capture team-level HPB / ZPB
-        / forfeit semantics. When those land, this method should
-        widen accordingly."""
+        A round carries the score the standings give it and the match
+        type Art. 16 handling reads. A team marked absent is a
+        zero-point bye whose contribution is cut first, not a
+        pairing-allocated bye scored as a win; a team that fielded
+        nobody, or every one of whose players lost by forfeit, forfeited
+        the match rather than playing it, and its opponent won by
+        forfeit rather than over the board."""
         from data.tie_breaks.team_records import (
             TeamMatchRecord,
             TeamMatchType,
@@ -1633,7 +1674,10 @@ class Tournament:
         win_mp = match_points.get(Result.WIN, 2.0)
         draw_mp = match_points.get(Result.DRAW, 1.0)
         loss_mp = match_points.get(Result.LOSS, 0.0)
+        absent_mp = match_points.get(Result.ZERO_POINT_BYE, loss_mp)
         pab_mp = match_points.get(Result.PAIRING_ALLOCATED_BYE, win_mp)
+        team_player_count = float(self.team_player_count or 0)
+        absent_gp_per_player = self.team_game_points[Result.ZERO_POINT_BYE]
 
         totals_mp: dict[int, float] = {team.id: 0.0 for team in self.teams}
         totals_gp: dict[int, float] = {team.id: 0.0 for team in self.teams}
@@ -1657,7 +1701,7 @@ class Tournament:
                     continue
                 # A PAB team still participates (it's present, just unpaired),
                 # so OWN-ELO should reflect its strength. The bye envelope has
-                # no boards, so take the round's line-up players' ratings.
+                # no boards, so take the round's lineup players' ratings.
                 bye_team = self.event.teams_by_id.get(a_id)
                 pab_ratings: tuple[int | None, ...]
                 if bye_team is None:
@@ -1672,30 +1716,58 @@ class Tournament:
                         )
                         rating_list.append(tp.rating if tp and tp.rating else None)
                     pab_ratings = tuple(rating_list)
+                # The bye types score as they do in the standings; the
+                # match type is what Art. 16 reads to decide whether the
+                # round was given up voluntarily.
+                match stb.bye_type:
+                    case TeamByeType.ZPB:
+                        own_mp = absent_mp
+                        own_gp = team_player_count * absent_gp_per_player
+                        match_type = TeamMatchType.ZPB
+                    case TeamByeType.HPB:
+                        own_mp = draw_mp
+                        own_gp = team_player_count * Result.DRAW.point_value
+                        match_type = TeamMatchType.HPB
+                    case TeamByeType.FPB:
+                        own_mp = win_mp
+                        own_gp = team_player_count * Result.WIN.point_value
+                        # A full-point bye is awarded, not given up.
+                        match_type = TeamMatchType.PAB
+                    case _:
+                        own_mp = pab_mp
+                        own_gp = self.team_pab_game_points
+                        match_type = TeamMatchType.PAB
                 matches_per_team[a_id].append(
                     TeamMatchRecord(
                         round_=team_board.round,
                         opponent_id=None,
-                        own_mp=pab_mp,
-                        own_gp=self.team_pab_game_points,
-                        match_type=TeamMatchType.PAB,
+                        own_mp=own_mp,
+                        own_gp=own_gp,
+                        match_type=match_type,
                         board_scores=a_boards,
                         board_ratings=pab_ratings,
                     )
                 )
-                totals_mp[a_id] += pab_mp
-                totals_gp[a_id] += self.team_pab_game_points
+                totals_mp[a_id] += own_mp
+                totals_gp[a_id] += own_gp
                 continue
             # Match result follows the effective game points (board + this
             # round's penalties/bonuses); the deltas are added to own_gp /
             # totals by the loop below — here they only tip the comparison.
-            a_gp_effective, b_gp_effective = team_board.effective_game_points
-            if a_gp_effective > b_gp_effective:
-                a_mp, b_mp = win_mp, loss_mp
-            elif a_gp_effective < b_gp_effective:
-                a_mp, b_mp = loss_mp, win_mp
-            else:
-                a_mp = b_mp = draw_mp
+            match_points_pair = team_board.match_points_pair()
+            assert match_points_pair is not None
+            a_mp, b_mp = match_points_pair
+            # A team is forfeit whether it fielded nobody or every one of
+            # its players lost by forfeit: either way no game was played
+            # on its side, and the round is not a played one for either
+            # team.
+            a_type = b_type = TeamMatchType.PLAYED
+            if team_board.team_all_forfeit(a_id):
+                a_type, b_type = TeamMatchType.FORFEIT_LOSS, TeamMatchType.FORFEIT_WIN
+            if team_board.team_all_forfeit(b_id):
+                b_type = TeamMatchType.FORFEIT_LOSS
+                if a_type != TeamMatchType.FORFEIT_LOSS:
+                    a_type = TeamMatchType.FORFEIT_WIN
             b_boards = self._team_board_scores_for(team_board, b_id)
             b_ratings = self._team_board_ratings_for(team_board, b_id)
             matches_per_team[a_id].append(
@@ -1704,7 +1776,7 @@ class Tournament:
                     opponent_id=b_id,
                     own_mp=a_mp,
                     own_gp=a_gp,
-                    match_type=TeamMatchType.PLAYED,
+                    match_type=a_type,
                     board_scores=a_boards,
                     board_ratings=a_ratings,
                 )
@@ -1715,7 +1787,7 @@ class Tournament:
                     opponent_id=a_id,
                     own_mp=b_mp,
                     own_gp=b_gp,
-                    match_type=TeamMatchType.PLAYED,
+                    match_type=b_type,
                     board_scores=b_boards,
                     board_ratings=b_ratings,
                 )
@@ -2811,7 +2883,7 @@ class Tournament:
         round — absent seats, e.g. freed by unpairing and awaiting a forfeit
         pairing. Each is ``(board_index, label)`` like ``(5, 'B3')``. Empty
         for other systems. A present-but-unpaired player's seat isn't a hole
-        (it's filled in the line-up); only ``None`` slots count."""
+        (it's filled in the lineup); only ``None`` slots count."""
         from data.pairings.fixed_table import FixedTablePairingEngine
 
         engine = self.pairing_variation.engine
@@ -2845,7 +2917,7 @@ class Tournament:
         may be ``None`` (a hole) — but not both. Two players ⇒ a game; one
         player + a hole ⇒ a forfeit win for the present player (handled by
         :meth:`create_boards`, which scores a one-sided flat board as a
-        forfeit). No line-up is touched."""
+        forfeit). No lineup is touched."""
         if white_id is None and black_id is None:
             raise SharlyChessException('A board needs at least one player.')
         for player_id in (white_id, black_id):
@@ -3798,6 +3870,7 @@ class Tournament:
         win_mp = match_points.get(Result.WIN, 2.0)
         draw_mp = match_points.get(Result.DRAW, 1.0)
         loss_mp = match_points.get(Result.LOSS, 0.0)
+        absent_mp = match_points.get(Result.ZERO_POINT_BYE, loss_mp)
         pab_mp = match_points.get(Result.PAIRING_ALLOCATED_BYE, draw_mp)
         team_player_count = float(self.team_player_count or 0)
         win_gp_per_player = Result.WIN.point_value
@@ -3812,7 +3885,7 @@ class Tournament:
             if stb.team_b_id is None:
                 match stb.bye_type:
                     case TeamByeType.ZPB:
-                        a_entry[0] += loss_mp
+                        a_entry[0] += absent_mp
                     case TeamByeType.HPB:
                         a_entry[0] += draw_mp
                         a_entry[1] += team_player_count * draw_gp_per_player
@@ -3829,15 +3902,12 @@ class Tournament:
             b_entry = totals.setdefault(stb.team_b_id, [0.0, 0.0])
             a_entry[1] += a_gp
             b_entry[1] += b_gp
-            if a_gp > b_gp:
-                a_entry[0] += win_mp
-                b_entry[0] += loss_mp
-            elif a_gp < b_gp:
-                a_entry[0] += loss_mp
-                b_entry[0] += win_mp
-            else:
-                a_entry[0] += draw_mp
-                b_entry[0] += draw_mp
+            # The played results alone here: the adjustments are folded in
+            # below and reported separately in the 299 records.
+            match_points_pair = team_board.match_points_pair((a_gp, b_gp))
+            assert match_points_pair is not None
+            a_entry[0] += match_points_pair[0]
+            b_entry[0] += match_points_pair[1]
         # Bonus / penalty points count towards the standings, and the
         # 310 record carries the standings — the 299 records emitted
         # alongside say where the difference from the played results

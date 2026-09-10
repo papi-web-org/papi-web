@@ -288,7 +288,7 @@ msgstr ""
 msgid "Fédération Française des Échecs"
 msgstr ""
 
-msgid "Game points \"for\""
+msgid "Game points \"for\" "
 msgstr ""
 
 msgid "Game points differential"
@@ -384,9 +384,6 @@ msgid "Lowest own average rating"
 msgstr ""
 
 msgid "Make visible on FFE site"
-msgstr ""
-
-msgid "Match lost by forfeit, counted as 0 match points."
 msgstr ""
 
 msgid "Max. teams per league:"
@@ -797,4 +794,7 @@ msgid "{n} game lost by forfeit, counted as -1."
 msgid_plural "{n} games lost by forfeit, counted as -1 each."
 msgstr[0] ""
 msgstr[1] ""
+
+#~ msgid "Game points \"for\""
+#~ msgstr ""
 

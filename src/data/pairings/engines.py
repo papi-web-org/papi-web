@@ -109,7 +109,7 @@ class PairingEngine(ABC):
         team_board: 'TeamBoard',
         team_id: int,
     ) -> dict[int, int]:
-        """Board index → the line-up slot of *team_id* seated on it.
+        """Board index → the lineup slot of *team_id* seated on it.
 
         A team match seats each team's *i*-th player on board *i*, so
         the two numbers coincide. Systems whose table rotates one team
@@ -936,7 +936,7 @@ class TeamPairingEngine(PairingEngine, ABC):
         Team_b always gets the opposite color of team_a on each board.
 
         Overridden by systems whose table says who meets whom on each
-        board rather than pairing the line-ups straight across."""
+        board rather than pairing the lineups straight across."""
         team_a = tournament.event.teams_by_id[stb.team_a_id]
         team_b = (
             tournament.event.teams_by_id[stb.team_b_id]
