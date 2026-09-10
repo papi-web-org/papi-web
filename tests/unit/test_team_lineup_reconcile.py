@@ -27,6 +27,7 @@ from database.sqlite.event.event_store import (
     StoredTeam,
     StoredTeamBoard,
     StoredTournamentPlayer,
+    set_stored_fields,
 )
 from data.loader import EventLoader
 from tests.test_config import TestUtils
@@ -164,10 +165,7 @@ class TeamLineupReconcileTestCase(TestCase):
                 board_slots = team.round_board_slots(round_)
                 if board_slots is None:
                     continue
-                # When an explicit lineup is stored it must match the boards.
-                # (An all-holes lineup can't be stored as rows, so it falls
-                # back to the default roster — round_board_slots is the truth
-                # there, which every consumer of a paired round uses.)
+                # When a lineup is stored it must match the boards.
                 if team.has_explicit_round_lineup(round_):
                     stored = team.effective_round_slots(round_)
                     self.assertEqual(
@@ -200,6 +198,44 @@ class TeamLineupReconcileTestCase(TestCase):
 
     def test_seed_is_consistent(self) -> None:
         self._assert_consistent(self._load())
+
+    def test_a_hole_punched_on_boards_out_of_roster_order(self) -> None:
+        """The pairings tab reads its baseline off the boards: a round
+        with no stored lineup, whose boards are not in roster order,
+        keeps every other player where they stand when one is benched."""
+        from web.controllers.admin.pairings_admin_controller import (
+            PairingsAdminController,
+        )
+
+        tournament = self._load()
+        team_a = self._event.teams_by_id[self.team_a]
+        self.assertFalse(team_a.has_explicit_round_lineup(1))
+        boards = sorted(tournament.get_round_boards(1), key=lambda b: b.index)
+        # Swap team A's players on the first two boards, so what stands on
+        # them differs from the roster order the stored chain would answer.
+        with EventDatabase(EVENT_ID, write=True) as db:
+            for board, player_id in (
+                (boards[0], self.a_ids[1]),
+                (boards[1], self.a_ids[0]),
+            ):
+                set_stored_fields(board.stored_board, white_player_id=player_id)
+                db.update_stored_board(board.stored_board)
+
+        tournament = self._load()
+        team_a = self._event.teams_by_id[self.team_a]
+        team_board = tournament.get_round_team_boards(1)[0]
+        third_board = sorted(team_board.boards, key=lambda b: b.index)[2]
+        PairingsAdminController._punch_lineup_hole_for_team(
+            self._event, tournament, third_board, team_board, team_a, self.a_ids[2]
+        )
+
+        tournament = self._load()
+        team_a = self._event.teams_by_id[self.team_a]
+        self.assertEqual(
+            [p.id if p else None for p in team_a.effective_round_slots(1)],
+            [self.a_ids[1], self.a_ids[0], None, self.a_ids[3]],
+        )
+        self._assert_consistent(tournament)
 
     def test_reconcile_repairs_stored_lineup_divergence(self) -> None:
         """Stored lineup says slot N-1 is a hole while the player is still

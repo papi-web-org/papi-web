@@ -40,12 +40,16 @@ _CUP_MATCH_POINTS = {
 }
 
 
-@pytest.mark.unit
-class TeamAbsentMatchPointsTestCase(TestCase):
+class _AbsentMatchPointsHarness(TestCase):
+    """A four-team round-robin scored on match points, with the cup
+    scheme in force and a helper to forfeit a whole match."""
+
     def tearDown(self) -> None:
         TestUtils.delete_event(EVENT_ID)
 
-    def _create(self, match_points: dict[int, float]) -> None:
+    def _create(
+        self, match_points: dict[int, float], rule_set: str | None = None
+    ) -> None:
         TestUtils.create_event(EVENT_ID, overrides={'event_type': EventType.TEAM})
         stored_tournament = TestUtils.create_tournament(
             EVENT_ID,
@@ -57,6 +61,7 @@ class TeamAbsentMatchPointsTestCase(TestCase):
                 'pairing': 'TEAM_ROUND_ROBIN_BERGER',
                 'primary_score': ScoreType.MATCH_POINTS,
                 'match_points': match_points,
+                'rule_set': rule_set,
             },
         )
         self.team_ids: list[int] = []
@@ -138,6 +143,18 @@ class TeamAbsentMatchPointsTestCase(TestCase):
         assert stb.team_b_id is not None
         return stb.team_b_id if stb.team_a_id == team_id else stb.team_a_id
 
+    def _assert_tally_adds_up(self, tournament: Tournament) -> None:
+        """Every round a team was in is one of the four outcomes."""
+        for entry in tournament.team_standings():
+            self.assertEqual(
+                entry['wins'] + entry['draws'] + entry['losses'] + entry['forfeits'],
+                entry['played'],
+                f'the tally does not add up for {entry["team"].name}',
+            )
+
+
+@pytest.mark.unit
+class TeamAbsentMatchPointsTestCase(_AbsentMatchPointsHarness):
     def test_forfeited_match_scores_the_absence_value(self) -> None:
         self._create(_CUP_MATCH_POINTS)
         tournament = self._load()
@@ -148,6 +165,7 @@ class TeamAbsentMatchPointsTestCase(TestCase):
         tournament = self._forfeit_round_one(tournament, forfeit_id)
         self.assertEqual(self._mp(tournament, forfeit_id), 0.0)
         self.assertEqual(self._mp(tournament, opponent_id), 3.0)
+        self._assert_tally_adds_up(tournament)
 
     def test_forfeited_match_falls_back_to_the_loss_value(self) -> None:
         """No absence value set: the forfeiting team scores a loss, as it
@@ -256,7 +274,43 @@ class TeamAbsentMatchPointsTestCase(TestCase):
             team.set_round_bye(1, TeamByeType.ZPB, database)
         tournament = self._load()
         self.assertEqual(self._mp(tournament, absent_id), 0.0)
+        self._assert_tally_adds_up(tournament)
         row = self._row(tournament, absent_id)
         self.assertEqual(row['forfeits'], 1)
         self.assertEqual(row['losses'], 0)
         self.assertEqual(row['played'], 1)
+
+
+@pytest.mark.unit
+class LoubatiereForfeitedMatchTestCase(_AbsentMatchPointsHarness):
+    """The FFE cup scores a forfeited match through the absence value.
+
+    C03: a match played and lost is worth 1 match point, one lost by
+    forfeit 0. The per-board penalty for a game lost by forfeit (-1 game
+    point) stands on top.
+    """
+
+    RULE_SET = 'ffe-coupe-jean-claude-loubatiere'
+
+    def test_the_rule_set_takes_no_match_point_off(self) -> None:
+        self._create(_CUP_MATCH_POINTS, rule_set=self.RULE_SET)
+        tournament = self._load()
+        self.assertIsNotNone(tournament.rule_set)
+        self.assertEqual(tournament.generate_round_pairings(1), '')
+        tournament = self._load()
+        forfeit_id = self.team_ids[0]
+        opponent_id = self._opponent_id(tournament, forfeit_id)
+        tournament = self._forfeit_round_one(tournament, forfeit_id)
+
+        rule_set = tournament.rule_set
+        assert rule_set is not None
+        team = tournament.event.teams_by_id[forfeit_id]
+        adjustment = rule_set.team_point_adjustment(team, 1)
+        # The forfeited games still cost a game point each; the match
+        # points come from the absence value, not from an adjustment.
+        assert adjustment is not None
+        self.assertEqual(adjustment.mp, 0.0)
+        self.assertLess(adjustment.gp, 0.0)
+
+        self.assertEqual(self._mp(tournament, forfeit_id), 0.0)
+        self.assertEqual(self._mp(tournament, opponent_id), 3.0)
