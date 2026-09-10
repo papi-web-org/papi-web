@@ -880,17 +880,13 @@ class TeamAdminController(BaseEventAdminController):
     ) -> list[list[dict[str, Any]]]:
         """Split the rounds into runs sharing one lineup.
 
-        A paired round's lineup is what stands on its boards, so it joins
-        the run in progress when the same players stand on the same
-        boards as in the round before — which is what groups the rounds
-        of a tournament paired all at once (a round-robin, a Scheveningen
-        or Molter table) instead of giving each one a run of its own.
-
-        A round still to be paired has no boards to read, so it goes by
-        where its lineup comes from: it joins the run while it takes the
-        previous round's lineup (the editor's "use the previous round's
-        lineup" box), and opens one as soon as it stores a lineup of its
-        own — which the rounds after it then follow.
+        A round joins the run in progress while the same players stand on
+        the same boards as in the round before it — whether that lineup
+        is read off the boards of a paired round or taken from the round
+        before by one still to be paired. A tournament paired all at once
+        (a round-robin, a Scheveningen or Molter table) therefore groups
+        the rounds a team plays alike, rather than giving every round a
+        run of its own.
         """
         groups: list[list[dict[str, Any]]] = []
         previous_slots: tuple[int | None, ...] | None = None
@@ -899,8 +895,7 @@ class TeamAdminController(BaseEventAdminController):
                 player.id if player is not None else None
                 for player in round_info['slots']
             )
-            continues_run = slots == previous_slots
-            if groups and continues_run:
+            if slots == previous_slots:
                 groups[-1].append(round_info)
             else:
                 groups.append([round_info])
@@ -963,7 +958,6 @@ class TeamAdminController(BaseEventAdminController):
                     # modal naming the round — so the round it names is
                     # editable and the rest are there to be read.
                     'editable': not is_paired or round_ == requested_round,
-                    'has_override': team.has_explicit_round_lineup(round_),
                     'lineup_source': team.lineup_source(round_),
                     'slots': slots,
                     'bench': bench,

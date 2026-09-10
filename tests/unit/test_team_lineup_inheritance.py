@@ -32,7 +32,7 @@ TEAMS = 4
 class TeamLineupInheritanceTestCase(TestCase):
     def setUp(self) -> None:
         TestUtils.create_event(EVENT_ID, overrides={'event_type': EventType.TEAM})
-        TestUtils.create_tournament(
+        stored_tournament = TestUtils.create_tournament(
             EVENT_ID,
             TOURNAMENT_NAME,
             overrides={
@@ -44,13 +44,9 @@ class TeamLineupInheritanceTestCase(TestCase):
         )
         self.team_ids: list[int] = []
         self.player_ids: list[list[int]] = []
+        tournament_id = stored_tournament.id
+        assert tournament_id is not None
         with EventDatabase(EVENT_ID, write=True) as database:
-            tournament_id = next(
-                stored.id
-                for stored in database.load_stored_tournaments()
-                if stored.name == TOURNAMENT_NAME
-            )
-            assert tournament_id is not None
             for seed in range(1, TEAMS + 1):
                 team_id = database.add_stored_team(
                     StoredTeam(

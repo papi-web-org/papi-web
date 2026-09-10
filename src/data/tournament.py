@@ -970,7 +970,9 @@ class Tournament:
             # round's penalties/bonuses); the deltas are added to the totals
             # separately by _apply_point_adjustments_to_standings below.
             a_gp_effective, b_gp_effective = team_board.effective_game_points
-            match_points_pair = team_board.match_points_pair()
+            match_points_pair = team_board.match_points_pair(
+                (a_gp_effective, b_gp_effective)
+            )
             assert match_points_pair is not None
             a_mp, b_mp = match_points_pair
             if ent_a:
@@ -3838,7 +3840,7 @@ class Tournament:
             b_entry[1] += b_gp
             # The played results alone here: the adjustments are folded in
             # below and reported separately in the 299 records.
-            match_points_pair = team_board.match_points_pair(effective=False)
+            match_points_pair = team_board.match_points_pair((a_gp, b_gp))
             assert match_points_pair is not None
             a_entry[0] += match_points_pair[0]
             b_entry[0] += match_points_pair[1]

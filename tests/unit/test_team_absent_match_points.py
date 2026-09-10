@@ -46,7 +46,7 @@ class TeamAbsentMatchPointsTestCase(TestCase):
 
     def _create(self, match_points: dict[int, float]) -> None:
         TestUtils.create_event(EVENT_ID, overrides={'event_type': EventType.TEAM})
-        TestUtils.create_tournament(
+        stored_tournament = TestUtils.create_tournament(
             EVENT_ID,
             TOURNAMENT_NAME,
             overrides={
@@ -59,13 +59,9 @@ class TeamAbsentMatchPointsTestCase(TestCase):
             },
         )
         self.team_ids: list[int] = []
+        tournament_id = stored_tournament.id
+        assert tournament_id is not None
         with EventDatabase(EVENT_ID, write=True) as database:
-            tournament_id = next(
-                stored.id
-                for stored in database.load_stored_tournaments()
-                if stored.name == TOURNAMENT_NAME
-            )
-            assert tournament_id is not None
             for seed in range(1, TEAMS + 1):
                 team_id = database.add_stored_team(
                     StoredTeam(
@@ -107,12 +103,7 @@ class TeamAbsentMatchPointsTestCase(TestCase):
 
     def _forfeit_round_one(self, tournament: Tournament, team_id: int):
         """Every board of the team's round-1 match forfeited by it."""
-        team_board = next(
-            tb
-            for tb in tournament.get_round_team_boards(1)
-            if team_id
-            in (tb.stored_team_board.team_a_id, tb.stored_team_board.team_b_id)
-        )
+        team_board = self._round_one_match(tournament, team_id)
         for board in team_board.boards:
             white_team_id, _ = team_board.board_team_ids(board)
             tournament.add_result(

@@ -305,15 +305,11 @@ class Team:
             # No tournament yet: the base lineup is the whole roster
             # (the roster size stands in for the board count).
             return list(self.players)
-        if tournament.team_player_count is None:
-            return []
-        if round_ > 1:
-            return [
-                player
-                for player in self.effective_round_slots(round_)
-                if player is not None
-            ]
-        return self.players[: tournament.team_player_count]
+        return [
+            player
+            for player in self.effective_round_slots(round_)
+            if player is not None
+        ]
 
     def lineup_source(self, round_: int) -> str:
         """How *round_*'s effective lineup is obtained: ``'explicit'`` when
@@ -428,11 +424,8 @@ class Team:
         players relative to the roster. Once the round is paired its
         boards are the source of truth, as in
         :meth:`round_board_slots`."""
-        board_slots = self.round_board_slots(round_)
-        if board_slots is not None:
-            lineup = [player for player in board_slots if player is not None]
-        else:
-            lineup = self.effective_round_lineup(round_)
+        slots = self.round_board_slots(round_) or self.effective_round_slots(round_)
+        lineup = [player for player in slots if player is not None]
         roster_index = {player.id: i for i, player in enumerate(self.players)}
         last = -1
         for player in lineup:

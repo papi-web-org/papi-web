@@ -209,7 +209,7 @@ class TeamBoard:
         return saw_board
 
     def match_points_pair(
-        self, *, effective: bool = True
+        self, game_points: tuple[float, float] | None = None
     ) -> tuple[float, float] | None:
         """``(team_a, team_b)`` match points for this match, or ``None``
         for a bye envelope (no team B) — a bye is scored by its bye type,
@@ -217,9 +217,10 @@ class TeamBoard:
 
         The game points decide who won; a team that forfeited the whole
         match takes the tournament's absent-team match points instead of
-        a plain loss. ``effective`` folds the round's point adjustments
-        into the comparison — every scoring path wants that, but the TRF
-        totals account for adjustments separately."""
+        a plain loss. *game_points* is the pair to read the outcome from,
+        for a caller holding it already or wanting the played points
+        alone (the TRF totals, which account for the round's adjustments
+        separately); it defaults to :attr:`effective_game_points`."""
         stb = self.stored_team_board
         if stb.team_b_id is None:
             return None
@@ -229,7 +230,9 @@ class TeamBoard:
         draw_mp = mp.get(Result.DRAW, 1.0)
         loss_mp = mp.get(Result.LOSS, 0.0)
         absent_mp = mp.get(Result.ZERO_POINT_BYE, loss_mp)
-        a_gp, b_gp = self.effective_game_points if effective else self.game_points
+        a_gp, b_gp = (
+            game_points if game_points is not None else self.effective_game_points
+        )
         if a_gp > b_gp:
             mp_a, mp_b = win_mp, loss_mp
         elif a_gp < b_gp:
@@ -252,13 +255,13 @@ class TeamBoard:
             return None
         if self.boards and all(board.no_result for board in self.boards):
             return None
-        a_gp, b_gp = self.effective_game_points
         tournament = self.tournament
         if tournament.primary_score == ScoreType.MATCH_POINTS:
             match_points = self.match_points_pair()
             assert match_points is not None
             mp_a, mp_b = match_points
             return f'{mp_a:g}', f'{mp_b:g}'
+        a_gp, b_gp = self.effective_game_points
         a_str = (
             'F'
             if self.team_all_forfeit(self.stored_team_board.team_a_id)
@@ -276,48 +279,24 @@ class TeamBoard:
         """Human-readable score line shown in the team-block header. Format
         follows the tournament's primary score: match points if
         primary_score is MATCH_POINTS, otherwise game points."""
-        if (
-            self.stored_team_board.team_b_id is not None
-            and self.boards
-            and all(board.no_result for board in self.boards)
-        ):
-            return '–'
-        a_gp, b_gp = self.effective_game_points
         tournament = self.tournament
-        if (
-            self.stored_team_board.team_b_id is None
-            and self.bye_type == TeamByeType.PAB
-            and tournament.team_bye_is_rest
-        ):
+        if self.stored_team_board.team_b_id is not None:
+            score_pair = self.match_score_pair
+            if score_pair is None:
+                return '–'
+            return f'{score_pair[0]} – {score_pair[1]}'
+        if self.bye_type == TeamByeType.PAB and tournament.team_bye_is_rest:
             # Round-robin rest game: no points to display.
             return '–'
         if tournament.primary_score == ScoreType.MATCH_POINTS:
             mp = tournament.match_points
-            win_mp = mp.get(Result.WIN, 2.0)
             loss_mp = mp.get(Result.LOSS, 0.0)
-            if self.stored_team_board.team_b_id is None:
-                if self.bye_type == TeamByeType.ZPB:
-                    mp_a = mp.get(Result.ZERO_POINT_BYE, loss_mp)
-                else:
-                    mp_a = mp.get(Result.PAIRING_ALLOCATED_BYE, win_mp)
-                return f'{mp_a:g} – 0'
-            match_points = self.match_points_pair()
-            assert match_points is not None
-            mp_a, mp_b = match_points
-            return f'{mp_a:g} – {mp_b:g}'
-        if self.stored_team_board.team_b_id is None:
-            return f'{tournament.team_pab_game_points:g} – 0'
-        a_str = (
-            'F'
-            if self.team_all_forfeit(self.stored_team_board.team_a_id)
-            else f'{a_gp:g}'
-        )
-        b_str = (
-            'F'
-            if self.team_all_forfeit(self.stored_team_board.team_b_id)
-            else f'{b_gp:g}'
-        )
-        return f'{a_str} – {b_str}'
+            if self.bye_type == TeamByeType.ZPB:
+                mp_a = mp.get(Result.ZERO_POINT_BYE, loss_mp)
+            else:
+                mp_a = mp.get(Result.PAIRING_ALLOCATED_BYE, mp.get(Result.WIN, 2.0))
+            return f'{mp_a:g} – 0'
+        return f'{tournament.team_pab_game_points:g} – 0'
 
     @property
     def last_result_update(self) -> datetime | None:

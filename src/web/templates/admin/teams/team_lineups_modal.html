@@ -51,6 +51,7 @@
                             {# One mark for the group: its rounds share a
                                lineup, so they are in or out of roster order
                                together. #}
+                            {% if warn_lineup_order %}
                             <i
                                 class="lineup-round-mark bi-recycle"
                                 {{ macros.tooltip_attributes(
@@ -69,6 +70,7 @@
                                     style="display:none"
                                 {% endif %}
                             ></i>
+                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
@@ -86,16 +88,17 @@
                         {% if not editable %}
                             <div class="alert alert-info py-1 px-2 small mb-2">
                                 {{ _(
-                                    'This round has been paired, so its line-up is '
+                                    'This round has been paired, so its lineup is '
                                     'what stands on its boards. You can still edit '
-                                    'the line-up from the Pairings tab.'
+                                    'the lineup from the Pairings tab.'
                                 ) }}
                             </div>
                         {% endif %}
-                        {# Shown for any round out of roster order, whether or
-                           not the tournament asks to be warned: the round's
-                           button is marked either way, and this is what says
-                           what the mark means. #}
+                        {# The tournament's "warn on lineup out of roster
+                           order" setting covers this warning and the mark on
+                           the round's button; the roster positions on the
+                           cards are shown either way. #}
+                        {% if warn_lineup_order %}
                         <div
                             class="lineup-order-warning alert alert-warning py-1 px-2 small mb-2"
                             {% if not round_info['out_of_order'] %}style="display:none"{% endif %}
@@ -116,6 +119,7 @@
                                 </button>
                             {% endif %}
                         </div>
+                        {% endif %}
                         <form
                             class="lineup-form"
                             hx-patch="{{ url_for(

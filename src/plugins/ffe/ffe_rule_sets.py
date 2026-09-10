@@ -455,6 +455,13 @@ class _FfeTeamCupRuleSet(RuleSet, ABC):
             rows.append((index, forfeited, played))
         return rows
 
+    @override
+    def team_point_adjustment(
+        self, team: 'Team', round_: int
+    ) -> 'PointAdjustment | None':
+        # -1 when a game was played on a board below a forfeited one.
+        return self._following_board_played_penalty(team, round_)
+
     def _forfeit_loss_penalty(
         self, team: 'Team', round_: int
     ) -> 'PointAdjustment | None':
@@ -619,8 +626,7 @@ class CoupeJeanClaudeLoubatiereRuleSet(_FfeTeamCupRuleSet):
     def team_point_adjustment(
         self, team: 'Team', round_: int
     ) -> 'PointAdjustment | None':
-        # A game lost by forfeit counts -1 game point. (A match lost by
-        # forfeit scores 0 match points through the absence value.)
+        # A game lost by forfeit counts -1 game point.
         return self._forfeit_loss_penalty(team, round_)
 
     @property
@@ -743,15 +749,6 @@ class ChampionnatFemininN1N2RuleSet(_FfeTeamCupRuleSet):
             'MOLTER': _FFE_MOLTER_TIE_BREAKS,
         }
 
-    @override
-    def team_point_adjustment(
-        self, team: 'Team', round_: int
-    ) -> 'PointAdjustment | None':
-        # -1 when a game was played on a board below a forfeited one. (A
-        # match lost by forfeit scores 0 match points through the absence
-        # value.)
-        return self._following_board_played_penalty(team, round_)
-
     @staticmethod
     @override
     def static_id() -> str:
@@ -862,15 +859,6 @@ class CoupeDeLaPariteRuleSet(_FfeTeamCupRuleSet):
         msgs = super().roster_warnings(team)
         msgs.extend(self._gender_balance_warnings(team))
         return msgs
-
-    @override
-    def team_point_adjustment(
-        self, team: 'Team', round_: int
-    ) -> 'PointAdjustment | None':
-        # -1 when a game was played on a board below a forfeited one. (A
-        # match lost by forfeit scores 0 match points through the absence
-        # value.)
-        return self._following_board_played_penalty(team, round_)
 
     @staticmethod
     def _gender_balance_warnings(team: 'Team') -> list[str]:

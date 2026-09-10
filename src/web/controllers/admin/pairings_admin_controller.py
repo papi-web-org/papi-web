@@ -1275,9 +1275,16 @@ class PairingsAdminController(BaseEventAdminController):
         physical_side: str = 'white' if side_player_id == w_id else 'black'
         side_tp = tournament.tournament_players_by_id[side_player_id]
         with EventDatabase(event.uniq_id, write=True) as database:
+            # The boards are the lineup once the round is paired: a
+            # baseline read off the stored chain would reconcile a team
+            # that has holes but no stored lineup against players who
+            # are not on its boards.
             lineup_slots: list[int | None] = [
                 p.id if p is not None else None
-                for p in side_team.effective_round_slots(round_)
+                for p in (
+                    side_team.round_board_slots(round_)
+                    or side_team.effective_round_slots(round_)
+                )
             ]
             if 0 <= slot < len(lineup_slots):
                 lineup_slots[slot] = None
@@ -1337,9 +1344,16 @@ class PairingsAdminController(BaseEventAdminController):
             tournament, team_board, side_team, this_board.index
         )
         with EventDatabase(event.uniq_id, write=True) as database:
+            # The boards are the lineup once the round is paired: a
+            # baseline read off the stored chain would reconcile a team
+            # that has holes but no stored lineup against players who
+            # are not on its boards.
             lineup_slots: list[int | None] = [
                 p.id if p is not None else None
-                for p in side_team.effective_round_slots(round_)
+                for p in (
+                    side_team.round_board_slots(round_)
+                    or side_team.effective_round_slots(round_)
+                )
             ]
             if 0 <= slot < len(lineup_slots):
                 lineup_slots[slot] = new_player_tp.id

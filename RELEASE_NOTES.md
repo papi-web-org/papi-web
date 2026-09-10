@@ -42,6 +42,8 @@
 - Fix: the lineup editor groups the rounds sharing a lineup again (5.0.4)
 - Fix: a round taking the previous round's lineup now takes the one it played (5.0.4)
 - A team can be set to field nobody for a round before it is paired (5.0.4)
+- Fix: the "warn on lineup out of roster order" setting is honoured again (5.0.4)
+- Fix: the forfeit column was missing from the ranking screens (5.0.4)
 
 ## Championships
 

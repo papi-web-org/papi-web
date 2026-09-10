@@ -698,11 +698,9 @@
                                 }
                                 function syncDerived() {
                                     $gpZpb.attr('placeholder', effectiveValue($gpLoss, '0'));
-                                    if ($mpZpb.length) {
-                                        $mpZpb.attr(
-                                            'placeholder', effectiveValue($mpLoss, '0')
-                                        );
-                                    }
+                                    $mpZpb.attr(
+                                        'placeholder', effectiveValue($mpLoss, '0')
+                                    );
                                     // PABs only exist in Swiss pairings (other
                                     // systems give rest games) — hide the PAB
                                     // fields elsewhere. Team Swiss PAB defaults
