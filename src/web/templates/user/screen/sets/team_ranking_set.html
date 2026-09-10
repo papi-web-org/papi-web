@@ -9,7 +9,7 @@
     and tournament.primary_score|string == 'MATCH_POINTS'
 ) %}
 {% set team_tie_breaks = tournament.tie_breaks | selectattr('supports_team_mode') | list %}
-{% set numeric_count = (4 if primary_is_mp else 1) + 1 + team_tie_breaks | length %}
+{% set numeric_count = (5 if primary_is_mp else 1) + 1 + team_tie_breaks | length %}
 <div class="row gy-2 gx-3 screen-set-row mx-0 w-100 px-3 py-2">
     {% for standings in screen_set.team_standings_lists %}
         <div class="col screen-set-col {% if not loop.first %}border-start border-2 border-dark{% endif %}">
@@ -24,6 +24,7 @@
                     <div class="grid-header fw-bold text-center">{{ _('W *** TEAM RANKING HEADER WIN') }}</div>
                     <div class="grid-header fw-bold text-center">{{ _('D *** TEAM RANKING HEADER DRAW') }}</div>
                     <div class="grid-header fw-bold text-center">{{ _('L *** TEAM RANKING HEADER LOSS') }}</div>
+                    <div class="grid-header fw-bold text-center">{{ _('F *** TEAM RANKING HEADER FORFEIT') }}</div>
                     <div class="grid-header fw-bold text-center">{{ _('MP *** MATCH POINTS') }}</div>
                 {% else %}
                     <div class="grid-header fw-bold text-center">{{ _('GP *** GAME POINTS') }}</div>
@@ -42,6 +43,7 @@
                                 <div class="text-center">{{ row.wins }}</div>
                                 <div class="text-center">{{ row.draws }}</div>
                                 <div class="text-center">{{ row.losses }}</div>
+                                <div class="text-center">{{ row.forfeits }}</div>
                                 <div class="text-center fw-bold">{{ '%g'|format(row.mp) }}</div>
                             {% else %}
                                 <div class="text-center fw-bold">{{ '%g'|format(row.gp) }}</div>

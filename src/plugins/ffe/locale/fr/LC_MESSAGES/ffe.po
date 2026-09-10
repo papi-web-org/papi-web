@@ -405,9 +405,6 @@ msgstr "Plus faible moyenne Elo"
 msgid "Make visible on FFE site"
 msgstr "Rendre visible sur le site de la FFE"
 
-msgid "Match lost by forfeit, counted as 0 match points."
-msgstr "Match perdu par forfait"
-
 msgid "Max. teams per league:"
 msgstr "Max. d'équipes par ligue :"
 

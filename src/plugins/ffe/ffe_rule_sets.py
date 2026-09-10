@@ -44,10 +44,15 @@ if TYPE_CHECKING:
 # treated as a win for the exempt team) and the same Suisse-style
 # game-point scheme. Centralising the constants here so the two rule
 # sets stay in sync.
+#
+# A match lost by forfeit scores 0 rather than the 1 a match played
+# and lost is worth ("un match perdu par forfait 0 point"), which is
+# what the absence value says.
 _FFE_MATCH_POINTS: dict[int, float] = {
     Result.WIN.value: 3.0,
     Result.DRAW.value: 2.0,
     Result.LOSS.value: 1.0,
+    Result.ZERO_POINT_BYE.value: 0.0,
     Result.PAIRING_ALLOCATED_BYE.value: 3.0,
 }
 
@@ -210,6 +215,7 @@ class _FfeTeamCupRuleSet(RuleSet, ABC):
             'mp_win',
             'mp_draw',
             'mp_loss',
+            'mp_zpb',
             'mp_pab',
             'gp_win',
             'gp_draw',
@@ -355,14 +361,7 @@ class _FfeTeamCupRuleSet(RuleSet, ABC):
         tournament = team.tournament
         if tournament is None:
             return None
-        for team_board in tournament.get_round_team_boards(round_):
-            stored = team_board.stored_team_board
-            if (
-                team.id in (stored.team_a_id, stored.team_b_id)
-                and not team_board.is_bye
-            ):
-                return team_board
-        return None
+        return tournament.team_match_by_team_and_round.get((team.id, round_))
 
     @staticmethod
     def _team_board_breakdown(
@@ -449,6 +448,13 @@ class _FfeTeamCupRuleSet(RuleSet, ABC):
             rows.append((index, forfeited, played))
         return rows
 
+    @override
+    def team_point_adjustment(
+        self, team: 'Team', round_: int
+    ) -> 'PointAdjustment | None':
+        # -1 when a game was played on a board below a forfeited one.
+        return self._following_board_played_penalty(team, round_)
+
     def _forfeit_loss_penalty(
         self, team: 'Team', round_: int
     ) -> 'PointAdjustment | None':
@@ -501,43 +507,6 @@ class _FfeTeamCupRuleSet(RuleSet, ABC):
             ).format(n=count),
         )
 
-    def _match_forfeit_mp_penalty(
-        self, team: 'Team', round_: int
-    ) -> 'PointAdjustment | None':
-        """A match lost by forfeit scores 0 match points instead of the
-        normal 1 ("un match perdu par forfait 0 point"). Applied as a -1
-        match-point adjustment when the team forfeited its whole match, and
-        only where match points rank the teams (Suisse / round-robin)."""
-        tournament = team.tournament
-        if tournament is None:
-            return None
-        if tournament.primary_score != ScoreType.MATCH_POINTS:
-            return None
-        rows = self._round_breakdown(team, round_)
-        if rows and all(forfeited for _index, forfeited, _played in rows):
-            return PointAdjustment(
-                mp=-1.0,
-                explanation=_('Match lost by forfeit, counted as 0 match points.'),
-            )
-        return None
-
-    @staticmethod
-    def _combine(
-        *adjustments: 'PointAdjustment | None',
-    ) -> 'PointAdjustment | None':
-        """Sum several point adjustments into one, joining their
-        explanations. Returns ``None`` when none apply."""
-        parts = [adjustment for adjustment in adjustments if adjustment is not None]
-        if not parts:
-            return None
-        return PointAdjustment(
-            mp=sum(part.mp for part in parts),
-            gp=sum(part.gp for part in parts),
-            explanation=' '.join(
-                part.explanation for part in parts if part.explanation
-            ),
-        )
-
     @override
     def form_defaults(
         self,
@@ -556,6 +525,7 @@ class _FfeTeamCupRuleSet(RuleSet, ABC):
             'mp_win': _fmt(_FFE_MATCH_POINTS[Result.WIN.value]),
             'mp_draw': _fmt(_FFE_MATCH_POINTS[Result.DRAW.value]),
             'mp_loss': _fmt(_FFE_MATCH_POINTS[Result.LOSS.value]),
+            'mp_zpb': _fmt(_FFE_MATCH_POINTS[Result.ZERO_POINT_BYE.value]),
             'mp_pab': _fmt(_FFE_MATCH_POINTS[Result.PAIRING_ALLOCATED_BYE.value]),
             'gp_win': _fmt(gp[Result.WIN.value]),
             'gp_draw': _fmt(gp[Result.DRAW.value]),
@@ -649,12 +619,8 @@ class CoupeJeanClaudeLoubatiereRuleSet(_FfeTeamCupRuleSet):
     def team_point_adjustment(
         self, team: 'Team', round_: int
     ) -> 'PointAdjustment | None':
-        # A game lost by forfeit counts -1 game point; a match lost by
-        # forfeit scores 0 match points.
-        return self._combine(
-            self._forfeit_loss_penalty(team, round_),
-            self._match_forfeit_mp_penalty(team, round_),
-        )
+        # A game lost by forfeit counts -1 game point.
+        return self._forfeit_loss_penalty(team, round_)
 
     @property
     @override
@@ -776,17 +742,6 @@ class ChampionnatFemininN1N2RuleSet(_FfeTeamCupRuleSet):
             'MOLTER': _FFE_MOLTER_TIE_BREAKS,
         }
 
-    @override
-    def team_point_adjustment(
-        self, team: 'Team', round_: int
-    ) -> 'PointAdjustment | None':
-        # -1 when a game was played on a board below a forfeited one; a
-        # match lost by forfeit scores 0 match points.
-        return self._combine(
-            self._following_board_played_penalty(team, round_),
-            self._match_forfeit_mp_penalty(team, round_),
-        )
-
     @staticmethod
     @override
     def static_id() -> str:
@@ -897,17 +852,6 @@ class CoupeDeLaPariteRuleSet(_FfeTeamCupRuleSet):
         msgs = super().roster_warnings(team)
         msgs.extend(self._gender_balance_warnings(team))
         return msgs
-
-    @override
-    def team_point_adjustment(
-        self, team: 'Team', round_: int
-    ) -> 'PointAdjustment | None':
-        # -1 when a game was played on a board below a forfeited one; a
-        # match lost by forfeit scores 0 match points.
-        return self._combine(
-            self._following_board_played_penalty(team, round_),
-            self._match_forfeit_mp_penalty(team, round_),
-        )
 
     @staticmethod
     def _gender_balance_warnings(team: 'Team') -> list[str]:

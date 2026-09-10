@@ -443,6 +443,11 @@ class TournamentAdminController(BaseEventAdminController):
                     'mp_loss': (
                         match_points.get(Result.LOSS.value) if match_points else None
                     ),
+                    'mp_zpb': (
+                        match_points.get(Result.ZERO_POINT_BYE.value)
+                        if match_points
+                        else None
+                    ),
                     'mp_pab': (
                         match_points.get(Result.PAIRING_ALLOCATED_BYE.value)
                         if match_points
@@ -607,6 +612,7 @@ class TournamentAdminController(BaseEventAdminController):
                         'mp_win',
                         'mp_draw',
                         'mp_loss',
+                        'mp_zpb',
                         'mp_pab',
                     )
                 ),
@@ -864,6 +870,7 @@ class TournamentAdminController(BaseEventAdminController):
                 (Result.WIN, 'mp_win'),
                 (Result.DRAW, 'mp_draw'),
                 (Result.LOSS, 'mp_loss'),
+                (Result.ZERO_POINT_BYE, 'mp_zpb'),
                 (Result.PAIRING_ALLOCATED_BYE, 'mp_pab'),
             ):
                 raw = WebContext.form_data_to_str(data, mp_field)

@@ -783,11 +783,11 @@ class TeamAdminController(BaseEventAdminController):
         if player is not None:
             if self._player_is_paired(team, player):
                 # A paired player can't leave the roster — it would orphan
-                # their board(s). The line-up must be edited first.
+                # their board(s). The lineup must be edited first.
                 Message.warning(
                     request,
                     _(
-                        'This player is paired in at least one round and cannot be removed from the roster (must be removed from the line-up first).'
+                        'This player is paired in at least one round and cannot be removed from the roster (must be removed from the lineup first).'
                     ),
                 )
             else:
@@ -878,24 +878,28 @@ class TeamAdminController(BaseEventAdminController):
     def _group_rounds_by_lineup(
         rounds_data: list[dict[str, Any]],
     ) -> list[list[dict[str, Any]]]:
-        """Split the rounds into runs sharing one line-up.
+        """Split the rounds into runs sharing one lineup.
 
-        A round opens a run when it does not take the previous round's
-        line-up — that is, whenever the editor's "use the previous
-        round's line-up" box is unticked or absent (round 1, and any
-        paired round, whose line-up is whatever is on its boards).
+        A round joins the run in progress while the same players stand on
+        the same boards as in the round before it — whether that lineup
+        is read off the boards of a paired round or taken from the round
+        before by one still to be paired. A tournament paired all at once
+        (a round-robin, a Scheveningen or Molter table) therefore groups
+        the rounds a team plays alike, rather than giving every round a
+        run of its own.
         """
         groups: list[list[dict[str, Any]]] = []
+        previous_slots: tuple[int | None, ...] | None = None
         for round_info in rounds_data:
-            inherits = (
-                round_info['round'] > 1
-                and not round_info['is_paired']
-                and round_info['lineup_source'] != 'explicit'
+            slots = tuple(
+                player.id if player is not None else None
+                for player in round_info['slots']
             )
-            if groups and inherits:
+            if slots == previous_slots:
                 groups[-1].append(round_info)
             else:
                 groups.append([round_info])
+            previous_slots = slots
         return groups
 
     @classmethod
@@ -912,7 +916,7 @@ class TeamAdminController(BaseEventAdminController):
         warn_lineup_order = False
         if tournament is not None:
             warn_lineup_order = tournament.warn_lineup_order
-            # Every round, played ones included: the team's line-up through
+            # Every round, played ones included: the team's lineup through
             # the whole tournament is worth seeing in one place. A played
             # round is shown read-only unless the pairings tab asked for
             # that very round — see ``editable`` below.
@@ -948,13 +952,12 @@ class TeamAdminController(BaseEventAdminController):
                 {
                     'round': round_,
                     'is_paired': is_paired,
-                    # A played round's line-up is its boards, and moving a
+                    # A played round's lineup is its boards, and moving a
                     # player there has to move them on the board too. That
                     # is what the pairings tab does, and it opens this same
                     # modal naming the round — so the round it names is
                     # editable and the rest are there to be read.
                     'editable': not is_paired or round_ == requested_round,
-                    'has_override': team.has_explicit_round_lineup(round_),
                     'lineup_source': team.lineup_source(round_),
                     'slots': slots,
                     'bench': bench,
@@ -1067,12 +1070,9 @@ class TeamAdminController(BaseEventAdminController):
             )
         else:
             with EventDatabase(event.uniq_id, True) as database:
-                if all(v is None for v in slot_values):
-                    team.delete_round_lineup(round_, database)
-                else:
-                    team.set_round_lineup(round_, slot_values, database)
-                # The line-up-average sort mode keys off the round 1
-                # line-up, so re-sort once it changes (self-guards for
+                team.set_round_lineup(round_, slot_values, database)
+                # The lineup-average sort mode keys off the round 1
+                # lineup, so re-sort once it changes (self-guards for
                 # the other modes and once a round is paired).
                 if tournament is not None:
                     tournament.resort_teams(database)
@@ -1106,28 +1106,14 @@ class TeamAdminController(BaseEventAdminController):
             )
             return
 
-        # Find the team's team_board for this round (skip byes/EXEMPT —
-        # those have no opponent and don't need slot reconciliation).
-        team_board = next(
-            (
-                tb
-                for tb in tournament.get_round_team_boards(round_)
-                if (
-                    tb.stored_team_board.team_a_id == team.id
-                    or tb.stored_team_board.team_b_id == team.id
-                )
-                and tb.stored_team_board.team_b_id is not None
-            ),
-            None,
-        )
+        # Byes / EXEMPT are not in the index: they have no opponent, and
+        # no boards whose slots would need reconciling.
+        team_board = tournament.team_match_by_team_and_round.get((team.id, round_))
         if team_board is None:
             # Team has a bye / no real match this round — just persist
             # the lineup; no boards to reconcile.
             with EventDatabase(event.uniq_id, write=True) as database:
-                if all(v is None for v in new_slot_values):
-                    team.delete_round_lineup(round_, database)
-                else:
-                    team.set_round_lineup(round_, new_slot_values, database)
+                team.set_round_lineup(round_, new_slot_values, database)
             return
 
         # Baseline must reflect the actual boards, not the default-roster
@@ -1139,7 +1125,7 @@ class TeamAdminController(BaseEventAdminController):
                 team.round_board_slots(round_) or team.effective_round_slots(round_)
             )
         ]
-        # Keyed by the team's line-up slot, which is the board index in
+        # Keyed by the team's lineup slot, which is the board index in
         # a straight team match but not in a table that rotates one team
         # around the other.
         slot_by_board_index = tournament.pairing_variation.engine.team_board_slots(
@@ -1195,10 +1181,7 @@ class TeamAdminController(BaseEventAdminController):
         # boards as soon as there's a hole, and the next edit reconciles
         # against that phantom roster and corrupts the seating.
         with EventDatabase(event.uniq_id, write=True) as database:
-            if all(v is None for v in new_slot_values):
-                team.delete_round_lineup(round_, database)
-            else:
-                team.set_round_lineup(round_, new_slot_values, database)
+            team.set_round_lineup(round_, new_slot_values, database)
 
     @staticmethod
     def _reconcile_flat_round_lineup(
@@ -1301,10 +1284,7 @@ class TeamAdminController(BaseEventAdminController):
             if old_pid != (new_slot_values[i] if i < len(new_slot_values) else None)
         ]
         with EventDatabase(event.uniq_id, write=True) as database:
-            if all(v is None for v in new_slot_values):
-                team.delete_round_lineup(round_, database)
-            else:
-                team.set_round_lineup(round_, new_slot_values, database)
+            team.set_round_lineup(round_, new_slot_values, database)
             for slot, old_pid, new_pid in changes:
                 seat = board_side_by_player.get(old_pid) if old_pid else None
                 if seat is None:

@@ -1654,7 +1654,7 @@ button.collapse-button[aria-expanded="true"] .bi-chevron-down {
 }
 
 /* The out-of-order mark rides the corner of the group like a notification
-   badge — one per group, since its rounds share a line-up. Positioned
+   badge — one per group, since its rounds share a lineup. Positioned
    here rather than with Bootstrap's position utilities: those carry
    !important, and the badge is hidden and shown through an inline
    display. */
@@ -1687,7 +1687,7 @@ button.collapse-button[aria-expanded="true"] .bi-chevron-down {
 
 /* Laid out here rather than with Bootstrap's d-flex: that class carries
    !important, which would outrank the inline display:none that hides the
-   alert on a round whose line-up is in order.
+   alert on a round whose lineup is in order.
 
    Filled rather than Bootstrap 5.3's subtle alert, which was too quiet to
    catch the eye. Done by overriding the alert's own variables, so the
