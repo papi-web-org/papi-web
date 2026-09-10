@@ -369,7 +369,7 @@ class FixedTablePairingEngine(PairingEngine):
                 # persisted. Skip it rather than create an orphan that
                 # vanishes on reload.
                 continue
-            # One side missing (incomplete roster / line-up hole) ⇒ a hole;
+            # One side missing (incomplete roster / lineup hole) ⇒ a hole;
             # the present player is given a forfeit win in ``create_boards``.
             stored_boards.append(
                 StoredBoard(

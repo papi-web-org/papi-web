@@ -555,12 +555,12 @@
                         <div class="col-12 col-md-6">
                             {{ admin_macros.switch_input(
                                 name='enforce_roster_order',
-                                placeholder=_('Warn on line-up out of roster order'),
+                                placeholder=_('Warn on lineup out of roster order'),
                                 tooltip_text=_(
                                     'When enabled, a warning is shown if a '
-                                    'per-round line-up places players in a '
+                                    'per-round lineup places players in a '
                                     'different order than the team roster. '
-                                    'The line-up can still be reordered freely.'
+                                    'The lineup can still be reordered freely.'
                                 ),
                                 data=data, errors=errors
                             ) }}
@@ -731,6 +731,8 @@
                                 const $teamPlayerCount = $('#team-player-count');
                                 const $mpWin = $('#mp-win');
                                 const $mpDraw = $('#mp-draw');
+                                const $mpLoss = $('#mp-loss');
+                                const $mpZpb = $('#mp-zpb');
                                 const $mpPab = $('#mp-pab');
                                 function formatNumber(n) {
                                     return Number.isFinite(n)
@@ -743,6 +745,9 @@
                                 }
                                 function syncDerived() {
                                     $gpZpb.attr('placeholder', effectiveValue($gpLoss, '0'));
+                                    $mpZpb.attr(
+                                        'placeholder', effectiveValue($mpLoss, '0')
+                                    );
                                     // PABs only exist in Swiss pairings (other
                                     // systems give rest games) — hide the PAB
                                     // fields elsewhere. Team Swiss PAB defaults
@@ -783,11 +788,13 @@
                                 $teamPlayerCount.on('input change', syncDerived);
                                 $mpWin.on('input change', syncDerived);
                                 $mpDraw.on('input change', syncDerived);
+                                $mpLoss.on('input change', syncDerived);
                                 $('[name=pairing_system]').on('change', syncDerived);
                                 syncDerived();
                             })();
                         </script>
                         {% if is_team_event %}
+                            <div id="match-points-section">
                             <h6 class="mt-4 mb-2 text-uppercase text-muted small fw-bold border-bottom pb-1">
                                 {{ _('Match points') }}
                             </h6>
@@ -821,6 +828,21 @@
                                 </div>
                             </div>
                             <div class="row gy-2 gx-3 mt-1">
+                                <div class="col-6 col-md-6">
+                                    {{ admin_macros.number_input(
+                                        name='mp_zpb',
+                                        label=_('Absence:'),
+                                        placeholder='0',
+                                        tooltip_text=_(
+                                            'Match points scored by an absent '
+                                            'team — one left unpaired as absent, '
+                                            'or one that forfeited its whole '
+                                            'match. Defaults to the Loss value.'
+                                        ),
+                                        step='any',
+                                        data=data, errors=errors
+                                    ) }}
+                                </div>
                                 <div class="col-6 col-md-6" id="mp-pab-field">
                                     {{ admin_macros.number_input(
                                         name='mp_pab',
@@ -834,6 +856,7 @@
                                         data=data, errors=errors
                                     ) }}
                                 </div>
+                            </div>
                             </div>
                         {% endif %}
                     </div>
@@ -850,10 +873,22 @@
                             | list
                             | tojson
                         }};
+                        // Systems that aggregate game points only, with no
+                        // match-points side to the score (a flat fixed table).
+                        const NO_MATCH_POINTS = {{
+                            pairing_systems
+                            | rejectattr('supports_match_points')
+                            | map(attribute='id')
+                            | list
+                            | tojson
+                        }};
                         function syncPointAttribution() {
                             const id = $('#pairing-system').val() || '';
                             $('#points-attribution-section').toggle(
                                 !NO_GAME_POINTS.includes(id)
+                            );
+                            $('#match-points-section').toggle(
+                                !NO_MATCH_POINTS.includes(id)
                             );
                         }
                         $('#pairing-system').on('change', syncPointAttribution);

@@ -1341,7 +1341,7 @@ _BOARD_CONTEXT = _board_context()
 class TecBoardTieBreakTestCase(TestCase):
     """TEC-2023 Exercises 46-48: BC, TBR and BBE applied to the round-3
     match between teams #11 (Koalas) and #14 (Narwhals), which the
-    exercises resolve from the published line-up
+    exercises resolve from the published lineup
 
         board 1  1-0    board 2  ½-½    board 3  ½-½    board 4  0-1
 
@@ -1656,7 +1656,7 @@ class EDEKnockoutVariantTestCase(TestCase):
     a single criterion, "EDE system with board count [13.3.2]", whose
     knock-out part reads the two tied teams' own encounter.
 
-    Teams #11 and #14 drew their round-3 match 2-2 with the line-up
+    Teams #11 and #14 drew their round-3 match 2-2 with the lineup
 
         board 1  1-0    board 2  ½-½    board 3  ½-½    board 4  0-1
 
