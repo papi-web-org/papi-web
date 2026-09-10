@@ -10747,9 +10747,3 @@ msgstr ""
 msgid "← Back to IT1 certificate"
 msgstr ""
 
-#~ msgid "Choose a captain from the team roster, or enter the name of a non playing captain."
-#~ msgstr ""
-
-#~ msgid "This round has been paired, so its line-up is what stands on its boards. You can still edit the line-up from the Pairings tab."
-#~ msgstr ""
-
