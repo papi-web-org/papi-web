@@ -42,7 +42,10 @@ _CUP_MATCH_POINTS = {
 
 class _AbsentMatchPointsHarness(TestCase):
     """A four-team round-robin scored on match points, with the cup
-    scheme in force and a helper to forfeit a whole match."""
+    scheme in force and a helper to forfeit a whole match.
+
+    The FIDE 6.6 participation rule is off: a forfeiting team stays in
+    the standings, where its match points can be read."""
 
     def tearDown(self) -> None:
         TestUtils.delete_event(EVENT_ID)
@@ -62,6 +65,7 @@ class _AbsentMatchPointsHarness(TestCase):
                 'primary_score': ScoreType.MATCH_POINTS,
                 'match_points': match_points,
                 'rule_set': rule_set,
+                'round_robin_participation_rule': False,
             },
         )
         self.team_ids: list[int] = []
