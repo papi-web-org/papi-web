@@ -44,6 +44,7 @@
 - A team can be set to field nobody for a round before it is paired (5.0.4)
 - Fix: the "warn on lineup out of roster order" setting is honoured again (5.0.4)
 - Fix: the forfeit column was missing from the ranking screens (5.0.4)
+- Fix: a team's bye is worth the same to the tie-breaks as to its ranking row (5.0.4)
 
 ## Championships
 

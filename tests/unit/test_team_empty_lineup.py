@@ -20,7 +20,8 @@ from database.sqlite.event.event_store import (
     StoredTournamentPlayer,
 )
 from tests.test_config import TestUtils
-from utils.enum import EventType
+from data.tie_breaks.team_records import TeamMatchType
+from utils.enum import EventType, Result, TeamByeType
 
 
 EVENT_ID = 'test-team-empty-lineup'
@@ -30,8 +31,10 @@ TEAMS = 4
 ROUNDS = 3
 
 
-@pytest.mark.unit
-class TeamEmptyLineupTestCase(TestCase):
+class _TeamLineupHarness(TestCase):
+    """One team tournament of four teams over three rounds, none of it
+    paired, with every player on a roster."""
+
     def setUp(self) -> None:
         TestUtils.create_event(EVENT_ID, overrides={'event_type': EventType.TEAM})
         stored_tournament = TestUtils.create_tournament(
@@ -106,6 +109,9 @@ class TeamEmptyLineupTestCase(TestCase):
     def _slot_names(slots) -> list[str | None]:
         return [player.last_name if player is not None else None for player in slots]
 
+
+@pytest.mark.unit
+class TeamEmptyLineupTestCase(_TeamLineupHarness):
     def test_an_empty_lineup_survives_a_reload(self) -> None:
         team = self._team(self._bench_everyone(1))
         self.assertTrue(team.has_explicit_round_lineup(1))
@@ -161,3 +167,78 @@ class TeamEmptyLineupTestCase(TestCase):
             [player.last_name for player in team.effective_round_lineup(1)],
             ['T1P0', 'T1P2'],
         )
+
+
+@pytest.mark.unit
+class TeamByeRecordsTestCase(_TeamLineupHarness):
+    """What a bye is worth to the tie-breaks, per bye type.
+
+    The standings and the tie-break records read the same regulations,
+    so a bye scores the same on both sides, and its match type says
+    whether the round was given up voluntarily (Art. 16.5).
+    """
+
+    ABSENT_MP = 0.0
+    DRAW_MP = 2.0
+    WIN_MP = 3.0
+    PAB_MP = 3.0
+
+    def setUp(self) -> None:
+        super().setUp()
+        with EventDatabase(EVENT_ID, write=True) as database:
+            stored_tournament = next(
+                stored
+                for stored in database.load_stored_tournaments()
+                if stored.name == TOURNAMENT_NAME
+            )
+            stored_tournament.match_points = {
+                Result.WIN.value: self.WIN_MP,
+                Result.DRAW.value: self.DRAW_MP,
+                Result.LOSS.value: 1.0,
+                Result.ZERO_POINT_BYE.value: self.ABSENT_MP,
+                Result.PAIRING_ALLOCATED_BYE.value: self.PAB_MP,
+            }
+            database.update_stored_tournament(stored_tournament)
+
+    def _bye_record(self, bye_type: str):
+        team_id = self.team_ids[0]
+        with EventDatabase(EVENT_ID, write=True) as database:
+            self._team(self._load(), 0).set_round_bye(1, bye_type, database)
+        tournament = self._load()
+        record = next(
+            record for record in tournament.team_records() if record.team_id == team_id
+        )
+        self.assertEqual(len(record.matches), 1)
+        standings_mp = next(
+            entry['mp']
+            for entry in tournament.team_standings()
+            if entry['team'].id == team_id
+        )
+        return record.matches[0], standings_mp
+
+    def test_a_team_marked_absent_gives_the_round_up(self) -> None:
+        match, standings_mp = self._bye_record(TeamByeType.ZPB)
+        self.assertEqual(match.match_type, TeamMatchType.ZPB)
+        self.assertEqual(match.own_mp, self.ABSENT_MP)
+        self.assertEqual(match.own_mp, standings_mp)
+        self.assertTrue(match.voluntary_unplayed)
+
+    def test_a_half_point_bye_is_worth_a_drawn_match(self) -> None:
+        match, standings_mp = self._bye_record(TeamByeType.HPB)
+        self.assertEqual(match.match_type, TeamMatchType.HPB)
+        self.assertEqual(match.own_mp, self.DRAW_MP)
+        self.assertEqual(match.own_mp, standings_mp)
+        self.assertTrue(match.voluntary_unplayed)
+
+    def test_a_full_point_bye_is_worth_a_won_match(self) -> None:
+        match, standings_mp = self._bye_record(TeamByeType.FPB)
+        self.assertEqual(match.own_mp, self.WIN_MP)
+        self.assertEqual(match.own_mp, standings_mp)
+        self.assertFalse(match.voluntary_unplayed)
+
+    def test_a_pairing_allocated_bye_keeps_its_own_value(self) -> None:
+        match, standings_mp = self._bye_record(TeamByeType.PAB)
+        self.assertEqual(match.match_type, TeamMatchType.PAB)
+        self.assertEqual(match.own_mp, self.PAB_MP)
+        self.assertEqual(match.own_mp, standings_mp)
+        self.assertFalse(match.voluntary_unplayed)

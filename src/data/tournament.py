@@ -1631,10 +1631,11 @@ class Tournament:
         """Build :class:`TeamRecord` instances for every team in this
         tournament, suitable as input to the team tie-break compute API.
 
-        Only PLAYED and PAB match types are currently emitted — the
-        underlying data model does not yet capture team-level HPB / ZPB
-        / forfeit semantics. When those land, this method should
-        widen accordingly."""
+        A bye carries the score its bye type is worth, as the standings
+        score it, and the match type Art. 16 handling reads: a team
+        marked absent is a zero-point bye whose contribution is cut
+        first, not a pairing-allocated bye scored as a win. A match
+        played but forfeited outright is still reported as PLAYED."""
         from data.tie_breaks.team_records import (
             TeamMatchRecord,
             TeamMatchType,
@@ -1645,7 +1646,12 @@ class Tournament:
             after_round = self.current_round
         match_points = self.match_points
         win_mp = match_points.get(Result.WIN, 2.0)
+        draw_mp = match_points.get(Result.DRAW, 1.0)
+        loss_mp = match_points.get(Result.LOSS, 0.0)
+        absent_mp = match_points.get(Result.ZERO_POINT_BYE, loss_mp)
         pab_mp = match_points.get(Result.PAIRING_ALLOCATED_BYE, win_mp)
+        team_player_count = float(self.team_player_count or 0)
+        absent_gp_per_player = self.team_game_points[Result.ZERO_POINT_BYE]
 
         totals_mp: dict[int, float] = {team.id: 0.0 for team in self.teams}
         totals_gp: dict[int, float] = {team.id: 0.0 for team in self.teams}
@@ -1684,19 +1690,40 @@ class Tournament:
                         )
                         rating_list.append(tp.rating if tp and tp.rating else None)
                     pab_ratings = tuple(rating_list)
+                # The bye types score as they do in the standings; the
+                # match type is what Art. 16 reads to decide whether the
+                # round was given up voluntarily.
+                match stb.bye_type:
+                    case TeamByeType.ZPB:
+                        own_mp = absent_mp
+                        own_gp = team_player_count * absent_gp_per_player
+                        match_type = TeamMatchType.ZPB
+                    case TeamByeType.HPB:
+                        own_mp = draw_mp
+                        own_gp = team_player_count * Result.DRAW.point_value
+                        match_type = TeamMatchType.HPB
+                    case TeamByeType.FPB:
+                        own_mp = win_mp
+                        own_gp = team_player_count * Result.WIN.point_value
+                        # A full-point bye is awarded, not given up.
+                        match_type = TeamMatchType.PAB
+                    case _:
+                        own_mp = pab_mp
+                        own_gp = self.team_pab_game_points
+                        match_type = TeamMatchType.PAB
                 matches_per_team[a_id].append(
                     TeamMatchRecord(
                         round_=team_board.round,
                         opponent_id=None,
-                        own_mp=pab_mp,
-                        own_gp=self.team_pab_game_points,
-                        match_type=TeamMatchType.PAB,
+                        own_mp=own_mp,
+                        own_gp=own_gp,
+                        match_type=match_type,
                         board_scores=a_boards,
                         board_ratings=pab_ratings,
                     )
                 )
-                totals_mp[a_id] += pab_mp
-                totals_gp[a_id] += self.team_pab_game_points
+                totals_mp[a_id] += own_mp
+                totals_gp[a_id] += own_gp
                 continue
             # Match result follows the effective game points (board + this
             # round's penalties/bonuses); the deltas are added to own_gp /
