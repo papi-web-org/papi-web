@@ -218,11 +218,11 @@ class TeamLineupRoundGroupsTestCase(TestCase):
             _round_groups(tournament, self._team(tournament)), [[1, 2], [3]]
         )
 
-    def test_team_swiss_lineup_of_its_own_does_not_open_a_group(self) -> None:
-        """A round still to be paired goes by where its line-up comes
-        from: round 3 stores one of its own, so it opens a group the
-        rounds after it follow — even though it happens to seat the same
-        players in the same order as the round before."""
+    def test_team_swiss_storing_an_unchanged_lineup_is_not_a_new_lineup(self) -> None:
+        """Grouping goes by the lineup a round shows, not by where the
+        lineup comes from: round 3 stores one of its own, seating the
+        same players in the same order as the round before, so it stays
+        in the run rather than opening one."""
         self._create('TEAM_SWISS_STANDARD', rounds=5, teams=8)
         self._set_lineup(0, 3, [0, 1, 2, 3])
         tournament = self._pair(1)
@@ -233,9 +233,8 @@ class TeamLineupRoundGroupsTestCase(TestCase):
 
     def test_team_swiss_rounds_follow_a_paired_round_they_take_over(self) -> None:
         """Round 1 is paired with its players in an order the roster does
-        not have, and nothing is stored for round 2. Round 2 still takes
-        round 1's line-up as far as the editor is concerned, so the two
-        stay in one group."""
+        not have, and nothing is stored for round 2. Round 2 takes round
+        1's lineup, boards and all, so the two stay in one group."""
         self._create('TEAM_SWISS_STANDARD', rounds=3, teams=4)
         tournament = self._pair(1)
         team = self._team(tournament)
