@@ -39,10 +39,35 @@ from utils.enum import TournamentRating, PlayerRatingType
 logger: Logger = get_logger()
 
 
-def drop_k_factors(stored_player: StoredPlayer):
-    """Forget the k-factors of a player, so that they are estimated instead."""
-    for stored_rating in stored_player.ratings.values():
-        stored_rating.pop('k', None)
+def reliable_k_factor(
+    k_factor: int | None, fide_rating: int | None, year_of_birth: int | None
+) -> int | None:
+    """What can still be trusted of a k-factor read from a FIDE database of
+    an earlier rating period.
+
+    A coefficient only ever goes down (40 once the player has played their
+    30 games or turned 19, then 10 once their published rating has reached
+    2400, for good). An outdated one is therefore an upper bound, and the
+    lower of it and the estimate never overshoots: a 10 survives whatever
+    the estimate says, while a 20 gives way to the 10 of a player who has
+    reached 2400 since."""
+    if k_factor is None:
+        return None
+    return min(
+        k_factor, Player.estimate_fide_rating_coefficient(fide_rating, year_of_birth)
+    )
+
+
+def keep_reliable_k_factors(stored_player: StoredPlayer):
+    """Reduce the k-factors of a player read from a FIDE database of an
+    earlier rating period to what can still be trusted."""
+    year_of_birth = stored_player.year_of_birth or (
+        stored_player.date_of_birth.year if stored_player.date_of_birth else None
+    )
+    for tr_value, stored_rating in stored_player.ratings.items():
+        rating = PlayerRating.from_stored_value(stored_rating)
+        rating.k_factor = reliable_k_factor(rating.k_factor, rating.fide, year_of_birth)
+        stored_player.ratings[tr_value] = rating.stored_value
 
 
 class PlayerComparator:
@@ -154,16 +179,43 @@ class DataSource(IdentifiableEntity, ABC):
             if match_player is not None:
                 match_player = self._with_k_factors(
                     match_player,
-                    k_factors_by_fide_id.get(match_player.fide_id or 0, {})
-                    if player.fide_k_factor_reference_date in covered_dates
-                    # Outside the rating period of the database, the
-                    # k-factors of the player are left untouched.
-                    else player.k_factors_by_rating_value,
+                    self._k_factors_for_player(
+                        player,
+                        k_factors_by_fide_id.get(match_player.fide_id or 0, {}),
+                        player.fide_k_factor_reference_date in covered_dates,
+                    ),
                 )
             player_comparator = PlayerComparator(fields, player, match_player)
             if not diff_only or player_comparator.diff_field_ids:
                 player_comparators.append(player_comparator)
         return player_comparators
+
+    @staticmethod
+    def _k_factors_for_player(
+        player: Player,
+        database_k_factors: dict[int, int | None],
+        in_rating_period: bool,
+    ) -> dict[int, int | None]:
+        """The k-factors the update proposes for a player: the ones of the
+        database inside its rating period, and outside of it what remains
+        trustworthy of them, the player keeping their own where nothing
+        does."""
+        if in_rating_period:
+            return database_k_factors
+        k_factors: dict[int, int | None] = {}
+        for tournament_rating in TournamentRating:
+            tr_value = tournament_rating.value
+            k_factor = reliable_k_factor(
+                database_k_factors.get(tr_value),
+                player.ratings[tournament_rating].fide,
+                player.year_of_birth,
+            )
+            k_factors[tr_value] = (
+                k_factor
+                if k_factor is not None
+                else player.ratings[tournament_rating].k_factor
+            )
+        return k_factors
 
     @staticmethod
     def _fide_k_factors_by_fide_id(
@@ -277,7 +329,12 @@ class DataSource(IdentifiableEntity, ABC):
         database = FideDatabase()
         if not fide_id or not database.exists():
             return
-        keep_k_factors = database.covers_rating_period(k_factor_reference_date)
+        in_rating_period = database.covers_rating_period(k_factor_reference_date)
+        year_of_birth = src_stored_player.year_of_birth or (
+            src_stored_player.date_of_birth.year
+            if src_stored_player.date_of_birth
+            else None
+        )
         with database:
             fide_stored_player = database.get_stored_player_by_fide_id(
                 player_fide_id=fide_id,
@@ -304,8 +361,15 @@ class DataSource(IdentifiableEntity, ABC):
                 )
                 if source_rating.fide is None:
                     source_rating.fide = fide_player_rating.fide
-                if keep_k_factors:
-                    source_rating.k_factor = fide_player_rating.k_factor
+                source_rating.k_factor = (
+                    fide_player_rating.k_factor
+                    if in_rating_period
+                    else reliable_k_factor(
+                        fide_player_rating.k_factor,
+                        source_rating.fide,
+                        year_of_birth,
+                    )
+                )
                 src_stored_player.ratings[rating_type.value] = (
                     source_rating.stored_value
                 )
@@ -485,7 +549,7 @@ class FideDataSource(LocalDataSource):
         k_factor_reference_date: date,
     ):
         if not FideDatabase().covers_rating_period(k_factor_reference_date):
-            drop_k_factors(src_stored_player)
+            keep_reliable_k_factors(src_stored_player)
 
     def check_player_match(self, player1: StoredPlayer, player2: StoredPlayer) -> bool:
         return bool(player1.fide_id) and player1.fide_id == player2.fide_id

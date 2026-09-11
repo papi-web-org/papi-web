@@ -465,13 +465,6 @@ class Player:
         return 20
 
     @property
-    def k_factors_by_rating_value(self) -> dict[int, int | None]:
-        return {
-            tournament_rating.value: rating.k_factor
-            for tournament_rating, rating in self.ratings.items()
-        }
-
-    @property
     def fide_k_factor_reference_date(self) -> date:
         """The day whose FIDE rating period the k-factors of the player
         are read from."""

@@ -34,7 +34,7 @@ from data.columns.players_tab import PlayersTabColumn
 from data.event import Event
 from data.access_levels.actions import AuthAction
 from data.access_levels.client import Client
-from data.input_output.data_source import DataSource, drop_k_factors
+from data.input_output.data_source import DataSource, keep_reliable_k_factors
 from data.input_output.managers import DataSourceManager, PlayerExporterManager
 from data.player import (
     Player,
@@ -2202,7 +2202,7 @@ class PlayerAdminController(BaseEventAdminController):
 
         if data_source:
             stored_players_by_index = {}
-            keep_k_factors = FideDatabase().covers_rating_period(
+            in_rating_period = FideDatabase().covers_rating_period(
                 cls._k_factor_reference_date(web_context)
             )
             identifier_column = data_source.import_identifier_column
@@ -2232,8 +2232,8 @@ class PlayerAdminController(BaseEventAdminController):
                     column.augment_stored_player_with_tournament(
                         tournament, stored_player, value
                     )
-                if not keep_k_factors:
-                    drop_k_factors(stored_player)
+                if not in_rating_period:
+                    keep_reliable_k_factors(stored_player)
                 stored_players_by_index[index] = stored_player
 
         for index, stored_player in stored_players_by_index.items():
