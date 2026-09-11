@@ -223,6 +223,9 @@ msgstr "Pas de connection à internet."
 msgid "No player to synchronize yet, import or upload tournaments first."
 msgstr "Aucun·e joueur·euse à synchroniser pour le moment, vous devez d'abord importer ou mettre en ligne un tournoi."
 
+msgid "No tournament has started yet, no results to upload."
+msgstr "Aucun tournoi n'a encore démarré, aucun résultat à mettre en ligne."
+
 msgid "Not scheduled"
 msgstr "Non programmé"
 

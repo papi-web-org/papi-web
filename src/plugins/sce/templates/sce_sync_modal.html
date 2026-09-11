@@ -318,18 +318,27 @@
                     </thead>
                     {% include '/sce_upload_table.html' %}
                 </table>
+                {% set started_tournaments = sce_allowed_tournaments | selectattr('started') | list %}
                 <div class="text-center mt-3 mb-1">
-                    <button
-                        type="button"
-                        hx-post="{{ url_for('sce-upload-all-tournament-results', event_uniq_id=admin_event.uniq_id) }}"
-                        class="text-nowrap white btn btn-outline-primary"
-                        {% if sce_event_status.actions_disabled %}
-                            disabled
+                    <span
+                        {% if not started_tournaments and not sce_event_status.actions_disabled %}
+                            {{ macros.tooltip_attributes('', _(
+                                'No tournament has started yet, no results to upload.'
+                            )) }}
                         {% endif %}
                     >
-                        <i class="bi-cloud-arrow-up-fill pe-1"></i>
-                        {{ _('Upload all tournament results') }}
-                    </button>
+                        <button
+                            type="button"
+                            hx-post="{{ url_for('sce-upload-all-tournament-results', event_uniq_id=admin_event.uniq_id) }}"
+                            class="text-nowrap white btn btn-outline-primary"
+                            {% if sce_event_status.actions_disabled or not started_tournaments %}
+                                disabled
+                            {% endif %}
+                        >
+                            <i class="bi-cloud-arrow-up-fill pe-1"></i>
+                            {{ _('Upload all tournament results') }}
+                        </button>
+                    </span>
                 </div>
             {% endif %}
         </div>
