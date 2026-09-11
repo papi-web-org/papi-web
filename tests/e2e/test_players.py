@@ -43,6 +43,7 @@ class TestPlayersFunctionality:
         modal.get_by_test_id('standard-rating-estimated').fill('1000')
         modal.get_by_test_id('rapid-rating-national').fill('1500')
         modal.get_by_test_id('blitz-rating-fide').fill('2000')
+        modal.get_by_test_id('blitz-rating-k').fill('20')
         modal.get_by_test_id('title').select_option(
             str(PlayerTitle.GRANDMASTER.value), force=True
         )
@@ -71,7 +72,7 @@ class TestPlayersFunctionality:
             assert player.ratings == {
                 TournamentRating.STANDARD: PlayerRating(estimated=1000),
                 TournamentRating.RAPID: PlayerRating(national=1500),
-                TournamentRating.BLITZ: PlayerRating(fide=2000),
+                TournamentRating.BLITZ: PlayerRating(fide=2000, k_factor=20),
             }
             assert player.title == PlayerTitle.GRANDMASTER
             assert player.federation.name == 'FRA'
@@ -92,6 +93,13 @@ class TestPlayersFunctionality:
         edit_link.click()
         modal = page.locator('#player-modal:not(.htmx-added)')
         expect(modal).to_be_visible()
+        # The coefficients left empty are estimated from the rating and the age.
+        expect(modal.get_by_test_id('standard-rating-k')).to_have_attribute(
+            'placeholder', '40'
+        )
+        expect(modal.get_by_test_id('blitz-rating-k')).to_have_attribute(
+            'placeholder', '20'
+        )
         modal.get_by_test_id('last-name').fill('hoe')
         modal.locator('button[type=submit]').click()
 

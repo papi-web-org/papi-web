@@ -4321,6 +4321,10 @@ msgid "Invalid board number [{fixed_board_str}]."
 msgstr "Numéro d'échiquier non valide [{fixed_board_str}]."
 
 #, python-brace-format
+msgid "Invalid coefficient (k) [{k_factor}] (expected in range [{min}-{max}])."
+msgstr "Coefficient (k) [{k_factor}] invalide (attendu dans la plage [{min}-{max}])."
+
+#, python-brace-format
 msgid "Invalid color [{color}] ([#RRGGBB] expected)."
 msgstr "Couleur non valide [{color}] ([#RRGGBB] attendu)."
 
@@ -4485,6 +4489,9 @@ msgstr "Juin"
 
 msgid "Junior categories"
 msgstr "Catégories jeunes"
+
+msgid "K *** FIDE RATING COEFFICIENT"
+msgstr "K"
 
 msgid "Kashdan"
 msgstr "Kashdan"
@@ -8540,6 +8547,9 @@ msgstr "Je"
 
 msgid "Thailand"
 msgstr "Thaïlande"
+
+msgid "The FIDE coefficient (k) of the player. When left empty, the coefficient shown is estimated from the rating and the age of the player."
+msgstr "Le coefficient FIDE (k) du·de la joueur·euse. Laissé vide, le coefficient affiché est estimé à partir du classement et de l'âge du·de la joueur·euse."
 
 msgid "The FIDE rules stipulate that only the pairings of the round <b>prior</b> to the current one may be modified. Changes to pairings previous to this should be made at the <b>end</b> of the tournament, <b>after</b> the rankings have been published, and solely for the computation of the FIDE ratings."
 msgstr "Le règlement FIDE indique que seuls les appariements de la ronde <b>précédant</b> la ronde courante peuvent être modifiés. Les modifications des appariements antérieurs doivent être effectuées à la <b>fin</b> du tournoi, <b>après</b> la publication du classement, et uniquement pour le calcul des classements ELO FIDE."

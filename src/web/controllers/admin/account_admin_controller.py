@@ -1,4 +1,5 @@
 from copy import copy
+from datetime import date
 from typing import Annotated, Any
 
 from argon2 import PasswordHasher
@@ -220,7 +221,7 @@ class AccountAdminController(BaseEventAdminController):
             raise NotFoundException(f'Unknown data source [{data_source_id}].')
 
         stored_player, errors = await PlayerAdminController.get_search_stored_player(
-            data_source, player_source_id
+            data_source, player_source_id, date.today()
         )
         if stored_player:
             stored_account = StoredAccount(

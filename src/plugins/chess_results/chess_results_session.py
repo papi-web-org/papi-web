@@ -302,6 +302,8 @@ class ChessResultsSession(Session):
             prev_tb_values = tb_values
 
             ratings = p.ratings.get(tournament.rating)
+            k_factor, k_factor_is_estimated = p.fide_rating_coefficient
+            rating_change = p.fide_rating_change
             ET.SubElement(
                 pdata,
                 'player',
@@ -328,7 +330,12 @@ class ChessResultsSession(Session):
                     'rank': str(p.rank),
                     'pts': str(p.points or 0),
                     'equal': 'J' if same_as_previous else 'N',
-                    'kfaktor': '',
+                    # Only the official coefficient is uploaded: an estimate
+                    # would make Chess-Results show wrong rating changes.
+                    'kfaktor': '' if k_factor_is_estimated else str(k_factor),
+                    'rtgdifference': str(rating_change)
+                    if rating_change is not None
+                    else '',
                     'state': '',
                 }
                 | {f'tb{i + 1}': tb_values[i] for i in range(MAX_TIE_BREAKS)},
@@ -482,6 +489,10 @@ class ChessResultsSession(Session):
                 ratings = (
                     member_tp.ratings.get(tournament.rating) if member_tp else None
                 )
+                k_factor, k_factor_is_estimated = (
+                    member_tp.fide_rating_coefficient if member_tp else (0, True)
+                )
+                rating_change = member_tp.fide_rating_change if member_tp else None
                 ET.SubElement(
                     pdata,
                     'player',
@@ -507,7 +518,10 @@ class ChessResultsSession(Session):
                         'rank': str(rank_by_id.get(player.id, '')),
                         'pts': str((member_tp.points if member_tp else 0) or 0),
                         'equal': 'N',
-                        'kfaktor': '',
+                        'kfaktor': '' if k_factor_is_estimated else str(k_factor),
+                        'rtgdifference': str(rating_change)
+                        if rating_change is not None
+                        else '',
                         'state': '',
                     }
                     | {f'tb{i + 1}': '' for i in range(MAX_TIE_BREAKS)},

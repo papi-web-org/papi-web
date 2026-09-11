@@ -105,6 +105,64 @@ class TournamentExporterTestCase(TestCase):
                     [self.tournament.id],
                 )
 
+    def test_chess_results_uploads_the_official_k_factor_only(self):
+        """The coefficient (k) reaches Chess-Results in the ``kfaktor``
+        attribute when it is the player's official one; an estimate is not
+        uploaded, as it would make the site show wrong rating changes."""
+        tournament_players = list(
+            self.tournament.tournament_players_by_pairing_number.values()
+        )
+        with_k_factor = tournament_players[0]
+        ratings = dict(with_k_factor.ratings)
+        ratings[self.tournament.rating].k_factor = 20
+        with_k_factor.update_ratings(ratings)
+
+        with patch.object(CRUtils, 'encrypt', return_value='encrypted-test-sid'):
+            xml = ChessResultsSession(self.tournament).build_tournament_xml(
+                self.tournament,
+                sid='test-sid',
+                tnr='test-key',
+                creator_id='test-creator',
+                state=None,
+            )
+        k_factors_by_id = {
+            player.attrib['id']: player.attrib['kfaktor']
+            for player in ET.fromstring(xml).findall('./players/player')
+        }
+        assert k_factors_by_id[str(with_k_factor.id)] == '20'
+        assert k_factors_by_id[str(tournament_players[1].id)] == ''
+
+    def test_chess_results_uploads_the_rating_change(self):
+        """Chess-Results displays the rating change it is given rather than
+        computing one, so the player's change over the tournament is
+        uploaded in ``rtgdifference`` — only when it rests on the official
+        coefficient (k)."""
+        tournament_players = list(
+            self.tournament.tournament_players_by_pairing_number.values()
+        )
+        with_k_factor = tournament_players[0]
+        ratings = dict(with_k_factor.ratings)
+        ratings[self.tournament.rating].k_factor = 20
+        with_k_factor.update_ratings(ratings)
+
+        with patch.object(CRUtils, 'encrypt', return_value='encrypted-test-sid'):
+            xml = ChessResultsSession(self.tournament).build_tournament_xml(
+                self.tournament,
+                sid='test-sid',
+                tnr='test-key',
+                creator_id='test-creator',
+                state=None,
+            )
+        changes_by_id = {
+            player.attrib['id']: player.attrib['rtgdifference']
+            for player in ET.fromstring(xml).findall('./players/player')
+        }
+        assert changes_by_id[str(with_k_factor.id)] == str(
+            with_k_factor.fide_rating_change
+        )
+        assert changes_by_id[str(with_k_factor.id)] not in ('', '0')
+        assert changes_by_id[str(tournament_players[1].id)] == ''
+
     def test_chess_results_getkey_escapes_tournament_name(self):
         """A tournament name with XML metacharacters (e.g. ``R&B``) must be
         escaped in the GETKEY payload, otherwise Chess-Results rejects the

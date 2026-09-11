@@ -230,9 +230,15 @@ class RatingUpdaterField(PlayerUpdaterField, ABC):
     def static_name(cls) -> str:
         return cls.tournament_rating().short_name
 
+    @property
+    def _with_k_factor(self) -> bool:
+        return PlayerRatingType.FIDE in self.rating_types
+
     def is_updated(self, player: Player, match_player: Player) -> bool:
         src_ratings = player.ratings[self.tournament_rating()]
         match_ratings = match_player.ratings[self.tournament_rating()]
+        if self._with_k_factor and src_ratings.k_factor != match_ratings.k_factor:
+            return True
         return any(
             src_ratings.get_type_value(rt) != match_ratings.get_type_value(rt)
             for rt in self.rating_types
@@ -262,10 +268,17 @@ class RatingUpdaterField(PlayerUpdaterField, ABC):
             src_ratings.set_value_from_type(
                 match_ratings.get_type_value(rating_type), rating_type
             )
+        if self._with_k_factor:
+            src_ratings.k_factor = match_ratings.k_factor
         stored_player.ratings[tr] = src_ratings.stored_value
 
+    def _format_ratings(self, ratings: PlayerRating) -> str:
+        if self._with_k_factor and ratings.k_factor is not None:
+            return f'{ratings} (K{ratings.k_factor})'
+        return str(ratings)
+
     def get_string_value(self, player: Player) -> str:
-        return str(player.ratings[self.tournament_rating()])
+        return self._format_ratings(player.ratings[self.tournament_rating()])
 
     def get_composed_string_value(self, _player: Player, match_player: Player) -> str:
         ratings = copy.deepcopy(_player.ratings[self.tournament_rating()])
@@ -274,7 +287,9 @@ class RatingUpdaterField(PlayerUpdaterField, ABC):
             ratings.set_value_from_type(
                 match_ratings.get_type_value(rating_type), rating_type
             )
-        return str(ratings)
+        if self._with_k_factor:
+            ratings.k_factor = match_ratings.k_factor
+        return self._format_ratings(ratings)
 
 
 class StandardRatingUpdaterField(RatingUpdaterField):
