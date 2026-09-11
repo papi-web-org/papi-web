@@ -1,0 +1,23 @@
+{# Requires in context: update_players_alert_message, data_sources, client. #}
+{% if client.can_update_players and data_sources %}
+    <div class="alert alert-warning d-flex align-items-center gap-2 py-2 px-2 mb-3">
+        <i class="bi-exclamation-triangle-fill"></i>
+        <div class="flex-grow-1">{{ update_players_alert_message }}</div>
+        <div class="dropdown">
+            <button
+                class="btn btn-sm btn-outline-warning dropdown-toggle text-nowrap"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+            >
+                <i class="bi-arrow-repeat pe-1"></i>
+                {{ _('Update') }}
+            </button>
+            <ul class="dropdown-menu">
+                {% with from_modal=true, tab='players', tournament=none %}
+                    {% include '/admin/players/players_diff.html' %}
+                {% endwith %}
+            </ul>
+        </div>
+    </div>
+{% endif %}

@@ -3513,6 +3513,9 @@ msgstr ""
 msgid "Export players"
 msgstr ""
 
+msgid "Export the event in SCE format."
+msgstr ""
+
 msgid "Export tournament"
 msgstr ""
 
@@ -7169,6 +7172,12 @@ msgid "Reload the page"
 msgstr ""
 
 msgid "Reminder: the tournament is played on multiple FIDE periods, you might have to update the players' ratings before pairing."
+msgstr ""
+
+msgid "Reminder: you might have to update the players' information before distributing them among the tournaments."
+msgstr ""
+
+msgid "Reminder: you might have to update the players' information before printing the place cards."
 msgstr ""
 
 msgid "Reminder: you might have to update the players' ratings before pairing."

@@ -57,7 +57,7 @@
                     'admin-event-export',
                     event_uniq_id=admin_event.uniq_id,
                 ) }}"
-                onclick="downloadFile(this, 'modal-form'); closeModal();"
+                onclick="downloadFileAndCloseModal(this, 'modal-form')"
             >
                 <i class="bi-box-arrow-right pe-1"></i>
                 {{ _('Export') }}

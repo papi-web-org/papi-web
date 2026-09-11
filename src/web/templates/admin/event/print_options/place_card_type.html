@@ -6,8 +6,24 @@
         data=data, errors=errors
     ) }}
 </div>
+<div class="col-12 mt-2" id="{{ option.id }}-update-players-alert" style="display:none">
+    {% with update_players_alert_message=_(
+        'Reminder: you might have to update the players\' information '
+        'before printing the place cards.'
+    ) %}
+        {% include '/admin/players/update_players_alert.html' %}
+    {% endwith %}
+</div>
 <script>
     (() => {
+        function refreshUpdatePlayersAlert() {
+            const selected = $('.modal #{{ option.id }}').val();
+            const playerDataTypes = {{ option.player_data_place_card_type_ids | tojson }};
+            $('#{{ option.id }}-update-players-alert').toggle(
+                playerDataTypes.includes(selected)
+            );
+        }
+
         function hideInvalidOptions() {
             const selected = $('.modal #{{ option.id }}').val();
             const validOptions = {{ option.valid_option_ids_per_type_id | tojson }};
@@ -29,10 +45,12 @@
                 // Delay to allow default hide/show script to complete
                 setTimeout(hideInvalidOptions, 0);
             }
+            refreshUpdatePlayersAlert();
         }
 
         const $modal = $('.modal');
         $modal.find('#{{ option.id }}').on('change', handleOptionsChange);
         $modal.find('#document').on('change', handleOptionsChange);
+        refreshUpdatePlayersAlert();
     })();
 </script>
