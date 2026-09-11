@@ -43,6 +43,7 @@ from common import (
     DATA_DIR,
     DEVEL_ENV,
     MANUAL_PATH_USED,
+    SNAPSHOTS_DIR,
 )
 from common.i18n import _, locales, ngettext
 from common.i18n.utils import locale_localized_name
@@ -50,6 +51,8 @@ from common.logger import get_logger
 from common.updaters.sparkle_updater import SparkleUpdater
 from common.updaters.version_updater import VersionUpdater
 from common.updaters.windows_updater import WindowsUpdater
+from data.snapshot import move_snapshots_root
+from data.snapshot_worker import SnapshotScheduler
 from database.sqlite.config.config_database import ConfigDatabase
 from gui.gui_logger import GUILogHandler
 from gui.selection_popup import limit_popup_height
@@ -401,6 +404,16 @@ class SharlyChessServerToga(toga.App):
         self.launch_browser_switch: Optional[toga.Switch] = None
         self.data_path_input: Optional[TextInput] = None
         self.data_path_move_button: Optional[toga.Button] = None
+        self.snapshot_switch: Optional[toga.Switch] = None
+        self.snapshot_custom_dir_switch: Optional[toga.Switch] = None
+        self.snapshot_path_input: Optional[TextInput] = None
+        self.snapshot_path_change_button: Optional[toga.Button] = None
+        self.snapshot_switches_box: Optional[toga.Box] = None
+        self.snapshot_path_box: Optional[toga.Box] = None
+        self.snapshot_path_container: Optional[toga.Box] = None
+        #: Guards the custom folder switch against its own handler while it is
+        #: being put back after a cancelled choice.
+        self._updating_snapshot_switch = False
         self.check_beta_switch: Optional[toga.Switch] = None
         self.latest_version_label: Optional[toga.Label] = None
         self.latest_version_btn: Optional[toga.Button] = None
@@ -690,6 +703,56 @@ class SharlyChessServerToga(toga.App):
                 _('Move'), on_press=self._handle_data_path_selection
             )
             data_path_buttons.append(self.data_path_move_button)
+        self.snapshot_switch = toga.Switch(
+            text=_('Back up the events as they change'),
+            value=config.snapshot_enabled,
+            on_change=self._on_snapshot_switch_change,
+        )
+        self.snapshot_custom_dir_switch = toga.Switch(
+            text=_('Choose my own folder'),
+            value=not config.snapshot_dir_is_default,
+            on_change=self._on_snapshot_custom_dir_switch_change,
+        )
+        self.snapshot_path_input = toga.TextInput(
+            value=str(config.snapshot_dir.absolute()),
+            readonly=True,
+            width=self.compact_size[0] - self.view_margin * 2,
+        )
+        if sys.platform == 'darwin':
+            native = self.snapshot_path_input._impl.native
+            cell = native.cell
+            cell.usesSingleLineMode = True
+            cell.scrollable = True
+            cell.wraps = False
+            native.selectable = True
+        self.snapshot_switches_box = toga.Box(
+            direction=COLUMN,
+            align_items='start',
+            gap=7,
+            children=[self.snapshot_switch, self.snapshot_custom_dir_switch],
+        )
+        self.snapshot_path_change_button = toga.Button(
+            _('Change'), on_press=self._handle_snapshot_path_selection
+        )
+        self.snapshot_path_box = toga.Box(
+            direction=COLUMN,
+            align_items='center',
+            gap=7,
+            children=[
+                self.snapshot_path_input,
+                toga.Box(
+                    direction=ROW,
+                    gap=10,
+                    children=[
+                        toga.Button(
+                            _('Open'), on_press=self._open_snapshot_path_explorer
+                        ),
+                        self.snapshot_path_change_button,
+                    ],
+                ),
+            ],
+        )
+        self.snapshot_path_container = toga.Box(direction=COLUMN)
         current_version_message = _('Current version: Sharly Chess {version}').format(
             version=SHARLY_CHESS_VERSION
         )
@@ -731,6 +794,10 @@ class SharlyChessServerToga(toga.App):
                 gap=10,
             ),
             toga.Divider(margin=(5, 0)),
+            toga.Label(_('Backups'), style=title_style),
+            self.snapshot_switches_box,
+            self.snapshot_path_container,
+            toga.Divider(margin=(5, 0)),
             toga.Label(_('Updates'), style=title_style),
             toga.Label(current_version_message, text_align='center'),
             self.latest_version_label,
@@ -767,6 +834,25 @@ class SharlyChessServerToga(toga.App):
             width=self.compact_size[0] - self.view_margin * 4,
             children=[label_widget, widget],
         )
+
+    def _center_snapshot_switches(self):
+        """Centres the backup switches as one block.
+
+        A switch asks for at least the width of its text and then takes all the
+        width it is given, so it fills its box and no alignment can centre it.
+        The block is given the width of the widest of the two instead, which is
+        only known once they have been laid out."""
+        assert isinstance(self.main_window, toga.Window)
+        if self.snapshot_switches_box is None or self.main_window.content is None:
+            return
+        self.main_window.content.refresh()
+        widths = []
+        for switch in (self.snapshot_switch, self.snapshot_custom_dir_switch):
+            assert switch is not None
+            intrinsic = switch.intrinsic.width
+            widths.append(getattr(intrinsic, 'value', intrinsic) or 0)
+        if width := max(widths):
+            self.snapshot_switches_box.style.width = width
 
     def _align_settings_labels(self):
         """Gives every label of the settings the width of the widest one. The
@@ -962,6 +1048,9 @@ class SharlyChessServerToga(toga.App):
             self.show_log_time_switch.value = config.console_show_date
             assert self.check_beta_switch is not None
             self.check_beta_switch.value = config.check_beta_versions
+            assert self.snapshot_switch is not None
+            self.snapshot_switch.value = config.snapshot_enabled
+            self._set_snapshot_custom_dir_switch(not config.snapshot_dir_is_default)
 
         self.gui_loop.call_soon_threadsafe(config_update)
 
@@ -1078,6 +1167,8 @@ class SharlyChessServerToga(toga.App):
         self._show_view('settings')
         # The labels can only be measured once the view they are in is laid out.
         self._align_settings_labels()
+        self._center_snapshot_switches()
+        self._update_snapshot_path_widgets()
         self._update_latest_version_components()
 
     def _toggle_log_settings(self, widget):
@@ -1673,6 +1764,143 @@ class SharlyChessServerToga(toga.App):
 
     def _on_check_beta_switch_change(self, widget: toga.Switch, **kwargs):
         self._update_config('check_beta_versions', widget.value)
+
+    def _on_snapshot_switch_change(self, widget: toga.Switch, **kwargs):
+        self._update_config('snapshot_enabled', widget.value)
+        if not widget.value:
+            SnapshotScheduler.forget_statuses()
+
+    def _update_snapshot_path_widgets(self):
+        """The folder is only shown once the user has asked to choose one: the
+        default one is the application's business, not theirs."""
+        assert self.snapshot_custom_dir_switch is not None
+        assert self.snapshot_path_input is not None
+        assert self.snapshot_path_box is not None
+        assert self.snapshot_path_container is not None
+        self.snapshot_path_input.value = str(
+            SharlyChessConfig().snapshot_dir.absolute()
+        )
+        is_shown = self.snapshot_path_box in self.snapshot_path_container.children
+        if self.snapshot_custom_dir_switch.value and not is_shown:
+            self.snapshot_path_container.add(self.snapshot_path_box)
+        elif not self.snapshot_custom_dir_switch.value and is_shown:
+            self.snapshot_path_container.remove(self.snapshot_path_box)
+
+    async def _on_snapshot_custom_dir_switch_change(
+        self, widget: toga.Switch, **kwargs
+    ):
+        """Turns the custom folder on or off.
+
+        Turning it on asks for the folder straight away: the setting holds the
+        folder itself, so there is no state where a custom folder is wanted but
+        none is known. Cancelling the choice puts the switch back.
+        """
+        if self._updating_snapshot_switch:
+            return
+        if widget.value:
+            if not await self._choose_snapshot_dir():
+                self._set_snapshot_custom_dir_switch(False)
+            return
+        await self._clear_snapshot_dir()
+
+    def _set_snapshot_custom_dir_switch(self, value: bool):
+        """Sets the switch without its handler acting on the change."""
+        assert self.snapshot_custom_dir_switch is not None
+        self._updating_snapshot_switch = True
+        try:
+            self.snapshot_custom_dir_switch.value = value
+        finally:
+            self._updating_snapshot_switch = False
+        self._update_snapshot_path_widgets()
+
+    async def _clear_snapshot_dir(self):
+        """Goes back to the default folder, taking the snapshots along."""
+        assert isinstance(self.main_window, toga.Window)
+        config = SharlyChessConfig()
+        current_dir = config.snapshot_dir
+        if config.snapshot_dir_is_default:
+            self._update_snapshot_path_widgets()
+            return
+        confirm_dialog = toga.ConfirmDialog(
+            _('Backups folder'),
+            _('Go back to the default backups folder?')
+            + '\n'
+            + _('The backups already taken will be moved there.'),
+        )
+        if not await self.main_window.dialog(confirm_dialog):
+            self._set_snapshot_custom_dir_switch(True)
+            return
+        moved = move_snapshots_root(current_dir, SNAPSHOTS_DIR.absolute())
+        self._update_config('snapshot_dir', None)
+        self._update_snapshot_path_widgets()
+        if not moved:
+            await self._warn_snapshots_not_moved()
+
+    async def _warn_snapshots_not_moved(self):
+        assert isinstance(self.main_window, toga.Window)
+        await self.main_window.dialog(
+            toga.InfoDialog(
+                _('Backups folder'),
+                _(
+                    'The new folder is in use, but the backups already '
+                    'taken could not be moved to it. They are still in the '
+                    'previous folder.'
+                ),
+            )
+        )
+
+    def _open_snapshot_path_explorer(self, widget):
+        snapshot_dir = SharlyChessConfig().snapshot_dir
+        snapshot_dir.mkdir(parents=True, exist_ok=True)
+        self._open_dir_in_explorer(snapshot_dir)
+
+    async def _handle_snapshot_path_selection(self, widget):
+        await self._choose_snapshot_dir()
+
+    async def _choose_snapshot_dir(self) -> bool:
+        """Chooses the folder the snapshots are written to, and moves the ones
+        already taken over to it. Returns whether a folder was chosen.
+
+        Unlike the data folder, this needs no restart: the worker reads the
+        setting as it goes.
+        """
+        config = SharlyChessConfig()
+        current_dir = config.snapshot_dir
+        folder_dialog = toga.SelectFolderDialog(
+            '', initial_directory=current_dir if current_dir.is_dir() else None
+        )
+        assert isinstance(self.main_window, toga.Window)
+        chosen_dir: Path | None = await self.main_window.dialog(folder_dialog)
+        if chosen_dir is None:
+            return False
+        new_dir = chosen_dir.absolute()
+        if new_dir == current_dir:
+            return not config.snapshot_dir_is_default
+
+        error: str | None = None
+        if not os.access(new_dir, os.W_OK):
+            error = _('You do not have write permission on this folder.')
+        elif current_dir in new_dir.parents:
+            error = _("The new folder can't be a sub folder of the current folder.")
+        if error:
+            await self.main_window.dialog(toga.ErrorDialog(_('Invalid folder'), error))
+            return False
+
+        confirm_dialog = toga.ConfirmDialog(
+            _('Backups folder'),
+            _('Confirm the new backups folder "{folder}"?').format(folder=new_dir)
+            + '\n'
+            + _('The backups already taken will be moved there.'),
+        )
+        if not await self.main_window.dialog(confirm_dialog):
+            return False
+
+        moved = move_snapshots_root(current_dir, new_dir)
+        self._update_config('snapshot_dir', str(new_dir))
+        self._update_snapshot_path_widgets()
+        if not moved:
+            await self._warn_snapshots_not_moved()
+        return True
 
     # --- Interactive prompts ---
     def handle_interactive_yn(

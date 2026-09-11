@@ -39,6 +39,13 @@ from data.championship.championship_loader import (
     ChampionshipLoader,
 )
 from data.loader import ArchiveLoader, EventLoader
+from data.snapshot import (
+    SnapshotException,
+    SnapshotLoader,
+    SnapshotReason,
+    delete_archived_snapshots,
+)
+from data.snapshot_worker import SnapshotScheduler
 from data.player_categories import (
     SELECTABLE_JUNIOR_CATEGORIES,
     SELECTABLE_SENIOR_CATEGORIES,
@@ -73,6 +80,7 @@ from utils import Utils
 from utils.date_time import (
     format_date,
     format_date_range,
+    format_datetime,
 )
 from utils.enum import EventType, Extension, FormAction
 from web.controllers.admin.base_admin_controller import (
@@ -1633,6 +1641,229 @@ class IndexAdminController(BaseAdminController):
         file_path.unlink(missing_ok=True)
         return self._admin_render(web_context)
 
+    @staticmethod
+    def _event_is_accessible(event_uniq_id: str) -> bool:
+        return (
+            EventDatabase.event_database_path(event_uniq_id).is_file()
+            and event_uniq_id not in EventLoader.damaged_event_ids()
+        )
+
+    def _event_snapshots_modal(
+        self, request: HTMXRequest, event_uniq_id: str
+    ) -> Template:
+        """Renders the snapshots of an event.
+
+        The uniq_id comes from the path rather than from a loaded event: an
+        event whose file is damaged cannot be opened, and it is the very one
+        whose snapshots are wanted.
+        """
+        web_context = AdminWebContext(request)
+        return HTMXTemplate(
+            template_name='admin/modals.html',
+            context=(
+                web_context.template_context
+                | {
+                    'modal': 'event-snapshots',
+                    'snapshots_event_uniq_id': event_uniq_id,
+                    'snapshots': SnapshotLoader.snapshots(event_uniq_id),
+                    'snapshot_status': SnapshotScheduler.status(event_uniq_id),
+                    'snapshots_enabled': SharlyChessConfig().snapshot_enabled,
+                    'event_is_accessible': self._event_is_accessible(event_uniq_id),
+                }
+            ),
+            re_target='#modal-wrapper',
+        )
+
+    @get(
+        path='/event-snapshots-modal/{event_uniq_id:str}',
+        name='event-snapshots-modal',
+        guards=[ActionGuard(AuthAction.MANAGE_EVENTS)],
+    )
+    async def htmx_admin_event_snapshots_modal(
+        self, request: HTMXRequest, event_uniq_id: FromPath[str]
+    ) -> Template:
+        return self._event_snapshots_modal(request, event_uniq_id)
+
+    @post(
+        path='/event-snapshot-now/{event_uniq_id:str}',
+        name='event-snapshot-now',
+        guards=[ActionGuard(AuthAction.MANAGE_EVENTS)],
+    )
+    async def htmx_admin_event_snapshot_now(
+        self, request: HTMXRequest, event_uniq_id: FromPath[str]
+    ) -> Template:
+        try:
+            snapshot = SnapshotScheduler.snapshot_now(
+                event_uniq_id, SnapshotReason.AUTO
+            )
+        except SnapshotException as e:
+            Message.error(
+                request,
+                _('The backup of event [{uniq_id}] failed: {error}').format(
+                    uniq_id=event_uniq_id, error=e
+                ),
+            )
+        else:
+            Message.success(
+                request,
+                _('Backup of event [{uniq_id}] taken at {time}.').format(
+                    uniq_id=event_uniq_id, time=format_datetime(snapshot.taken_at)
+                ),
+            )
+        return self._event_snapshots_modal(request, event_uniq_id)
+
+    @get(
+        path='/event-snapshot-restore-modal/{event_uniq_id:str}/{snapshot_name:str}',
+        name='event-snapshot-restore-modal',
+        guards=[ActionGuard(AuthAction.MANAGE_EVENTS)],
+    )
+    async def htmx_admin_event_snapshot_restore_modal(
+        self,
+        request: HTMXRequest,
+        event_uniq_id: FromPath[str],
+        snapshot_name: FromPath[str],
+    ) -> Template:
+        """Asks before replacing the event, showing what the snapshot holds."""
+        snapshot = SnapshotLoader.snapshot(event_uniq_id, snapshot_name)
+        if not snapshot:
+            raise NotFoundException(f'Unknown snapshot [{snapshot_name}]')
+        web_context = AdminWebContext(request)
+        return HTMXTemplate(
+            template_name='admin/modals.html',
+            context=(
+                web_context.template_context
+                | {
+                    'modal': 'event-snapshot-restore',
+                    'snapshots_event_uniq_id': event_uniq_id,
+                    'snapshot': snapshot,
+                    'event_is_accessible': self._event_is_accessible(event_uniq_id),
+                }
+            ),
+            re_target='#modal-wrapper',
+        )
+
+    @post(
+        path='/event-snapshot-restore/{event_uniq_id:str}/{snapshot_name:str}',
+        name='event-snapshot-restore',
+        guards=[ActionGuard(AuthAction.MANAGE_EVENTS)],
+    )
+    async def htmx_admin_event_snapshot_restore(
+        self,
+        request: HTMXRequest,
+        event_uniq_id: FromPath[str],
+        snapshot_name: FromPath[str],
+    ) -> Template | ClientRedirect:
+        snapshot = SnapshotLoader.snapshot(event_uniq_id, snapshot_name)
+        if not snapshot:
+            raise NotFoundException(f'Unknown snapshot [{snapshot_name}]')
+        try:
+            replaced = snapshot.restore_in_place()
+        except SharlyChessException as e:
+            Message.error(request, f'{e}')
+            return self._event_snapshots_modal(request, event_uniq_id)
+        if replaced:
+            Message.success(
+                request,
+                _(
+                    'Event [{uniq_id}] has been restored. The state it was in '
+                    'has been kept as a snapshot, so this can be undone.'
+                ).format(uniq_id=event_uniq_id),
+            )
+        else:
+            Message.success(
+                request,
+                _('Event [{uniq_id}] has been restored.').format(uniq_id=event_uniq_id),
+            )
+        return ClientRedirect(admin_event_url(request, event_uniq_id))
+
+    @post(
+        path='/event-snapshot-restore-copy/{event_uniq_id:str}/{snapshot_name:str}',
+        name='event-snapshot-restore-copy',
+        guards=[ActionGuard(AuthAction.CREATE_EVENTS)],
+    )
+    async def htmx_admin_event_snapshot_restore_copy(
+        self,
+        request: HTMXRequest,
+        event_uniq_id: FromPath[str],
+        snapshot_name: FromPath[str],
+    ) -> Template | ClientRedirect:
+        snapshot = SnapshotLoader.snapshot(event_uniq_id, snapshot_name)
+        if not snapshot:
+            raise NotFoundException(f'Unknown snapshot [{snapshot_name}]')
+        try:
+            copy_uniq_id = snapshot.restore_as_copy()
+        except SharlyChessException as e:
+            Message.error(request, f'{e}')
+            return self._event_snapshots_modal(request, event_uniq_id)
+        Message.success(
+            request,
+            _('The snapshot has been restored as the new event [{uniq_id}].').format(
+                uniq_id=copy_uniq_id
+            ),
+        )
+        return ClientRedirect(admin_event_url(request, copy_uniq_id))
+
+    @get(
+        path='/{admin_tab:str}/event-damaged-delete-modal/{event_uniq_id:str}',
+        name='admin-event-damaged-delete-modal',
+        guards=[ActionGuard(AuthAction.MANAGE_EVENTS)],
+    )
+    async def htmx_admin_event_damaged_delete_modal(
+        self,
+        request: HTMXRequest,
+        admin_tab: FromPath[str],
+        event_uniq_id: FromPath[str],
+    ) -> Template:
+        """Asks before archiving an event whose file cannot be read.
+
+        The event cannot be loaded, so neither this nor the deletion below goes
+        through it: an event that will not open is one the user has to be able
+        to get rid of.
+        """
+        web_context = AdminWebContext(request, admin_tab=admin_tab)
+        return HTMXTemplate(
+            template_name='admin/modals.html',
+            context=(
+                web_context.template_context
+                | {
+                    'modal': 'event-damaged-delete',
+                    'damaged_event_uniq_id': event_uniq_id,
+                    'admin_tab': admin_tab,
+                }
+            ),
+            re_target='#modal-wrapper',
+        )
+
+    @delete(
+        path='/{admin_tab:str}/event-damaged-delete/{event_uniq_id:str}',
+        name='admin-event-damaged-delete',
+        guards=[ActionGuard(AuthAction.MANAGE_EVENTS)],
+        status_code=HTTP_200_OK,
+    )
+    async def htmx_admin_event_damaged_delete(
+        self,
+        request: HTMXRequest,
+        admin_tab: FromPath[str],
+        event_uniq_id: FromPath[str],
+    ) -> Template:
+        if not EventDatabase.event_database_path(event_uniq_id).is_file():
+            raise NotFoundException(f'Unknown event [{event_uniq_id}]')
+        # Built before the deletion: the context resolves the event from the
+        # path of the request, which afterwards names a file that is gone.
+        web_context = AdminWebContext(request, admin_tab=admin_tab)
+        try:
+            arch = EventDatabase(event_uniq_id).delete()
+        except OSError as ex:
+            raise ClientException(f'Archiving the database failed: {ex}')
+        Message.success(
+            request,
+            _(
+                'Event [{uniq_id}] has been deleted, the database has been '
+                'archived ({arch}).'
+            ).format(uniq_id=event_uniq_id, arch=arch),
+        )
+        return self._admin_render(web_context)
+
     @get(
         path='/event-export-modal/{event_uniq_id:str}',
         name='event-export-modal',
@@ -1761,6 +1992,7 @@ class IndexAdminController(BaseAdminController):
         if not archive:
             raise NotFoundException(f'Unknown archive [{archive_name}]')
         archive.file.unlink(missing_ok=True)
+        delete_archived_snapshots(archive.name)
         Message.success(
             request,
             _('Archive [{archive}] successfully deleted.').format(archive=archive.name),
@@ -1783,6 +2015,31 @@ class IndexAdminController(BaseAdminController):
                 config_database.update_stored_config(sharly_chess_config.stored_config)
             sharly_chess_config.load_and_set_env()
         return self._admin_render(web_context=web_context)
+
+    @get(
+        path='/event-backup-status/{event_uniq_id:str}',
+        name='admin-event-backup-status',
+        guards=[ActionGuard(AuthAction.MANAGE_EVENTS)],
+    )
+    async def htmx_admin_event_backup_status(
+        self, request: HTMXRequest, event_uniq_id: FromPath[str]
+    ) -> Template:
+        """The warning shown when the backups of an event stop being written.
+
+        Asked for on the `snapshot-failed` event: a failure happens on the
+        worker thread, long after the request that caused it, so nothing would
+        otherwise say so until the panel is opened to look.
+        """
+        status = SnapshotScheduler.status(event_uniq_id)
+        if not status.is_failing:
+            return HTMXTemplate(template_name='/common/empty.html')
+        return HTMXTemplate(
+            template_name='admin/event/event_backup_status.html',
+            context={
+                'snapshot_status': status,
+                'snapshots_event_uniq_id': event_uniq_id,
+            },
+        )
 
     @get(
         path='/database-status-badge',

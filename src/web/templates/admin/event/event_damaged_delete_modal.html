@@ -1,0 +1,55 @@
+{% extends '/admin/common/modal/delete_modal.html' %}
+
+{# Archiving an event whose file cannot be read, so nothing here goes through
+   the loaded event. #}
+
+{% block modal_title %}
+    {{ _('Archive event') }}
+{% endblock %}
+
+{% block object_name %}
+    {{ _('%(string)s: %(value)s', string=_('Event'), value=damaged_event_uniq_id) }}
+{% endblock %}
+
+{% block delete_warning %}
+{% endblock %}
+
+{% block form_content %}
+    <div class="alert alert-warning mt-3" role="alert">
+        <i class="bi-exclamation-triangle-fill pe-1"></i>
+        {{ _(
+            'This event could not be read. Archiving it sets its file aside, '
+            'and its backups are kept with it: both can be brought back from '
+            'the archives.'
+        ) }}
+    </div>
+    {{ admin_macros.checkbox_input(
+        name='archive',
+        placeholder=_('I confirm that I want to archive this event.'),
+    ) }}
+    <script>
+        $('#archive').change(function () {
+           $('#delete-button').prop('disabled', !$(this).is(':checked'));
+        });
+        $('#archive').trigger('change');
+
+        requestRefresh();
+    </script>
+{% endblock %}
+
+{% block delete_url %}
+    {{ url_for(
+        'admin-event-damaged-delete',
+        admin_tab=admin_tab,
+        event_uniq_id=damaged_event_uniq_id,
+    ) }}
+{% endblock %}
+
+{% block delete_button_content %}
+    <i class="bi-archive-fill pe-1"></i>
+    {{ _('Archive') }}
+{% endblock %}
+
+{% block delete_modal_script %}
+    <script>requestRefresh()</script>
+{% endblock %}

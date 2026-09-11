@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from functools import cached_property
 from logging import Logger
 from pathlib import Path
-from typing import Any, TYPE_CHECKING, Sequence, override, cast
+from typing import Any, Self, TYPE_CHECKING, Sequence, override, cast
 
 from packaging.version import Version
 
@@ -13,6 +13,7 @@ from common import (
     DEVEL_ENV,
     EVENTS_DIR,
 )
+from common.exception import SharlyChessException
 from common.logger import get_logger
 from data.event_metadata import EventMetadata
 from database.sqlite.event.event_store import (
@@ -72,6 +73,7 @@ class EventDatabase(MigrationDatabase):
         file_path: Path | None = None,
         check_dirty_tournaments: bool = True,
         enable_foreign_keys: bool = True,
+        snapshot_on_commit: bool = True,
     ):
         """Initialize EventDatabase with either a unique ID or a file path."""
         if uniq_id is not None and file_path is not None:
@@ -79,6 +81,7 @@ class EventDatabase(MigrationDatabase):
         if uniq_id is None and file_path is None:
             raise ValueError('Must specify either uniq_id or file_path')
         self.check_dirty_tournaments = check_dirty_tournaments
+        self.snapshot_on_commit = snapshot_on_commit
 
         if file_path is not None:
             # Initialize with file path
@@ -90,9 +93,38 @@ class EventDatabase(MigrationDatabase):
             file_path = self.event_database_path(self.uniq_id)
         super().__init__(file_path, write, enable_foreign_keys=enable_foreign_keys)
 
+    @override
+    def __enter__(self) -> Self:
+        from data.snapshot import is_restored_by_another_thread
+
+        if self.write and is_restored_by_another_thread(self.uniq_id):
+            # The file of the event is being replaced: a write would land in
+            # the file on its way out and be lost silently.
+            raise SharlyChessException(
+                f'Event [{self.uniq_id}] is being restored and cannot be '
+                f'modified right now.'
+            )
+        super().__enter__()
+        return self
+
     def __exit__(self, exc_type, exc_value, tb):
         dirty_tournaments: list[StoredTournament] = []
         stored_event: StoredEvent | None = None
+        # The event is the one the snapshots follow only when this instance
+        # holds the file of the event itself: the uploads and the exports work
+        # on a copy in a temporary directory.
+        is_event_file = (
+            self.event_database_path(self.uniq_id).resolve() == self.file.resolve()
+        )
+        changed = (
+            self.write
+            and exc_type is None
+            and self.database is not None
+            # Read before the connection is closed below, and only counts the
+            # changes of this connection: an event opened for writing and left
+            # untouched is not worth a snapshot.
+            and self.database.total_changes > 0
+        )
 
         try:
             if (
@@ -102,8 +134,7 @@ class EventDatabase(MigrationDatabase):
                 # When auto-uploading to the FFE website, the database is copied to
                 # tmpdir/event.sce. Not taking the database path into account will make the hook below
                 # try to load the wrong event (which will error out or load an unrelated event).
-                and self.event_database_path(self.uniq_id).resolve()
-                == self.file.resolve()
+                and is_event_file
             ):
                 try:
                     self.execute('SELECT * FROM tournament WHERE dirty = 1;')
@@ -132,6 +163,11 @@ class EventDatabase(MigrationDatabase):
                 stored_event=stored_event,
                 stored_tournament=stored_tournament,
             )
+
+        if changed and is_event_file and self.snapshot_on_commit:
+            from data.snapshot_worker import SnapshotScheduler
+
+            SnapshotScheduler.notify_changed(self.uniq_id)
 
     @cached_property
     def migration_managers(self) -> list['DatabaseMigrationManager']:
@@ -167,6 +203,9 @@ class EventDatabase(MigrationDatabase):
         return {
             'file_path': self.file,
             'check_dirty_tournaments': False,
+            # A migration commits at every step, and the snapshot worth keeping
+            # is the one taken of the event before the upgrade started.
+            'snapshot_on_commit': False,
         }
 
     @property
@@ -175,11 +214,30 @@ class EventDatabase(MigrationDatabase):
 
     @override
     def upgrade(self):
+        from common.sharly_chess_config import SharlyChessConfig
+        from data.snapshot import SnapshotException, SnapshotReason
+        from data.snapshot_worker import SnapshotScheduler, suppress_snapshots
+
         if DEVEL_ENV:
             with self.get_migration_instance() as database:
                 if database.is_metadata_table_installed():
                     database.create_backup()
-        super().upgrade()
+        is_event_file = (
+            self.event_database_path(self.uniq_id).resolve() == self.file.resolve()
+        )
+        if is_event_file and SharlyChessConfig().snapshot_enabled:
+            try:
+                SnapshotScheduler.snapshot_now(
+                    self.uniq_id, SnapshotReason.BEFORE_UPGRADE
+                )
+            except SnapshotException as e:
+                # An event that cannot be snapshotted is still an event to
+                # upgrade, and the upgrade is what the user is waiting for.
+                logger.warning(
+                    '%sNo snapshot taken before the upgrade: %s', self.log_prefix, e
+                )
+        with suppress_snapshots(self.uniq_id):
+            super().upgrade()
 
     @staticmethod
     def event_database_path(uniq_id: str) -> Path:
@@ -192,6 +250,7 @@ class EventDatabase(MigrationDatabase):
     def delete(self) -> Path:
         """Soft-deletes the event database file by archiving it."""
         from data.loader import ArchiveLoader, EventLoader
+        from data.snapshot import archive_snapshots
 
         index = 0
         arch_file = ArchiveLoader.get_archive_path(self.uniq_id)
@@ -201,6 +260,7 @@ class EventDatabase(MigrationDatabase):
         arch_file.parent.mkdir(parents=True, exist_ok=True)
         self.file.rename(arch_file)
         logger.info('Database has been archived (%s).', arch_file)
+        archive_snapshots(self.uniq_id, arch_file.stem)
         EventLoader.unload_event(self.uniq_id)
         return arch_file
 
@@ -209,8 +269,10 @@ class EventDatabase(MigrationDatabase):
         provided `new_uniq_id`."""
 
         from data.loader import EventLoader
+        from data.snapshot import rename_snapshots
 
         self.file.rename(EventDatabase(new_uniq_id).file)
+        rename_snapshots(self.uniq_id, new_uniq_id)
         EventLoader.unload_event(self.uniq_id)
 
     def clone(self, new_uniq_id: str):

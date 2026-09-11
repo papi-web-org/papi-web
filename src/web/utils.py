@@ -14,7 +14,11 @@ from litestar.exceptions import (
 from litestar.status_codes import HTTP_423_LOCKED
 from litestar_htmx import HTMXRequest
 
-from common.exception import SharlyChessException, DatabaseInaccessibleException
+from common.exception import (
+    SharlyChessException,
+    DatabaseCorruptedException,
+    DatabaseInaccessibleException,
+)
 from common.logger import get_logger
 from data.access_levels.access_levels import AccessLevel
 from data.access_levels.client import Client
@@ -72,6 +76,14 @@ class RequestUtils:
             raise HTTPException(
                 status_code=HTTP_423_LOCKED,
                 detail=f'Event [{event_uniq_id}] could not be opened.',
+            ) from sce
+        except DatabaseCorruptedException as sce:
+            # An event whose file is damaged is unusable in the same way as a
+            # locked one, and is treated the same: the page context is built
+            # without it, so the list can still offer its snapshots.
+            raise HTTPException(
+                status_code=HTTP_423_LOCKED,
+                detail=f'Event [{event_uniq_id}] could not be read.',
             ) from sce
         except SharlyChessException as sce:
             raise NotFoundException(f'Event [{event_uniq_id}] not found.') from sce

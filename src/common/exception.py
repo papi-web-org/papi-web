@@ -14,6 +14,14 @@ class DatabaseInaccessibleException(SharlyChessException):
     (locked by another program, file sync such as OneDrive, permissions…)."""
 
 
+class DatabaseCorruptedException(SharlyChessException):
+    """Error raised when a database file exists and can be opened but holds
+    something that is not a readable database any more.
+
+    Kept apart from the other failures so that such an event can be listed and
+    offered its snapshots, rather than quietly disappearing."""
+
+
 class DictReaderException(SharlyChessException):
     """Error raised when validating the content of a dict."""
 

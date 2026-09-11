@@ -2,6 +2,7 @@
 
 ## General
 
+- Events are backed up as they change, and a backup can be restored over an event or beside it (5.1.0)
 - The language, federation and date format settings have moved from the browser to the main application window (5.1.0)
 - Plugins are now installed and uninstalled from the main application window (5.1.0)
 

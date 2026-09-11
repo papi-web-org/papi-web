@@ -20,12 +20,17 @@ from common import (
     ARCHIVES_DIR,
     BACKUP_BASE_DIR,
 )
-from common.exception import SharlyChessException, DatabaseInaccessibleException
+from common.exception import (
+    SharlyChessException,
+    DatabaseCorruptedException,
+    DatabaseInaccessibleException,
+)
 from common.i18n.utils import normalized_key
 from common.logger import get_logger
 from data.event import Event
 from data.event_metadata import EventMetadata
 from database.sqlite.event.event_database import EventDatabase
+from database.sqlite.event.event_store import StoredEvent
 from plugins.manager import plugin_manager
 from utils import Utils
 from utils.date_time import get_date_timestamp, format_datetime
@@ -42,6 +47,11 @@ class EventLoader:
     # _invalid_uniq_ids so they are retried on each scan and recover once the file
     # becomes accessible again.
     _inaccessible_uniq_ids: set[str] = set()
+    # Event files present on disk holding something that is not a readable
+    # database any more. Kept apart from _invalid_uniq_ids so that they are
+    # listed rather than quietly dropped: a damaged event is the one whose
+    # snapshots are wanted.
+    _corrupted_uniq_ids: set[str] = set()
     # Last metadata successfully read for each event, reused to display an event
     # that has become inaccessible with its real name and dates.
     _last_known_metadata: dict[str, EventMetadata] = {}
@@ -57,7 +67,18 @@ class EventLoader:
 
     @classmethod
     def unload_event(cls, uniq_id: str):
-        cls._valid_event_ids.remove(uniq_id)
+        """Forgets everything known about an event, so that the next scan reads
+        its file afresh.
+
+        The event is dropped from the invalid, inaccessible and corrupted ids
+        as well as from the valid ones: an event whose file has just been
+        replaced — deleted, or restored from a snapshot — is checked again,
+        whichever of them it was in.
+        """
+        cls._valid_event_ids.discard(uniq_id)
+        cls._invalid_uniq_ids.discard(uniq_id)
+        cls._inaccessible_uniq_ids.discard(uniq_id)
+        cls._corrupted_uniq_ids.discard(uniq_id)
         cls.load_event_ids()
 
     @classmethod
@@ -66,8 +87,10 @@ class EventLoader:
         cls._clean_not_existing_event_database_files(cls._valid_event_ids)
         cls._clean_not_existing_event_database_files(cls._invalid_uniq_ids)
         cls._clean_not_existing_event_database_files(cls._inaccessible_uniq_ids)
-        # Inaccessible ids are deliberately excluded so they are retried: a locked
-        # file may become readable again once the lock is released.
+        cls._clean_not_existing_event_database_files(cls._corrupted_uniq_ids)
+        # Inaccessible and corrupted ids are deliberately excluded so they are
+        # retried: a locked file may become readable again once the lock is
+        # released, and a damaged one once a snapshot has been restored over it.
         known_event_ids = cls._valid_event_ids | cls._invalid_uniq_ids
         metadata_by_event_id: dict[str, EventMetadata] = {}
         for event_id in event_ids:
@@ -77,25 +100,39 @@ class EventLoader:
                 metadata_by_event_id[event_id] = cls.check_event_database(event_id)
                 cls._valid_event_ids.add(event_id)
                 cls._inaccessible_uniq_ids.discard(event_id)
+                cls._corrupted_uniq_ids.discard(event_id)
                 cls._last_known_metadata[event_id] = metadata_by_event_id[event_id]
             except DatabaseInaccessibleException as e:
                 logger.debug('Event [%s] could not be opened: %s', event_id, e)
                 cls._inaccessible_uniq_ids.add(event_id)
+            except DatabaseCorruptedException as e:
+                logger.debug('Event [%s] could not be read: %s', event_id, e)
+                cls._corrupted_uniq_ids.add(event_id)
             except SharlyChessException as e:
                 logger.debug('Event [%s] could not be loaded: %s', event_id, e)
                 cls._invalid_uniq_ids.add(event_id)
         return metadata_by_event_id
 
     @classmethod
+    def damaged_event_ids(cls) -> set[str]:
+        """The events whose file is there but which could not be read: locked
+        by another program, or holding something that is not a database any
+        more. They are the ones a snapshot is restored over."""
+        cls.load_event_ids()
+        return cls._corrupted_uniq_ids | cls._inaccessible_uniq_ids
+
+    @classmethod
     def inaccessible_events_metadata(cls) -> list[EventMetadata]:
-        """Placeholder metadata for event files that exist but could not be opened
-        (locked by another program, file sync such as OneDrive, permissions…).
+        """Placeholder metadata for event files that exist but could not be read
+        — locked by another program or by file synchronisation (OneDrive, Google
+        Drive, DropBox…), or holding something that is not a database any more.
         They are listed but flagged as not accessible so the user can see that they
-        exist and have not been lost. As the database can't be read, only the id is
+        exist and have not been lost, and reach the snapshots that bring them back.
+        As the database can't be read, only the id is
         known; the file modification date is used to place them in the right list."""
         cls.load_event_ids()
         events_metadata: list[EventMetadata] = []
-        for uniq_id in sorted(cls._inaccessible_uniq_ids):
+        for uniq_id in sorted(cls.damaged_event_ids()):
             known = cls._last_known_metadata.get(uniq_id)
             if known is not None:
                 # Reuse the real name and dates so the event stays in its section.
@@ -126,19 +163,23 @@ class EventLoader:
         """Check the validity of an event database, raises a SharlyChessError if it is not."""
         database = EventDatabase(event_uniq_id)
         if not database.is_sqlite_file():
-            raise SharlyChessException(
+            raise DatabaseCorruptedException(
                 f'File {database.file} is not a SQLite database.'
             )
+        # Every read of the file is guarded, not only the status: SQLite
+        # reports a page it cannot make sense of when that page is read, so a
+        # file whose header and metadata are intact still raises later, and a
+        # raw error here reaches the request and answers it with a 500.
         try:
             needs_upgrade = not database.check_status()
+            if needs_upgrade:
+                database.upgrade()
+            with EventDatabase(event_uniq_id) as database:
+                stored_event = database.load_stored_event_metadata()
         except sqlite3.DatabaseError as e:
-            raise SharlyChessException(
+            raise DatabaseCorruptedException(
                 f'File {database.file} is a corrupted SQLite database: {e}'
             ) from e
-        if needs_upgrade:
-            database.upgrade()
-        with EventDatabase(event_uniq_id) as database:
-            stored_event = database.load_stored_event_metadata()
         for plugin_id in stored_event.enabled_plugins:
             if plugin_id not in plugin_manager.plugins_by_id:
                 raise SharlyChessException(
@@ -219,21 +260,42 @@ class EventLoader:
 
         if current_request_performance() is None:
             self.load_event_ids(uniq_id)
-            with EventDatabase(uniq_id) as event_database:
-                return Event(event_database.load_stored_event())
+            return Event(self._load_stored_event(uniq_id))
         start = perf_counter()
         try:
             self.load_event_ids(uniq_id)
-            with EventDatabase(uniq_id) as event_database:
-                event = Event(event_database.load_stored_event())
+            event = Event(self._load_stored_event(uniq_id))
             return event
         finally:
             record_event_load(perf_counter() - start)
 
     @classmethod
+    def _load_stored_event(cls, uniq_id: str) -> StoredEvent:
+        """Reads an event, turning a file that is not a readable database into
+        a `DatabaseCorruptedException`.
+
+        SQLite only reports the damage when the rows are read, so the raw error
+        would otherwise reach the request and answer it with a 500 — for every
+        page carrying the uniq_id of a damaged event, the way back to its
+        snapshots included.
+        """
+        try:
+            with EventDatabase(uniq_id) as database:
+                return database.load_stored_event()
+        except sqlite3.DatabaseError as e:
+            raise DatabaseCorruptedException(
+                f'Event [{uniq_id}] could not be read: {e}'
+            ) from e
+
+    @classmethod
     def load_event_metadata(cls, uniq_id: str) -> EventMetadata:
-        with EventDatabase(uniq_id) as database:
-            event_metadata = database.load_stored_event_metadata()
+        try:
+            with EventDatabase(uniq_id) as database:
+                event_metadata = database.load_stored_event_metadata()
+        except sqlite3.DatabaseError as e:
+            raise DatabaseCorruptedException(
+                f'Event [{uniq_id}] could not be read: {e}'
+            ) from e
         return event_metadata
 
     @classmethod
@@ -302,6 +364,14 @@ class EventLoader:
                     cls._valid_event_ids.discard(uniq_id)
                     cls._inaccessible_uniq_ids.add(uniq_id)
                     continue
+                except DatabaseCorruptedException as e:
+                    # An event that was valid and whose file has since been
+                    # damaged is demoted so it is listed with the way back to
+                    # its snapshots rather than dropped from the page.
+                    logger.debug('Event [%s] could not be read: %s', uniq_id, e)
+                    cls._valid_event_ids.discard(uniq_id)
+                    cls._corrupted_uniq_ids.add(uniq_id)
+                    continue
                 except SharlyChessException as e:
                     logger.debug('Event [%s] could not be loaded: %s', uniq_id, e)
                     cls._valid_event_ids.discard(uniq_id)
@@ -333,12 +403,15 @@ class Archive:
         return quote(self.name)
 
     def restore(self) -> str | None:
+        from data.snapshot import restore_archived_snapshots
+
         event_uniq_id = EventLoader().get_unused_event_uniq_id(self.name.split('#')[0])
         new_path = EventDatabase.event_database_path(event_uniq_id)
         shutil.copy(self.file, new_path)
         try:
             EventLoader.check_event_database(event_uniq_id)
             self.file.unlink()
+            restore_archived_snapshots(self.name, event_uniq_id)
             return event_uniq_id
         except SharlyChessException as exception:
             logger.exception(exception)

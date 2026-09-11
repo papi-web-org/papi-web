@@ -126,6 +126,39 @@ def _default_data_dir() -> Path:
 MANUAL_PATH_USED = os.getenv('SC_MANUAL_PATH_USED') == '1'
 
 
+def _default_snapshots_dir() -> Path:
+    """Where the snapshots go when the user has not named a folder of their own.
+
+    Deliberately not under the data directory. On Windows that directory is
+    Documents, which OneDrive's Known Folder Move commonly synchronises, and a
+    synchronised folder is a poor place to keep backups: the client dehydrates
+    the files it thinks are cold — which is exactly what old backups look like
+    — and a backup that needs downloading is not there at a venue with no
+    network, which is when it is wanted.
+
+    The environments that already point the data directory somewhere
+    deliberate keep the snapshots beside it.
+    """
+    if TEST_ENV or DEVEL_ENV or MANUAL_PATH_USED or FLATPAK_ID:
+        return DATA_DIR / 'snapshots'
+    match sys.platform:
+        case 'win32':
+            local_app_data = os.getenv('LOCALAPPDATA')
+            if local_app_data:
+                return Path(local_app_data) / 'Sharly Chess' / 'snapshots'
+        case 'darwin':
+            return MACOS_SUPPORT_DIR / 'snapshots'
+        case 'linux':
+            xdg_state_home = os.getenv('XDG_STATE_HOME')
+            base = (
+                Path(xdg_state_home)
+                if xdg_state_home
+                else Path.home() / '.local' / 'state'
+            )
+            return base / 'Sharly Chess' / 'snapshots'
+    return DATA_DIR / 'snapshots'
+
+
 def _app_data_dir() -> Path:
     if TEST_ENV:
         # Tests run against their own tree, and each pytest-xdist worker
@@ -152,6 +185,11 @@ TEST_DATA_DIR = BASE_DIR / 'tests' / 'tmp'
 DATA_DIR = _app_data_dir()
 BACKUP_BASE_DIR = DATA_DIR / 'backup'  # Dev only
 ARCHIVES_DIR = DATA_DIR / 'archives'
+#: Default location of the event snapshots, which the configuration overrides
+#: with a folder of the user's own. The snapshots share that folder with
+#: whatever else is in it, so nothing here ever removes a file it did not
+#: write nor a directory it did not create.
+SNAPSHOTS_DIR = _default_snapshots_dir()
 CUSTOM_DIR = DATA_DIR / 'custom'
 CUSTOM_PLACE_CARDS_DIR = CUSTOM_DIR / 'place_cards'
 DATA_SOURCES_DIR = DATA_DIR / 'data_sources'
