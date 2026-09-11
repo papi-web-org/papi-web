@@ -416,17 +416,35 @@
         </div>
 
         <div class="modal-footer">
-            {% if action == 'update' and client.can_create_events %}
-                <button
-                    type="button"
-                    class="btn btn-outline-primary text-nowrap me-auto"
-                    hx-get="{{ url_for('admin-event-modal', action='clone', event_uniq_id=admin_event.uniq_id) }}"
-                    hx-target="body"
-                    hx-indicator="#please-wait"
-                >
-                    <i class="bi-copy pe-1"></i>
-                    {{ _('Duplicate') }}
-                </button>
+            {% if action == 'update' and (client.can_create_events or client.can_manage_events) %}
+                <div class="d-flex gap-2 me-auto">
+                    {% if client.can_create_events %}
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary text-nowrap"
+                            hx-get="{{ url_for('admin-event-modal', action='clone', event_uniq_id=admin_event.uniq_id) }}"
+                            hx-target="body"
+                            hx-indicator="#please-wait"
+                        >
+                            <i class="bi-copy pe-1"></i>
+                            {{ _('Duplicate') }}
+                        </button>
+                    {% endif %}
+                    {% if client.can_manage_events %}
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary text-nowrap"
+                            hx-get="{{ url_for('event-export-modal', event_uniq_id=admin_event.uniq_id) }}"
+                            hx-push-url="false"
+                            hx-target="body"
+                            hx-indicator="#please-wait"
+                            {{ macros.tooltip_attributes('info', _('Export the event in SCE format.'), 'top') }}
+                        >
+                            <i class="bi-box-arrow-right pe-1"></i>
+                            {{ _('Export') }}
+                        </button>
+                    {% endif %}
+                </div>
             {% endif %}
             <button
                 type="button"

@@ -76,8 +76,7 @@
             </div>
             <script>
                 $('.export-button').click(function () {
-                    downloadFile(this);
-                    closeModal();
+                    downloadFile(this).then(closeModal);
                 });
             </script>
         </div>

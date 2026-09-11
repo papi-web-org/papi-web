@@ -173,7 +173,7 @@
                 <i class="bi-diagram-3-fill"></i>{{ _('Pairing system') }}
             </span>
             <span>
-                {{ item.pairing_variation.name }}
+                <span>{{ item.pairing_variation.name }}</span>
                 {% with pairing_tooltip_message=item.pairing_variation.settings_tooltip_message(item) %}
                     {% if pairing_tooltip_message %}
                         <i

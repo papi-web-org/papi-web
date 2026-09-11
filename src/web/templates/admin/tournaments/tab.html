@@ -25,23 +25,6 @@
                 {{ _('Actions') }}
             </button>
             <ul class="dropdown-menu">
-                {% if client.can_manage_events %}
-                    <li>
-                        <button
-                            class="dropdown-item text-nowrap"
-                            hx-get="{{ url_for('event-export-modal', event_uniq_id=admin_event.uniq_id) }}"
-                            hx-push-url="false"
-                            hx-target="body"
-                            hx-indicator="#please-wait"
-                            data-bs-toggle="modal"
-                            data-bs-target="#modal-wrapper"
-                            onclick="event.stopPropagation();"
-                        >
-                            <i class="bi-box-arrow-right pe-1"></i>
-                            {{ _('Export event in SCE format') }}
-                        </button>
-                    </li>
-                {% endif %}
                 {% for menu_items_template in plugin_tab_action_menu_items_templates %}
                     {% include menu_items_template %}
                 {% endfor %}
