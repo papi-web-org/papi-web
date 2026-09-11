@@ -220,6 +220,9 @@ msgstr ""
 msgid "No player to synchronize yet, import or upload tournaments first."
 msgstr ""
 
+msgid "No tournament has started yet, no results to upload."
+msgstr ""
+
 msgid "Not scheduled"
 msgstr ""
 
