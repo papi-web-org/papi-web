@@ -54,6 +54,19 @@ class StoredConfig:
     )
     stored_tags: list[StoredTag] = field(default_factory=list[StoredTag])
     errors: dict[str, str] = field(default_factory=dict[str, str])
+    #: The identity this installation connects to the remote access relay with.
+    #: The private half never leaves the machine.
+    remote_install_id: str | None = None
+    remote_install_private_key: str | None = None
+    remote_install_public_key: str | None = None
+    #: The account remote access is opened under, signed in to on this machine.
+    remote_access_token: str | None = None
+    remote_access_refresh_token: str | None = None
+    remote_access_token_expires_at: float | None = None
+    #: Whether the screens of this server are reachable over the internet, and
+    #: the identity the address is issued against.
+    remote_access: bool = False
+    remote_uniq_id: str | None = None
 
 
 @dataclass

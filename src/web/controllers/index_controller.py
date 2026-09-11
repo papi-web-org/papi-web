@@ -16,6 +16,7 @@ from common.sharly_chess_config import SharlyChessConfig
 from web.controllers.admin.base_admin_controller import AdminWebContext
 from web.controllers.admin.index_admin_controller import IndexAdminController
 from web.controllers.base_controller import BaseController, WebContext
+from web.remote_access import remote_identity
 from web.session import SessionEventsShowDetails
 
 
@@ -55,6 +56,25 @@ class IndexController(BaseController):
         return HTMXTemplate(
             template_name='common/empty_modal.html',
             re_target='#modal-wrapper',
+        )
+
+    @get(
+        path='/robots.txt',
+        name='robots',
+        cache=CACHE_FOREVER,
+    )
+    async def robots(self, request: HTMXRequest) -> Response[str]:
+        """Ask crawlers to leave the event alone.
+
+        A tournament's screens are of no use in a search engine, and an event
+        that has finished should not go on being served from one. This is a
+        request rather than a barrier: it is honoured by the crawlers that
+        index, and ignored by the ones probing for files the server has never
+        had.
+        """
+        return Response(
+            'User-agent: *\nDisallow: /\n',
+            media_type='text/plain',
         )
 
     @get(
@@ -191,6 +211,33 @@ class IndexController(BaseController):
     @get('/.well-known/appspecific/com.chrome.devtools.json')
     async def chrome_devtools_placeholder(self) -> Response:
         return Response(content='{}', media_type='application/json')
+
+    @get('/.well-known/sharly-chess-instance')
+    async def remote_access_instance(self, request: HTMXRequest) -> Response:
+        """Answers which event is behind this hostname, for whoever issued it.
+
+        Unguarded on purpose: it is asked from outside, before anyone has
+        logged in, and it says nothing an attacker gains by. The nonce is only
+        useful to whoever handed it down."""
+        identity = remote_identity(request.headers.get('host', ''))
+        if identity is None:
+            # Answered rather than raised: the application turns a raised 404
+            # into a redirect to a page for a person to read, and this is read
+            # by the control plane.
+            return Response(
+                content={},
+                media_type='application/json',
+                status_code=status_codes.HTTP_404_NOT_FOUND,
+                headers={'Cache-Control': 'no-store'},
+            )
+        return Response(
+            content={
+                'remote_uniq_id': identity.remote_uniq_id,
+                'instance_nonce': identity.instance_nonce,
+            },
+            media_type='application/json',
+            headers={'Cache-Control': 'no-store'},
+        )
 
     @get(
         path=[

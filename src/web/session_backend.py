@@ -23,6 +23,7 @@ from litestar.utils.dataclass import extract_dataclass_items
 from litestar.utils.empty import Empty
 
 from common.logger import get_logger
+from web.tunnel import REMOTE_SESSION_MAX_AGE, request_is_tunnelled
 
 
 logger = get_logger()
@@ -63,6 +64,22 @@ class SkipUnchangedSessionBackend(ServerSideSessionBackend):
         cast(dict[str, Any], connection.scope)[_SESSION_HASH_KEY] = _hash_session(data)
         return data
 
+    def _cookie_params(self, connection: ASGIConnection) -> dict[str, Any]:
+        """The cookie attributes to answer this connection with.
+
+        A session opened from the internet is carried over TLS and belongs to a
+        phone that may be handed on once the round is over, so it is marked
+        secure and expires well before the fortnight a local one is given."""
+        params = dict(
+            extract_dataclass_items(
+                self.config, exclude_none=True, include=Cookie.__dict__.keys()
+            )
+        )
+        if request_is_tunnelled(connection.scope):
+            params['secure'] = True
+            params['max_age'] = REMOTE_SESSION_MAX_AGE
+        return params
+
     async def store_in_message(
         self,
         scope_session: ScopeSession,
@@ -79,11 +96,7 @@ class SkipUnchangedSessionBackend(ServerSideSessionBackend):
         headers = MutableScopeHeaders.from_message(message)
         session_id = self.get_session_id(connection)
 
-        cookie_params = dict(
-            extract_dataclass_items(
-                self.config, exclude_none=True, include=Cookie.__dict__.keys()
-            )
-        )
+        cookie_params = self._cookie_params(connection)
 
         if scope_session is Empty:
             # Session was explicitly cleared — delete from store.

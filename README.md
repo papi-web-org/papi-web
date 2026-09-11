@@ -25,6 +25,7 @@ _Sharly Chess - © Sharly Chess project 2013-2025_
 - [Setting up a development environment](docs/technical-appendices/dev-setup.md)
 - [Description of the databases](docs/technical-appendices/databases.md)
 - [Network](docs/technical-appendices/network.md)
+- [Remote access over the internet](docs/technical-appendices/remote-access.md)
 - [FIDE endorsement](docs/technical-appendices/fide-endorsement.md)
 
 ### Sandbox

@@ -51,6 +51,7 @@ class SharlyChessConfig(metaclass=Singleton):
 
     def __init__(self):
         self.web_port: int | None = None
+        self.web_tunnel_port: int | None = None
         self._stored_config: StoredConfig | None = None
         self._date_formatter: DateFormatter | None = None
         self._federations_by_locale: dict[str, dict[str, str]] = {}
@@ -220,7 +221,12 @@ class SharlyChessConfig(metaclass=Singleton):
 
     @property
     def experimental_features(self) -> list[str]:
-        return []
+        """What is being offered ahead of being finished.
+
+        The switch that turns these on is shown only while there is something
+        behind it, so naming a feature here is what makes it reachable.
+        """
+        return [_('Remote access to the screens over the internet')]
 
     @property
     def launch_browser(self) -> bool:
@@ -354,6 +360,18 @@ class SharlyChessConfig(metaclass=Singleton):
         if not TEST_ENV
         else [9000]
     )
+
+    # The host the tunnel listener is bound to.  Requests reaching the server on
+    # this listener come from the internet through the tunnel client, which runs
+    # on this machine and therefore connects over the loopback interface.
+    web_tunnel_host: str = LOCALHOST_IP
+
+    # The ports the tunnel listener tries to start on, tried one after the other.
+    # Left empty, the operating system chooses one: nothing outside this process
+    # refers to it, and letting the bind itself reserve the port removes the gap
+    # between finding one free and taking it.  Tests pin it so that they can
+    # drive traffic through the tunnel listener.
+    web_tunnel_ports: list[int] = [] if not TEST_ENV else [19000]
 
     """ The accepted console log levels. """
     console_log_levels: dict[int, str] = {

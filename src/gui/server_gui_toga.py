@@ -46,6 +46,7 @@ from common import (
 )
 from common.i18n import _, locales, ngettext
 from common.i18n.utils import locale_localized_name
+from common.exception import SharlyChessException
 from common.logger import get_logger
 from common.updaters.sparkle_updater import SparkleUpdater
 from common.updaters.version_updater import VersionUpdater
@@ -56,6 +57,17 @@ from gui.selection_popup import limit_popup_height
 from gui.web_view_background import show_window_through
 from utils import Utils
 from utils.program_variables import ProgramVar
+from web.remote_access_account import is_signed_in, on_account_change, sign_out
+from web.remote_access_api import EventHeldElsewhereError
+from web.remote_access_manager import (
+    current_session as remote_access_session,
+    on_remote_access_change,
+    start_serving as start_remote_access,
+    stop_serving as stop_remote_access,
+    stopped_because as remote_access_stopped_because,
+    url as remote_access_url,
+    use_new_url as use_new_remote_access_url,
+)
 from web.server_engine import ServerEngine
 from common.sharly_chess_config import SharlyChessConfig
 
@@ -407,6 +419,20 @@ class SharlyChessServerToga(toga.App):
         self.locale_select: Optional[toga.Selection] = None
         self.date_formatter_select: Optional[toga.Selection] = None
         self.experimental_switch: Optional[toga.Switch] = None
+        self.remote_access_button: Optional[toga.Button] = None
+        # Raising or dropping a tunnel talks to two machines over the internet
+        # and takes a moment, which has to be visible while it happens.
+        self.remote_access_busy: str | None = None
+        # What went wrong last time it was asked for. Shown rather than only
+        # logged: the button going back to how it was is indistinguishable from
+        # the press having done nothing.
+        self.remote_access_error: str | None = None
+        # Set when the refusal was another machine of this account holding the
+        # lease, which is the one refusal the arbiter can do something about.
+        self.remote_access_held_elsewhere: bool = False
+        # What has already been said out loud, so that a redraw does not say it
+        # again.
+        self.remote_access_reported: str | None = None
 
         # Setup content, displayed while the settings have not been set
         self.federation_field: Optional[toga.Widget] = None
@@ -925,6 +951,64 @@ class SharlyChessServerToga(toga.App):
     def _on_experimental_switch_change(self, widget: toga.Switch, **kwargs):
         self._update_config('experimental', widget.value)
 
+    def _on_remote_access_account_change(self):
+        """Redraw the networks, from whichever thread noticed the change.
+
+        An account can change before there is a window to show it in, during
+        setup or while starting, and there is nothing to say then.
+        """
+        self._report_remote_access_stopped()
+        if self.networks_view is None:
+            return
+        self.gui_loop.call_soon_threadsafe(
+            lambda: self._refresh_networks_view(None, hard_refresh=True)
+        )
+
+    def _report_remote_access_stopped(self):
+        """Say, out loud, that the server stopped being reachable unasked.
+
+        A tab the arbiter is not looking at is no way to tell them: the whole
+        point of this is to be usable while they work in the browser, and the
+        first they would otherwise hear of it is somebody telephoning to say
+        the address is dead. Shown once per reason, and never for a stop they
+        asked for — the button changing under their hand says that already.
+        """
+        reason = remote_access_stopped_because()
+        if reason is None:
+            self.remote_access_reported = None
+            return
+        if reason == self.remote_access_reported:
+            return
+        self.remote_access_reported = reason
+        self.gui_loop.call_soon_threadsafe(
+            lambda: self.gui_loop.create_task(self._show_remote_access_stopped(reason))
+        )
+
+    async def _show_remote_access_stopped(self, reason: str):
+        assert isinstance(self.main_window, toga.Window)
+        await self.main_window.dialog(
+            toga.ErrorDialog(
+                self._dialog_title(_('Access over the internet has stopped')),
+                _('{reason}\n\nThe screens are still served on the local network.')
+                .format(reason=reason),
+            )
+        )
+
+    def _on_remote_access_press(self, widget: toga.Button, **kwargs):
+        """Signing in happens in the browser, because the account lives on the
+        site and the answer comes back to this server's own address."""
+        if not is_signed_in():
+            webbrowser.open(f'{SharlyChessConfig().local_url}/remote-access/sign-in')
+            return
+
+        # Signing out gives the tunnel up first, which talks to the relay and
+        # to the site, so it waits where it can be seen waiting.
+        def work():
+            stop_remote_access()
+            sign_out()
+
+        self._work_at_remote_access(_('Signing out…'), work)
+
     def _on_setup_done(self, widget):
         """The settings have been set: the application is usable and the web
         server is started."""
@@ -962,6 +1046,8 @@ class SharlyChessServerToga(toga.App):
             self.show_log_time_switch.value = config.console_show_date
             assert self.check_beta_switch is not None
             self.check_beta_switch.value = config.check_beta_versions
+            if self.experimental_switch is not None:
+                self.experimental_switch.value = config.experimental
 
         self.gui_loop.call_soon_threadsafe(config_update)
 
@@ -1072,7 +1158,10 @@ class SharlyChessServerToga(toga.App):
 
     def _show_networks_view(self, widget):
         self._show_view('networks')
-        self._refresh_networks_view(hard_refresh=False)
+        # Drawn afresh on every visit: a sign-in lapses on its own, and a tab
+        # still reporting what was true when it was last looked at would be
+        # wrong exactly when someone came to check.
+        self._refresh_networks_view(hard_refresh=True)
 
     def _show_settings_view(self, widget):
         self._show_view('settings')
@@ -1358,6 +1447,13 @@ class SharlyChessServerToga(toga.App):
                 return
 
     def on_running(self):
+        # Signing in finishes in a browser, and the server puts itself back on
+        # the internet as it starts. Both happen without the window asking, so
+        # the window is told: whoever is looking at the networks should not
+        # have to leave the tab and come back to learn what happened.
+        on_account_change(self._on_remote_access_account_change)
+        on_remote_access_change(self._on_remote_access_account_change)
+
         # Logging handler
         assert self.html_view is not None
         self.html_view.set_content('about:blank', LOG_HTML)
@@ -1485,6 +1581,8 @@ class SharlyChessServerToga(toga.App):
                     text_align='center',
                 )
             )
+        self._add_remote_access_section()
+        self.networks_view.add(toga.Divider(margin=(10, 0)))
         refresh_box = toga.Box(style=Pack(direction=ROW, align_items='center'))
         refresh_box.add(
             toga.Button(
@@ -1495,6 +1593,215 @@ class SharlyChessServerToga(toga.App):
         )
         self.networks_view.add(refresh_box)
         self._request_window_size(self.compact_size)
+
+    def _add_remote_access_section(self):
+        """Where the server can be reached from outside the venue.
+
+        It sits with the addresses on the local network because it is the same
+        kind of thing — somewhere to point a telephone at — and differs only in
+        not requiring the telephone to be in the room.
+        """
+        assert self.networks_view is not None
+        if not SharlyChessConfig().experimental:
+            return
+
+        self.networks_view.add(toga.Divider(margin=(10, 0)))
+        self.networks_view.add(
+            toga.Label(
+                text=_('Access over the internet'),
+                style=Pack(font_weight='bold', font_size=10, text_align='center'),
+            )
+        )
+
+        if self.remote_access_busy is not None:
+            waiting = toga.Box(
+                style=Pack(direction=ROW, align_items='center', gap=10, margin_top=10)
+            )
+            indicator = toga.ActivityIndicator(style=Pack(width=16, height=16))
+            indicator.start()
+            waiting.add(indicator)
+            waiting.add(toga.Label(text=self.remote_access_busy))
+            self.networks_view.add(waiting)
+            return
+
+        signed_in = is_signed_in()
+        url = remote_access_url() if signed_in else None
+
+        if url:
+            # The address is announced only when there is one: a heading over
+            # nothing tells the arbiter they have missed something.
+            item = toga.Box(
+                style=Pack(direction=COLUMN, gap=5, align_items='center', margin_top=10)
+            )
+            item.add(
+                toga.ImageView(
+                    image=pil_to_toga_image(make_qr_pil(url)),
+                    style=Pack(
+                        width=self.network_qrcode_width,
+                        height=self.network_qrcode_width,
+                    ),
+                )
+            )
+            address = toga.Box(
+                style=Pack(direction=ROW, align_items='center', gap=10)
+            )
+            address.add(self.make_link_button(url))
+            address.add(
+                toga.Button(
+                    text=_('Re-generate'),
+                    on_press=self._on_remote_access_new_url,
+                )
+            )
+            item.add(address)
+            item.add(
+                toga.Label(
+                    text=_('Anyone with this address can reach the public screens.'),
+                    align_items='center',
+                    text_align='center',
+                )
+            )
+            self.networks_view.add(item)
+        # What the last press ran into, or failing that what ended a session
+        # nobody asked to end — a refusal arrives while the arbiter is doing
+        # something else, and is only ever read here.
+        trouble = self.remote_access_error or remote_access_stopped_because()
+        if trouble is not None:
+            self.networks_view.add(
+                toga.Label(
+                    text=trouble,
+                    align_items='center',
+                    text_align='center',
+                    margin_top=5,
+                )
+            )
+        elif not signed_in:
+            self.networks_view.add(
+                toga.Label(
+                    text=_(
+                        'Sign in to make this server reachable from outside the venue.'
+                    ),
+                    align_items='center',
+                    text_align='center',
+                    margin_top=5,
+                )
+            )
+
+        buttons = toga.Box(
+            style=Pack(direction=ROW, align_items='center', gap=10, margin_top=10)
+        )
+        if signed_in:
+            buttons.add(
+                toga.Button(
+                    text=_('Turn off internet access')
+                    if url
+                    else _('Turn on internet access'),
+                    on_press=self._on_remote_access_toggle,
+                )
+            )
+            if self.remote_access_held_elsewhere:
+                buttons.add(
+                    toga.Button(
+                        text=_('Serve it from here'),
+                        on_press=self._on_remote_access_take_over,
+                    )
+                )
+        # Whether anyone is signed in is said by which of these is offered,
+        # rather than said again in words above them.
+        buttons.add(
+            toga.Button(
+                text=_('Sign out') if signed_in else _('Sign in'),
+                on_press=self._on_remote_access_press,
+            )
+        )
+        self.networks_view.add(buttons)
+
+    def _on_remote_access_toggle(self, widget: toga.Button, **kwargs):
+        """Raising the tunnel talks to two machines over the internet, so it is
+        not done on the thread drawing the window, and takes long enough that
+        the waiting has to be shown rather than left to be guessed at.
+
+        What is on is whether there is a session, not whether one was asked for:
+        a server that could not be put back after a restart is still off, and
+        offering to turn it off again would cost the arbiter a press to find
+        that out."""
+        if remote_access_session() is not None:
+            self._work_at_remote_access(
+                _('Taking this server off the internet…'), stop_remote_access
+            )
+            return
+        self._start_remote_access()
+
+    def _start_remote_access(self, take_over: bool = False):
+        self._work_at_remote_access(
+            _('Making this server reachable…'),
+            lambda: start_remote_access(take_over=take_over),
+        )
+
+    async def _on_remote_access_new_url(self, widget: toga.Button, **kwargs):
+        """Give this address up and take a fresh one.
+
+        Beside the address rather than among the buttons below, because it is
+        the address it acts on and not the server. Asked about first, because
+        every code already printed against the current address stops working,
+        and there is no getting it back: the site keeps it reserved for ever
+        rather than handing it to anybody else.
+        """
+        assert isinstance(self.main_window, toga.Window)
+        confirmed = await self.main_window.dialog(
+            toga.ConfirmDialog(
+                self._dialog_title(_('Use a new address')),
+                _(
+                    'This server will be given a different address on the '
+                    'internet.\n\nEvery QR code and link already printed for the '
+                    'current address will stop working, and it cannot be given '
+                    'back.'
+                ),
+            )
+        )
+        if not confirmed:
+            return
+        self._work_at_remote_access(
+            _('Taking a new address…'), use_new_remote_access_url
+        )
+
+    def _on_remote_access_take_over(self, widget: toga.Button, **kwargs):
+        """Serve from this machine instead of the one still holding the lease.
+
+        Offered only where the control plane said as much, and it says that
+        only of another machine of the same account."""
+        self._start_remote_access(take_over=True)
+
+    def _work_at_remote_access(self, waiting: str, work: Callable[[], object]):
+        """Do the slow part off the drawing thread, and say how it went."""
+        self.remote_access_busy = waiting
+        self.remote_access_error = None
+        self.remote_access_held_elsewhere = False
+        self._refresh_networks_view(None, hard_refresh=True)
+
+        def run():
+            try:
+                work()
+            except EventHeldElsewhereError as e:
+                logger.warning('Remote access is held elsewhere: %s', e)
+                self.remote_access_error = _(
+                    'Another machine signed in to this account is already '
+                    'serving this address.'
+                )
+                self.remote_access_held_elsewhere = True
+            except SharlyChessException as e:
+                logger.error('Remote access could not be changed: %s', e)
+                self.remote_access_error = str(e)
+            except Exception as e:
+                # The window must still come back, whatever went wrong.
+                logger.exception('Remote access could not be changed.')
+                self.remote_access_error = str(e)
+            finally:
+                self.remote_access_busy = None
+                self.gui_loop.call_soon_threadsafe(
+                    lambda: self._refresh_networks_view(None, hard_refresh=True)
+                )
+
+        threading.Thread(target=run, daemon=True).start()
 
     def _noop(self, widget: toga.Widget):
         pass

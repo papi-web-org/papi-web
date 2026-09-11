@@ -16,7 +16,7 @@ from common.i18n import _
 from data.access_levels.access_levels import AccessLevel, AccessLevelScope
 from data.access_levels.actions import AuthAction
 from data.access_levels.manager import AccessLevelManager
-from data.account import Account, Permission
+from data.account import MINIMUM_PASSWORD_LENGTH, Account, Permission
 from data.input_output.managers import DataSourceManager
 from data.player import Player
 from database.sqlite.event.event_store import (
@@ -350,7 +350,7 @@ class AccountAdminController(BaseEventAdminController):
                     account_name=full_name
                 )
 
-        password = WebContext.form_data_to_str(flat_data, 'password')
+        password = WebContext.form_data_to_str(flat_data, field := 'password')
         password_hash: str | None
         if not password:
             if action == FormAction.UPDATE:
@@ -358,6 +358,11 @@ class AccountAdminController(BaseEventAdminController):
                 password_hash = account.password_hash
             else:
                 password_hash = None
+        elif len(password) < MINIMUM_PASSWORD_LENGTH:
+            password_hash = None
+            errors[field] = _(
+                'The password must be at least {length} characters long.'
+            ).format(length=MINIMUM_PASSWORD_LENGTH)
         else:
             password_hash = PasswordHasher().hash(password)
 

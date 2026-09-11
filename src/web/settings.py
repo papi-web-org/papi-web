@@ -62,6 +62,7 @@ from web.controllers.admin.prize_config_admin_controller import (
     PrizeConfigAdminController,
 )
 from web.controllers.profile_controller import ProfileController
+from web.controllers.remote_access_controller import RemoteAccessController
 from web.controllers.admin.rotator_admin_controller import RotatorAdminController
 from web.controllers.admin.menu_admin_controller import MenuAdminController
 from web.controllers.admin.screen_config_admin_controller import (
@@ -97,6 +98,7 @@ static_files_router: Router = create_static_files_router(
 
 _route_handlers: Sequence[ControllerRouterHandler] = [
     IndexController,
+    RemoteAccessController,
     ScreenUserController,
     InputUserController,
     IndexAdminController,
@@ -340,10 +342,18 @@ stores: dict[str, Store] = {'sessions': SQLiteStore(session_pool)}
 
 _session_config = ServerSideSessionConfig(
     key='sharly-chess-session',
+    # Stated rather than left to the default: it is what keeps a cross-site POST
+    # from carrying the session, and the application has no CSRF tokens to fall
+    # back on if it is ever weakened.
+    samesite='lax',
+    # Named rather than matched on their extension. Anything ending in .json or
+    # .css that is not one of these is an ordinary request for a page that does
+    # not exist, and denying it a session turned a refusal into a server error.
     exclude=[
-        r'^/static/*',
+        r'^/static/',
         r'^/ws$',
-        r'.*\.(png|jpg|jpeg|gif|css|js|svg|ico|json)$',
+        r'^/favicon\.ico$',
+        r'^/robots\.txt$',
     ],
 )
 

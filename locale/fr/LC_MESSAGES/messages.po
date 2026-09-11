@@ -4306,6 +4306,9 @@ msgstr "Valeur TRF25 invalide : caractères inattendus."
 msgid "Invalid URL [{background_image}]."
 msgstr "URL [{background_image}] non valide."
 
+msgid "Invalid account or password."
+msgstr "Compte ou mot de passe invalide."
+
 msgid "Invalid account."
 msgstr "Compte invalide."
 
@@ -8298,6 +8301,9 @@ msgstr "Soutenir le projet Sharly Chess"
 msgid "Suriname"
 msgstr "Suriname"
 
+msgid "Surname, or first name and surname"
+msgstr "Nom, ou prénom et nom"
+
 msgid "Sweden"
 msgstr "Suède"
 
@@ -8873,6 +8879,10 @@ msgstr "Les numéros d'appariement du tournoi par ordre croissant."
 
 msgid "The pairing numbers of the tournament in descending order."
 msgstr "Les numéros d'appariement du tournoi par ordre décroissant."
+
+#, python-brace-format
+msgid "The password must be at least {length} characters long."
+msgstr "Le mot de passe doit comporter au moins {length} caractères."
 
 msgid "The percentage of a player's own current Keizer value awarded for an excused absence or a requested bye (0 = nothing, 100 = the full value)."
 msgstr "Le pourcentage de la valeur Keizer actuelle d'un·e joueur·euse attribué pour une absence excusée ou un bye demandé (0 = rien, 100 = la valeur entière)."
@@ -9567,6 +9577,10 @@ msgstr "Trop peu d'équipes pour générer les appariements (minimum : {min})."
 #, python-brace-format
 msgid "Too many byes for player [{player_name}]."
 msgstr "Trop de byes pour le·la joueurÏeuse [{player_name}]."
+
+#, python-brace-format
+msgid "Too many failed attempts, please try again in {minutes} minutes."
+msgstr "Trop de tentatives échouées, veuillez réessayer dans {minutes} minutes."
 
 msgid "Too much information to display on a single projector?"
 msgstr "Trop d’informations à afficher sur un seul projecteur ?"
@@ -10525,6 +10539,9 @@ msgstr "Vous devez créer un tournoi avant de créer un groupe non-cumulable."
 
 msgid "You must create a tournament before creating these screens."
 msgstr "Vous devez créer un tournoi avant de pouvoir créer ces écrans."
+
+msgid "Your name as the arbiter of the event entered it. Accents and capitals do not matter."
+msgstr "Votre nom tel que l'arbitre de l'évènement l'a saisi. Les accents et les majuscules n'ont pas d'importance."
 
 msgid "Your text here"
 msgstr "Votre texte ici"
