@@ -4,6 +4,7 @@
 
 - The language, federation and date format settings have moved from the browser to the main application window (5.1.0)
 - Plugins are now installed and uninstalled from the main application window (5.1.0)
+- The event export feature has been moved to the event's configuration window (5.1.0)
 
 ## Tournaments
 

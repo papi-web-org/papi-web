@@ -3513,6 +3513,9 @@ msgstr ""
 msgid "Export players"
 msgstr ""
 
+msgid "Export the event in SCE format."
+msgstr ""
+
 msgid "Export tournament"
 msgstr ""
 

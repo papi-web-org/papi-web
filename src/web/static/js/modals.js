@@ -105,6 +105,15 @@ function requestRefresh() {
     refreshRequested = true;
 }
 
+/* Closing a modal can reload the page, which cancels a download the browser
+   has not finished handing to the user: wait for the file, then close without
+   the reload. */
+async function downloadFileAndCloseModal(el, formId) {
+    await downloadFile(el, formId);
+    refreshRequested = false;
+    closeModal();
+}
+
 // Intercept Bootstrap modal hide
 $(document).on('hide.bs.modal', function (e) {
     if (ignoreNextModalClose) {

@@ -3513,6 +3513,9 @@ msgstr "Exporter l'évènement au format SCE"
 msgid "Export players"
 msgstr "Exporter les joueur·euses"
 
+msgid "Export the event in SCE format."
+msgstr "Exporter l'évènement au format SCE."
+
 msgid "Export tournament"
 msgstr "Exporter le tournoi"
 
