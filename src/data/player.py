@@ -50,6 +50,8 @@ if TYPE_CHECKING:
 
 MIN_YOB = 1900
 MAX_YOB = date.today().year
+MIN_K_FACTOR = 0
+MAX_K_FACTOR = 40
 
 
 @dataclass
@@ -446,6 +448,36 @@ class Player:
             for rating in self.ratings.values()
         )
 
+    @staticmethod
+    def estimate_fide_rating_coefficient(
+        fide_rating: int | None, year_of_birth: int | None
+    ) -> int:
+        """Best guess of the coefficient (k) of a player, according to
+        Section B-02-8.3.3 of the FIDE handbook."""
+        if fide_rating is None:
+            return 40
+        if fide_rating > 2400:
+            return 10
+        if year_of_birth:
+            age = date.today().year - year_of_birth
+            if age <= 18 and fide_rating < 2300:
+                return 40
+        return 20
+
+    @property
+    def k_factors_by_rating_value(self) -> dict[int, int | None]:
+        return {
+            tournament_rating.value: rating.k_factor
+            for tournament_rating, rating in self.ratings.items()
+        }
+
+    @property
+    def fide_k_factor_reference_date(self) -> date:
+        """The day whose FIDE rating period the k-factors of the player
+        are read from."""
+        tournament = self.optional_single_tournament
+        return tournament.start_date if tournament else self.event.start_date
+
     @property
     def first_real_rating_str(self) -> str:
         for tournament_rating in TournamentRating:
@@ -679,27 +711,41 @@ class TournamentPlayer(Player):
 
     @property
     def fide_rating_coefficient(self) -> tuple[int, bool]:
-        """Returns the player's coefficient (k), or the best guess."""
-        from database.sqlite.fide.fide_database import FideDatabase
+        """Returns the player's coefficient (k), and whether it is a guess."""
+        rating = self.tournament.rating
+        if self.tournament_rating_is_overridden:
+            rating = TournamentRating.STANDARD
+        k_factor = self.ratings[rating].k_factor
+        if k_factor is not None:
+            return k_factor, False
+        rating_used_by_fide = self.rating_used_by_fide
+        return Player.estimate_fide_rating_coefficient(
+            rating_used_by_fide.value
+            if rating_used_by_fide.type == PlayerRatingType.FIDE
+            else None,
+            self.year_of_birth,
+        ), True
 
-        if self.fide_id and FideDatabase().exists():
-            with FideDatabase() as db:
-                k = (db.get_k_factors_by_fide_id(self.fide_id) or {}).get(
-                    self.tournament.rating
-                )
-                if k is not None:
-                    return k, False
+    @property
+    def fide_rating_change(self) -> int | None:
+        """The FIDE rating change of the player over the tournament.
 
-        # Make the best guess according to Section B-02-8.3.3 of the FIDE handbook
-        if self.rating_used_by_fide.type != PlayerRatingType.FIDE:
-            return 40, True
-        if self.rating_used_by_fide.value > 2400:
-            return 10, True
-        if self.year_of_birth:
-            age = date.today().year - self.year_of_birth
-            if age <= 18 and self.rating_used_by_fide.value < 2300:
-                return 40, True
-        return 20, True
+        `None` when it cannot be stated: the tournament is not played on
+        FIDE ratings, the coefficient (k) of the player is only an estimate,
+        or no game of theirs counts for the FIDE ratings."""
+        if self.tournament.player_rating_type != PlayerRatingType.FIDE:
+            return None
+        k_factor, k_factor_is_estimated = self.fide_rating_coefficient
+        if k_factor_is_estimated:
+            return None
+        deltas = [
+            rating_change.delta
+            for pairing in self.pairings.values()
+            if (rating_change := pairing.fide_rating_change(k_factor)).delta is not None
+        ]
+        if not deltas:
+            return None
+        return round(sum(deltas))
 
     @property
     def first_fide_rating(self) -> tuple[int | None, str | None]:

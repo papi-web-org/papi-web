@@ -219,7 +219,7 @@ This section is the one that allows the platform to authenticate the request.
 | tb6 | Tie-break 6, computed based on "rankinground" | ? |
 | pts | The number of points, computed based on "rankinground" | M |
 | equal | If `n` players are strictly tied after tie-breaks, set this field as `J` for players 2 to `n` inside this tied group (their rank is then shown blank). If all tie-breaks are equal, the players are sorted by starting rank. If the tie-breaks are not equal, set this field as `N` | M |
-| kfactor | The FIDE K factor used to compute rating change | O |
+| kfaktor | The FIDE K factor used to compute rating change | O |
 | state | `0` if the player is active; `1` if the player withdrew and their points do not count; `2` if the player withdrew and their points still count | M for Round-robin tournaments, F otherwise |
 
 ### Intermediate ranking data (optional, Swiss tournaments only — team and individual)

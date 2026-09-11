@@ -54,6 +54,7 @@ class PlayerRating:
     estimated: int | None = None
     national: int | None = None
     fide: int | None = None
+    k_factor: int | None = None
 
     @classmethod
     def from_stored_value(cls, dict_rating: dict[str, int | None]) -> Self:
@@ -61,6 +62,7 @@ class PlayerRating:
             estimated=dict_rating.get('estimated', None),
             national=dict_rating.get('national', None),
             fide=dict_rating.get('fide', None),
+            k_factor=dict_rating.get('k', None),
         )
 
     @classmethod
@@ -100,6 +102,8 @@ class PlayerRating:
             ratings['national'] = self.national
         if self.fide is not None:
             ratings['fide'] = self.fide
+        if self.k_factor is not None:
+            ratings['k'] = self.k_factor
         return ratings
 
     def __str__(self) -> str:

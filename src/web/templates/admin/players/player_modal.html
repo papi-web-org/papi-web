@@ -186,13 +186,15 @@
                                 with
                                     fide=tournament_rating.form_key ~ '_rating_fide',
                                     national=tournament_rating.form_key ~ '_rating_national',
-                                    estimated=tournament_rating.form_key ~ '_rating_estimated'
+                                    estimated=tournament_rating.form_key ~ '_rating_estimated',
+                                    k=tournament_rating.form_key ~ '_rating_k'
                             %}
                                 {%
                                     with
                                         fide_id=fide|replace('_', '-'),
                                         national_id=national|replace('_', '-'),
-                                        estimated_id=estimated|replace('_', '-')
+                                        estimated_id=estimated|replace('_', '-'),
+                                        k_id=k|replace('_', '-')
                                 %}
                                     <label class="form-check-label d-block pb-1">{{ tournament_rating_strings['label'] }}</label>
                                     <div class="d-flex align-items-center gap-2">
@@ -206,10 +208,37 @@
                                             value="{{ data[fide] }}"
                                         />
                                         <div>{{ rating_type_labels['fide'] }}</div>
+                                        <input
+                                            name="{{ k }}"
+                                            type="number"
+                                            id="{{ k_id }}"
+                                            data-testid="{{ k_id }}"
+                                            class="form-control d-inline {% if k in errors %}is-invalid{% endif %} mb-2"
+                                            style="max-width: 4.5rem"
+                                            aria-describedby="{{ k_id }}-help {{ k_id }}-error"
+                                            placeholder="{{ k_factor_placeholders[tournament_rating] }}"
+                                            min="{{ min_k_factor }}"
+                                            max="{{ max_k_factor }}"
+                                            value="{{ data[k] }}"
+                                        />
+                                        <div
+                                            {{ macros.tooltip_attributes('info', _(
+                                                'The FIDE coefficient (k) of the player. '
+                                                'When left empty, the coefficient shown is estimated '
+                                                'from the rating and the age of the player.'
+                                            )) }}
+                                        >
+                                            {{ _('K *** FIDE RATING COEFFICIENT') }}
+                                        </div>
                                     </div>
                                     {% if fide in errors %}
                                         <div id="{{ fide_id }}-error" class="form-text invalid-feedback" style="display: block">
                                             {{ errors[fide] }}
+                                        </div>
+                                    {% endif %}
+                                    {% if k in errors %}
+                                        <div id="{{ k_id }}-error" class="form-text invalid-feedback" style="display: block">
+                                            {{ errors[k] }}
                                         </div>
                                     {% endif %}
                                     <div class="d-flex align-items-center gap-2">
@@ -277,6 +306,38 @@
                         </div>
                     {% endif %}
                 </div>
+                <script>
+                    (function () {
+                        // Section B-02-8.3.3 of the FIDE handbook.
+                        function estimateKFactor(fideRating, yearOfBirth) {
+                            if (!fideRating) {
+                                return 40;
+                            }
+                            if (fideRating > 2400) {
+                                return 10;
+                            }
+                            var age = new Date().getFullYear() - yearOfBirth;
+                            if (yearOfBirth && age <= 18 && fideRating < 2300) {
+                                return 40;
+                            }
+                            return 20;
+                        }
+                        function updateKFactorPlaceholders() {
+                            var yearMatch = ($('#date-of-birth').val() || '').match(/\d{4}/);
+                            var yearOfBirth = yearMatch ? parseInt(yearMatch[0], 10) : null;
+                            {% for tournament_rating in tournament_ratings_strings %}
+                                {% set key = tournament_rating.form_key|replace('_', '-') %}
+                                $('#{{ key }}-rating-k').attr('placeholder', estimateKFactor(
+                                    parseInt($('#{{ key }}-rating-fide').val(), 10),
+                                    yearOfBirth
+                                ));
+                            {% endfor %}
+                        }
+                        $('#date-of-birth, input[name$="_rating_fide"]').on(
+                            'input change', updateKFactorPlaceholders
+                        );
+                    })();
+                </script>
 
                 <h4>
                     {{ _('FIDE') }}

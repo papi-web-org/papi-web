@@ -4321,6 +4321,10 @@ msgid "Invalid board number [{fixed_board_str}]."
 msgstr ""
 
 #, python-brace-format
+msgid "Invalid coefficient (k) [{k_factor}] (expected in range [{min}-{max}])."
+msgstr "Invalid coefficient (k) [{k_factor}] (expected in range [{min}-{max}])."
+
+#, python-brace-format
 msgid "Invalid color [{color}] ([#RRGGBB] expected)."
 msgstr ""
 
@@ -4485,6 +4489,9 @@ msgstr ""
 
 msgid "Junior categories"
 msgstr ""
+
+msgid "K *** FIDE RATING COEFFICIENT"
+msgstr "K"
 
 msgid "Kashdan"
 msgstr ""
@@ -8538,6 +8545,9 @@ msgstr "Th"
 
 msgid "Thailand"
 msgstr ""
+
+msgid "The FIDE coefficient (k) of the player. When left empty, the coefficient shown is estimated from the rating and the age of the player."
+msgstr "The FIDE coefficient (k) of the player. When left empty, the coefficient shown is estimated from the rating and the age of the player."
 
 msgid "The FIDE rules stipulate that only the pairings of the round <b>prior</b> to the current one may be modified. Changes to pairings previous to this should be made at the <b>end</b> of the tournament, <b>after</b> the rankings have been published, and solely for the computation of the FIDE ratings."
 msgstr ""

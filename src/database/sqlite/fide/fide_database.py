@@ -1,5 +1,6 @@
 import re
 from contextlib import suppress
+from datetime import date
 from logging import Logger
 from pathlib import Path
 from typing import Iterator, Any, override
@@ -81,15 +82,16 @@ class FideDatabase(LocalSourcePlayerDatabase):
     @staticmethod
     def _get_player_from_row(row: dict[str, Any]) -> StoredPlayer:
         rating_keys = {
-            TournamentRating.STANDARD: 'standard_rating',
-            TournamentRating.RAPID: 'rapid_rating',
-            TournamentRating.BLITZ: 'blitz_rating',
+            TournamentRating.STANDARD: ('standard_rating', 'k_standard'),
+            TournamentRating.RAPID: ('rapid_rating', 'k_rapid'),
+            TournamentRating.BLITZ: ('blitz_rating', 'k_blitz'),
         }
         ratings = {
             tournament_rating.value: PlayerRating(
-                fide=row[key] or None,
+                fide=row[rating_key] or None,
+                k_factor=row.get(k_key) or None,
             ).stored_value
-            for tournament_rating, key in rating_keys.items()
+            for tournament_rating, (rating_key, k_key) in rating_keys.items()
         }
         return StoredPlayer(
             id=None,
@@ -190,17 +192,18 @@ class FideDatabase(LocalSourcePlayerDatabase):
             return self._get_player_from_row(player_row)
         return None
 
-    def get_k_factors_by_fide_id(
-        self, player_fide_id: int
-    ) -> dict[TournamentRating, int | None] | None:
-        self.execute('SELECT * FROM player WHERE fide_id = ?', (player_fide_id,))
-        if player_row := self.fetchone():
-            return {
-                TournamentRating.STANDARD: player_row.get('k_standard') or None,
-                TournamentRating.RAPID: player_row.get('k_rapid') or None,
-                TournamentRating.BLITZ: player_row.get('k_blitz') or None,
-            }
-        return None
+    def covers_rating_period(self, day: date) -> bool:
+        """Whether the installed database is the rating list of *day*'s period.
+
+        FIDE publishes a rating list on the 1st of every month, so the list
+        installed during a given month is the one that applies to the
+        tournaments of that month."""
+        if not self.exists():
+            return False
+        updated_at = self.updated_at
+        if updated_at is None:
+            return False
+        return (updated_at.year, updated_at.month) == (day.year, day.month)
 
     def get_stored_players_by_fide_id(
         self, player_fide_ids: list[int]

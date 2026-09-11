@@ -1,6 +1,7 @@
 import asyncio
 from abc import ABC, abstractmethod
-from datetime import datetime
+from dataclasses import replace
+from datetime import date, datetime
 from functools import cached_property
 from logging import Logger
 from typing import override, ClassVar, Collection
@@ -36,6 +37,12 @@ from utils.entity import IdentifiableEntity
 from utils.enum import TournamentRating, PlayerRatingType
 
 logger: Logger = get_logger()
+
+
+def drop_k_factors(stored_player: StoredPlayer):
+    """Forget the k-factors of a player, so that they are estimated instead."""
+    for stored_rating in stored_player.ratings.values():
+        stored_rating.pop('k', None)
 
 
 class PlayerComparator:
@@ -123,6 +130,15 @@ class DataSource(IdentifiableEntity, ABC):
         match_stored_players = await self.get_match_stored_players(players)
         if match_stored_players is None:
             return None
+        k_factors_by_fide_id = self._fide_k_factors_by_fide_id(match_stored_players)
+        database = FideDatabase()
+        covered_dates = {
+            reference_date
+            for reference_date in {
+                player.fide_k_factor_reference_date for player in players
+            }
+            if database.covers_rating_period(reference_date)
+        }
         player_comparators: list[PlayerComparator] = []
         for player in players:
             match_player = next(
@@ -135,10 +151,59 @@ class DataSource(IdentifiableEntity, ABC):
                 ),
                 None,
             )
+            if match_player is not None:
+                match_player = self._with_k_factors(
+                    match_player,
+                    k_factors_by_fide_id.get(match_player.fide_id or 0, {})
+                    if player.fide_k_factor_reference_date in covered_dates
+                    # Outside the rating period of the database, the
+                    # k-factors of the player are left untouched.
+                    else player.k_factors_by_rating_value,
+                )
             player_comparator = PlayerComparator(fields, player, match_player)
             if not diff_only or player_comparator.diff_field_ids:
                 player_comparators.append(player_comparator)
         return player_comparators
+
+    @staticmethod
+    def _fide_k_factors_by_fide_id(
+        match_stored_players: list[StoredPlayer],
+    ) -> dict[int, dict[int, int | None]]:
+        """Read the k-factors of the matched players in the FIDE database,
+        so that they are brought over whatever the data source is."""
+        database = FideDatabase()
+        fide_ids = [
+            match_stored_player.fide_id
+            for match_stored_player in match_stored_players
+            if match_stored_player.fide_id
+        ]
+        if not fide_ids or not database.exists():
+            return {}
+        with database:
+            fide_stored_players = database.get_stored_players_by_fide_id(fide_ids)
+        return {
+            fide_stored_player.fide_id: {
+                tr_value: PlayerRating.from_stored_value(stored_rating).k_factor
+                for tr_value, stored_rating in fide_stored_player.ratings.items()
+            }
+            for fide_stored_player in fide_stored_players
+            if fide_stored_player.fide_id
+        }
+
+    @staticmethod
+    def _with_k_factors(
+        match_stored_player: StoredPlayer,
+        k_factors: dict[int, int | None],
+    ) -> StoredPlayer:
+        ratings: dict[int, dict[str, int | None]] = {}
+        for tournament_rating in TournamentRating:
+            tr_value = tournament_rating.value
+            rating = PlayerRating.from_stored_value(
+                match_stored_player.ratings.get(tr_value, {})
+            )
+            rating.k_factor = k_factors.get(tr_value)
+            ratings[tr_value] = rating.stored_value
+        return replace(match_stored_player, ratings=ratings)
 
     # --------------------------------------------------------------------------
     # Player search
@@ -187,10 +252,13 @@ class DataSource(IdentifiableEntity, ABC):
         self,
         player_source_id: str,
         with_arbiter_title: bool,
+        k_factor_reference_date: date,
     ) -> StoredPlayer | None:
         stored_player = await self.get_stored_player_by_source_id(player_source_id)
         if stored_player:
-            self._adjust_player_from_fide_database(stored_player)
+            self._adjust_player_from_fide_database(
+                stored_player, k_factor_reference_date
+            )
             await plugin_manager.ahook.augment_player_after_search(
                 stored_player=stored_player,
                 data_source=self,
@@ -201,6 +269,7 @@ class DataSource(IdentifiableEntity, ABC):
     @staticmethod
     def _adjust_player_from_fide_database(
         src_stored_player: StoredPlayer,
+        k_factor_reference_date: date,
     ):
         """Cross-references the player with the FIDE Database.
         Override this method to disable this behavior."""
@@ -208,6 +277,7 @@ class DataSource(IdentifiableEntity, ABC):
         database = FideDatabase()
         if not fide_id or not database.exists():
             return
+        keep_k_factors = database.covers_rating_period(k_factor_reference_date)
         with database:
             fide_stored_player = database.get_stored_player_by_fide_id(
                 player_fide_id=fide_id,
@@ -226,24 +296,19 @@ class DataSource(IdentifiableEntity, ABC):
                 )
                 if not stored_fide_rating:
                     continue
-                fide_rating = PlayerRating.from_stored_value(stored_fide_rating).fide
-                if not fide_rating:
+                fide_player_rating = PlayerRating.from_stored_value(stored_fide_rating)
+                if not fide_player_rating.fide:
                     continue
-                stored_source_rating = src_stored_player.ratings.get(
-                    rating_type.value, None
+                source_rating = PlayerRating.from_stored_value(
+                    src_stored_player.ratings.get(rating_type.value, None) or {}
                 )
-                if not stored_source_rating:
-                    src_stored_player.ratings[rating_type.value] = PlayerRating(
-                        fide=fide_rating
-                    ).stored_value
-                    continue
-                source_rating = PlayerRating.from_stored_value(stored_source_rating)
                 if source_rating.fide is None:
-                    src_stored_player.ratings[rating_type.value] = PlayerRating(
-                        fide=fide_rating,
-                        national=source_rating.national,
-                        estimated=source_rating.estimated,
-                    ).stored_value
+                    source_rating.fide = fide_player_rating.fide
+                if keep_k_factors:
+                    source_rating.k_factor = fide_player_rating.k_factor
+                src_stored_player.ratings[rating_type.value] = (
+                    source_rating.stored_value
+                )
 
     # --------------------------------------------------------------------------
     # Player Import
@@ -417,8 +482,10 @@ class FideDataSource(LocalDataSource):
     @override
     def _adjust_player_from_fide_database(
         src_stored_player: StoredPlayer,
+        k_factor_reference_date: date,
     ):
-        pass
+        if not FideDatabase().covers_rating_period(k_factor_reference_date):
+            drop_k_factors(src_stored_player)
 
     def check_player_match(self, player1: StoredPlayer, player2: StoredPlayer) -> bool:
         return bool(player1.fide_id) and player1.fide_id == player2.fide_id

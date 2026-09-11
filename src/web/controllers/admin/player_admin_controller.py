@@ -34,15 +34,24 @@ from data.columns.players_tab import PlayersTabColumn
 from data.event import Event
 from data.access_levels.actions import AuthAction
 from data.access_levels.client import Client
-from data.input_output.data_source import DataSource
+from data.input_output.data_source import DataSource, drop_k_factors
 from data.input_output.managers import DataSourceManager, PlayerExporterManager
-from data.player import Player, PlayerRating, TournamentPlayer, MIN_YOB, MAX_YOB
+from data.player import (
+    Player,
+    PlayerRating,
+    TournamentPlayer,
+    MIN_YOB,
+    MAX_YOB,
+    MIN_K_FACTOR,
+    MAX_K_FACTOR,
+)
 from data.print_documents.documents import (
     PlayerListPrintDocument,
 )
 from data.teams.team import RosterFullError
 from data.tournament import Tournament
 from database.sqlite.event.event_database import EventDatabase
+from database.sqlite.fide.fide_database import FideDatabase
 from database.sqlite.event.event_store import (
     StoredPlayer,
     StoredTeam,
@@ -669,6 +678,53 @@ class PlayerAdminController(BaseEventAdminController):
             for gender in PlayerGender
         }
 
+    @staticmethod
+    def _get_k_factor_placeholders(
+        data: dict[str, str],
+    ) -> dict[TournamentRating, int]:
+        """The automatic coefficients (k) shown while the fields are left empty."""
+        year_of_birth: int | None = None
+        field = 'date_of_birth'
+        try:
+            date_of_birth = WebContext.form_data_to_date(data, field)
+            year_of_birth = date_of_birth.year if date_of_birth else None
+        except FormError:
+            year_str = data.get(field, '')
+            if year_str.isdigit() and len(year_str) == 4:
+                year_of_birth = int(year_str)
+        placeholders: dict[TournamentRating, int] = {}
+        for tournament_rating in TournamentRating:
+            try:
+                fide_rating = WebContext.form_data_to_int(
+                    data, f'{tournament_rating.form_key}_rating_fide'
+                )
+            except ValueError:
+                fide_rating = None
+            placeholders[tournament_rating] = Player.estimate_fide_rating_coefficient(
+                fide_rating, year_of_birth
+            )
+        return placeholders
+
+    @staticmethod
+    def _k_factor_reference_date(
+        web_context: PlayerAdminWebContext, data: dict[str, str] | None = None
+    ) -> date:
+        """The day whose FIDE rating period the k-factors are read from."""
+        event = web_context.get_admin_event()
+        tournament: Tournament | None = None
+        if data:
+            try:
+                tournament_id = WebContext.form_data_to_int(data, 'tournament_id')
+            except ValueError:
+                tournament_id = None
+            if tournament_id:
+                tournament = event.tournaments_by_id.get(tournament_id)
+        if tournament is None:
+            tournament = web_context.admin_tournament
+        if tournament is None and web_context.admin_player is not None:
+            tournament = web_context.admin_player.optional_single_tournament
+        return tournament.start_date if tournament else event.start_date
+
     @classmethod
     def _render_players_form_modal(
         cls,
@@ -762,6 +818,7 @@ class PlayerAdminController(BaseEventAdminController):
                     f'{key}_rating_fide': rating_.fide or None,
                     f'{key}_rating_national': rating_.national or None,
                     f'{key}_rating_estimated': rating_.estimated or None,
+                    f'{key}_rating_k': rating_.k_factor,
                 }
 
             plugin_form_data: dict[str, str] = {}
@@ -862,6 +919,7 @@ class PlayerAdminController(BaseEventAdminController):
         plugin_manager.hook_for_event(event, 'insert_player_form_fields_template')(
             templates_by_section=plugin_templates_by_section
         )
+        k_factor_placeholders = cls._get_k_factor_placeholders(data)
         template_context |= {
             'gender_options': cls._get_gender_options(),
             'tournament_ratings_strings': {
@@ -887,6 +945,9 @@ class PlayerAdminController(BaseEventAdminController):
             'rating_type_labels': {
                 prt.form_key: prt.short_name for prt in PlayerRatingType
             },
+            'k_factor_placeholders': k_factor_placeholders,
+            'min_k_factor': MIN_K_FACTOR,
+            'max_k_factor': MAX_K_FACTOR,
             'title_options': {
                 str(t.value): f'{t.short_name} - {t.name}'
                 if t.short_name
@@ -939,7 +1000,9 @@ class PlayerAdminController(BaseEventAdminController):
 
     @staticmethod
     async def get_search_stored_player(
-        data_source: DataSource, player_source_id: str
+        data_source: DataSource,
+        player_source_id: str,
+        k_factor_reference_date: date,
     ) -> tuple[StoredPlayer | None, dict[str, str]]:
         errors: dict[str, str] = {}
         stored_player: StoredPlayer | None = None
@@ -949,6 +1012,7 @@ class PlayerAdminController(BaseEventAdminController):
             stored_player = await data_source.fetch_player(
                 player_source_id=player_source_id,
                 with_arbiter_title=False,
+                k_factor_reference_date=k_factor_reference_date,
             )
             if not stored_player:
                 raise NotFoundException(
@@ -981,7 +1045,9 @@ class PlayerAdminController(BaseEventAdminController):
             request, player_id, data_source_id=data_source_id
         )
         stored_player, errors = await self.get_search_stored_player(
-            web_context.get_admin_data_source(), player_source_id
+            web_context.get_admin_data_source(),
+            player_source_id,
+            self._k_factor_reference_date(web_context, data),
         )
         return self._render_players_form_modal(
             web_context,
@@ -1224,6 +1290,22 @@ class PlayerAdminController(BaseEventAdminController):
                         min=prt.min_value,
                         max=prt.max_value,
                     )
+        for tr in TournamentRating:
+            try:
+                WebContext.form_data_to_int(
+                    data,
+                    field := f'{tr.form_key}_rating_k',
+                    minimum=MIN_K_FACTOR,
+                    maximum=MAX_K_FACTOR,
+                )
+            except ValueError:
+                errors[field] = _(
+                    'Invalid coefficient (k) [{k_factor}] (expected in range [{min}-{max}]).'
+                ).format(
+                    k_factor=data[field],
+                    min=MIN_K_FACTOR,
+                    max=MAX_K_FACTOR,
+                )
         plugin_manager.hook_for_event(event, 'validate_player_form_fields')(
             data=data, errors=errors
         )
@@ -1284,6 +1366,9 @@ class PlayerAdminController(BaseEventAdminController):
                     or None,
                     fide=WebContext.form_data_to_int(data, f'{tr.form_key}_rating_fide')
                     or None,
+                    k_factor=WebContext.form_data_to_int(
+                        data, f'{tr.form_key}_rating_k'
+                    ),
                 ).stored_value
                 for tr in TournamentRating
             },
@@ -2117,6 +2202,9 @@ class PlayerAdminController(BaseEventAdminController):
 
         if data_source:
             stored_players_by_index = {}
+            keep_k_factors = FideDatabase().covers_rating_period(
+                cls._k_factor_reference_date(web_context)
+            )
             identifier_column = data_source.import_identifier_column
             column_content = content_by_column_id[identifier_column.id]
             identifiers = [
@@ -2144,6 +2232,8 @@ class PlayerAdminController(BaseEventAdminController):
                     column.augment_stored_player_with_tournament(
                         tournament, stored_player, value
                     )
+                if not keep_k_factors:
+                    drop_k_factors(stored_player)
                 stored_players_by_index[index] = stored_player
 
         for index, stored_player in stored_players_by_index.items():
