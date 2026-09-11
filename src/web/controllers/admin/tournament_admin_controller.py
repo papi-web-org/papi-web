@@ -10,7 +10,7 @@ from litestar import post, get, patch, delete
 from litestar.enums import RequestEncodingType
 from litestar.exceptions import NotFoundException, ClientException, ValidationException
 from litestar.params import Body, FromPath, FromQuery
-from litestar.plugins.htmx import HTMXRequest, HTMXTemplate
+from litestar.plugins.htmx import ClientRedirect, HTMXRequest, HTMXTemplate
 from litestar.response import Template, File, Redirect
 from litestar.status_codes import HTTP_200_OK
 
@@ -2538,7 +2538,7 @@ class TournamentAdminController(BaseEventAdminController):
 
     @classmethod
     def _player_distribution_modal_context(
-        cls, web_context: TournamentAdminWebContext
+        cls, web_context: TournamentAdminWebContext, tab: str
     ) -> dict[str, Any]:
         request = web_context.request
         event = web_context.get_admin_event()
@@ -2567,6 +2567,7 @@ class TournamentAdminController(BaseEventAdminController):
         ).get()
         return {
             'modal': 'distribute-players',
+            'distribute_tab': tab,
             'distribution_type_options': {
                 'rating': SelectOption(
                     _('Descending rating'),
@@ -2612,11 +2613,12 @@ class TournamentAdminController(BaseEventAdminController):
     async def htmx_admin_distribute_players_modal(
         self,
         request: HTMXRequest,
+        tab: FromQuery[str] = 'tournaments',
     ) -> Template:
         web_context = TournamentAdminWebContext(request)
         return self._admin_event_tournaments_render(
             web_context,
-            self._player_distribution_modal_context(web_context),
+            self._player_distribution_modal_context(web_context, tab),
         )
 
     @staticmethod
@@ -2699,7 +2701,7 @@ class TournamentAdminController(BaseEventAdminController):
             dict[str, str | list[str]],
             Body(media_type=RequestEncodingType.URL_ENCODED),
         ],
-    ) -> Template:
+    ) -> ClientRedirect:
         web_context = TournamentAdminWebContext(request)
         event = web_context.get_admin_event()
         flat_data = WebContext.flatten_list_data(data)
@@ -2763,4 +2765,9 @@ class TournamentAdminController(BaseEventAdminController):
         Message.success(
             request, _('Players successfully distributed among the tournaments.')
         )
-        return self._admin_event_tournaments_render(web_context)
+        tab = WebContext.form_data_to_str(flat_data, 'tab') or 'tournaments'
+        return ClientRedirect(
+            redirect_to=request.app.route_reverse(
+                f'admin-event-{tab}-tab', event_uniq_id=event.uniq_id
+            )
+        )

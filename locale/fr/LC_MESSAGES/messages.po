@@ -7176,6 +7176,12 @@ msgstr "Recharger la page"
 msgid "Reminder: the tournament is played on multiple FIDE periods, you might have to update the players' ratings before pairing."
 msgstr "Rappel : le tournoi est joué sur plusieurs périodes FIDE, vous devez peut-être mettre à jour les classements des joueur·euses avant d'apparier."
 
+msgid "Reminder: you might have to update the players' information before distributing them among the tournaments."
+msgstr "Rappel : vous devez peut-être mettre à jour les informations des joueur·euses avant de les répartir dans les tournois."
+
+msgid "Reminder: you might have to update the players' information before printing the place cards."
+msgstr "Rappel : vous devez peut-être mettre à jour les informations des joueur·euses avant d'imprimer les chevalets."
+
 msgid "Reminder: you might have to update the players' ratings before pairing."
 msgstr "Rappel : vous devez peut-être mettre à jour les classements des joueur·euses avant d'apparier."
 

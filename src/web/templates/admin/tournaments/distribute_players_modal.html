@@ -9,6 +9,12 @@
             </div>
         </div>
         <div class="modal-body">
+            {% with update_players_alert_message=_(
+                'Reminder: you might have to update the players\' information '
+                'before distributing them among the tournaments.'
+            ) %}
+                {% include '/admin/players/update_players_alert.html' %}
+            {% endwith %}
             <form
                 id="modal-form"
                 hx-trigger="submit, enterKeypressFromModal"
@@ -17,6 +23,7 @@
                 hx-target="body"
                 hx-indicator="#please-wait"
             >
+                <input type="hidden" name="tab" value="{{ distribute_tab }}">
                 <h4>{{ _('Settings') }}</h4>
                 <div class="row gy-2">
                     {{ admin_macros.select_input(

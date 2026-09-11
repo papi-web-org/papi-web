@@ -148,6 +148,12 @@ class PlaceCardType(IdentifiableEntity, ABC):
         return True
 
     @property
+    def includes_player_data(self) -> bool:
+        """Whether the cards carry information taken from the players'
+        records (name, rating, club, etc.)."""
+        return False
+
+    @property
     def mirror_rotate(self) -> bool:
         return True
 
@@ -164,6 +170,10 @@ class PlayerCardType(PlaceCardType):
     @staticmethod
     def static_singular_name() -> str:
         return _('Player')
+
+    @property
+    def includes_player_data(self) -> bool:
+        return True
 
     @staticmethod
     def get_valid_option_types() -> list[type['PrintOption']]:
@@ -299,6 +309,10 @@ class PairingCardType(PlaceCardType):
     @staticmethod
     def static_singular_name() -> str:
         return _('Pairing')
+
+    @property
+    def includes_player_data(self) -> bool:
+        return True
 
     @property
     def mirror_rotate(self) -> bool:

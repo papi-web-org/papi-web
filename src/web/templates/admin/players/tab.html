@@ -130,45 +130,80 @@
                     ) }}
                 </span>
                 <div class="flex-grow-1"></div>
-                <div
-                    class="dropdown d-inline"
-                    {{ macros.tooltip_attributes(
-                        'info', _('Download the players matching the search into a file.'), 'bottom'
-                    ) }}
-                >
+                <div class="dropdown d-inline">
                     <button
                         class="btn btn-outline-primary dropdown-toggle mx-auto"
                         type="button"
                         data-bs-toggle="dropdown"
                         aria-expanded="false"
-
                     >
-                        <i class="bi-box-arrow-right pe-1"></i>
-                        {{ _('Export') }}
+                        {{ _('Actions') }}
                     </button>
-                    <ul class="dropdown-menu">
-                        {% for exporter in player_exporters %}
-                            <li
-                                class="dropdown-item text-start cursor-pointer"
-                                onclick="$('#exporter-{{ exporter.id }}-form').submit()"
-                                {% set tooltip = exporter.warning_tooltip %}
-                                {% if tooltip %}
-                                    {{ macros.tooltip_attributes('warning', tooltip, 'left') }}
-                                {% endif %}
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li class="dropdown-submenu">
+                            <span
+                                {{ macros.tooltip_attributes(
+                                    'info',
+                                    _('Download the players matching the search into a file.'),
+                                    'left'
+                                ) }}
                             >
-                                <form
-                                    id="exporter-{{ exporter.id }}-form"
-                                    action="{{ url_for(
-                                        'event-export-players',
-                                        event_uniq_id=admin_event.uniq_id,
-                                        exporter_id=exporter.id
-                                    ) }}"
-                                    hx-indicator="#please-wait"
+                                <button class="dropdown-item d-flex justify-content-between">
+                                    <span><i class="bi-box-arrow-right pe-1"></i>{{ _('Export') }}</span>
+                                    <i class="ps-3 bi-caret-right-fill"></i>
+                                </button>
+                            </span>
+                            <ul class="dropdown-menu">
+                                {% for exporter in player_exporters %}
+                                    <li
+                                        class="dropdown-item text-start cursor-pointer"
+                                        onclick="$('#exporter-{{ exporter.id }}-form').submit()"
+                                        {% set tooltip = exporter.warning_tooltip %}
+                                        {% if tooltip %}
+                                            {{ macros.tooltip_attributes('warning', tooltip, 'left') }}
+                                        {% endif %}
+                                    >
+                                        <form
+                                            id="exporter-{{ exporter.id }}-form"
+                                            action="{{ url_for(
+                                                'event-export-players',
+                                                event_uniq_id=admin_event.uniq_id,
+                                                exporter_id=exporter.id
+                                            ) }}"
+                                            hx-indicator="#please-wait"
+                                        >
+                                            {{ exporter.name }}
+                                        </form>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% if not admin_event.is_team_event %}
+                            <li>
+                                <span
+                                    {% if not client.can_distribute_players %}
+                                        {{ macros.tooltip_attributes('warning', _('You are not allowed to distribute the players.'), 'left') }}
+                                    {% elif admin_event.player_distribution_error_message %}
+                                        {{ macros.tooltip_attributes('warning', admin_event.player_distribution_error_message, 'left') }}
+                                    {% endif %}
                                 >
-                                    {{ exporter.name }}
-                                </form>
+                                    <button
+                                        class="dropdown-item text-nowrap"
+                                        {% if not admin_event.player_distribution_error_message and client.can_distribute_players %}
+                                            hx-get="{{ url_for('admin-distribute-players-modal', event_uniq_id=admin_event.uniq_id) }}"
+                                            hx-vals='{"tab": "players"}'
+                                            hx-target="body"
+                                            hx-indicator="#please-wait"
+                                        {% else %}
+                                            disabled
+                                        {% endif %}
+                                    >
+                                        <i class="bi bi-sort-numeric-down-alt pe-1"></i>
+                                        {{ _('Distribute the players among the tournaments') }}
+                                    </button>
+                                </span>
                             </li>
-                        {% endfor %}
+                        {% endif %}
                     </ul>
                 </div>
                 {% include 'filter_columns.html' %}

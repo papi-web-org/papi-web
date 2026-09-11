@@ -13,6 +13,7 @@ from common.i18n import _
 from data.access_levels.actions import AuthAction
 from data.access_levels.client import Client
 from data.event import Event
+from data.input_output import DataSourceManager
 from data.print_documents import (
     PrintDocument,
     PrintDocumentManager,
@@ -138,6 +139,7 @@ class EventDocumentsController(BaseEventAdminController):
             'players_per_tournament_id': players_per_tournament_id,
             'teams_per_tournament_id': teams_per_tournament_id,
             'allowed_tournaments': allowed_tournaments,
+            'data_sources': DataSourceManager().objects(),
         }
 
     @classmethod

@@ -916,6 +916,16 @@ class PlaceCardPrintOption(PrintOption):
         return PrintPlaceCardTypeManager().get_object(self.value)
 
     @property
+    def player_data_place_card_type_ids(self) -> list[str]:
+        from data.print_documents import PrintPlaceCardTypeManager
+
+        return [
+            place_card_type.static_id()
+            for place_card_type in PrintPlaceCardTypeManager().objects()
+            if place_card_type.includes_player_data
+        ]
+
+    @property
     def valid_option_ids_per_type_id(self) -> dict[str, list[str]]:
         from data.print_documents import PrintPlaceCardTypeManager
 
