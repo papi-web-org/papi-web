@@ -245,7 +245,7 @@ class ScheveningenPairingSystem(
 
     @property
     def pairing_buttons_template(self) -> str:
-        # Round by round, so each team can edit its line-up between them.
+        # Round by round, so each team can edit its lineup between them.
         return '/admin/pairings/swiss_pairing_buttons.html'
 
     @property
@@ -339,7 +339,7 @@ class ScheveningenEngine(TeamPairingEngine):
     """Pairs the round as the match it is: one team_board envelope over
     every board of the round, which is what earns each round its match
     points. The seating comes from the table rather than from the two
-    line-ups read straight across — board *j* keeps team A's *j*-th
+    lineups read straight across — board *j* keeps team A's *j*-th
     player, and team B moves around it from round to round."""
 
     @property

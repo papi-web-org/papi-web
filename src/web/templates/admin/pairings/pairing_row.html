@@ -13,7 +13,7 @@
     {% endif %}
 >
     {# Molter codes (A1 / B3). A seated player's code is their own team letter
-       + line-up slot, so it follows them (manual re-pairing, colour permute).
+       + lineup slot, so it follows them (manual re-pairing, colour permute).
        An empty seat (hole) falls back to the table cell's expected code, so a
        forfeit shows which player is missing. #}
     {% set _white_molter_code = wtp.team.player_round_label(wtp, admin_round) if (wtp and wtp.team) else (molter_code[0] if molter_code is defined and molter_code else none) %}

@@ -51,10 +51,14 @@ if TYPE_CHECKING:
 
 # Art. 5.3.2: a won match is worth 3 points, a drawn one 2, a lost one 1.
 # An exempt team "marque trois points de match" — the same 3 as a win.
+# Art. 5.3.2: "Un match perdu par forfait sportif est compté 0 point",
+# against the 1 a match played and lost scores — which is what the
+# absence value says.
 _J03_MATCH_POINTS: dict[int, float] = {
     Result.WIN.value: 3.0,
     Result.DRAW.value: 2.0,
     Result.LOSS.value: 1.0,
+    Result.ZERO_POINT_BYE.value: 0.0,
     Result.PAIRING_ALLOCATED_BYE.value: 3.0,
 }
 
@@ -203,6 +207,7 @@ class ChampionnatScolaireRuleSet(RuleSet):
             'mp_win',
             'mp_draw',
             'mp_loss',
+            'mp_zpb',
             'mp_pab',
             'gp_win',
             'gp_draw',
@@ -261,6 +266,7 @@ class ChampionnatScolaireRuleSet(RuleSet):
             'mp_win': _fmt(_J03_MATCH_POINTS[Result.WIN.value]),
             'mp_draw': _fmt(_J03_MATCH_POINTS[Result.DRAW.value]),
             'mp_loss': _fmt(_J03_MATCH_POINTS[Result.LOSS.value]),
+            'mp_zpb': _fmt(_J03_MATCH_POINTS[Result.ZERO_POINT_BYE.value]),
             'mp_pab': _fmt(_J03_MATCH_POINTS[Result.PAIRING_ALLOCATED_BYE.value]),
             'gp_win': _fmt(_J03_GAME_POINTS[Result.WIN.value]),
             'gp_draw': _fmt(_J03_GAME_POINTS[Result.DRAW.value]),
@@ -406,10 +412,7 @@ class ChampionnatScolaireRuleSet(RuleSet):
     ) -> 'PointAdjustment | None':
         parts = [
             adjustment
-            for adjustment in (
-                self._forfeit_loss_penalty(team, round_),
-                self._match_forfeit_mp_penalty(team, round_),
-            )
+            for adjustment in (self._forfeit_loss_penalty(team, round_),)
             if adjustment is not None
         ]
         if not parts:
@@ -477,22 +480,6 @@ class ChampionnatScolaireRuleSet(RuleSet):
                 'played, counted as -1 each.',
                 count,
             ).format(n=count),
-        )
-
-    @staticmethod
-    def _match_forfeit_mp_penalty(
-        team: 'Team', round_: int
-    ) -> 'PointAdjustment | None':
-        """Art. 5.3.2: "Un match perdu par forfait sportif est compté 0
-        point" — one match point off the 1 a lost match otherwise scores.
-        A match lost through administrative forfeits keeps its 1 point, so
-        this only fires when the team fielded nobody at all."""
-        rows = _round_breakdown(team, round_)
-        if not rows or not all(forfeited for _index, forfeited, _played in rows):
-            return None
-        return PointAdjustment(
-            mp=-1.0,
-            explanation=_('Match lost by forfeit, counted as 0 match points.'),
         )
 
     @override

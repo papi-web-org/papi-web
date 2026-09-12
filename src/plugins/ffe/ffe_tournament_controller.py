@@ -106,8 +106,8 @@ class FfeTournamentController(BaseEventAdminController):
             Message.error(
                 request,
                 _(
-                    'Tournament visibility could not be set, '
-                    'consult the FFE modal for more details.'
+                    'Tournament visibility could not be set, consult '
+                    'Menu > Data Transfer > FFE for more details.'
                 ),
             )
         else:
@@ -131,7 +131,10 @@ class FfeTournamentController(BaseEventAdminController):
         if FFEUtils.get_tournament_plugin_data(tournament).upload_failure_id:
             Message.error(
                 request,
-                _('Tournament upload failed, consult the FFE modal for more details.'),
+                _(
+                    'Tournament upload failed, consult Menu > '
+                    'Data Transfer > FFE for more details.'
+                ),
             )
         else:
             Message.success(request, _('Tournament successfully uploaded.'))

@@ -493,7 +493,7 @@
 | `reason`        | `TEXT`    |                                                              | Optional explanation                |
 |                 |           | UNIQUE(`tournament_id`, `team_id`, `round`)                  |                                     |
 
-### `team_round_lineup` table (team line-ups per round)
+### `team_round_lineup` table (team lineups per round)
 
 | Field       | Type      | Constraint                                                             | Description                                              |
 |-------------|-----------|------------------------------------------------------------------------|----------------------------------------------------------|
@@ -577,7 +577,7 @@
 | `team_colour_type`                        | `TEXT`    |                                            | Colour-allocation scheme for team matches (team mode only)                                                                                           |
 | `primary_score`                           | `TEXT`    |                                            | Primary ranking score ID for the team standings (team mode only)                                                                                     |
 | `secondary_score_for_colours`             | `INTEGER` | NOT NULL DEFAULT 1                         | Boolean: whether the secondary score is used for colour allocation                                                                                   |
-| `enforce_roster_order`                    | `INTEGER` | NOT NULL<br/>DEFAULT 0                     | Boolean: whether round line-ups must follow the team roster order                                                                                    |
+| `enforce_roster_order`                    | `INTEGER` | NOT NULL<br/>DEFAULT 0                     | Boolean: whether round lineups must follow the team roster order                                                                                    |
 | `team_sort_mode`                          | `TEXT`    | NOT NULL<br/>DEFAULT 'MANUAL'              | How teams are ordered (e.g. `MANUAL`; extensible)                                                                                                    |
 | `rule_set`                                | `TEXT`    |                                            | The applied rule-set ID (e.g. an FFE rule set), if any                                                                                               |
 | `rule_set_config`                         | `TEXT`    |                                            | The configuration of the rule set for the tournament, in JSON format                                                                                 |

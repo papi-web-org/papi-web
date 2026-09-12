@@ -538,7 +538,7 @@ class TestScheveningenTournament(TestCase):
 
     def test_a_line_up_slot_follows_the_table(self):
         """Team B's slot is not the board number — the engine is what
-        the line-up edits ask, rather than assuming the two agree."""
+        the lineup edits ask, rather than assuming the two agree."""
         tournament = self._paired_round(2)
         engine = tournament.pairing_variation.engine
         team_board = tournament.get_round_team_boards(2)[0]

@@ -18,12 +18,12 @@
         <div class="modal-body">
             {% if not rounds_data %}
                 <div class="text-muted">
-                    {{ _('This team has no rounds to show a line-up for.') }}
+                    {{ _('This team has no rounds to show a lineup for.') }}
                 </div>
             {% else %}
                 <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
                     <label class="form-label mb-0">{{ _('Round:') }}</label>
-                    {# One button group per run of rounds sharing a line-up,
+                    {# One button group per run of rounds sharing a lineup,
                        so which rounds follow which is read off the row
                        instead of being hidden in a tooltip. #}
                     {% for group in round_groups %}
@@ -49,17 +49,18 @@
                                 {% endfor %}
                             </div>
                             {# One mark for the group: its rounds share a
-                               line-up, so they are in or out of roster order
+                               lineup, so they are in or out of roster order
                                together. #}
+                            {% if warn_lineup_order %}
                             <i
                                 class="lineup-round-mark bi-recycle"
                                 {{ macros.tooltip_attributes(
                                     '',
                                     _(
-                                        'The line-up for round %(round)d is not in the same order as the team roster.',
+                                        'The lineup for round %(round)d is not in the same order as the team roster.',
                                         round=first_round
                                     ) if first_round == last_round else _(
-                                        'The line-up for rounds %(first_round)d-%(last_round)d is not in the same order as the team roster.',
+                                        'The lineup for rounds %(first_round)d-%(last_round)d is not in the same order as the team roster.',
                                         first_round=first_round,
                                         last_round=last_round
                                     ),
@@ -69,6 +70,7 @@
                                     style="display:none"
                                 {% endif %}
                             ></i>
+                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
@@ -86,15 +88,17 @@
                         {% if not editable %}
                             <div class="alert alert-info py-1 px-2 small mb-2">
                                 {{ _(
-                                    'This round has been paired, so its line-up is what stands on its boards. If you really want to edit this line-up: go to the Pairings tab, select round #%(round)d and open this modal again.',
-                                    round=round_num
+                                    'This round has been paired, so its lineup is '
+                                    'what stands on its boards. You can still edit '
+                                    'the lineup from the Pairings tab.'
                                 ) }}
                             </div>
                         {% endif %}
-                        {# Shown for any round out of roster order, whether or
-                           not the tournament asks to be warned: the round's
-                           button is marked either way, and this is what says
-                           what the mark means. #}
+                        {# The tournament's "warn on lineup out of roster
+                           order" setting covers this warning and the mark on
+                           the round's button; the roster positions on the
+                           cards are shown either way. #}
+                        {% if warn_lineup_order %}
                         <div
                             class="lineup-order-warning alert alert-warning py-1 px-2 small mb-2"
                             {% if not round_info['out_of_order'] %}style="display:none"{% endif %}
@@ -102,7 +106,7 @@
                             <i class="bi-recycle"></i>
                             <span class="flex-grow-1">
                                 {{ _(
-                                    'The line-up for round %(round)d is not in the same order as the team roster.',
+                                    'The lineup for round %(round)d is not in the same order as the team roster.',
                                     round=round_num
                                 ) }}
                             </span>
@@ -115,6 +119,7 @@
                                 </button>
                             {% endif %}
                         </div>
+                        {% endif %}
                         <form
                             class="lineup-form"
                             hx-patch="{{ url_for(
@@ -149,7 +154,7 @@
                                     >
                                     <label class="form-check-label" for="use-previous-r{{ round_num }}">
                                         {{ _(
-                                            "Use the previous round's line-up "
+                                            "Use the previous round's lineup "
                                             "(untick to set this round)"
                                         ) }}
                                     </label>
@@ -157,7 +162,7 @@
                                 <div class="lineup-previous-note text-muted small mb-2">
                                     {{ _(
                                         "This round will use round #%(round)d's "
-                                        "line-up when paired.",
+                                        "lineup when paired.",
                                         round=round_num - 1
                                     ) }}
                                 </div>
@@ -315,10 +320,10 @@
                             }
                             // The round's button states the same fact, so it
                             // follows the drag too: left alone it would go on
-                            // marking a round just put back in order.
-                            // The mark belongs to the round's group, whose
-                            // other rounds inherit this very line-up — so
-                            // editing here settles it for all of them.
+                            // marking a round just put back in order. The
+                            // mark belongs to the round's group, so it stands
+                            // as long as any round of the group is out of
+                            // order.
                             const button = document.querySelector(
                                 '.lineup-round-button[data-round="'
                                 + section.dataset.round + '"]'
@@ -333,7 +338,22 @@
                                 ? group.querySelector('.lineup-round-mark')
                                 : null;
                             if (mark) {
-                                mark.style.display = outOfOrder ? '' : 'none';
+                                const groupOutOfOrder = Array.from(
+                                    group.querySelectorAll('.lineup-round-button')
+                                ).some(function (groupButton) {
+                                    const groupSection = document.querySelector(
+                                        '.lineup-round-section[data-round="'
+                                        + groupButton.dataset.round + '"]'
+                                    );
+                                    const groupWarning = groupSection
+                                        ? groupSection.querySelector(
+                                            '.lineup-order-warning'
+                                        )
+                                        : null;
+                                    return groupWarning
+                                        && groupWarning.style.display !== 'none';
+                                });
+                                mark.style.display = groupOutOfOrder ? '' : 'none';
                             }
                         }
                         // Put the players already on boards back in roster
@@ -400,12 +420,12 @@
                             if (resetOrder) {
                                 resetOrder.addEventListener('click', function () {
                                     // On a round that takes the previous
-                                    // round's line-up, the reorder has to make
-                                    // the line-up this round's own. Left
+                                    // round's lineup, the reorder has to make
+                                    // the lineup this round's own. Left
                                     // inheriting, the save would drop what was
                                     // just reordered — and the reorder would
                                     // in any case belong to the round the
-                                    // line-up came from, reaching back over
+                                    // lineup came from, reaching back over
                                     // rounds the captain did not touch.
                                     if (usePrev && usePrev.checked) {
                                         usePrev.checked = false;
