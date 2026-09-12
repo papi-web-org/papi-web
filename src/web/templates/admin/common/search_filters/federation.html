@@ -1,0 +1,6 @@
+{{ admin_macros.select_input(
+    name='federation_filter',
+    label=_('Federation:'),
+    select_options=filter.options,
+    onchange="onFilterChange(this)",
+) }}

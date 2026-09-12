@@ -10009,6 +10009,9 @@ msgstr ""
 msgid "Use a data source to import players from their identifier."
 msgstr ""
 
+msgid "Use a tournament's criteria"
+msgstr ""
+
 msgid "Use default"
 msgstr ""
 
@@ -11191,4 +11194,3 @@ msgstr ""
 
 msgid "← Back to IT1 certificate"
 msgstr ""
-

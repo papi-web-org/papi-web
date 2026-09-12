@@ -12,6 +12,34 @@
             </h2>
         </div>
         <div class="modal-body">
+            {% if 'alert' in errors %}
+                {% with type='error', message=errors['alert'] %}
+                    {% include '/common/alert.html' %}
+                {% endwith %}
+            {% endif %}
+            {% if action in ['create', 'replace'] %}
+                {% if previous_player %}
+                    {% if warning_message %}
+                        {% with type='warning', auto_remove=true, message=warning_message %}
+                            {% include '/common/alert.html' %}
+                        {% endwith %}
+                    {% else %}
+                        {% with type='success', auto_remove=true, message=_(
+                            'Player [%(player)s] has been created.',
+                            player=previous_player.full_name
+                        )  %}
+                            {% include '/common/alert.html' %}
+                        {% endwith %}
+                    {% endif %}
+                {% endif %}
+                <h4>
+                    {{ _('Search *** SECTION TITLE') }}
+                </h4>
+                {% with usage = 'player' %}
+                    {% include '/admin/common/search_filter_form.html' %}
+                    {% include '/admin/common/player_search.html' %}
+                {% endwith %}
+            {% endif %}
             <form
                 id="modal-form"
                 hx-trigger="submit, enterKeypressFromModal"
@@ -27,34 +55,6 @@
                 hx-target="body"
                 hx-indicator="#please-wait"
             >
-                {% if 'alert' in errors %}
-                    {% with type='error', message=errors['alert'] %}
-                        {% include '/common/alert.html' %}
-                    {% endwith %}
-                {% endif %}
-                {% if action in ['create', 'replace'] %}
-                    {% if previous_player %}
-                        {% if warning_message %}
-                            {% with type='warning', auto_remove=true, message=warning_message %}
-                                {% include '/common/alert.html' %}
-                            {% endwith %}
-                        {% else %}
-                            {% with type='success', auto_remove=true, message=_(
-                                'Player [%(player)s] has been created.',
-                                player=previous_player.full_name
-                            )  %}
-                                {% include '/common/alert.html' %}
-                            {% endwith %}
-                        {% endif %}
-                    {% endif %}
-                    <h4>
-                        {{ _('Search *** SECTION TITLE') }}
-                    </h4>
-                    {% with usage = 'player' %}
-                        {% include '/admin/common/player_search.html' %}
-                    {% endwith %}
-                {% endif %}
-
                 <h4>
                     {{ _('Identity') }}
                 </h4>

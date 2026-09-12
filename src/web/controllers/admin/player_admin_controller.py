@@ -1,9 +1,11 @@
 import csv
 from collections import defaultdict, Counter
 from collections.abc import Callable
+from contextlib import suppress
 from datetime import date
 from functools import cached_property
 from itertools import islice
+import json
 from logging import Logger
 import math
 from pathlib import Path
@@ -37,11 +39,13 @@ from data.access_levels.client import Client
 from data.input_output.data_source import DataSource
 from data.input_output.managers import DataSourceManager, PlayerExporterManager
 from data.player import Player, PlayerRating, TournamentPlayer, MIN_YOB, MAX_YOB
+from data.player_categories import PlayerCategory
 from data.print_documents.documents import (
     PlayerListPrintDocument,
 )
 from data.teams.team import RosterFullError
 from data.tournament import Tournament
+from data.criteria.managers import SearchFilterManager
 from database.sqlite.event.event_database import EventDatabase
 from database.sqlite.event.event_store import (
     StoredPlayer,
@@ -862,6 +866,7 @@ class PlayerAdminController(BaseEventAdminController):
         plugin_manager.hook_for_event(event, 'insert_player_form_fields_template')(
             templates_by_section=plugin_templates_by_section
         )
+        search_filter_manager = SearchFilterManager(web_context.get_admin_event())
         template_context |= {
             'gender_options': cls._get_gender_options(),
             'tournament_ratings_strings': {
@@ -906,6 +911,13 @@ class PlayerAdminController(BaseEventAdminController):
             'team_options': team_options,
             'team_locked': team_locked,
             'is_team_event': event.is_team_event,
+            'search_filters': search_filter_manager.get_filters(),
+            'filters_by_tournament': json.dumps(
+                search_filter_manager.get_filters_by_tournament()
+            ),
+            'enabled_filters_by_datasource': json.dumps(
+                search_filter_manager.get_filters_by_datasource()
+            ),
             'selected_data_source': SessionPlayersActiveDataSource(request).get(),
             'plugin_templates_by_section': plugin_templates_by_section,
             'previous_player': (
@@ -2702,6 +2714,7 @@ class PlayerAdminController(BaseEventAdminController):
         search: FromQuery[str],
         page: FromPath[int] = 0,
         usage: FromQuery[str] = 'player',
+        filters: FromQuery[str] = '{}',
     ) -> Template:
         web_context = PlayerAdminWebContext(
             request, player_id, data_source_id=data_source_id
@@ -2717,6 +2730,7 @@ class PlayerAdminController(BaseEventAdminController):
                     web_context.get_admin_event().federation,
                     page,
                     DataSource.SEARCH_LIMIT,
+                    self._convert_filters(web_context.get_admin_event(), filters),
                 )
                 for stored_player in stored_players:
                     stored_player.id = 0
@@ -2737,6 +2751,63 @@ class PlayerAdminController(BaseEventAdminController):
                 'connection_error': connection_error,
             },
         )
+
+    @staticmethod
+    def _convert_filters(event: Event, json_filters: str) -> dict:
+        def _get_year_for(category: PlayerCategory) -> int:
+            return category.representative_year(
+                event, event.start_date, event.stop_date
+            )
+
+        try:
+            filters = json.loads(json_filters)
+        except json.decoder.JSONDecodeError:
+            return {}
+        if 'category_filter' in filters and filters['category_filter']:
+            player_categories = event.player_categories
+            junior_categories: list[Any] = event.junior_categories
+            senior_categories: list[Any] = event.senior_categories
+            categories_intervals = []
+            category_filters = []
+            for category_id in filters['category_filter']:
+                with suppress(ValueError):
+                    category = PlayerCategory.from_id(category_id)
+                    if category in junior_categories or category in senior_categories:
+                        category_filters.append(category)
+            category_filters.sort()
+
+            while len(category_filters):
+                # merges adjacent categories and finds the birth year interval that matches each one
+                start = category_filters.pop(0)
+                stop = start
+                while len(category_filters) and player_categories.index(
+                    stop
+                ) + 1 == player_categories.index(category_filters[0]):
+                    stop = category_filters.pop(0)
+
+                max_year: int | None
+                if start in junior_categories:
+                    if (index := junior_categories.index(start)) == 0:
+                        max_year = None
+                    else:
+                        max_year = _get_year_for(junior_categories[index - 1]) - 1
+                else:
+                    max_year = _get_year_for(start)
+
+                min_year: int | None
+                if stop in junior_categories:
+                    min_year = _get_year_for(stop)
+                elif (index := senior_categories.index(stop)) == len(
+                    senior_categories
+                ) - 1:
+                    min_year = None
+                else:
+                    min_year = _get_year_for(senior_categories[index + 1]) + 1
+
+                categories_intervals.append((min_year, max_year))
+
+            filters['year_of_birth_filter'] = categories_intervals
+        return filters
 
     @staticmethod
     def _players_export_sort_key(player: Player) -> Any:

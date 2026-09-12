@@ -1,32 +1,41 @@
 {% import '/common/macros.j2' as macros with context %}
 {% import '/admin/common/macros.j2' as admin_macros %}
 
-<img
-    class="player-federation-flag pe-1"
-    src="{{ macros.federation_flag_url(player.federation) }}"
-/>
-{% if not no_identifier %}
-    {% if player.plugin_data.ffe.ffe_licence_number %}
-        {{ player.plugin_data.ffe.ffe_licence_number }}
-    {% else %}
-        -
+<div
+    {% if player.plugin_data.ffe and player.plugin_data.ffe.ffe_licence == "N" %}
+        class="license-expired"
     {% endif %}
-{% endif %}
-<span class="fw-bold">
-    {{ player.full_name }}
-</span>
-{% if player.year_of_birth %}
-    ({{ player.year_of_birth }}, {{ player.category.name }})
-{% endif %}
--
-{% if player.has_real_rating %}
-    {{ player.first_real_rating_str }}
-{% else %}
-    <i>{{ _('Unrated *** SINGULAR FOR UNRATED PLAYER') }}</i>
-{% endif %}
-{% if player.plugin_data.ffe.league %}
-    - {{ player.plugin_data.ffe.league }}
-{% endif %}
-{% if player.club.name %}
-    - {{ player.club }}
-{% endif %}
+>
+    <img
+        class="player-federation-flag pe-1"
+        src="{{ macros.federation_flag_url(player.federation) }}"
+    />
+    {% if not no_identifier %}
+        {% if player.plugin_data.ffe.ffe_licence_number %}
+            {{ player.plugin_data.ffe.ffe_licence_number }}
+        {% else %}
+            -
+        {% endif %}
+    {% endif %}
+    <span class="fw-bold">
+        {{ player.full_name }}
+    </span>
+    {% if player.year_of_birth %}
+        ({{ player.year_of_birth }}, {{ player.category.name }})
+    {% endif %}
+    {% if player.plugin_data.ffe.ffe_licence %}
+        - {{player.plugin_data.ffe.ffe_licence}}
+    {% endif %}
+    -
+    {% if player.has_real_rating %}
+        {{ player.first_real_rating_str }}
+    {% else %}
+        <i>{{ _('Unrated *** SINGULAR FOR UNRATED PLAYER') }}</i>
+    {% endif %}
+    {% if player.plugin_data.ffe.league %}
+        - {{ player.plugin_data.ffe.league }}
+    {% endif %}
+    {% if player.club.name %}
+        - {{ player.club }}
+    {% endif %}
+</div>

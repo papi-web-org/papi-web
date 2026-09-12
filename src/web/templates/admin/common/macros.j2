@@ -564,6 +564,7 @@ with_indicator: display a loading indicator, optional
     with_indicator=false,
     select_options={},
     onchange='',
+    onkeyup='',
     multiple_select=false,
     tooltip_select=false,
     select_search_placeholder='',
@@ -815,6 +816,9 @@ with_indicator: display a loading indicator, optional
                         aria-describedby="{{ id }}-help {{ id }}-error"
                         placeholder="{{ placeholder }}"
                         value="{{ value }}"
+                        {% if onkeyup %}
+                            onkeyup="{{ onkeyup }}"
+                        {% endif %}
                         {% if disabled or (default_checkbox and data[default_checkbox_name] == 'on') %}disabled{% endif %}
                         {% if hx_get %}
                             hx-get="{{ hx_get }}"
@@ -986,6 +990,7 @@ with_indicator: display a loading indicator, optional
     with_indicator=false,
     autocomplete='',
     prevent_wrapping=false,
+    onkeyup='',
     hx_get='',
     hx_post='',
     hx_trigger='',
@@ -1018,6 +1023,7 @@ with_indicator: display a loading indicator, optional
         with_indicator=with_indicator,
         autocomplete=autocomplete,
         prevent_wrapping=prevent_wrapping,
+        onkeyup=onkeyup,
         hx_get=hx_get,
         hx_post=hx_post,
         hx_trigger=hx_trigger,

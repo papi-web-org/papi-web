@@ -29,6 +29,12 @@ msgstr "A - Competition"
 msgid "A non-empty string is expected"
 msgstr ""
 
+msgid "A only"
+msgstr ""
+
+msgid "A or B"
+msgstr ""
+
 msgid "A positive integer is expected."
 msgstr ""
 

@@ -1,0 +1,43 @@
+<div>
+    <div id="search-criteria-collapse" class="collapse filter-collapsable-container my-2 p-2">
+        <div>
+            <form id="filter-form" class="row gy-2 gx-3">
+                {% for search_filter in search_filters %}
+                    {% with filter = search_filters[search_filter] %}
+                        <div class="col-12 col-md-6">
+                            {% include filter.template_name %}
+                        </div>
+                    {% endwith %}
+                {% endfor %}
+            </form>
+        </div>
+        <div class="row my-2">
+            <div class="col-12 text-end">
+                {% set criteria_tournament_ids = tournament_options | reject('equalto', '') | list %}
+                {% if criteria_tournament_ids %}
+                    <div class="dropdown btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{_("Use a tournament's criteria")}}<span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" style="z-index:1010">
+                            {% for id in criteria_tournament_ids %}
+                                <button type="button" class="dropdown-item" onclick="loadFiltersFromTournament({{id}})">
+                                    {{tournament_options[id]}}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="clearFilters()">{{_('Clear all')}}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.filter-collapsable-container {
+    border: 3px solid gray;
+    border-radius: 15px;
+    background: #444;
+}
+</style>

@@ -10011,6 +10011,9 @@ msgstr "Utiliser le Fore Buchholz"
 msgid "Use a data source to import players from their identifier."
 msgstr "Utiliser une source de données pour importer des joueur·euses à partir de leur identifiant."
 
+msgid "Use a tournament's criteria"
+msgstr "Utiliser les critères d'un tournoi"
+
 msgid "Use default"
 msgstr "Par défaut"
 
@@ -11193,4 +11196,3 @@ msgstr "—"
 
 msgid "← Back to IT1 certificate"
 msgstr "← Retour au certificat IT1"
-

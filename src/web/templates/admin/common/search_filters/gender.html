@@ -1,0 +1,6 @@
+{{ admin_macros.select_input(
+    name='gender_filter',
+    label=_('Gender:'),
+    select_options=filter.options,
+    onchange="onFilterChange(this)",
+) }}

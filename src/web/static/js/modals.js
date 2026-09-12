@@ -82,6 +82,7 @@ function handleModalOpened(static) {
     if (!scrollToFirstError() && modalForm) {
         let fields = modalForm.getElementsByClassName("form-control");
         if (fields.length > 0) {
+            // TODO: exclude filters from this
             fields[0].select(); // If the modal contains a form, set focus on the first field
         }
     }

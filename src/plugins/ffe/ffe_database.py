@@ -121,6 +121,7 @@ class FfeDatabase(LocalSourcePlayerDatabase):
         federation: str,
         page: int = 0,
         limit: int | None = None,
+        filters: dict | None = None,
     ) -> list[StoredPlayer]:
         tokens: list[str] = [
             unicode_normalize(token) for token in re.split(r'\s+', string)
@@ -131,8 +132,9 @@ class FfeDatabase(LocalSourcePlayerDatabase):
             ('ffe_licence_number', '', ''),
         )
         int_fields: tuple[str, ...] = ('fide_id',)
+        filter_conditions, filter_params = self._process_filters(filters or {})
         token_conditions: dict[str, str] = {}
-        params: list[Any] = []
+        params: list[Any] = list(filter_params)
         for token in tokens:
             expressions = [f'({field[0]} LIKE ?)' for field in str_fields]
             params += [f'{field[1]}{token}{field[2]}' for field in str_fields]
@@ -144,7 +146,8 @@ class FfeDatabase(LocalSourcePlayerDatabase):
                 ] * len(int_fields)
             token_conditions[token] = ' OR '.join(expressions)
         conditions: str = ' AND '.join(
-            map(lambda condition: f'({condition})', token_conditions.values())
+            filter_conditions
+            + list(map(lambda condition: f'({condition})', token_conditions.values()))
         )
 
         # We build one CASE block that sorts best → worst
@@ -252,6 +255,49 @@ class FfeDatabase(LocalSourcePlayerDatabase):
             tuple(params),
         )
         return [self.get_stored_player_from_row(row) for row in self.fetchall()]
+
+    @classmethod
+    def _process_filters(cls, filters: dict) -> tuple[list[str], list[Any]]:
+        conditions: list[str] = []
+        params: list[Any] = []
+        if 'ffe_licence_filter' in filters:
+            if filters['ffe_licence_filter'] == 'B':
+                conditions.append("(ffe_licence IN ('B', 'A') OR federation !='FRA')")
+            elif filters['ffe_licence_filter'] == 'A':
+                conditions.append("(ffe_licence='A' OR federation !='FRA')")
+        if 'federation_filter' in filters:
+            conditions.append('federation = ?')
+            params.append(filters['federation_filter'])
+        if 'gender_filter' in filters:
+            conditions.append('gender = ?')
+            params.append(filters['gender_filter'])
+        if 'ffe_league_filter' in filters:
+            conditions.append('league = ?')
+            params.append(filters['ffe_league_filter'])
+        if 'club_filter' in filters:
+            club: str = filters['club_filter']
+            conditions.append('LOWER(club) LIKE LOWER(?)')
+            params.append(f'%{club}%')
+        if filters.get('year_of_birth_filter', None):
+            age_conditions: list[str] = []
+            for min_year, max_year in filters['year_of_birth_filter']:
+                match min_year, max_year:
+                    case None, None:
+                        continue
+                    case None, _:
+                        age_conditions.append("strftime('%Y', date_of_birth) <= ?")
+                        params.append(str(max_year))
+                    case _, None:
+                        age_conditions.append("strftime('%Y', date_of_birth) >= ?")
+                        params.append(str(min_year))
+                    case _, _:
+                        age_conditions.append(
+                            "strftime('%Y', date_of_birth) BETWEEN ? AND ?"
+                        )
+                        params += [str(min_year), str(max_year)]
+            if age_conditions:
+                conditions.append(f'({" OR ".join(age_conditions)})')
+        return conditions, params
 
     # ---------------------------------------------------------------------------------
     # Legacy

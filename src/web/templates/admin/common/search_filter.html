@@ -1,0 +1,38 @@
+<style>
+#search-criteria-collapse-toggle {
+    cursor: pointer;
+    transition: background-color .15s ease-in-out, color .15s ease-in-out;
+}
+#search-criteria-collapse-toggle:hover {
+    background-color: var(--bs-secondary-bg);
+}
+#search-criteria-collapse-toggle[aria-expanded="true"] {
+    color: var(--bs-primary);
+}
+#search-criteria-collapse-toggle .funnel-filled,
+#search-criteria-collapse-toggle[aria-expanded="true"] .funnel-outline {
+    display: none;
+}
+#search-criteria-collapse-toggle[aria-expanded="true"] .funnel-filled {
+    display: inline-block;
+}
+</style>
+<script>
+{% include 'js/searchFilter.js' %}
+</script>
+<button
+    type="button"
+    id="search-criteria-collapse-toggle"
+    class="input-group-text with-input-group-indicator px-2 pt-2 position-relative"
+    data-bs-toggle="collapse"
+    data-bs-target="#search-criteria-collapse"
+    aria-controls="search-criteria-collapse"
+    aria-expanded="false"
+>
+    <i class="bi bi-funnel funnel-outline"></i>
+    <i class="bi bi-funnel-fill funnel-filled"></i>
+    <span
+        id="filter-count"
+        class="badge rounded-pill text-bg-danger position-absolute top-0 start-100 translate-middle d-none"
+    ></span>
+</button>

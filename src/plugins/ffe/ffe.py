@@ -727,6 +727,54 @@ class FfePlugin(Plugin):
             datasheet_columns, FfeLeagueDatasheetColumn(), federation
         )
 
+    @hookimpl
+    def insert_search_filter_types(self, filters):
+        licences = {
+            '': '-',
+            'B': _('A or B'),
+            'A': _('A only'),
+        }
+        leagues = {'': '-'} | {
+            code: f'{code} - {name}' for code, name in FFE_LEAGUES.items()
+        }
+
+        filters['licence'] = {
+            'template_name': '/ffe_search_filter_licence.html',
+            'options': licences,
+        }
+        filters['league'] = {
+            'template_name': '/ffe_search_filter_league.html',
+            'options': leagues,
+        }
+
+    @hookimpl
+    def insert_search_filter_for_datasource(self, datasource_mapping):
+        datasource_mapping['ffe-online'] = [
+            'federation_filter',
+            'gender_filter',
+            'category_filter',
+            'club_filter',
+            'ffe_licence_filter',
+            'ffe_league_filter',
+        ]
+        datasource_mapping['ffe-local'] = [
+            'federation_filter',
+            'gender_filter',
+            'category_filter',
+            'club_filter',
+            'ffe_licence_filter',
+            'ffe_league_filter',
+        ]
+
+    @hookimpl
+    def map_filter_to_tournament_criteria(self, filter_list: list, criterion: Any):
+        if isinstance(criterion, FfeLicenceTournamentCriterion):
+            if criterion.licence in (PlayerFFELicence.B, PlayerFFELicence.A):
+                filter_list.append(('ffe_licence_filter', criterion.value))
+
+        elif isinstance(criterion, FfeLeagueTournamentCriterion):
+            filter_list.append(('ffe_league_filter', criterion.value))
+
     # ---------------------------------------------------------------------------------
     # Events
     # ---------------------------------------------------------------------------------

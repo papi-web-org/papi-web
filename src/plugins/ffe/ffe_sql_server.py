@@ -172,16 +172,22 @@ class FFESqlServer(SqlServer):
         return f"'{fide_id}'"
 
     async def search_player(
-        self, string: str, federation: str, page: int = 0, limit: int | None = None
+        self,
+        string: str,
+        federation: str,
+        page: int = 0,
+        limit: int | None = None,
+        filters: dict | None = None,
     ) -> list[StoredPlayer]:
         """Searches the SQL server for the given tokens, raises SharlyChessException on error."""
         # NOTE(Amaras): Quicken search if the string looks like a complete FFE
         # licence number, so that it skips a more complex request
         string = string.upper().strip()
-        if PlayerFFELicence.validate(string):
-            return await self.get_stored_players_by_licence_numbers([string])
-        if fide_id := self.string_matches_fide_id(string):
-            return await self.get_players_by_fide_id([fide_id])
+        if not filters:
+            if PlayerFFELicence.validate(string):
+                return await self.get_stored_players_by_licence_numbers([string])
+            if fide_id := self.string_matches_fide_id(string):
+                return await self.get_players_by_fide_id([fide_id])
         tokens: list[str] = [
             unicode_normalize(token) for token in re.split(r'\s+', string)
         ]
@@ -190,10 +196,12 @@ class FFESqlServer(SqlServer):
             ('joueur.Prenom', '%', '%'),
             ('joueur.NrFFE', '', ''),
         )
+        filter_conditions, filter_params = self._process_filters(filters or {})
         conditions: list[str] = [
             self.RATING_TYPE_CONDITION,
+            *filter_conditions,
         ]
-        params: list[Any] = []
+        params: list[Any] = list(filter_params)
         for token in tokens:
             token_expressions: list[str] = [
                 f'(UPPER({field[0]}) LIKE %s)' for field in str_fields
@@ -393,3 +401,46 @@ class FFESqlServer(SqlServer):
             f'joueur.FideCode IN ({", ".join(["%s"] * 2 * len(player_fide_ids))})',
             params,
         )
+
+    @staticmethod
+    def _process_filters(filters: dict) -> tuple[list[str], list[Any]]:
+        conditions: list[str] = []
+        params: list[Any] = []
+        if 'ffe_licence_filter' in filters:
+            if filters['ffe_licence_filter'] == 'B':
+                conditions.append(
+                    "(joueur.AffType IN ('B', 'A') OR joueur.Federation !='fra')"
+                )
+            elif filters['ffe_licence_filter'] == 'A':
+                conditions.append("(joueur.AffType='A' OR joueur.Federation !='fra')")
+        if 'federation_filter' in filters:
+            conditions.append('joueur.Federation = %s')
+            params.append(filters['federation_filter'])
+        if 'gender_filter' in filters:
+            conditions.append('joueur.Sexe = %s')
+            params.append(filters['gender_filter'])
+        if 'ffe_league_filter' in filters:
+            conditions.append('club.Ligue = %s')
+            params.append(filters['ffe_league_filter'])
+        if 'club_filter' in filters:
+            club: str = filters['club_filter']
+            conditions.append('LOWER(club.Nom) LIKE LOWER(%s)')
+            params.append(f'%{club}%')
+        if filters.get('year_of_birth_filter', None):
+            age_conditions = []
+            for min_year, max_year in filters['year_of_birth_filter']:
+                match min_year, max_year:
+                    case None, None:
+                        continue
+                    case None, _:
+                        age_conditions.append('YEAR(joueur.NeLe) <= %s')
+                        params.append(max_year)
+                    case _, None:
+                        age_conditions.append('YEAR(joueur.NeLe) >= %s')
+                        params.append(min_year)
+                    case _, _:
+                        age_conditions.append('YEAR(joueur.NeLe) BETWEEN %s AND %s')
+                        params += [min_year, max_year]
+            if age_conditions:
+                conditions.append(f'({" OR ".join(age_conditions)})')
+        return conditions, params

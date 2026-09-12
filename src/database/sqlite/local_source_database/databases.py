@@ -616,6 +616,7 @@ class LocalSourcePlayerDatabase(GitHubLocalSourceDatabase):
         federation: str,
         page: int = 0,
         limit: int | None = None,
+        filters: dict | None = None,
     ) -> list[StoredPlayer]:
         """Search a player in the database.
         Returns maximum *limit* results (no limit if *limit* is None)."""

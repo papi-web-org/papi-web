@@ -1,0 +1,8 @@
+{{ admin_macros.select_input(
+    name="category_filter",
+    label=_('Age categories') + " :",
+    multiple_select=true,
+    select_options=filter.options,
+    onchange="delayFilterChange(this)",
+    placeholder="-",
+) }}
