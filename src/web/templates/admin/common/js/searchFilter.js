@@ -3,6 +3,7 @@ var filters = {};
 var filterRefreshTimer;
 var ENABLED_FILTERS_BY_DATASOURCE = JSON.parse('{{enabled_filters_by_datasource|safe}}');
 var FILTERS_BY_TOURNAMENT = JSON.parse('{{filters_by_tournament|safe}}');
+var enabledFilters;
 
 
 function filterInit() {
@@ -14,11 +15,12 @@ function filterInit() {
         filters[filterName] = storedFilters[filterName];
         $(`#filter-form [name=${filterName}]`).val(filters[filterName]).trigger("change");
     }
-    updateFilterCount();
 
     let dataSource = $("#data-source-select").val();
     if (!Object.keys(ENABLED_FILTERS_BY_DATASOURCE).includes(dataSource)) {return;}
-    let enabledFilters = ENABLED_FILTERS_BY_DATASOURCE[dataSource];
+    enabledFilters = ENABLED_FILTERS_BY_DATASOURCE[dataSource];
+    updateFilterCount();
+
     $("#filter-form select, #filter-form input[type='text']").closest("div[id*=filter-wrapper]").parent().hide();
 
     for (let filter of enabledFilters) {
@@ -45,9 +47,9 @@ function onFilterChange(elem) { // save filters into browser storage and refresh
 
 function updateFilterCount() { // update the badge
 
-    let filterCount = Object.keys(filters).reduce(function (c, x) {
-        let filterElem = $(`#filter-form [name='${x}']`);
-        let isFilterActive = Boolean(filterElem.val().length) * filterElem.closest("div[id*=filter-wrapper]").is(":visible");
+    let filterCount = Object.keys(filters).reduce(function (c, filterName) {
+        let filterElem = $(`#filter-form [name='${filterName}']`);
+        let isFilterActive = enabledFilters.includes(filterName) && Boolean(filterElem.val().length);
         return c + isFilterActive;
     }, 0);
 
