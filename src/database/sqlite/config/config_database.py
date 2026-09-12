@@ -99,6 +99,14 @@ class ConfigDatabase(MigrationDatabase):
             last_notified_version=row['last_notified_version'],
             locale=row['locale'],
             date_formatter=row['date_formatter'],
+            remote_install_id=row['remote_install_id'],
+            remote_install_private_key=row['remote_install_private_key'],
+            remote_install_public_key=row['remote_install_public_key'],
+            remote_access_token=row['remote_access_token'],
+            remote_access_refresh_token=row['remote_access_refresh_token'],
+            remote_access_token_expires_at=row['remote_access_token_expires_at'],
+            remote_access=self.load_bool_from_database_field(row['remote_access']),
+            remote_uniq_id=row['remote_uniq_id'],
         )
 
     def _get_stored_config(self) -> StoredConfig:
@@ -135,6 +143,45 @@ class ConfigDatabase(MigrationDatabase):
         field_sets = (f'`{f}` = ?' for f in fields.keys())
         self.execute(
             f'UPDATE `info` SET {", ".join(field_sets)}', tuple(fields.values())
+        )
+        return self._get_stored_config()
+
+    def update_remote_install(
+        self,
+        private_key: str | None,
+        public_key: str | None,
+        install_id: str | None,
+    ) -> StoredConfig:
+        """Records what this installation is known by to the remote access relay."""
+        self.execute(
+            'UPDATE `info` SET `remote_install_private_key` = ?,'
+            ' `remote_install_public_key` = ?, `remote_install_id` = ?',
+            (private_key, public_key, install_id),
+        )
+        return self._get_stored_config()
+
+    def update_remote_access(
+        self, remote_access: bool, remote_uniq_id: str | None
+    ) -> StoredConfig:
+        """Records whether this server should be reachable, and under what
+        identity."""
+        self.execute(
+            'UPDATE `info` SET `remote_access` = ?, `remote_uniq_id` = ?',
+            (remote_access, remote_uniq_id),
+        )
+        return self._get_stored_config()
+
+    def update_remote_access_tokens(
+        self,
+        access_token: str | None,
+        refresh_token: str | None,
+        expires_at: float | None,
+    ) -> StoredConfig:
+        """Records the account remote access is opened under."""
+        self.execute(
+            'UPDATE `info` SET `remote_access_token` = ?,'
+            ' `remote_access_refresh_token` = ?, `remote_access_token_expires_at` = ?',
+            (access_token, refresh_token, expires_at),
         )
         return self._get_stored_config()
 

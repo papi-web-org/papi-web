@@ -25,6 +25,12 @@ if TYPE_CHECKING:
     from data.event import Event
 
 
+#: Applied when a password is set or changed.  Accounts that already have a
+#: shorter one keep it: a password good enough for a venue's own network is not
+#: worth locking an arbiter out of a running event over.
+MINIMUM_PASSWORD_LENGTH = 8
+
+
 @dataclass
 class Role:
     stored_role: StoredRole

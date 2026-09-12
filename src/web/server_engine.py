@@ -15,6 +15,7 @@ import uvicorn
 from litestar import Litestar
 from litestar.config.compression import CompressionConfig
 from litestar.exceptions import (
+    MethodNotAllowedException,
     PermissionDeniedException,
     NotFoundException,
     ClientException,
@@ -34,6 +35,11 @@ from data.input_output import DataSourceManager
 from web.channels import channels_plugin
 from web.garbage_collection import RequestGarbageCollectionMiddleware
 from web.performance import PerformanceMiddleware
+from web.tunnel import request_is_tunnelled
+from web.remote_access_manager import (
+    resume_session_in_background,
+    stop_all_sessions,
+)
 from web.settings import (
     route_handlers,
     template_config,
@@ -191,7 +197,12 @@ class ServerEngine:
             else:
                 return
             http = cast(HTTPScope, scope)
-            logger.error(
+            # Anything reachable from the internet is found within minutes and
+            # probed continuously for files it has never had. Said once per
+            # request at the level real faults are reported, that noise buries
+            # them. From the venue network the same request is worth seeing.
+            log = logger.debug if request_is_tunnelled(scope) else logger.error
+            log(
                 '%s: %s %s\n%s',
                 prefix,
                 http.get('method', '?'),
@@ -202,6 +213,10 @@ class ServerEngine:
         app: Litestar = Litestar(
             debug=self.debug,
             request_class=HTMXRequest,
+            # Said on every response as well as in robots.txt, because a
+            # crawler that arrives at a page by following a link elsewhere has
+            # no reason to have read the file first.
+            response_headers={'X-Robots-Tag': 'noindex, nofollow'},
             route_handlers=route_handlers,
             exception_handlers=exception_handlers,  # type: ignore
             template_config=template_config,
@@ -219,6 +234,7 @@ class ServerEngine:
                     ValidationException,
                     PermissionDeniedException,
                     NotFoundException,
+                    MethodNotAllowedException,
                 },
             ),  # type: ignore
             after_exception=[log_http_exception],
@@ -258,7 +274,55 @@ class ServerEngine:
                 for sig in HANDLED_SIGNALS:
                     signal.signal(sig, handle_exit)
 
-        await server._serve()
+        sockets: list[socket.socket] = [
+            self.__bind_socket(sc_config.web_host, sc_config.web_port)
+        ]
+        tunnel_socket: socket.socket | None = self.__bind_tunnel_socket()
+        if tunnel_socket is not None:
+            sockets.append(tunnel_socket)
+
+        # Only once the listener the tunnel client connects to is bound, since
+        # resuming an event raises a tunnel that dials straight back into it.
+        resume_session_in_background()
+
+        try:
+            await server._serve(sockets=sockets)
+        finally:
+            # Giving the leases up is what lets another machine pick these
+            # events up without waiting for them to lapse.
+            stop_all_sessions()
+
+    @staticmethod
+    def __bind_tunnel_socket() -> socket.socket | None:
+        """Bind the loopback listener the tunnel client connects to.
+
+        The port is the one thing that tells a request arriving from the
+        internet apart from the arbiter's own browser, so it is recorded as the
+        listener is bound rather than chosen in advance: between finding a port
+        free and taking it, another program can take it first.
+
+        Remote access is the only thing lost if no port can be had, so the
+        server goes on serving the local network either way.
+        """
+        sc_config = SharlyChessConfig()
+        for candidate in sc_config.web_tunnel_ports or [0]:
+            try:
+                sock = ServerEngine.__bind_socket(sc_config.web_tunnel_host, candidate)
+            except OSError as error:
+                logger.debug(f'Tunnel port {candidate} unavailable: {error}')
+                continue
+            sc_config.web_tunnel_port = sock.getsockname()[1]
+            logger.info(f'Tunnel port: {sc_config.web_tunnel_port}')
+            return sock
+        logger.warning('No tunnel port could be bound, remote access is unavailable.')
+        return None
+
+    @staticmethod
+    def __bind_socket(host: str, port: int) -> socket.socket:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind((host, port))
+        return sock
 
     @staticmethod
     def __port_in_use(port: int) -> bool:

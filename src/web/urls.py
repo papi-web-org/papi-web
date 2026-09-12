@@ -3,6 +3,8 @@ from urllib.parse import urlencode
 
 from litestar.plugins.htmx import HTMXRequest
 
+from web.tunnel import request_is_tunnelled
+
 
 def build_get_url(
     base_url: str,
@@ -30,8 +32,13 @@ def build_internal_get_url(
 
 
 def get_base_url(request: HTMXRequest) -> str:
+    scheme = request.url.scheme
+    if request_is_tunnelled(request.scope):
+        # The tunnel terminates TLS and reaches the server over loopback, so
+        # the scheme on the connection is not the one the caller used.
+        scheme = request.headers.get('x-forwarded-proto') or scheme
     port = '' if request.url.port in (80, 443, None) else f':{request.url.port}'
-    return f'{request.url.scheme}://{request.url.hostname}{port}'
+    return f'{scheme}://{request.url.hostname}{port}'
 
 
 def index_url(request: HTMXRequest) -> str:

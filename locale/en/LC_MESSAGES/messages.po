@@ -4306,6 +4306,9 @@ msgstr ""
 msgid "Invalid URL [{background_image}]."
 msgstr ""
 
+msgid "Invalid account or password."
+msgstr ""
+
 msgid "Invalid account."
 msgstr ""
 
@@ -8296,6 +8299,9 @@ msgstr ""
 msgid "Suriname"
 msgstr ""
 
+msgid "Surname, or first name and surname"
+msgstr ""
+
 msgid "Sweden"
 msgstr ""
 
@@ -8870,6 +8876,10 @@ msgid "The pairing numbers of the tournament in ascending order."
 msgstr ""
 
 msgid "The pairing numbers of the tournament in descending order."
+msgstr ""
+
+#, python-brace-format
+msgid "The password must be at least {length} characters long."
 msgstr ""
 
 msgid "The percentage of a player's own current Keizer value awarded for an excused absence or a requested bye (0 = nothing, 100 = the full value)."
@@ -9564,6 +9574,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "Too many byes for player [{player_name}]."
+msgstr ""
+
+#, python-brace-format
+msgid "Too many failed attempts, please try again in {minutes} minutes."
 msgstr ""
 
 msgid "Too much information to display on a single projector?"
@@ -10522,6 +10536,9 @@ msgid "You must create a tournament before creating a prize bracket."
 msgstr ""
 
 msgid "You must create a tournament before creating these screens."
+msgstr ""
+
+msgid "Your name as the arbiter of the event entered it. Accents and capitals do not matter."
 msgstr ""
 
 msgid "Your text here"

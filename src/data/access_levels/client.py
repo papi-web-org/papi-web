@@ -17,6 +17,7 @@ from data.player import Player
 from data.tournament import Tournament
 from utils.enum import Result
 from web.session import SessionUserAccountId, SessionUserAccountPasswordHash
+from web.tunnel import request_is_tunnelled
 
 if TYPE_CHECKING:
     from data.event import Event
@@ -41,10 +42,31 @@ class Client:
             else ''
         )
         self.event = event
+        self.remote = request_is_tunnelled(request.scope)
         self.account = self._get_account()
 
+    @cached_property
+    def source_host(self) -> str:
+        """The address the request originated from.  Tunnelled requests all
+        reach the server from the tunnel client running on this machine, so the
+        caller is named by the forwarding header instead; only the tunnel client
+        can reach the listener that carries them.
+
+        The *last* entry is the one to read, not the first.  A forwarding header
+        is appended to, so anything before the final entry was written by
+        somebody upstream of the relay — which, at the public end of a tunnel,
+        means whoever is calling.  Reading the first entry would let a caller
+        name themselves differently on every attempt and so never be counted."""
+        if self.remote and self.request is not None:
+            forwarded_for = self.request.headers.get('x-forwarded-for')
+            if forwarded_for:
+                relay_saw = forwarded_for.rsplit(',', 1)[-1].strip()
+                if relay_saw:
+                    return relay_saw
+        return self.host
+
     def _get_account(self) -> Account:
-        if self.host in [LOCALHOST_IP, LOCALHOST_NAME]:
+        if not self.remote and self.host in [LOCALHOST_IP, LOCALHOST_NAME]:
             if self.event:
                 return self.event.administrator_account
             return Account.predefined_administrator_account()
@@ -77,6 +99,7 @@ class Client:
         client.request = None
         client.host = LOCALHOST_IP
         client.event = event
+        client.remote = False
         client.account = event.administrator_account
         return client
 

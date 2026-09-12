@@ -2,6 +2,7 @@ from typing import Annotated
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHash
+from text_unidecode import unidecode
 from litestar import post, get
 from litestar.enums import RequestEncodingType
 from litestar.params import Body, FromPath, FromQuery
@@ -17,6 +18,7 @@ from web.controllers.admin.base_admin_controller import AdminWebContext
 from web.controllers.admin.base_event_admin_controller import BaseEventAdminWebContext
 from web.controllers.base_controller import WebContext, BaseController
 from web.guards import EventGuard
+from web.login_throttle import LoginThrottle, login_throttle_keys
 from web.messages import Message
 from web.session import SessionUserAccountId, SessionUserAccountPasswordHash
 from web.urls import admin_event_url
@@ -36,6 +38,40 @@ class ProfileWebContext(BaseEventAdminWebContext):
 
 class ProfileController(BaseController):
     guards = [EventGuard()]
+
+    @staticmethod
+    def _comparable(value: str) -> str:
+        """A name reduced to what someone typing it on a phone can be expected
+        to get right: no accents, no case, no doubled spaces."""
+        return ' '.join(unidecode(value).casefold().split())
+
+    @classmethod
+    def _account_id_named(cls, accounts: list[Account], typed: str) -> int | None:
+        """The account the typed name identifies, or None.
+
+        Unused while the list of accounts is shown to remote clients as well as
+        local ones. Kept for when it is not: what someone types then has to be
+        met halfway — the full name in either order, the surname on its own when
+        only one account bears it, or the address the account was given. What is
+        never accepted is a name matching more than one account, which would log
+        somebody in as a colleague."""
+        if not typed:
+            return None
+        comparable = cls._comparable(typed)
+        if not comparable:
+            return None
+
+        def matches(account: Account) -> bool:
+            names = {cls._comparable(account.full_name)}
+            if account.first_name:
+                names.add(cls._comparable(f'{account.last_name} {account.first_name}'))
+            names.add(cls._comparable(account.last_name))
+            if account.mail:
+                names.add(cls._comparable(account.mail))
+            return comparable in names
+
+        matching = [account for account in accounts if matches(account)]
+        return matching[0].id if len(matching) == 1 else None
 
     @classmethod
     def _render_profile_modal(
@@ -101,14 +137,20 @@ class ProfileController(BaseController):
         if data is None:
             data = {}
         field: str
-        account_id: int | None = WebContext.form_data_to_int(
-            data, field := 'account_id'
-        )
         admin_event: Event = web_context.get_admin_event()
         accounts: list[Account] = admin_event.sorted_active_user_accounts
+        account_id: int | None = WebContext.form_data_to_int(data, field := 'account_id')
         if not account_id and len(accounts) == 1:
             account_id = accounts[0].id
-        if not account_id:
+        throttle_keys = login_throttle_keys(
+            event_uniq_id, web_context.client.source_host, account_id
+        )
+        locked_for = LoginThrottle.locked_for(throttle_keys)
+        if locked_for is not None:
+            errors[field := 'password'] = _(
+                'Too many failed attempts, please try again in {minutes} minutes.'
+            ).format(minutes=max(1, round(locked_for.total_seconds() / 60)))
+        elif not account_id:
             errors[field] = _('Please select the account.')
         else:
             password: str = WebContext.form_data_to_str(data, field := 'password') or ''
@@ -151,6 +193,7 @@ class ProfileController(BaseController):
                                     )
                                 )
                     except (VerifyMismatchError, VerificationError):
+                        LoginThrottle.record_failure(throttle_keys)
                         errors[field] = _('Invalid password.')
                         data[field] = ''
                     except InvalidHash:
@@ -158,6 +201,7 @@ class ProfileController(BaseController):
                             'Something went wrong. Please ask your administrator to recreate your account.'
                         )
                     else:
+                        LoginThrottle.record_success(throttle_keys)
                         SessionUserAccountId(request, admin_event).set(account.id)
                         SessionUserAccountPasswordHash(request, admin_event).set(
                             account.password_hash
@@ -170,6 +214,7 @@ class ProfileController(BaseController):
                         )
                         return ClientRedirect(admin_event_url(request, event_uniq_id))
             except KeyError:
+                LoginThrottle.record_failure(throttle_keys)
                 errors['account_id'] = _('Invalid account.')
 
         return self._render_profile_modal(

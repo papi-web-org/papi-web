@@ -57,6 +57,7 @@ class TestConfig:
     # Server configuration
     TEST_HOST = '127.0.0.1'  # Use IP instead of localhost
     TEST_PORT = 9000
+    TEST_TUNNEL_PORT = 19000
     TEST_TIMEOUT = 30  # seconds to wait for server startup
 
     # Global timeout for all global expect calls.
